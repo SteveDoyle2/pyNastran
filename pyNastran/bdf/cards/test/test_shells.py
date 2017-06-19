@@ -764,7 +764,7 @@ class TestShells(unittest.TestCase):
         ctriar.raw_fields()
         ctriar.write_card(size=8, is_double=False)
         ctriar.write_card(size=16, is_double=False)
-        ctriar.flipNormal()
+        ctriar.flip_normal()
 
         eid = 8
         nids = [1, 2, 3, 4]
@@ -772,7 +772,7 @@ class TestShells(unittest.TestCase):
         cquadr.raw_fields()
         cquadr.write_card(size=8, is_double=False)
         cquadr.write_card(size=16, is_double=False)
-        cquadr.flipNormal()
+        cquadr.flip_normal()
 
         mid = 42
         model.add_pshell(pid, mid1=mid, t=0.2)

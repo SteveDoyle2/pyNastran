@@ -95,6 +95,9 @@ class CMASS1(PointMassElement):
         self.c1 = c1
         self.g2 = g2
         self.c2 = c2
+        self.g1_ref = None
+        self.g2_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -165,35 +168,28 @@ class CMASS1(PointMassElement):
         """
         msg = ' which is required by CMASS1 eid=%s' % self.eid
         if isinstance(self.g1, integer_types):
-            self.g1 = model.Node(self.g1, msg=msg)
-            self.g1_ref = self.g1
+            self.g1_ref = model.Node(self.g1, msg=msg)
         if isinstance(self.g2, integer_types):
-            self.g2 = model.Node(self.g2, msg=msg)
-            self.g2_ref = self.g2
-        self.pid = model.PropertyMass(self.pid, msg=msg)
-        self.pid_ref = self.pid
+            self.g2_ref = model.Node(self.g2, msg=msg)
+        self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.pid = self.Pid()
-        if isinstance(self.g2, integer_types):
-            del self.g2_ref
-        del self.g1_ref, self.pid_ref
+        self.g1_ref = None
+        self.g2_ref = None
+        self.pid_ref = None
 
     def G1(self):
-        if isinstance(self.g1, integer_types):
-            return self.g1
-        elif self.g1 is None:
-            return self.g1
-        return self.g1_ref.nid
+        if self.g1_ref is not None:
+            return self.g1_ref.nid
+        return self.g1
 
     def G2(self):
-        if isinstance(self.g2, integer_types):
-            return self.g2
-        elif self.g2 is None:
-            return self.g2
-        return self.g2_ref.nid
+        if self.g2_ref is not None:
+            return self.g2_ref.nid
+        return self.g2
 
     def Centroid(self):
         """
@@ -203,11 +199,11 @@ class CMASS1(PointMassElement):
         f = 0.
         p1 = np.array([0., 0., 0.])
         p2 = np.array([0., 0., 0.])
-        if self.g1 is not None:
-            p1 = self.g1.get_position()
+        if self.g1_ref is not None:
+            p1 = self.g1_ref.get_position()
             f += 1.
-        if self.g2 is not None:
-            p2 = self.g2.get_position()
+        if self.g2_ref is not None:
+            p2 = self.g2_ref.get_position()
             f += 1.
         c = (p1 + p2) / f
         return c
@@ -288,6 +284,8 @@ class CMASS2(PointMassElement):
         self.c1 = c1
         self.g2 = g2
         self.c2 = c2
+        self.g1_ref = None
+        self.g2_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -402,33 +400,25 @@ class CMASS2(PointMassElement):
         """
         msg = ' which is required by CMASS2 eid=%s' % self.eid
         if isinstance(self.g1, integer_types):
-            self.g1 = model.Node(self.g1, msg=msg)
-            self.g1_ref = self.g1
+            self.g1_ref = model.Node(self.g1, msg=msg)
         if isinstance(self.g2, integer_types):
-            self.g2 = model.Node(self.g2, msg=msg)
-            self.g2_ref = self.g2
+            self.g2_ref = model.Node(self.g2, msg=msg)
 
     def uncross_reference(self):
         self.g1 = self.G1()
         self.g2 = self.G2()
-        if self.g1 is not None:
-            del self.g1_ref
-        if self.g2 is not None:
-            del self.g2_ref
+        self.g1_ref = None
+        self.g2_ref = None
 
     def G1(self):
-        if isinstance(self.g1, integer_types):
-            return self.g1
-        elif self.g1 is None:
-            return self.g1
-        return self.g1_ref.nid
+        if self.g1_ref is not None:
+            return self.g1_ref.nid
+        return self.g1
 
     def G2(self):
-        if isinstance(self.g2, integer_types):
-            return self.g2
-        elif self.g2 is None:
-            return self.g2
-        return self.g2_ref.nid
+        if self.g2_ref is not None:
+            return self.g2_ref.nid
+        return self.g2
 
     def raw_fields(self):
         fields = ['CMASS2', self.eid, self.mass, self.G1(),
@@ -490,6 +480,9 @@ class CMASS3(PointMassElement):
         self.s1 = s1
         self.s2 = s2
         assert self.s1 != self.s2
+        self.s1_ref = None
+        self.s2_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -545,14 +538,15 @@ class CMASS3(PointMassElement):
             the BDF object
         """
         msg = ' which is required by CMASS3 eid=%s' % self.eid
-        #self.s1 = model.Node(self.s1, msg=msg)
-        #self.s2 = model.Node(self.s2, msg=msg)
-        self.pid = model.PropertyMass(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.s1_ref = model.Node(self.s1, msg=msg)
+        self.s2_ref = model.Node(self.s2, msg=msg)
+        self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.pid = self.Pid()
-        del self.pid_ref
+        self.s1_ref = None
+        self.s2_ref = None
+        self.pid_ref = None
 
     def raw_fields(self):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
@@ -608,6 +602,8 @@ class CMASS4(PointMassElement):
         self.s1 = s1
         self.s2 = s2
         assert self.s1 != self.s2
+        self.s1_ref = None
+        self.s2_ref = None
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
@@ -684,7 +680,7 @@ class CONM1(PointMassElement):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     |    1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
     +========+=====+=====+=====+=====+=====+=====+=====+=====+
-    |  CONM1 | EID | G   | CID | M11 | M21 | M22 | M31 | M32 |
+    |  CONM1 | EID |  G  | CID | M11 | M21 | M22 | M31 | M32 |
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     |        | M33 | M41 | M42 | M43 | M44 | M51 | M52 | M53 |
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -775,6 +771,8 @@ class CONM1(PointMassElement):
         self.eid = eid
         self.nid = nid
         self.cid = cid
+        self.nid_ref = None
+        self.cid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -875,14 +873,14 @@ class CONM1(PointMassElement):
         return [self.Nid()]
 
     def Nid(self):
-        if isinstance(self.nid, integer_types):
-            return self.nid
-        return self.nid_ref.nid
+        if self.nid_ref is not None:
+            return self.nid_ref.nid
+        return self.nid
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def cross_reference(self, model):
         """
@@ -894,15 +892,14 @@ class CONM1(PointMassElement):
             the BDF object
         """
         msg = ' which is required by CONM1 eid=%s' % self.eid
-        self.nid = model.Node(self.Nid(), msg=msg)
-        self.cid = model.Coord(self.Cid(), msg=msg)
-        self.nid_ref = self.nid
-        self.cid_ref = self.cid
+        self.nid_ref = model.Node(self.Nid(), msg=msg)
+        self.cid_ref = model.Coord(self.Cid(), msg=msg)
 
     def uncross_reference(self):
         self.nid = self.Nid()
         self.cid = self.Cid()
-        del self.nid_ref, self.cid_ref
+        self.nid_ref = None
+        self.cid_ref = None
 
     def MassMatrix(self):
         return self.mass_matrix
@@ -1031,6 +1028,8 @@ class CONM2(PointMassElement):
         #: coordinate system is implied. (Real)
         #: I11, I21, I22, I31, I32, I33 = I
         self.I = np.asarray(I)
+        self.nid_ref = None
+        self.cid_ref = None
 
     def validate(self):
         assert isinstance(self.cid, integer_types), self.cid
@@ -1142,8 +1141,8 @@ class CONM2(PointMassElement):
             #dx = self.cid_ref.transform_node_to_global(self.X)
             matrix = self.cid_ref.beta()
             raise NotImplementedError('CONM2 intertia method for CID != 0 is not implemented.')
-            A2 = A * matrix
-            return A2  # correct for offset using dx???
+            #A2 = A * matrix
+            #return A2  # correct for offset using dx???
 
     def Centroid(self):
         """
@@ -1153,7 +1152,7 @@ class CONM2(PointMassElement):
         cid = self.Cid()
         if cid == 0:
             # no transform needed
-            X2 = self.nid.get_position() + self.X
+            X2 = self.nid_ref.get_position() + self.X
         elif cid == -1:
             # case X1, X2, X3 are the coordinates, not offsets, of the center of gravity of
             # the mass in the basic coordinate system.
@@ -1172,13 +1171,13 @@ class CONM2(PointMassElement):
             # this statement is not supported...
 
             # convert self.X into the global frame
-            x = self.cid.transform_node_to_global(self.X)
+            x = self.cid_ref.transform_node_to_global(self.X)
 
             # self.X is an offset
-            dx = x - self.cid.origin
+            dx = x - self.cid_ref.origin
 
             # the actual position of the CONM2
-            X2 = self.nid.get_position() + dx
+            X2 = self.nid_ref.get_position() + dx
         return X2
 
     def center_of_mass(self):
@@ -1194,32 +1193,31 @@ class CONM2(PointMassElement):
             the BDF object
         """
         msg = ' which is required by CONM2 eid=%s' % self.eid
-        self.nid = model.Node(self.nid, msg=msg)
-        self.nid_ref = self.nid
+        self.nid_ref = model.Node(self.nid, msg=msg)
 
         cid = self.Cid()
         if cid != -1:
-            self.cid = model.Coord(cid, msg=msg)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(cid, msg=msg)
 
     def uncross_reference(self):
         self.nid = self.Nid()
         self.cid = self.Cid()
-        del self.nid_ref, self.cid_ref
+        self.nid_ref = None
+        self.cid_ref = None
 
     @property
     def node_ids(self):
         return [self.Nid()]
 
     def Nid(self):
-        if isinstance(self.nid, integer_types):
-            return self.nid
-        return self.nid_ref.nid
+        if self.nid_ref is not None:
+            return self.nid_ref.nid
+        return self.nid
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def raw_fields(self):
         list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +

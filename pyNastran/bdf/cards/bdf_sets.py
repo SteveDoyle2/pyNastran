@@ -37,7 +37,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
 from six.moves import zip, range
-import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import (
@@ -117,6 +116,7 @@ class ABCQSet(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = ids
         self.components = components
+        self.ids_ref = None
 
     def validate(self):
         assert isinstance(self.ids, list), type(self.ids)
@@ -153,54 +153,18 @@ class ABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
+        if self.ids_ref is None:
+            return self.ids
         msg = ' which is required by %s' % self.type
         return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
-
-    def get_dof_matrix(self):
-        # type: () -> np.ndarray
-        """
-        Gets the (grid-components) for the ASET, BSET, CSET, QSET
-
-        Returns
-        -------
-        dof_array : (n, 2) int ndarray
-            the degree of freedom map
-
-        nids = [10, 20, 25]
-        comps = [1, 2, 3]
-
-        dof_array = [
-            [10, 1],
-            [20, 2],
-            [25, 3],
-        ]
-        """
-        comp_ints = []
-        for compi in self.components:
-            if compi == '0':
-                comp_ints.append(0)
-            else:
-                comp_int = int(compi) - 1
-                comp_ints.append(comp_int)
-
-        nids = np.array(self.ids, dtype='int32')
-        comp_ints = np.array(self.comp_ints, dtype='int32')
-
-        dof_array = np.hstack([nids, cids]).reshape(2, 3).T
-        nnids = len(nids)
-        ncomps = len(comp_ints)
-        assert nnids == ncomps
-        dof_array = np.hstack([nids, ncomps]).reshape(2, nnids).T
-        return dof_array
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -238,6 +202,7 @@ class SuperABCQSet(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = ids
         self.components = components
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -264,17 +229,18 @@ class SuperABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        if self.ids_ref is None:
+            return self.ids
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -391,52 +357,7 @@ class ABQSet1(Set):
 
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
-
-    def get_dof_matrix(self):
-        # type: () -> np.ndarray
-        """
-        Gets the (grid-components) for the ASET1, BSET1, QSET1
-
-        Returns
-        -------
-        dof_array : (n, 2) int ndarray
-            the degree of freedom map
-
-        nids = [10, 20, 25, 30]
-        comps = [1, 2, 3]
-
-        dof_array = [
-            [10, 1]
-            [10, 2]
-            [10, 3]
-            [20, 1]
-            [20, 2]
-            [25, 3]
-            [25, 1]
-            [25, 2]
-            [25, 3]
-            [30, 1]
-            [30, 2]
-            [30, 3]
-        ]
-        """
-        if components == '0':
-            comp_ints = [0]
-        else:
-            comp_ints = []
-            for compi in self.components:
-                comp_int = int(compi) - 1
-                comp_ints.append(comp_int)
-        nids = np.array(self.ids, dtype='int32') # [10, 20, 25, 30]
-        comp_ints = np.array(self.comp_ints, dtype='int32')  # [1, 2, 3]
-
-        nnids = len(nids)
-        ncomps = len(comp_ints)
-        dof_array = np.hstack([
-            np.repeat(nids, ncomps),
-            np.repeat(comp_ints, nnids)
-            ]).reshape(2, nnids*ncomps).T
-        return dof_array
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -476,12 +397,11 @@ class ABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     #@property
     #def node_ids(self):
@@ -490,7 +410,9 @@ class ABQSet1(Set):
     @property
     def node_ids(self):
         msg = ' which is required by %s' % self.type
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        if self.ids_ref is None:
+            return self.ids
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -534,6 +456,7 @@ class SuperABQSet1(Set):
         self.ids = expand_thru(ids)
         #print('ids =', self.ids)
         assert None not in self.ids
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -570,17 +493,18 @@ class SuperABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        if self.ids_ref is None:
+            return self.ids
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -681,17 +605,18 @@ class CSET1(Set):
             the BDF object
         """
         msg = ' which is required by CSET1'
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
         msg = ' which is required by CSET1'
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        if self.ids_ref is None:
+            return self.ids
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -768,6 +693,7 @@ class SET1(Set):
 
         self.is_skin = is_skin
         self.xref_type = None
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -782,9 +708,7 @@ class SET1(Set):
             a comment for the card
         """
         sid = integer(card, 1, 'sid')
-
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
-
         is_skin = False
         i = 0
         if len(ids) > 0:
@@ -845,9 +769,9 @@ class SET1(Set):
         """
         msg = ' which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
-            self.ids = model.Nodes(self.get_ids(), msg=msg)
+            self.ids_ref = model.Nodes(self.get_ids(), msg=msg)
         elif xref_type == 'Point':
-            self.ids = model.Points(self.get_ids(), msg=msg)
+            self.ids_ref = model.Points(self.get_ids(), msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type
@@ -855,17 +779,20 @@ class SET1(Set):
     def uncross_reference(self):
         if self.xref_type in ['Node', 'Point']:
             self.ids = self.get_ids()
-            del self.ids_ref
             self.xref_type = None
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
+        self.ids_ref = None
 
     def get_ids(self):
+        if self.ids_ref is None:
+            return self.ids
+
         if self.xref_type is None:
             ids = self.ids
         elif self.xref_type in ['Node', 'Point']:
             ids = [node if isinstance(node, integer_types) else node.nid
-                   for node in self.ids]
+                   for node in self.ids_ref]
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
         return ids
@@ -1306,6 +1233,7 @@ class USET(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.components = components
         self.ids = ids
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1365,17 +1293,18 @@ class USET(Set):
             the BDF object
         """
         msg = ' which is required by USET name=%s' % (self.name)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
+        if self.ids_ref is None:
+            return self.ids
         msg = ' which is required by USET name=%s' % (self.name)
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """
@@ -1403,7 +1332,7 @@ class USET1(ABQSet1):
     type = 'USET1'
 
     def __init__(self, name, components, ids, comment=''):
-        Set.__init__(self)
+        ABQSet1.__init__(self)
         if comment:
             self.comment = comment
         self.name = name
@@ -1415,6 +1344,7 @@ class USET1(ABQSet1):
 
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1451,17 +1381,18 @@ class USET1(ABQSet1):
             the BDF object
         """
         msg = ' which is required by USET1 name=%s' % (self.name)
-        self.ids = model.EmptyNodes(self.node_ids, msg=msg)
-        self.ids_ref = self.ids
+        self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.ids = self.node_ids
-        del self.ids_ref
+        self.ids_ref = None
 
     @property
     def node_ids(self):
+        if self.ids_ref is None:
+            return self.ids
         msg = ' which is required by USET1 name=%s' % (self.name)
-        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids_ref, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""

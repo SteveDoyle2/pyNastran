@@ -1087,7 +1087,7 @@ class AddCards(AddMethods):
         self._add_pelast_object(prop)
         return prop
 
-    def add_conrod(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+    def add_conrod(self, eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment=''):
         # type: (int, int, List[int], float, float, float, float, str) -> CONROD
         """
         Creates a CONROD card
@@ -1100,7 +1100,7 @@ class AddCards(AddMethods):
             material id
         nids : List[int, int]
             node ids
-        A : float
+        A : float; default=0.
             area
         j : float; default=0.
             polar moment of inertia
@@ -1111,7 +1111,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        elem = CONROD(eid, mid, nids, A, j=j, c=c, nsm=nsm, comment=comment)
+        elem = CONROD(eid, mid, nids, A=A, j=j, c=c, nsm=nsm, comment=comment)
         self._add_element_object(elem)
         return elem
 

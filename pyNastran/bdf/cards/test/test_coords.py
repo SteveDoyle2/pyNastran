@@ -749,11 +749,11 @@ def get_nodes(grids, grids_expected, coords):
 
         msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)
         msg += 'n=%s grid=\n%s' % (nid, node)
-        coord = node.cp
-        msg += 'n=%s coord=\n%s' % (node.nid, coord)
-        while coord.rid:
-            msg += 'n=%s rcoord=\n%s' % (node.nid, coord.rid)
-            coord = coord.rid
+        coord_ref = node.cp_ref
+        msg += 'n=%s coord=\n%s' % (node.nid, coord_ref)
+        while coord_ref.rid:
+            msg += 'n=%s rcoord=\n%s' % (node.nid, coord_ref.rid)
+            coord_ref = coord_ref.rid
         assert allclose(n, pos), msg
 
 

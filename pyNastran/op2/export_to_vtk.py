@@ -216,7 +216,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
             elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUADX', 'CQUADX8', 'CQUAD',
                                'CTRIA3', 'CTRIA6', 'CTRIAX', 'CTRIAX6', 'CSHEAR']:
                 pid = elem.Pid()
-                prop = elem.pid
+                prop = elem.pid_ref
                 if prop.type in ['PCOMP', 'PCOMPG']:
                     mid = prop.Mid(0)
                 elif prop.type in ['PSHELL']:

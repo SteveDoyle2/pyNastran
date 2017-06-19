@@ -27,21 +27,18 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from pyNastran.bdf.cards.elements.shell import TriShell, QuadShell, _triangle_area_centroid_normal, _normal
+from pyNastran.bdf.cards.elements.shell import TriShell, _triangle_area_centroid_normal, _normal
 from pyNastran.bdf.cards.base_card import Element
 
 __all__ = ['CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
            'CQUADX', 'CQUADX4', 'CQUADX8']
 
 
-class AxisymmetricElement(Element):
+class AxisymmetricTri(Element):
     def __init__(self):
         Element.__init__(self)
-
-
-class AxisymmetricTri(AxisymmetricElement):
-    def __init__(self):
-        AxisymmetricElement.__init__(self)
+        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.pid_ref = None  # type: Optional[Any]
 
     def get_edge_ids(self):
         """
@@ -61,12 +58,34 @@ class AxisymmetricTri(AxisymmetricElement):
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
     def Mass(self):
-        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
+        return 0.
+
+class AxisymmetricQuad(Element):
+    def __init__(self):
+        Element.__init__(self)
+        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.pid_ref = None  # type: Optional[Any]
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+            tuple(sorted([node_ids[3], node_ids[0]])),
+        ]
+
+    def Mass(self):
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         return 0.
 
 class CTRAX3(AxisymmetricTri):
@@ -141,7 +160,7 @@ class CTRAX3(AxisymmetricTri):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def flipNormal(self):
+    def flip_normal(self):
         pass
 
     def Mass(self):
@@ -176,19 +195,20 @@ class CTRAX3(AxisymmetricTri):
             the BDF object
         """
         msg = ' which is required by CTRIAX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.pid_ref = None  # type: Optional[Any]
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        if self.nodes_ref is None:
+            return self.nodes
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     def raw_fields(self):
         list_fields = ['CTRAX3', self.eid, self.Pid()] + self.node_ids + [self.theta]
@@ -286,7 +306,7 @@ class CTRAX6(AxisymmetricTri):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def flipNormal(self):
+    def flip_normal(self):
         pass
 
     def AreaCentroidNormal(self):
@@ -326,11 +346,14 @@ class CTRAX6(AxisymmetricTri):
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        if self.nodes_ref is None:
+            return self.nodes
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CTRAX6', self.eid, self.Pid()] + self.node_ids + [self.theta]
@@ -351,7 +374,7 @@ class CTRAX6(AxisymmetricTri):
         return msg
 
 
-class CTRIAX(TriShell):
+class CTRIAX(AxisymmetricTri):
     """
     +--------+------------+-------+----+----+----+----+----+-----+
     |   1    |     2      |   3   |  4 |  5 |  6 | 7  |  8 |  9  |
@@ -365,7 +388,7 @@ class CTRIAX(TriShell):
     """
     type = 'CTRIAX'
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
-        TriShell.__init__(self)
+        AxisymmetricTri.__init__(self)
         if comment:
             self.comment = comment
         #: Element ID
@@ -433,7 +456,7 @@ class CTRIAX(TriShell):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
 
-    def flipNormal(self):
+    def flip_normal(self):
         pass
 
     def AreaCentroidNormal(self):
@@ -441,7 +464,7 @@ class CTRIAX(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -449,7 +472,7 @@ class CTRIAX(TriShell):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} \lvert (n_1-n_2) \times (n_1-n_3) \rvert"""
-        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes[:3])
+        (n1, n2, n3) = self.get_node_positions(nodes=self.nodes_ref[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -465,19 +488,20 @@ class CTRIAX(TriShell):
             the BDF object
         """
         msg = ' which is required by CTRIAX eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.pid_ref = None  # type: Optional[Any]
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        if self.nodes_ref is None:
+            return self.nodes
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
         list_fields = ['CTRIAX', self.eid, self.Pid()] + self.node_ids + [self.theta_mcid]
@@ -577,15 +601,14 @@ class CTRIAX6(TriShell):
             the BDF object
         """
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.mid = model.Material(self.mid)
-        self.nodes_ref = self.nodes
-        self.mid_ref = self.mid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.mid_ref = model.Material(self.mid)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.mid = self.Mid()
-        del self.nodes_ref, self.mid_ref
+        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.mid_ref = None  # type: Optional[Any]
 
     def _verify(self, xref=True):
         eid = self.eid
@@ -598,7 +621,7 @@ class CTRIAX6(TriShell):
             assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
-            assert self.mid.type in ['MAT1', 'MAT3', 'MAT4'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
+            assert self.mid_ref.type in ['MAT1', 'MAT3', 'MAT4'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
@@ -654,7 +677,7 @@ class CTRIAX6(TriShell):
             return self.mid
         return self.mid_ref.mid
 
-    def flipNormal(self):
+    def flip_normal(self):
         r"""
         ::
 
@@ -676,7 +699,9 @@ class CTRIAX6(TriShell):
          /       \
         1----2----3
         """
-        return self._nodeIDs(allow_empty_nodes=True)
+        if self.nodes_ref is None:
+            return self.nodes
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def get_edge_ids(self):
         """
@@ -708,7 +733,7 @@ class CTRIAX6(TriShell):
         return msg
 
 
-class CQUADX(QuadShell):
+class CQUADX(AxisymmetricQuad):
     """
     Defines an axisymmetric quadrilateral element with up to nine grid
     points for use in fully nonlinear (i.e., large strain and large
@@ -727,7 +752,7 @@ class CQUADX(QuadShell):
     """
     type = 'CQUADX'
     def __init__(self, eid, pid, nids, theta_mcid=0., comment=''):
-        QuadShell.__init__(self)
+        AxisymmetricQuad.__init__(self)
         if comment:
             self.comment = comment
         #: Element ID
@@ -777,15 +802,14 @@ class CQUADX(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUADX eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.pid_ref = None  # type: Optional[Any]
 
     def Thickness(self):
         """
@@ -793,7 +817,7 @@ class CQUADX(QuadShell):
         """
         return self.pid_ref.Thickness()
 
-    def flipNormal(self):
+    def flip_normal(self):
         r"""
         ::
 
@@ -808,7 +832,9 @@ class CQUADX(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        if self.nodes_ref is None:
+            return self.nodes
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def _verify(self, xref):
         """
@@ -839,7 +865,7 @@ class CQUADX(QuadShell):
         return self.comment + msg.rstrip() + '\n'
 
 
-class CQUADX4(QuadShell):
+class CQUADX4(AxisymmetricQuad):
     """
     Defines an isoparametric and axisymmetric quadrilateral cross-section
     ring element for use in linear and fully nonlinear (i.e., large strain
@@ -856,7 +882,7 @@ class CQUADX4(QuadShell):
     type = 'CQUADX4'
 
     def __init__(self, eid, pid, nids, theta=0., comment=''):
-        QuadShell.__init__(self)
+        AxisymmetricQuad.__init__(self)
         if comment:
             self.comment = comment
         #: Element ID
@@ -901,17 +927,16 @@ class CQUADX4(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUADX eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.pid_ref = None  # type: Optional[Any]
 
-    def flipNormal(self):
+    def flip_normal(self):
         r"""
         ::
 
@@ -926,7 +951,7 @@ class CQUADX4(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(allow_empty_nodes=True)
 
     def _verify(self, xref):
         """
@@ -951,7 +976,7 @@ class CQUADX4(QuadShell):
         data = ['CQUADX4', self.eid, self.Pid()] + nodes + [self.theta]
         return self.comment + print_card_8(data)
 
-class CQUADX8(QuadShell):
+class CQUADX8(AxisymmetricQuad):
     """
     Defines an isoparametric and axisymmetric quadrilateral cross-section
     ring element with midside nodes for use in linear and fully nonlinear
@@ -969,7 +994,7 @@ class CQUADX8(QuadShell):
     """
     type = 'CQUADX8'
     def __init__(self, eid, pid, nids, theta=0., comment=''):
-        QuadShell.__init__(self)
+        AxisymmetricQuad.__init__(self)
         if comment:
             self.comment = comment
         #: Element ID
@@ -1018,21 +1043,20 @@ class CQUADX8(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUADX8 eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None  # type: Optional[List[Any]]
+        self.pid_ref = None  # type: Optional[Any]
 
     def Normal(self):
         (n1, n2, n3, n4) = self.get_node_positions()[:4]
         return _normal(n1 - n3, n2 - n4)
 
-    def flipNormal(self):
+    def flip_normal(self):
         r"""
         ::
 
@@ -1047,7 +1071,7 @@ class CQUADX8(QuadShell):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def _verify(self, xref):
         """

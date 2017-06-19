@@ -210,14 +210,7 @@ def _eq_nodes_setup(bdf_filename, tol,
         for eid, element in sorted(iteritems(model.masses)):
             spoint_epoint_nid_set.update(element.node_ids)
 
-        if model.spoints and model.epoints:
-            nids_new = spoint_epoint_nid_set - model.spoints.points - model.epoints.points
-        elif model.spoints:
-            nids_new = spoint_epoint_nid_set - model.spoints.points
-        elif model.epoints:
-            nids_new = spoint_epoint_nid_set - model.epoints.points
-        else:
-            nids_new = spoint_epoint_nid_set
+        nids_new = spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
 
         if None in nids_new:
             nids_new.remove(None)
@@ -269,7 +262,7 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         node2 = model.nodes[nid2]
 
         # TODO: doesn't use get position...
-        distance = norm(node1.xyz - node2.xyz)
+        distance = norm(node1.get_position() - node2.get_position())
 
         #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
         if distance > tol:

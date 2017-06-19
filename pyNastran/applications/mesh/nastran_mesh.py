@@ -389,7 +389,7 @@ def intersect(model, eids, max_dist=2.):
 #
 #     if flipStarter:
 #         elem = self.Element(starterEid)
-#         elem.flipNormal()
+#         elem.flip_normal()
 #     normals[starterEid] = elem.Normal()
 #
 #     for eid in allEids:

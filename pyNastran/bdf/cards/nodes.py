@@ -65,6 +65,7 @@ class RINGAX(BaseCard):
     _field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
 
     def __init__(self, nid, R, z, ps=None, comment=''):  # this card has missing fields
+        # type: (int, float, float, Optional[str], str) -> None
         """
         Creates the RINGAX card
         """
@@ -1050,7 +1051,9 @@ class GRID(BaseCard):
         self.cd = cd
         self.ps = ps
         self.seid = seid
-        self._validate_input()
+        self.cp_ref = None # type: Any
+        self.cd_ref = None # type: Any
+        self.elements_ref = None # type: Any
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1118,7 +1121,7 @@ class GRID(BaseCard):
             seid = 0
         return GRID(nid, cp, xyz, cd, ps, seid, comment=comment)
 
-    def _validate_input(self):
+    def validate(self):
         # type: () -> None
         assert isinstance(self.cp, integer_types), 'cp=%s' % (self.cp)
         assert self.nid > 0, 'nid=%s' % (self.nid)
@@ -1161,9 +1164,10 @@ class GRID(BaseCard):
         cd : int
             the output coordinate system
         """
-        if isinstance(self.cd, integer_types):
+        if self.cd_ref is None:
             return self.cd
         return self.cd_ref.cid
+
 
     def Cp(self):
         # type: () -> int
@@ -1175,7 +1179,7 @@ class GRID(BaseCard):
         cp : int
             the analysis coordinate system
         """
-        if isinstance(self.cp, integer_types):
+        if self.cp_ref is None:
             return self.cp
         return self.cp_ref.cid
 
@@ -1359,33 +1363,24 @@ class GRID(BaseCard):
         if grdset:
             # update using a grdset object
             if not self.cp:
-                self.cp = grdset.cp
-                self.cp_ref = self.cp
+                self.cp_ref = grdset.cp
             if not self.cd:
                 self.cd = grdset.cd
                 self.cd_ref = self.cd
             if not self.ps:
-                self.ps = grdset.ps
-                self.ps_ref = self.ps
+                self.ps_ref = grdset.ps
             if not self.seid:
-                self.seid = grdset.seid
-                self.seid_ref = self.seid
+                self.seid_ref = grdset.seid
         msg = ' which is required by GRID nid=%s' % (self.nid)
-        self.cp = model.Coord(self.cp, msg=msg)
-        self.cp_ref = self.cp
+        self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.cd != -1:
-            self.cd = model.Coord(self.cd, msg=msg)
-            self.cd_ref = self.cd
+            self.cd_ref = model.Coord(self.cd, msg=msg)
 
     def uncross_reference(self):
         # type: () -> None
-        self.cp = self.Cp()
-        self.cd = self.Cd()
-        if self.cd != -1:
-            del self.cd_ref
-        del self.cp_ref
-        if hasattr(self, 'elements'):
-            del self.elements
+        self.cd_ref = None
+        self.cp_ref = None
+        self.elements_ref = None
 
     def raw_fields(self):
         # type: () -> List[Any]
@@ -1650,9 +1645,9 @@ class POINT(BaseCard):
         comment : str; default=''
             a comment for the card
         """
-        nid = data[0]
-        cp = data[1]
-        xyz = np.array(data[2:5])
+        nid = data[0] # type: int
+        cp = data[1] # type: int
+        xyz = np.array(data[2:5]) # type: np.ndarray
         return POINT(nid, cp, xyz, comment=comment)
 
     def set_position(self, model, xyz, cid=0):

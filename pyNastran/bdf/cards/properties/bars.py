@@ -132,6 +132,7 @@ class LineProperty(Property):
         self.j = None
         self.nsm = None
         Property.__init__(self)
+        self.mid_ref = None
 
     #def D_bending(self):
         #pass
@@ -508,14 +509,14 @@ def _bar_areaL(class_name, Type, dim, prop):
         d = dim2 - 2 * tf
 
         # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-        #tw - dim3
-        #tf = dim4
+        tw = dim3
+        tf = dim4
         #b = dim1 - 0.5 * tw
-        #h = dim2 - tf
-        #bf = dim1 - tw
+        h = dim2 - tf
+        bf = dim1 - tw
         #hw = dim2 - 2 * tf
 
-        A = 2 * tf * bf + (h + tf) * tweb  # I think tt is tf...
+        #A = 2 * tf * bf + (h + tf) * tweb  # I think tt is tf...
         #zc = bf * tf * (bf + tw) / A
         #zs = b**2 * tf / (2 * b * tw + h * tf / 3)
         #i1 = (
@@ -541,8 +542,10 @@ def _bar_areaL(class_name, Type, dim, prop):
 
         #A2 = 2. * bf * tf + (dim2 - 2. * dim4) * tweb
         A2 = 2. * tf * bf + (dim2 - 2. * dim4) * tweb
-        assert np.allclose(A, A2), 'A=%s A1=%s A2=%s' % (A, A2, A2)
-        assert np.allclose(A1, A2), 'A=%s A1=%s A2=%s' % (A, A1, A2)
+        A0 = A1
+        assert np.allclose(A0, A2), 'A0=%s A1=%s A2=%s' % (A0, A2, A2)
+        assert np.allclose(A1, A2), 'A0=%s A1=%s A2=%s' % (A0, A1, A2)
+        A = A1
 
     #CHAN1 = DIM2*DIM3 + (DIM4-DIM3)*(DIM1+DIM2)
     elif Type == 'CHAN1':
@@ -974,6 +977,7 @@ class PBAR(LineProperty):
         self.k1 = k1
         #: default=infinite; assume 1e8
         self.k2 = k2
+        self.mid_ref = None
 
     def validate(self):
         if self.i1 < 0.:
@@ -1096,12 +1100,11 @@ class PBAR(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBAR mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def Area(self):
         """
@@ -1258,6 +1261,7 @@ class PBARL(LineProperty):
         #self.validate()
         #area = self.Area()
         #assert area > 0, 'Type=%s dim=%s A=%s\n%s' % (self.Type, self.dim, area, str(self))
+        self.mid_ref = None
 
     def validate(self):
         if self.Type not in self.valid_types:
@@ -1335,12 +1339,11 @@ class PBARL(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBARL mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _verify(self, xref=False):
         pid = self.pid
@@ -1718,6 +1721,7 @@ class PBRSECT(LineProperty):
             raise NotImplementedError('PBRSECT.pid=%s key=%r value=%r' % (pid, key, value))
 
         self._validate_input()
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1782,8 +1786,7 @@ class PBRSECT(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBRSECT mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
@@ -1884,6 +1887,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         self.ez = ez
         self.fy = fy
         self.fz = fz
+        self.mid_ref = None
 
     def add_card(self, card, comment=''):
         pid = integer(card, 1, 'pid')
@@ -1933,12 +1937,11 @@ class PBEAM3(LineProperty):  # not done, cleanup
             the BDF object
         """
         msg = ' which is required by PBEAM3 mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def repr_fields(self):
         """.. todo:: not done"""
@@ -2026,6 +2029,7 @@ class PBEND(LineProperty):
         self.p = p
         self.rb = rb
         self.theta_b = theta_b
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2186,12 +2190,11 @@ class PBEND(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBEND mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def raw_fields(self):
         return self.repr_fields()

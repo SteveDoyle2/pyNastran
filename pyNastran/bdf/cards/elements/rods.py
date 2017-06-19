@@ -19,37 +19,12 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
     def __init__(self):
         Element.__init__(self)
 
-    def cross_reference(self, model):
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
-
-    def uncross_reference(self):
-        self.nodes = self.node_ids
-        self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
-
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
-
-    def Rho(self):
-        r"""returns the material density  \f$ \rho \f$"""
-        return self.pid_ref.mid_ref.rho
-
-    def Length(self):
-        r"""
-        Gets the length of the element.
-
-        .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
-        """
-        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
-        return L
 
     def Mass(self):
         r"""
@@ -105,6 +80,8 @@ class CROD(RodElement):
         self.pid = pid
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -142,10 +119,23 @@ class CROD(RodElement):
         nids = data[2:4]
         return CROD(eid, pid, nids, comment=comment)
 
+
+    def cross_reference(self, model):
+        msg = ' which is required by CROD eid=%s' % (self.eid)
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        self.nodes_ref = None
+        self.pid_ref = None
+
     def _verify(self, xref=False):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
+        assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(pid, int), 'pid=%r' % pid
         if xref:  # True
             mid = self.Mid()
@@ -165,6 +155,25 @@ class CROD(RodElement):
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
+    def Length(self):
+        r"""
+        Gets the length of the element.
+
+        .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        """
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
+        return L
+
+    def Rho(self):
+        r"""returns the material density  \f$ \rho \f$"""
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        return self.pid_ref.mid_ref.rho
+
     def Centroid(self):
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
@@ -172,49 +181,49 @@ class CROD(RodElement):
         return self.Centroid()
 
     def Mid(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.Mid()
 
     def Area(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.A
 
     def Nsm(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.nsm
 
     def E(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.mid_ref.E()
 
     def G(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.mid_ref.G()
 
     def J(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.J()
 
     def C(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.c
 
     def MassPerLength(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         massPerLength = self.pid_ref.mid_ref.rho * self.pid_ref.A + self.pid_ref.nsm
@@ -275,6 +284,8 @@ class CTUBE(RodElement):
         self.pid = pid
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -312,6 +323,17 @@ class CTUBE(RodElement):
         nids = data[2:4]
         return CTUBE(eid, pid, nids, comment=comment)
 
+    def cross_reference(self, model):
+        msg = ' which is required by CTUBE eid=%s' % (self.eid)
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def uncross_reference(self):
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        self.nodes_ref = None
+        self.pid_ref = None
+
     def _verify(self, xref=False):
         pid = self.Pid()
         edges = self.get_edge_ids()
@@ -331,41 +353,73 @@ class CTUBE(RodElement):
             elif self.pid_ref.mid_ref.type == 'MAT4':
                 pass
             else:
-                raise NotImplementedError('_verify does not support self.pid_ref.mid_ref.type=%s' % self.pid_ref.mid_ref.type)
+                msg = '_verify does not support self.pid_ref.mid_ref.type=%s' % (
+                    self.pid_ref.mid_ref.type)
+                raise NotImplementedError(msg)
 
             c = self.Centroid()
             for i in range(3):
                 assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
+    def Length(self):
+        r"""
+        Gets the length of the element.
+
+        .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        """
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
+        return L
+
+    def Rho(self):
+        r"""returns the material density  \f$ \rho \f$"""
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        return self.pid_ref.mid_ref.rho
+
     def Mid(self):
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.Mid()
 
     def Mass(self):
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.MassPerLength() * self.Length()
 
     def Nsm(self):
-        if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.Nsm()
 
     def Area(self):
-        if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.Area()
 
     def E(self):
-        if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.mid_ref.E()
 
     def G(self):
-        if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.mid_ref.G()
 
     def J(self):
-        if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.J()
 
     def Centroid(self):
@@ -405,7 +459,7 @@ class CONROD(RodElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+    def __init__(self, eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment=''):
         """
         Creates a CONROD card
 
@@ -439,6 +493,8 @@ class CONROD(RodElement):
         self.nsm = nsm
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
+        self.nodes_ref = None
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -456,7 +512,7 @@ class CONROD(RodElement):
         nids = [integer(card, 2, 'n1'),
                 integer(card, 3, 'n2')]
         mid = integer(card, 4, 'mid')
-        A = double(card, 5, 'A')
+        A = double_or_blank(card, 5, 'A', 0.0)
         j = double_or_blank(card, 6, 'j', 0.0)
         c = double_or_blank(card, 7, 'c', 0.0)
         nsm = double_or_blank(card, 8, 'nsm', 0.0)
@@ -493,15 +549,14 @@ class CONROD(RodElement):
             the BDF object
         """
         msg = ' which is required by CONROD eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.mid = self.Mid()
-        del self.nodes_ref, self.mid_ref
+        self.nodes_ref = None
+        self.mid_ref = None
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -525,27 +580,49 @@ class CONROD(RodElement):
             for i in range(3):
                 assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
+    def Length(self):
+        r"""
+        Gets the length of the element.
+
+        .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+        """
+        if self.mid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
+        return L
+
+    def Rho(self):
+        r"""returns the material density  \f$ \rho \f$"""
+        if self.mid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        return self.mid_ref.rho
+
     def Centroid(self):
+        if self.mid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
     def center_of_mass(self):
         return self.Centroid()
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
+        if self.mid_ref is None:
             return self.mid
         #elif self.mid is None:
             #print ("No material defined for element ", self.eid)
             #return None
-        else:
-            return self.mid_ref.mid
+        return self.mid_ref.mid
 
     def Pid(self):
         return self.pid
 
     def MassPerLength(self):
-        if isinstance(self.mid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        if self.mid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         massPerLength = self.mid_ref.rho * self.A + self.nsm
         return massPerLength
 
@@ -566,21 +643,17 @@ class CONROD(RodElement):
 
     def E(self):
         r"""returns the Young's Modulus, :math:`E`$"""
-        if isinstance(self.mid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        if self.mid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.mid_ref.E()
 
     def G(self):
         r"""returns the Shear Modulus, :math:`G`"""
-        if isinstance(self.mid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        if self.mid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.mid_ref.G()
-
-    def Rho(self):
-        r"""returns the material density, :math:`\rho`"""
-        if isinstance(self.mid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.mid_ref.rho
 
     #def write_code_aster(self):
         #msg = ''

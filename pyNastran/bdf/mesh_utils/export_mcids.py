@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf import read_bdf
 
 def export_mcids(bdf_filename, csv_filename=None,
                  eids=None, export_xaxis=True, export_yaxis=True,
-                 iply=0):
+                 iply=0, log=None, debug=False):
     """
     Exports the element material coordinates systems, so you can
     load it into pyNastranGUI.
@@ -59,7 +59,7 @@ def export_mcids(bdf_filename, csv_filename=None,
         eids = [eids]
 
     if isinstance(bdf_filename, string_types):
-        model = read_bdf(bdf_filename, xref=False)
+        model = read_bdf(bdf_filename, xref=False, log=log, debug=debug)
         #print(model.get_bdf_stats())
         model.safe_cross_reference()
     else:

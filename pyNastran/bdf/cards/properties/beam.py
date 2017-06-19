@@ -298,6 +298,7 @@ class PBEAM(IntegratedLineProperty):
                     msg += '  cwa=%s cwb=%s\n' % (self.cwa, self.cwb)
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxb, self.j, i, j)
                     raise ValueError(msg)
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -728,15 +729,14 @@ class PBEAM(IntegratedLineProperty):
             the BDF object
         """
         msg = ' which is required by PBEAM mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
         #if model.sol != 600:
             #assert max(self.j) == 0.0, self.j
             #assert min(self.j) == 0.0, self.j
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -984,6 +984,7 @@ class PBEAML(IntegratedLineProperty):
         self.xxb = xxb
         self.so = so
         self.nsm = nsm
+        self.mid_ref = None
         A = self.Area()
 
     @classmethod
@@ -1170,12 +1171,11 @@ class PBEAML(IntegratedLineProperty):
         .. todo:: What happens when there are 2 subcases?
         """
         msg = ' which is required by PBEAML mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def verify(self, model, isubcase):
         if model.is_thermal_solution(isubcase):
@@ -1297,13 +1297,15 @@ class PBMSECT(LineProperty):
                 else:
                     self.brps[0] = int(value)
 
-            elif key == 'T':
+            elif key.startswith('T('):
                 if key.startswith('T('):
                     assert key.endswith(')'), 'key=%r' % key
                     key_id = int(key[2:-1])
                     self.ts[key_id] = float(value)
-                else:
+                elif key == 'T':
                     self.ts[0] = int(value)
+                else:
+                    raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
             else:
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
         self._validate_input()
@@ -1370,8 +1372,7 @@ class PBMSECT(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBMSECT mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
         self.outp = model.Set(self.outp)
         self.outp_ref = self.outp
@@ -1570,6 +1571,7 @@ class PBCOMP(LineProperty):
         self.c = c
         self.mids = mids
         assert 0 <= self.symopt <= 5, 'symopt=%i is invalid; ' % self.symopt
+        self.mid_ref = None
 
     def validate(self):
         assert isinstance(self.mids, list), 'mids=%r type=%s' % (self.mids, type(self.mids))
@@ -1672,15 +1674,14 @@ class PBCOMP(LineProperty):
             the BDF object
         """
         msg = ' which is required by PBCOMP mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def Mids(self):
         return self.mids
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def raw_fields(self):
         list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,

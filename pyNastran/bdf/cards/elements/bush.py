@@ -124,6 +124,11 @@ class CBUSH(BushElement):
         self.s = s
         self.ocid = ocid
         self.si = si
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
+        self.cid_ref = None
+        self.ocid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -215,28 +220,24 @@ class CBUSH(BushElement):
         assert isinstance(ocid, integer_types), 'ocid=%r' % ocid
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
+        if self.gb_ref is None:
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, integer_types) or self.gb is None:
+        if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
 
     def OCid(self):
-        if self.ocid is None:
-            return None
-        elif isinstance(self.ocid, integer_types):
-            return self.ocid
-        return self.ocid_ref.cid
+        if self.ocid_ref is not None:
+            return self.ocid_ref.cid
+        return self.ocid
 
     def Cid(self):
-        if self.cid is None:
-            return None
-        elif isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def cross_reference(self, model):
         """
@@ -248,27 +249,25 @@ class CBUSH(BushElement):
             the BDF object
         """
         msg = ' which is required by CBUSH eid=%s' % self.eid
-        self.ga = model.Node(self.ga, msg=msg)
-        self.ga_ref = self.ga
+        self.ga_ref = model.Node(self.ga, msg=msg)
         if self.gb is not None:
-            self.gb = model.Node(self.gb, msg=msg)
-            self.gb_ref = self.gb
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+            self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
         if self.cid is not None:
-            self.cid = model.Coord(self.cid, msg=msg)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(self.cid, msg=msg)
+        if self.ocid is not None and self.ocid != -1:
+            self.ocid_ref = model.Coord(self.ocid, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.pid = self.Pid()
         self.cid = self.Cid()
         self.gb = self.Gb()
-        if self.cid is not None:
-            del self.cid_ref
-        if self.gb is not None:
-            del self.gb_ref
-        del self.ga_ref, self.pid_ref
+        self.cid_ref = None
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
+        self.ocid_ref = None
 
     def raw_fields(self):
         if self.g0 is not None:
@@ -311,6 +310,10 @@ class CBUSH1D(BushElement):
         self.ga = nids[0]
         self.gb = nids[1]
         self.cid = cid
+        self.ga_ref = None
+        self.gb_ref = None
+        self.cid_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -351,27 +354,22 @@ class CBUSH1D(BushElement):
             the BDF object
         """
         msg = ' which is required by CBUSH1D eid=%s' % self.eid
-        self.ga = model.Node(self.ga, msg=msg)
-        self.ga_ref = self.ga
+        self.ga_ref = model.Node(self.ga, msg=msg)
         if self.gb:
-            self.gb = model.Node(self.gb, msg=msg)
-            self.gb_ref = self.gb
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+            self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
         if self.cid is not None:
-            self.cid = model.Coord(self.cid)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(self.cid)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.cid = self.Cid()
         self.pid = self.Pid()
-        if self.gb:
-            del self.gb_ref
-        if self.cid is not None:
-            del self.cid_ref
-        del self.ga_ref, self.pid_ref
+        self.ga_ref = None
+        self.gb_ref = None
+        self.cid_ref = None
+        self.pid_ref = None
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -384,22 +382,22 @@ class CBUSH1D(BushElement):
         assert isinstance(cid, integer_types) or cid is None, 'cid=%r' % cid
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
-            return self.ga
-        #elif self.ga is None:
-            #return None
-        return self.ga_ref.nid
+        if self.ga_ref is not None:
+            return self.ga_ref.nid
+        return self.ga
 
     def Gb(self):
-        if isinstance(self.gb, integer_types):
-            return self.gb
-        elif self.gb is None:
-            return None
-        return self.gb_ref.nid
+        if self.gb_ref is not None:
+            return self.gb_ref.nid
+        return self.gb
 
     @property
     def nodes(self):
         return [self.ga, self.gb]
+
+    @property
+    def nodes_ref(self):
+        return [self.ga_ref, self.gb_ref]
 
     @property
     def node_ids(self):
@@ -512,15 +510,11 @@ class CBUSH2D(BushElement):
             the BDF object
         """
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
-        self.ga = model.Node(self.ga, msg=msg)
-        self.ga_ref = self.ga
-        self.gb = model.Node(self.gb, msg=msg)
-        self.gb_ref = self.gb
-        self.pid = model.Property(self.pid)
-        self.pid_ref = self.pid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.Property(self.pid)
         if self.cid is not None:
-            self.cid = model.Coord(self.cid, msg=msg)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(self.cid, msg=msg)
         if self.sptid is not None:
             pass
 
@@ -529,9 +523,10 @@ class CBUSH2D(BushElement):
         self.gb = self.Gb()
         self.cid = self.Cid()
         self.pid = self.Pid()
-        if self.cid is not None:
-            del self.cid_ref
-        del self.ga_ref, self.gb_ref, self.pid_ref
+        self.ga_ref = None
+        self.gb_ref = None
+        self.cid_ref = None
+        self.pid_ref = None
 
     def raw_fields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),

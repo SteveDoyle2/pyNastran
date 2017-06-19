@@ -955,7 +955,7 @@ class GetCard(GetMethods):
                 n1 = elem.ref_grid_id
                 assert isinstance(n1, integer_types), 'RBE3 eid=%s ref_grid_id=%s' % (elem.eid, n1)
                 for (_weight, ci, Gij) in elem.WtCG_groups:
-                    Giji = elem._nodeIDs(nodes=Gij, allow_empty_nodes=True)
+                    Giji = elem._node_ids(nodes=Gij, allow_empty_nodes=True)
                     # list_fields += [wt, ci] + Giji
                     for n2 in Giji:
                         assert isinstance(n2, integer_types), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)

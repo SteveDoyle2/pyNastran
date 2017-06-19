@@ -181,26 +181,37 @@ class TestAero(unittest.TestCase):
     def test_aelink_1(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        id = 10
+        idi = 10
         label = 'CS'
         independent_labels = ['A', 'B', 'C']
         Cis = [1.0, 2.0]
-        aelink = AELINK(id, label, independent_labels, Cis, comment='')
+        aelink = AELINK(idi, label, independent_labels, Cis, comment='')
         with self.assertRaises(RuntimeError):
             aelink.validate()
         str(aelink)
         aelink.write_card()
 
-        card = ['AELINK', id, label, independent_labels[0], Cis[0],
+        card = ['AELINK', idi, label, independent_labels[0], Cis[0],
                 independent_labels[1], Cis[1], independent_labels[2]]
         with self.assertRaises(AssertionError):
             model.add_card(card, 'AELINK')
 
-        card = ['AELINK', id, label, independent_labels[0], Cis[0],
+        card = ['AELINK', idi, label, independent_labels[0], Cis[0],
                 independent_labels[1], Cis[1]]
         model.add_card(card, 'AELINK', comment='cat')
+        #print(model.aelinks[idi])
+        assert model.aelinks[idi][0].comment == '$cat\n', 'comment=%r' % str(model.aelinks[idi][0].comment)
 
-
+        idi = 11
+        lable = 'LABEL'
+        independent_labels = ['pig', 'frog', 'dog']
+        Cis = []
+        aelink2 = model.add_aelink(idi, label, independent_labels, Cis)
+        with self.assertRaises(RuntimeError):
+            model.validate()
+        aelink2.Cis = [1.0, 2.0, 3.0]
+        model.validate()
+        model.cross_reference()
 
     def test_aelist_1(self):
         """checks the AELIST card"""
@@ -1017,7 +1028,11 @@ class TestAero(unittest.TestCase):
         spline3.cross_reference(model)
         spline3.write_card()
         spline3.raw_fields()
-
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file, close=False)
+        bdf_file.seek(0)
+        model.clear_attributes()
+        model.read_bdf(bdf_file, punch=True, xref=False)
 
    # def test_spline4_1(self):
    # def test_spline5_1(self):

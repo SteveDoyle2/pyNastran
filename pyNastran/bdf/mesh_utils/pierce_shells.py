@@ -177,15 +177,15 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
         for eid in eidsi2:
             elem = model.elements[eid]
             if elem.type == 'CQUAD4':
-                v0 = elem.nodes[0].get_position()
-                v1 = elem.nodes[1].get_position()
-                v2 = elem.nodes[2].get_position()
-                v3 = elem.nodes[3].get_position()
+                v0 = elem.nodes_ref[0].get_position()
+                v1 = elem.nodes_ref[1].get_position()
+                v2 = elem.nodes_ref[2].get_position()
+                v3 = elem.nodes_ref[3].get_position()
                 xyz_pierce = quad_intersection(xyz_point, direction, v0, v1, v2, v3)
             elif elem.type == 'CTRIA3':
-                v0 = elem.nodes[0].get_position()
-                v1 = elem.nodes[1].get_position()
-                v2 = elem.nodes[2].get_position()
+                v0 = elem.nodes_ref[0].get_position()
+                v1 = elem.nodes_ref[1].get_position()
+                v2 = elem.nodes_ref[2].get_position()
                 xyz_pierce = triangle_intersection(xyz_point, direction, v0, v1, v2)
             else:
                 raise NotImplementedError(elem)

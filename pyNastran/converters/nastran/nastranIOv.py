@@ -755,7 +755,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     'caero_control_surfaces', color=PINK, line_width=5, opacity=1.0,
                     representation='surface')
             for aid, aesurf in iteritems(model.aesurf):
-                aelist = aesurf.alid1
+                aelist = aesurf.alid1_ref
                 ncaeros_cs += len(aelist.elements)
 
                 cs_name = '%s_control_surface' % aesurf.label
@@ -767,7 +767,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
                 cs_box_ids[cs_name].extend(aelist.elements)
                 if aesurf.alid2 is not None:
-                    aelist = aesurf.alid2
+                    aelist = aesurf.alid2_ref
                     ncaeros_cs += len(aelist.elements)
                     cs_box_ids.extend(aelist.elements)
                     cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
@@ -1752,7 +1752,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                     if nids2:
                         nids2 = np.array(nids2, dtype='int32')
-                        print(nids2)
                         inids2 = np.searchsorted(all_nids, nids2)
                         for elem_nid in inids2:
                             nnodes = 20
@@ -2707,7 +2706,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 # TODO: verify
                 # CBUSH, CBUSH1D, CFAST, CELAS1, CELAS3
-                # CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, CVISC
+                # CDAMP1, CDAMP3, CDAMP4, CDAMP5, CVISC
                 if hasattr(element, 'pid'):
                     pid = element.Pid()
                 else:
@@ -2779,8 +2778,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid_to_pid_map[nid].append(pid)
 
                 # 2 points
-                min_edge_lengthi = norm(element.nodes[0].get_position() -
-                                        element.nodes[1].get_position())
+                min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
+                                        element.nodes_ref[1].get_position())
                 self.eid_to_nid_map[eid] = node_ids
                 elem = vtk.vtkLine()
                 try:
@@ -2949,7 +2948,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     normali = np.ones(3) * 2.
                     #raise
 
-                prop = element.pid
+                prop = element.pid_ref
                 ptype = prop.type
                 if ptype == 'PSHELL':
                     z0 = prop.z1

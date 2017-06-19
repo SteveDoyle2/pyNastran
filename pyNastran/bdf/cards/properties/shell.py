@@ -1281,6 +1281,7 @@ class PPLANE(ShellProperty):
         self.t = t
         self.nsm = nsm
         self.formulation_option = formulation_option
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1303,6 +1304,7 @@ class PPLANE(ShellProperty):
                       comment=comment)
 
     def cross_reference(self, model):
+        # type: (Any) -> None
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1312,15 +1314,19 @@ class PPLANE(ShellProperty):
             the BDF object
         """
         msg = ' which is required by PPLANE pid=%s' % self.pid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg)
+
+    def uncross_reference(self):
+        # type: () -> None
+        self.mid = self.Mid()
+        self.mid_ref = None
 
     def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
-            assert self.mid.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5', 'MAT8'], 'PPLANE: mid.type=%s' % self.mid.type
+            assert self.mid_ref.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5', 'MAT8'], 'PPLANE: mid.type=%s' % self.mid.type
 
     #def Pid(self):
         #return self.pid
@@ -1391,6 +1397,7 @@ class PSHEAR(ShellProperty):
         #assert self.f1 >= 0.0
         #assert self.f2 >= 0.0
         assert self.t > 0.0
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1444,16 +1451,20 @@ class PSHEAR(ShellProperty):
             the BDF object
         """
         msg = ' which is required by PSHEAR pid=%s' % self.pid
-        self.mid = model.Material(self.mid, msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg)
+
+    def uncross_reference(self):
+        # type: () -> None
+        self.mid = self.Mid()
+        self.mid_ref = None
 
     def Rho(self):
         return self.mid_ref.Rho()
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
-            return self.mid
-        return self.mid_ref.mid
+        if self.mid_ref is not None:
+            return self.mid_ref.mid
+        return self.mid
 
     def MassPerArea(self):
         """
@@ -1473,10 +1484,8 @@ class PSHEAR(ShellProperty):
 
         if xref:
             assert isinstance(self.mid_ref, Material), 'mid=%r' % self.mid_ref
-
-            assert isinstance(self.mid_ref, Material), 'mid=%r' % self.mid_ref
             assert self.mid_ref.type in ['MAT1', ], 'pid.type=%s mid.type=%s' % (self.type, self.mid_ref.type)
-            if self.mid.type == 'MAT1':
+            if self.mid_ref.type == 'MAT1':
                 E = self.mid_ref.E()
                 G = self.mid_ref.G()
                 nu = self.mid_ref.Nu()
@@ -1590,6 +1599,11 @@ class PSHELL(ShellProperty):
 
         if self.t is not None:
             assert self.t >= 0.0, 'PSHELL pid=%s Thickness=%s must be >= 0' % (self.pid, self.t)
+
+        self.mid1_ref = None
+        self.mid2_ref = None
+        self.mid3_ref = None
+        self.mid4_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

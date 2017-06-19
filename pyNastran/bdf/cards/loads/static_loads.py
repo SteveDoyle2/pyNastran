@@ -590,6 +590,8 @@ class ACCEL1(BaseCard):
         self.nodes = expand_thru_by(nodes)
 
         assert max(abs(self.N)) > 0.
+        self.nodes_ref = None
+        self.cid_ref = None
 
     def validate(self):
         assert len(self.N) == 3, 'N=%r' % self.N
@@ -629,10 +631,8 @@ class ACCEL1(BaseCard):
             the BDF object
         """
         msg = ' which is required by ACCEL1 sid=%s' % self.sid
-        self.cid = model.Coord(self.Cid(), msg=msg)
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.cid_ref = self.cid
-        self.nodes_ref = self.nodes
+        self.cid_ref = model.Coord(self.Cid(), msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -640,20 +640,21 @@ class ACCEL1(BaseCard):
     def uncross_reference(self):
         self.cid = self.Cid()
         self.nodes = self.node_ids
-        del self.nodes_ref, self.cid_ref
+        self.nodes_ref = None
+        self.cid_ref = None
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     @property
     def node_ids(self):
         #msg = ' which is required by ACCEL1 sid=%s' % self.sid
         #_node_ids(self.nodes, allow_empty_nodes=True, msg=msg)
-        return self._nodeIDs()
+        return self._node_ids(nodes=self.nodes_ref)
 
-    def _nodeIDs(self, nodes=None):  # this function comes from BaseCard.py
+    def _node_ids(self, nodes=None):  # this function comes from BaseCard.py
         """returns node_ids for repr functions"""
         if not nodes:
             nodes = self.nodes
@@ -828,6 +829,8 @@ class FORCE(Force):
         self.xyz = np.asarray(xyz, dtype='float64')
         assert self.xyz.size == 3, self.xyz.shape
         assert isinstance(self.cid, int), self.cid
+        self.node_ref = None
+        self.cid_ref = None
 
     def validate(self):
         assert isinstance(self.cid, int), self.cid
@@ -877,19 +880,19 @@ class FORCE(Force):
 
     @property
     def node_id(self):
-        if isinstance(self.node, int):
-            return self.node
-        return self.node_ref.nid
+        if self.node_ref is not None:
+            return self.node_ref.nid
+        return self.node
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def F(self):
         return {self.node_id : self.mag * self.xyz}
 
-    #def nodeID(self):
+    #def node_id(self):
         #return self.node
 
     def cross_reference(self, model):
@@ -902,29 +905,27 @@ class FORCE(Force):
             the BDF object
         """
         msg = ' which is required by FORCE sid=%s' % self.sid
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()
-        del self.cid_ref
+        self.cid_ref = None
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by FORCE sid=%s' % self.sid
         # try:
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+        self.cid_ref = model.Coord(self.cid, msg=msg)
         # except KeyError:
             # pass
 
     def raw_fields(self):
-        list_fields = ['FORCE', self.sid, self.node, self.Cid(),
+        list_fields = ['FORCE', self.sid, self.node_id, self.Cid(),
                        self.mag] + list(self.xyz)
         return list_fields
 
     def repr_fields(self):
         cid = set_blank_if_default(self.Cid(), 0)
-        list_fields = ['FORCE', self.sid, self.node, cid,
+        list_fields = ['FORCE', self.sid, self.node_id, cid,
                        self.mag] + list(self.xyz)
         return list_fields
 
@@ -932,7 +933,7 @@ class FORCE(Force):
         if size == 8:
             cids = set_string8_blank_if_default(self.Cid(), 0)
             msg = 'FORCE   %8i%8i%8s%8s%8s%8s%8s\n' % (
-                self.sid, self.node,
+                self.sid, self.node_id,
                 cids, print_float_8(self.mag), print_float_8(self.xyz[0]),
                 print_float_8(self.xyz[1]), print_float_8(self.xyz[2]))
         else:
@@ -940,7 +941,7 @@ class FORCE(Force):
             if is_double:
                 msg = ('FORCE*  %16i%16i%16s%s\n'
                        '*       %16s%16s%16s\n') % (
-                           self.sid, self.node,
+                           self.sid, self.node_id,
                            cids, print_scientific_double(self.mag),
                            print_scientific_double(self.xyz[0]),
                            print_scientific_double(self.xyz[1]),
@@ -948,7 +949,7 @@ class FORCE(Force):
             else:
                 msg = ('FORCE*  %16i%16i%16s%s\n'
                        '*       %16s%16s%16s\n') % (
-                           self.sid, self.node,
+                           self.sid, self.node_id,
                            cids, print_float_16(self.mag), print_float_16(self.xyz[0]),
                            print_float_16(self.xyz[1]), print_float_16(self.xyz[2]))
         return self.comment + msg
@@ -987,6 +988,9 @@ class FORCE1(Force):
         self.mag = mag
         self.g1 = g1
         self.g2 = g2
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1037,14 +1041,9 @@ class FORCE1(Force):
             the BDF object
         """
         msg = ' which is required by FORCE1 sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.node_ref = self.node
-
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g1_ref = self.g1
-
-        self.g2 = model.Node(self.g2, msg=msg)
-        self.g2_ref = self.g2
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.g1_ref = model.Node(self.g1, msg=msg)
+        self.g2_ref = model.Node(self.g2, msg=msg)
 
         self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
@@ -1053,7 +1052,9 @@ class FORCE1(Force):
         self.node = self.node_id
         self.g1 = self.G1()
         self.g2 = self.G2()
-        del self.node_ref, self.g1_ref, self.g2_ref
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
 
     def safe_cross_reference(self, model, debug=True):
         """
@@ -1061,34 +1062,31 @@ class FORCE1(Force):
         """
         return self.cross_reference(model)
         #msg = ' which is required by FORCE1 sid=%s' % self.sid
-        #self.node = model.Node(self.node, msg=msg)
-        #self.node_ref = self.node
-        #self.g1 = model.Node(self.g1, msg=msg)
-        #self.g1_ref = self.g1
-        #self.g2 = model.Node(self.g2, msg=msg)
-        #self.g2_ref = self.g2
+        #self.node_ref = model.Node(self.node, msg=msg)
+        #self.g1_ref = model.Node(self.g1, msg=msg)
+        #self.g2_ref = model.Node(self.g2, msg=msg)
         #self.xyz = self.g2.get_position() - self.g1.get_position()
         #self.normalize()
-
-    def G1(self):
-        if isinstance(self.g1, (integer_types, float)):
-            return self.g1
-        return self.g1_ref.nid
-
-    def G2(self):
-        if isinstance(self.g2, (integer_types, float)):
-            return self.g2
-        return self.g2_ref.nid
 
     @property
     def node_ids(self):
         return [self.node_id, self.G1(), self.G2()]
 
+    def G1(self):
+        if self.g1_ref is not None:
+            return self.g1_ref.nid
+        return self.g1
+
+    def G2(self):
+        if self.g2_ref is not None:
+            return self.g2_ref.nid
+        return self.g2
+
     @property
     def node_id(self):
-        if isinstance(self.node, integer_types):
-            return self.node
-        return self.node_ref.nid
+        if self.node_ref is not None:
+            return self.node_ref.nid
+        return self.node
 
     def raw_fields(self):
         list_fields = ['FORCE1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
@@ -1147,6 +1145,11 @@ class FORCE2(Force):
         self.g2 = g2
         self.g3 = g3
         self.g4 = g4
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
+        self.g3_ref = None
+        self.g4_ref = None
 
     def validate(self):
         assert isinstance(self.sid, integer_types), str(self)
@@ -1210,17 +1213,11 @@ class FORCE2(Force):
             the BDF object
         """
         msg = ' which is required by FORCE2 sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g2 = model.Node(self.g2, msg=msg)
-        self.g3 = model.Node(self.g3, msg=msg)
-        self.g4 = model.Node(self.g4, msg=msg)
-
-        self.node_ref = self.node
-        self.g1_ref = self.g1
-        self.g2_ref = self.g2
-        self.g3_ref = self.g3
-        self.g4_ref = self.g4
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.g1_ref = model.Node(self.g1, msg=msg)
+        self.g2_ref = model.Node(self.g2, msg=msg)
+        self.g3_ref = model.Node(self.g3, msg=msg)
+        self.g4_ref = model.Node(self.g4, msg=msg)
 
         xyz1 = self.g1_ref.get_position()
         xyz2 = self.g2_ref.get_position()
@@ -1256,17 +1253,11 @@ class FORCE2(Force):
         .. todo:: cross reference and fix repr function
         """
         msg = ' which is required by FORCE2 sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g2 = model.Node(self.g2, msg=msg)
-        self.g3 = model.Node(self.g3, msg=msg)
-        self.g4 = model.Node(self.g4, msg=msg)
-
-        self.node_ref = self.node
-        self.g1_ref = self.g1
-        self.g2_ref = self.g2
-        self.g3_ref = self.g3
-        self.g4_ref = self.g4
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.g1_ref = model.Node(self.g1, msg=msg)
+        self.g2_ref = model.Node(self.g2, msg=msg)
+        self.g3_ref = model.Node(self.g3, msg=msg)
+        self.g4_ref = model.Node(self.g4, msg=msg)
 
         xyz1 = self.g1_ref.get_position()
         xyz2 = self.g2_ref.get_position()
@@ -1298,40 +1289,44 @@ class FORCE2(Force):
         self.g2 = self.G2()
         self.g3 = self.G3()
         self.g4 = self.G4()
-        del self.node_ref, self.g1_ref, self.g2_ref, self.g3_ref, self.g4_ref
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
+        self.g3_ref = None
+        self.g4_ref = None
 
     @property
     def node_id(self):
-        if isinstance(self.node, integer_types):
-            return self.node
-        return self.node.nid
+        if self.node_ref is not None:
+            return self.node_ref.nid
+        return self.node
 
     def G1(self):
-        if isinstance(self.g1, integer_types):
-            return self.g1
-        return self.g1_ref.nid
+        if self.g1_ref is not None:
+            return self.g1_ref.nid
+        return self.g1
 
     def G2(self):
-        if isinstance(self.g2, integer_types):
-            return self.g2
-        return self.g2_ref.nid
+        if self.g2_ref is not None:
+            return self.g2_ref.nid
+        return self.g2
 
     def G3(self):
-        if isinstance(self.g3, integer_types):
-            return self.g3
-        return self.g3_ref.nid
+        if self.g3_ref is not None:
+            return self.g3_ref.nid
+        return self.g3
 
     def G4(self):
-        if isinstance(self.g4, integer_types):
-            return self.g4
-        return self.g4_ref.nid
+        if self.g4_ref is not None:
+            return self.g4_ref.nid
+        return self.g4
 
     @property
     def node_ids(self):
         return [self.node_id, self.G1(), self.G2(), self.G3(), self.G4()]
 
     def raw_fields(self):
-        (node, g1, g2, g3, g4) = self._nodeIDs([self.node, self.g1, self.g2, self.g3, self.g4])
+        (node, g1, g2, g3, g4) = self._node_ids([self.node, self.g1, self.g2, self.g3, self.g4])
         list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 
@@ -1390,6 +1385,8 @@ class MOMENT(Moment):
         self.mag = mag
         self.xyz = np.asarray(xyz, dtype='float64')
         assert self.xyz.size == 3, self.xyz.shape
+        self.node_ref = None
+        self.cid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1448,22 +1445,19 @@ class MOMENT(Moment):
             the BDF object
         """
         msg = ' which is required by MOMENT sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.node_ref = self.node
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by MOMENT sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.node_ref = self.node
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
         self.node = self.node_id
         self.cid = self.Cid()
-        del self.node_ref, self.cid_ref
+        self.node_ref = None
+        self.cid_ref = None
 
     @property
     def node_ids(self):
@@ -1472,12 +1466,12 @@ class MOMENT(Moment):
 
     @property
     def node_id(self):
-        if isinstance(self.node, integer_types):
+        if self.node_ref is None:
             return self.node
         return self.node_ref.nid
 
     def raw_fields(self):
-        list_fields = ['MOMENT', self.sid, self.node, self.Cid(),
+        list_fields = ['MOMENT', self.sid, self.node_id, self.Cid(),
                        self.mag] + list(self.xyz)
         return list_fields
 
@@ -1553,6 +1547,9 @@ class MOMENT1(Moment):
         self.mag = mag
         self.g1 = g1
         self.g2 = g2
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1603,13 +1600,9 @@ class MOMENT1(Moment):
             the BDF object
         """
         msg = ' which is required by MOMENT1 sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g2 = model.Node(self.g2, msg=msg)
-
-        self.node_ref = self.node
-        self.g1_ref = self.g1
-        self.g2_ref = self.g2
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.g1_ref = model.Node(self.g1, msg=msg)
+        self.g2_ref = model.Node(self.g2, msg=msg)
 
         self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
@@ -1618,20 +1611,18 @@ class MOMENT1(Moment):
         self.node = self.node_id
         self.g1 = self.G1()
         self.g2 = self.G2()
-        del self.node_ref, self.g1_ref, self.g2_ref
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
 
     def safe_cross_reference(self, model, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
         msg = ' which is required by MOMENT1 sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g2 = model.Node(self.g2, msg=msg)
-
-        self.node_ref = self.node
-        self.g1_ref = self.g1
-        self.g2_ref = self.g2
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.g1_ref = model.Node(self.g1, msg=msg)
+        self.g2_ref = model.Node(self.g2, msg=msg)
 
         self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
@@ -1648,14 +1639,20 @@ class MOMENT1(Moment):
         return self.node_ref.nid
 
     def G1(self):
-        if isinstance(self.g1, integer_types):
-            return self.g1
-        return self.g1_ref.nid
+        if self.g1_ref is not None:
+            return self.g1_ref.nid
+        return self.g1
 
     def G2(self):
-        if isinstance(self.g2, integer_types):
-            return self.g2
-        return self.g2_ref.nid
+        if self.g2_ref is not None:
+            return self.g2_ref.nid
+        return self.g2
+
+    @property
+    def node_id(self):
+        if self.node_ref is not None:
+            return self.node_ref.nid
+        return self.node
 
     def raw_fields(self):
         list_fields = ['MOMENT1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
@@ -1724,6 +1721,11 @@ class MOMENT2(Moment):
         self.g3 = g3
         self.g4 = g4
         self.xyz = xyz
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
+        self.g3_ref = None
+        self.g4_ref = None
 
     def validate(self):
         assert isinstance(self.sid, integer_types), str(self)
@@ -1793,17 +1795,11 @@ class MOMENT2(Moment):
             the BDF object
         """
         msg = ' which is required by MOMENT2 sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g2 = model.Node(self.g2, msg=msg)
-        self.g3 = model.Node(self.g3, msg=msg)
-        self.g4 = model.Node(self.g4, msg=msg)
-
-        self.node_ref = self.node
-        self.g1_ref = self.g1
-        self.g2_ref = self.g2
-        self.g3_ref = self.g3
-        self.g4_ref = self.g4
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.g1_ref = model.Node(self.g1, msg=msg)
+        self.g2_ref = model.Node(self.g2, msg=msg)
+        self.g3_ref = model.Node(self.g3, msg=msg)
+        self.g4_ref = model.Node(self.g4, msg=msg)
 
         v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
         v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
@@ -1812,29 +1808,27 @@ class MOMENT2(Moment):
         self.xyz = cross(v12, v34)
 
     def uncross_reference(self):
-        self.node = self.NodeID()
+        self.node = self.node_id
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.g3 = self.G3()
         self.g4 = self.G4()
-        del self.node_ref, self.g1_ref, self.g2_ref, self.g3_ref, self.g4_ref
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
+        self.g3_ref = None
+        self.g4_ref = None
 
     def safe_cross_reference(self, model, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
         msg = ' which is required by MOMENT2 sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g2 = model.Node(self.g2, msg=msg)
-        self.g3 = model.Node(self.g3, msg=msg)
-        self.g4 = model.Node(self.g4, msg=msg)
-
-        self.node_ref = self.node
-        self.g1_ref = self.g1
-        self.g2_ref = self.g2
-        self.g3_ref = self.g3
-        self.g4_ref = self.g4
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.g1_ref = model.Node(self.g1, msg=msg)
+        self.g2_ref = model.Node(self.g2, msg=msg)
+        self.g3_ref = model.Node(self.g3, msg=msg)
+        self.g4_ref = model.Node(self.g4, msg=msg)
 
         v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
         v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
@@ -1842,39 +1836,40 @@ class MOMENT2(Moment):
         v34 = v34 / norm(v34)
         self.xyz = cross(v12, v34)
 
-    def NodeID(self):
-        if isinstance(self.node, integer_types):
-            return self.node
-        return self.node_ref.nid
+    @property
+    def node_id(self):
+        if self.node_ref is not None:
+            return self.node_ref.nid
+        return self.node
 
     def G1(self):
-        if isinstance(self.g1, integer_types):
-            return self.g1
-        return self.g1_ref.nid
+        if self.g1_ref is not None:
+            return self.g1_ref.nid
+        return self.g1
 
     def G2(self):
-        if isinstance(self.g2, integer_types):
-            return self.g2
-        return self.g2_ref.nid
+        if self.g2_ref is not None:
+            return self.g2_ref.nid
+        return self.g2
 
     def G3(self):
-        if isinstance(self.g3, integer_types):
-            return self.g3
-        return self.g3_ref.nid
+        if self.g3_ref is not None:
+            return self.g3_ref.nid
+        return self.g3
 
     def G4(self):
-        if isinstance(self.g4, integer_types):
-            return self.g4
-        return self.g4_ref.nid
+        if self.g4_ref is not None:
+            return self.g4_ref.nid
+        return self.g4
 
     @property
     def node_ids(self):
         """all the nodes referenced by the load"""
-        return [self.NodeID(), self.G1(), self.G2(), self.G3(), self.G4()]
+        return [self.node_id, self.G1(), self.G2(), self.G3(), self.G4()]
 
     def raw_fields(self):
         list_fields = [
-            'MOMENT2', self.sid, self.NodeID(), self.mag,
+            'MOMENT2', self.sid, self.node_id, self.mag,
             self.G1(), self.G2(), self.G3(), self.G4()]
         return list_fields
 
@@ -1918,6 +1913,7 @@ class GMLOAD(Load):
         self.entity_id = entity_id
         self.method = method
         self.load_magnitudes = load_magnitudes
+        self.cid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1965,8 +1961,7 @@ class GMLOAD(Load):
             the BDF object
         """
         msg = ' which is required by GMLOAD sid=%s' % self.sid
-        self.cid = model.Coord(self.Cid(), msg=msg)
-        self.cid_ref = self.cid
+        self.cid_ref = model.Coord(self.Cid(), msg=msg)
         #self.node = model.Node(self.node, msg=msg)
         #self.g1 = model.Node(self.g1, msg=msg)
         #self.g2 = model.Node(self.g2, msg=msg)
@@ -1978,12 +1973,12 @@ class GMLOAD(Load):
 
     def uncross_reference(self):
         self.cid = self.Cid()
-        del self.cid_ref
+        self.cid_ref = None
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     #def G1(self):
         #if isinstance(self.g1, (integer_types, float)):
@@ -2148,7 +2143,7 @@ class PLOAD1(Load):
                    'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
     valid_scales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
 
-    def __init__(self, sid, eid, Type, scale, x1, p1, x2=None, p2=None, comment=''):
+    def __init__(self, sid, eid, load_type, scale, x1, p1, x2=None, p2=None, comment=''):
         """
         Creates a PLOAD1 card, which may be applied to a CBAR/CBEAM
 
@@ -2158,7 +2153,7 @@ class PLOAD1(Load):
             load id
         eid : int
             element to apply the load to
-        Type : str
+        load_type : str
             type of load that's applied
             valid_types = {FX, FY, FZ, FXE, FYE, FZE,
                            MX, MY, MZ, MXE, MYE, MZE}
@@ -2184,13 +2179,21 @@ class PLOAD1(Load):
             p2 = p1
         self.sid = sid
         self.eid = eid
-        self.Type = Type
+        self.load_type = load_type
         self.scale = scale
         self.x1 = x1
         self.p1 = p1
         self.x2 = x2
         self.p2 = p2
-        self._validate_input()
+        self.eid_ref = None
+
+    @property
+    def Type(self):
+        return self.load_type
+
+    @Type.setter
+    def Type(self, load_type):
+        self.load_type = load_type
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2206,14 +2209,14 @@ class PLOAD1(Load):
         """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
-        Type = string(card, 3, 'Type ("%s")' % '",  "'.join(cls.valid_types))
+        load_type = string(card, 3, 'Type ("%s")' % '",  "'.join(cls.valid_types))
         scale = string(card, 4, 'scale ("%s")' % '", "'.join(cls.valid_scales))
         x1 = double(card, 5, 'x1')
         p1 = double(card, 6, 'p1')
         x2 = double_or_blank(card, 7, 'x2', x1)
         p2 = double_or_blank(card, 8, 'p2', p1)
         assert len(card) <= 9, 'len(PLOAD1 card) = %i\ncard=%s' % (len(card), card)
-        return PLOAD1(sid, eid, Type, scale, x1, p1, x2, p2, comment=comment)
+        return PLOAD1(sid, eid, load_type, scale, x1, p1, x2, p2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -2229,20 +2232,20 @@ class PLOAD1(Load):
         """
         sid = data[0]
         eid = data[1]
-        Type = data[2]
+        load_type = data[2]
         scale = data[3]
         x1 = data[4]
         p1 = data[5]
         x2 = data[6]
         p2 = data[7]
-        Type = cls.valid_types[Type - 1]
+        load_type = cls.valid_types[load_type - 1]
         scale = cls.valid_scales[scale - 1]
-        return PLOAD1(sid, eid, Type, scale, x1, p1, x2, p2, comment=comment)
+        return PLOAD1(sid, eid, load_type, scale, x1, p1, x2, p2, comment=comment)
 
-    def _validate_input(self):
-        if self.Type not in self.valid_types:
+    def validate(self):
+        if self.load_type not in self.valid_types:
             msg = '%s is an invalid type on the PLOAD1 card; valid_types=[%s]' % (
-                self.Type, ', '.join(self.valid_types).rstrip(', '))
+                self.load_type, ', '.join(self.valid_types).rstrip(', '))
             raise RuntimeError(msg)
         if self.scale not in self.valid_scales:
             msg = '%s is an invalid scale on the PLOAD1 card; valid_scales=[%s]' % (
@@ -2265,15 +2268,14 @@ class PLOAD1(Load):
             the BDF object
         """
         msg = ' which is required by PLOAD1 sid=%s' % self.sid
-        self.eid = model.Element(self.eid, msg=msg)
-        self.eid_ref = self.eid
+        self.eid_ref = model.Element(self.eid, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 
     def uncross_reference(self):
         self.eid = self.Eid()
-        del self.eid_ref
+        self.eid_ref = None
 
     def transform_load(self):
         p1 = self.eid_ref.ga_ref.get_position()
@@ -2308,12 +2310,12 @@ class PLOAD1(Load):
         return [self]
 
     def Eid(self):
-        if isinstance(self.eid, integer_types):
-            return self.eid
-        return self.eid_ref.eid
+        if self.eid_ref is not None:
+            return self.eid_ref.eid
+        return self.eid
 
     def raw_fields(self):
-        list_fields = ['PLOAD1', self.sid, self.Eid(), self.Type, self.scale,
+        list_fields = ['PLOAD1', self.sid, self.Eid(), self.load_type, self.scale,
                        self.x1, self.p1, self.x2, self.p2]
         return list_fields
 
@@ -2375,6 +2377,7 @@ class PLOAD2(Load):
         self.sid = sid
         self.pressure = pressure
         self.eids = eids
+        self.eids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2427,23 +2430,22 @@ class PLOAD2(Load):
             the BDF object
         """
         msg = ' which is required by PLOAD2 sid=%s' % self.sid
-        self.eids = model.Elements(self.eids, msg=msg)
-        self.eids_ref = self.eids
+        self.eids_ref = model.Elements(self.eids, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 
     def uncross_reference(self):
         self.eids = self.element_ids
-        del self.eids_ref
+        self.eids_ref = None
 
     @property
     def element_ids(self):
-        if isinstance(self.eids[0], integer_types):
-            eids = self.eids
+        if self.eids_ref is not None:
+            eids = [elem.eid for elem in self.eids_ref]
         else:
-            eids = [elem.eid for elem in self.eids]
-        return eids
+            eids = self.eids
+        return self.eids
 
     def get_loads(self):
         return [self]
@@ -2484,13 +2486,72 @@ class PLOAD2(Load):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+#def PLOAD4_func(self, sid, eids, pressures,
+                #g1=None, g34=None, cid=0, nvector=None, surf_or_line='SURF',
+                #line_load_dir='NORM', comment=''):
+    #"""
+    #Creates a PLOAD4 card
+
+    #Solid Format
+    #============
+    #Defines a pressure load on a face of a CHEXA, CPENTA, or CTETRA element.
+
+    #+--------+-----+-----+----+----+------+------+------+-------+
+    #|   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
+    #+========+=====+=====+====+====+======+======+======+=======+
+    #| PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  |  G1  | G3/G4 |
+    #+--------+-----+-----+----+----+------+------+------+-------+
+    #|        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
+    #+--------+-----+-----+----+----+------+------+------+-------+
+
+    #Shell Format
+    #============
+    #Defines a pressure load on a face of a CTRIA3, CTRIA6, CTRIAR,
+    #CQUAD4, CQUAD8, or CQUADR element.
+    #+--------+-----+-----+----+----+------+------+------+-------+
+    #|   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
+    #+========+=====+=====+====+====+======+======+======+=======+
+    #| PLOAD4 | SID | EID | P1 | P2 |  P3  |  P4  | THRU | EID2  |
+    #+--------+-----+-----+----+----+------+------+------+-------+
+    #|        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
+    #+--------+-----+-----+----+----+------+------+------+-------+
+
+    #.. warning:: NX does not support SORL and LDIR, MSC does
+    #"""
+    #if g34 is None:
+        #return PLOAD4Solid(
+            #sid, eids, pressures,
+            #g1=None, g34=None, cid=0, nvector=None, surf_or_line='SURF',
+            #line_load_dir='NORM', comment='')
+    #return PLOAD4Shell(
+        #sid, eids, pressures, cid=0, nvector=None, surf_or_line='SURF',
+        #line_load_dir='NORM', comment='')
+
+
+#class PLOAD4Shell(PLOAD4):
+    #def __init__(self, sid, eids, pressures, g1=None, g34=None, cid=0,
+                 #nvector=None, surf_or_line='SURF',
+                 #line_load_dir='NORM', comment=''):
+        #PLOAD4.__init__(self, sid, eids, pressures, g1=None, g34=None,
+                        #cid=0, nvector=None,
+                        #surf_or_line='SURF',
+                        #line_load_dir='NORM',
+                        #comment='')
+#class PLOAD4Shell(PLOAD4):
+    #def __init__(self, sid, eids, pressures, g1=None, g34=None, cid=0,
+                 #nvector=None, surf_or_line='SURF',
+                 #line_load_dir='NORM', comment=''):
+        #PLOAD4.__init__(self, sid, eids, pressures, g1=g1, g34=g34,
+                        #cid=cid, nvector=nvector,
+                        #surf_or_line=surf_or_line,
+                        #line_load_dir=line_load_dir,
+                        #comment=comment)
 
 class PLOAD4(Load):
     """
-    Standard Format
-    ===============
-    Defines a pressure load on a face of a CHEXA, CPENTA, CTETRA,
-    CTRIA3, CTRIA6, CTRIAR, CQUAD4, CQUAD8, or CQUADR element.
+    Solid Format
+    ============
+    Defines a pressure load on a face of a CHEXA, CPENTA, or CTETRA element.
 
     +--------+-----+-----+----+----+------+------+------+-------+
     |   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
@@ -2500,8 +2561,8 @@ class PLOAD4(Load):
     |        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
     +--------+-----+-----+----+----+------+------+------+-------+
 
-    Alternate Format
-    ================
+    Shell Format
+    ============
     Defines a pressure load on a face of a CTRIA3, CTRIA6, CTRIAR,
     CQUAD4, CQUAD8, or CQUADR element.
     +--------+-----+-----+----+----+------+------+------+-------+
@@ -2516,8 +2577,8 @@ class PLOAD4(Load):
     """
     type = 'PLOAD4'
 
-    def __init__(self, sid, eids, pressures,
-                 g1=None, g34=None, cid=0, nvector=None, surf_or_line='SURF',
+    def __init__(self, sid, eids, pressures, g1, g34,
+                 cid=0, nvector=None, surf_or_line='SURF',
                  line_load_dir='NORM', comment=''):
         """
         Creates a PLOAD4 card
@@ -2590,6 +2651,11 @@ class PLOAD4(Load):
         #
         #   if cid=N123 = 0: line_load_dir_default=NORM
         self.line_load_dir = line_load_dir
+        #self.eid_ref = None
+        self.g1_ref = None
+        self.g34_ref = None
+        self.cid_ref = None
+        self.eids_ref = None
 
     def validate(self):
         if self.surf_or_line not in ['SURF', 'LINE']:
@@ -2707,7 +2773,7 @@ class PLOAD4(Load):
         if self.g1 and self.g34:  # solid elements
             nid = self.g1_ref.nid
             nid_opposite = self.g34_ref.nid
-            (face_node_ids, area) = elem.getFaceNodesAndArea(self, nid, nid_opposite)
+            (face_node_ids, area) = elem.get_face_nodes_and_area(self, nid, nid_opposite)
         else:
             face_node_ids = elem.node_ids
             area = elem.Area()
@@ -2733,9 +2799,9 @@ class PLOAD4(Load):
 
     def Cid(self):
         """gets the coordinate system object"""
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def cross_reference(self, model):
         """
@@ -2747,100 +2813,73 @@ class PLOAD4(Load):
             the BDF object
         """
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
-        #self.eid = model.Element(self.eid, msg=msg)
-        self.cid = model.Coord(self.cid, msg=msg)
-        #self.eid_ref = self.eid
-        self.cid_ref = self.cid
+        self.cid_ref = model.Coord(self.cid, msg=msg)
         if self.g1 is not None:
-            self.g1 = model.Node(self.g1, msg=msg + '; g1')
-            self.g1_ref = self.g1
+            self.g1_ref = model.Node(self.g1, msg=msg + '; g1')
         if self.g34 is not None:
-            self.g34 = model.Node(self.g34, msg=msg + '; g34')
-            self.g34_ref = self.g34
+            self.g34_ref = model.Node(self.g34, msg=msg + '; g34')
         if self.eids:
-            self.eids = model.Elements(self.eids, msg=msg)
-            self.eids_ref = self.eids
+            self.eids_ref = model.Elements(self.eids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
         try:
-            self.cid = model.Coord(self.cid, msg=msg)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(self.cid, msg=msg)
         except KeyError:
             model.log.warning('Could not find cid=%s%s' % (self.cid, msg))
 
         #self.eid_ref = self.eid
         if self.g1 is not None:
             try:
-                self.g1 = model.Node(self.g1, msg=msg)
-                self.g1_ref = self.g1
+                self.g1_ref = model.Node(self.g1, msg=msg)
             except KeyError:
                 model.log.warning('Could not find g1=%s%s' % (self.g1, msg))
 
         if self.g34 is not None:
             try:
-                self.g34 = model.Node(self.g34, msg=msg)
-                self.g34_ref = self.g34
+                self.g34_ref = model.Node(self.g34, msg=msg)
             except KeyError:
                 model.log.warning('Could not find g34=%s%s' % (self.g34, msg))
 
         #if self.eids:
         msgia = 'Could not find element=%%s, %s\n' % msg
-        self.eids, msgi = model.safe_get_elements(self.eids, msg=msgia)
-        self.eids_ref = self.eids
+        self.eids_ref, msgi = model.safe_get_elements(self.eids, msg=msgia)
         if msgi:
             model.log.warning(msgi.rstrip())
 
     def uncross_reference(self):
-        #self.eid = self.Eid(self.eid)
         self.cid = self.Cid()
         if self.g1 is not None:
             self.g1 = self.G1()
-            del self.g1_ref
         if self.g34 is not None:
             self.g34 = self.G34()
-            del self.g34_ref
         self.eids = self.element_ids
-        del self.cid_ref, self.eids_ref
+        self.g1_ref = None
+        self.g34_ref = None
+        self.cid_ref = None
+        self.eids_ref = None
 
     def G1(self):
-        if isinstance(self.g1, integer_types):
-            return self.g1
-        return self.g1_ref.nid
+        if self.g1_ref is not None:
+            return self.g1_ref.nid
+        return self.g1
 
     def G34(self):
-        if isinstance(self.g34, integer_types):
-            return self.g34
-        return self.g34_ref.nid
-
-    def Eid(self, eid):
-        if isinstance(eid, integer_types):
-            return eid
-        return eid.eid
+        if self.g34_ref is not None:
+            return self.g34_ref.nid
+        return self.g34
 
     @property
     def node_ids(self):
-        node_ids = [None, None]
-        if isinstance(self.g1, integer_types):
-            node_ids[0] = self.g1
-        elif self.g1 is not None:
-            node_ids[0] = self.g1_ref.nid
-
-        if isinstance(self.g34, integer_types):
-            node_ids[1] = self.g34
-        elif self.g34 is not None:
-            node_ids[1] = self.g34_ref.nid
+        node_ids = [self.G1(), self.G34()]
         return node_ids
 
     def get_element_ids(self, eid=None):
-        if eid:
-            eidi = self.Eid(eid)
-            return eidi
-        eids = []
-        for element in self.eids:
-            eidi = self.Eid(element)
-            eids.append(eidi)
+        if self.eids_ref is not None:
+            eids = [eid_ref.eid for eid_ref in self.eids_ref]
+        else:
+            eids = self.eids
         return eids
 
     @property
@@ -3002,6 +3041,9 @@ class PLOADX1(Load):
         self.ga = nids[0]
         self.gb = nids[1]
         self.theta = theta
+        self.eid_ref = None
+        self.ga_ref = None
+        self.gb_ref = None
 
     def validate(self):
         assert isinstance(self.ga, integer_types), 'ga=%r' % self.ga
@@ -3056,17 +3098,17 @@ class PLOADX1(Load):
             the BDF object
         """
         msg = ' which is required by PLOADX1 lid=%s' % self.sid
-        self.eid = model.Element(self.eid, msg=msg)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-
-        self.eid_ref = self.eid
-        self.ga_ref = self.ga
-        self.gb_ref = self.gb
+        self.eid_ref = model.Element(self.eid, msg=msg)
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
 
     @property
     def nodes(self):
         return [self.ga, self.gb]
+
+    @property
+    def nodes_ref(self):
+        return [self.ga_ref, self.gb_ref]
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -3075,22 +3117,24 @@ class PLOADX1(Load):
         self.eid = self.Eid()
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.eid_ref, self.ga_ref, self.gb_ref
+        self.eid_ref = None
+        self.ga_ref = None
+        self.gb_ref = None
 
     def Eid(self):
-        if isinstance(self.eid, integer_types):
-            return self.eid
-        return self.eid_ref.eid
+        if self.eid_ref is not None:
+            return self.eid_ref.eid
+        return self.eid
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
-            return self.ga
-        return self.ga_ref.nid
+        if self.ga_ref is not None:
+            return self.ga_ref.nid
+        return self.ga
 
     def Gb(self):
-        if isinstance(self.gb, integer_types):
-            return self.gb
-        return self.gb_ref.nid
+        if self.gb_ref is not None:
+            return self.gb_ref.nid
+        return self.gb
 
     def get_loads(self):
         return [self]
