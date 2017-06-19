@@ -3065,7 +3065,7 @@ class PLOADX1(Load):
         gb = integer(card, 6, 'gb')
         theta = double_or_blank(card, 7, 'theta', 0.)
         assert len(card) <= 8, 'len(PLOADX1 card) = %i\ncard=%s' % (len(card), card)
-        nids =
+        nids = [ga, gb]
         return PLOADX1(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
 
     @classmethod
