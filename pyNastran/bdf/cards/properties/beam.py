@@ -1297,13 +1297,15 @@ class PBMSECT(LineProperty):
                 else:
                     self.brps[0] = int(value)
 
-            elif key == 'T':
+            elif key.startswith('T('):
                 if key.startswith('T('):
                     assert key.endswith(')'), 'key=%r' % key
                     key_id = int(key[2:-1])
                     self.ts[key_id] = float(value)
-                else:
+                elif key == 'T':
                     self.ts[0] = int(value)
+                else:
+                    raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
             else:
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
         self._validate_input()
@@ -1569,6 +1571,7 @@ class PBCOMP(LineProperty):
         self.c = c
         self.mids = mids
         assert 0 <= self.symopt <= 5, 'symopt=%i is invalid; ' % self.symopt
+        self.mid_ref = None
 
     def validate(self):
         assert isinstance(self.mids, list), 'mids=%r type=%s' % (self.mids, type(self.mids))
@@ -1678,7 +1681,7 @@ class PBCOMP(LineProperty):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def raw_fields(self):
         list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,

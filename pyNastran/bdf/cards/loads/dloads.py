@@ -57,6 +57,7 @@ class ACSRCE(BaseCard):
         self.power_ref = None
         self.sloads_ref = None
         self.delay_ref = None
+        self.dphase_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -169,6 +170,7 @@ class ACSRCE(BaseCard):
         self.power_ref = None
         self.sloads_ref = None
         self.delay_ref = None
+        self.dphase_ref = None
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)

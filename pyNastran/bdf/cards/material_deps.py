@@ -935,7 +935,7 @@ class MATT8(MaterialDependence):
     +=======+========+========+=======+=========+========+========+========+========+
     | MATT8 |  MID   | T(E1)  | T(E2) | T(Nu12) | T(G12) | T(G1z) | T(G2z) | T(RHO) |
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
-    |       |  T(A1) | T(A2)  |       |  T(Xt)  | T(Yc)  | T(Yt)  | T(Yc)  | T(S)   |
+    |       |  T(A1) | T(A2)  |       |  T(Xt)  | T(Xc)  | T(Yt)  | T(Yc)  | T(S)   |
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
     |       |  T(GE) | T(F12) |       |         |        |        |        |        |
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
@@ -944,9 +944,9 @@ class MATT8(MaterialDependence):
 
     def __init__(self, mid, E1_table=None, E2_table=None, Nu12_table=None,
                  G12_table=None, G1z_table=None, G2z_table=None, rho_table=None,
-                 A1_table=None, A2_table=None,
-                 Xt_table=None, Xc_table=None, Yt_table=None, Yc_table=None,
-                 S_table=None, GE_table=None, F12_table=None, comment=''):
+                 a1_table=None, a2_table=None,
+                 xt_table=None, xc_table=None, yt_table=None, yc_table=None,
+                 s_table=None, ge_table=None, f12_table=None, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment
@@ -959,16 +959,34 @@ class MATT8(MaterialDependence):
         self._G1z_table = G1z_table
         self._G2z_table = G2z_table
         self._rho_table = rho_table
-        self._A1_table = A1_table
-        self._A2_table = A2_table
+        self._a1_table = a1_table
+        self._a2_table = a2_table
 
-        self._Xt_table = Xt_table
-        self._Xc_table = Xc_table
-        self._Yt_table = Yt_table
-        self._Yc_table = Yc_table
-        self._S_table = S_table
-        self._GE_table = GE_table
-        self._F12_table = F12_table
+        self._xt_table = xt_table
+        self._xc_table = xc_table
+        self._yt_table = yt_table
+        self._yc_table = yc_table
+        self._s_table = s_table
+        self._ge_table = ge_table
+        self._f12_table = f12_table
+
+        self.E1_table_ref = None
+        self.E2_table_ref = None
+        self.Nu12_table_ref = None
+        self.G12_table_ref = None
+        self.G1z_table_ref = None
+        self.G2z_table_ref = None
+        self.rho_table_ref = None
+
+        self.a1_table_ref = None
+        self.a2_table_ref = None
+        self.xt_table_ref = None
+        self.xc_table_ref = None
+        self.yt_table_ref = None
+        self.yc_table_ref = None
+        self.s_table_ref = None
+        self.ge_table_ref = None
+        self.f12_table_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -990,24 +1008,206 @@ class MATT8(MaterialDependence):
         G1z_table = integer_or_blank(card, 6, 'T(G1z)')
         G2z_table = integer_or_blank(card, 7, 'T(G2z)')
         rho_table = integer_or_blank(card, 8, 'T(Rho)')
-        A1_table = integer_or_blank(card, 9, 'T(A1)')
-        A2_table = integer_or_blank(card, 10, 'T(A2)')
+        a1_table = integer_or_blank(card, 9, 'T(A1)')
+        a2_table = integer_or_blank(card, 10, 'T(A2)')
 
-        Xt_table = integer_or_blank(card, 12, 'T(Xt)')
-        Xc_table = integer_or_blank(card, 13, 'T(Xc)')
-        Yt_table = integer_or_blank(card, 14, 'T(Yt)')
-        Yc_table = integer_or_blank(card, 15, 'T(Yc)')
-        S_table = integer_or_blank(card, 16, 'T(S)')
-        GE_table = integer_or_blank(card, 17, 'T(GE)')
-        F12_table = integer_or_blank(card, 18, 'T(F12)')
+        xt_table = integer_or_blank(card, 12, 'T(Xt)')
+        xc_table = integer_or_blank(card, 13, 'T(Xc)')
+        yt_table = integer_or_blank(card, 14, 'T(Yt)')
+        yc_table = integer_or_blank(card, 15, 'T(Yc)')
+        s_table = integer_or_blank(card, 16, 'T(S)')
+        ge_table = integer_or_blank(card, 17, 'T(GE)')
+        f12_table = integer_or_blank(card, 18, 'T(F12)')
 
         assert len(card) <= 19, 'len(MATT8 card) = %i\ncard=%s' % (len(card), card)
         return MATT8(mid, E1_table, E2_table, Nu12_table, G12_table,
                      G1z_table, G2z_table, rho_table,
-                     A1_table, A2_table, Xt_table,
-                     Xc_table, Yt_table, Yc_table,
-                     S_table, GE_table, F12_table,
+                     a1_table, a2_table, xt_table,
+                     xc_table, yt_table, yc_table,
+                     s_table, ge_table, f12_table,
                      comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by MATT1 mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+        ## TODO: add refs
+        if self._E1_table is not None:
+            self.E1_table_ref = model.TableM(self._E1_table)
+        if self._E2_table is not None:
+            self.E2_table_ref = model.TableM(self._E2_table)
+        if self._Nu12_table is not None:
+            self.Nu12_table_ref = model.TableM(self._Nu12_table)
+        if self._G12_table is not None:
+            self.G12_table_ref = model.TableM(self._G12_table)
+        if self._G1z_table is not None:
+            self.G1z_table_ref = model.TableM(self._G1z_table)
+        if self._G2z_table is not None:
+            self.G2z_table_ref = model.TableM(self._G2z_table)
+        if self._rho_table is not None:
+            self.rho_table_ref = model.TableM(self._rho_table)
+
+        if self._a1_table is not None:
+            self.a1_table_ref = model.TableM(self._a1_table)
+        if self._a2_table is not None:
+            self.a2_table_ref = model.TableM(self._a2_table)
+        if self._xt_table is not None:
+            self.xt_table_ref = model.TableM(self._xt_table)
+        if self._xc_table is not None:
+            self.xc_table_ref = model.TableM(self._xc_table)
+        if self._yt_table is not None:
+            self.yt_table_ref = model.TableM(self._yt_table)
+        if self._s_table is not None:
+            self.s_table_ref = model.TableM(self._s_table)
+
+    def uncross_reference(self):
+        self._E1_table = self.E1_table()
+        self._E2_table = self.E2_table()
+        self._Nu12_table = self.Nu12_table()
+        self._G12_table = self.G12_table()
+        self._G1z_table = self.G1z_table()
+        self._G2z_table = self.G2z_table()
+        self._rho_table = self.rho_table()
+        self._a1_table = self.a1_table()
+        self._a2_table = self.a2_table()
+
+        self._xt_table = self.xt_table()
+        self._xc_table = self.xc_table()
+        self._yt_table = self.yt_table()
+        self._yc_table = self.yc_table()
+        self._s_table = self.s_table()
+        self._ge_table = self.ge_table()
+        self._f12_table = self.f12_table()
+
+        self.E1_table_ref = None
+        self.E2_table_ref = None
+        self.Nu12_table_ref = None
+        self.G12_table_ref = None
+        self.G1z_table_ref = None
+        self.G2z_table_ref = None
+        self.rho_table_ref = None
+
+        self.a1_table_ref = None
+        self.a2_table_ref = None
+        self.xt_table_ref = None
+        self.xc_table_ref = None
+        self.yt_table_ref = None
+        self.yc_table_ref = None
+        self.s_table_ref = None
+        self.ge_table_ref = None
+        self.f12_table_ref = None
+
+    def E1_table(self):
+        if self.E1_table_ref is not None:
+            return self.E1_table_ref.tid
+        return self._E1_table
+
+    def E2_table(self):
+        if self.E2_table_ref is not None:
+            return self.E2_table_ref.tid
+        return self._E2_table
+
+    def G12_table(self):
+        if self.G12_table_ref is not None:
+            return self.G12_table_ref.tid
+        return self._G12_table
+
+    def G1z_table(self):
+        if self.G1z_table_ref is not None:
+            return self.G1z_table_ref.tid
+        return self._G1z_table
+
+    def G2z_table(self):
+        if self.G2z_table_ref is not None:
+            return self.G2z_table_ref.tid
+        return self._G2z_table
+
+    def G1z_table(self):
+        if self.G1z_table_ref is not None:
+            return self.G1z_table_ref.tid
+        return self._G1z_table
+
+    def rho_table(self):
+        if self.rho_table_ref is not None:
+            return self.rho_table_ref.tid
+        return self._rho_table
+
+    def a1_table(self):
+        if self.a1_table_ref is not None:
+            return self.a1_table_ref.tid
+        return self._a1_table
+
+    def a2_table(self):
+        if self.a2_table_ref is not None:
+            return self.a2_table_ref.tid
+        return self._a2_table
+
+    def s_table(self):
+        if self.s_table_ref is not None:
+            return self.s_table_ref.tid
+        return self._s_table
+
+    def ge_table(self):
+        if self.ge_table_ref is not None:
+            return self.ge_table_ref.tid
+        return self._ge_table
+
+    def f12_table(self):
+        if self.f12_table_ref is not None:
+            return self.f12_table_ref.tid
+        return self._f12_table
+
+    def xt_table(self):
+        if self.xt_table_ref is not None:
+            return self.xt_table_ref.tid
+        return self._xt_table
+
+    def xc_table(self):
+        if self.xc_table_ref is not None:
+            return self.xc_table_ref.tid
+        return self._xc_table
+
+    def yt_table(self):
+        if self.yt_table_ref is not None:
+            return self.yt_table_ref.tid
+        return self._yt_table
+
+    def yc_table(self):
+        if self.yc_table_ref is not None:
+            return self.yc_table_ref.tid
+        return self._yc_table
+
+    def raw_fields(self):
+        list_fields = ['MATT8', self.mid, self.E1_table(), self.E2_table(), self.G12_table(),
+                       self.G1z_table(), self.G2z_table(), self.rho_table(),
+                       self.a1_table(), self.a2_table(), None,
+                       self.xt_table(), self.xc_table(), self.yt_table(), self.yc_table(),
+                       self.s_table(), self.ge_table(), self.f12_table()]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        """
+        +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+        |   1   |   2    |   3    |   4   |    5    |   6    |   7    |    8   |   9    |
+        +=======+========+========+=======+=========+========+========+========+========+
+        | MATT8 |  MID   | T(E1)  | T(E2) | T(Nu12) | T(G12) | T(G1z) | T(G2z) | T(RHO) |
+        +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+        |       |  T(A1) | T(A2)  |       |  T(Xt)  | T(Xc)  | T(Yt)  | T(Yc)  | T(S)   |
+        +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+        |       |  T(GE) | T(F12) |       |         |        |        |        |        |
+        +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+        """
+        list_fields = self.raw_fields()
+        return self.comment + print_card_8(list_fields)
 
 
 #MATT9

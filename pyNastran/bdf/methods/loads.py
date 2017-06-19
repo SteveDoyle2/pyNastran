@@ -693,7 +693,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                 continue
 
             if load.Cid() != 0:
-                cp = load.cid
+                cp = load.cid_ref
                 m = cp.transform_vector_to_global(load.xyz)
             else:
                 m = load.xyz
@@ -765,7 +765,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
 
         elif load.type == 'PLOAD1':
             #elem = model.elements[load.eid]
-            elem = load.eid
+            elem = load.eid_ref
             if elem.eid not in eids:
                 continue
 
@@ -1015,7 +1015,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     raise NotImplementedError(msg)
 
                 f = pressure * area * normal * scale
-                #load.cid.transformToGlobal()
+                #load.cid.transform_to_global()
                 m = cross(r, f)
                 F += f
                 M += m

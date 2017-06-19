@@ -621,7 +621,7 @@ class CTRIAX6(TriShell):
             assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
-            assert self.mid.type in ['MAT1', 'MAT3', 'MAT4'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
+            assert self.mid_ref.type in ['MAT1', 'MAT3', 'MAT4'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):

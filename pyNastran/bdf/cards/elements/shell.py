@@ -996,7 +996,7 @@ class CTRIA6(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
@@ -1004,7 +1004,7 @@ class CTRIA6(TriShell):
         Get the area, :math:`A`.
 
         .. math:: A = \frac{1}{2} (n_0-n_1) \times (n_0-n_2)"""
-        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         a = n1 - n2
         b = n1 - n3
         area = 0.5 * norm(cross(a, b))
@@ -1017,7 +1017,7 @@ class CTRIA6(TriShell):
         .. math::
           n = \frac{(n_0-n_1) \times (n_0-n_2)}{\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
-        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _normal(n1 - n2, n1 - n3)
 
     def Centroid(self):
@@ -1027,7 +1027,7 @@ class CTRIA6(TriShell):
         .. math::
           CG = \frac{1}{3} (n_1+n_2+n_3)
         """
-        n1, n2, n3 = self.get_node_positions(nodes=self.nodes[:3])
+        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         centroid = (n1 + n2 + n3) / 3.
         return centroid
 
@@ -3347,7 +3347,7 @@ class CQUAD(QuadShell):
         r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         a = n1 - n3
         b = n2 - n4
         area = 0.5 * norm(cross(a, b))
