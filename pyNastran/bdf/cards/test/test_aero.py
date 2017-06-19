@@ -996,8 +996,8 @@ class TestAero(unittest.TestCase):
    # def test_spline2_1(self):
     def test_spline3(self):
         """checks the SPLINE3 card"""
-        model = BDF()
-        eid = 1
+        model = BDF(debug=False)
+        eid = 100
         pid = 10
         igid = 1
         p1 = [0., 0., 0.]
@@ -1007,25 +1007,41 @@ class TestAero(unittest.TestCase):
         box_id = 42
         components = 3
         nids = 5
-        displacement_components = [3]
-        coeffs = [1.0]
+        displacement_components = 3
+        coeffs = 1.0
         model.add_caero1(eid, pid, igid, p1, x12, p4, x43,
                          cp=0,
                          nspan=5, lspan=0,
                          nchord=5, lchord=0, comment='')
         model.add_paero1(pid, Bi=None, comment='')
-        #model.add_spline1(eid, caero, box1, box2, setg, dz=0., method='IPS',
-                         #usage='BOTH', nelements=10,
-                         #melements=10, comment='')
-        spline3 = model.add_spline3(
-            eid, caero, box_id, components, nids,
-            displacement_components, coeffs, usage='BOTH', comment='spline3')
+        model.add_grid(5)
 
+        spline_id = 101
+        spline3 = model.add_spline3(
+            spline_id, caero, box_id, components, nids,
+            displacement_components, coeffs, usage='BOTH', comment='spline3')
         spline3.validate()
         spline3.write_card()
         spline3.raw_fields()
 
-        spline3.cross_reference(model)
+        spline_id = 102
+        nids = [5, 6, 7]
+        displacement_components = [3, 7]
+        coeffs = [1.0, 2.0]
+        spline3b = model.add_spline3(
+            spline_id, caero, box_id, components, nids,
+            displacement_components, coeffs, usage='failed', comment='spline3')
+
+        cref = bref = sref = 1.0
+        model.add_aeros(cref, bref, sref)
+
+        with self.assertRaises(RuntimeError):
+            spline3b.validate()
+        del model.splines[spline_id]
+        model.validate()
+
+        #spline3.cross_reference(model)
+        model.cross_reference()
         spline3.write_card()
         spline3.raw_fields()
         bdf_file = StringIO()

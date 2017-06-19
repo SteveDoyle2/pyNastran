@@ -311,7 +311,7 @@ class OUG(OP2Common):
             elif self.table_name == b'OUGV1PAT':
                 n = self._read_oug_displacement(data, ndata, is_cid=True)
             elif self.table_name == b'OAG1':
-                n = self._read_oug_acceleration(data, ndata, is_cid=False)
+                n = self._read_oug_acceleration(data, ndata)
             else:
                 raise NotImplementedError(self.code_information())
         elif self.table_code == 7:

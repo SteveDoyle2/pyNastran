@@ -6076,7 +6076,7 @@ class SPLINE3(Spline):
         #9:G2,C2,A2...
 
     def __init__(self, eid, caero, box_id, components,
-                 nids, displacement_components, coeffs,
+                 nodes, displacement_components, coeffs,
                  usage='BOTH', comment=''):
         """
         Creates a SPLINE3 card, which is useful for control surface
@@ -6103,7 +6103,7 @@ class SPLINE3(Spline):
            5-pitch angle
            6-relative control angle for CAERO4/5; yaw angle for CAERO2
 
-        nids :  : List[int]
+        nodes : List[int]
            Grid point identification number of the independent grid point.
         displacement_components :  : List[int]
            Component numbers in the displacement coordinate system.
@@ -6123,8 +6123,8 @@ class SPLINE3(Spline):
         if comment:
             self.comment = comment
 
-        if isinstance(nids, integer_types):
-            nids = [nids]
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
         if isinstance(displacement_components, integer_types):
             displacement_components = [displacement_components]
         if isinstance(coeffs, float):
@@ -6138,9 +6138,11 @@ class SPLINE3(Spline):
         self.components = components
         self.usage = usage
 
-        self.nids = nids
+        self.nodes = nodes
         self.displacement_components = displacement_components
         self.coeffs = coeffs
+        self.nodes_ref = None
+        self.caero_ref = None
 
     def validate(self):
         is_failed = False
@@ -6148,6 +6150,15 @@ class SPLINE3(Spline):
         if self.components not in [0, 1, 2, 3, 4, 5, 6]:
             msg += 'components=%r must be [0, 1, 2, 3, 4, 5, 6]\n' % (
                 self.components)
+            is_failed = True
+
+        if not len(self.nodes) == len(self.displacement_components):
+            msg += 'nnodes=%s ndisplacement_components=%s must be equal\n' % (
+                len(self.nodes), len(self.displacement_components))
+            is_failed = True
+        if not len(self.nodes) == len(self.coeffs):
+            msg += 'nnodes=%s ncoeffs=%s must be equal\n' % (
+                len(self.nodes), len(self.coeffs))
             is_failed = True
 
         for i, disp_component, coeff  in zip(count(), self.displacement_components, self.coeffs):
@@ -6215,24 +6226,42 @@ class SPLINE3(Spline):
                        comment=comment)
 
     def CAero(self):
-        if isinstance(self.caero, integer_types):
-            return self.caero
-        return self.caero_ref.eid
+        if self.caero_ref is not None:
+            return self.caero_ref.eid
+        return self.caero
 
     def cross_reference(self, model):
         msg = ' which is required by SPLINE3 eid=%s' % self.eid
-        self.caero = model.CAero(self.CAero(), msg=msg)
-        self.caero_ref = self.caero
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.caero_ref = model.CAero(self.caero, msg=msg)
+
+    @property
+    def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
+        return [node.nid for node in self.nodes_ref]
 
     def uncross_reference(self):
         self.caero = self.CAero()
-        del self.caero_ref
+        self.nodes = self.node_ids
+        self.caero_ref = None
 
     def raw_fields(self):
+        """
+        +---------+------+-------+-------+------+----+----+-----+-------+
+        |    1    |  2   |   3   |   4   |  5   |  6 |  7 |  8  |   9   |
+        +=========+======+=======+=======+======+====+====+=====+=======+
+        | SPLINE3 | EID  | CAERO | BOXID | COMP | G1 | C1 | A1  | USAGE |
+        +---------+------+-------+-------+------+----+----+-----+-------+
+        |         |  G2  |  C2   |  A2   | ---- | G3 | C3 | A2  |  ---  |
+        +---------+------+-------+-------+------+----+----+-----+-------+
+        |         |  G4  |  C4   |  A4   | etc. |    |    |     |       |
+        +---------+------+-------+-------+------+----+----+-----+-------+
+        """
         list_fields = [
-            'SPLINE3', self.eid, self.CAero(), self.box_id,
-            self.nids[0], self.displacement_components[0], self.coeffs[0], self.usage]
-        for nid, disp_c, coeff in zip(self.nids[1:], self.displacement_components[1:],
+            'SPLINE3', self.eid, self.CAero(), self.box_id, self.components,
+            self.nodes[0], self.displacement_components[0], self.coeffs[0], self.usage]
+        for nid, disp_c, coeff in zip(self.nodes[1:], self.displacement_components[1:],
                                       self.coeffs[1:]):
             list_fields += [nid, disp_c, coeff, None]
         return list_fields

@@ -39,8 +39,6 @@ from pyNastran.gui.test.all_tests import *
     #import pyNastran.gui.gui
 #import pyNastran.gui.gui
 
-from pyNastran.applications.all_tests import *
-
 
 if __name__ == "__main__":  # pragma: no cover
     import unittest

@@ -1634,9 +1634,9 @@ class MOMENT1(Moment):
 
     @property
     def node_id(self):
-        if isinstance(self.node, integer_types):
-            return self.node
-        return self.node_ref.nid
+        if self.node_ref is not None:
+            return self.node_ref.nid
+        return self.node
 
     def G1(self):
         if self.g1_ref is not None:
@@ -1647,12 +1647,6 @@ class MOMENT1(Moment):
         if self.g2_ref is not None:
             return self.g2_ref.nid
         return self.g2
-
-    @property
-    def node_id(self):
-        if self.node_ref is not None:
-            return self.node_ref.nid
-        return self.node
 
     def raw_fields(self):
         list_fields = ['MOMENT1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
@@ -3071,7 +3065,8 @@ class PLOADX1(Load):
         gb = integer(card, 6, 'gb')
         theta = double_or_blank(card, 7, 'theta', 0.)
         assert len(card) <= 8, 'len(PLOADX1 card) = %i\ncard=%s' % (len(card), card)
-        return PLOADX1(sid, eid, pa, ga, gb, pb, theta, comment=comment)
+        nids =
+        return PLOADX1(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -3086,7 +3081,8 @@ class PLOADX1(Load):
             a comment for the card
         """
         sid, eid, pa, pb, ga, gb, theta = data
-        return PLOADX1(sid, eid, pa, ga, gb, pb, theta, comment=comment)
+        nids = [ga, gb]
+        return PLOADX1(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
 
     def cross_reference(self, model):
         """

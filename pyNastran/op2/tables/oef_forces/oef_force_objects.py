@@ -256,7 +256,7 @@ class RealSpringDamperForceArray(RealForceObject):
                         (force2, stress2) = t2
                         if not allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                            msg += '%s\n  (%s, %s)\n  (%s, %s)\n' % (
                                 eid,
                                 force1, stress1,
                                 force2, stress2)

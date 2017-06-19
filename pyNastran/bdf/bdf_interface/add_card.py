@@ -3504,7 +3504,7 @@ class AddCards(AddMethods):
         self._add_spline_object(spline)
         return spline
 
-    def add_spline3(self, eid, caero, box_id, components, nids,
+    def add_spline3(self, eid, caero, box_id, components, nodes,
                     displacement_components,
                     coeffs, usage='BOTH', comment=''):
         """
@@ -3532,7 +3532,7 @@ class AddCards(AddMethods):
            5-pitch angle
            6-relative control angle for CAERO4/5; yaw angle for CAERO2
 
-        nids :  : List[int]
+        nodes : List[int]
            Grid point identification number of the independent grid point.
         displacement_components :  : List[int]
            Component numbers in the displacement coordinate system.
@@ -3548,7 +3548,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        spline = SPLINE3(eid, caero, box_id, components, nids,
+        spline = SPLINE3(eid, caero, box_id, components, nodes,
                          displacement_components,
                          coeffs, usage=usage,
                          comment=comment)
