@@ -6191,8 +6191,8 @@ class SPLINE3(Spline):
         box_id = integer(card, 3, 'box_id')
         components = integer(card, 4, 'comp')
         g1 = integer(card, 5, 'G1')
-        c1 = integer(card, 5, 'C1')
-        a1 = double(card, 5, 'A1')
+        c1 = integer(card, 6, 'C1')
+        a1 = double(card, 7, 'A1')
         usage = string_or_blank(card, 8, 'usage', 'BOTH')
 
         nfields = len(card) - 1
@@ -6215,7 +6215,7 @@ class SPLINE3(Spline):
             if card[j + 3] or card[j + 4] or card[j + 5]:
                 i += 1
                 gii = integer(card, j, 'Gi_' % i)
-                cii = integer(card, j + 1, 'Ci_' % i)
+                cii = components(card, j + 1, 'Ci_' % i)
                 aii = double(card, j + 2, 'Ai_' % i)
                 Gi.append(gii)
                 ci.append(cii)

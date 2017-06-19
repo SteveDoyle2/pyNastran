@@ -464,8 +464,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
             'PAERO4', # 'PAERO5',
             'MONPNT1', 'MONPNT2', 'MONPNT3',  ## monitor_points
-            'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',  ## splines
-            #'SPLINE3', 'SPLINE6', 'SPLINE7',
+            'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
+            'SPLINE6', 'SPLINE7',
             'TRIM',  ## trims
             'CSSCHD', ## csschds
             'DIVERG', ## divergs
