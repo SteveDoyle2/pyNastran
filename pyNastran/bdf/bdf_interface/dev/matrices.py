@@ -18,12 +18,12 @@ def _lambda_1d(v1):
     #xyz1 = model.Node(n1).get_position()
     #xyz2 = model.Node(n2).get_position()
     #v1 = xyz2 - xyz1
-    n = norm(v1)
+    n = np.linalg.norm(v1)
     if n == 0:
         raise ZeroDivisionError(v1)
     v1 = v1 / n
     (l, m, n) = v1
-    Lambda = zeros((2, 6), 'd')
+    Lambda = np.zeros((2, 6), 'd')
     Lambda[0, 0] = Lambda[1, 3] = l
     Lambda[0, 1] = Lambda[1, 4] = m
     Lambda[0, 2] = Lambda[1, 5] = n
@@ -91,7 +91,7 @@ def make_mass_matrix(model, reference_point):
         return eids2
 
     #etypes_skipped = set([])
-    for etype, eids in iteritems(self._type_to_id_map):
+    for etype, eids in iteritems(model._type_to_id_map):
         if etype in ['CROD', 'CONROD']:
             eids2 = get_sub_eids(all_eids, eids)
 
@@ -108,20 +108,20 @@ def make_mass_matrix(model, reference_point):
                        #[0., 1.]])  # 1D rod lumped
 
             for eid in eids2:
-                elem = self.elements[eid]
+                elem = model.elements[eid]
                 n1, n2 = elem.node_ids
 
                 i1, i2, i3 = components[(n1, 1)], components[(n1, 2)], components[(n1, 3)]
                 j1, j2, j3 = components[(n2, 1)], components[(n2, 2)], components[(n2, 3)]
-                mpl = elem.MassPerLength()
-                massi = mpl * length / 2.
 
                 inid1 = inids[n1]
                 inid2 = inids[n2]
                 v1 = xyz[inid2, :] - xyz[inid1, :]
-                length = norm(v1)
+                length = np.linalg.norm(v1)
+                mpl = elem.MassPerLength()
+                massi = mpl * length / 2.
                 Lambda = _lambda_1d(v1)
-                mass_mat2 = dot(dot(transpose(Lambda), mass_mat * massi), Lambda)
+                mass_mat2 = np.dot(np.dot(Lambda.T, mass_mat * massi), Lambda)
                 assert mass_mat2.shape == (6, 6), mass_mat2
                 mass[i1, i1] = mass_mat2[0, 0]
                 mass[i2, i2] = mass_mat2[1, 1]
@@ -137,7 +137,7 @@ def make_mass_matrix(model, reference_point):
             mass_mat = np.zeros((6, 6))
             eids2 = get_sub_eids(all_eids, eids)
             for eid in eids2:
-                elem = self.masses[eid]
+                elem = model.masses[eid]
                 massi = elem.Mass()
                 rx, ry, rz = elem.X
                 mass_mat[0, 0] = massi
@@ -170,6 +170,7 @@ def make_mass_matrix(model, reference_point):
         else:
             pass
 
+    Mgg = mass
     return make_gpwg(Mgg, reference_point, xyz_cid0, cps, model.coords, model.log)
 
 def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
@@ -214,33 +215,33 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     .. todo:: hasn't been tested
     """
     nnodes = xyz_cid0.shape[0]
-    D = zeros((nnodes*6, 6), dtype='float32')
+    D = np.zeros((nnodes*6, 6), dtype='float32')
 
     # we subtract ref point so as to not change xyz_cid0
     for i, node in enumerate(xyz_cid0 - reference_point):
         r1, r2, r3 = node
         j = i * 6
-        Tr = array([[0., r3, -r2],
-                    [-r3, 0., r1],
-                    [r2, -r1, 0.]], dtype='float32')
+        Tr = np.array([[0., r3, -r2],
+                       [-r3, 0., r1],
+                       [r2, -r1, 0.]], dtype='float32')
         #print('Tr[%i]=\n%s\n' % (i+1, Tr))
 
         cp = grid_cps[i]
         Ti = coords[cp].beta()
-        if not array_equal(Ti, eye(3)):
+        if not np.array_equal(Ti, eye(3)):
             log.info('Ti[%i]=\n%s\n' % (i+1, Ti))
         TiT = Ti.T
-        d = zeros((6, 6), dtype='float32')
+        d = np.zeros((6, 6), dtype='float32')
         d[:3, :3] = TiT
         d[3:, 3:] = TiT
-        d[:3, 3:] = dot(TiT, Tr)
+        d[:3, 3:] = np.dot(TiT, Tr)
         D[j:j+6, :] = d
 
-    Mo = zeros((6, 6), dtype='float32')
+    Mo = np.zeros((6, 6), dtype='float32')
     #print('D=\n%s\n' % D)
     # translati
 
-    Mo = np.triple(D, Mgg)
+    Mo = triple(D, Mgg)
     log.info('Mgg=\n%s\n' % Mgg)
     log.info('Mo=\n%s\n' % Mo)
 
@@ -316,11 +317,11 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     I22 = Mr[1, 1] - Mz * xz ** 2 - Mx * zx ** 2
     I32 = I23 = -Mr[1, 2] - Mx * yx * zx
     I33 = Mr[2, 2] - Mx * yx ** 2 - My * xy ** 2
-    II = array([
+    II = np.array([
         [I11, I12, I13],
         [I21, I22, I13],
         [I31, I32, I33],
-        ], dtype='float32')
+    ], dtype='float32')
     II = nan_to_num(II)
     log.info('I(S)=\n%s\n' % II)
 
@@ -329,7 +330,7 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     fill_diagonal(-II, diag(II))
     #print('I~=\n%s\n' % II)
     if nan in II:
-        Q = zeros((3, 3), dtype='float32')
+        Q = np.zeros((3, 3), dtype='float32')
     else:
         omegaQ, Q = eig(II)
     #i = argsort(omegaQ)
