@@ -51,7 +51,8 @@ class RealBushArray(OES_Object):
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
 
         if self.element_type == 102:
-            nnodes_per_element = 1
+            #nnodes_per_element = 1
+            pass
         else:
             raise NotImplementedError(self.element_type)
 

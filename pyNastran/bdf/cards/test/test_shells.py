@@ -958,6 +958,119 @@ class TestShells(unittest.TestCase):
 
         save_load_deck(model)
 
+    def test_cquadx4(self):
+        """tests a CQUADX4"""
+        model = BDF(debug=False)
+        eid = 1
+        pid = 2
+        mid = 3
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        cquadx4 = model.add_cquadx4(eid, pid, [1, 2, 3, 4], theta=0., comment='cquadx4')
+        psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
+                                 isop=None, fctn='SMECH', comment='psolid')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        mass = model.mass_properties()[0]
+        assert np.allclose(mass, 0.0), mass  # TODO: not sure
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model.uncross_reference()
+        #bdf_file = model.write_bdf(bdf_file)
+
+        save_load_deck(model)
+
+    def test_ctria6_cquad8_cquad9(self):
+        """tests a CQUAD8 and CQUAD9"""
+        model = BDF(debug=False)
+        eid = 1
+        pid = 10
+        mid = 100
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(5, xyz=[.5, 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(6, xyz=[1., .5, 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(7, xyz=[.5, 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(9, xyz=[.5, .5, 0.])
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        cquad8 = model.add_cquad8(eid, pid, nids, theta_mcid=0., comment='cquad8')
+
+        eid = 2
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        cquad = model.add_cquad(eid, pid, nids, theta_mcid=0., comment='cquad')
+        model.add_pshell(pid, mid1=mid, t=1.0)
+
+        eid = 3
+        nids = [1, 2, 3, 5, 6, 9]
+        ctria6 = model.add_ctria6(eid, pid, nids, theta_mcid=0., comment='ctria6')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.1)
+
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        assert np.allclose(cquad8.Mass(), 0.1), cquad8.Mass()
+        assert np.allclose(cquad.Mass(), 0.1), cquad.Mass()
+        assert np.allclose(ctria6.Mass(), 0.05), ctria6.Mass()
+
+        save_load_deck(model)
+
+    def test_cquadx8(self):
+        """tests a CQUADX, CTRIAX, CTRIAX6"""
+        model = BDF(debug=False)
+        eid = 1
+        pid = 10
+        mid = 100
+        model.add_grid(1, xyz=[0., 0., 0.])
+        model.add_grid(5, xyz=[.5, 0., 0.])
+        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(6, xyz=[1., .5, 0.])
+        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(7, xyz=[.5, 1., 0.])
+        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(9, xyz=[.5, .5, 0.])
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        model.add_cquadx8(eid, pid, nids, theta=0., comment='cquadx8')
+
+        eid = 2
+        # 4---7---3
+        # |     / |
+        # 8   9   6
+        # |/      |
+        # 1---5---2
+        nids = [1, 2, 3, 5, 6, 9]
+        model.add_ctriax(eid, pid, nids, theta_mcid=0., comment='ctriax')
+
+        eid = 3
+        nids = [1, 5, 2, 6, 3, 9]
+        model.add_ctriax6(eid, mid, nids, theta=0., comment='ctriax6')
+
+        model.add_psolid(pid, mid)
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        model.cross_reference()
+        model.pop_xref_errors()
+        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

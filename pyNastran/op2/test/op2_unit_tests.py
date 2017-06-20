@@ -145,9 +145,17 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        op2 = read_op2_geom(op2_filename, debug=False)
-        op2.write_f06(f06_filename)
-        os.remove(f06_filename)
+        #op2 = read_op2_geom(op2_filename, debug=False)
+        #op2.write_f06(f06_filename)
+        #os.remove(f06_filename)
+        run_op2(op2_filename, make_geom=True, write_bdf=True,
+                write_f06=True, write_op2=False,
+                write_xlsx=False, is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True, check_memory=False,
+                stop_on_failure=True, dev=False)
 
     def test_bdf_op2_elements_02(self):
         """tests a large number of elements and results in SOL 103-modes"""
@@ -159,9 +167,18 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        op2 = read_op2_geom(op2_filename, debug=False)
-        op2.write_f06(f06_filename)
-        os.remove(f06_filename)
+        #op2 = read_op2_geom(op2_filename, debug=False)
+        #op2.write_f06(f06_filename)
+        #os.remove(f06_filename)
+        run_op2(op2_filename, make_geom=True, write_bdf=True,
+                write_f06=True, write_op2=False,
+                write_xlsx=False, is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True, check_memory=False,
+                stop_on_failure=True, dev=False)
+
 
     def test_bdf_op2_elements_03(self):
         """tests a large number of elements and results in SOL 108-freq"""
@@ -173,9 +190,17 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        op2 = read_op2_geom(op2_filename, debug=False)
-        op2.write_f06(f06_filename)
-        os.remove(f06_filename)
+        run_op2(op2_filename, make_geom=True, write_bdf=True,
+                write_f06=True, write_op2=False,
+                write_xlsx=False, is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True, check_memory=False,
+                stop_on_failure=True, dev=False)
+        #op2 = read_op2_geom(op2_filename, debug=False)
+        #op2.write_f06(f06_filename)
+        #os.remove(f06_filename)
 
     def test_set_results(self):
         op2_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
@@ -214,7 +239,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
 
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         run_op2(op2_filename, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -478,7 +503,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2_geom(op2_filename)
+        read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -1144,7 +1169,7 @@ class TestOP2(Tester):
         write_f06 = False
         debug = False
         op2_filename = os.path.join(model_path, 'plate_py', 'plate_py.op2')
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, quiet=True)
@@ -1162,7 +1187,7 @@ class TestOP2(Tester):
         write_bdf = False
         write_f06 = False
         debug = False
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2i, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                   write_f06=write_f06,
                                   debug=debug, stop_on_failure=True,
@@ -1207,7 +1232,7 @@ class TestOP2(Tester):
         debug = False
         debug_file = 'debug.out'
 
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2 = OP2(debug=debug, debug_file=debug_file)
         op2.read_op2(op2_filename)
         assert os.path.exists(debug_file), os.listdir('.')
@@ -1228,7 +1253,7 @@ class TestOP2(Tester):
 
         debug = False
         debug_file = 'debug.out'
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2 = OP2(debug=debug, debug_file=debug_file)
         op2.read_op2(op2_filename)
         assert os.path.exists(debug_file), os.listdir('.')
@@ -1261,7 +1286,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -1370,7 +1395,7 @@ class TestOP2(Tester):
     @unittest.expectedFailure
     def test_set_times_01(self):
         """specify the modes to extract"""
-        model = OP2(debug=True, log=None, debug_file=None, mode='msc')
+        model = OP2(debug=False, log=None, debug_file=None, mode='msc')
 
         # subcase : times
         times = {1 : [2, 3]}

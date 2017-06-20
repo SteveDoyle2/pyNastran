@@ -248,16 +248,17 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         True : compares vectorized result to slow vectorized result
         False : doesn't run slow vectorized result
     debug : bool; default=False
-        dunno???
+        debug flag for OP2
     binary_debug : bool; default=False
         creates a very cryptic developer debug file showing exactly what was parsed
     quiet : bool; default=False
-        dunno???
+        don't write debug messages
     stop_on_failure : bool; default=True
         is this used???
     dev : bool; default=False
-        flag that gets set to True by op2_test.py that let's us crash/ignore
-        on a different set of errors than test_op2
+        flag that is used by op2_test.py to ignore certain errors
+        False : crash on errors
+        True : don't crash
     """
     op2 = None
     op2_nv = None
