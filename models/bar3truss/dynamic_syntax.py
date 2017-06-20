@@ -1,9 +1,12 @@
+"""
+Demonstrates reading the OpenMDAO syntax
+"""
+from __future__ import print_function
 import os
 from numpy import sqrt, searchsorted
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-is_op2 = True
 
 try:
     from pyNastran.f06.f06 import F06
@@ -12,14 +15,17 @@ except ImportError:
     is_f06 = False
 is_f06 = False
 
-def calculate_stress(ax, tors):
-    sigma = 2 * ax * ax
-    tau = 3 * tors * tors
+def calculate_stress(axial, torsion):
+    """calculate VM stress"""
+    sigma = 2 * axial * axial
+    tau = 3 * torsion * torsion
     val = sqrt(.5 * (sigma + tau))
     return val
 
 def main():
-    vars = {
+    """runs the dynamic syntax problem"""
+    is_op2 = True
+    variables = {
         'bar1_a' : 1.0,
         'bar2_a' : 2.0,
         'bar3_a' : 3.0,
@@ -28,10 +34,9 @@ def main():
         'loadmag': 1.,
         'rho'   : 0.284,
         'youngs': 30000000.0,
-
     }
     model = BDF(debug=False)
-    model.set_dynamic_syntax(vars)
+    model.set_dynamic_syntax(variables)
     model.read_bdf('vared_bar3.bdf')
     out_bdf = 'out.bdf'
     out_f06 = 'out.f06'
@@ -69,10 +74,11 @@ def main():
             subcase1 = modeli.crod_stress[1]
             for eid in eids:
                 eid = 2
-                ieid = np.searchsorted(subcase1.elements, eid)
+                ieid = searchsorted(subcase1.elements, eid)
                 print('axial   stress[%s] = %s' % (eid, subcase1.axial[ieid]))
                 print('torsion stress[%s] = %s' % (eid, subcase1.torsion[ieid]))
-                print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[ieid], subcase1.torsion[ieid])))
+                print('        stress[%s] = %s\n' % (
+                    eid, calculate_stress(subcase1.axial[ieid], subcase1.torsion[ieid])))
     #========================================
     subcase1 = model4.crod_stress[1]
     combined_stress = calculate_stress(subcase1.data[0, :, 0], subcase1.data[0, :, 1])

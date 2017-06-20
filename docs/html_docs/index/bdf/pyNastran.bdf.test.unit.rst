@@ -34,9 +34,9 @@ unit Package
 :mod:`test_renumber` Module
 ---------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.test.unit.test_renumber
+.. inheritance-diagram:: pyNastran.bdf.mesh_utils.test.test_renumber
 
-.. automodule:: pyNastran.bdf.test.unit.test_renumber
+.. automodule:: pyNastran.bdf.mesh_utils.test.test_renumber
     :members:
     :undoc-members:
     :show-inheritance:

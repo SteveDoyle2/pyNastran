@@ -106,9 +106,9 @@ This is the pyNastran.bdf.rst file.
 *******************************
 :mod:`patran_rpt` Module
 *******************************
-.. inheritance-diagram:: pyNastran.bdf.patran_rpt
+.. inheritance-diagram:: pyNastran.bdf.patran_utils.patran_rpt
 
-.. automodule:: pyNastran.bdf.patran_rpt
+.. automodule:: pyNastran.bdf.patran_utils.patran_rpt
     :members:
     :undoc-members:
     :show-inheritance:

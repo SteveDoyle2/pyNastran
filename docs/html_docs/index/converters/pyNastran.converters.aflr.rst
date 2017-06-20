@@ -122,27 +122,6 @@ ugrid Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`ugrid_reader_to_foam` Module
-----------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.aflr.ugrid.ugrid_reader_to_foam
-
-.. automodule:: pyNastran.converters.aflr.ugrid.ugrid_reader_to_foam
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`ugrid_reader_to_foam` Module
-----------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.aflr.ugrid.ugrid_reader_to_foam
-
-.. automodule:: pyNastran.converters.aflr.ugrid.ugrid_reader_to_foam
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 Subpackages
 -----------

@@ -5,6 +5,7 @@ defines:
 """
 from __future__ import print_function
 from six import iteritems
+import numpy as np
 
 def _lambda_1d(v1):
     """
@@ -27,6 +28,16 @@ def _lambda_1d(v1):
     Lambda[0, 1] = Lambda[1, 4] = m
     Lambda[0, 2] = Lambda[1, 5] = n
     return Lambda
+
+def triple(A, B):
+    """
+    Performs the following matrix triple product:
+
+        [C] = [A][B][A]
+
+    .. todo:: not validated
+    """
+    return np.einsum('ia,aj,ka->ijk', A, B, A)
 
 def make_mass_matrix(model, reference_point):
     """
@@ -229,7 +240,7 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     #print('D=\n%s\n' % D)
     # translati
 
-    Mo = triple(D, Mgg)
+    Mo = np.triple(D, Mgg)
     log.info('Mgg=\n%s\n' % Mgg)
     log.info('Mo=\n%s\n' % Mo)
 
