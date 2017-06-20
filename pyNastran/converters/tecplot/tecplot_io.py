@@ -23,7 +23,7 @@ class TecplotIO(object):
                 None, None)
         return data
 
-    def load_tecplot_geometry(self, tecplot_filename, dirname, name='main', plot=True):
+    def load_tecplot_geometry(self, tecplot_filename, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -208,9 +208,9 @@ class TecplotIO(object):
     def clear_tecplot(self):
         pass
 
-    #def load_tecplot_results(self, cart3d_filename, dirname):
+    #def load_tecplot_results(self, cart3d_filename):
         #model = Cart3D(log=self.log, debug=False)
-        #self.load_cart3d_geometry(cart3d_filename, dirname)
+        #self.load_cart3d_geometry(cart3d_filename)
 
     def _fill_tecplot_case(self, cases, ID, model, is_surface):
         #'x', 'y', 'z',

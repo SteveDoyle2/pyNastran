@@ -120,8 +120,7 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
         load_geometry_name = 'load_%s_geometry' % self._formati
         if hasattr(self, load_geometry_name):
             # self.load_nastran_geometry(bdf_filename, None)
-            dirname = None
-            getattr(self, load_geometry_name)(input_filename, dirname)
+            getattr(self, load_geometry_name)(input_filename)
         else:
             msg = "load_geometry_name=%s doesn't exist" % load_geometry_name
             raise NotImplementedError(msg)
@@ -131,8 +130,7 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
         load_results_name = 'load_%s_results' % self._formati
         if hasattr(self, load_results_name):
             # self.load_nastran_ressults(op2_filename, None)
-            dirname = None
-            getattr(self, load_results_name)(output_filename, dirname)
+            getattr(self, load_results_name)(output_filename)
         else:
             msg = "load_results_name=%s doesn't exist" % load_results_name
             raise NotImplementedError(msg)

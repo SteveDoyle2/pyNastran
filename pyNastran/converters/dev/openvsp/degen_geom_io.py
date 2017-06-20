@@ -23,7 +23,7 @@ class DegenGeomIO(object):
                )
         return data
 
-    def load_degen_geom_geometry(self, csv_filename, dirname,
+    def load_degen_geom_geometry(self, csv_filename,
                                  name='main', plot=True):# pragma: no cover
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -112,7 +112,7 @@ class DegenGeomIO(object):
     #def clear_adb(self):
         #pass
 
-    #def load_adb_results(self, cart3d_filename, dirname):
+    #def load_adb_results(self, cart3d_filename):
         #raise NotImplementedError()
 
 

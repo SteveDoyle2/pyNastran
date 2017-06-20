@@ -23,7 +23,7 @@ class STL_IO(object):
                 None, None)
         return data
 
-    def load_stl_geometry(self, stl_filename, dirname, name='main', plot=True):
+    def load_stl_geometry(self, stl_filename, name='main', plot=True):
         #print("load_stl_geometry...")
         skip_reading = self._remove_old_geometry(stl_filename)
         if skip_reading:

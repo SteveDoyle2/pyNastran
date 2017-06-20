@@ -51,7 +51,7 @@ class ADB_IO(object):  # pragma: no cover
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_vsp_aero_geometry(self, adb_filename, dirname,
+    def load_vsp_aero_geometry(self, adb_filename,
                                name='main', plot=True):  # pragma: no cover
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -164,7 +164,7 @@ class ADB_IO(object):  # pragma: no cover
     #def clear_adb(self):
         #pass
 
-    #def load_adb_results(self, cart3d_filename, dirname):
+    #def load_adb_results(self, cart3d_filename):
         #raise NotImplementedError()
 
 

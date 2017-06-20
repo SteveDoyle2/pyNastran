@@ -23,23 +23,21 @@ class TestPanairGUI(unittest.TestCase):
         geometry_filename = os.path.join(model_path, 'M100.inp')
         #agps_filename = os.path.join(model_path, 'agps')
         #out_filename = os.path.join(model_path, 'panair.out')
-        dirname = None
 
         test = PanairGUI()
         test.log = log
-        test.load_panair_geometry(geometry_filename, dirname)
+        test.load_panair_geometry(geometry_filename)
 
     def test_m100_results(self):
         log = get_logger(level='warning')
         geometry_filename = os.path.join(model_path, 'M100.inp')
         agps_filename = os.path.join(model_path, 'agps')
         out_filename = os.path.join(model_path, 'panair.out')
-        dirname = None
 
         test = PanairGUI()
         test.log = log
-        test.load_panair_geometry(geometry_filename, dirname)
-        test.load_panair_results(agps_filename, dirname)
+        test.load_panair_geometry(geometry_filename)
+        test.load_panair_results(agps_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

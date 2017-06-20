@@ -20,7 +20,7 @@ class LaWGS_IO(object):
                 None, None)
         return data
 
-    def load_lawgs_geometry(self, lawgs_filename, dirname, name='main', plot=True):
+    def load_lawgs_geometry(self, lawgs_filename, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
         self.eid_maps[name] = {}

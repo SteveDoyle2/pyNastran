@@ -27,12 +27,11 @@ class STL_GUITest(unittest.TestCase):
         from pyNastran.utils.log import get_logger
         log = get_logger(level='warning')
         geometry_filename = os.path.join(model_path, 'sphere.stl')
-        dirname = None
 
         test = STL_GUI()
         test.log = log
-        #test.load_nastran_geometry(geometry_filename, None)
-        test.load_stl_geometry(geometry_filename, dirname)
+        #test.load_nastran_geometry(geometry_filename)
+        test.load_stl_geometry(geometry_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

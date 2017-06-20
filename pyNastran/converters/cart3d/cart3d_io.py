@@ -62,7 +62,7 @@ class Cart3dIO(object):
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_cart3d_geometry(self, cart3d_filename, dirname, name='main', plot=True):
+    def load_cart3d_geometry(self, cart3d_filename, name='main', plot=True):
         skip_reading = self._remove_old_cart3d_geometry(cart3d_filename)
         if skip_reading:
             return
@@ -353,8 +353,8 @@ class Cart3dIO(object):
     def clear_cart3d(self):
         pass
 
-    def load_cart3d_results(self, cart3d_filename, dirname):
-        self.load_cart3d_geometry(cart3d_filename, dirname)
+    def load_cart3d_results(self, cart3d_filename):
+        self.load_cart3d_geometry(cart3d_filename)
 
     def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
         nelements = elements.shape[0]

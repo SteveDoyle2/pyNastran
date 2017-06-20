@@ -23,7 +23,7 @@ class FastIO(object):
                 None, None)
         return data
 
-    def load_fast_geometry(self, fgrid_filename, dirname, name='main', plot=True):
+    def load_fast_geometry(self, fgrid_filename, name='main', plot=True):
         skip_reading = self._remove_old_geometry(fgrid_filename)
         if skip_reading:
             return

@@ -24,10 +24,9 @@ class TestFastGUI(unittest.TestCase):
 
     def test_cart3d_geometry_01(self):
         geometry_filename = os.path.join(test_path, 'flow_demo1', 'om6inviscid.fgrid')
-        dirname = None
 
         test = FastGUI()
-        test.load_fast_geometry(geometry_filename, dirname)
+        test.load_fast_geometry(geometry_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

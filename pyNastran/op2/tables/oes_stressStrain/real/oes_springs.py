@@ -185,7 +185,6 @@ class RealSpringArray(OES_Object):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
         nwrite = len(eids)
         nrows = nwrite // 4
         nleftover = nwrite - nrows * 4

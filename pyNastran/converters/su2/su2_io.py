@@ -23,7 +23,7 @@ class SU2_IO(object):
                 None, None)
         return data
 
-    def load_su2_geometry(self, su2_filename, dirname, name='main', plot=True):
+    def load_su2_geometry(self, su2_filename, name='main', plot=True):
         #print("load_su2_geometry...")
         skip_reading = self._remove_old_geometry(su2_filename)
         if skip_reading:

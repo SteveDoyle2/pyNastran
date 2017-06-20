@@ -980,11 +980,11 @@ class MAT4(ThermalMaterial):
     type = 'MAT4'
     _field_map = {
         1: 'mid', 2:'k', 3:'cp', 4:'rho', 5: 'mu', 6:'H', 7:'hgen',
-        8:'refEnthalpy', 9:'tch', 10:'tdelta', 11:'qlat',
+        8:'ref_enthalpy', 9:'tch', 10:'tdelta', 11:'qlat',
     }
 
     def __init__(self, mid, k, cp=0.0, rho=1.0, H=None, mu=None,
-                 hgen=1.0, refEnthalpy=None, tch=None, tdelta=None, qlat=None, comment=''):
+                 hgen=1.0, ref_enthalpy=None, tch=None, tdelta=None, qlat=None, comment=''):
         ThermalMaterial.__init__(self)
         self.matt4 = None
         if comment:
@@ -996,7 +996,7 @@ class MAT4(ThermalMaterial):
         self.H = H
         self.mu = mu
         self.hgen = hgen
-        self.refEnthalpy = refEnthalpy
+        self.ref_enthalpy = ref_enthalpy
         self.tch = tch
         self.tdelta = tdelta
         self.qlat = qlat
@@ -1020,13 +1020,13 @@ class MAT4(ThermalMaterial):
         H = double_or_blank(card, 5, 'H')
         mu = double_or_blank(card, 6, 'mu')
         hgen = double_or_blank(card, 7, 'hgen', 1.0)
-        refEnthalpy = double_or_blank(card, 8, 'refEnthalpy')
+        ref_enthalpy = double_or_blank(card, 8, 'refEnthalpy')
         tch = double_or_blank(card, 9, 'tch')
         tdelta = double_or_blank(card, 10, 'tdelta')
         qlat = double_or_blank(card, 11, 'qlat')
         assert len(card) <= 12, 'len(MAT4 card) = %i\ncard=%s' % (len(card), card)
         return MAT4(mid, k, cp=cp, rho=rho, H=H, mu=mu, hgen=hgen,
-                    refEnthalpy=refEnthalpy, tch=tch, tdelta=tdelta,
+                    ref_enthalpy=ref_enthalpy, tch=tch, tdelta=tdelta,
                     qlat=qlat, comment=comment)
 
     @classmethod
@@ -1048,11 +1048,11 @@ class MAT4(ThermalMaterial):
         H = data[4]
         mu = data[5]
         hgen = data[6]
-        refEnthalpy = data[7]
+        ref_enthalpy = data[7]
         tch = data[8]
         tdelta = data[9]
         qlat = data[10]
-        return MAT4(mid, k, cp, rho, H, mu, hgen, refEnthalpy, tch, tdelta,
+        return MAT4(mid, k, cp, rho, H, mu, hgen, ref_enthalpy, tch, tdelta,
                     qlat, comment=comment)
 
     def get_density(self):
@@ -1077,7 +1077,7 @@ class MAT4(ThermalMaterial):
 
     def raw_fields(self):
         list_fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu,
-                       self.hgen, self.refEnthalpy, self.tch, self.tdelta,
+                       self.hgen, self.ref_enthalpy, self.tch, self.tdelta,
                        self.qlat]
         return list_fields
 
@@ -1085,16 +1085,16 @@ class MAT4(ThermalMaterial):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
+        Returns
+        -------
+        fields : List[varies]
           the fields that define the card
-        :type fields:
-          LIST
         """
         rho = set_blank_if_default(self.rho, 1.0)
         hgen = set_blank_if_default(self.hgen, 1.0)
         cp = set_blank_if_default(self.cp, 0.0)
         list_fields = ['MAT4', self.mid, self.k, cp, rho, self.H, self.mu, hgen,
-                       self.refEnthalpy, self.tch, self.tdelta, self.qlat]
+                       self.ref_enthalpy, self.tch, self.tdelta, self.qlat]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1123,6 +1123,35 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     def __init__(self, mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0.,
                  cp=0., rho=1., hgen=1., comment=''):
+        """
+        Creates a MAT5, which defines the thermal material properties for an
+        anisotropic material
+
+        Parameters
+        ----------
+        mid : int
+            material id
+        kxx : float; default==0.
+            ???
+        kxy : float; default==0.
+            ???
+        kxz : float; default==0.
+            ???
+        kyy : float; default==0.
+            ???
+        kyz : float; default==0.
+            ???
+        kzz : float; default==0.
+            ???
+        cp : float; default==0.
+            ???
+        rho : float; default==1.
+            ???
+        hgen : float; default=1.
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalMaterial.__init__(self)
         self.matt5 = None
         if comment:
@@ -1140,6 +1169,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         self.cp = cp
         self.rho = rho
         self.hgen = hgen
+        self.matt5_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1204,12 +1234,11 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         """
         #msg = ' which is required by MAT5 mid=%s' % self.mid
         if self.mid in model.MATT5:
-            self.matt5 = model.MATT5[self.mid]  # not using a method...
-            self.matt5_ref = self.matt5
+            self.matt5_ref = model.MATT5[self.mid]  # not using a method...
 
     def uncross_reference(self):
-        self.matt5 = self.Matt5()
-        del self.matt5_ref, self.matt5_ref
+        #self.matt5 = self.Matt5()
+        del self.matt5_ref
 
     def get_density(self):
         return self.rho

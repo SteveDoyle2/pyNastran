@@ -22,48 +22,48 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_solid_shell_bar_02(self):
         bdf_filename = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
         op2_filename = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_solid_shell_bar_03(self):
         bdf_filename = os.path.join(model_path, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')
         op2_filename = os.path.join(model_path, 'sol_101_elements', 'buckling_solid_shell_bar.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_solid_bending(self):
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
         op2_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_beam_modes_01(self):
         bdf_filename = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
         op2_filename = os.path.join(model_path, 'beam_modes', 'beam_modes_m1.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_beam_modes_02(self):
         bdf_filename = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
         op2_filename = os.path.join(model_path, 'beam_modes', 'beam_modes_m2.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_beam_modes_03(self):
         dirname = os.path.join(model_path, 'beam_modes')
@@ -71,14 +71,14 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        #test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        #test.load_nastran_results(op2_filename)
 
-        test.load_nastran_geometry(bdf_filename, dirname)
-        #test.load_nastran_results(op2_filename, dirname)
+        test.load_nastran_geometry(bdf_filename)
+        #test.load_nastran_results(op2_filename)
 
-        test.load_nastran_geometry(bdf_filename, '')
-        test.load_nastran_results(op2_filename, dirname)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_beam_modes_04(self):
         dirname = os.path.join(model_path, 'beam_modes')
@@ -86,32 +86,32 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(dirname, 'beam_modes_m2.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
-        test.load_nastran_geometry(bdf_filename, dirname)
-        test.load_nastran_results(op2_filename, dirname)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
-        test.load_nastran_geometry(bdf_filename, '')
+        test.load_nastran_geometry(bdf_filename)
 
 
-    @unittest.expectedFailure
-    def test_contact(self):
-        """this test fails because of a misparsed card"""
-        bdf_filename = os.path.join(model_path, 'contact', 'contact.bdf')
-        op2_filename = os.path.join(model_path, 'contact', 'contact.op2')
+    #@unittest.expectedFailure
+    #def test_contact(self):
+        #"""this test fails because of a misparsed card"""
+        #bdf_filename = os.path.join(model_path, 'contact', 'contact.bdf')
+        #op2_filename = os.path.join(model_path, 'contact', 'contact.op2')
 
-        test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        #test = NastranGUI()
+        #test.load_nastran_geometry(bdf_filename)
+        #test.load_nastran_results(op2_filename)
 
     def test_fsi(self):
         bdf_filename = os.path.join(model_path, 'fsi', 'fsi.bdf')
         op2_filename = os.path.join(model_path, 'fsi', 'fsi.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_thermal_01(self):
         dirname = os.path.join(model_path, 'thermal')
@@ -119,14 +119,14 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(dirname, 'thermal_test_153.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_bwb_gui(self):
         bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
         test = NastranGUI()
         #test.log = get_logger2()
-        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_geometry(bdf_filename)
 
     def test_femap_rougv1_01(self):
         """tests the exhaust manifold and it's funny eigenvectors"""
@@ -135,14 +135,36 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(dirname, 'modal_example.op2')
 
         test = NastranGUI()
-        test.load_nastran_geometry(op2_filename, None)
-        test.load_nastran_results(op2_filename, None)
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_aero(self):
         """tests the bah_plane"""
         bdf_filename = os.path.join(model_path, 'aero', 'bah_plane', 'bah_plane.bdf')
         test = NastranGUI()
-        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_elements_01(self):
+        """tests a large number of elements and results in SOL 101"""
+        #bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
+        op2_filename = os.path.join(model_path, 'elements', 'static_elements.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+
+    def test_gui_elements_02(self):
+        """tests a large number of elements and results in SOL 103-modes"""
+        #bdf_filename = os.path.join(model_path, 'elements', 'modes_elements.bdf')
+        op2_filename = os.path.join(model_path, 'elements', 'modes_elements.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+
+    def test_gui_elements_03(self):
+        """tests a large number of elements and results in SOL 108-freq"""
+        #bdf_filename = os.path.join(model_path, 'elements', 'freq_elements.bdf')
+        op2_filename = os.path.join(model_path, 'elements', 'freq_elements.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+
 
 
 def test_bottle():  # pragma: no cover

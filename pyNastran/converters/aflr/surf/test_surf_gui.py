@@ -31,7 +31,7 @@ class TestSurfGui(unittest.TestCase):
         log = get_logger(level='warning')
         test = SurfGui()
         test.log = log
-        test.load_surf_geometry(ugrid_filename, dirname=None)
+        test.load_surf_geometry(ugrid_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

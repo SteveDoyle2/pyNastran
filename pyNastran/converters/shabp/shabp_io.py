@@ -25,7 +25,7 @@ class ShabpIO(object):
                 'Shabp (*.out)', self.load_shabp_results)
         return data
 
-    def load_shabp_geometry(self, shabp_filename, dirname, name='main', plot=True):
+    def load_shabp_geometry(self, shabp_filename, name='main', plot=True):
         self.eid_maps[name] = {}
         self.nid_maps[name] = {}
 
@@ -239,7 +239,7 @@ class ShabpIO(object):
         cases[icase+13] = (nz_res, (itime, 'NormalZ'))
         return form, cases
 
-    def load_shabp_results(self, shabp_filename, dirname):
+    def load_shabp_results(self, shabp_filename):
         Cpd, deltad = self.model.read_shabp_out(shabp_filename)
 
         cases = self.result_cases

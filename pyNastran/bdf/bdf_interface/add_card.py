@@ -73,7 +73,7 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, F
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
                                            MATG, MATHE, MATHP, CREEP, EQUIV)
-from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
+from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATT8, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
@@ -2338,10 +2338,10 @@ class AddCards(AddMethods):
         return mat
 
     def add_mat4(self, mid, k, cp=0.0, rho=1.0, H=None, mu=None, hgen=1.0,
-                 refEnthalpy=None, tch=None, tdelta=None,
+                 ref_enthalpy=None, tch=None, tdelta=None,
                  qlat=None, comment=''):
         mat = MAT4(mid, k, cp=cp, rho=rho, H=H, mu=mu, hgen=hgen,
-                   refEnthalpy=refEnthalpy, tch=tch, tdelta=tdelta,
+                   ref_enthalpy=ref_enthalpy, tch=tch, tdelta=tdelta,
                    qlat=qlat, comment=comment)
         self._add_thermal_material_object(mat)
         return mat
@@ -2351,6 +2351,7 @@ class AddCards(AddMethods):
         mat = MAT5(mid, kxx=kxx, kxy=kxy, kxz=kxz, kyy=kyy, kyz=kyz, kzz=kzz, cp=cp,
                    rho=rho, hgen=hgen, comment=comment)
         self._add_thermal_material_object(mat)
+        return mat
 
     def add_mat8(self, mid, e11, e22, nu12, g12=0.0, g1z=1e8, g2z=1e8,
                  rho=0., a1=0., a2=0.,
@@ -2471,8 +2472,8 @@ class AddCards(AddMethods):
         self._add_material_dependence_object(mat)
         return mat
 
-    def add_matt1(self, mid, E_table, G_table, nu_table, rho_table, A_table,
-                  ge_table, st_table, sc_table, ss_table,
+    def add_matt1(self, mid, E_table=None, G_table=None, nu_table=None, rho_table=None,
+                  A_table=None, ge_table=None, st_table=None, sc_table=None, ss_table=None,
                   comment=''):
         mat = MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
                     ge_table, st_table, sc_table, ss_table,
@@ -2480,32 +2481,48 @@ class AddCards(AddMethods):
         self._add_material_dependence_object(mat)
         return mat
 
-    def add_matt2(self, mid, G11_table, G12_table, G13_table, G22_table,
-                  G23_table, G33_table, rho_table,
-                  A1_table, A2_table, A3_table, ge_table,
-                  st_table, sc_table, ss_table,
+    def add_matt2(self, mid, G11_table=None, G12_table=None, G13_table=None, G22_table=None,
+                  G23_table=None, G33_table=None, rho_table=None,
+                  a1_table=None, a2_table=None, a3_table=None, ge_table=None,
+                  st_table=None, sc_table=None, ss_table=None,
                   comment=''):
         mat = MATT2(mid, G11_table, G12_table, G13_table, G22_table,
                     G23_table, G33_table, rho_table,
-                    A1_table, A2_table, A3_table, ge_table,
+                    a1_table, a2_table, a3_table, ge_table,
                     st_table, sc_table, ss_table,
                     comment=comment)
         self._add_material_dependence_object(mat)
         return mat
 
-    def add_matt4(self, mid, k_table, cp_table, H_table, mu_table, Hgen_table,
-                  comment=''):
-        mat = MATT4(mid, k_table, cp_table, H_table, mu_table, Hgen_table,
+    #ddf add_matt3(mid):
+        #mat = MATT3
+
+    def add_matt4(self, mid, k_table=None, cp_table=None, h_table=None,
+                  mu_table=None, hgen_table=None, comment=''):
+        mat = MATT4(mid, k_table, cp_table, h_table, mu_table, hgen_table,
                     comment=comment)
         self._add_material_dependence_object(mat)
         return mat
 
-    def add_matt5(self, mid, kxx_table, kxy_table, kxz_table, kyy_table,
-                  kyz_table, kzz_table, cp_table,
-                  hgen_table, comment=''):
+    def add_matt5(self, mid, kxx_table=None, kxy_table=None, kxz_table=None,
+                  kyy_table=None, kyz_table=None, kzz_table=None, cp_table=None,
+                  hgen_table=None, comment=''):
         mat = MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
                     kyz_table, kzz_table, cp_table,
                     hgen_table, comment=comment)
+        self._add_material_dependence_object(mat)
+        return mat
+
+    def add_matt8(self, mid, E1_table=None, E2_table=None, Nu12_table=None,
+                 G12_table=None, G1z_table=None, G2z_table=None, rho_table=None,
+                 a1_table=None, a2_table=None,
+                 xt_table=None, xc_table=None, yt_table=None, yc_table=None,
+                 s_table=None, ge_table=None, f12_table=None, comment=''):
+        mat = MATT8(mid, E1_table=E1_table, E2_table=E2_table, Nu12_table=Nu12_table,
+                    G12_table=G12_table, G1z_table=G1z_table, G2z_table=G2z_table,
+                    rho_table=rho_table, a1_table=a1_table, a2_table=a2_table,
+                    xt_table=xt_table, xc_table=xc_table, yt_table=yt_table, yc_table=yc_table,
+                    s_table=s_table, ge_table=ge_table, f12_table=f12_table, comment=comment)
         self._add_material_dependence_object(mat)
         return mat
 

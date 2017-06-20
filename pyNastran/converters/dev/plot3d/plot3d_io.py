@@ -22,7 +22,7 @@ class Plot3d_io(object):  # pragma: no cover
                 None, None)
         return data
 
-    def load_plot3d_geometry(self, p3d_filename, dirname, name='main'):
+    def load_plot3d_geometry(self, p3d_filename, name='main'):
         print("load_plot3d_geometry")
         self.nid_map = {}
 
@@ -198,6 +198,6 @@ class Plot3d_io(object):  # pragma: no cover
                 #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
 
-    #def load_panair_results(self, panairFileName, dirname):
+    #def load_panair_results(self, panairFileName):
         ##self.result_cases = {}
         #pass

@@ -2686,7 +2686,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #if args[-1] == 'plot':
             try:
                 t0 = time.time()
-                has_results = load_function(infile_name, self.last_dir, name=name, plot=plot)
+                has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
                 dt = time.time() - t0
                 print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
                 #else:
@@ -2694,8 +2694,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #self.log_error(str(args))
                     #self.log_error("'plot' needs to be added to %r; "
                                    #"args[-1]=%r" % (name, args[-1]))
-                    #has_results = load_function(infile_name, self.last_dir)
-                    #form, cases = load_function(infile_name, self.last_dir)
+                    #has_results = load_function(infile_name) # , self.last_dir
+                    #form, cases = load_function(infile_name) # , self.last_dir
             except Exception as e:
                 msg = traceback.format_exc()
                 self.log_error(msg)
@@ -3153,7 +3153,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #raise IOError(msg)
             self.last_dir = os.path.split(out_filenamei)[0]
             try:
-                load_function(out_filenamei, self.last_dir)
+                load_function(out_filenamei)
             except Exception: #  as e
                 msg = traceback.format_exc()
                 self.log_error(msg)

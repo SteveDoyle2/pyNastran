@@ -28,12 +28,11 @@ class TestUsm3dGUI(unittest.TestCase):
         #log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(model_path, 'box.cogsg')
         flo_filename = os.path.join(model_path, 'box.flo')
-        dirname = None
 
         test = Usm3dGUI()
         #test.log = log
-        test.load_usm3d_geometry(geometry_filename, dirname)
-        test.load_usm3d_results(flo_filename, dirname)
+        test.load_usm3d_geometry(geometry_filename)
+        test.load_usm3d_results(flo_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

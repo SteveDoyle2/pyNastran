@@ -449,9 +449,10 @@ class MATT2(MaterialDependence):
     """
     type = 'MATT2'
 
-    def __init__(self, mid, G11_table, G12_table, G13_table, G22_table, G23_table,
-                 G33_table, rho_table, A1_table, A2_table, A3_table,
-                 ge_table, st_table, sc_table, ss_table, comment=''):
+    def __init__(self, mid, G11_table=None, G12_table=None, G13_table=None,
+                 G22_table=None, G23_table=None, G33_table=None, rho_table=None,
+                 A1_table=None, A2_table=None, A3_table=None,
+                 ge_table=None, st_table=None, sc_table=None, ss_table=None, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self.comment = comment
@@ -1037,10 +1038,8 @@ class MATT8(MaterialDependence):
             the BDF object
         """
         msg = ', which is required by MATT1 mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
-        ## TODO: add refs
         if self._E1_table is not None:
             self.E1_table_ref = model.TableM(self._E1_table)
         if self._E2_table is not None:
@@ -1115,6 +1114,11 @@ class MATT8(MaterialDependence):
         if self.E2_table_ref is not None:
             return self.E2_table_ref.tid
         return self._E2_table
+
+    def Nu12_table(self):
+        if self.Nu12_table_ref is not None:
+            return self.Nu12_table_ref.tid
+        return self._Nu12_table
 
     def G12_table(self):
         if self.G12_table_ref is not None:

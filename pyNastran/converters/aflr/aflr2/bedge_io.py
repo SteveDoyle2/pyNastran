@@ -19,7 +19,7 @@ class BEdge_IO(object):
             None, None)
         return data
 
-    def load_bedge_geometry(self, bedge_filename, dirname, name='main', plot=True):
+    def load_bedge_geometry(self, bedge_filename, name='main', plot=True):
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return

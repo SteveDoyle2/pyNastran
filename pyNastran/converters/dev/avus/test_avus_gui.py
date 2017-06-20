@@ -60,10 +60,9 @@ class TestAvusGUI(unittest.TestCase):
         with open(avus_filename, 'w') as avus_file:
             avus_file.write(lines)
 
-        dirname = None
         test = AvusGUI()
         test.log = get_logger(level='warning', encoding='utf-8')
-        test.load_avus_geometry(avus_filename, dirname)
+        test.load_avus_geometry(avus_filename)
         os.remove(avus_filename)
 
     def test_avus_geometry_01(self):
@@ -93,10 +92,9 @@ class TestAvusGUI(unittest.TestCase):
         with open(avus_filename, 'w') as avus_file:
             avus_file.write(lines)
 
-        dirname = None
         test = AvusGUI()
         test.log = get_logger(level='warning', encoding='utf-8')
-        test.load_avus_geometry(avus_filename, dirname)
+        test.load_avus_geometry(avus_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -27,11 +27,10 @@ class TestSU2GUI(unittest.TestCase):
     def test_su2_geometry(self):
         log = get_logger(level='warning')
         geometry_filename = os.path.join(model_path, 'mesh_naca0012_inv.su2')
-        dirname = None
 
         test = SU2_GUI()
         test.log = log
-        test.load_su2_geometry(geometry_filename, dirname)
+        test.load_su2_geometry(geometry_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

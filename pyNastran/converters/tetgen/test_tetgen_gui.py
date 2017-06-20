@@ -28,11 +28,10 @@ class TestTetgenGUI(unittest.TestCase):
     def test_tetgen_geometry_01(self):
         log = get_logger(level='warning')
         geometry_filename = os.path.join(model_path, 'gear.smesh')
-        dirname = None
 
         test = TetgenGUI()
         test.log = log
-        test.load_tetgen_geometry(geometry_filename, dirname)
+        test.load_tetgen_geometry(geometry_filename)
 
     def test_tetgen_geometry_02(self):
         log = get_logger(level='warning')
@@ -48,8 +47,8 @@ class TestTetgenGUI(unittest.TestCase):
         test = TetgenGUI()
         test.log = log
         base = os.path.join(model_path, 'tetgen_test.1')
-        test.load_tetgen_geometry(base + '.smesh', dirname=None)
-        test.load_tetgen_geometry(base + '.ele', dirname=None)
+        test.load_tetgen_geometry(base + '.smesh')
+        test.load_tetgen_geometry(base + '.ele')
         #base = 'tetgen_test_flipped.1'
         #m.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag=3)
         #m.write_nastran(base + '.bdf')

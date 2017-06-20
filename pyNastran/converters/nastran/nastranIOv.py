@@ -413,7 +413,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #print('done with cross_reference')
         return model
 
-    def load_nastran_geometry(self, bdf_filename, dirname, name='main', plot=True):
+    def load_nastran_geometry(self, bdf_filename, name='main', plot=True):
         """
         The entry point for Nastran geometry loading.
 
@@ -421,8 +421,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         ----------
         bdf_filename : str
             the Nastran filename to load
-        dirname : str
-            ???
         name : str
             the name of the "main" actor for the GUI
         plot : bool; default=True
@@ -902,7 +900,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 j += 4
             elif isinstance(element, CAERO2):
                 # slender body
-                if 0:
+                if 0:  # pragma: no cover
                     # 1D version
                     cpoints = element.get_points()
                     cpoints[:, 2] +=  zfighting_offset
@@ -3721,7 +3719,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             print(sout)
         return icase
 
-    def load_nastran_results(self, op2_filename, dirname):
+    def load_nastran_results(self, op2_filename):
         """
         Loads the Nastran results into the GUI
         """

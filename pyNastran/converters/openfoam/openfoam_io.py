@@ -60,16 +60,16 @@ class OpenFoamIO(object):
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_openfoam_geometry_hex(self, openfoam_filename, dirname, plot=True):
-        self.load_openfoam_geometry(openfoam_filename, dirname, 'hex')
+    def load_openfoam_geometry_hex(self, openfoam_filename, plot=True):
+        self.load_openfoam_geometry(openfoam_filename, 'hex')
 
-    def load_openfoam_geometry_shell(self, openfoam_filename, dirname, plot=True):
-        self.load_openfoam_geometry(openfoam_filename, dirname, 'shell')
+    def load_openfoam_geometry_shell(self, openfoam_filename, plot=True):
+        self.load_openfoam_geometry(openfoam_filename, 'shell')
 
-    def load_openfoam_geometry_faces(self, openfoam_filename, dirname, plot=True):
-        self.load_openfoam_geometry(openfoam_filename, dirname, 'faces')
+    def load_openfoam_geometry_faces(self, openfoam_filename, plot=True):
+        self.load_openfoam_geometry(openfoam_filename, 'faces')
 
-    def load_openfoam_geometry(self, openfoam_filename, dirname, mesh_3d, plot=True):
+    def load_openfoam_geometry(self, openfoam_filename, mesh_3d, plot=True):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
@@ -114,6 +114,7 @@ class OpenFoamIO(object):
         elif mesh_3d == 'shell':
             self.nElements = len(quads)
         elif mesh_3d == 'faces':
+            dirname = os.path.dirname(openfoam_filename)
             point_filename = os.path.join(dirname, 'points')
             face_filename = os.path.join(dirname, 'faces')
             boundary_filename = os.path.join(dirname, 'boundary')
@@ -320,7 +321,7 @@ class OpenFoamIO(object):
     def clear_openfoam(self):
         pass
 
-    def _load_openfoam_results(self, openfoam_filename, dirname):
+    def _load_openfoam_results(self, openfoam_filename):
         raise NotImplementedError()
 
     def _fill_openfoam_case(self, cases, ID, nodes, nelements, patches, names, normals,
