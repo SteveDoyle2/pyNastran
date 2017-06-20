@@ -157,8 +157,8 @@ class DYNAMICS(GeomCommon):
                 load_id = ints[istart + 3 + 2*iscale]
                 scales.append(scale)
                 load_ids.append(load_id)
+
             dload = self.add_dload(sid, global_scale, scales, load_ids)
-            #print(dload)
             istart = iend + 2
             nentries += 1
         self._increase_card_count('DLOAD', nentries)

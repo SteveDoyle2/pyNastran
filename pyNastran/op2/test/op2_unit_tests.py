@@ -190,7 +190,7 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        run_op2(op2_filename, make_geom=True, write_bdf=True,
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 write_xlsx=False, is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,

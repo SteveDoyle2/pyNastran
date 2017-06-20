@@ -115,8 +115,6 @@ class AddMethods(BDFAttributes):
         for nid in spoints.points:
             if nid in self.spoints:
                 continue
-                #raise RuntimeError('nid=%s\nold_spoint=\n%snew_spoint=\n%s' % (
-                    #nid, self.spoints[nid], spoints))
             spoint = SPOINT(nid, comment=comment)
             comment = ''
             self.spoints[nid] = spoint
@@ -128,8 +126,6 @@ class AddMethods(BDFAttributes):
         for nid in epoints.points:
             if nid in self.epoints:
                 continue
-                #raise RuntimeError('nid=%s\nold_epoint=\n%snew_epoint=\n%s' % (
-                    #nid, self.epoints[nid], epoints))
             epoint = EPOINT(nid, comment=comment)
             comment = ''
             self.epoints[nid] = epoint
@@ -150,10 +146,6 @@ class AddMethods(BDFAttributes):
                     assert elem.eid not in self.plotels, 'eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, self.plotels[elem.eid], elem)
         self.plotels[key] = elem
         self._type_to_id_map[elem.type].append(key)
-
-    #def add_element(self, elem, allow_overwrites=False):
-        #"""deprecated"""
-        #return self._add_element_object(elem, allow_overwrites)
 
     def _add_element_object(self, elem, allow_overwrites=False):
         key = elem.eid

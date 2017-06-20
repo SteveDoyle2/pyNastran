@@ -1178,7 +1178,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         bdf_extension = '.bdf'
         f06_extension = '.f06'
-        (fname, extension) = os.path.splitext(op2_filename)
+        fname = os.path.splitext(op2_filename)[0]
 
         self.op2_filename = op2_filename
         self.bdf_filename = fname + bdf_extension

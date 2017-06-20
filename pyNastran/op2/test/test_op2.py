@@ -201,7 +201,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     return failed_cases
 
 
-def run_op2(op2_filename, make_geom=False, write_bdf=False,
+def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             write_f06=True, write_op2=False, write_xlsx=False,
             is_mag_phase=False, is_sort2=False, is_nx=None,
             delete_f06=False,
@@ -260,6 +260,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         False : crash on errors
         True : don't crash
     """
+    if read_bdf is None:
+        read_bdf = write_bdf
     op2 = None
     op2_nv = None
     if subcases is None:
@@ -346,13 +348,14 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             op2.validate()
             op2.write_bdf(bdf_filename, size=8)
             op2.log.debug('bdf_filename = %s' % bdf_filename)
-            try:
-                op2_bdf.read_bdf(bdf_filename)
-            except:
-                if dev and len(op2_bdf.card_count) == 0:
-                    pass
-                else:
-                    raise
+            if read_bdf:
+                try:
+                    op2_bdf.read_bdf(bdf_filename)
+                except:
+                    if dev and len(op2_bdf.card_count) == 0:
+                        pass
+                    else:
+                        raise
             #os.remove(bdf_filename)
         if compare:
             assert op2 == op2_nv
