@@ -436,7 +436,7 @@ class AELIST(BaseCard):
 
     Remarks
     -------
-   1. These entries are referenced by the AESURF entry.
+    1. These entries are referenced by the AESURF entry.
     2. When the THRU option is used, all intermediate grid points must exist.
        The word THRU may not appear in field 3 or 9 (2 or 9 for continuations).
     3. Intervening blank fields are not allowed.
@@ -584,11 +584,11 @@ class AEPARM(BaseCard):
         comment : str; default=''
             a comment for the card
         """
-        id = data[0]
+        aeparm_id = data[0]
         label = data[1]
         units = data[2]
         assert len(data) == 3, 'data = %s' % data
-        return AEPARM(id, label, units, comment=comment)
+        return AEPARM(aeparm_id, label, units, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -934,6 +934,17 @@ class AESURF(BaseCard):
         self.tqllim_ref = None
         self.tqulim_ref = None
 
+    def update(self, model, maps):
+        coord_map = maps['coord']
+        aelist_map = maps['aelist']
+        self.cid1 = coord_map[self.cid1]
+        if self.cid2:
+            self.cid2 = coord_map[self.cid2]
+
+        self.alid1 = aelist_map[self.alid1]
+        if self.alid2:
+            self.alid2 = aelist_map[self.alid2]
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -1272,6 +1283,15 @@ class AERO(Aero):
     def uncross_reference(self):
         self.acsid_ref = None
 
+    def update(self, maps):
+        """
+        maps = {
+            'coord' : cid_map,
+        }
+        """
+        cid_map = maps['coord']
+        self.acsid = cid_map[self.acsid]
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -1488,6 +1508,16 @@ class AEROS(Aero):
     def uncross_reference(self):
         self.acsid_ref = None
         self.rcsid_ref = None
+
+    def update(self, maps):
+        """
+        maps = {
+            'coord' : cid_map,
+        }
+        """
+        cid_map = maps['coord']
+        self.acsid = cid_map[self.acsid]
+        self.rcsid = cid_map[self.rcsid]
 
     def raw_fields(self):
         """
@@ -2133,6 +2163,29 @@ class CAERO1(BaseCard):
         self.cp_ref = None
         self.lchord_ref = None
         self.lspan_ref = None
+
+    def update(self, maps):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        #msg = ' which is required by CAERO1 eid=%s' % self.eid
+        paero_map = maps['paero']
+        coord_map = maps['coord']
+        aefact_map = maps['aefact']
+        self.pid = paero_map[self.pid]
+        self.cp = coord_map[self.cp]
+        #self.acsid = coord_map[self.acsid]  # AERO/AEROS card
+
+        if self.nchord == 0:
+            self.lchord = aefact_map[self.lchord]
+        if self.nspan == 0:
+            self.lspan = aefact_map[self.lspan]
+        #self._init_ids(model)
 
     @property
     def min_max_eid(self):
@@ -4612,11 +4665,9 @@ class MKAERO1(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        #cards = []
         nmachs = len(self.machs)
         nreduced_freqs = len(self.reduced_freqs)
         if nmachs > 8 or nreduced_freqs > 8:
-            #cards = []
             mach_sets = []
             rfreq_sets = []
             imach = 0
@@ -6244,6 +6295,7 @@ class SPLINE3(Spline):
     def uncross_reference(self):
         self.caero = self.CAero()
         self.nodes = self.node_ids
+        self.nodes_ref = None
         self.caero_ref = None
 
     def raw_fields(self):
