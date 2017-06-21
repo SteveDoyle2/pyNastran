@@ -99,7 +99,7 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 #from pyNastran.bdf.cards.loads.loads import (
     #DAREA, #LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN
 #)
-
+from pyNastran.bdf.errors import DuplicateIDsError, CrossReferenceError
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,

@@ -447,7 +447,7 @@ class RLOAD1(DynamicLoad):
         assert len(card) <= 8, 'len(RLOAD1 card) = %i\ncard=%s' % (len(card), card)
         return RLOAD1(sid, excite_id, delay, dphase, tc, td, Type, comment=comment)
 
-    def _cross_reference_excite_id(self, msg):
+    def _cross_reference_excite_id(self, model, msg):
         """not quite done...not sure how to handle the very odd xref"""
         case_control = model.case_control_deck
         if case_control is not None:
@@ -480,6 +480,7 @@ class RLOAD1(DynamicLoad):
             the BDF object
         """
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
+        #self._cross_reference_excite_id(model, msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc_ref = model.TableD(self.tc, msg=msg)
         if isinstance(self.td, integer_types) and self.td:
@@ -1025,9 +1026,6 @@ class TLOAD1(DynamicLoad):
         msg = ' which is required by TLOAD1=%s' % (self.sid)
         if self.tid:
             self.tid_ref = model.TableD(self.tid, msg=msg)
-        else:
-            print('self.tid = ', self.tid)
-            asdf
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay, msg=msg)
 

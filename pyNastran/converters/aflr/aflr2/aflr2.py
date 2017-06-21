@@ -397,7 +397,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
     axis : int; default=1
         the axis to remove (nodes in Nx3)
     """
-    self.log.debug('bedge_filename = %s' % bedge_filename)
+    log.debug('bedge_filename = %s' % bedge_filename)
     #if bedge_filename == 'farfield.bedge':
         #print(grid_bcs)
 
@@ -418,7 +418,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
             i = where(curves == ucurve)[0]
 
             subcurvesi = subcurves[i]
-            self.log.debug('ucurve=%s i=%s subcurves[i]=%s' % (ucurve, i, subcurvesi))
+            log.debug('ucurve=%s i=%s subcurves[i]=%s' % (ucurve, i, subcurvesi))
 
             usubcurves = unique(subcurvesi)
             nsubcurves = len(usubcurves)
@@ -427,13 +427,13 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
 
             for usubcurve in usubcurves:
                 if usubcurve not in all_usubcurves:
-                    self.log.debug(all_usubcurves)
+                    log.debug(all_usubcurves)
                     # stop???
 
                 all_usubcurves.add(usubcurve)
                 j = where(subcurvesi == usubcurve)[0]
                 nnodesi = len(j)
-                self.log.debug('usubcurve=%s j=%s subcurves[j]=%s nnodes=%s' % (
+                log.debug('usubcurve=%s j=%s subcurves[j]=%s nnodes=%s' % (
                     usubcurve, j, subcurvesi[j], nnodesi))
                 #f.write('%s ' % nnodesi)
                 nodes_pack.append(nnodesi)
@@ -444,7 +444,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
             bedge_file.write('  %s' % nsubcurvesi)
         bedge_file.write('\n')
         nsubcurves = len(grid_bcs)
-        self.log.debug('nsubcurves = %s?' % nsubcurves)
+        log.debug('nsubcurves = %s?' % nsubcurves)
         assert nsubcurves < 20
         #assert nsubcurves == len(nsubcurves_list) #  wrong check...
 

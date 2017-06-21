@@ -13,7 +13,7 @@ from scipy.spatial import cKDTree
 import scipy.interpolate
 
 def projected_barycentric_coord(p, q, u, v):
-    """
+    r"""
     points p, q
     vector u, v
         3
@@ -25,10 +25,10 @@ def projected_barycentric_coord(p, q, u, v):
     v = p3 - p1
     """
     n = cross(u, v)
-    one_over_4_area_squared = 1.0 / dot(n, n)
+    one_over_4_area_squared = 1.0 / np.dot(n, n)
     w = p - q
-    b[2] = dot(cross(u, w), n) * one_over_4_area_squared
-    b[1] = dot(cross(w, v), n) * one_over_4_area_squared
+    b[2] = np.dot(crnp.oss(u, w), n) * one_over_4_area_squared
+    b[1] = np.dot(np.cross(w, v), n) * one_over_4_area_squared
     b[0] = 1.0 - b[1] - b[2]
     return b
 
@@ -74,7 +74,7 @@ def project_points_onto_stl(stl, points):
         #If `x` has shape tuple+(self.m,), then `i` has shape tuple+(k,).
         #Missing neighbors are indicated with self.n.
     dist, i = tree.query(points, k=1, eps=0, p=2,
-                          distance_upper_bound=np.inf, n_jobs=1)
+                         distance_upper_bound=np.inf, n_jobs=1)
 
     # distance from centroid to point, such that we get the element id directly
     print('i =', i)
@@ -232,7 +232,7 @@ def build():
     model.nodes[2] = GRID(nid=2, cp=0, xyz=xyz2)
     model.nodes[3] = GRID(nid=3, cp=0, xyz=xyz3)
     model.nodes[4] = GRID(nid=4, cp=0, xyz=xyz4)
-    model.elements[1] = CQUAD4(eid=1, pid=100, nids=[1,2,3,4])
+    model.elements[1] = CQUAD4(eid=1, pid=100, nids=[1, 2, 3, 4])
     model.properties[100] = PSHELL(pid=100, mid1=1000, t=0.1)
     model.materials[1000] = MAT1(mid=1000, E=1e7, G=None, nu=0.3)
 

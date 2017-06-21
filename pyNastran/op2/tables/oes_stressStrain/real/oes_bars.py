@@ -116,8 +116,8 @@ class RealBarArray(OES_Object):
             if self.is_sort1():
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
                         (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
                         (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
                         if not np.allclose(t1, t2):
@@ -212,7 +212,8 @@ class RealBarArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06, header=None, page_stamp='PAGE %s', page_num=1,
+                  is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = self._get_msgs()
@@ -222,7 +223,7 @@ class RealBarArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06.write(''.join(header + msg))
 
             s1a = self.data[itime, :, 0]
             s2a = self.data[itime, :, 1]
@@ -253,12 +254,12 @@ class RealBarArray(OES_Object):
                 vals2 = write_floats_13e(vals)
                 [s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
                  s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci] = vals2
-                f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
-                        ' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
-                        % (eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
-                            '', s1bi, s2bi, s3bi, s4bi, '',     smaxbi, sminbi, MSci))
+                f06.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
+                          ' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
+                          % (eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
+                             '', s1bi, s2bi, s3bi, s4bi, '',     smaxbi, sminbi, MSci))
 
-            f.write(page_stamp % page_num)
+            f06.write(page_stamp % page_num)
             page_num += 1
 
         if self.nonlinear_factor is None:

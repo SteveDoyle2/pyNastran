@@ -1111,7 +1111,7 @@ class USET(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.components = components
         self.ids = ids
-    self.ids_ref = None
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

@@ -53,7 +53,7 @@ class Usm3dIO(object):
             msg = 'The current file is must have the format of xxx_%%i.flo, not %r' % self.out_filename
             raise RuntimeError(msg)
         #print("loading %r" % flo_filename)
-        self.load_usm3d_results(flo_filename, dirname)
+        self.load_usm3d_results(flo_filename)
         self.out_filename = os.path.join(dirname, flo_filename)
 
         print("done stepping...")

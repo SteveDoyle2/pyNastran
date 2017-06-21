@@ -207,11 +207,11 @@ class PGAP(Property):
         if comment:
             self.comment = comment
         if kb is None:
-            kb = double_or_blank(card, 5, 'kb', 1e-14 * ka)
+            kb = 1e-14 * ka
         if kt is None:
-            kt = double_or_blank(card, 6, 'kt', mu1 * ka)
+            kt = mu1 * ka
         if mu2 is None:
-            mu2 = double_or_blank(card, 8, 'mu2', mu1)
+            mu2 = mu1
 
         #: Property ID
         self.pid = pid

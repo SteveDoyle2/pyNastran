@@ -2662,29 +2662,29 @@ class CPLSTN8(QuadShell):
             theta = 0.0
         return CPLSTN8(eid, pid, nids, theta=theta, comment=comment)
 
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        """
-        Adds a CPLSTN8 card from the OP2
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #"""
+        #Adds a CPLSTN8 card from the OP2
 
-        Parameters
-        ----------
-        data : List[varies]
-            a list of fields defined in OP2 format
-        comment : str; default=''
-            a comment for the card
-        """
-        #print "CQUAD8 = ",data
-        #(6401,
-        #6400,
-        #6401, 6402, 6405, 6403, 0, 0, 6404, 0,
-        #-1.0, -1.0, -1.0, -1.0,
-        #0.0, 0)
-        eid = data[0]
-        pid = data[1]
-        nids = data[2:10]
-        theta = data[10]
-        return CQUAD8(eid, pid, nids, T1, T2, T3, T4, theta, comment=comment)
+        #Parameters
+        #----------
+        #data : List[varies]
+            #a list of fields defined in OP2 format
+        #comment : str; default=''
+            #a comment for the card
+        #"""
+        ##print("CQUAD8 = ",data)
+        ##(6401,
+        ##6400,
+        ##6401, 6402, 6405, 6403, 0, 0, 6404, 0,
+        ##-1.0, -1.0, -1.0, -1.0,
+        ##0.0, 0)
+        #eid = data[0]
+        #pid = data[1]
+        #nids = data[2:10]
+        #theta = data[10]
+        #return CPLSTN8(eid, pid, nids, T1, T2, T3, T4, theta, comment=comment)
 
     def cross_reference(self, model):
         """

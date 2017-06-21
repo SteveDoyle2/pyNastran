@@ -1,27 +1,36 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4.QtGui import (
-        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
-        QColorDialog,
-    )
-elif qt_version == 5:
-    from PyQt5.QtWidgets import (
-        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
-        QColorDialog,
-    )
-
-
-
 from numpy import setdiff1d, unique, array, hstack
 
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore
+    from PyQt4.QtGui import (
+        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
+        QColorDialog, QLabel,
+    )
+elif qt_version == 5:
+    from PyQt5 import QtCore
+    from PyQt5.QtWidgets import (
+        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
+        QColorDialog, QLabel,
+    )
+elif qt_version == 'pyside':
+    from PySide import QtCore
+    from PySide.QtGui import (
+        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
+        QColorDialog, QLabel,
+    )
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
+
+
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
-from pyNastran.bdf.cards.base_card import collapse_colon_packs
+from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 
 
-class ChangeBCs(QtGui.QDialog):
+class ChangeBCs(QDialog):
     """
     +--------------------------+
     |     Change BCs           |
@@ -42,6 +51,8 @@ class ChangeBCs(QtGui.QDialog):
         self._default_theta = data['theta']
 
         self.elements_pound = data['elements_pound']
+        self.eids = []
+        self.cids = []
 
         self.out_data = data
         QDialog.__init__(self, win_parent)
@@ -55,11 +66,11 @@ class ChangeBCs(QtGui.QDialog):
     def create_widgets(self):
         # Name
         self.pid = QLabel("New Property ID:")
-        self.pid_edit = QLineEdit(str(self._default_pid).strip())
+        self.pid_edit = QLineEdit(str(self._default_property).strip())
         self.pid_button = QPushButton("Default")
 
         # Name
-        self.elements = QLabel("Element ID:")
+        self.elements = QLabel("Element IDs:")
         self.elements_edit = QLineEdit(str(self._default_elements).strip())
         self.elements_button = QPushButton("Default")
 
@@ -71,7 +82,7 @@ class ChangeBCs(QtGui.QDialog):
 
         # applies a unique implicitly
         self.eids = parse_patran_syntax(str(self._default_elements), pound=self.elements_pound)
-        self.cids = parse_patran_syntax(str(self._default_coords), pound=self.coords_pound)
+        #self.cids = parse_patran_syntax(str(self._default_coords), pound=self.coords_pound)
 
         # continuous / discrete
         #self.checkbox_continuous = QCheckBox("Continuous")
@@ -94,9 +105,13 @@ class ChangeBCs(QtGui.QDialog):
         grid.addWidget(self.pid_edit, 0, 1)
         grid.addWidget(self.pid_button, 0, 2)
 
-        grid.addWidget(self.elements, 2, 0)
-        grid.addWidget(self.elements_edit, 2, 1)
-        grid.addWidget(self.elements_button, 2, 2)
+        grid.addWidget(self.elements, 1, 0)
+        grid.addWidget(self.elements_edit, 1, 1)
+        grid.addWidget(self.elements_button, 1, 2)
+
+        grid.addWidget(self.theta, 2, 0)
+        grid.addWidget(self.theta_edit, 2, 1)
+        grid.addWidget(self.theta_button, 2, 2)
 
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
@@ -330,6 +345,9 @@ def main():
     nice_blue = (0.1, 0.2, 0.4)
     #The Main window
     d = {
+        'eid' : 1,
+        'pid' : 2,
+        'theta' : 42.,
         'name' : 'asdf',
         'coords' : 0,
         'coords_pound' : 4,
@@ -337,7 +355,7 @@ def main():
         'elements' : '1:#',
         'color' : nice_blue,
     }
-    main_window = GroupsModify(d)
+    main_window = ChangeBCs(d)
     main_window.show()
     # Enter the main loop
     app.exec_()

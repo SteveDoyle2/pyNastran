@@ -81,7 +81,7 @@ class ShabpOut(object):
 
         nstreamlines = 19
         streamlines = []
-        for istreamline in xrange(nstreamlines):
+        for istreamline in range(nstreamlines):
             # streamline 1
             streamline = []
             line, i = self.readline(f, i)
