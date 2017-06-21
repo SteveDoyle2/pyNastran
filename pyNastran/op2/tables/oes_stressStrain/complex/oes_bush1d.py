@@ -50,11 +50,11 @@ class ComplexCBush1DArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element = np.zeros(self.nelements, dtype='int32')
 
         #[tx, ty, tz, rx, ry, rz]
-        self.data = zeros((self.ntimes, self.nelements, 6), dtype='complex64')
+        self.data = np.zeros((self.ntimes, self.nelements, 6), dtype='complex64')
 
     def build_dataframe(self):
         headers = self.get_headers()
@@ -138,11 +138,11 @@ class ComplexCBush1DArray(OES_Object):
         return msg
 
     def get_element_index(self, eids):
-        itot = searchsorted(eids, self.element)
+        itot = np.searchsorted(eids, self.element)
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = searchsorted(eids, self.element)
+        ind = np.searchsorted(eids, self.element)
         return ind
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):

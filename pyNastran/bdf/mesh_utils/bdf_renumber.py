@@ -371,7 +371,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #print(nid_map)
         #print(reverse_nid_map)
     else:
-        for nid in nid_spoints_epoints:
+        for nid in nids_spoints_epoints:
             nid_map[nid] = nid
             reverse_nid_map[nid] = nid
 

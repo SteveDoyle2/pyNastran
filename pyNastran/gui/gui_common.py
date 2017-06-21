@@ -5791,7 +5791,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             data[group.name] = group
         self.groups = data
 
-    def on_update_geometry_properties(self, out_data, write_log=True):
+    def on_update_geometry_properties(self, out_data, name=None, write_log=True):
         """
         Applies the changed properties to the different actors if
         something changed.
@@ -5801,28 +5801,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         being actually "hidden" at the same time.
         """
         lines = []
-        for name, group in iteritems(out_data):
-            if name in ['clicked_ok', 'clicked_cancel']:
-                continue
-            actor = self.geometry_actors[name]
-            if isinstance(actor, vtk.vtkActor):
-                lines += self._update_geomtry_properties_actor(name, group, actor)
-            elif isinstance(actor, vtk.vtkAxesActor):
-                changed = False
-                is_visible1 = bool(actor.GetVisibility())
-                is_visible2 = group.is_visible
-                if is_visible1 != is_visible2:
-                    actor.SetVisibility(is_visible2)
-                    alt_prop = self.geometry_properties[name]
-                    alt_prop.is_visible = is_visible2
-                    actor.Modified()
-                    changed = True
-
-                if changed:
-                    lines.append('    %r : CoordProperties(is_visible=%s),\n' % (
-                        name, is_visible2))
-            else:
-                raise NotImplementedError(actor)
+        if name is None:
+            for namei, group in iteritems(out_data):
+                if namei in ['clicked_ok', 'clicked_cancel']:
+                    continue
+                self._update_ith_geometry_properties(namei, group, lines, render=False)
+        else:
+            group = out_data[name]
+            self._update_ith_geometry_properties(name, group, lines, render=False)
 
         self.vtk_interactor.Render()
         if write_log and lines:
@@ -5831,6 +5817,30 @@ class GuiCommon2(QMainWindow, GuiCommon):
             msg += '}\n'
             msg += 'self.on_update_geometry_properties(out_data)'
             self.log_command(msg)
+
+    def _update_ith_geometry_properties(self, namei, group, lines, render=True):
+        """updates a geometry"""
+        actor = self.geometry_actors[namei]
+        if isinstance(actor, vtk.vtkActor):
+            lines += self._update_geomtry_properties_actor(namei, group, actor)
+        elif isinstance(actor, vtk.vtkAxesActor):
+            changed = False
+            is_visible1 = bool(actor.GetVisibility())
+            is_visible2 = group.is_visible
+            if is_visible1 != is_visible2:
+                actor.SetVisibility(is_visible2)
+                alt_prop = self.geometry_properties[namei]
+                alt_prop.is_visible = is_visible2
+                actor.Modified()
+                changed = True
+
+            if changed:
+                lines.append('    %r : CoordProperties(is_visible=%s),\n' % (
+                    namei, is_visible2))
+        else:
+            raise NotImplementedError(actor)
+        if render:
+            self.vtk_interactor.Render()
 
     def _update_geomtry_properties_actor(self, name, group, actor):
         """
@@ -5856,7 +5866,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         prop = actor.GetProperty()
         backface_prop = actor.GetBackfaceProperty()
 
-        if backface_prop is None:
+        if name == 'main' and backface_prop is None:
             # don't edit these
             # we're lying about the colors to make sure the
             # colors aren't reset for the Normals

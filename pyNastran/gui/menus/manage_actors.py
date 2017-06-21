@@ -160,7 +160,6 @@ class Model(QtCore.QAbstractTableModel):
 
 class EditGeometryProperties(PyDialog):
     force = True
-    allow_update = True
     def __init__(self, data, win_parent=None):
         """
         +------------------+
@@ -186,6 +185,7 @@ class EditGeometryProperties(PyDialog):
         self.set_font_size(data['font_size'])
         del self.out_data['font_size']
         self.setWindowTitle('Edit Geometry Properties')
+        self.allow_update = True
 
         #default
         #self.win_parent = win_parent
@@ -659,6 +659,7 @@ class EditGeometryProperties(PyDialog):
         self.on_cancel()
 
     def on_color(self):
+        """called when the user clicks on the color box"""
         name = self.active_key
         obj = self.out_data[name]
         rgb_color_ints = obj.color
@@ -666,28 +667,33 @@ class EditGeometryProperties(PyDialog):
         msg = name
         col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self, "Choose a %s color" % msg)
         if col.isValid():
-            color = col.getRgbF()[:3]
-            obj.color = color
+            color_float = col.getRgbF()[:3]
+            obj.color = color_float
+            color_int = [int(colori * 255) for colori in color_float]
             #print('new_color =', color)
             self.color_edit.setStyleSheet("QPushButton {"
-                                          "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
+                                          "background-color: rgb(%s, %s, %s);" % tuple(color_int) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
         self.on_apply(force=self.force)
+        print(self.allow_update)
 
     def on_show(self):
+        """shows the actor"""
         name = self.active_key
         is_checked = self.checkbox_show.isChecked()
         self.out_data[name].is_visible = is_checked
         self.on_apply(force=self.force)
 
     def on_hide(self):
+        """hides the actor"""
         name = self.active_key
         is_checked = self.checkbox_hide.isChecked()
         self.out_data[name].is_visible = not is_checked
         self.on_apply(force=self.force)
 
     def on_line_width(self):
+        """increases/decreases the wireframe (for solid bodies) or the bar thickness"""
         self.is_line_width_edit_active = True
         name = self.active_key
         line_width = self.line_width_edit.value()
@@ -700,6 +706,7 @@ class EditGeometryProperties(PyDialog):
         self.is_line_width_edit_active = False
 
     def on_line_width_slider(self):
+        """increases/decreases the wireframe (for solid bodies) or the bar thickness"""
         self.is_line_width_edit_slider_active = True
         #name = self.active_key
         line_width = self.line_width_slider_edit.value()
@@ -708,6 +715,7 @@ class EditGeometryProperties(PyDialog):
         self.is_line_width_edit_slider_active = False
 
     def on_point_size(self):
+        """increases/decreases the point size"""
         self.is_point_size_edit_active = True
         name = self.active_key
         point_size = self.point_size_edit.value()
@@ -720,6 +728,7 @@ class EditGeometryProperties(PyDialog):
         self.is_point_size_edit_active = False
 
     def on_point_size_slider(self):
+        """increases/decreases the point size"""
         self.is_point_size_edit_slider_active = True
         name = self.active_key
         point_size = self.point_size_slider_edit.value()
@@ -728,6 +737,10 @@ class EditGeometryProperties(PyDialog):
         self.is_point_size_edit_slider_active = False
 
     def on_bar_scale(self):
+        """
+        Vectors start at some xyz coordinate and can increase in length.
+        Increases/decreases the length scale factor.
+        """
         self.is_bar_scale_edit_active = True
         name = self.active_key
         float_bar_scale = self.bar_scale_edit.value()
@@ -741,6 +754,10 @@ class EditGeometryProperties(PyDialog):
         self.is_bar_scale_edit_active = False
 
     def on_bar_scale_slider(self):
+        """
+        Vectors start at some xyz coordinate and can increase in length.
+        Increases/decreases the length scale factor.
+        """
         self.is_bar_scale_edit_slider_active = True
         name = self.active_key
         int_bar_scale = self.bar_scale_slider_edit.value()
@@ -750,6 +767,10 @@ class EditGeometryProperties(PyDialog):
         self.is_bar_scale_edit_slider_active = False
 
     def on_opacity(self):
+        """
+        opacity = 1.0 (solid/opaque)
+        opacity = 0.0 (invisible)
+        """
         self.is_opacity_edit_active = True
         name = self.active_key
         float_opacity = self.opacity_edit.value()
@@ -763,6 +784,10 @@ class EditGeometryProperties(PyDialog):
         self.is_opacity_edit_active = False
 
     def on_opacity_slider(self):
+        """
+            opacity = 1.0 (solid/opaque)
+            opacity = 0.0 (invisible)
+            """
         self.is_opacity_edit_slider_active = True
         name = self.active_key
         int_opacity = self.opacity_slider_edit.value()
@@ -825,6 +850,7 @@ class EditGeometryProperties(PyDialog):
         old_obj.point_size = self.point_size_edit.value()
         old_obj.bar_scale = self.bar_scale_edit.value()
         old_obj.opacity = self.opacity_edit.value()
+        #old_obj.color = self.color_edit
         old_obj.is_visible = self.checkbox_show.isChecked()
         return True
         #name_value, flag0 = self.check_name(self.name_edit)
@@ -836,8 +862,10 @@ class EditGeometryProperties(PyDialog):
 
     def on_apply(self, force=False):
         passed = self.on_validate()
-        if (passed or force) and self.allow_update:
-            self.win_parent.on_update_geometry_properties(self.out_data)
+        print("passed=%s force=%s allow=%s" % (passed, force, self.allow_update))
+        if (passed or force) and self.allow_update and hasattr(self.win_parent, 'on_update_geometry_properties'):
+            print('obj = %s' % self.out_data[self.active_key])
+            self.win_parent.on_update_geometry_properties(self.out_data, name=self.active_key)
         return passed
 
     def on_cancel(self):
@@ -852,7 +880,8 @@ class EditGeometryProperties(PyDialog):
         # self.close()
 
 
-def main():
+def main():  # pragma: no cover
+    """gui independent way to test the program"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -887,5 +916,5 @@ def main():
     # Enter the main loop
     app.exec_()
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

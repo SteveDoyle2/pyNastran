@@ -396,7 +396,7 @@ class LOADCYN(Load):
         scalei = double_or_blank(card, 7, 'sid2')
         if scalei is not None:
             loadi = double_or_blank(card, 8, 'load2')
-            scales.append(scaali)
+            scales.append(scalei)
             load_ids.append(loadi)
         return LOADCYN(sid, scale, segment_id, scales, load_ids,
                        segment_type=segment_type, comment=comment)

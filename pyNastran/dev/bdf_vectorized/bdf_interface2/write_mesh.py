@@ -4,6 +4,7 @@ This file defines:
 """
 from __future__ import print_function
 import io
+import sys
 from codecs import open
 
 from six import string_types, iteritems, StringIO, PY2

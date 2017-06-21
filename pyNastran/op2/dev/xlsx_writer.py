@@ -114,7 +114,7 @@ class XlsxWriter(OP2_F06_Common):
             #isheet =+ 1
 
         if self.grid_point_weight.reference_point is not None and 0:
-            if has_attr(result, 'write_xlsx'):
+            if hasattr(result, 'write_xlsx'):
                 self.grid_point_weight.write_xlsx(workbook, page_stamp, self.page_num)
             else:
                 print("*op2 - grid_point_weight not written")
@@ -126,7 +126,7 @@ class XlsxWriter(OP2_F06_Common):
         for ikey, result in sorted(iteritems(self.eigenvalues)):
             # header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            if has_attr(result, 'write_xlsx'):
+            if hasattr(result, 'write_xlsx'):
                 result.write_xlsx(xlsx)
                 if delete_objects:
                     del result

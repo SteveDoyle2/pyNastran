@@ -6,7 +6,7 @@ def divide_2d_array_by_column_vector(array_obj, vector):
     vector[:, 0] / vector
     vector[:, 1] / vector
     vector[:, 2] / vector
-    return v
+    return vector
 
 class ElementsRod(object):
     def __init__(self, model):

@@ -43,9 +43,9 @@ class ShabpIO(object):
         #for nid,node in enumerate(nodes):
             #print "node[%s] = %s" %(nid,str(node))
 
+        nnodes = len(nodes)
         self.nNodes = len(nodes)
         self.nElements = len(elements)
-
         #print("nNodes = ",self.nNodes)
         #print("nElements = ", self.nElements)
 
@@ -57,11 +57,11 @@ class ShabpIO(object):
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #elem.SetNumberOfPoints(nNodes)
-        if 0:
-            fraction = 1. / nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
-                self.gridResult.InsertNextValue(nid * fraction)
+        #if 0:
+            #fraction = 1. / nnodes  # so you can color the nodes by ID
+            #for nid, node in sorted(iteritems(nodes)):
+                #points.InsertPoint(nid - 1, *node)
+                #self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)
 
                 #elem = vtk.vtkVertex()

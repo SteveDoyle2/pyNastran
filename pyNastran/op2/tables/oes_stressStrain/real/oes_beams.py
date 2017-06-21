@@ -1,8 +1,8 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
 from six import iteritems, integer_types
 from six.moves import range, zip
-from itertools import count
 import numpy as np
 from numpy import zeros
 ints = (int, np.int32)
@@ -130,8 +130,8 @@ class RealBeamArray(OES_Object):
             if self.is_sort1():
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
                         (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
                         (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
                         if not np.allclose(t1, t2):

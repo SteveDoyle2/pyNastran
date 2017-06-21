@@ -7,8 +7,8 @@ import numpy as np
 
 def read_su2(su2_filename, log=None, debug=False):
     model = SU2Reader()
-    nodes, elements, regions = su2.read_su2(su2_filename)
-    #su2.to_cart3d()
+    nodes, elements, regions = model.read_su2(su2_filename)
+    #model.to_cart3d()
     return model, nodes, elements, regions
 
 class SU2Reader(object):
@@ -195,8 +195,3 @@ class SU2Reader(object):
                 su2_file.write('NPOINTS = %i\n' % nnodes)
                 for inode, node in enumerate(nodes):
                     su2_file.write('%i %i %i %i\n' % (node[0], node[1], node[2], inode))
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main('mesh_naca0012_inv.su2')
-

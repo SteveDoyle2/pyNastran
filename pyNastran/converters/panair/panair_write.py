@@ -1,6 +1,7 @@
 from six import iteritems
 from six.moves import range
 
+from pyNastran.converters.panair.panair_grid import fortran_value
 
 class PanairWrite(object):
     def __init__(self):

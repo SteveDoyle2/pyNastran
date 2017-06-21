@@ -206,115 +206,115 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase += 1
         return icase
 
-    def _fill_op2_force2(self, cases, model, key, icase, itime,
-                         form_dict, header_dict, is_static):
-        """creates the thermal loads"""
-        thermal_loads = [
-            # 3D
-            model.chexa_thermal_load, model.ctetra_thermal_load,
-            model.cpenta_thermal_load,
-        ]
-        eids = self.element_ids
-        name = 'thermal_load'
-        for result in thermal_loads:
-            if key not in result:
-                continue
-
-            title = name + 'XYZ'
-            case = result[key]
-            subcase_idi = case.isubcase
-            if not hasattr(case, 'data'):
-                print('str(%s) has no data...' % case.__class.__name__)
-                continue
-            #if not case.is_real():
-                #print('complex results not supported...')
+    #def _fill_op2_force2(self, cases, model, key, icase, itime,
+                         #form_dict, header_dict, is_static):
+        #"""creates the thermal loads"""
+        #thermal_loads = [
+            ## 3D
+            #model.chexa_thermal_load, model.ctetra_thermal_load,
+            #model.cpenta_thermal_load,
+        #]
+        #eids = self.element_ids
+        #name = 'thermal_load'
+        #for result in thermal_loads:
+            #if key not in result:
                 #continue
-            # transient
-            if case.nonlinear_factor is not None:
-                #code_name = case.data_code['name']
-                has_cycle = hasattr(case, 'mode_cycle')
-            else:
-                has_cycle = False
-                code_name = None
-            assert case.is_sort1(), case.is_sort1()
 
-            itime0 = 0
-            t1 = case.data[itime0, :, 0]
-            ndata = t1.shape[0]
-            if nelements != ndata:
-                eidsi = case.elements
-                assert len(eidsi) == nelements
-                j = np.searchsorted(eids, eidsi)  # searching for eidsi
+            #title = name + 'XYZ'
+            #case = result[key]
+            #subcase_idi = case.isubcase
+            #if not hasattr(case, 'data'):
+                #print('str(%s) has no data...' % case.__class.__name__)
+                #continue
+            ##if not case.is_real():
+                ##print('complex results not supported...')
+                ##continue
+            ## transient
+            #if case.nonlinear_factor is not None:
+                ##code_name = case.data_code['name']
+                #has_cycle = hasattr(case, 'mode_cycle')
+            #else:
+                #has_cycle = False
+                #code_name = None
+            #assert case.is_sort1(), case.is_sort1()
 
-                try:
-                    if not np.allclose(eids[j], eidsi):
-                        msg = 'nids[j]=%s eidsi=%s' % (eids[j], eidsi)
-                        raise RuntimeError(msg)
-                except IndexError:
-                    msg = 'element_ids = %s\n' % list(eids)
-                    msg += 'eidsi in force = %s\n' % list(eidsi)
-                    raise IndexError(msg)
+            #itime0 = 0
+            #t1 = case.data[itime0, :, 0]
+            #ndata = t1.shape[0]
+            #if nelements != ndata:
+                #eidsi = case.elements
+                #assert len(eidsi) == nelements
+                #j = np.searchsorted(eids, eidsi)  # searching for eidsi
 
-            # (itime, nelements, xyz)
-            t123 = case.data[:, :, :3]
-            if nelements != ndata:
-                t123i = np.zeros((nelements, 3), dtype='float32')
-                t123i[j, :] = t123
-                t123 = t123i
-            tnorm = norm(t123, axis=1)
-            assert len(tnorm) == t123.shape[0]
-            ntimes = case.ntimes
-            titles = []
-            scales = []
-            headers = []
-            for itime in range(ntimes):
-                dt = case._times[itime]
-                header = self._get_nastran_header(case, dt, itime)
-                header_dict[(key, itime)] = header
+                #try:
+                    #if not np.allclose(eids[j], eidsi):
+                        #msg = 'nids[j]=%s eidsi=%s' % (eids[j], eidsi)
+                        #raise RuntimeError(msg)
+                #except IndexError:
+                    #msg = 'element_ids = %s\n' % list(eids)
+                    #msg += 'eidsi in force = %s\n' % list(eidsi)
+                    #raise IndexError(msg)
 
-                loads = case.data[itime, :, :]
-                txyz = norm(loads[:, :3], axis=1)
-                rxyz = norm(loads[:, 3:6], axis=1)
-                assert loads[:, :3].shape[1] == 3, loads.shape
-                assert loads[:, 3:6].shape[1] == 3, loads.shape
-                assert len(txyz) == nelements, 'len(txyz)=%s nnodes=%s' % (
-                    len(txyz), nnodes)
+            ## (itime, nelements, xyz)
+            #t123 = case.data[:, :, :3]
+            #if nelements != ndata:
+                #t123i = np.zeros((nelements, 3), dtype='float32')
+                #t123i[j, :] = t123
+                #t123 = t123i
+            #tnorm = norm(t123, axis=1)
+            #assert len(tnorm) == t123.shape[0]
+            #ntimes = case.ntimes
+            #titles = []
+            #scales = []
+            #headers = []
+            #for itime in range(ntimes):
+                #dt = case._times[itime]
+                #header = self._get_nastran_header(case, dt, itime)
+                #header_dict[(key, itime)] = header
 
-                tx_res = GuiResult(subcase_idi, header=name + 'Tx', title=name + 'Tx',
-                                   location='node', scalar=loads[:, 0])
-                ty_res = GuiResult(subcase_idi, header=name + 'Ty', title=name + 'Ty',
-                                   location='node', scalar=loads[:, 1])
-                tz_res = GuiResult(subcase_idi, header=name + 'Tz', title=name + 'Tz',
-                                   location='node', scalar=loads[:, 2])
-                rx_res = GuiResult(subcase_idi, header=name + 'Rx', title=name + 'Rx',
-                                   location='node', scalar=loads[:, 3])
-                ry_res = GuiResult(subcase_idi, header=name + 'Ry', title=name + 'Ry',
-                                   location='node', scalar=loads[:, 4])
-                rz_res = GuiResult(subcase_idi, header=name + 'Rz', title=name + 'Rz',
-                                   location='node', scalar=loads[:, 5])
-                txyz_res = GuiResult(subcase_idi, header=name + 'Txyz',
-                                     title=name + 'Txyz', location='node', scalar=txyz)
-                rxyz_res = GuiResult(subcase_idi, header=name + 'Rxyz',
-                                     title=name + 'Rxyz', location='node', scalar=rxyz)
+                #loads = case.data[itime, :, :]
+                #txyz = norm(loads[:, :3], axis=1)
+                #rxyz = norm(loads[:, 3:6], axis=1)
+                #assert loads[:, :3].shape[1] == 3, loads.shape
+                #assert loads[:, 3:6].shape[1] == 3, loads.shape
+                #assert len(txyz) == nelements, 'len(txyz)=%s nnodes=%s' % (
+                    #len(txyz), nnodes)
 
-                cases[icase] = (tx_res, (0, name + 'Tx'))
-                cases[icase + 1] = (ty_res, (0, name + 'Ty'))
-                cases[icase + 2] = (tz_res, (0, name + 'Tz'))
-                cases[icase + 3] = (txyz_res, (0, name  + 'Txyz'))
-                cases[icase + 4] = (rx_res, (0, name + 'Rx'))
-                cases[icase + 5] = (ry_res, (0, name + 'Ry'))
-                cases[icase + 6] = (rz_res, (0, name + 'Rz'))
-                cases[icase + 7] = (rxyz_res, (0, name  + 'Rxyz'))
+                #tx_res = GuiResult(subcase_idi, header=name + 'Tx', title=name + 'Tx',
+                                   #location='node', scalar=loads[:, 0])
+                #ty_res = GuiResult(subcase_idi, header=name + 'Ty', title=name + 'Ty',
+                                   #location='node', scalar=loads[:, 1])
+                #tz_res = GuiResult(subcase_idi, header=name + 'Tz', title=name + 'Tz',
+                                   #location='node', scalar=loads[:, 2])
+                #rx_res = GuiResult(subcase_idi, header=name + 'Rx', title=name + 'Rx',
+                                   #location='node', scalar=loads[:, 3])
+                #ry_res = GuiResult(subcase_idi, header=name + 'Ry', title=name + 'Ry',
+                                   #location='node', scalar=loads[:, 4])
+                #rz_res = GuiResult(subcase_idi, header=name + 'Rz', title=name + 'Rz',
+                                   #location='node', scalar=loads[:, 5])
+                #txyz_res = GuiResult(subcase_idi, header=name + 'Txyz',
+                                     #title=name + 'Txyz', location='node', scalar=txyz)
+                #rxyz_res = GuiResult(subcase_idi, header=name + 'Rxyz',
+                                     #title=name + 'Rxyz', location='node', scalar=rxyz)
 
-                form_dict[(key, itime)].append((name + 'Tx', icase, []))
-                form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
-                form_dict[(key, itime)].append((name + 'Tz', icase + 2, []))
-                form_dict[(key, itime)].append((name + 'Txyz', icase + 3, []))
-                form_dict[(key, itime)].append((name + 'Rx', icase + 4, []))
-                form_dict[(key, itime)].append((name + 'Ry', icase + 5, []))
-                form_dict[(key, itime)].append((name + 'Rz', icase + 6, []))
-                form_dict[(key, itime)].append((name + 'Rxyz', icase + 7, []))
-                icase += 7
+                #cases[icase] = (tx_res, (0, name + 'Tx'))
+                #cases[icase + 1] = (ty_res, (0, name + 'Ty'))
+                #cases[icase + 2] = (tz_res, (0, name + 'Tz'))
+                #cases[icase + 3] = (txyz_res, (0, name  + 'Txyz'))
+                #cases[icase + 4] = (rx_res, (0, name + 'Rx'))
+                #cases[icase + 5] = (ry_res, (0, name + 'Ry'))
+                #cases[icase + 6] = (rz_res, (0, name + 'Rz'))
+                #cases[icase + 7] = (rxyz_res, (0, name  + 'Rxyz'))
+
+                #form_dict[(key, itime)].append((name + 'Tx', icase, []))
+                #form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
+                #form_dict[(key, itime)].append((name + 'Tz', icase + 2, []))
+                #form_dict[(key, itime)].append((name + 'Txyz', icase + 3, []))
+                #form_dict[(key, itime)].append((name + 'Rx', icase + 4, []))
+                #form_dict[(key, itime)].append((name + 'Ry', icase + 5, []))
+                #form_dict[(key, itime)].append((name + 'Rz', icase + 6, []))
+                #form_dict[(key, itime)].append((name + 'Rxyz', icase + 7, []))
+                #icase += 7
 
     def _fill_op2_force(self, cases, model, key, icase, itime,
                         form_dict, header_dict, is_static):
@@ -547,8 +547,8 @@ class NastranGuiResults(NastranGuiAttributes):
             cycle = np.abs(eigi) / (2. * np.pi)
             header += '; freq = %g Hz' % cycle
         elif hasattr(case, 'eigns'):  #  eign is not eigr; it's more like eigi
-            eigi2 = case.eigrs[itime] #  but |eigi| = sqrt(|eign|)
-            cycle = np.sqrt(np.abs(eigr2)) / (2. * np.pi)
+            eigi = case.eigrs[itime] #  but |eigi| = sqrt(|eign|)
+            cycle = np.sqrt(np.abs(eigi)) / (2. * np.pi)
             header += '; freq = %g Hz' % cycle
         elif hasattr(case, 'dt'):
             time = case._times[itime]
@@ -670,25 +670,25 @@ class NastranGuiResults(NastranGuiAttributes):
             #header_dict[(key, itime)] = header
         #except AttributeError:
             #pass
-        if 1:
-            ese_res = GuiResult(subcase_id, header='Strain Energy',
-                                title='Strain Energy', data_format='%.3e',
-                                location='centroid', scalar=ese)
-            percent_res = GuiResult(subcase_id, header='Percent of Total',
-                                title='Percent of Total', data_format='%.3f',
-                                location='centroid', scalar=percent)
-            sed_res = GuiResult(subcase_id, header='Strain Energy Density',
-                                title='Strain Energy Density', data_format='%.3e',
-                                location='centroid', scalar=strain_energy_density)
 
-            cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
-            cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
-            cases[icase + 2] = (sed_res, (subcase_id, 'Strain Energy Density'))
+        ese_res = GuiResult(subcase_id, header='Strain Energy',
+                            title='Strain Energy', data_format='%.3e',
+                            location='centroid', scalar=ese)
+        percent_res = GuiResult(subcase_id, header='Percent of Total',
+                            title='Percent of Total', data_format='%.3f',
+                            location='centroid', scalar=percent)
+        sed_res = GuiResult(subcase_id, header='Strain Energy Density',
+                            title='Strain Energy Density', data_format='%.3e',
+                            location='centroid', scalar=strain_energy_density)
 
-            form_dict[(key, itime)].append(('Strain Energy', icase, []))
-            form_dict[(key, itime)].append(('Percent', icase + 1, []))
-            form_dict[(key, itime)].append(('Strain Energy Density', icase + 1, []))
-            icase += 3
+        cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
+        cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
+        cases[icase + 2] = (sed_res, (subcase_id, 'Strain Energy Density'))
+
+        form_dict[(key, itime)].append(('Strain Energy', icase, []))
+        form_dict[(key, itime)].append(('Percent', icase + 1, []))
+        form_dict[(key, itime)].append(('Strain Energy Density', icase + 1, []))
+        icase += 3
 
         return icase
 

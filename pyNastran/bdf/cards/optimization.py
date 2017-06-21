@@ -1660,7 +1660,7 @@ class DRESP2(OptConstraint):
         #    (1, 'DESVAR') = [30],
         #    (2, 'DRESP1') = [40],
         # }
-        params = parse_table_fields(fields)
+        params = parse_table_fields(card, fields)
 
         #print("--DRESP2 Params--")
         #for key, value_list in sorted(iteritems(params)):
@@ -3024,6 +3024,7 @@ class DVMREL2(OptConstraint):
             print('DVMREL2 calculate : %s[%r] = ???' % (self.mat_type, self.mp_name))
             raise
 
+        argsi = []
         if self.dvids:
             for desvar in self.dvids: # DESVARS
                 arg = desvar.calculate(op2_model, subcase_id)
@@ -3516,7 +3517,7 @@ class DVPREL2(OptConstraint):
         iend = len(fields) + ioffset
 
         #F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\d200m20.dat
-        #params = parse_table_fields(fields)
+        #params = parse_table_fields(card, fields)
         #print(params)
 
         try:
@@ -3752,7 +3753,7 @@ class DVGRID(OptConstraint):
     def _verify(self, xref=True):
         pass
 
-def parse_table_fields(fields, allowed=None):
+def parse_table_fields(card, fields, allowed=None):
     """
     params = {
        (0, 'DRESP1') = [10, 20],
