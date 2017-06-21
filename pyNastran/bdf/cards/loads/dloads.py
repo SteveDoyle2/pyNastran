@@ -45,6 +45,36 @@ class ACSRCE(BaseCard):
 
     def __init__(self, sid, excite_id, rho, b,
                  delay=0, dphase=0, power=0, comment=''):
+        """
+        Creates an ACSRCE card
+
+        Parameters
+        ----------
+        sid : int
+            load set id number (referenced by DLOAD)
+        excite_id : int
+            Identification number of a DAREA or SLOAD entry that lists
+            each degree of freedom to apply the excitation and the
+            corresponding scale factor, A, for the excitation
+        rho : float
+            Density of the fluid
+        b : float
+            Bulk modulus of the fluid
+        delay : int; default=0
+            Time delay, τ.
+        dphase : int / float; default=0
+            the dphase; if it's 0/blank there is no phase lag
+            float : delay in units of time
+            int : delay id
+        power : int; default=0
+            Power as a function of frequency, P(f).
+            float : value of P(f) used over all frequencies for all
+                    degrees of freedom in EXCITEID entry.
+            int : TABLEDi entry that defines P(f) for all degrees of
+                  freedom in EXCITEID entry.
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -149,7 +179,7 @@ class ACSRCE(BaseCard):
                 dphases_ref[sload_key] = model.DPHASE(self.dphase, msg=cmsg)
             self.dphases_ref = dphases_ref
 
-        if isinstance(self.power, integer_types):
+        if isinstance(self.power, integer_types) and self.power > 0:
             self.power_ref = model.TableD(self.power, msg=cmsg)
 
         #load_ids2 = []

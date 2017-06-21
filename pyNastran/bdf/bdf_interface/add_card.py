@@ -2776,6 +2776,36 @@ class AddCards(AddMethods):
 
     def add_acsrce(self, sid, excite_id, rho, b, delay=0, dphase=0, power=0,
                    comment=''):
+        """
+        Creates an ACSRCE card
+
+        Parameters
+        ----------
+        sid : int
+            load set id number (referenced by DLOAD)
+        excite_id : int
+            Identification number of a DAREA or SLOAD entry that lists
+            each degree of freedom to apply the excitation and the
+            corresponding scale factor, A, for the excitation
+        rho : float
+            Density of the fluid
+        b : float
+            Bulk modulus of the fluid
+        delay : int; default=0
+            Time delay, τ.
+        dphase : int / float; default=0
+            the dphase; if it's 0/blank there is no phase lag
+            float : delay in units of time
+            int : delay id
+        power : int; default=0
+            Power as a function of frequency, P(f).
+            float : value of P(f) used over all frequencies for all
+                    degrees of freedom in EXCITEID entry.
+            int : TABLEDi entry that defines P(f) for all degrees of
+                  freedom in EXCITEID entry.
+        comment : str; default=''
+            a comment for the card
+        """
         load = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=power,
                       comment=comment)
         self._add_load_object(load)
@@ -4973,9 +5003,9 @@ class AddCards(AddMethods):
         self._add_rotor_object(rotor)
         return rotor
 
-    def add_rotord(self, sid, rstart, rstep, numstep, rids, rsets, rspeeds,
-                   rcords, w3s, w4s, rforces,
-                   brgsets, refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
+    def add_rotord(self, sid, rstart, rstep, numstep,
+                   rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
+                   refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
                    zstein='NO', orbeps=1.e-6, roprt=0, sync=1, etype=1,
                    eorder=1.0, threshold=0.02, maxiter=10, comment=''):
         rotor = ROTORD(sid, rstart, rstep, numstep, rids, rsets, rspeeds,

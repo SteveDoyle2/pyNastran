@@ -5,6 +5,7 @@ import numpy as np
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -377,6 +378,89 @@ class TestDynamic(unittest.TestCase):
         model2.uncross_reference()
         #print(out)
         #print(outs)
+
+    def test_ascre(self):
+        """tests ASCRE, DELAY, DPHASE, TABLED2"""
+        model = BDF(debug=False)
+        sid = 1
+        excite_id = 2
+        rho = 1.0
+        b = 2.0
+        acsrce = model.add_acsrce(sid, excite_id, rho, b, delay=0, dphase=0, power=0,
+                                  comment='acsrce')
+        sid = 3
+        excite_id = 4
+        rho = 1.0
+        b = 2.0
+        delay = 3
+        dphase = 4
+        power = 5
+        acsrce2 = model.add_acsrce(sid, excite_id, rho, b, delay=delay,
+                                   dphase=dphase, power=power)
+        nodes = 4
+        components = 5
+        delays = 6.0
+        delay = model.add_delay(sid, nodes, components, delays, comment='')
+
+        nodes = 4
+        components = 6
+        phase_leads = 2.0
+        delay = model.add_dphase(sid, nodes, components, phase_leads)
+
+        tid = power
+        x1 = 1.
+        x = np.linspace(0., 1.) + 10.
+        y = np.sin(x) + 2.
+        model.add_tabled2(tid, x1, x, y, comment='tabled2')
+        model.add_grid(4)
+
+        model.validate()
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        save_load_deck(model)
+
+    def test_nlparm(self):
+        """tests NLPARM"""
+        model = BDF(debug=False)
+        nlparm_id = 42
+        model.add_nlparm(nlparm_id, comment='nlparm')
+        save_load_deck(model)
+
+    def test_nlpci(self):
+        """tests NLPCI"""
+        model = BDF(debug=False)
+        nlpci_id = 42
+        model.add_nlpci(nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
+                       scale=0., desiter=12, mxinc=20,
+                       comment='nlpci')
+        save_load_deck(model)
+
+    #def test_rotord(self):
+        #"""tests ROTORD"""
+        #model = BDF(debug=False)
+        #sid = 42
+        #rstart = 10.0
+        #rstep = 11.0
+        #numstep = 10
+        #rids = []
+        #rsets = [31]
+        #rspeeds = [None]
+        #rcords = []
+        #w3s = []
+        #w4s = []
+        #rforces = []
+        #brgsets = []
+        #rotord = model.add_rotord(
+            #sid, rstart, rstep, numstep,
+            #rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
+            #refsys='ROT', cmout=0.0, runit='RPM',
+            #funit='RPM', zstein='NO', orbeps=1.e-6,
+            #roprt=0, sync=1, etype=1, eorder=1.0,
+            #threshold=0.02, maxiter=10, comment='rotord')
+        #rotord.validate()
+        #save_load_deck(model)
 
     def _test_dynamic1(self):
         """

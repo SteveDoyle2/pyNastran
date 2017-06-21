@@ -1057,6 +1057,15 @@ class ROTORD(BaseCard):
         self.rspeeds_ref = None
 
     def validate(self):
+        assert isinstance(self.rids, list), self.rids
+        assert isinstance(self.rsets, list), self.rsets
+        assert isinstance(self.rspeeds, list), self.rspeeds
+        assert isinstance(self.rcords, list), self.rcords
+        assert isinstance(self.w3s, list), self.w3s
+        assert isinstance(self.w4s, list), self.w4s
+        assert isinstance(self.rforces, list), self.rforces
+        assert isinstance(self.brgsets, list), self.brgsets
+
         nrsets = len(self.rsets)
         if nrsets == 0:
             raise RuntimeError('nrsets=0')
