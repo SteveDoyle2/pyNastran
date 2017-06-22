@@ -1,4 +1,5 @@
 """defines testing utils"""
+import os
 from six import StringIO
 from pyNastran.bdf.bdf import BDF
 
@@ -13,4 +14,9 @@ def save_load_deck(model):
 
     model2 = BDF(log=model.log)
     model2.read_bdf(bdf_file, punch=True)
-    return model2
+    model2.save(obj_filename='model.obj', unxref=True)
+    model3 = BDF(debug=False, log=None, mode='msc')
+    model3.load(obj_filename='model.obj')
+    os.remove('model.obj')
+    model3.cross_reference()
+    return model3

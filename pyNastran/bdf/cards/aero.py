@@ -2515,14 +2515,14 @@ class CAERO2(BaseCard):
         #print('nint=%s lint=%s' % (self.nint, self.lint))
         assert isinstance(self.lsb, integer_types), self.lsb
         assert isinstance(self.lint, integer_types), self.lint
-        assert len(self.p1) == 3, 'p1=%s' % self.p1
+        assert len(self.p1) == 3, 'CAERO2: p1=%s' % self.p1
         if self.nsb == 0 and self.lsb == 0:
-            msg = 'nsb=%s lsb=%s; nsb or lsb must be > 0' % (self.nsb, self.lsb)
+            msg = 'CAERO2: nsb=%s lsb=%s; nsb or lsb must be > 0' % (self.nsb, self.lsb)
             raise ValueError(msg)
         if self.nint == 0 and self.lint == 0:
-            msg = 'nint=%s lint=%s; nint or lint must be > 0' % (self.nint, self.lint)
+            msg = 'CAERO2: nint=%s lint=%s; nint or lint must be > 0' % (self.nint, self.lint)
             raise ValueError(msg)
-        assert len(self.p1) == 3, 'p1=%s' % self.p1
+        assert len(self.p1) == 3, 'CAERO2: p1=%s' % self.p1
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -4777,17 +4777,17 @@ class MKAERO2(BaseCard):
         self.reduced_freqs = reduced_freqs
 
     def validate(self):
-        if len(self.machs) != len(self.reduced_freqs):
-            msg = 'MKAERO2; len(machs)=%s len(rfreqs)=%s; should be the same' % (
-                len(self.machs), len(self.reduced_freqs))
-            raise ValueError(msg)
-
         if len(self.machs) == 0:
             msg = 'MKAERO2; nmachs=%s machs=%s' % (len(self.machs), self.machs)
             raise ValueError(msg)
         if len(self.reduced_freqs) == 0:
             msg = 'MKAERO2; nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
             raise ValueError(msg)
+        if len(self.machs) != len(self.reduced_freqs):
+            msg = 'MKAERO2; len(machs)=%s len(rfreqs)=%s; should be the same' % (
+                len(self.machs), len(self.reduced_freqs))
+            raise ValueError(msg)
+
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -5334,11 +5334,11 @@ class PAERO2(BaseCard):
 
 
     def validate(self):
-        assert self.orient in ['Z', 'Y', 'ZY'], 'orient=%r' % self.orient
-        assert isinstance(self.AR, float), 'AR=%r type=%s' % (self.AR, type(self.AR))
-        assert isinstance(self.width, float), 'width=%r type=%s' % (self.width, type(self.width))
-        assert isinstance(self.thi, list), 'thi=%s type=%s' % (self.thi, type(self.thi))
-        assert isinstance(self.thn, list), 'thn=%s type=%s' % (self.thn, type(self.thn))
+        assert self.orient in ['Z', 'Y', 'ZY'], 'PAERO2: orient=%r' % self.orient
+        assert isinstance(self.AR, float), 'PAERO2: AR=%r type=%s' % (self.AR, type(self.AR))
+        assert isinstance(self.width, float), 'PAERO2: width=%r type=%s' % (self.width, type(self.width))
+        assert isinstance(self.thi, list), 'PAERO2: thi=%s type=%s' % (self.thi, type(self.thi))
+        assert isinstance(self.thn, list), 'PAERO2: thn=%s type=%s' % (self.thn, type(self.thn))
 
     @classmethod
     def add_card(cls, card, comment=''):

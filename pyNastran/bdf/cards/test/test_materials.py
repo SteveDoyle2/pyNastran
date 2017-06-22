@@ -178,6 +178,7 @@ class TestMaterials(unittest.TestCase):
             gzx_table=1, ax_table=1, ath_table=1,
             az_table=1, ge_table=1, comment='matt3')
         matt3.validate()
+        matt3.write_card()
 
         x = np.linspace(1., 10.)
         y = np.sin(x) + 5.
@@ -226,6 +227,7 @@ class TestMaterials(unittest.TestCase):
         matt4 = model.add_matt4(mid, k_table, cp_table, H_table, mu_table,
                                 Hgen_table, comment='matt4')
         matt4.validate()
+        matt4.write_card()
 
         x = np.linspace(1., 10.)
         y = np.sin(x) + 5.
@@ -280,6 +282,7 @@ class TestMaterials(unittest.TestCase):
                                kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
                                comment='matt5')
         matt5.validate()
+        matt5.write_card()
 
         x = np.linspace(1., 10.)
         y = np.sin(x) + 5.
@@ -366,9 +369,14 @@ class TestMaterials(unittest.TestCase):
         mat8.write_card(size=16, is_double=False)
         mat8.validate()
 
-        matt8 = model.add_matt8(mid, E1_table=1, E2_table=2, Nu12_table=3,
-                                rho_table=4, comment='matt8')
+        matt8 = model.add_matt8(
+            mid, E1_table=1, E2_table=2, Nu12_table=3,
+            G12_table=4, G1z_table=1, G2z_table=1, rho_table=1,
+            a1_table=1, a2_table=1,
+            xt_table=1, xc_table=1, yt_table=1, yc_table=1,
+            s_table=1, ge_table=1, f12_table=1, comment='matt8')
         matt8.validate()
+        matt8.write_card()
 
         x = np.linspace(1., 10.)
         y = np.sin(x) + 5.
@@ -503,6 +511,8 @@ def read_write(model):
     bdf_file.seek(0)
     model.read_bdf(bdf_file, punch=True)
     model.uncross_reference()
+    bdf_file.seek(0)
+    model.write_bdf(out_filename=bdf_file, size=16, close=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

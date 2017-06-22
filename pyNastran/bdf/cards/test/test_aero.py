@@ -514,15 +514,84 @@ class TestAero(unittest.TestCase):
     def test_spline1(self):
         """checks the SPLINE1 card"""
         eid = 1
-        caero_id = 1
+        caero_id = 99999999
         box1 = 1
         box2 = 10
-        setg = 1
+        setg = 42
         spline = SPLINE1(eid, caero_id, box1, box2, setg, dz=0., method='IPS',
                          usage='BOTH', nelements=10,
                          melements=10, comment='$ spline1')
         spline.validate()
         spline.write_card(size=8, is_double=False)
+        model = BDF(debug=False)
+        model.splines[eid] = spline
+
+        pid = 10
+        igid = 1
+        p1 = [0., 0., 0.]
+        p4 = [0., 10., 0.]
+        x12 = 4.
+        x43 = 3.
+        cid = 1
+        caero1 = model.add_caero1(caero_id, pid, igid, p1, x12, p4, x43,
+                                  cp=cid, nspan=5,
+                                  lspan=0, nchord=6, lchord=0,
+                                  comment='')
+        Bi = [3]
+        paero = model.add_paero1(pid, Bi=Bi, comment='')
+        model.add_cord2r(cid, rid=0,
+                         origin=None, zaxis=None, xzplane=None,
+                         comment='')
+        velocity = 0.0
+        cref = 1.0
+        rho_ref = 1.225
+        model.add_aero(velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0,
+                      comment='')
+
+        setg = 42
+        ids = [100, 101, 102]
+        model.add_set1(setg, ids, is_skin=False, comment='')
+        model.add_grid(100)
+        model.add_grid(101)
+        model.add_grid(102)
+
+        #------------------
+        # CAERO2
+        eid = 3
+        caero = 3
+        id1 = 21
+        id2 = 35
+        setg = 43
+        spline2 = model.add_spline2(eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=1,
+                                    dthx=None, dthy=None, usage='BOTH', comment='')
+        spline.validate()
+
+        pid = 3
+        caero2 = model.add_caero2(caero, pid, igid, p1, x12, cp=1, nsb=4,
+                                  nint=4, lsb=0, lint=0, comment='')
+        caero2.validate()
+
+        orient = 'ZY'
+        width = 1.0
+        AR = 2.0
+        thi = []
+        thn = []
+        paero2 = model.add_paero2(pid, orient, width, AR, thi, thn,
+                                  lrsb=10, lrib=None, lth1=None, lth2=None, comment='')
+        paero2.validate()
+
+        sid = 10
+        Di = [0., 1.0, 2.0, 3.0, 0.]
+        aefact = model.add_aefact(sid, Di, comment='')
+        aefact.validate()
+
+        model.add_set1(setg, ids, is_skin=False, comment='')
+
+        model.cross_reference(model)
+        caero1.panel_points_elements()
+        caero2.get_points_elements_3d()
+        save_load_deck(model)
+
 
     def test_spline2(self):
         """checks the SPLINE2 card"""
@@ -1273,6 +1342,35 @@ class TestAero(unittest.TestCase):
         mkaero = MKAERO2.add_card(BDFCard(['MKAERO2'] + machs + reduced_freqs), comment='mkaero2')
         mkaero.validate()
         mkaero.write_card()
+
+        # at least one mach
+        machs = []
+        reduced_freqs = [42.]
+        mkaero = MKAERO2(machs, reduced_freqs)
+        with self.assertRaises(ValueError):
+            mkaero.validate()
+
+        # at least one rfreq
+        machs = [0.8]
+        reduced_freqs = []
+        mkaero = MKAERO2(machs, reduced_freqs)
+        with self.assertRaises(ValueError):
+            mkaero.validate()
+
+        # should be the same length
+        machs = [0.8]
+        reduced_freqs = [42., 43.]
+        mkaero = MKAERO2(machs, reduced_freqs)
+        with self.assertRaises(ValueError):
+            mkaero.validate()
+
+        # split the write card method
+        machs = [0.1, 0.2, 0.3, 0.4, 0.5]
+        reduced_freqs = [1., 2., 3., 4., 5.]
+        mkaero = MKAERO2(machs, reduced_freqs)
+        mkaero.validate()
+        mkaero.write_card()
+
 
     def test_diverg(self):
         """checks the DIVERG card"""
