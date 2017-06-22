@@ -574,8 +574,9 @@ class DynamicLoad(BaseCard):
 
 class SPCD(Load):
     """
-    Defines an enforced displacement value for static analysis and an enforced
-    motion value (displacement, velocity or acceleration) in dynamic analysis.
+    Defines an enforced displacement value for static analysis and an
+    enforced motion value (displacement, velocity or acceleration) in
+    dynamic analysis.
 
      +------+-----+-----+-----+------+----+----+----+
      |   1  |  2  |  3  |  4  |   5  |  6 | 7  |  8 |
@@ -588,6 +589,27 @@ class SPCD(Load):
     type = 'SPCD'
 
     def __init__(self, sid, nodes, constraints, enforced, comment=''):
+        """
+        Creates an SPCD card, which defines the degree of freedoms to be
+        set during enforced motion
+
+        Parameters
+        ----------
+        conid : int
+            constraint id
+        nodes : List[int]
+            GRID/SPOINT ids
+        constraints : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        enforced : List[float]
+            the constrained value for the given node (typically 0.0)
+
+        .. note:: len(nodes) == len(constraints) == len(enforced)
+        .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
+                     Yes, you really want to constrain the deflection to 0.0
+                     with an SPC1 card and then reset the deflection using an
+                     SPCD card.
+        """
         if comment:
             self.comment = comment
         self.sid = sid

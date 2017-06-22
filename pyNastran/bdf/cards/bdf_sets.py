@@ -269,12 +269,26 @@ class ASET(ABCQSet):
     type = 'ASET'
 
     def __init__(self, ids, components, comment=''):
+        """
+        Creates an ASET card, which defines the degree of freedoms that
+        will be retained during an ASET modal reduction.
+
+        Parameters
+        ----------
+        components : List[str]
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+
+        ..note :: the length of components and ids must be the same
+        """
         ABCQSet.__init__(self, ids, components, comment)
 
 class BSET(ABCQSet):
     """
-    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
-    generalized dynamic reduction or component mode synthesis calculations.
+    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set)
+    during generalized dynamic reduction or component mode synthesis
+    calculations.
 
     +------+-----+----+-----+------+-----+----+-----+----+
     |  1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
@@ -287,13 +301,28 @@ class BSET(ABCQSet):
     type = 'BSET'
 
     def __init__(self, ids, components, comment=''):
+        """
+        Creates an BSET card, which defines the degree of freedoms that
+        will be fixed during a generalized dynamic reduction or component
+        model synthesis calculation.
+
+        Parameters
+        ----------
+        components : List[str]
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+
+        ..note :: the length of components and ids must be the same
+        """
         ABCQSet.__init__(self, ids, components, comment)
 
 
 class CSET(ABCQSet):
     """
-    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
-    generalized dynamic reduction or component mode synthesis calculations.
+    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set)
+    during generalized dynamic reduction or component mode synthesis
+    calculations.
 
     +------+-----+----+-----+------+-----+----+-----+----+
     |  1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
@@ -306,6 +335,20 @@ class CSET(ABCQSet):
     type = 'CSET'
 
     def __init__(self, ids, components, comment=''):
+        """
+        Creates an CSET card, which defines the degree of freedoms that
+        will be free during a generalized dynamic reduction or component
+        model synthesis calculation.
+
+        Parameters
+        ----------
+        components : List[str]
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+
+        ..note :: the length of components and ids must be the same
+        """
         ABCQSet.__init__(self, ids, components, comment)
 
 
@@ -533,20 +576,59 @@ class ASET1(ABQSet1):
     type = 'ASET1'
 
     def __init__(self, components, ids, comment=''):
+        """
+        Creates an ASET1 card, which defines the degree of freedoms that
+        will be retained during an ASET modal reduction.
+
+        Parameters
+        ----------
+        components : str
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+        """
         ABQSet1.__init__(self, components, ids, comment)
 
 
 class BSET1(ABQSet1):
+    """
+    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set)
+    during generalized dynamic reduction or component mode synthesis
+    calculations.
+
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+==================+=====+=====+=====+
+    | BSET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |       | ID8 | ID9 |      |     |     |     |     |     |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    | BSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    """
     type = 'BSET1'
 
     def __init__(self, components, ids, comment=''):
+        """
+        Creates an BSET1 card, which defines the degree of freedoms that
+        will be fixed during a generalized dynamic reduction or component
+        model synthesis calculation.
+
+        Parameters
+        ----------
+        components : str
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+        """
         ABQSet1.__init__(self, components, ids, comment)
 
 
 class CSET1(Set):
     """
-    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
-    generalized dynamic reduction or component mode synthesis calculations.
+    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set)
+    during generalized dynamic reduction or component mode synthesis
+    calculations.
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
@@ -563,6 +645,18 @@ class CSET1(Set):
     type = 'CSET1'
 
     def __init__(self, ids, components, comment=''):
+        """
+        Creates an CSET1 card, which defines the degree of freedoms that
+        will be free during a generalized dynamic reduction or component
+        model synthesis calculation.
+
+        Parameters
+        ----------
+        components : str
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+        """
         Set.__init__(self)
         if comment:
             self.comment = comment

@@ -2514,10 +2514,10 @@ class AddCards(AddMethods):
         return mat
 
     def add_matt8(self, mid, E1_table=None, E2_table=None, Nu12_table=None,
-                 G12_table=None, G1z_table=None, G2z_table=None, rho_table=None,
-                 a1_table=None, a2_table=None,
-                 xt_table=None, xc_table=None, yt_table=None, yc_table=None,
-                 s_table=None, ge_table=None, f12_table=None, comment=''):
+                  G12_table=None, G1z_table=None, G2z_table=None, rho_table=None,
+                  a1_table=None, a2_table=None,
+                  xt_table=None, xc_table=None, yt_table=None, yc_table=None,
+                  s_table=None, ge_table=None, f12_table=None, comment=''):
         mat = MATT8(mid, E1_table=E1_table, E2_table=E2_table, Nu12_table=Nu12_table,
                     G12_table=G12_table, G1z_table=G1z_table, G2z_table=G2z_table,
                     rho_table=rho_table, a1_table=a1_table, a2_table=a2_table,
@@ -3170,16 +3170,68 @@ class AddCards(AddMethods):
         return load
 
     def add_spc(self, conid, gids, components, enforced, comment=''):
+        """
+        Creates an SPC card, which defines the degree of freedoms to be
+        constrained
+
+        Parameters
+        ----------
+        conid : int
+            constraint id
+        gids : List[int]
+            GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        enforced : List[float]
+            the constrained value for the given node (typically 0.0)
+
+        .. note:: len(gids) == len(components) == len(enforced)
+        .. warning:: non-zero enforced deflection requires an SPCD as well
+        """
         spc = SPC(conid, gids, components, enforced, comment=comment)
         self._add_constraint_spc_object(spc)
         return spc
 
     def add_spc1(self, conid, components, nodes, comment=''):
+        """
+        Creates an SPC1 card, which defines the degree of freedoms to be
+        constrained to a value of 0.0
+
+        Parameters
+        ----------
+        conid : int
+            constraint id
+        components : str
+            the degree of freedoms to constrain (e.g., '1', '123')
+        nodes : List[int]
+            GRID/SPOINT ids
+        """
         spc = SPC1(conid, components, nodes, comment=comment)
         self._add_constraint_spc_object(spc)
         return spc
 
     def add_spcd(self, sid, gids, constraints, enforced, comment=''):
+        """
+        Creates an SPCD card, which defines the degree of freedoms to be
+        set during enforced motion
+
+        Parameters
+        ----------
+        conid : int
+            constraint id
+        nodes : List[int]
+            GRID/SPOINT ids
+        constraints : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        enforced : List[float]
+            the constrained value for the given node (typically 0.0)
+
+        .. note:: len(nodes) == len(constraints) == len(enforced)
+        .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
+                     Yes, you really want to constrain the deflection to 0.0
+                     with an SPC1 card and then reset the deflection using an
+                     SPCD card.
+        """
         spc = SPCD(sid, gids, constraints, enforced, comment=comment)
         self._add_load_object(spc)
         return spc
@@ -3371,6 +3423,39 @@ class AddCards(AddMethods):
 
     def add_caero4(self, eid, pid, p1, x12, p4, x43,
                    cp=0, nspan=0, lspan=0, comment=''):
+        """
+        Defines a CAERO4 card, which defines a strip theory surface.
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int, PAERO4
+            int : PAERO4 ID
+            PAERO4 : PAERO4 object (xref)
+        p1 : (1, 3) ndarray float
+            xyz location of point 1 (leading edge; inboard)
+        p4 : (1, 3) ndarray float
+            xyz location of point 4 (leading edge; outboard)
+        x12 : float
+            distance along the flow direction from node 1 to node 2
+            (typically x, root chord)
+        x43 : float
+            distance along the flow direction from node 4 to node 3
+            (typically x, tip chord)
+        cp : int, CORDx; default=0
+            int : coordinate system
+            CORDx : Coordinate object (xref)
+        nspan : int; default=0
+            int > 0 : N spanwise boxes distributed evenly
+            int = 0 : use lchord
+        lspan : int, AEFACT; default=0
+            int > 0 : AEFACT reference for non-uniform nspan
+            int = 0 : use nspan
+            AEFACT : AEFACT object  (xref)
+        comment : str; default=''
+             a comment for the card
+        """
         caero = CAERO4(eid, pid, p1, x12, p4, x43,
                        cp=cp, nspan=nspan, lspan=lspan, comment=comment)
         self._add_caero_object(caero)
@@ -3604,6 +3689,46 @@ class AddCards(AddMethods):
 
     def add_spline4(self, eid, caero, aelist, setg, dz, method, usage,
                     nelements, melements, comment=''):
+        """
+        Creates a SPLINE4 card, which defines a curved Infinite Plate,
+        Thin Plate, or Finite Plate Spline.
+
+        Parameters
+        ----------
+        Parameters
+        ----------
+        eid : int
+            spline id
+        caero : int
+            CAEROx id that defines the plane of the spline
+        box1 / box2 : int
+            First/last box id that is used by the spline
+        setg : int
+            SETx id that defines the list of GRID points that are used
+            by the surface spline
+        dz : float; default=0.0
+            linear attachment flexibility
+            dz = 0.; spline passes through all grid points
+        method : str; default=IPS
+            method for spline fit
+            valid_methods = {IPS, TPS, FPS}
+            IPS : Harder-Desmarais Infinite Plate Spline
+            TPS : Thin Plate Spline
+            FPS : Finite Plate Spline
+        usage : str; default=BOTH
+            Spline usage flag to determine whether this spline applies
+            to the force transformation, displacement transformation, or
+            both
+            valid_usage = {FORCE, DISP, BOTH}
+        nelements : int; default=10
+            The number of FE elements along the local spline x-axis if
+            using the FPS option
+        melements : int; default=10
+            The number of FE elements along the local spline y-axis if
+            using the FPS option
+        comment : str; default=''
+            a comment for the card
+        """
         spline = SPLINE4(eid, caero, aelist, setg, dz, method, usage,
                          nelements, melements, comment=comment)
         self._add_spline_object(spline)
@@ -3842,31 +3967,107 @@ class AddCards(AddMethods):
         return set_obj
 
     def add_aset(self, ids, components, comment=''):
+        """
+        Creates an ASET card, which defines the degree of freedoms that
+        will be retained during an ASET modal reduction.
+
+        Parameters
+        ----------
+        components : List[str]
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+
+        ..note :: the length of components and ids must be the same
+        """
         aset = ASET(ids, components, comment=comment)
         self._add_aset_object(aset)
         return aset
 
     def add_aset1(self, components, ids, comment=''):
+        """
+        Creates an ASET1 card, which defines the degree of freedoms that
+        will be retained during an ASET modal reduction.
+
+        Parameters
+        ----------
+        components : str
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+        """
         aset = ASET1(components, ids, comment=comment)
         self._add_aset_object(aset)
         return aset
 
     def add_bset(self, ids, components, comment=''):
+        """
+        Creates an BSET card, which defines the degree of freedoms that
+        will be fixed during a generalized dynamic reduction or component
+        model synthesis calculation.
+
+        Parameters
+        ----------
+        components : List[str]
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+
+        ..note :: the length of components and ids must be the same
+        """
         bset = BSET(ids, components, comment=comment)
         self._add_bset_object(bset)
         return bset
 
     def add_bset1(self, components, ids, comment=''):
+        """
+        Creates an BSET1 card, which defines the degree of freedoms that
+        will be fixed during a generalized dynamic reduction or component
+        model synthesis calculation.
+
+        Parameters
+        ----------
+        components : str
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+        """
         bset = BSET1(components, ids, comment=comment)
         self._add_bset_object(bset)
         return bset
 
     def add_cset(self, ids, components, comment=''):
+        """
+        Creates an CSET card, which defines the degree of freedoms that
+        will be free during a generalized dynamic reduction or component
+        model synthesis calculation.
+
+        Parameters
+        ----------
+        components : List[str]
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+
+        ..note :: the length of components and ids must be the same
+        """
         cset = CSET(ids, components, comment=comment)
         self._add_cset_object(cset)
         return cset
 
     def add_cset1(self, ids, components, comment=''):
+        """
+        Creates an CSET1 card, which defines the degree of freedoms that
+        will be free during a generalized dynamic reduction or component
+        model synthesis calculation.
+
+        Parameters
+        ----------
+        components : str
+            the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+        """
         cset = CSET1(ids, components, comment=comment)
         self._add_cset_object(cset)
         return cset

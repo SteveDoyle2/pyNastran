@@ -3173,9 +3173,11 @@ class CAERO4(BaseCard):
         p4 : (1, 3) ndarray float
             xyz location of point 4 (leading edge; outboard)
         x12 : float
-            distance along the flow direction from node 1 to node 2; (typically x, root chord)
+            distance along the flow direction from node 1 to node 2
+            (typically x, root chord)
         x43 : float
-            distance along the flow direction from node 4 to node 3; (typically x, tip chord)
+            distance along the flow direction from node 4 to node 3
+            (typically x, tip chord)
         cp : int, CORDx; default=0
             int : coordinate system
             CORDx : Coordinate object (xref)
@@ -3474,6 +3476,40 @@ class CAERO5(BaseCard):
     def __init__(self, eid, pid, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, ntheory=0, nthick=0,
                  comment=''):
+        """
+        Defines a CAERO5 card, which defines elements for Piston theory
+        (high supersonic flow where the normal Mach is less than 1).
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            PAERO5 ID
+        p1 : (1, 3) ndarray float
+            xyz location of point 1 (leading edge; inboard)
+        p4 : (1, 3) ndarray float
+            xyz location of point 4 (leading edge; outboard)
+        x12 : float
+            distance along the flow direction from node 1 to node 2; (typically x, root chord)
+        x43 : float
+            distance along the flow direction from node 4 to node 3; (typically x, tip chord)
+        cp : int, CORDx; default=0
+            int : coordinate system
+        nspan : int; default=0
+            int > 0 : N spanwise boxes distributed evenly
+            int = 0 : use lchord
+        lspan : int, AEFACT; default=0
+            int > 0 : AEFACT reference for non-uniform nspan
+            int = 0 : use nspan
+        ntheory : int; default=0
+            ???
+            valid_theory = {0, 1, 2}
+        nthick : int; default=0
+            ???
+        comment : str; default=''
+             a comment for the card
+        """
         if comment:
             self.comment = comment
 
@@ -3561,21 +3597,18 @@ class CAERO5(BaseCard):
     def safe_cross_reference(self, model):
         msg = ' which is required by CAERO5 eid=%s' % self.eid
         try:
-            self.pid = model.PAero(self.pid, msg=msg)
-            self.pid_ref = self.pid
+            self.pid_ref = model.PAero(self.pid, msg=msg)
         except KeyError:
             pass
 
         try:
-            self.cp = model.Coord(self.cp, msg=msg)
-            self.cp_ref = self.cp
+            self.cp_ref = model.Coord(self.cp, msg=msg)
         except KeyError:
             pass
 
         if self.nspan == 0:
             try:
-                self.lspan = model.AEFact(self.lspan, msg=msg)
-                self.lspan_ref = self.lspan
+                self.lspan_ref = model.AEFact(self.lspan, msg=msg)
             except KeyError:
                 pass
 
@@ -3584,8 +3617,9 @@ class CAERO5(BaseCard):
         self.cp = self.Cp()
         if self.nspan == 0:
             self.lspan = self.LSpan()
-            del self.lspan_ref
-        del self.pid_ref, self.cp_ref
+        self.pid_ref = None
+        self.cp_ref = None
+        self.lspan_ref = None
 
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)
@@ -3669,19 +3703,19 @@ class CAERO5(BaseCard):
             c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
 
     def Cp(self):
-        if isinstance(self.cp, integer_types):
-            return self.cp
-        return self.cp_ref.cid
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        return self.pid_ref.pid
+        if self.pid_ref is not None:
+            return self.pid_ref.pid
+        return self.pid
 
     def LSpan(self):
-        if isinstance(self.lspan, integer_types):
-            return self.lspan
-        return self.lspan_ref.sid
+        if self.lspan_ref is not None:
+            return self.lspan_ref.sid
+        return self.lspan
 
     def repr_fields(self):
         """
@@ -6348,6 +6382,46 @@ class SPLINE4(Spline):
 
     def __init__(self, eid, caero, aelist, setg, dz, method, usage,
                  nelements, melements, comment=''):
+        """
+        Creates a SPLINE4 card, which defines a curved Infinite Plate,
+        Thin Plate, or Finite Plate Spline.
+
+        Parameters
+        ----------
+        Parameters
+        ----------
+        eid : int
+            spline id
+        caero : int
+            CAEROx id that defines the plane of the spline
+        box1 / box2 : int
+            First/last box id that is used by the spline
+        setg : int
+            SETx id that defines the list of GRID points that are used
+            by the surface spline
+        dz : float; default=0.0
+            linear attachment flexibility
+            dz = 0.; spline passes through all grid points
+        method : str; default=IPS
+            method for spline fit
+            valid_methods = {IPS, TPS, FPS}
+            IPS : Harder-Desmarais Infinite Plate Spline
+            TPS : Thin Plate Spline
+            FPS : Finite Plate Spline
+        usage : str; default=BOTH
+            Spline usage flag to determine whether this spline applies
+            to the force transformation, displacement transformation, or
+            both
+            valid_usage = {FORCE, DISP, BOTH}
+        nelements : int; default=10
+            The number of FE elements along the local spline x-axis if
+            using the FPS option
+        melements : int; default=10
+            The number of FE elements along the local spline y-axis if
+            using the FPS option
+        comment : str; default=''
+            a comment for the card
+        """
         Spline.__init__(self)
         if comment:
             self.comment = comment

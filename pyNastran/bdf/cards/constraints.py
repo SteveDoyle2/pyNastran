@@ -527,6 +527,24 @@ class SPC(Constraint):
     """
     type = 'SPC'
     def __init__(self, conid, gids, components, enforced, comment=''):
+        """
+        Creates an SPC card, which defines the degree of freedoms to be
+        constrained
+
+        Parameters
+        ----------
+        conid : int
+            constraint id
+        gids : List[int]
+            GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        enforced : List[float]
+            the constrained value for the given node (typically 0.0)
+
+        .. note:: len(gids) == len(components) == len(enforced)
+        .. warning:: non-zero enforced deflection requires an SPCD as well
+        """
         Constraint.__init__(self)
         if comment:
             self.comment = comment
@@ -818,6 +836,19 @@ class SPC1(Constraint):
     type = 'SPC1'
 
     def __init__(self, conid, components, nodes, comment=''):
+        """
+        Creates an SPC1 card, which defines the degree of freedoms to be
+        constrained to a value of 0.0
+
+        Parameters
+        ----------
+        conid : int
+            constraint id
+        components : str
+            the degree of freedoms to constrain (e.g., '1', '123')
+        nodes : List[int]
+            GRID/SPOINT ids
+        """
         Constraint.__init__(self)
         if comment:
             self.comment = comment
