@@ -9,8 +9,8 @@ List of Installed Scripts
 Various Command line utilities are installed by pyNastran:
 
  - pyNastranGUI
- - test_bdf
- - test_op2
+ - .. test_bdf_
+ - .. test_op2_
  - test_op4
  - bdf
  - f06
@@ -131,7 +131,7 @@ Runs through various checks on an OP2 file.  Creates a summary table.
     test_op2 -h | --help
     test_op2 -v | --version
 
-  Tests to see if an OP2 will work with pyNastran 1.1.0+dev.103ee14b.
+  Tests to see if an OP2 will work with pyNastran
   
   Positional Arguments:
     OP2_FILENAME         Path to OP2 file
@@ -167,7 +167,7 @@ Limited checker for testing to see if an OP4 file will load.
    test_op4 -h | --help
    test_op4 -v | --version
  
- Tests to see if an OP4 will work with pyNastran 0.8.0+dev.a941748.
+ Tests to see if an OP4 will work with pyNastran
  
  Positional Arguments:
    OP4_FILENAME         Path to OP4 file
@@ -267,15 +267,21 @@ Example:
 .. code-block:: console
 
     format_converter tecplot tecplot.*.plt tecplot.tecplot_joined.plt -x 0.0 -y 0.0 z 0.0
+    format_converter nastran fem.bdf stl fem.stl -b
+    format_converter nastran fem.bdf cart3d fem.tri
+    format_converter stl model.*.stl nastran fem.bdf
 
-----------------------------
-run_nastran_double_precision
-----------------------------
->>> run_nastran_double_precision --help
-Bugged...no prompt
+..
 
-Still in development, runs:
-  run_nastran_double_precision fem.bdf
-
-with various output formats to verify there are no bugs in the write_bdf method.  Verifies it by reading the OP2.
-
+  ----------------------------
+  run_nastran_double_precision
+  ----------------------------
+  >>> run_nastran_double_precision --help
+  Bugged...no prompt
+  
+  Still in development, runs:
+    run_nastran_double_precision fem.bdf
+  
+  with various output formats to verify there are no bugs in the write_bdf method.  Verifies it by reading the OP2.
+  
+  
