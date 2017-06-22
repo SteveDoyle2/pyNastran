@@ -2723,21 +2723,49 @@ class DVCREL2(OptConstraint):
 
 
 class DVMREL1(OptConstraint):
+    """
+    Design Variable to Material Relation
+    Defines the relation between a material property and design variables.
+
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    |    1    |   2   |   3   |   4   |    5   |   6   |   7   |    8   |
+    +=========+=======+=======+=======+========+=======+=======+========+
+    | DVMREL1 |  ID   | TYPE  |  MID  | MPNAME | MPMIN | MPMAX |   C0   |
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    |         | DVID1 | COEF1 | DVID2 | COEF2  | DVID3 | COEF3 | -etc.- |
+    +---------+-------+-------+-------+--------+-------+-------+--------+
+    """
     type = 'DVMREL1'
 
     def __init__(self, oid, mat_type, mid, mp_name, dvids, coeffs,
                  mp_min=None, mp_max=1e20, c0=0., validate=False, comment=''):
         """
-        Design Variable to Material Relation
-        Defines the relation between a material property and design variables.
+        Creates a DVMREL1 card
 
-        +---------+-------+-------+-------+--------+-------+-------+--------+
-        |    1    |   2   |   3   |   4   |    5   |   6   |   7   |    8   |
-        +=========+=======+=======+=======+========+=======+=======+========+
-        | DVMREL1 |  ID   | TYPE  |  MID  | MPNAME | MPMIN | MPMAX |   C0   |
-        +---------+-------+-------+-------+--------+-------+-------+--------+
-        |         | DVID1 | COEF1 | DVID2 | COEF2  | DVID3 | COEF3 | -etc.- |
-        +---------+-------+-------+-------+--------+-------+-------+--------+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        prop_type : str
+            material card name (e.g., MAT1)
+        mid : int
+            material id
+        mp_name : str
+            optimization parameter as a pname (material name; E)
+        dvids : List[int]
+            DESVAR ids
+        coeffs : List[float]
+            scale factors for DESVAR ids
+        mp_min : float; default=None
+            minimum material property value
+        mp_max : float; default=1e20
+            maximum material property value
+        c0 : float; default=0.
+            offset factor for the variable
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -2866,25 +2894,55 @@ class DVMREL1(OptConstraint):
 
 
 class DVMREL2(OptConstraint):
+    """
+    +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+    |    1    |    2   |   3    |   4   |     5   |   6   |   7   |   8   |   9   |
+    +=========+========+========+=======+=========+=======+=======+=======+=======+
+    | DVMREL2 |   ID   | TYPE   |  MID  | MPNAME  | MPMIN | MPMAX | EQID  |       |
+    +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+    |         | DESVAR | DVID1  | DVID2 | DVID3   | DVID4 | DVID5 | DVID6 | DVID7 |
+    +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+    |         | DVID8  | -etc.- |       |         |       |       |       |       |
+    +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+    |         | DTABLE | LABL1  | LABL2 | LABL3   | LABL4 | LABL5 | LABL6 | LABL7 |
+    +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+    |         | LABL8  | -etc.- |       |         |       |       |       |       |
+    +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+    """
     type = 'DVMREL2'
 
     allowed_materials = ['MAT1', 'MAT2']
     def __init__(self, oid, mat_type, mid, mp_name, deqation, dvids, labels,
                  mp_min=None, mp_max=1e20, validate=False, comment=''):
         """
-        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |    1    |    2   |   3    |   4   |     5   |   6   |   7   |   8   |   9   |
-        +=========+========+========+=======+=========+=======+=======+=======+=======+
-        | DVMREL2 |   ID   | TYPE   |  MID  | MPNAME  | MPMIN | MPMAX | EQID  |       |
-        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |         | DESVAR | DVID1  | DVID2 | DVID3   | DVID4 | DVID5 | DVID6 | DVID7 |
-        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |         | DVID8  | -etc.- |       |         |       |       |       |       |
-        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |         | DTABLE | LABL1  | LABL2 | LABL3   | LABL4 | LABL5 | LABL6 | LABL7 |
-        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |         | LABL8  | -etc.- |       |         |       |       |       |       |
-        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+        Creates a DVMREL2 card
+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        mat_type : str
+            material card name (e.g., MAT1)
+        mid : int
+            material id
+        mp_name : str
+            optimization parameter as a pname (material name; E)
+        deqation : int
+            DEQATN id
+        dvids : List[int]; default=None
+            DESVAR ids
+        labels : List[str]; default=None
+            DTABLE names
+        mp_min : float; default=None
+            minimum material property value
+        mp_max : float; default=1e20
+            maximum material property value
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+
+        .. note:: either dvids or labels is required
         """
         if comment:
             self.comment = comment

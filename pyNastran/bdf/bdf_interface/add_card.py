@@ -3055,7 +3055,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_pload1(self, sid, eid, Type, scale, x1, p1, x2=None, p2=None, comment=''):
+    def add_pload1(self, sid, eid, load_type, scale, x1, p1, x2=None, p2=None, comment=''):
         """
         Creates a PLOAD1 card, which may be applied to a CBAR/CBEAM
 
@@ -3065,7 +3065,7 @@ class AddCards(AddMethods):
             load id
         eid : int
             element to apply the load to
-        Type : str
+        load_type : str
             type of load that's applied
             valid_types = {FX, FY, FZ, FXE, FYE, FZE,
                            MX, MY, MZ, MXE, MYE, MZE}
@@ -3083,7 +3083,7 @@ class AddCards(AddMethods):
         Point Load       : x1 == x2
         Distributed Load : x1 != x2
         """
-        load = PLOAD1(sid, eid, Type, scale, x1, p1, x2=x2, p2=p2, comment=comment)
+        load = PLOAD1(sid, eid, load_type, scale, x1, p1, x2=x2, p2=p2, comment=comment)
         self._add_load_object(load)
         return load
 
@@ -4983,6 +4983,34 @@ class AddCards(AddMethods):
 
     def add_dvmrel1(self, oid, mat_type, mid, mp_name, dvids, coeffs,
                     mp_min=None, mp_max=1e20, c0=0., validate=True, comment=''):
+        """
+        Creates a DVMREL1 card
+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        prop_type : str
+            material card name (e.g., MAT1)
+        mid : int
+            material id
+        mp_name : str
+            optimization parameter as a pname (material name; E)
+        dvids : List[int]
+            DESVAR ids
+        coeffs : List[float]
+            scale factors for DESVAR ids
+        mp_min : float; default=None
+            minimum material property value
+        mp_max : float; default=1e20
+            maximum material property value
+        c0 : float; default=0.
+            offset factor for the variable
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+        """
         dvmrel = DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
                          mp_min, mp_max, c0=c0, validate=validate, comment=comment)
         self._add_dvmrel_object(dvmrel)
@@ -4990,6 +5018,36 @@ class AddCards(AddMethods):
 
     def add_dvmrel2(self, oid, mat_type, mid, mp_name, deqation, dvids, labels,
                     mp_min=None, mp_max=1e20, validate=True, comment=''):
+        """
+        Creates a DVMREL2 card
+
+        Parameters
+        ----------
+        oid : int
+            optimization id
+        mat_type : str
+            material card name (e.g., MAT1)
+        mid : int
+            material id
+        mp_name : str
+            optimization parameter as a pname (material name; E)
+        deqation : int
+            DEQATN id
+        dvids : List[int]; default=None
+            DESVAR ids
+        labels : List[str]; default=None
+            DTABLE names
+        mp_min : float; default=None
+            minimum material property value
+        mp_max : float; default=1e20
+            maximum material property value
+        validate : bool; default=False
+            should the variable be validated
+        comment : str; default=''
+            a comment for the card
+
+        .. note:: either dvids or labels is required
+        """
         dvmrel = DVMREL2(oid, mat_type, mid, mp_name, deqation, dvids, labels,
                          mp_min=mp_min, mp_max=mp_max,
                          validate=validate, comment=comment)
@@ -5622,8 +5680,10 @@ class AddCards(AddMethods):
         else:
             if comment:
                 self.rejects.append([comment])
-            self.reject_cards.append(card_obj)
-            self._write_reject_message(card_name, card_obj, comment=comment)
+                msg = "DTI only supports name='UNITS'; name=%r fields=%s" % (name, str(fields))
+            raise NotImplementedError(msg)
+            #self.reject_cards.append(card_obj)
+            #self._write_reject_message(card_name, card_obj, comment=comment)
         return dti
 
     def add_dmig_uaccel(self, tin, ncol, load_sequences, comment=''):
