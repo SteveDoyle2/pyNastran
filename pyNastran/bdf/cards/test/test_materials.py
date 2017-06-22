@@ -172,29 +172,33 @@ class TestMaterials(unittest.TestCase):
         mat3.write_card(size=16, is_double=False)
         mat3.validate()
 
-        #matt3 = model.add_matt3()
-        #matt3.validate()
+        matt3 = model.add_matt3(
+            mid, ex_table=1, eth_table=2, ez_table=3,
+            nuth_table=4, nuxz_table=1, rho_table=1,
+            gzx_table=1, ax_table=1, ath_table=1,
+            az_table=1, ge_table=1, comment='matt3')
+        matt3.validate()
 
-        #x = np.linspace(1., 10.)
-        #y = np.sin(x) + 5.
-        #tablem1 = model.add_tablem1(1, x, y, comment='tablem1')
-        #tablem1.write_card()
+        x = np.linspace(1., 10.)
+        y = np.sin(x) + 5.
+        tablem1 = model.add_tablem1(1, x, y, comment='tablem1')
+        tablem1.write_card()
+
+        x1 = 1.0
+        tablem2 = model.add_tablem2(2, x1, x, y, comment='tablem2')
+        tablem2.write_card()
+
+        x2 = 2.0
+        tablem3 = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
+        tablem3.write_card()
 
         #x1 = 1.0
-        #tablem2 = model.add_tablem2(2, x1, x, y, comment='tablem2')
-        #tablem2.write_card()
-
         #x2 = 2.0
-        #tablem3 = model.add_tablem3(3, x1, x2, x, y, comment='tablem3')
-        #tablem3.write_card()
-
-        ##x1 = 1.0
-        ##x2 = 2.0
-        #x3 = 3.0
-        #x4 = 4.0
-        #a = [5.0]
-        #tablem4 = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
-        #tablem4.write_card()
+        x3 = 3.0
+        x4 = 4.0
+        a = [5.0]
+        tablem4 = model.add_tablem4(4, x1, x2, x3, x4, a, comment='tablem4')
+        tablem4.write_card()
 
         model.validate()
         model.cross_reference()

@@ -94,7 +94,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
                                            MATG, MATHE, MATHP, CREEP, EQUIV)
 # TODO: add MATT3, MATT8, MATT9
-from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATT8, MATS1
+from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
@@ -147,7 +147,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None,
              encoding=None, log=None, debug=True, mode='msc'):
-    # type: (Union[str, None], bool, bool, bool, Union[List[str], None], Union[str, None], Union[SimpleLogger, None], bool, str) -> BDF
+    # type: (Union[str, None], bool, bool, bool, Union[List[str], None], Union[str, None], Union[SimpleLogger, None], Optional[bool], str) -> BDF
     """
     Creates the BDF object
 
@@ -163,17 +163,20 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     log : logging module object / None
         if log is set, debug is ignored and uses the
         settings the logging object has
-    validate : bool
-        runs various checks on the BDF (default=True)
-    xref :  bool
-        should the bdf be cross referenced (default=True)
-    punch : bool
-        indicates whether the file is a punch file (default=False)
+    validate : bool; default=True
+        runs various checks on the BDF
+    xref :  bool; default=True
+        should the bdf be cross referenced
+    punch : bool; default=False
+        indicates whether the file is a punch file
     skip_cards : List[str]; default=None
         None : include all cards
         list of cards to skip
-    encoding : str
-        the unicode encoding (default=None; system default)
+    encoding : str; default=None -> system default
+        the unicode encoding
+    mode : str; default='msc'
+        the type of Nastran
+        valid_modes = {'msc', 'nx'}
 
     Returns
     -------
@@ -269,7 +272,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
     def __init__(self, debug=True, log=None, mode='msc'):
-        # type: (bool, SimpleLogger, str) -> None
+        # type: (Optional[bool], SimpleLogger, str) -> None
         """
         Initializes the BDF object
 
@@ -283,6 +286,9 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         log : logging module object / None
             if log is set, debug is ignored and uses the
             settings the logging object has
+        mode : str; default='msc'
+            the type of Nastran
+            valid_modes = {'msc', 'nx'}
         """
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
@@ -407,7 +413,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'MATG', 'MATHE', 'MATHP',
 
             ## Material dependence - MATT1/MATT2/etc.
-            'MATT1', 'MATT2', 'MATT4', 'MATT5', 'MATT8', #'MATT3', 'MATT9',
+            'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', # 'MATT9',
             'MATS1', #'MATS3', 'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
@@ -458,11 +464,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'AEPARM',   ## aeparams
             'AESTAT',   ## aestats
             'AESURF',  ## aesurf
-            #'AESURFS', ## aesurfs
-            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',  ## caeros
-            # 'CAERO5',
-            'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
-            'PAERO4', # 'PAERO5',
+            'AESURFS', ## aesurfs
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', ## caeros
+            'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', ## paeros
+
             'MONPNT1', 'MONPNT2', 'MONPNT3',  ## monitor_points
             'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             'SPLINE6', 'SPLINE7',
@@ -1038,16 +1043,16 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         ----------
         bdf_filename : str / None
             the input bdf (default=None; popup a dialog)
-        validate : bool
-            runs various checks on the BDF (default=True)
-        xref :  bool
-            should the bdf be cross referenced (default=True)
-        punch : bool
-            indicates whether the file is a punch file (default=False)
-        read_includes : bool
-            indicates whether INCLUDE files should be read (default=True)
-        encoding : str
-            the unicode encoding (default=None; system default)
+        validate : bool; default=True
+            runs various checks on the BDF
+        xref :  bool; default=True
+            should the bdf be cross referenced
+        punch : bool; default=False
+            indicates whether the file is a punch file
+        read_includes : bool; default=True
+            indicates whether INCLUDE files should be read
+        encoding : str; default=None -> system default
+            the unicode encoding
 
         .. code-block:: python
 
@@ -1961,13 +1966,13 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             #'MATS8' : (MATS8, self._add_material_dependence_object),
             'MATT1' : (MATT1, self._add_material_dependence_object),
             'MATT2' : (MATT2, self._add_material_dependence_object),
-            #'MATT3' : (MATT3, self._add_material_dependence_object),
+            'MATT3' : (MATT3, self._add_material_dependence_object),
             'MATT4' : (MATT4, self._add_material_dependence_object),
             'MATT5' : (MATT5, self._add_material_dependence_object),
             'MATT8' : (MATT8, self._add_material_dependence_object),
             #'MATT9' : (MATT9, self._add_material_dependence_object),
 
-            ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+            # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self._add_creep_material_object),
 
             'NSMADD' : (NSMADD, self._add_nsm_object),
@@ -1979,7 +1984,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'CMASS1' : (CMASS1, self._add_mass_object),
             'CMASS2' : (CMASS2, self._add_mass_object),
             'CMASS3' : (CMASS3, self._add_mass_object),
-            ## CMASS4 - added later because documentation is wrong
+            # CMASS4 - added later because documentation is wrong
 
             'MPC' : (MPC, self._add_constraint_mpc_object),
             'MPCADD' : (MPCADD, self._add_constraint_mpc_object),

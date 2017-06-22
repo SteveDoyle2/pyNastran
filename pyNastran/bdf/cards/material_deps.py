@@ -622,6 +622,218 @@ class MATT2(MaterialDependence):
         return self.comment + print_card_16(card)
 
 #MATT3 - CTRIAX6 only
+class MATT3(MaterialDependence):
+    """
+    Specifies temperature-dependent material properties on MAT3 entry fields via
+    TABLEMi entries that are temperature dependent.
+    +--------+--------+-------+--------+-------+----------+----------+---------+--------+
+    |    1   |    2   |   3   |    4   |   5   |     6    |     7    |    8    |    9   |
+    +========+========+=======+========+=======+==========+==========+=========+========+
+    | MATT3  |   MID  | T(EX) | T(ETH) | T(EZ) | T(NUXTH) | T(NUTHZ) | T(NUZX) | T(RHO) |
+    +--------+--------+-------+--------+-------+----------+----------+---------+--------+
+    |        |        |       | T(GZX) | T(AX) |  T(ATH)  |  T(AZ)   |         |  T(GE) |
+    +--------+--------+-------+--------+-------+----------+----------+---------+--------+
+    """
+    type = 'MATT3'
+
+    def __init__(self, mid, ex_table=None, eth_table=None, ez_table=None,
+                 nuth_table=None, nuxz_table=None, rho_table=None,
+                 gzx_table=None, ax_table=None, ath_table=None, az_table=None,
+                 ge_table=None, comment=''):
+        """
+        Creates a MATT3 card
+        """
+        MaterialDependence.__init__(self)
+        if comment:
+            self.comment = comment
+
+        self.mid = mid
+        self._ex_table = ex_table
+        self._eth_table = eth_table
+        self._ez_table = ez_table
+        self._nuth_table = nuth_table
+        self._nuxz_table = nuxz_table
+        self._rho_table = rho_table
+        self._gzx_table = gzx_table
+        self._ax_table = ax_table
+        self._ath_table = ath_table
+        self._az_table = az_table
+        self._ge_table = ge_table
+
+        self.ex_table_ref = None
+        self.eth_table_ref = None
+        self.ez_table_ref = None
+        self.nuth_table_ref = None
+        self.nuxz_table_ref = None
+        self.rho_table_ref = None
+        self.gzx_table_ref = None
+        self.ax_table_ref = None
+        self.ath_table_ref = None
+        self.az_table_ref = None
+        self.ge_table_ref = None
+
+    def cross_reference(self, model):
+        msg = ', which is required by MATT3 mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+        if self._ex_table is not None:
+            self.ex_table_ref = model.TableM(self._ex_table)
+        if self._eth_table is not None:
+            self.eth_table_ref = model.TableM(self._eth_table)
+        if self._ez_table is not None:
+            self.ez_table_ref = model.TableM(self._ez_table)
+        if self._nuth_table is not None:
+            self.nuth_table_ref = model.TableM(self._nuth_table)
+        if self._nuxz_table is not None:
+            self.nuxz_table_ref = model.TableM(self._nuxz_table)
+        if self._rho_table is not None:
+            self.rho_table_ref = model.TableM(self._rho_table)
+
+        if self._gzx_table is not None:
+            self.gzx_table_ref = model.TableM(self._gzx_table)
+        if self._ax_table is not None:
+            self.ax_table_ref = model.TableM(self._ax_table)
+        if self._ath_table is not None:
+            self.ath_table_ref = model.TableM(self._ath_table)
+        if self._az_table is not None:
+            self.az_table_ref = model.TableM(self._az_table)
+        if self._ge_table is not None:
+            self.ge_table_ref = model.TableM(self._ge_table)
+
+
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        self.mid_ref = None
+
+        self._ex_table = self.ex_table()
+        self._eth_table = self.eth_table()
+        self._ez_table = self.ez_table()
+        self._nuth_table = self.nuth_table()
+        self._nuxz_table = self.nuxz_table()
+        self._rho_table = self.rho_table()
+        self._gzx_table = self.gzx_table()
+        self._ax_table = self.ax_table()
+        self._ath_table = self.ath_table()
+        self._az_table = self.az_table()
+        self._ge_table = self.ge_table()
+
+        self.ex_table_ref = None
+        self.eth_table_ref = None
+        self.ez_table_ref = None
+        self.nuth_table_ref = None
+        self.nuxz_table_ref = None
+        self.rho_table_ref = None
+        self.gzx_table_ref = None
+        self.ax_table_ref = None
+        self.ath_table_ref = None
+        self.az_table_ref = None
+        self.ge_table_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a MATT3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        mid = integer(card, 1, 'mid')
+        ex_table = integer_or_blank(card, 2, 'T(EX)')
+        eth_table = integer_or_blank(card, 3, 'T(ETH)')
+        ez_table = integer_or_blank(card, 5, 'T(EZ)')
+        nuth_table = integer_or_blank(card, 6, 'T(NUTH)')
+        nuxz_table = integer_or_blank(card, 7, 'T(NUXZ)')
+        rho_table = integer_or_blank(card, 8, 'T(RHO)')
+
+        gzx_table = integer_or_blank(card, 11, 'T(GZX)')
+        ax_table = integer_or_blank(card, 12, 'T(AX)')
+        ath_table = integer_or_blank(card, 13, 'T(ATH)')
+        az_table = integer_or_blank(card, 14, 'T(AZ)')
+        ge_table = integer_or_blank(card, 16, 'T(GE)')
+
+        assert len(card) <= 16, 'len(MATT3 card) = %i\ncard=%s' % (len(card), card)
+        return MATT3(mid, ex_table, eth_table, ez_table,
+                     nuth_table, nuxz_table, rho_table, gzx_table,
+                     ax_table, ath_table, az_table, ge_table, comment=comment)
+
+    def ex_table(self):
+        if self.ex_table_ref is not None:
+            return self.ex_table_ref.tid
+        return self._ex_table
+
+    def eth_table(self):
+        if self.eth_table_ref is not None:
+            return self.eth_table_ref.tid
+        return self._eth_table
+
+    def ez_table(self):
+        if self.ez_table_ref is not None:
+            return self.ez_table_ref.tid
+        return self._eth_table
+
+    def nuth_table(self):
+        if self.nuth_table_ref is not None:
+            return self.nuth_table_ref.tid
+        return self._nuth_table
+
+    def nuxz_table(self):
+        if self.nuxz_table_ref is not None:
+            return self.nuxz_table_ref.tid
+        return self._nuxz_table
+
+    def rho_table(self):
+        if self.rho_table_ref is not None:
+            return self.rho_table_ref.tid
+        return self._rho_table
+
+    def gzx_table(self):
+        if self.gzx_table_ref is not None:
+            return self.gzx_table_ref.tid
+        return self._gzx_table
+
+    def ax_table(self):
+        if self.ax_table_ref is not None:
+            return self.ax_table_ref.tid
+        return self._ax_table
+
+    def ath_table(self):
+        if self.ath_table_ref is not None:
+            return self.ath_table_ref.tid
+        return self._ath_table
+
+    def az_table(self):
+        if self.az_table_ref is not None:
+            return self.az_table_ref.tid
+        return self._az_table
+
+    def ge_table(self):
+        if self.ge_table_ref is not None:
+            return self.ge_table_ref.tid
+        return self._ge_table
+
+    def raw_fields(self):
+        list_fields = [
+            'MATT3', self.Mid(), self.ex_table(), self.eth_table(), self.ez_table(),
+            self.nuth_table(), self.nuxz_table(), self.rho_table(), None, None,
+            self.gzx_table(), self.ax_table(), self.ath_table(), self.az_table(),
+            None, self.ge_table(),
+        ]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class MATT4(MaterialDependence):
     """

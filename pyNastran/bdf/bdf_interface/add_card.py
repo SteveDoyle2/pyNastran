@@ -73,7 +73,7 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, F
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
                                            MATG, MATHE, MATHP, CREEP, EQUIV)
-from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATT8, MATS1
+from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
@@ -2494,8 +2494,15 @@ class AddCards(AddMethods):
         self._add_material_dependence_object(mat)
         return mat
 
-    #ddf add_matt3(mid):
-        #mat = MATT3
+    def add_matt3(self, mid, ex_table=None, eth_table=None, ez_table=None,
+                  nuth_table=None, nuxz_table=None, rho_table=None,
+                  gzx_table=None, ax_table=None, ath_table=None, az_table=None,
+                  ge_table=None, comment=''):
+        mat = MATT3(mid, ex_table, eth_table, ez_table,
+                    nuth_table, nuxz_table, rho_table, gzx_table,
+                    ax_table, ath_table, az_table, ge_table, comment=comment)
+        self._add_material_dependence_object(mat)
+        return mat
 
     def add_matt4(self, mid, k_table=None, cp_table=None, h_table=None,
                   mu_table=None, hgen_table=None, comment=''):

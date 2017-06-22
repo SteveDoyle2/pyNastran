@@ -20,6 +20,7 @@ from pyNastran.bdf.cards.aero import (
     AELINK, DIVERG, AECOMP,
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 ROOTPATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
@@ -981,6 +982,7 @@ class TestAero(unittest.TestCase):
 
         read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
+        save_load_deck(model)
 
 
         #caero5.raw_fields()
@@ -1417,7 +1419,7 @@ class TestAero(unittest.TestCase):
         wg = 50.
         x0 = 3.
         V = 42.
-        model = BDF()
+        model = BDF(debug=False)
         gust = model.add_gust(sid, dload, wg, x0, V=V, comment='gust load')
         gust.validate()
         gust.write_card()
@@ -1425,6 +1427,7 @@ class TestAero(unittest.TestCase):
         gust2 = GUST.add_card(BDFCard(['GUST', sid, dload, wg, x0, V]), comment='gust load')
         gust2.validate()
         gust2.write_card()
+        save_load_deck(model)
 
 
     def test_csschd(self):
@@ -1548,10 +1551,7 @@ class TestAero(unittest.TestCase):
         model._verify_bdf(xref=True)
         model.uncross_reference()
 
-        bdf_filename = StringIO()
-        model.write_bdf(bdf_filename, close=False)
-        bdf_filename.seek(0)
-        model2 = read_bdf(bdf_filename, punch=True, debug=False)
+        save_load_deck(model)
 
     def test_bah_plane_bdf(self):
         """tests the bah_plane"""

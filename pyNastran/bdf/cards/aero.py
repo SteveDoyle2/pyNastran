@@ -1930,6 +1930,7 @@ class CAERO1(BaseCard):
         self.cp_ref = None
         self.lchord_ref = None
         self.lspan_ref = None
+        self.ascid_ref = None
 
     def validate(self):
         msg = ''
@@ -2163,6 +2164,7 @@ class CAERO1(BaseCard):
         self.cp_ref = None
         self.lchord_ref = None
         self.lspan_ref = None
+        self.ascid_ref = None
 
     def update(self, maps):
         """
@@ -2506,6 +2508,7 @@ class CAERO2(BaseCard):
         self.cp_ref = None
         self.lint_ref = None
         self.lsb_ref = None
+        self.ascid_ref = None
 
     def validate(self):
         #print('nsb=%s lsb=%s' % (self.nsb, self.lsb))
@@ -2629,6 +2632,7 @@ class CAERO2(BaseCard):
         self.cp_ref = None
         self.lint_ref = None
         self.lsb_ref = None
+        self.ascid_ref = None
 
     def get_points(self):
         """
@@ -3529,6 +3533,9 @@ class CAERO5(BaseCard):
         self.x12 = x12
         self.p4 = np.asarray(p4, dtype='float64')
         self.x43 = x43
+        self.pid_ref = None
+        self.cp_ref = None
+        self.lspan_ref = None
 
         assert self.x12 > 0., 'x12=%s' % self.x12
         if not (self.nspan > 0 or self.lspan > 0):
@@ -3586,13 +3593,10 @@ class CAERO5(BaseCard):
             the BDF object
         """
         msg = ' which is required by CAERO5 eid=%s' % self.eid
-        self.pid = model.PAero(self.pid, msg=msg)
-        self.pid_ref = self.pid
-        self.cp = model.Coord(self.cp, msg=msg)
-        self.cp_ref = self.cp
+        self.pid_ref = model.PAero(self.pid, msg=msg)
+        self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.nspan == 0:
-            self.lspan = model.AEFact(self.lspan, msg=msg)
-            self.lspan_ref = self.lspan
+            self.lspan_ref = model.AEFact(self.lspan, msg=msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CAERO5 eid=%s' % self.eid
@@ -4322,6 +4326,9 @@ class FLUTTER(BaseCard):
         self.nvalue = nvalue
         self.omax = omax
         self.epsilon = epsilon
+        self.density_ref = None
+        self.mach_ref = None
+        self.reduced_freq_velocity_ref = None
 
     def validate(self):
         if self.method not in ['K', 'KE', 'PK', 'PKNL', 'PKS', 'PKNLS']:
@@ -4414,28 +4421,22 @@ class FLUTTER(BaseCard):
             the BDF object
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
-        self.density = model.FLFACT(self.density, msg=msg)
-        self.density_ref = self.density
-        self.mach = model.FLFACT(self.mach, msg=msg)
-        self.mach_ref = self.mach
-        self.reduced_freq_velocity = model.FLFACT(self.reduced_freq_velocity, msg=msg)
-        self.reduced_freq_velocity_ref = self.reduced_freq_velocity
+        self.density_ref = model.FLFACT(self.density, msg=msg)
+        self.mach_ref = model.FLFACT(self.mach, msg=msg)
+        self.reduced_freq_velocity_ref = model.FLFACT(self.reduced_freq_velocity, msg=msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by FLUTTER sid=%s' % self.sid
         try:
-            self.density = model.FLFACT(self.density, msg=msg)
-            self.density_ref = self.density
+            self.density_ref = model.FLFACT(self.density, msg=msg)
         except KeyError:
             pass
         try:
-            self.mach = model.FLFACT(self.mach, msg=msg)
-            self.mach_ref = self.mach
+            self.mach_ref = model.FLFACT(self.mach, msg=msg)
         except KeyError:
             pass
         try:
-            self.reduced_freq_velocity = model.FLFACT(self.reduced_freq_velocity, msg=msg)
-            self.reduced_freq_velocity_ref = self.reduced_freq_velocity
+            self.reduced_freq_velocity_ref = model.FLFACT(self.reduced_freq_velocity, msg=msg)
         except KeyError:
             pass
 
@@ -4443,22 +4444,24 @@ class FLUTTER(BaseCard):
         self.density = self.get_density()
         self.mach = self.get_mach()
         self.reduced_freq_velocity = self.get_rfreq_vel()
-        del self.density_ref, self.mach_ref, self.reduced_freq_velocity_ref
+        self.density_ref = None
+        self.mach_ref = None
+        self.reduced_freq_velocity_ref = None
 
     def get_density(self):
-        if isinstance(self.density, integer_types):
-            return self.density
-        return self.density_ref.sid
+        if self.density_ref is not None:
+            return self.density_ref.sid
+        return self.density
 
     def get_mach(self):
-        if isinstance(self.mach, integer_types):
-            return self.mach
-        return self.mach_ref.sid
+        if self.mach_ref is not None:
+            return self.mach_ref.sid
+        return self.mach
 
     def get_rfreq_vel(self):
-        if isinstance(self.reduced_freq_velocity, integer_types):
-            return self.reduced_freq_velocity
-        return self.reduced_freq_velocity_ref.sid
+        if self.reduced_freq_velocity_ref is not None:
+            return self.reduced_freq_velocity_ref.sid
+        return self.reduced_freq_velocity
 
     def _get_raw_nvalue_omax(self):
         if self.method in ['K', 'KE']:
@@ -4586,7 +4589,7 @@ class GUST(BaseCard):
         return GUST(sid, dload, wg, x0, V, comment=comment)
 
     #def Angle(self):
-        #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
+        #angle = self.wg * self.t * (t-(x-self.x0) / self.V) # T is the tabular
         #return angle
 
     #def uncross_reference(self):
@@ -5770,6 +5773,8 @@ class SPLINE1(Spline):
         self.usage = usage
         self.nelements = nelements
         self.melements = melements
+        self.caero_ref = None
+        self.setg_ref = None
 
     def validate(self):
         assert self.nelements > 0, 'nelements = %s' % self.nelements
@@ -5825,14 +5830,14 @@ class SPLINE1(Spline):
         return np.arange(self.box1, self.box2 + 1)
 
     def CAero(self):
-        if isinstance(self.caero, integer_types):
-            return self.caero
-        return self.caero_ref.eid
+        if self.caero_ref is not None:
+            return self.caero_ref.eid
+        return self.caero
 
     def Set(self):
-        if isinstance(self.setg, integer_types):
-            return self.setg
-        return self.setg_ref.sid
+        if self.setg_ref is not None:
+            return self.setg_ref.sid
+        return self.setg
 
     def cross_reference(self, model):
         """
@@ -5844,11 +5849,9 @@ class SPLINE1(Spline):
             the BDF object
         """
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
-        self.caero = model.CAero(self.CAero(), msg=msg)
-        self.caero_ref = self.caero
-        self.setg = model.Set(self.Set(), msg=msg)
-        self.setg.cross_reference(model, 'Node')
-        self.setg_ref = self.setg
+        self.caero_ref = model.CAero(self.caero, msg=msg)
+        self.setg_ref = model.Set(self.setg, msg=msg)
+        self.setg_ref.cross_reference(model, 'Node')
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -5860,15 +5863,13 @@ class SPLINE1(Spline):
     def safe_cross_reference(self, model):
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         try:
-            self.caero = model.CAero(self.CAero(), msg=msg)
-            self.caero_ref = self.caero
+            self.caero_ref = model.CAero(self.caero, msg=msg)
         except KeyError:
             pass
 
         try:
-            self.setg = model.Set(self.Set(), msg=msg)
-            self.setg.cross_reference(model, 'Node')
-            self.setg_ref = self.setg
+            self.setg_ref = model.Set(self.setg, msg=msg)
+            self.setg_ref.cross_reference(model, 'Node')
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
@@ -5882,7 +5883,8 @@ class SPLINE1(Spline):
     def uncross_reference(self):
         self.caero = self.CAero()
         self.setg = self.Set()
-        del self.caero_ref, self.setg_ref
+        self.caero_ref = None
+        self.setg_ref = None
 
     def raw_fields(self):
         """
@@ -5999,6 +6001,9 @@ class SPLINE2(Spline):
         self.dthy = dthy
         self.usage = usage
         assert self.id2 >= self.id1, 'id2=%s id1=%s' % (self.id2, self.id1)
+        self.cid_ref = None
+        self.caero_ref = None
+        self.setg_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -6038,13 +6043,10 @@ class SPLINE2(Spline):
             the BDF object
         """
         msg = ' which is required by SPLINE2 eid=%s' % self.eid
-        self.cid = model.Coord(self.Cid(), msg=msg)
-        self.cid_ref = self.cid
-        self.caero = model.CAero(self.CAero(), msg=msg)
-        self.caero_ref = self.caero
-        self.setg = model.Set(self.Set(), msg=msg)
-        self.setg_ref = self.setg
-        self.setg.cross_reference(model, 'Node', msg=msg)
+        self.cid_ref = model.Coord(self.Cid(), msg=msg)
+        self.caero_ref = model.CAero(self.CAero(), msg=msg)
+        self.setg_ref = model.Set(self.Set(), msg=msg)
+        self.setg_ref.cross_reference(model, 'Node', msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 2:
@@ -6056,21 +6058,18 @@ class SPLINE2(Spline):
     def safe_cross_reference(self, model):
         msg = ' which is required by SPLINE2 eid=%s' % self.eid
         try:
-            self.cid = model.Coord(self.Cid(), msg=msg)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(self.Cid(), msg=msg)
         except KeyError:
             pass
 
         try:
-            self.caero = model.CAero(self.CAero(), msg=msg)
-            self.caero_ref = self.caero
+            self.caero_ref = model.CAero(self.CAero(), msg=msg)
         except KeyError:
             pass
 
         try:
-            self.setg = model.Set(self.Set(), msg=msg)
-            self.setg_ref = self.setg
-            self.setg.cross_reference(model, 'Node', msg=msg)
+            self.setg_ref = model.Set(self.Set(), msg=msg)
+            self.setg_ref.cross_reference(model, 'Node', msg=msg)
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 2:
@@ -6085,26 +6084,28 @@ class SPLINE2(Spline):
         self.cid = self.Cid()
         self.caero = self.CAero()
         self.setg = self.Set()
-        del self.cid_ref, self.caero_ref, self.setg_ref
+        self.cid_ref = None
+        self.caero_ref = None
+        self.setg_ref = None
 
     @property
     def aero_element_ids(self):
         return np.arange(self.id1, self.id2 + 1)
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.setg_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def CAero(self):
-        if isinstance(self.caero, integer_types):
-            return self.caero
-        return self.caero_ref.eid
+        if self.setg_ref is not None:
+            return self.caero_ref.eid
+        return self.caero
 
     def Set(self):
-        if isinstance(self.setg, integer_types):
-            return self.setg
-        return self.setg_ref.sid
+        if self.setg_ref is not None:
+            return self.setg_ref.sid
+        return self.setg
 
     def raw_fields(self):
         """
@@ -6310,27 +6311,27 @@ class SPLINE3(Spline):
         return SPLINE3(eid, caero, box_id, components, Gi, ci, ai, usage,
                        comment=comment)
 
-    def CAero(self):
-        if self.caero_ref is not None:
-            return self.caero_ref.eid
-        return self.caero
-
     def cross_reference(self, model):
         msg = ' which is required by SPLINE3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
-
-    @property
-    def node_ids(self):
-        if self.nodes_ref is None:
-            return self.nodes
-        return [node.nid for node in self.nodes_ref]
 
     def uncross_reference(self):
         self.caero = self.CAero()
         self.nodes = self.node_ids
         self.nodes_ref = None
         self.caero_ref = None
+
+    def CAero(self):
+        if self.caero_ref is not None:
+            return self.caero_ref.eid
+        return self.caero
+
+    @property
+    def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
+        return [node.nid for node in self.nodes_ref]
 
     def raw_fields(self):
         """
@@ -6434,6 +6435,9 @@ class SPLINE4(Spline):
         self.usage = usage
         self.nelements = nelements
         self.melements = melements
+        self.caero_ref = None
+        self.setg_ref = None
+        self.aelist_ref = None
 
     def validate(self):
         assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
@@ -6481,19 +6485,19 @@ class SPLINE4(Spline):
                        nelements, melements, comment=comment)
 
     def CAero(self):
-        if isinstance(self.caero, integer_types):
-            return self.caero
-        return self.caero_ref.eid
+        if self.caero_ref is not None:
+            return self.caero_ref.eid
+        return self.caero
 
     def AEList(self):
-        if isinstance(self.aelist, integer_types):
-            return self.aelist
-        return self.aelist_ref.sid
+        if self.aelist_ref is not None:
+            return self.aelist_ref.sid
+        return self.aelist
 
     def Set(self):
-        if isinstance(self.setg, integer_types):
-            return self.setg
-        return self.setg_ref.sid
+        if self.setg_ref is not None:
+            return self.setg_ref.sid
+        return self.setg
 
     @property
     def aero_element_ids(self):
@@ -6509,14 +6513,10 @@ class SPLINE4(Spline):
             the BDF object
         """
         msg = ' which is required by SPLINE4 eid=%s' % self.eid
-        self.caero = model.CAero(self.CAero(), msg=msg)
-        self.setg = model.Set(self.Set(), msg=msg)
-        self.aelist = model.AEList(self.aelist, msg=msg)
-        self.setg.cross_reference(model, 'Node')
-
-        self.caero_ref = self.caero
-        self.setg_ref = self.setg
-        self.aelist_ref = self.aelist
+        self.caero_ref = model.CAero(self.CAero(), msg=msg)
+        self.setg_ref = model.Set(self.Set(), msg=msg)
+        self.aelist_ref = model.AEList(self.aelist, msg=msg)
+        self.setg_ref.cross_reference(model, 'Node')
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -6529,7 +6529,9 @@ class SPLINE4(Spline):
         self.caero = self.CAero()
         self.setg = self.Set()
         self.aelist = self.AEList()
-        del self.caero_ref, self.setg_ref, self.aelist_ref
+        self.caero_ref = None
+        self.setg_ref = None
+        self.aelist_ref = None
 
     def raw_fields(self):
         """
@@ -6608,6 +6610,10 @@ class SPLINE5(Spline):
         self.rcore = rcore
         assert method in ['BEAM', 'RIS'], method
         assert ftype in ['WF0', 'WF2'], ftype
+        self.cid = None
+        self.caero_ref = None
+        self.setg_ref = None
+        self.aelist_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -6648,24 +6654,24 @@ class SPLINE5(Spline):
 
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def CAero(self):
-        if isinstance(self.caero, integer_types):
-            return self.caero
-        return self.caero_ref.eid
+        if self.caero_ref is not None:
+            return self.caero_ref.eid
+        return self.caero
 
     def AEList(self):
-        if isinstance(self.aelist, integer_types):
-            return self.aelist
-        return self.aelist_ref.sid
+        if self.aelist_ref is not None:
+            return self.aelist_ref.sid
+        return self.aelist
 
     def Set(self):
-        if isinstance(self.setg, integer_types):
-            return self.setg
-        return self.setg_ref.sid
+        if self.setg_ref is not None:
+            return self.setg_ref.sid
+        return self.setg
 
     def cross_reference(self, model):
         """
@@ -6677,15 +6683,11 @@ class SPLINE5(Spline):
             the BDF object
         """
         msg = ' which is required by SPLINE5 eid=%s' % self.eid
-        self.cid = model.Coord(self.Cid(), msg=msg)
-        self.cid_ref = self.cid
-        self.caero = model.CAero(self.CAero(), msg=msg)
-        self.caero_ref = self.caero
-        self.setg = model.Set(self.Set(), msg=msg)
-        self.setg_ref = self.setg
-        self.setg.cross_reference(model, 'Node')
-        self.aelist = model.AEList(self.AEList(), msg=msg)
-        self.aelist_ref = self.aelist
+        self.cid_ref = model.Coord(self.cid, msg=msg)
+        self.caero_ref = model.CAero(self.caero, msg=msg)
+        self.setg_ref = model.Set(self.setg, msg=msg)
+        self.setg_ref.cross_reference(model, 'Node')
+        self.aelist_ref = model.AEList(self.aelist, msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -6697,19 +6699,16 @@ class SPLINE5(Spline):
     def safe_cross_reference(self, model):
         msg = ' which is required by SPLINE5 eid=%s' % self.eid
         try:
-            self.cid = model.Coord(self.Cid(), msg=msg)
-            self.cid_ref = self.cid
+            self.cid_ref = model.Coord(self.cid, msg=msg)
         except KeyError:
             pass
         try:
-            self.caero = model.CAero(self.CAero(), msg=msg)
-            self.caero_ref = self.caero
+            self.caero_ref = model.CAero(self.caero, msg=msg)
         except KeyError:
             pass
 
         try:
-            self.setg = model.Set(self.Set(), msg=msg)
-            self.setg_ref = self.setg
+            self.setg_ref = model.Set(self.setg, msg=msg)
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
                 msg = 'SPLINE5 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
@@ -6720,9 +6719,8 @@ class SPLINE5(Spline):
             pass
 
         try:
-            self.setg.cross_reference(model, 'Node')
-            self.aelist = model.AEList(self.AEList(), msg=msg)
-            self.aelist_ref = self.aelist
+            self.setg_ref.cross_reference(model, 'Node')
+            self.aelist_ref = model.AEList(self.aelist, msg=msg)
         except KeyError:
             pass
 
@@ -6731,7 +6729,10 @@ class SPLINE5(Spline):
         self.caero = self.CAero()
         self.setg = self.Set()
         self.aelist = self.AEList()
-        del  self.cid, self.caero_ref, self.setg_ref, self.aelist_ref
+        self.cid = None
+        self.caero_ref = None
+        self.setg_ref = None
+        self.aelist_ref = None
 
     def raw_fields(self):
         """
