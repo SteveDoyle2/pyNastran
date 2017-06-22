@@ -1,11 +1,13 @@
 ==================
 Installed Programs
 ==================
->>> python setup_user.py develop
 
 -------------------------
 List of Installed Scripts
 -------------------------
+
+Various Command line utilities are installed by pyNastran:
+
  - pyNastranGUI
  - test_bdf
  - test_op2
@@ -73,6 +75,7 @@ Runs through various checks on a BDF that Nastran doesn't do.  Verifies your mod
 .. code-block:: conosle
 
   >>> test_bdf --help
+
   Usage:
     test_bdf [-x] [-p] [-c] [-L]      [-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] BDF_FILENAME
     test_bdf [-x] [-p] [-c] [-L] [-d] [-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] BDF_FILENAME
@@ -122,6 +125,7 @@ Runs through various checks on an OP2 file.  Creates a summary table.
 .. code-block:: console
 
   >>> test_op2 --help
+
   Usage:
     test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] OP2_FILENAME
     test_op2 -h | --help
@@ -227,6 +231,7 @@ This allows methods like nodal equivalencing to be written once.
 .. code-block:: console
 
   >>> format_converter --help
+
   Usage:
     format_converter nastran <INPUT> <format2> <OUTPUT> [-o <OP2>]
     format_converter <format1> <INPUT> tecplot <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>]
