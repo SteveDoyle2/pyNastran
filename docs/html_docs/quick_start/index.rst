@@ -5,11 +5,12 @@ Quick Start
 
 .. toctree::
 
-   Installation
-   bdf
+   installation
+   installed_programs
+   bdf_overview
    bdf_demo
    test_bdf
-   op2
+   op2_overview
    op2_demo
    test_op2
    op4_demo

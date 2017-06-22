@@ -1484,7 +1484,6 @@ def get_test_bdf_data():
     msg += "Info:\n"
     msg += '  -h, --help     show this help message and exit\n'
     msg += "  -v, --version  show program's version number and exit\n"
-    print(msg)
     if len(sys.argv) == 1:
         sys.exit(msg)
 
