@@ -10,8 +10,8 @@ The pyNastran GUI was originally developed to solve a data validation problem.
 It's hard to validate that things like coordinate systems were correct if you
 can't look at the geometry in a native format.  As time went on, niche features
 that were needed (e.g., aero panels) that were not supported natively in
-Patran 2005, were added.  The goal is not to replace a code like Patran, but
-complement it.
+Patran 2005, were added.  The goal is not to replace a code like Patran or
+FEMAP, but instead complement it.
 
 Since the intial development, the GUI has become significantly more capable
 by adding features such as displacements and forces, so the need for a code like
@@ -50,8 +50,8 @@ Advantages of pyNastranGUI
  - animated gifs
 
 
-Advantages of Patran
---------------------
+Advantages of Patran/FEMAP
+--------------------------
  - CAD geometry support (e.g., IGES, Parasolid)
  - geometry creation (e.g., points, surfaces)
  - meshing
@@ -167,7 +167,6 @@ To view the options:
       -q, --quiet    prints debug messages (default=True)
       -h, --help     show this help message and exit
       -v, --version  show program's version number and exit
-
 
 
 The standard way to run the code:
@@ -363,8 +362,8 @@ the image fill the screen.  Leave minimal whitespace.
 .. note:: If unlickling ``Repeat?`` doesn't disable gif looping, upgrade ``imageio``.
 
 
-Animation of Complex Mode Shapes
---------------------------------
+Animation of Complex Mode Shapes (Animate Phase)
+------------------------------------------------
 
 Complex Mode Shapes are simple and similar to the ``Animate Scale`` option.
 Here, the phase angle sweeps from 0 to 360 degrees.  Note that this option only
@@ -373,8 +372,8 @@ shows up when you have a complex result for ``iCase``.
 .. image:: ../../../pyNastran/gui/images/animation_menu_freq.png
 
 
-Animation of Time/Frequency/Load Step Results
----------------------------------------------
+Animation of Time/Frequency/Load Step Results (Animate Time)
+------------------------------------------------------------
 This option is recommended only for constant time/frequency/load step results.
 It is now necessary to learn how to set ``iCase``.  In the ``Application log``, you'll see:
 
@@ -409,7 +408,7 @@ Picking Results
 Click on the ``Probe`` button to activate probing.  Now click on a node/element.
 A label will appear .  This label will appear at the centroid of an elemental result 
 or the closest node to the selected location.  The value for the current result 
-quantity will appear on the model.  You may also use the ``p`` button.
+quantity will appear on the model.  You can also press the ``p`` button.
 
 .. image:: ../../../pyNastran/gui/images/picking_results.png
 
@@ -435,7 +434,7 @@ Model Clipping
 ==============
 Clipping let's you see "into" the model.
 
-.. image:: ../../../pyNastran/gui/icons/clipping.png
+.. image:: ../../../pyNastran/gui/images/clipping.png
 
 Zoom in and hover over an element and press the ``f`` key.
 The model will pan and now rotate around that point.
@@ -546,15 +545,43 @@ Custom Scalar Results
 =====================
 Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
 length is important.  Results must be in nodal/elemental sorted order.
+The following example has 3 scalar values with 2 locations.  The 
+corresponding model must have **only** two nodes.  By default, all results
+must be floatable (e.g., no NaN values).
+
+.. code-block:: console
+
+      # element_id, x,   y, z
+      1,            1.0, 2, 3.0
+      2,            4.0, 5, 6.0
+
+.. code-block:: console
+
+      # element_id  x    y  z
+      1             1.0  2  3.0
+      2             4.0  5  6.0
+
+
+You may also assign result types.
+
+.. code-block:: console
+
+      # element_id(%i), x(%f), y(%i), z(%f)
+      1,                1.0,     2,     3.0
+      2,                4.0,     5,     6.0
+
+Custom Deflection Results
+=========================
+Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and
+length is important.  Results must be in nodal/elemental sorted order.
 The following example has 3 scalar values with 2 locations.  The model must
 have **only** two nodes.
 
 .. code-block:: console
 
-      # x(%f), y(%i), z(%f)
-      1.0,     2,     3.0
-      4.0,     5,     6.0
-
+      # result_name
+      1.0     2     3.0
+      2.0     5     6.0
 
 Custom Results Specific Buttons
 ===============================

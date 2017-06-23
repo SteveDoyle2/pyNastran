@@ -1,6 +1,6 @@
-from six.moves import zip, StringIO
 import copy
 import unittest
+from six.moves import zip
 
 from pyNastran.bdf.bdf import BDF
 

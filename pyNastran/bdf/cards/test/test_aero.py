@@ -900,10 +900,7 @@ class TestAero(unittest.TestCase):
         caero3b.get_points()
         caero3b.panel_points_elements()
 
-        bdf_filename = StringIO()
-        model.write_bdf(bdf_filename, close=False)
-        bdf_filename.seek(0)
-        model2 = read_bdf(bdf_filename, punch=True, debug=False)
+        save_load_deck(model)
 
 
     def test_caero4_1(self):
@@ -1115,11 +1112,7 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         spline3.write_card()
         spline3.raw_fields()
-        bdf_file = StringIO()
-        model.write_bdf(bdf_file, close=False)
-        bdf_file.seek(0)
-        model.clear_attributes()
-        model.read_bdf(bdf_file, punch=True, xref=False)
+        save_load_deck(model)
 
    # def test_spline4_1(self):
    # def test_spline5_1(self):
