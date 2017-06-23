@@ -253,7 +253,7 @@ Additional Formats
 ==================
 Some of the results include:
 
-   * **Nastran** ASCII input (\*.bdf, \*.nas, \*.dat, \*.pch); binary output (\*.op2)
+   * **Nastran** ASCII input (\*.bdf, \*.nas, \*.dat, \*.pch, \*.ecd); binary output (\*.op2)
 
      * geometry
 
@@ -346,13 +346,13 @@ case that is currently active (Displacement) and is automatically populated when
 you click the ``Create Animation`` button from the Legend menu.
 
 If you would like to plot a separate result (e.g., Node ID), switch to that
-result.  The iCase value will not change.  When you click ``Run All`, the ``iCase``
+result.  The iCase value will not change.  When you click ``Run All``, the ``iCase``
 value is pulled and the deflection shape is calculated.  Make sure you actually
 have a deflected geometry.
 
 .. image:: ../../../pyNastran/gui/images/animation_menu_scale.png
 
-In your output folder you will find:
+In your output folder, you will find:
 
 .. image:: ../../../pyNastran/gui/images/solid_bending.gif
 
@@ -384,7 +384,7 @@ It is now necessary to learn how to set ``iCase``.  In the ``Application log``, 
 Check your first (assume 10), second (assume 11), and final time step (assume 40) 
 for their ``iCase`` values.
 
-For deflection results loaded from an OP2, the ``iCase Delta`` will be ``1``, but
+For deflection results loaded from an OP2, the ``iCase Delta`` will be 1, but
 depending on the frame rate and total time you want, you can skip steps.
 
 .. image:: ../../../pyNastran/gui/images/animation_menu_time.png
@@ -400,7 +400,7 @@ when you load model again.  The menu looks like:
 
 .. image:: ../../../pyNastran/gui/images/preferences_menu.png
 
-However over the cells for more information.
+Hover over the cells for more information.
 
 
 Picking Results
