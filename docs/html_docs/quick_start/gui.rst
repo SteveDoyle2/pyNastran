@@ -6,6 +6,17 @@ Graphical User Interface (GUI)
 Overview
 ********
 
+The pyNastran GUI was originally developed to solve a data validation problem.
+It's hard to validate that things like coordinate systems were correct if you
+can't look at the geometry in a native format.  As time went on, niche features
+that were needed (e.g., aero panels) that were not supported natively in
+Patran 2005, were added.  The goal is not to replace a code like Patran, but
+complement it.
+
+Since the intial development, the GUI has become significantly more capable
+by adding features such as displacements and forces, so the need for a code like
+Patran has decreased, but will not be eliminated.
+
 Introduction
 ============
 
@@ -19,19 +30,6 @@ A somewhat messy, but more featured image:
 
 The GUI also has a sidebar and transient support.
 
-
-Purpose
-=======
-The pyNastran GUI was originally developed to solve a data validation problem.
-It's hard to validate that things like coordinate systems were correct if you
-can't look at the geometry in a native format.  As time went on, niche features
-that were needed (e.g., aero panels) that were not supported natively in
-Patran 2005, were added.  The goal is not to replace a code like Patran, but
-complement it.
-
-Since the intial development, the GUI has become significantly more capable
-by adding features such as displacements and forces, so the need for a code like
-Patran has decreased, but will not be eliminated.
 
 
 Advantages of pyNastranGUI
@@ -49,6 +47,7 @@ Advantages of pyNastranGUI
  - 64 bit support
    - Patran 2005 can't read in models that pyNastranGUI can
    - not an advantage for newer versions
+ - animated gifs
 
 
 Advantages of Patran
@@ -72,7 +71,7 @@ a need for niche engineering formats.
 
 While, you could convert a Cart3d model (a simple triangulation) to another
 format like Nastran, you would need to map the geometry/result quantity of
-interest (e.g., Mach Number) to something like Pressure.  That's unintuitive
+interest (e.g., Mach Number) to something like pressure.  That's unintuitive
 and also requires writing an ill-defined format converter.  It's nice to load
 it natively as you can also automatically create other quantities (e.g., the
 bounding CFD box, free edges).
@@ -207,6 +206,7 @@ Features
      ``Edit Geometry Properties...`` on the ``View`` menu
 
  * legend menu
+ * animation menu
  * save/load view menu
 
 Minor Features
@@ -331,59 +331,120 @@ number format (e.g. float precision) and deflection scale.  Defaults are stored,
 they may always be gone back to.  The geometry will update when Apply/OK is clicked.
 OK/Cancel will close the window.
 
-Animation of Displacment/Mode Shapes
-====================================
+Animation Menu
+==============
 
-The animation menu is a sub-menu found on the Legend Menu.  It supports:
- - Scale Factor
- - Total Time (sec)
- - Frames/Second
- - Resolution Scale
- - Output Directory
- - Filename
- - scale/phase animation
- - one/two sided animations
- - infinite looping
- - delete images
- - make gif
- - TODO: animate time/frequency/loadstep
- - TODO: progate results based on result locking
+The animation menu is a sub-menu found on the Legend Menu.  
+However over the cells for more information.
 
+Animation of Displacment/Mode Shapes (Animate Scale)
+----------------------------------------------------
 You must load the animation menu when a displacement-like result is active.
-You may then change to a scalar result to show during the animation.
+You may then change to a scalar result to show during the animation.  For the
+following SOL 101 static deflection result, **Animate Scale** is used to scale
+the current result (Displacement).  The ``iCase`` value corresponds to
+case that is currently active (Displacement) and is automatically populated when 
+you click the ``Create Animation`` button from the Legend menu.
+
+If you would like to plot a separate result (e.g., Node ID), switch to that
+result.  The iCase value will not change.  When you click ``Run All`, the ``iCase``
+value is pulled and the deflection shape is calculated.  Make sure you actually
+have a deflected geometry.
+
+.. image:: ../../../pyNastran/gui/images/animation_menu_scale.png
+
+In your output folder you will find:
+
+.. image:: ../../../pyNastran/gui/images/solid_bending.gif
+
+If the file is too big, shrink the size of the window.  Make the max deflection of
+the image fill the screen.  Leave minimal whitespace.
+
+.. note:: If unlickling ``Repeat?`` doesn't disable gif looping, upgrade ``imageio``.
+
+
+Animation of Complex Mode Shapes
+--------------------------------
+
+Complex Mode Shapes are simple and similar to the ``Animate Scale`` option.
+Here, the phase angle sweeps from 0 to 360 degrees.  Note that this option only
+shows up when you have a complex result for ``iCase``.
+
+.. image:: ../../../pyNastran/gui/images/animation_menu_freq.png
+
+
+Animation of Time/Frequency/Load Step Results
+---------------------------------------------
+This option is recommended only for constant time/frequency/load step results.
+It is now necessary to learn how to set ``iCase``.  In the ``Application log``, you'll see:
+
+.. code-block:: console
+
+  COMMAND: fname=gui_qt_common.pyc lineNo=316 cycle_results(case=10)
+
+Check your first (assume 10), second (assume 11), and final time step (assume 40) 
+for their ``iCase`` values.
+
+For deflection results loaded from an OP2, the ``iCase Delta`` will be ``1``, but
+depending on the frame rate and total time you want, you can skip steps.
+
+.. image:: ../../../pyNastran/gui/images/animation_menu_time.png
+
+Note that there is currently no way to plot a transient result other than the deflection
+unless you want to use scripting.
+
+
+Preferences Menu
+================
+The preferences menu allows you to change various settings.  These will be remembered
+when you load model again.  The menu looks like:
+
+.. image:: ../../../pyNastran/gui/images/preferences.png
+
+However over the cells for more information.
 
 
 Picking Results
 ===============
-Hover over an element and press the ``p`` key.  A label will appear.  This label
-will appear at the centroid of an elemental result or the closest node to the
-selected location.  The value for the current result quantity will appear on the
-model.  You may also use the button.
+Click on the ``Probe`` button to activate probing.  Now click on a node/element.
+A label will appear .  This label will appear at the centroid of an elemental result 
+or the closest node to the selected location.  The value for the current result 
+quantity will appear on the model.  You may also use the ``p`` button.
 
 .. image:: ../../../pyNastran/gui/images/picking_results.png
 
 For "NodeID", the xyz of the selcted point and the node in global XYZ space will be shown.
 Labels may be cleared from the ``View`` menu.
-Text color may also be changed from the ``View`` menu.
+Text color may also be changed from the ``View -> Preferences`` menu.
+
+Note that for line elements, you need to be very accurate with your picking.  
+Zooming in does not help with picking like it does for shells.
 
 
 Focal Point
 ===========
-Hover over an element and press the ``f`` key.  The model will now rotate around
-that point.  You may also use the button.
+Click the following button and click on the rotation center point of the model.
+The model will now rotate around that point.  
+
+.. image:: ../../../pyNastran/gui/icons/trotation_center.png
+
+Alternatively, hover over the point and press the ``f`` key.
 
 
 Model Clipping
 ==============
 Clipping let's you see "into" the model.
 
-.. image:: ../../../pyNastran/gui/images/clipping.png
+.. image:: ../../../pyNastran/gui/icons/clipping.png
 
 Zoom in and hover over an element and press the ``f`` key.
 The model will pan and now rotate around that point.
 Continue to hold ``f`` while the model recenters.
 Eventually, the frame will clip.
 Reset the view by clicking the Undo-looking arrow at the top.
+
+**Note that clipping currently doesn't work...**
+
 
 Modify Groups
 =============
@@ -414,6 +475,7 @@ The "main" group is the entire geometry.
 The bolded/italicized text indicates the group that will be displayed to the screen.
 The defaults will be updated when you click ``Set As Main``.  This will also update
 the bolded/italicided group.
+
 
 Camera Views
 ============
@@ -493,6 +555,7 @@ have **only** two nodes.
       1.0,     2,     3.0
       4.0,     5,     6.0
 
+
 Custom Results Specific Buttons
 ===============================
 Nastran Static/Dynamic Aero solutions require custom cards that create
@@ -538,7 +601,7 @@ Local variables do not need this.
 Command line scripting
 ======================
 ``geom_script`` runs after the load_geometry method, while
-``postscript`` runs after load_results has been performed
+``post_script`` runs after load_results has been performed
 
 .. code-block :: python
 
@@ -569,179 +632,3 @@ Option #2
     self.magnify = 5
 
 Now take a screenshot.
-
-Animation of Displacment/Mode Shapes
-====================================
-
-While it's possible to take multiple screenshots of geometry with
-different scale factors, it's tedious.  Additionally, you can only
-plot displacement-type results (e.g. displacement, eigenvector)
-with deflection and not result types like Node ID or stress
-unless you write a script.
-
-.. image:: ../../../pyNastran/gui/images/solid_bending.gif
-
-
-.. code-block:: python
-
-    from PIL.Image import open as open_image
-    from pyNastran.gui.images2gif import writeGif
-
-    icase = 9
-    out = self.get_result_data_from_icase(icase)
-    obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-
-    xyz_base = obj.xyz
-    nnodes = xyz_base.shape[0]
-    actor = self.geometry_actors['main']
-
-    screenshot_filenames = []
-    scales = np.arange(-1., 1., 0.1) * 100.
-    for scale in scales:
-        screenshot_filename = 'solid_bending_%.0f.png' % scale
-        xyz = xyz_base + scale * obj.dxyz[i, :]
-        for j in range(nnodes):
-            self.grid.GetPoints().SetPoint(j, xyz[j, :])
-
-        self.grid.Modified()
-        actor.Modified()
-        self.rend.Render()
-        self.on_take_screenshot(screenshot_filename, magnify=1)
-        screenshot_filenames.append(screenshot_filename)
-
-    screenshot_filenames += screenshot_filenames[::-1][1:]
-    gif_filename = 'solid_bending.gif'
-    with open_image(screenshot_filenames[0]) as image:
-        shape = (image.width, image.height)
-
-    print('Writing gif to %s' % (gif_filename))
-
-    # down-res the image so we use less space
-    shape2 = (shape[0] // 2, shape[1] // 2)
-    images = [open_image(filename).resize(shape2) for filename in screenshot_filenames]
-
-    #writeGif('solid_bending.gif', images, duration=1/framerate, subRectangles=False)
-    writeGif(gif_filename, images, duration=0.1, dither=False)
-
-.. Attempt #2 - broken
-.. -------------------
-..
-.. .. code-block:: python
-..
-..     import time
-..     scales = [-1, 0.5, 0., 0.5, 1.0]
-..     title = 'Eigenvector'
-..     min_value = -1.0
-..     max_value = 1.0
-..     is_shown = True
-..     is_blue_to_red = True
-..     is_horizontal = False
-..
-..
-..     out = self.get_result_data_from_icase(icase)
-..     obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-..
-..     # obj is NastranDisplacementResults
-..     min_value, max_value = obj.get_min_max(i, res_name)
-..     subtitle, label = self.get_subtitle_label(subcase_id)
-..
-..     for scale in scales:
-..         #self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
-..                               #scale=scale_value, data_format=data_format,
-..                               #is_blue_to_red=is_blue_to_red,
-..                               #is_discrete=is_discrete, is_horizontal=is_horizontal,
-..                               #is_shown=is_shown)
-..         self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
-..                                 vector_size, subcase_id, result_type, location, subtitle, label,
-..                                 revert_displaced=False)
-..         time.sleep(2)
-..         #self.grid.Modified()
-
-
-.. Attempt #3 - broken
-.. -------------------
-..
-.. .. code-block:: python
-..
-..     icase = 9
-..     out = self.get_result_data_from_icase(icase)
-..     obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-..     print(obj)
-..
-..     label = ''
-..     min_value, max_value = obj.get_min_max(i, res_name)
-..     norm_value = float(max_value - min_value)
-..     scale = 100.
-..
-..     name_vector = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
-..     case = obj
-..     xyz = obj.xyz + scale * obj.dxyz[i, :]
-..
-..     grid_result_vector = self.set_grid_values(name_vector, case, vector_size, min_value, max_value, norm_value)
-
-
-.. Animation of Complex Mode Shapes
-.. ================================
-
-
-.. Complex Mode Shapes (not done)
-.. ------------------------------
-
- .. code-block:: python
-
-     from PIL.Image import open as open_image
-     from pyNastran.gui.images2gif import writeGif
-
-     from pyNastran.op2.op2 import read_op2
-     model = read_op2(op2_filename)
-
-     xyz_undef = self.xyz_cid0
-     nnodes = xyz_undef.shape[0]
-
-     #out = self.get_result_data_from_icase(icase)
-     #obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-     actor = self.geometry_actors['main']
-
-     subcase_id = 1
-     imode = 10
-     eigenvectors = model.eigenvectors[subcase_id].data[imode - 1,:,:]
-
-     #-------------------------------------------------------------------
-     mag = np.abs(eigenvectors[:, :3])
-     phase = np.angle(eigenvectors[:, :3])
-     reals = np.real(eigenvectors[:, :3])
-     imags = np.imag(eigenvectors[:, :3])
-
-     nframes = 10
-     amplitude = np.ones(nframes) * 5
-     screenshot_filenames = []
-     for i in range(nframes):
-         screenshot_filename = 'solid_bending_complex_%i.png' % i
-
-         theta = (2*np.pi * i/nframes) % (2*np.pi)
-         defl = amplitude[i] * (reals*np.cos(theta) + imags*np.sin(theta))
-         xyz_def = xyz_undef + defl
-         for j in range(nnodes):
-             self.grid.GetPoints().SetPoint(j, xyz_def[j, :])
-
-         self.grid.Modified()
-         actor.Modified()
-         self.rend.Render()
-         self.on_take_screenshot(screenshot_filename, magnify=1)
-         screenshot_filenames.append(screenshot_filename)
-     screenshot_filenames += screenshot_filenames[::-1][1:]
-
-
-     #-------------------------------------------------------------------
-
-     gif_filename = 'solid_bending_complex.gif'
-     with open_image(screenshot_filenames[0]) as image:
-         shape = (image.width, image.height)
-
-     print('Writing gif to %s' % (gif_filename))
-
-     # down-res the image so we use less space
-     shape2 = (shape[0] // 2, shape[1] // 2)
-     images = [open_image(filename).resize(shape2) for filename in screenshot_filenames]
-
-     writeGif(gif_filename, images, duration=0.1, dither=False)

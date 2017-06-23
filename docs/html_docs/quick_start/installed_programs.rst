@@ -9,8 +9,8 @@ List of Installed Scripts
 Various Command line utilities are installed by pyNastran:
 
  - pyNastranGUI
- - .. test_bdf_
- - .. test_op2_
+ - test_bdf_
+ - test_op2_
  - test_op4
  - bdf
  - f06
@@ -24,7 +24,7 @@ The Graphical User Interface (GUI) looks like:
 
 .. image:: ../../../pyNastran/gui/images/qt.png
 
-.. code-block:: conosle
+.. code-block:: console
 
   >>> pyNastranGUI --help
   
@@ -72,7 +72,7 @@ test_bdf
 --------
 Runs through various checks on a BDF that Nastran doesn't do.  Verifies your model is referenced properly.  Creates a summary table.
 
-.. code-block:: conosle
+.. code-block:: console
 
   >>> test_bdf --help
 
@@ -270,18 +270,3 @@ Example:
     format_converter nastran fem.bdf stl fem.stl -b
     format_converter nastran fem.bdf cart3d fem.tri
     format_converter stl model.*.stl nastran fem.bdf
-
-..
-
-  ----------------------------
-  run_nastran_double_precision
-  ----------------------------
-  >>> run_nastran_double_precision --help
-  Bugged...no prompt
-  
-  Still in development, runs:
-    run_nastran_double_precision fem.bdf
-  
-  with various output formats to verify there are no bugs in the write_bdf method.  Verifies it by reading the OP2.
-  
-  
