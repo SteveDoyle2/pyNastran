@@ -5,7 +5,7 @@ from numpy import array, allclose, array_equal, cross
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.utils import TransformLoadWRT
-from pyNastran.bdf.cards.test.utils import save
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
 bdf = BDF(debug=False)  # don't load this up with stuff
@@ -742,7 +742,7 @@ def get_nodes(grids, grids_expected, coords):
         #coord_obj = model.Coord(cid)
 
     model.cross_reference()
-    save_load_deck(model2)
+    save_load_deck(model)
 
     for (i, grid) in enumerate(grids_expected):
         (nid, cid, x, y, z) = grid
