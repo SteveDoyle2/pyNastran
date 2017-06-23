@@ -22,7 +22,7 @@ Overview
 Download Python
 ===============
 The software is tested against:
- - Python 2.7.12 (Windows/Linux)
+ - Python 2.7.13 (Windows/Linux)
  - Python 3.4 (Linux)
  - Python 3.5 (Windows/Linux)
  - Python 3.6 (Linux)
@@ -58,7 +58,7 @@ make use of numpy's "new" axis option in ``numpy.linalg.norm`` and there was a
 major bug fix in Python 2.7.7, so buyer beware.
 
 Regarding the GUI, Python 2.7 with ``vtk==5.10.1`` will give you the best
-looking GUI.  The GUI in Python 3 won't save your settings.
+looking GUI.
 
 Download pyNastran
 ==================
@@ -96,7 +96,7 @@ Install pyNastran
 
       >>> python setup.py install
 
-If you don't want the gui for Python 2.7, use ``setup_no_gui.py`` instead of ``setup.py``.
+If you don't want the gui, use ``setup_no_gui.py`` instead of ``setup.py``.
 
 *******************************
 Install Procedure - From Source
@@ -139,7 +139,7 @@ There are two ways to install the dev version of pyNastran
  2. Clone pyNastran (see below).  Using Git allows you to easily update to the
     latest dev version when you want to as well as push any commits of your own.
 
-If you don't want the gui for Python 2.7, use ``setup_no_gui.py`` instead of ``setup.py``.
+If you don't want the gui, use ``setup_no_gui.py`` instead of ``setup.py``.
 
 
 Cloning pyNastran using TortoiseGit

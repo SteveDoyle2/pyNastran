@@ -134,16 +134,6 @@ pyNastran/converters
     :undoc-members:
     :show-inheritance:
 
-:mod:`type_converter` Module
-----------------------------
-
-.. inheritance-diagram:: pyNastran.converters.type_converter
-
-.. automodule:: pyNastran.converters.type_converter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 

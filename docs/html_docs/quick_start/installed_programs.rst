@@ -8,13 +8,13 @@ List of Installed Scripts
 
 Various Command line utilities are installed by pyNastran:
 
- - pyNastranGUI
+ - pyNastranGUI_
  - test_bdf_
  - test_op2_
- - test_op4
- - bdf
- - f06
- - format_converter
+ - test_op4_
+ - bdf_
+ - f06_
+ - format_converter_
 
 ------------
 pyNastranGUI
@@ -266,7 +266,7 @@ Example:
 
 .. code-block:: console
 
-    format_converter tecplot tecplot.*.plt tecplot.tecplot_joined.plt -x 0.0 -y 0.0 z 0.0
-    format_converter nastran fem.bdf stl fem.stl -b
-    format_converter nastran fem.bdf cart3d fem.tri
-    format_converter stl model.*.stl nastran fem.bdf
+    >>> format_converter tecplot tecplot.*.plt tecplot.tecplot_joined.plt -x 0.0 -y 0.0 -z 0.0
+    >>> format_converter nastran fem.bdf stl fem.stl -b
+    >>> format_converter nastran fem.bdf cart3d fem.tri
+    >>> format_converter stl model.*.stl nastran fem.bdf
