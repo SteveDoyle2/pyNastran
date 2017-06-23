@@ -4,8 +4,8 @@ from six.moves import StringIO
 
 from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
-bdf = BDF(debug=False)
 
 class TestMaterials(unittest.TestCase):
     """tests MAT1"""
@@ -333,20 +333,16 @@ class TestMaterials(unittest.TestCase):
             '*',
         ]
 
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
-        #print("card =", card)
-        #with self.assertRaises(RuntimeError):  # temporary RuntimeError
         card2 = MAT8.add_card(cardi)
 
         fields = card2.raw_fields()
         msg = print_card_8(fields)
-        #f = StringIO.StringIO()
         size = 16
         msg = card2.write_card(size, 'dummy')
-        #msg = f.getvalue()
-        #print(msg)
 
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
@@ -404,7 +400,7 @@ class TestMaterials(unittest.TestCase):
         model.pop_xref_errors()
         matt8.write_card(size=16, is_double=False)
 
-        read_write(model)
+        save_load_deck(model)
 
     def test_mat9(self):
         """tests MAT9"""
@@ -443,7 +439,8 @@ class TestMaterials(unittest.TestCase):
             'MAT11          1    1.+75000000. 700000.      .1     .13     .267000000.',
             '        9000000.3000000.      .1  .00001 .000007 .000008     50.'
         ]
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
         cardi = BDFCard(card)
         card2 = MAT11.add_card(cardi)
 

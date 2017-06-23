@@ -136,7 +136,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
             #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
         elif prop_type == 'PBEAM':
             assert pname_fid in ['I1', 'I2', 'A', 'J',
-                                 'I1(B)', 'I2(B)',
+                                 'I1(A)', 'I1(B)', 'I2(B)',
                                  '-8', '-9', '-10', '-14', '-15', '-16', '-17', '-18', '-19', '-20', '-21',
                                  '-168'], msg
         elif prop_type == 'PBEAML':
@@ -1685,6 +1685,7 @@ class DRESP2(OptConstraint):
         for key, vals in sorted(iteritems(self.params)):
             j, name = key
             if name in ['DRESP1', 'DRESP2']:
+                #print('vals =', vals)
                 for val in vals:
                     arg = val.calculate(op2_model, subcase_id)
                     argsi.append(arg)

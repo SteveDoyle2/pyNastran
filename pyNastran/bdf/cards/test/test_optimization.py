@@ -6,11 +6,12 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import StringIO
+from six import StringIO, iteritems, integer_types
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import read_op2
+from pyNastran.bdf.cards.test.utils import save_load_deck
 #from pyNastran.f06.test.f06_unit_tests import run_model
 
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
@@ -23,18 +24,19 @@ class TestOpt(unittest.TestCase):
     """
     def test_opt_1(self):
         """tests SOL 200"""
-        #bdf_filename = os.path.join(model_path, 'sol200', 'model_200.bdf')
-        #model = read_bdf(bdf_filename, xref=True)
+        bdf_filename = os.path.join(model_path, 'sol200', 'model_200.bdf')
+        model = read_bdf(bdf_filename, xref=True, debug=False)
         op2_filename = os.path.join(model_path, 'sol200', 'model_200.op2')
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
         op2 = read_op2(op2_filename, debug=False)
 
-        #subcase_ids = op2.subcase_key.keys()
-        #for subcase_id in subcase_ids:
-            #assert isinstance(subcase_id, int), subcase_id
+        subcase_ids = op2.subcase_key.keys()
+        for subcase_id in subcase_ids:
+            assert isinstance(subcase_id, integer_types), subcase_id
             #for key, dresp in sorted(iteritems(model.dresps)):
+                #print(dresp)
                 #dresp.calculate(op2, subcase_id)
 
     def test_ddval(self):
@@ -49,6 +51,7 @@ class TestOpt(unittest.TestCase):
         ddval.raw_fields()
         model.validate()
         model.cross_reference()
+        save_load_deck(model)
 
     def test_doptprm(self):
         """tests a doptprm"""
@@ -74,6 +77,7 @@ class TestOpt(unittest.TestCase):
         doptprm.write_card(size=8)
         doptprm.write_card(size=16)
         doptprm.write_card(size=16, is_double=True)
+        save_load_deck(model)
 
 
     def test_dlink(self):
@@ -97,6 +101,7 @@ class TestOpt(unittest.TestCase):
         model2.add_card(lines, 'DLINK', is_list=False)
         dlink = model.dlinks[10]
         dlink.write_card()
+        save_load_deck(model)
 
     def test_dvprel1(self):
         """tests a DESVAR, DVPREL1, DRESP1, DCONSTR"""
@@ -211,12 +216,7 @@ class TestOpt(unittest.TestCase):
         dvprel2.write_card(size=16)
         dvprel2.write_card(size=16, is_double=True)
 
-        stringio = StringIO()
-        model.write_bdf(stringio, close=False)
-        stringio.getvalue()
-        #model.uncross_reference()
-        #model.cross_reference()
-        #model._verify_bdf(xref=True)
+        save_load_deck(model)
 
     def test_dvmrel1(self):
         """tests a DVMREL1"""
@@ -305,6 +305,7 @@ class TestOpt(unittest.TestCase):
         dvmrel2_1.raw_fields()
         mat8.raw_fields()
         mat10.raw_fields()
+        save_load_deck(model)
 
     def test_dvcrel1(self):
         """tests a DVCREL"""
@@ -392,6 +393,7 @@ class TestOpt(unittest.TestCase):
         model2.add_card(dvcrel1_lines, 'DVCREL1', is_list=False)
         model2.add_card(dvcrel2_lines, 'DVCREL2', is_list=False)
         model2.add_card(desvar_lines, 'DESVAR', is_list=False)
+        #save_load_deck(model2)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

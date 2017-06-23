@@ -10,10 +10,12 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, RROD
 #from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2
+from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.utils.log import get_logger
 
 bdf = BDF(debug=False)
 test_path = pyNastran.__path__[0]
-
+log = get_logger(level='warning')
 
 class TestLoads(unittest.TestCase):
     def test_force(self):
@@ -165,7 +167,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CPENTA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -257,7 +259,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CTRIA3"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -305,7 +307,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CQUAD4"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -352,7 +354,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CTETRA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -444,7 +446,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CHEXA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -687,6 +689,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
+        save_load_deck(model2)
 
     def test_loads_combo(self):
         r"""
@@ -969,6 +972,7 @@ class TestLoads(unittest.TestCase):
         model2.write_skin_solid_faces('skin.bdf', write_solids=False,
                                       write_shells=True)
         os.remove('skin.bdf')
+        save_load_deck(model2)
 
 
 if __name__ == '__main__':  # pragma: no cover
