@@ -399,7 +399,7 @@ Preferences Menu
 The preferences menu allows you to change various settings.  These will be remembered
 when you load model again.  The menu looks like:
 
-.. image:: ../../../pyNastran/gui/images/preferences.png
+.. image:: ../../../pyNastran/gui/images/preferences_menu.png
 
 However over the cells for more information.
 
