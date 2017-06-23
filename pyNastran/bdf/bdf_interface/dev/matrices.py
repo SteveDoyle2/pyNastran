@@ -92,7 +92,9 @@ def make_mass_matrix(model, reference_point):
 
     #etypes_skipped = set([])
     for etype, eids in iteritems(model._type_to_id_map):
-        if etype in ['CROD', 'CONROD']:
+        if etype in no_mass:
+            continue
+        elif etype in ['CROD', 'CONROD']:
             eids2 = get_sub_eids(all_eids, eids)
 
             # lumped
@@ -175,6 +177,8 @@ def make_mass_matrix(model, reference_point):
 
 def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     """
+    Calculates the Grid Point Weight Generator (GPWG) table.
+
     Parameters
     ----------
     reference_point : (3, ) float ndarray
@@ -228,7 +232,7 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
 
         cp = grid_cps[i]
         Ti = coords[cp].beta()
-        if not np.array_equal(Ti, eye(3)):
+        if not np.array_equal(Ti, np.eye(3)):
             log.info('Ti[%i]=\n%s\n' % (i+1, Ti))
         TiT = Ti.T
         d = np.zeros((6, 6), dtype='float32')
@@ -248,13 +252,13 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     # t-translation; r-rotation
     Mt_bar = Mo[:3, :3]
     Mtr_bar = Mo[:3, 3:]
-    Mrt_bar = Mo[3:, :3]
+    #Mrt_bar = Mo[3:, :3]
     Mr_bar = Mo[3:, 3:]
 
     #print('dinner =', diag(Mt_bar))
-    delta = norm(diag(Mt_bar))
+    delta = np.linalg.norm(np.diag(Mt_bar))
     #print('einner =', Mt_bar - diag(Mt_bar))
-    epsilon = norm([
+    epsilon = np.linalg.norm([
         Mt_bar[0, 1],
         Mt_bar[0, 2],
         Mt_bar[1, 2],
@@ -269,7 +273,7 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     log.info('e/d=%s\n' % (epsilon / delta))
 
     # hermitian eigenvectors
-    omega, S = eigh(Mt_bar)
+    omega, S = np.linalg.eigh(Mt_bar)
     log.info('omega=%s' % omega)
     log.info('S (right, but not correct order) =\n%s\n' % S)
 
@@ -282,11 +286,11 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     Mx = Mt[0, 0]
     My = Mt[1, 1]
     Mz = Mt[2, 2]
-    mass = diag(Mt)
+    mass = np.diag(Mt)
     log.info('mass = %s' % mass)
     #if min(mass) == 0.:
         #raise RuntimeError('mass = %s' % mass)
-    cg = array([
+    cg = np.array([
         [Mtr[0, 0], -Mtr[0, 2], Mtr[0, 1]],
         [Mtr[1, 2], Mtr[1, 1], -Mtr[1, 0]],
         [-Mtr[2, 1], Mtr[2, 0], Mtr[2, 2]],
@@ -300,17 +304,17 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     #cg = nan_to_num(cg)
 
     log.info('cg=\n%s\n' % cg)
-    xx = cg[0, 0]
+    #xx = cg[0, 0]
     yx = cg[0, 1]
     zx = cg[0, 2]
 
     xy = cg[1, 0]
-    yy = cg[1, 1]
+    #yy = cg[1, 1]
     zy = cg[1, 2]
 
     xz = cg[2, 0]
     yz = cg[2, 1]
-    zz = cg[2, 2]
+    #zz = cg[2, 2]
     I11 = Mr[0, 0] - My * zy ** 2 - Mz * yz ** 2
     I21 = I12 = -Mr[0, 1] - Mz * xz * yz
     I13 = I31 = -Mr[0, 2] - My * xy * zy
@@ -322,17 +326,18 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
         [I21, I22, I13],
         [I31, I32, I33],
     ], dtype='float32')
-    II = nan_to_num(II)
+    II = np.nan_to_num(II)
+
     log.info('I(S)=\n%s\n' % II)
 
 
     # 6. Reverse the sign of the off diagonal terms
-    fill_diagonal(-II, diag(II))
+    np.fill_diagonal(-II, np.diag(II))
     #print('I~=\n%s\n' % II)
     if nan in II:
         Q = np.zeros((3, 3), dtype='float32')
     else:
-        omegaQ, Q = eig(II)
+        omegaQ, Q = np.linalg.eig(II)
     #i = argsort(omegaQ)
     log.info('omegaQ = %s' % omegaQ)
     log.info('Q -> wrong =\n%s\n' % Q)
@@ -348,10 +353,10 @@ def get_Ajj(model, xyz=None):
         for nid, node in iteritems(model.nodes):
             xyz[nid] = node.get_position()
     for caero_id, caero in iteritems(model.caeros):
-        c = caero.get_centroids()
+        centroids = caero.get_centroids()
 
     for spline_id, spline in iteritems(model.splines):
-        s = spline.spline_nodes
+        spline_nodes = spline.spline_nodes
 
     Ajj = None
     return Ajj
