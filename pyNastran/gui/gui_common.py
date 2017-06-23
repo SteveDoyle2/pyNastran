@@ -3187,12 +3187,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
 
-        if PY2 and qt_version == 4:
-            self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-        elif qt_version == 5:  # tested on PY2
-            self.restoreGeometry(settings.value("mainWindowGeometry"))
-        else:
-            raise NotImplementedError('PY2=%s PY3=%s qt_version=%s' % (PY2, PY3, qt_version))
+        main_window_geometry = settings.value("mainWindowGeometry")
+        if main_window_geometry is not None:
+            if PY2 and qt_version == 4:
+                self.restoreGeometry(main_window_geometry.toByteArray())
+            elif qt_version == 5:  # tested on PY2
+                self.restoreGeometry(main_window_geometry)
+            else:
+                raise NotImplementedError('PY2=%s PY3=%s qt_version=%s' % (PY2, PY3, qt_version))
 
         self.reset_settings = False
         #if self.reset_settings or qt_version in [5, 'pyside']:
@@ -3205,8 +3207,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
-        if PY2 and qt_version == 4:
-            self.restoreState(settings.value("mainWindowState").toByteArray())
+        main_window_state = settings.value("mainWindowState")
+        if main_window_state is not None:
+            if PY2 and qt_version == 4:
+                self.restoreState(main_window_state.toByteArray())
         self.create_corner_axis()
         #-------------
         # loading
