@@ -277,8 +277,8 @@ class TestShells(unittest.TestCase):
         ft = 'HILL'
         tref = 0.
         ge = 0.
-        #lam = 'NO'  # isSymmetrical YES/NO
-        lam = 'BEND'  # isSymmetrical YES/NO
+        #lam = 'NO'  # is_symmetrical YES/NO
+        lam = 'BEND'  # is_symmetrical YES/NO
         Mid = [1, 2, 3]
         Theta = [0., 10., 20.]
         T = [.1, .2, .3]
@@ -452,7 +452,7 @@ class TestShells(unittest.TestCase):
         ft = 'HOFF'
         tref = 0.
         ge = 0.
-        lam = 'SYM'  # isSymmetrical SYM
+        lam = 'SYM'  # is_symmetrical SYM
         Mid = [1, 2, 3]
         Theta = [0., 10., 20.]
         T = [.1, .2, .3]

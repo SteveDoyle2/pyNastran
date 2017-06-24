@@ -29,9 +29,6 @@ class DeprecatedCompositeShellProperty(object):
     def Nsm(self):
         return self.get_nonstructural_mass()
 
-    def isSymmetrical(self):
-        return self.is_symmetrical()
-
     def Rho(self, iply):
         return self.get_density(iply)
 

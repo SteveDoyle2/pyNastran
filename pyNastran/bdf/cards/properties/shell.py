@@ -51,6 +51,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         self.sb = 0.
         self.ft = None
         self.lam = None
+        self.mids_ref = None
 
     def cross_reference(self, model):
         """
@@ -61,11 +62,12 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         model : BDF()
             the BDF object
         """
+        mids_ref = []
         for iply in range(len(self.thicknesses)):
             mid = self.mids[iply]
             msg = ' which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
-            self.mids[iply] = model.Material(mid, msg)
-        self.mids_ref = self.mids
+            mids_ref.append(model.Material(mid, msg))
+        self.mids_ref = mids_ref
 
         z1 = self.z0
         t = self.Thickness()
@@ -80,10 +82,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             model.log.warning(msg)
 
     def uncross_reference(self):
-        for iply in range(len(self.thicknesses)):
-            mid = self.Mid(iply)
-            self.mids[iply] = mid
-        del self.mids_ref
+        self.mids_ref = None
 
     def is_symmetrical(self):
         """
@@ -171,7 +170,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         #nplies = len(self.thicknesses)
         if iply == 'all':  # get all layers
             thick = sum(self.thicknesses)
-            if self.isSymmetrical():
+            if self.is_symmetrical():
                 return thick * 2.
             return thick
         else:
@@ -201,27 +200,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         Gets the non-structural mass :math:`i^{th}` ply
         """
         return self.nsm
-
-    def Mid(self, iply):
-        """
-        Gets the Material ID of the :math:`i^{th}` ply.
-
-        Parameters
-        ----------
-        iply : int/str; default='all'
-            the string **'all'** (default) or the mass per area of
-            the :math:`i^{th}` ply
-
-        Returns
-        -------
-        material_id : int
-            the material id of the ith ply
-        """
-        iply = self._adjust_ply_id(iply)
-        Mid = self.Material(iply)
-        if isinstance(Mid, integer_types):
-            return Mid
-        return Mid.mid
 
     def Mids(self):
         return self.material_ids
@@ -253,6 +231,27 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         iply = self._adjust_ply_id(iply)
         mid_ref = self.mids_ref[iply]
         return mid_ref.rho
+
+    def Mid(self, iply):
+        """
+        Gets the Material ID of the :math:`i^{th}` ply.
+
+        Parameters
+        ----------
+        iply : int/str; default='all'
+            the string **'all'** (default) or the mass per area of
+            the :math:`i^{th}` ply
+
+        Returns
+        -------
+        material_id : int
+            the material id of the ith ply
+        """
+        iply = self._adjust_ply_id(iply)
+        mid = self.Material(iply)
+        if isinstance(mid, integer_types):
+            return mid
+        return mid.mid
 
     def Material(self, iply):
         """
@@ -369,7 +368,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
         .. note:: final mass calculation will be done later
         """
-        rhos = [mat.get_density() for mat in self.mids]
+        rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
         return self.get_mass_per_area_rho(rhos, iply, method)
 
     def get_mass_per_area_rho(self, rhos, iply='all', method='nplies'):
@@ -780,7 +779,7 @@ class PCOMP(CompositeShellProperty):
 
     def _verify(self, xref=False):
         pid = self.Pid()
-        is_sym = self.isSymmetrical()
+        is_sym = self.is_symmetrical()
         nplies = self.nPlies()
         nsm = self.Nsm()
         mids = self.Mids()
@@ -833,7 +832,7 @@ class PCOMP(CompositeShellProperty):
         list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, tref, ge, self.lam]
         for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
                                          self.thetas, self.souts):
-            #theta = set_blank_if_default(theta,0.0)
+            #theta = set_blank_if_default(theta, 0.0)
             str_sout = set_blank_if_default(sout, 'NO')
             list_fields += [mid, t, theta, str_sout]
         return list_fields
@@ -1183,6 +1182,8 @@ class PLPLANE(ShellProperty):
         self.mid = mid
         self.cid = cid
         self.stress_strain_output_location = stress_strain_output_location
+        self.mid_ref = None
+        self.cid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1222,7 +1223,8 @@ class PLPLANE(ShellProperty):
     def uncross_reference(self):
         self.mid = self.Mid()
         self.cid = self.Cid()
-        del self.mid_ref, self.cid_ref
+        self.mid_ref = None
+        self.cid_ref = None
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -1242,14 +1244,14 @@ class PLPLANE(ShellProperty):
         #return 0.
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
-            return self.mid
-        return self.mid_ref.mid
+        if self.mid_ref is not None:
+            return self.mid_ref.mid
+        return self.mid
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def raw_fields(self):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(),
@@ -1332,9 +1334,9 @@ class PPLANE(ShellProperty):
         #return self.pid
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
-            return self.mid
-        return self.mid_ref.mid
+        if self.mid_ref is not None:
+            return self.mid_ref.mid
+        return self.mid
 
     def raw_fields(self):
         list_fields = ['PPLANE', self.pid, self.Mid(), self.t, self.nsm, self.formulation_option]
@@ -1700,17 +1702,17 @@ class PSHELL(ShellProperty):
         material_ids = self.material_ids
         assert len(mids) > 0
         if xref:
-            assert isinstance(self.mid, Material), 'mid=%r' % self.mid
+            assert isinstance(self.mid_ref, Material), 'mid=%r' % self.mid_ref
 
-            for i, mid in enumerate(mids):
-                if mid == 0:
+            mids_ref = [self.mid1_ref, self.mid2_ref, self.mid3_ref, self.mid4_ref]
+            for i, mid_ref in enumerate(mids_ref):
+                if mid is None or mid == 0:
                     continue
                 if i == 1: # mid2
                     if isinstance(mid, integer_types):
                         assert mid == -1, mid
                         continue
                 assert isinstance(mid, Material), 'mid=%r' % mid
-                assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'PSHELL: pid.type=%s mid.type=%s' % (self.type, mid.type)
                 if mid.type == 'MAT1':
                     E = mid.E()
                     G = mid.G()
@@ -1720,6 +1722,8 @@ class PSHELL(ShellProperty):
                     assert isinstance(G, float), 'G=%r' % G
                     assert isinstance(nu, float), 'nu=%r' % nu
                     assert isinstance(rho, float), 'rho=%r' % rho
+                elif mid.type in ['MAT2', 'MAT4', 'MAT5', 'MAT8']:
+                    pass
                 #elif mid.type == 'MAT2':
                     #pass
                 #elif mid.type == 'MAT4':
@@ -1728,8 +1732,8 @@ class PSHELL(ShellProperty):
                     #pass
                 #elif mid.type == 'MAT8':
                     #pass
-                #else:
-                    #raise NotImplementedError('pid.type=%s mid.type=%s' % (self.type, mid.type))
+                else:
+                    raise NotImplementedError('PSHELL: pid=%s mid.type=%s' % (self.pid, mid.type))
 
             t = self.Thickness()
             nsm = self.Nsm()
@@ -1743,14 +1747,7 @@ class PSHELL(ShellProperty):
         return z
 
     def materials(self):
-        materials = []
-        for i in range(1, 5):
-            name = 'mid%i_ref' % i
-            if hasattr(self, name):
-                mat = getattr(self, name)
-                materials.append(mat)
-            else:
-                materials.append(None)
+        materials = [self.mid1_ref, self.mid2_ref, self.mid3_ref, self.mid4_ref]
         return materials
 
     @property
@@ -1766,34 +1763,34 @@ class PSHELL(ShellProperty):
         #raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
 
     @property
-    def mid(self):
-        if isinstance(self.mid1, Material):
+    def mid_ref(self):
+        if self.mid1_ref is not None:
             return self.mid1_ref
         return self.mid2_ref
 
     def Mid(self):
         mid1 = self.Mid1()
-        if isinstance(mid1, integer_types):
+        if mid1 is not None:
             return mid1
         return self.Mid2()
 
     def Mid1(self):
-        if isinstance(self.mid1, Material):
+        if self.mid1_ref is not None:
             return self.mid1_ref.mid
         return self.mid1
 
     def Mid2(self):
-        if isinstance(self.mid2, Material):
+        if self.mid2_ref is not None:
             return self.mid2_ref.mid
         return self.mid2
 
     def Mid3(self):
-        if isinstance(self.mid3, Material):
+        if self.mid3_ref is not None:
             return self.mid3_ref.mid
         return self.mid3
 
     def Mid4(self):
-        if isinstance(self.mid4, Material):
+        if self.mid4_ref is not None:
             return self.mid4_ref.mid
         return self.mid4
 
@@ -1801,7 +1798,7 @@ class PSHELL(ShellProperty):
         return self.t
 
     def Rho(self):
-        return self.mid.rho
+        return self.mid_ref.rho
 
     def Nsm(self):
         return self.nsm
@@ -1811,7 +1808,8 @@ class PSHELL(ShellProperty):
         Calculates mass per area.
 
         .. math:: \frac{m}{A} = nsm + \rho t"""
-        rho = self.Rho()
+        mid_ref = self.mid_ref
+        rho = mid_ref.Rho()
         try:
             mass_per_area = self.nsm + rho * self.t
         except:
@@ -1844,17 +1842,13 @@ class PSHELL(ShellProperty):
         """
         msg = ' which is required by PSHELL pid=%s' % self.pid
         if self.mid1:
-            self.mid1 = model.Material(self.mid1, msg)
-            self.mid1_ref = self.mid1
+            self.mid1_ref = model.Material(self.mid1, msg)
         if self.mid2 and self.mid2 != -1:
-            self.mid2 = model.Material(self.mid2, msg)
-            self.mid2_ref = self.mid2
+            self.mid2_ref = model.Material(self.mid2, msg)
         if self.mid3:
-            self.mid3 = model.Material(self.mid3, msg)
-            self.mid3_ref = self.mid3
+            self.mid3_ref = model.Material(self.mid3, msg)
         if self.mid4:
-            self.mid4 = model.Material(self.mid4, msg)
-            self.mid4_ref = self.mid4
+            self.mid4_ref = model.Material(self.mid4, msg)
         if self.t is not None:
             z1 = abs(self.z1)
             z2 = abs(self.z2)
@@ -1869,6 +1863,10 @@ class PSHELL(ShellProperty):
         self.mid2 = self.Mid2()
         self.mid3 = self.Mid3()
         self.mid4 = self.Mid4()
+        self.mid1_ref = None
+        self.mid2_ref = None
+        self.mid3_ref = None
+        self.mid4_ref = None
 
     def raw_fields(self):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),

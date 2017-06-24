@@ -303,7 +303,7 @@ class TestShells(unittest.TestCase):
         ft = 0.
         tref = 0.
         ge = 0.
-        lam = 'NO' # isSymmetrical YES/NO
+        lam = 'NO' # is_symmetrical YES/NO
         Mid = [1, 2, 3]
         theta = [0., 10., 20.]
         T = [.1, .2, .3]
@@ -311,7 +311,7 @@ class TestShells(unittest.TestCase):
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
 
         p = PCOMP.add_op2_data(data)
-        self.assertFalse(p.isSymmetrical())
+        self.assertFalse(p.is_symmetrical())
         self.assertEqual(p.nPlies(), 3)
 
         self.assertAlmostEqual(p.Thickness(), 0.6)
@@ -436,14 +436,14 @@ class TestShells(unittest.TestCase):
         ft = 0.
         tref = 0.
         ge = 0.
-        lam = 'SYM'  # isSymmetrical SYM
+        lam = 'SYM'  # is_symmetrical SYM
         Mid = [1, 2, 3]
         theta = [0., 10., 20.]
         T = [.1, .2, .3]
         sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
         p = PCOMP.add_op2_data(data)
-        self.assertTrue(p.isSymmetrical())
+        self.assertTrue(p.is_symmetrical())
         self.assertEqual(p.nPlies(), 6)
 
         self.assertAlmostEqual(p.Thickness(), 1.2)

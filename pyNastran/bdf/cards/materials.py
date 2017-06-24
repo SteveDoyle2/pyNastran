@@ -1502,6 +1502,9 @@ class MAT8(OrthotropicMaterial):
     def get_density(self):
         return self.rho
 
+    def Rho(self):
+        return self.rho
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
