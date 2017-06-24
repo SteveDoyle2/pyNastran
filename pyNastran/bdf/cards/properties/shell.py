@@ -1712,7 +1712,7 @@ class PSHELL(ShellProperty):
                 if mid_ref is None or mid_ref == 0:
                     continue
                 if i == 1: # mid2
-                    if isinstance(mid, integer_types):
+                    if isinstance(mid_ref, integer_types):
                         assert mid_ref == -1, mid_ref
                         continue
                 assert isinstance(mid_ref, Material), 'mid_ref=%r' % mid_ref
