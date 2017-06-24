@@ -1709,34 +1709,34 @@ class PSHELL(ShellProperty):
 
             mids_ref = [self.mid1_ref, self.mid2_ref, self.mid3_ref, self.mid4_ref]
             for i, mid_ref in enumerate(mids_ref):
-                if mid is None or mid == 0:
+                if mid_ref is None or mid_ref == 0:
                     continue
                 if i == 1: # mid2
                     if isinstance(mid, integer_types):
-                        assert mid == -1, mid
+                        assert mid_ref == -1, mid_ref
                         continue
-                assert isinstance(mid, Material), 'mid=%r' % mid
-                if mid.type == 'MAT1':
-                    E = mid.E()
-                    G = mid.G()
-                    nu = mid.Nu()
-                    rho = mid.Rho()
+                assert isinstance(mid_ref, Material), 'mid_ref=%r' % mid_ref
+                if mid_ref.type == 'MAT1':
+                    E = mid_ref.E()
+                    G = mid_ref.G()
+                    nu = mid_ref.Nu()
+                    rho = mid_ref.Rho()
                     assert isinstance(E, float), 'E=%r' % E
                     assert isinstance(G, float), 'G=%r' % G
                     assert isinstance(nu, float), 'nu=%r' % nu
                     assert isinstance(rho, float), 'rho=%r' % rho
-                elif mid.type in ['MAT2', 'MAT4', 'MAT5', 'MAT8']:
+                elif mid_ref.type in ['MAT2', 'MAT4', 'MAT5', 'MAT8']:
                     pass
-                #elif mid.type == 'MAT2':
+                #elif mid_ref.type == 'MAT2':
                     #pass
-                #elif mid.type == 'MAT4':
+                #elif mid_ref.type == 'MAT4':
                     #pass
-                #elif mid.type == 'MAT5':
+                #elif mid_ref.type == 'MAT5':
                     #pass
-                #elif mid.type == 'MAT8':
+                #elif mid_ref.type == 'MAT8':
                     #pass
                 else:
-                    raise NotImplementedError('PSHELL: pid=%s mid.type=%s' % (self.pid, mid.type))
+                    raise NotImplementedError('PSHELL: pid=%s mid_ref.type=%s' % (self.pid, mid_ref.type))
 
             t = self.Thickness()
             nsm = self.Nsm()
