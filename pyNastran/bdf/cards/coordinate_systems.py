@@ -1664,14 +1664,15 @@ class Cord2x(Coord):
             set the rid to cid=0 if False
         """
         if maintain_rid:
-            e1 = self.rid_ref.transform_node_to_global(self.e1)
-            e2 = self.rid_ref.transform_node_to_global(self.e2)
-            e3 = self.rid_ref.transform_node_to_global(self.e3)
-            e12 = e2 - e1
-            e13 = e3 - e1
-            self.e1 = self.rid_ref.transform_node_to_local(xyz)
-            self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
-            self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
+            #e1 = self.rid_ref.transform_node_to_global(self.e1)
+            #e2 = self.rid_ref.transform_node_to_global(self.e2)
+            #e3 = self.rid_ref.transform_node_to_global(self.e3)
+            #e12 = e2 - e1
+            #e13 = e3 - e1
+            #self.e1 = self.rid_ref.transform_node_to_local(xyz)
+            #self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
+            #self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
+            raise RuntimeError('this method is very confusing...xyz is not defined...is that origin?')
         else:
             self.rid = 0
             if hasattr(self, 'rid_ref'):

@@ -7,7 +7,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 import io
-from typing import List, Dict, Any, Union, Optional, Tuple, Any, cast
+from typing import List, Dict, Union, Optional, Tuple, Any, cast
 from codecs import open
 from six import string_types, iteritems, itervalues, PY2, StringIO
 

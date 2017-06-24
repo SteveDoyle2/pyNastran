@@ -7,57 +7,6 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
-class NastranComplexDisplacementResults(GuiResultCommon):
-    def __init__(self, subcase_id, titles, xyz, dxyz, scalar,
-                 default_scale=40., uname='NastranGeometry'):
-        """
-        subcase_id : int
-            the flag that points to self.subcases for a message
-        titles : List[str]
-            the legend title
-        xyz : (nnodes, 3)
-            the nominal xyz locations
-        dxyz : (nnodes, 3)
-            the delta xyz values
-        scalars : (nnodes,n) float ndarray
-            #the data to make a contour plot with
-            does nothing
-        scales : List[float]
-            the deflection scale factors
-            nominally, this starts as an empty list and is filled later
-        uname : str
-            some unique name for ...
-        """
-        GuiResultCommon.__init__(self)
-        self.subcase_id = subcase_id
-        self.data_formats = ['%g'] * len(titles)
-        self.xyz = xyz
-        self.dxyz = dxyz
-        self.dxyz_norm = norm(dxyz, axis=1)
-        self.titles = titles
-        self.scale = default_scale
-
-        # displacement results can change the scale, so we need this
-        # for defaulting the result and to not locking out the
-        # displacement
-        self.default_scale = default_scale
-
-        # titles point to the scalar bar and thus can change
-        self.titles_default = deepcopy(titles)
-
-        # data formats are modified on the legend
-        self.data_formats_default = deepcopy(self.data_formats)
-        #self.default_scale = default_scales
-
-        #theta = (2*np.pi * i/frame) % (2 * pi)
-        theta = 0.0
-
-        # calculate deflections
-        eigvs = model.eigenvectors[1000].data[6, :, :]
-        scale = 1.0
-        defl = scale * (np.real(eigvs[:, :3]) * np.cos(theta) +
-                        np.imag(eigvs[:, :3]) * np.sin(theta))
-
 class TransientElementResults(object):
     deflects = False
     def __init__(self, subcase_id, titles, headers, scalars,

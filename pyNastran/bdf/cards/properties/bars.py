@@ -9,30 +9,6 @@ All bar properties are defined in this file.  This includes:
 
 All bars are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
-
-Area
-====
-ROD   = pi*(DIM1^2)
-TUBE  = pi*(DIM1^2 - DIM2^2)
-I     = (DIM3*DIM6)+(DIM2*DIM5) + ((DIM1-(DIM5+DIM6))*DIM4)
-I1    = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
-CHAN  = (2*(DIM1*DIM4))+((DIM2-(2*DIM4))*DIM3)
-CHAN1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
-CHAN2 = 2*(DIM1*DIM3)+((DIM4-(2*DIM1))*DIM2)
-T     = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
-T1    = (DIM1*DIM3)+(DIM2*DIM4)
-T2    = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
-BOX   = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
-BOX1  = (DIM2*DIM6)+(DIM2*DIM5)+((DIM1-DIM5-DIM6)*DIM3)+((DIM1-DIM5-DIM6)*DIM4)
-BAR   = DIM1*DIM2
-CROSS = (DIM2*DIM3)+2*((0.5*DIM1)*DIM4)
-H     = 2*((0.5*DIM2)*DIM3)+(DIM1*DIM4)
-Z     = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
-HEXA  = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
-HAT   = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
-HAT1  = (DIM1*DIM5)+(DIM3*DIM4)+((DIM1-DIM3)*DIM4)+2*((DIM2-DIM5-DIM4)*DIM4)
-DBOX  = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
-        (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -49,6 +25,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+from pyNastran.bdf.utils import to_fields
+
 
 def Iyy_beam(b, h):
     return 1 / 12. * b * h ** 3

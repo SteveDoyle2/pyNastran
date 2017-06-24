@@ -248,10 +248,11 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             the material id of the ith ply
         """
         iply = self._adjust_ply_id(iply)
-        mid = self.Material(iply)
-        if isinstance(mid, integer_types):
-            return mid
-        return mid.mid
+        if self.mids_ref is not None:
+            mid = self.mids_ref[iply].mid
+        else:
+            mid = self.mids[iply]
+        return mid
 
     def Material(self, iply):
         """
@@ -264,7 +265,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
-        mid = self.mids[iply]
+        if self.mids_ref is not None:
+            mid = self.mids_ref[iply]
+        else:
+            mid = self.mids[iply]
         return mid
 
     def get_theta(self, iply):
@@ -680,13 +684,13 @@ class PCOMP(CompositeShellProperty):
 
         #self.plies = []
         #if self.lam == 'SYM':
-        #    if nplies%2 == 1:  # 0th layer is the core layer
+        #    if nplies % 2 == 1:  # 0th layer is the core layer
         #       # cut the thickness in half to make the ply have an
         #       # even number of plies, is there a better way???
-        #       plies[0][1] = plies[0][1]/2.
+        #       plies[0][1] = plies[0][1] / 2.
         #
-        #    pliesLower = plies.reverse()
-        #    self.plies = pliesLower+plies
+        #    plies_lower = plies.reverse()
+        #    self.plies = plies_lower + plies
         #    #print str(self)
         z0 = double_or_blank(card, 2, 'z0')
         return PCOMP(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, tref, ge,
@@ -723,7 +727,6 @@ class PCOMP(CompositeShellProperty):
         if lam == 'NO':
             lam = None
 
-        #ply = [mid,t,theta,sout]
         mids = []
         thicknesses = []
         thetas = []
@@ -763,7 +766,7 @@ class PCOMP(CompositeShellProperty):
     @property
     def plies(self):
         plies = []
-        for mid, t, theta, sout in zip(self.mids, self.thicknesses, self.thetas, self.souts):
+        for mid, t, theta, sout in zip(self.material_ids, self.thicknesses, self.thetas, self.souts):
             plies.append([mid, t, theta, sout])
         return plies
 

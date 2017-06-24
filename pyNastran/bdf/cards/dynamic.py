@@ -2017,7 +2017,7 @@ class TIC(BaseCard):
         nid = data[1]
         comp = data[2]
         u0 = data[3]
-        u0 = data[4]
+        v0 = data[4]
         return TIC(sid, nid, comp, u0, v0, comment=comment)
 
     @property

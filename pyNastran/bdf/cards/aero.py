@@ -6302,7 +6302,7 @@ class SPLINE3(Spline):
             if card[j + 3] or card[j + 4] or card[j + 5]:
                 i += 1
                 gii = integer(card, j, 'Gi_' % i)
-                cii = components(card, j + 1, 'Ci_' % i)
+                cii = parse_components(card, j + 1, 'Ci_' % i)
                 aii = double(card, j + 2, 'Ai_' % i)
                 Gi.append(gii)
                 ci.append(cii)

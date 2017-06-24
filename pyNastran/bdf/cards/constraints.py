@@ -1415,7 +1415,7 @@ class MPCADD(ConstraintAdd):
             except KeyError:
                 if debug:
                     msg = 'Couldnt find MPC=%i, which is required by MPCADD=%s' % (
-                        spc_id, self.conid)
+                        mpc_id, self.conid)
                     print(msg)
                 continue
             self.sets_ref.append(mpc)
