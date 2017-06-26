@@ -201,7 +201,8 @@ class GetMethods(BDFAttributes):
             return self.thermal_materials[mid]
         else:
             msg = '\n' + msg
-            raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
+            raise KeyError('Invalid Material ID:  mid=%s%s\nAllowed=%s' % (
+                mid, msg, np.unique(list(self.materials.keys())) ))
 
     def StructuralMaterial(self, mid, msg=''):
         try:

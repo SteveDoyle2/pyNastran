@@ -156,7 +156,10 @@ class BaseCard(object):
             self._update_field_helper(n, value)
 
     def _update_field_helper(self, n, value):
-        """dynamic method for non-standard attributes (e.g., node.update_field(3, 0.1) to update z)"""
+        """
+        dynamic method for non-standard attributes
+        (e.g., node.update_field(3, 0.1) to update z)
+        """
         msg = '%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__
         raise IndexError(msg)
 
@@ -503,7 +506,8 @@ class Element(BaseCard):
             pass
             #unique_nodes = unique(self.nodes)
             #if len(self.nodes) != len(unique_nodes):
-                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, self.nodes)
+                #msg = '%s requires that all node ids be unique; node_ids=%s' % (
+                    #self.type, self.nodes)
                 #raise IndexError(msg)
 
         for nid in self.nodes:

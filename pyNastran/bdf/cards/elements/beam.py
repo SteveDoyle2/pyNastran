@@ -1,3 +1,7 @@
+"""
+defines:
+ - CBEAM
+"""
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import print_function
 from six import string_types
@@ -11,6 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+
 
 class CBEAM(CBAR):
     """

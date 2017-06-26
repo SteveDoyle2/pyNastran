@@ -10,8 +10,8 @@ def intersect1d_multi(array_set, assume_unique=False):
         i0 = isort[0]
         i1 = isort[1]
         if assume_unique:
-            ar1 = unique(array_set[i0])
-            ar2 = unique(array_set[i1])
+            ar1 = np.unique(array_set[i0])
+            ar2 = np.unique(array_set[i1])
         else:
             ar1 = array_set[i0]
             ar2 = array_set[i1]

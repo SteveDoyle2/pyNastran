@@ -546,7 +546,10 @@ class CBAR(LineElement):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         j = self.pid_ref.J()
-        assert isinstance(j, float), 'J=%r for CBAR eid=%s pid=%s pidType=%s' % (j, self.eid, self.pid_ref.pid, self.pid_ref.type)
+        if not isinstance(j, float):
+            msg = 'J=%r must be a float; CBAR eid=%s pid=%s pidType=%s' % (
+                j, self.eid, self.pid_ref.pid, self.pid_ref.type)
+            raise TypeError(msg)
         return j
 
     def Length(self):
