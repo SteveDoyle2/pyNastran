@@ -1403,7 +1403,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_ibulk()
             elif table_name == b'CMODEXT':
                 self._read_cmodext()
-
+            elif table_name in self.generalized_tables:
+                self.generalized_tables[table_name](self)
             elif table_name in MATRIX_TABLES:
                 self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:
@@ -1546,7 +1547,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.f.seek(self.n)
         return table_name
 
-    def set_additional_result_tables_to_read(self, matrices):
+    def set_additional_generalized_tables_to_read(self, tables):
+        """
+        Adds methods to call a generalized table.
+        Everything is left to the user.
+        """
+        self._update_generalized_tables(tables)
+        self.generalized_tables = tables
+
+    def set_additional_result_tables_to_read(self, tables):
         """
         Adds methods to read additional result tables.
         This is expected to really only be used for skipping
@@ -1555,7 +1564,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         Parameters
         ----------
-        matrices : Dict[bytes] = varies
+        tables : Dict[bytes] = varies
             a dictionary of key=name, value=list[method3, method4]/False,
             False : skips a table
                 applies self._table_passer to method3 and method4
@@ -1564,11 +1573,34 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             method4 : function
                 function to read table 4 results (e.g., the actual results)
         """
+        self._update_generalized_tables(tables)
+        table_mapper = self._get_table_mapper()
+        #is_added = False
+        def func():
+            """overloaded version of _get_table_mapper"""
+            #if is_added:
+                #return table_mapper
+            for _key, methods in iteritems(tables):
+                if methods is False:
+                    table_mapper[_key] = [self._table_passer, self._table_passer]
+                else:
+                    assert len(methods) == 2, methods
+                    table_mapper[_key] = methods
+            #is_added = True
+            return table_mapper
+        self._get_table_mapper = func
+
+    def _update_generalized_tables(self, tables):
+        """
+        helper function for:
+         - set_additional_generalized_tables_to_read
+         - set_additional_result_tables_to_read
+        """
         global NX_RESULT_TABLES
         global MSC_RESULT_TABLES
         global RESULT_TABLES
         failed_keys = []
-        keys = list(matrices.keys())
+        keys = list(tables.keys())
         for _key in keys:
             if PY3:
                 if not isinstance(_key, bytes):
@@ -1585,31 +1617,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #RESULT_TABLES.sort()
         #assert 'OESXRMS1' in RESULT_TABLES, RESULT_TABLES
 
-        table_mapper = self._get_table_mapper()
-        #is_added = False
-        def func():
-            """overloaded version of _get_table_mapper"""
-            #if is_added:
-                #return table_mapper
-            for _key, methods in iteritems(matrices):
-                if methods is False:
-                    table_mapper[_key] = [self._table_passer, self._table_passer]
-                else:
-                    assert len(methods) == 2, methods
-                    table_mapper[_key] = methods
-            #is_added = True
-            return table_mapper
-        self._get_table_mapper = func
-
     def set_additional_matrices_to_read(self, matrices):
         """
         Matrices (e.g., KHH) can be sparse or dense.
 
         Parameters
         ----------
-        matrices : Dict[bytes] = bool
-            a dictionary of key=name, value=True/False,
-            where True/False indicates the matrix should be read
+        matrices : List[bytes]; Dict[bytes] = bool
+            List[bytes] :
+                simplified method to add matrices; value will be True
+            Dict[bytes] = bool:
+                a dictionary of key=name, value=True/False,
+                where True/False indicates the matrix should be read
 
         .. note:: If you use an already defined table (e.g. KHH), it
                   will be ignored.  If the table you requested doesn't
@@ -1618,6 +1637,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                   store results like displacement.  Those are not matrices.
                   Matrices are things like DMIGs.
         """
+        if isinstance(matrices, list):
+            matrices2 = {}
+            for matrix in matrices:
+                assert isinstance(matrix, string_types), 'matrix=%r' % str(matrix)
+                matrices2[matrix] = True
+            matrices = matrices2
+
         self.additional_matrices = matrices
         if PY2:
             self.additional_matrices = matrices
