@@ -971,6 +971,7 @@ class SET3(Set):
         #:  Identifiers of grids points, elements, points or properties.
         #:  (Integer > 0)
         self.ids = expand_thru(ids)
+        self.ids_ref = None
         self.xref_type = None
 
     def validate(self):
@@ -979,12 +980,15 @@ class SET3(Set):
             raise ValueError(msg)
 
     def get_ids(self):
+        if self.ids_ref is None:
+            return self.ids
+
         if self.xref_type is None:
             ids = self.ids
         elif self.xref_type == 'Point':
             # TODO: improve this...
             ids = [point if isinstance(point, integer_types) else point.nid
-                   for point in self.ids]
+                   for point in self.ids_ref]
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
         return ids
@@ -994,7 +998,7 @@ class SET3(Set):
         #if xref_type == 'Node':
             #self.ids = model.Nodes(self.get_ids(), msg=msg)
         if xref_type == 'Point':
-            self.ids = model.Points(self.get_ids(), msg=msg)
+            self.ids_ref = model.Points(self.get_ids(), msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Point']" % xref_type)
         self.xref_type = xref_type

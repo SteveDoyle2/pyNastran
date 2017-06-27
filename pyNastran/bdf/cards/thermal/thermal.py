@@ -311,10 +311,33 @@ class CHBDYG(ThermalElement):
 
     def validate(self):
         #assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r' % self.Type
-        if self.Type != 'REV':
-            nnodes = int(self.Type[-1])
-            if len(self.nodes) != nnodes:
-                msg = 'nnodes=%s Type=%r' % (len(self.nodes), self.Type)
+        if self.Type == 'REV':
+            assert len(self.nodes) == 3, 'CHBDYG: REV; nodes=%s' % str(self.nodes)
+        if self.Type == 'REV1':
+            assert len(self.nodes) == 3, 'CHBDYG: REV; nodes=%s' % str(self.nodes)
+        else:
+            if self.Type == 'AREA3':
+                nnodes_required = 3
+                nnodes_allowed = 3
+            elif self.Type == 'AREA4':
+                nnodes_required = 4
+                nnodes_allowed = 4
+            elif self.Type == 'AREA6':
+                nnodes_required = 3
+                nnodes_allowed = 6
+            elif self.Type == 'AREA8':
+                nnodes_required = 4
+                nnodes_allowed = 8
+            else:
+                raise RuntimeError('CHBDYG Type=%r' % self.Type)
+
+            if len(self.nodes) < nnodes_required:
+                msg = 'nnodes=%s nnodes_required=%s; Type=%r' % (
+                    len(self.nodes), nnodes_required, self.Type)
+                raise ValueError(msg)
+            if len(self.nodes) > nnodes_allowed:
+                msg = 'nnodes=%s nnodes_allowed=%s; Type=%r' % (
+                    len(self.nodes), nnodes_allowed, self.Type)
                 raise ValueError(msg)
 
     @classmethod

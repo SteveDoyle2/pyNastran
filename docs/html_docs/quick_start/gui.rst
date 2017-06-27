@@ -627,8 +627,8 @@ Local variables do not need this.
 
 Command line scripting
 ======================
-``geom_script`` runs after the load_geometry method, while
-``post_script`` runs after load_results has been performed
+``geomscript`` runs after the load_geometry method, while
+``postscript`` runs after load_results has been performed
 
 .. code-block :: python
 

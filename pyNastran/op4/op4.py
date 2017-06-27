@@ -1381,9 +1381,12 @@ class OP4(object):
             The filename to write
             String -> opens a file (closed at the end)
             file   -> no file is opened and it's not closed
-        name_order: List[str]
+        matrices : Dict[str] = (form, np.ndarray)
+            the matrices to write
+
+        name_order: str / List[str]; default=None -> sorted based on name
             List of the names of the matrices that should be
-            written or string (default=None -> sorted based on matrices)
+            written or string
         is_binary : bool; default=True
             Should a binary file be written
         precision : str; default='default'
@@ -1918,42 +1921,6 @@ def _get_type_nwv(A, precision='default'):
     return matrix_type, nwords_per_value
 
 
-def get_matrices():
-    """creates dummy matrices"""
-    strings = array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='float32') # f?
-    return strings
-
-
 def compress_column(col):
     """takes a dense matrix column and puts it into OP4 format"""
     packs = []
@@ -1980,58 +1947,3 @@ def compress_column(col):
         packs.append(packi)
     #print("packs = ", packs)
     return packs
-
-
-def main():
-    """tests various matrices"""
-    from pyNastran.op4.utils import write_DMIG
-
-    #compress_column([14, 15, 16, 20, 21, 22, 26, 27, 28])
-    filenames = [
-        'test/mat_t_dn.op4',
-        'test/mat_t_s1.op4',
-        'test/mat_t_s2.op4',
-        'test/mat_b_dn.op4',
-        'test/mat_b_s1.op4',
-        'test/mat_b_s2.op4',
-        #'test/b_sample.op4',
-        #'binary.op4',
-    ]
-
-    #matrix_names = 'EYE10' # identity
-    #matrix_names = 'LOW'
-    #matrix_names = 'RND1RS' # real,single
-    #matrix_names = 'RND1RD' # real,double
-    #matrix_names = 'RND1CS' # complex,single
-    #matrix_names = 'RND1CD' # complex,double
-    #matrix_names = 'STRINGS'
-    #matrix_names = 'EYE5CD' # complex identity
-    matrix_names = None
-    strings = get_matrices()
-
-    is_big_mat = True
-    if PY2:
-        wb = 'wb'
-    else:
-        wb = 'w'
-    with open('ascii.op4', wb) as op4_file:
-        for fname in filenames:
-            op4 = OP4()
-            op4.endian = '>'
-            #if 't' in fname:
-            #else:
-                #f = open('binary.op4','wb')
-
-            matrices = op4.read_op4(fname, matrix_names=matrix_names,
-                                    precision='default')
-            print("keys = %s" % matrices.keys())
-            print("fname=%s" % fname)
-            for name, (form, matrix) in sorted(iteritems(matrices)):
-                op4.write_op4(op4_file, matrices, name_order=name)
-
-    print("-----------------------------")
-    print("done")
-    print("-----------------------------")
-
-#if __name__ == '__main__':  # pragma: no cover
-    #main()

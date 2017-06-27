@@ -572,6 +572,8 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gmi = Gmi
         self.Cmi = Cmi
         self.alpha = alpha
+        assert len(Gmi) == len(Cmi), 'len(Gmi)=%s len(Cmi)=%s' % (len(Gmi), len(Cmi))
+        assert len(Gmi) > 0, 'len(Gmi)=%s must be greater than 0' % (len(Gmi))
         self.Gni_ref = None
         self.Gmi_ref = None
 
@@ -590,7 +592,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         eid = integer(card, 1, 'eid')
         ium = card.index('UM')
         if ium > 0:
-            assert string(card, ium, 'UM') == 'UM'
+            assert string(card, ium, 'UM') == 'UM', 'RBE1=%s must contain UM' % str(card)
 
         #assert isinstance(card[-1], string_types), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
         alpha_last = integer_double_or_string(card, -1, 'alpha_last')

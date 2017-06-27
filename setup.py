@@ -117,7 +117,7 @@ try:
     import matplotlib
     sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
     if sver < [1, 5, 1]:
-        print("matplotlib.__version__ = %r < '1.5.1'" % six.__version__)
+        print("matplotlib.__version__ = %r < '1.5.1'" % matplotlib.__version__)
         py_packages.append('matplotlib >= 1.5.1, <2')
 except ImportError:
     py_packages.append('matplotlib >= 1.5.1')

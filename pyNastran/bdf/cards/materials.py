@@ -83,6 +83,7 @@ class CREEP(Material):
         self.e = e
         self.f = f
         self.g = g
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -158,17 +159,16 @@ class CREEP(Material):
             the BDF object
         """
         msg = ' which is required by CREEP pid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def Mid(self):  # links up to MAT1, MAT2, MAT9 or same mid
-        if isinstance(self.mid, integer_types):
-            return self.mid
-        return self.mid_ref.mid
+        if self.mid_ref is not None:
+            return self.mid_ref.mid
+        return self.mid
 
     def raw_fields(self):
         list_fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form,
@@ -674,6 +674,9 @@ class MAT2(AnisotropicMaterial):
                     comment=comment)
 
     def get_density(self):
+        return self.rho
+
+    def Rho(self):
         return self.rho
 
     def cross_reference(self, model):

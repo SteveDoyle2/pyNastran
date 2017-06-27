@@ -338,10 +338,8 @@ class CTRAX6(AxisymmetricTri):
             the BDF object
         """
         msg = ' which is required by CTRAX6 eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

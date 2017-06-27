@@ -3268,13 +3268,40 @@ class AddCards(AddMethods):
         self._add_constraint_mpc_object(mpcadd)
         return mpcadd
 
-    def add_suport(self, ids, Cs, comment=''):
-        suport = SUPORT(ids, Cs, comment=comment)
+    def add_suport(self, nodes, Cs, comment=''):
+        """
+        Creates a SUPORT card, which defines free-body reaction points.
+        This is always active.
+
+        Parameters
+        ----------
+        nodes : List[int]
+            the nodes to release
+        Cs : List[str]
+            compoents to support at each node
+        comment : str; default=''
+            a comment for the card
+        """
+        suport = SUPORT(nodes, Cs, comment=comment)
         self._add_suport_object(suport)
         return suport
 
-    def add_suport1(self, conid, ids, Cs, comment=''):
-        suport1 = SUPORT1(conid, ids, Cs, comment=comment)
+    def add_suport1(self, conid, nodes, Cs, comment=''):
+        """
+        Creates a SUPORT card, which defines free-body reaction points.
+
+        Parameters
+        ----------
+        conid : int
+            Case Control SUPORT id
+        nodes : List[int]
+            the nodes to release
+        Cs : List[str]
+            compoents to support at each node
+        comment : str; default=''
+            a comment for the card
+        """
+        suport1 = SUPORT1(conid, nodes, Cs, comment=comment)
         self._add_suport1_object(suport1)
         return suport1
 
@@ -4134,8 +4161,8 @@ class AddCards(AddMethods):
         self._add_seset_object(seset)
         return seset
 
-    def add_sesup(self, IDs, Cs, comment=''):
-        se_suport = SESUP(IDs, Cs, comment=comment)
+    def add_sesup(self, nodes, Cs, comment=''):
+        se_suport = SESUP(nodes, Cs, comment=comment)
         self._add_sesuport_object(se_suport)
         return se_suport
 

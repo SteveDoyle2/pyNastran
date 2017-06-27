@@ -46,6 +46,10 @@ class Constraint(BaseCard):
 
 class SUPORT1(Constraint):
     """
+    Defines determinate reaction degrees-of-freedom (r-set) in a free
+    body-analysis.  SUPORT1 must be requested by the SUPORT1 Case
+    Control command.
+
     +---------+-----+-----+----+-----+----+-----+----+
     |    1    |  2  |  3  |  4 |  5  | 6  |  7  | 8  |
     +=========+=====+=====+====+=====+====+=====+====+
@@ -56,16 +60,30 @@ class SUPORT1(Constraint):
     """
     type = 'SUPORT1'
 
-    def __init__(self, conid, IDs, Cs, comment=''):
+    def __init__(self, conid, nodes, Cs, comment=''):
+        """
+        Creates a SUPORT card, which defines free-body reaction points.
+
+        Parameters
+        ----------
+        conid : int
+            Case Control SUPORT id
+        nodes : List[int]
+            the nodes to release
+        Cs : List[str]
+            compoents to support at each node
+        comment : str; default=''
+            a comment for the card
+        """
         Constraint.__init__(self)
         if comment:
             self.comment = comment
         self.conid = conid
-        self.IDs = IDs
+        self.nodes = nodes
         self.Cs = Cs
-        assert len(self.IDs) > 0
-        assert len(self.IDs) == len(self.Cs)
-        self.IDs_ref = None
+        assert len(self.nodes) > 0
+        assert len(self.nodes) == len(self.Cs)
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -85,16 +103,16 @@ class SUPORT1(Constraint):
         assert len(card) > 2
         nterms = int((nfields - 1.) / 2.)
         n = 1
-        IDs = []
+        nodes = []
         Cs = []
         for i in range(nterms):
             nstart = 2 + 2 * i
             ID = integer(card, nstart, 'ID%s' % n)
             C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
-            IDs.append(ID)
+            nodes.append(nid)
             Cs.append(C)
             n += 1
-        return SUPORT1(conid, IDs, Cs, comment=comment)
+        return SUPORT1(conid, nodes, Cs, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -110,29 +128,29 @@ class SUPORT1(Constraint):
         """
         conid = data[0]
         assert (len(data) - 1) % 2 == 0, data
-        IDs = []
+        nodes = []
         Cs = []
         for i in range(1, len(data), 2):
-            ID = data[i]
+            nid = data[i]
             C = data[i+1]
-            IDs.append(ID)
+            nodes.append(nid)
             Cs.append(C)
-        return SUPORT1(conid, IDs, Cs, comment=comment)
+        return SUPORT1(conid, nodes, Cs, comment=comment)
 
     def add_suport1_to_set(self, suport1):
         assert self.conid == suport1.conid, 'SUPORT1 conid=%s new_conid=%s; they must be the same' % (self.conid, suport1.conid)
         comment = self.comment + suport1.comment
         if comment:
             self.comment = comment
-        self.IDs += suport1.IDs
+        self.nodes += suport1.nodes
         self.Cs += suport1.Cs
 
     @property
     def node_ids(self):
         msg = ', which is required by SUPORT1'
-        if self.IDs_ref is None:
-            return self.IDs
-        return self._node_ids(nodes=self.IDs_ref, allow_empty_nodes=True, msg=msg)
+        if self.nodes_ref is None:
+            return self.nodes
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -149,7 +167,7 @@ class SUPORT1(Constraint):
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
         msg = ' which is required by SUPORT1=%s' % self.conid
-        for nid in self.IDs:
+        for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
             except KeyError:
@@ -159,16 +177,16 @@ class SUPORT1(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.IDs_ref = nids2
+        self.nodes_ref = nids2
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        self.IDs_ref = None
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def raw_fields(self):
         fields = ['SUPORT1', self.conid]
-        for ID, c in zip(self.node_ids, self.Cs):
-            fields += [ID, c]
+        for nid, c in zip(self.node_ids, self.Cs):
+            fields += [nid, c]
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -178,6 +196,8 @@ class SUPORT1(Constraint):
 
 class SUPORT(Constraint):
     """
+    Defines determinate reaction degrees-of-freedom in a free body.
+
     +---------+-----+-----+-----+-----+-----+-----+-----+----+
     |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  | 9  |
     +=========+=====+=====+=====+=====+=====+=====+=====+====+
@@ -186,21 +206,34 @@ class SUPORT(Constraint):
     """
     type = 'SUPORT'
 
-    def __init__(self, IDs, Cs, comment=''):
+    def __init__(self, nodes, Cs, comment=''):
+        """
+        Creates a SUPORT card, which defines free-body reaction points.
+        This is always active.
+
+        Parameters
+        ----------
+        nodes : List[int]
+            the nodes to release
+        Cs : List[str]
+            compoents to support at each node
+        comment : str; default=''
+            a comment for the card
+        """
         Constraint.__init__(self)
         if comment:
             self.comment = comment
-        self.IDs = IDs ## TODO:  IDs reference nodes???
+        self.nodes = nodes
         self.Cs = []
         for ci in Cs:
             if isinstance(ci, integer_types):
                 ci = str(ci)
             self.Cs.append(ci)
-        self.IDs_ref = None
+        self.nodes_ref = None
 
     def validate(self):
-        assert len(self.IDs) > 0
-        assert len(self.IDs) == len(self.Cs)
+        assert len(self.nodes) > 0
+        assert len(self.nodes) == len(self.Cs)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -221,16 +254,16 @@ class SUPORT(Constraint):
         assert len(card) > 1, card
         nterms = int(nfields / 2.)
         n = 1
-        IDs = []
+        nodes = []
         Cs = []
         for i in range(nterms):
             nstart = 1 + 2 * i
-            ID = integer(card, nstart, 'ID%s' % n)
+            nid = integer(card, nstart, 'ID%s' % n)
             C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
-            IDs.append(ID)
+            nodes.append(nid)
             Cs.append(C)
             n += 1
-        return SUPORT(IDs, Cs, comment=comment)
+        return SUPORT(nodes, Cs, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -245,19 +278,19 @@ class SUPORT(Constraint):
             a comment for the card
         """
         fields = data
-        IDs = []
+        nodes = []
         Cs = []
         for i in range(0, len(fields), 2):
-            IDs.append(fields[i])
+            nodes.append(fields[i])
             Cs.append(fields[i + 1])
-        return SUPORT(IDs, Cs, comment=comment)
+        return SUPORT(nodes, Cs, comment=comment)
 
     @property
     def node_ids(self):
         msg = ', which is required by SUPORT'
-        if self.IDs_ref is None:
-            return self.IDs
-        return self._node_ids(nodes=self.IDs_ref, allow_empty_nodes=True, msg=msg)
+        if self.nodes_ref is None:
+            return self.nodes
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -269,12 +302,12 @@ class SUPORT(Constraint):
             the BDF object
         """
         msg = ', which is required by SUPORT'
-        self.IDs_ref = model.EmptyNodes(self.IDs, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
         msg = ' which is required by SUPORT'
-        for nid in self.IDs:
+        for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
             except KeyError:
@@ -283,16 +316,16 @@ class SUPORT(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.IDs_ref = nids2
+        self.nodes_ref = nids2
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        self.IDs_ref = None
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def raw_fields(self):
         fields = [self.type]
-        for ID, c in zip(self.node_ids, self.Cs):
-            fields += [ID, c]
+        for nid, c in zip(self.node_ids, self.Cs):
+            fields += [nid, c]
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -303,8 +336,8 @@ class SUPORT(Constraint):
 class SESUP(SUPORT):
     type = 'SESUP'
 
-    def __init__(self, IDs, Cs, comment=''):
-        SUPORT.__init__(self, IDs, Cs, comment='')
+    def __init__(self, nodes, Cs, comment=''):
+        SUPORT.__init__(self, nodes, Cs, comment='')
 
 
 class MPC(Constraint):

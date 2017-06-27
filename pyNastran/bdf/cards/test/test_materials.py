@@ -94,6 +94,41 @@ class TestMaterials(unittest.TestCase):
 
         read_write(model)
 
+    def test_creep(self):
+        """tests MAT1/CREEP"""
+        model = BDF(debug=False)
+        mid = 10
+        k = 1000.
+        E = 3.0e7
+        G = 4.0e6
+        nu = 0.2
+        mat1 = model.add_mat1(mid, E, G, nu, comment='mat1')
+        mat1.write_card(size=16, is_double=False)
+
+        T0 = 42.
+        exp = 1.
+        form = 'cat'
+        tidkp = 42
+        tidcp = 43
+        tidcs = 44
+        thresh = 6.
+        Type = 7
+        a = 8.
+        b = 9.
+        c = 10.
+        d = 11.
+        e = 12.
+        f = 13.
+        g = 14.
+        creep = model.add_creep(
+            mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
+            a, b, c, d, e, f, g,
+            comment='creep')
+        creep.raw_fields()
+        model.cross_reference()
+        model.uncross_reference()
+        read_write(model)
+
     def test_mat2_01(self):
         """tests MAT2, MATT2"""
         model = BDF(debug=False)
@@ -498,7 +533,6 @@ class TestMaterials(unittest.TestCase):
             model.StructuralMaterial(-1)
         with self.assertRaises(KeyError):
             model.ThermalMaterial(-1)
-
 
 def read_write(model):
     """reads/writes the model as a StringIO"""

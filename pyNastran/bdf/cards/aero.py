@@ -3861,6 +3861,8 @@ class PAERO5(BaseCard):
 
         # ca/c - control surface chord / strip chord
         self.caoci = np.array(caoci, dtype='float64')
+        self.lxis_ref = None
+        self.ltaus_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3894,11 +3896,15 @@ class PAERO5(BaseCard):
                       comment=comment)
     @property
     def lxis_id(self):
-        return self.lxis if isinstance(self.lxis, integer_types) else self.lxis_ref.sid
+        if self.lxis_ref is not None:
+            return  self.lxis_ref.sid
+        return self.lxis
 
     @property
     def ltaus_id(self):
-        return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.sid
+        if self.lxis_ref is not None:
+            return self.ltaus_ref.sid
+        return self.ltaus
 
     def cross_reference(self, model):
         """
@@ -3909,29 +3915,25 @@ class PAERO5(BaseCard):
         model : BDF()
             the BDF object
         """
-        self.lxis = model.AEFact(self.lxis_id)
-        self.ltaus = model.AEFact(self.ltaus_id)
-
-        self.ltaus_ref = self.ltaus
-        self.lxis_ref = self.lxis
+        self.lxis_ref = model.AEFact(self.lxis_id)
+        self.ltaus_ref = smodel.AEFact(self.ltaus_id)
 
     def safe_cross_reference(self, model):
         try:
-            self.lxis = model.AEFact(self.lxis_id)
-            self.lxis_ref = self.lxis
+            self.lxis_ref = model.AEFact(self.lxis_id)
         except KeyError:
             pass
 
         try:
-            self.ltaus = model.AEFact(self.ltaus_id)
-            self.ltaus_ref = self.ltaus
+            self.ltaus_ref = smodel.AEFact(self.ltaus_id)
         except KeyError:
             pass
 
     def uncross_reference(self):
         self.lxis = self.lxis_id
         self.ltaus = self.ltaus_id
-        del self.ltaus_ref, self.lxis_ref
+        self.lxis_ref = None
+        self.ltaus_ref = None
 
     def raw_fields(self):
         list_fields = ['PAERO5', self.pid, self.nalpha, self.lalpha, self.nxis,
@@ -5331,6 +5333,8 @@ class PAERO2(BaseCard):
             self.lrsb = None
         if self.lrib is 0:
             self.lrib = None
+        self.lrsb_ref = None
+        self.lrib_ref = None
 
 
     def validate(self):
@@ -5375,10 +5379,8 @@ class PAERO2(BaseCard):
         msg = ' which is required by PAERO2 eid=%s' % self.pid
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
-            self.lrsb = self.lrsb_ref
         if self.lrib is not None and isinstance(self.lrib, integer_types):
             self.lrib_ref = model.AEFact(self.lrib, msg=msg)
-            self.lrib = self.lrib_ref
 
     def safe_cross_reference(self, model, debug=False):
         msg = ' which is required by PAERO2 eid=%s' % self.pid
@@ -5396,22 +5398,22 @@ class PAERO2(BaseCard):
                 pass
 
     def uncross_reference(self):
-        if self.lrsb is not None and isinstance(self.lrsb, integer_types):
+        if self.lrsb_ref is not None:
             self.lrsb = self.lrsb_ref.sid # AEFACT id
-            del self.lrsb_ref
-        if self.lrib is not None and isinstance(self.lrib, integer_types):
+        if self.lrib_ref is not None:
             self.lrib = self.lrib_ref.sid # AEFACT id
-            del self.lrib_ref
+        self.lrsb_ref = None
+        self.lrib_ref = None
 
     def Lrsb(self):
-        if self.lrsb is None or isinstance(self.lrsb, integer_types):
-            return self.lrsb
-        return self.lrsb_ref.sid
+        if self.lrsb_ref is not None:
+            return self.lrsb_ref.sid
+        return self.lrsb
 
     def Lrib(self):
-        if self.lrib is None or isinstance(self.lrib, integer_types):
-            return self.lrib
-        return self.lrib_ref.sid
+        if self.lrib_ref is not None:
+            return self.lrib_ref.sid
+        return self.lrib
 
     def raw_fields(self):
         """

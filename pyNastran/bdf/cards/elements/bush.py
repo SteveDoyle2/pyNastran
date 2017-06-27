@@ -515,8 +515,8 @@ class CBUSH2D(BushElement):
         self.pid_ref = model.Property(self.pid)
         if self.cid is not None:
             self.cid_ref = model.Coord(self.cid, msg=msg)
-        if self.sptid is not None:
-            pass
+        #if self.sptid is not None:
+            #pass
 
     def uncross_reference(self):
         self.ga = self.Ga()

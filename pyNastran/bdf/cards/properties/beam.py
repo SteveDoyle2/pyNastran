@@ -1309,6 +1309,9 @@ class PBMSECT(LineProperty):
             else:
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
         self._validate_input()
+        self.mid_ref = None
+        self.outp_ref = None
+        self.brp1_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1374,32 +1377,31 @@ class PBMSECT(LineProperty):
         msg = ' which is required by PBMSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-        self.outp = model.Set(self.outp)
-        self.outp_ref = self.outp
+        self.outp_ref = model.Set(self.outp)
         self.outp_ref.cross_reference(model, 'Point', msg=msg)
 
         if len(self.brps):
             ## TODO: not done
-            self.brp1 = model.Set(self.brp1)
-            self.brp1_ref = self.brp1
+            self.brp1_ref = model.Set(self.brp1)
             self.brp1_ref.cross_reference(model, 'Point', msg=msg)
 
     @property
     def outp_id(self):
-        if isinstance(self.outp, int):
-            return self.outp
-        return self.outp.sid
+        if self.outp_ref is not None:
+            return self.outp.sid
+        return self.outp
 
     @property
     def brp1_id(self):
-        ## TODO: not done
-        if self.brp1 is None or isinstance(self.brp1, int):
-            return self.brp1
-        return self.brp1.sid
+        if self.brp1_ref is not None:
+            return self.brp1.sid
+        return self.brp1
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
+        self.outp_ref = None
+        self.brp1_ref = None
 
     def _verify(self, xref=False):
         pid = self.Pid()

@@ -54,13 +54,14 @@ class TestOP4(unittest.TestCase):
                     #print(matrix)
 
     def test_eye10(self):
+        """tests the EYE10 matrices"""
         fnames = [
             'mat_t_dn.op4',
             'mat_t_s1.op4',
             'mat_t_s2.op4',
         ]
         for fname in fnames:
-            op4 = OP4()
+            op4 = OP4(debug=False)
             matrices = op4.read_op4(os.path.join(op4_path, fname))
             (form, A) = matrices['EYE10']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
@@ -73,13 +74,14 @@ class TestOP4(unittest.TestCase):
                 self.assertTrue(array_equal(A, E))
 
     def test_eye5cd(self):
+        """tests the EYE5CD matrices"""
         fnames = [
             'mat_t_dn.op4',
             'mat_t_s1.op4',
             'mat_t_s2.op4',
         ]
         for fname in fnames:
-            op4 = OP4()
+            op4 = OP4(debug=False)
             matrices = op4.read_op4(os.path.join(op4_path, fname))
             (form, A) = matrices['EYE5CD']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
@@ -88,10 +90,11 @@ class TestOP4(unittest.TestCase):
                 self.assertTrue(array_equal(A.col, range(5)))
                 self.assertTrue(array_equal(A.data, [-1+1j] * 5))
             else: # real
-                E = -eye(5) + 1j*eye(5)
+                E = -eye(5) + 1j * eye(5)
                 self.assertTrue(array_equal(A, E))
 
     def test_null(self):
+        """tests the NULL matrices"""
         fnames = [
             'mat_t_dn.op4',
             'mat_t_s1.op4',
@@ -99,7 +102,7 @@ class TestOP4(unittest.TestCase):
         ]
         for fname in fnames:
             #print('-------%s-------' % fname)
-            op4 = OP4()
+            op4 = OP4(debug=False)
             matrices = op4.read_op4(os.path.join(op4_path, fname))
             (form, A) = matrices['NULL']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
@@ -119,7 +122,7 @@ class TestOP4(unittest.TestCase):
             del A
 
     def test_bad_inputs_1(self):
-        op4 = OP4()
+        op4 = OP4(debug=False)
         op4_filename = os.path.join(op4_path, 'bad_inputs.op4')
         form1 = 1
         A1 = ones((3, 3), dtype='float64')
@@ -154,7 +157,8 @@ class TestOP4(unittest.TestCase):
 
     @staticmethod
     def test_file_obj_ascii():
-        op4 = OP4()
+        """tests ascii writing"""
+        op4 = OP4(debug=False)
         form1 = 1
         A1 = ones((3, 3), dtype='float64')
         matrices = {
@@ -170,7 +174,7 @@ class TestOP4(unittest.TestCase):
 
     @staticmethod
     def test_file_obj_binary():
-        op4 = OP4()
+        op4 = OP4(debug=False)
         form1 = 1
         A1 = ones((3, 3), dtype='float64')
         matrices = {
@@ -181,7 +185,8 @@ class TestOP4(unittest.TestCase):
                           is_binary=True)
 
     def test_square_matrices_1(self):
-        op4 = OP4()
+        """tests reading/writing square matrices (A1, A2, A3)"""
+        op4 = OP4(debug=False)
         #matrices = op4.read_op4(os.path.join(op4_path, fname))
         form1 = 1
         form2 = 2
@@ -217,6 +222,103 @@ class TestOP4(unittest.TestCase):
             self.assertTrue(array_equal(A3, A3b))
             del A1b, A2b, A3b
             del form1b, form2b, form3b
+
+    #def test_compress_column(self):
+        #compress_column([14, 15, 16, 20, 21, 22, 26, 27, 28])
+
+    def test_main(self):
+        """tests various matrices"""
+        #from pyNastran.op4.utils import write_dmig
+
+        op4_filenames = [
+            # name, write_binary
+            ('mat_t_dn.op4', False),
+            ('mat_t_s1.op4', False),
+            ('mat_t_s2.op4', False),
+            ('mat_b_dn.op4', False),
+            ('mat_b_s1.op4', False),
+            ('mat_b_s2.op4', False),
+            #'b_sample.op4',
+            #'binary.op4',
+        ]
+
+        #matrix_names = 'EYE10' # identity
+        #matrix_names = 'LOW'
+        #matrix_names = 'RND1RS' # real,single
+        #matrix_names = 'RND1RD' # real,double
+        #matrix_names = 'RND1CS' # complex,single
+        #matrix_names = 'RND1CD' # complex,double
+        #matrix_names = 'STRINGS'
+        #matrix_names = 'EYE5CD' # complex identity
+        matrix_names = None
+        strings = get_matrices()
+
+        is_big_mat = True
+        with open('ascii.op4', 'w') as op4_filea, open('binary.op4', 'wb') as op4_fileb:
+
+            op4 = OP4(debug=False)
+            matrices = {'strings' : (2, strings)}
+            name = 'strings'
+            op4.write_op4(op4_filea, matrices, name_order=name,
+                          is_binary=False)
+            #op4.write_op4(op4_fileb, matrices, name_order=name,
+                          #is_binary=True)
+
+            for op4_filename, write_binary in op4_filenames:
+                op4 = OP4()
+                op4.endian = '>'
+                #if 't' in fname:
+                #else:
+                    #f = open('binary.op4','wb')
+                op4_filename = os.path.join(op4_path, op4_filename)
+                matrices = op4.read_op4(op4_filename, matrix_names=matrix_names,
+                                        precision='default')
+                #print("keys = %s" % matrices.keys())
+                #print("fname=%s" % fname)
+                for name, (form, matrix) in sorted(iteritems(matrices)):
+                    op4.write_op4(op4_filea, matrices, name_order=name,
+                                  is_binary=False)
+                    if write_binary:
+                        op4.write_op4(op4_fileb, matrices, name_order=name,
+                                      is_binary=True)
+
+
+def get_matrices():
+    """creates dummy matrices"""
+    strings = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='float32') # f?
+    return strings
+
+
 
 
 if __name__ == '__main__':  # pragma: no cover
