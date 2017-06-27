@@ -838,7 +838,8 @@ class GetCard(GetMethods):
 
         Parameters
         ----------
-        load_case : ???
+        load_case : int
+            the load case to get the pressure contour for
         eids : ???
         normals : (nelements, 3) float ndarray
             the element normals
@@ -846,9 +847,10 @@ class GetCard(GetMethods):
         Returns
         -------
         is_pressure : bool
-            the pressure data
-        pressures : (nelements, 1) float ndarray
-            the centroidal pressures
+            is there pressure data
+        pressures : (nelements, 1) float ndarray / None
+            ndarray : the centroidal pressures
+            None : corresponds to is_pressure=False
         """
         if 'PLOAD4' not in self.card_count:
             return False, None
@@ -1073,6 +1075,11 @@ class GetCard(GetMethods):
                 #if nids.intersection(rbe_nids):
                     #rbes.append(eid)
             #elif rigid_element == 'RSPLINE':
+            elif rigid_element.type == 'RBAR':
+                nodes = [rigid_element.ga, rigid_element.gb]
+                components = [rigid_element.cma, rigid_element.cmb]
+                for nid, componentsi in zip(nodes, components):
+                    dependent_nid_to_components[nid] = componentsi
             else:
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components

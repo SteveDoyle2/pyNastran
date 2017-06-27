@@ -5908,7 +5908,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         bar_scale2 = group.bar_scale
         # bar_scale2 = max(0.0, bar_scale2)
 
-        print('name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
+        #print('name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
         if color1 != color2:
             #print('color_2662[%s] = %s' % (name, str(color1)))
             assert isinstance(color1[0], float), color1
