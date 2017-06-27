@@ -23,7 +23,7 @@ from pyNastran.converters.nastran.nastranIOv import NastranIO
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.panair.panair_io import PanairIO
 from pyNastran.converters.fast.fast_io import FastIO
-from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
+from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
 from pyNastran.converters.shabp.shabp_io import ShabpIO
 from pyNastran.converters.stl.stl_io import STL_IO
 from pyNastran.converters.su2.su2_io import SU2_IO

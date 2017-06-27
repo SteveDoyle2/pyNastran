@@ -3163,6 +3163,16 @@ class DVMREL2(OptConstraint):
 
 
 def break_word_by_trailing_integer(pname_fid):
+    """
+    Splits a word
+
+    Examples
+    --------
+    >>> break_word_by_trailing_integer('T11')
+    ('T', '11')
+    >>> break_word_by_trailing_integer('THETA11')
+    ('THETA', '11')
+    """
     nums = []
     for i, letter in enumerate(reversed(pname_fid)):
         if letter.isdigit():
@@ -3172,7 +3182,7 @@ def break_word_by_trailing_integer(pname_fid):
         num = ''.join(nums[::-1])
         word = pname_fid[:-i-1]
         assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
-        return word, num
+    return word, num
 
 
 class DVPREL1(OptConstraint):
