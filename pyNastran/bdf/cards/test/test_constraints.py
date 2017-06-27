@@ -24,42 +24,42 @@ class TestConstraints(unittest.TestCase):
         card = ['SUPORT', '2']
         cardi = BDFCard(card)
         con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.IDs[0], 2)
+        self.assertEqual(con.nodes[0], 2)
         self.assertEqual(con.Cs[0], '0')
-        self.assertEqual(len(con.IDs), 1)
+        self.assertEqual(len(con.nodes), 1)
         self.assertEqual(len(con.Cs), 1)
 
         card = ['SUPORT', '2', '432']
         cardi = BDFCard(card)
         con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.IDs[0], 2)
+        self.assertEqual(con.nodes[0], 2)
         self.assertEqual(con.Cs[0], '234')
-        self.assertEqual(len(con.IDs), 1)
+        self.assertEqual(len(con.nodes), 1)
         self.assertEqual(len(con.Cs), 1)
 
         card = ['SUPORT', '2', '432', 3]
         cardi = BDFCard(card)
         con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.IDs[1], 3)
-        self.assertEqual(len(con.IDs), 2)
+        self.assertEqual(con.nodes[1], 3)
+        self.assertEqual(len(con.nodes), 2)
         self.assertEqual(len(con.Cs), 2)
 
         card = ['SUPORT', '2', None, 3]
         cardi = BDFCard(card)
         con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.IDs[0], 2)
-        self.assertEqual(con.IDs[1], 3)
+        self.assertEqual(con.nodes[0], 2)
+        self.assertEqual(con.nodes[1], 3)
         self.assertEqual(con.Cs[0], '0')
         self.assertEqual(con.Cs[1], '0')
-        self.assertEqual(len(con.IDs), 2)
+        self.assertEqual(len(con.nodes), 2)
         self.assertEqual(len(con.Cs), 2)
 
         card = ['SUPORT', '2', '432', 3, '1325']
         cardi = BDFCard(card)
         con = SUPORT.add_card(cardi) # default
-        self.assertEqual(con.IDs[1], 3)
+        self.assertEqual(con.nodes[1], 3)
         self.assertEqual(con.Cs[1], '1235')
-        self.assertEqual(len(con.IDs), 2)
+        self.assertEqual(len(con.nodes), 2)
         self.assertEqual(len(con.Cs), 2)
 
     def test_support1_01(self):
@@ -81,32 +81,32 @@ class TestConstraints(unittest.TestCase):
         card = ['SUPORT1', '1', '2']
         cardi = BDFCard(card)
         con = SUPORT1.add_card(cardi) # default
-        self.assertEqual(con.IDs[0], 2)
+        self.assertEqual(con.nodes[0], 2)
         self.assertEqual(con.Cs[0], '0')
 
         card = ['SUPORT1', '1', '2', '432']
         cardi = BDFCard(card)
         con = SUPORT1.add_card(cardi) # default
-        self.assertEqual(con.IDs[0], 2)
+        self.assertEqual(con.nodes[0], 2)
         self.assertEqual(con.Cs[0], '234')
 
         card = ['SUPORT1', '1', '2', '432', 3]
         cardi = BDFCard(card)
         con = SUPORT1.add_card(cardi) # default
-        self.assertEqual(con.IDs[1], 3)
+        self.assertEqual(con.nodes[1], 3)
 
         card = ['SUPORT1', '1', '2', None, 3]
         cardi = BDFCard(card)
         con = SUPORT1.add_card(cardi) # default
-        self.assertEqual(con.IDs[0], 2)
-        self.assertEqual(con.IDs[1], 3)
+        self.assertEqual(con.nodes[0], 2)
+        self.assertEqual(con.nodes[1], 3)
         self.assertEqual(con.Cs[0], '0')
         self.assertEqual(con.Cs[1], '0')
 
         card = ['SUPORT1', '1', '2', '432', 3, '1325']
         card = BDFCard(card)
         con = SUPORT1.add_card(card) # default
-        self.assertEqual(con.IDs[1], 3)
+        self.assertEqual(con.nodes[1], 3)
         self.assertEqual(con.Cs[1], '1235')
 
     def test_mpc_01(self):

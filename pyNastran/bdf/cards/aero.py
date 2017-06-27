@@ -3902,7 +3902,7 @@ class PAERO5(BaseCard):
 
     @property
     def ltaus_id(self):
-        if self.lxis_ref is not None:
+        if self.ltaus_ref is not None:
             return self.ltaus_ref.sid
         return self.ltaus
 
@@ -3916,7 +3916,7 @@ class PAERO5(BaseCard):
             the BDF object
         """
         self.lxis_ref = model.AEFact(self.lxis_id)
-        self.ltaus_ref = smodel.AEFact(self.ltaus_id)
+        self.ltaus_ref = model.AEFact(self.ltaus_id)
 
     def safe_cross_reference(self, model):
         try:
@@ -3925,7 +3925,7 @@ class PAERO5(BaseCard):
             pass
 
         try:
-            self.ltaus_ref = smodel.AEFact(self.ltaus_id)
+            self.ltaus_ref = model.AEFact(self.ltaus_id)
         except KeyError:
             pass
 
