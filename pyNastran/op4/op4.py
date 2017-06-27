@@ -6,7 +6,7 @@ import sys
 import os
 import io
 from struct import pack, unpack, Struct
-from six import string_types, iteritems, PY2
+from six import string_types, iteritems, PY2, PY3
 from six.moves import range
 
 import numpy as np
@@ -1431,10 +1431,16 @@ class OP4(object):
             name_order = sorted(matrices.keys())
         elif isinstance(name_order, string_types):
             name_order = [name_order]
+        elif PY3 and isinstance(name_order, bytes):
+            name_order = [name_order]
 
         is_big_mat = False  ## .. todo:: hardcoded
         for name in name_order:
-            (form, matrix) = matrices[name]
+            try:
+                (form, matrix) = matrices[name]
+            except KeyError:
+                raise KeyError('key=%r is an invalid matrix; keys=%s' % (
+                    str(name), matrices.keys()))
             if not form in (1, 2, 3, 6, 8, 9):
                 raise ValueError('form=%r and must be in [1, 2, 3, 6, 8, 9]' % form)
 
@@ -1694,6 +1700,8 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
     .. todo:: Does this work for complex matrices?
     """
     msg = ''
+    if isinstance(name, bytes):
+        name = name.decode('ascii')
     assert isinstance(name, string_types), 'name=%s' % name
     #A = A.tolil() # list-of-lists sparse matrix
     #print dir(A)

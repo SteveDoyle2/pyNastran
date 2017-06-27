@@ -1,3 +1,4 @@
+"""defines various Material card tests"""
 import unittest
 import numpy as np
 from six.moves import StringIO
@@ -10,6 +11,7 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 class TestMaterials(unittest.TestCase):
     """tests MAT1"""
     def test_mat1_01(self):
+        """tests MAT1 initialization from a BDFCard"""
         #
         #MAT5           1    700.    300.    900.    400.    200.    600.     90.+
         #+             .1
@@ -44,7 +46,7 @@ class TestMaterials(unittest.TestCase):
         """tests MAT1, MATT1"""
         model = BDF(debug=False)
         mid = 10
-        k = 1000.
+        #k = 1000.
         E = 3.0e7
         G = 4.0e6
         nu = 0.2
@@ -98,7 +100,7 @@ class TestMaterials(unittest.TestCase):
         """tests MAT1/CREEP"""
         model = BDF(debug=False)
         mid = 10
-        k = 1000.
+        #k = 1000.
         E = 3.0e7
         G = 4.0e6
         nu = 0.2
@@ -134,12 +136,11 @@ class TestMaterials(unittest.TestCase):
         model = BDF(debug=False)
         mid = 10
         G11 = G22 = G12 = G13 = G22 = G23 = G33 = 1.0
-        nuxth = nuthz = nuzx = 0.3
+        #nuxth = nuthz = nuzx = 0.3
         mat2 = model.add_mat2(mid, G11, G12, G13, G22, G23, G33, rho=0.,
                               a1=None, a2=None, a3=None, tref=0.,
                               ge=0., St=None, Sc=None, Ss=None,
-                             mcsid=None,
-                             comment='')
+                              mcsid=None, comment='mat2')
         mat2.write_card(size=16, is_double=False)
         mat2.validate()
 
@@ -196,14 +197,14 @@ class TestMaterials(unittest.TestCase):
         model = BDF(debug=False)
         mid = 10
         ex = 3.0e7
-        ey = eth = 6.0e7
+        eth = 6.0e7
         ez = 6e4
         nuxth = nuthz = nuzx = 0.3
         mat3 = model.add_mat3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0,
-                             gzx=None, ax=0.,
-                             ath=0., az=0.,
-                             tref=0., ge=0.,
-                             comment='mat3')
+                              gzx=None, ax=0.,
+                              ath=0., az=0.,
+                              tref=0., ge=0.,
+                              comment='mat3')
         mat3.write_card(size=16, is_double=False)
         mat3.validate()
 
@@ -256,11 +257,11 @@ class TestMaterials(unittest.TestCase):
 
         k_table = 1
         cp_table = 2
-        H_table = 3
+        h_table = 3
         mu_table = 4
-        Hgen_table = 3
-        matt4 = model.add_matt4(mid, k_table, cp_table, H_table, mu_table,
-                                Hgen_table, comment='matt4')
+        hgen_table = 3
+        matt4 = model.add_matt4(mid, k_table, cp_table, h_table, mu_table,
+                                hgen_table, comment='matt4')
         matt4.validate()
         matt4.write_card()
 
@@ -314,8 +315,8 @@ class TestMaterials(unittest.TestCase):
         cp_table = 4
         hgen_table = 4
         matt5 = model.add_matt5(mid, kxx_table, kxy_table, kxz_table,
-                               kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
-                               comment='matt5')
+                                kyy_table, kyz_table, kzz_table, cp_table, hgen_table,
+                                comment='matt5')
         matt5.validate()
         matt5.write_card()
 
@@ -441,16 +442,16 @@ class TestMaterials(unittest.TestCase):
         """tests MAT9"""
         model = BDF(debug=False)
         mid = 10
-        e11 = 3.0e7
-        e22 = 6.0e7
-        nu12 = 0.3
+        #e11 = 3.0e7
+        #e22 = 6.0e7
+        #nu12 = 0.3
         mat9 = model.add_mat9(mid, G11=0., G12=0., G13=0., G14=0., G15=0.,
-                             G16=0., G22=0., G23=0., G24=0.,
-                             G25=0., G26=0., G33=0., G34=0.,
-                             G35=0., G36=0., G44=0., G45=0.,
-                             G46=0., G55=0., G56=0., G66=0.,
-                             rho=0., A=None, tref=0., ge=0.,
-                             comment='mat9')
+                              G16=0., G22=0., G23=0., G24=0.,
+                              G25=0., G26=0., G33=0., G34=0.,
+                              G35=0., G36=0., G44=0., G45=0.,
+                              G46=0., G55=0., G56=0., G66=0.,
+                              rho=0., A=None, tref=0., ge=0.,
+                              comment='mat9')
         mat9.write_card(size=16, is_double=False)
         mat9.validate()
 

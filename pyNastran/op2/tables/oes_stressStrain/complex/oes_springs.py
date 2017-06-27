@@ -181,10 +181,10 @@ class ComplexSpringDamperArray(OES_Object):
 
         eids = self.element
         #is_odd = False
-        nwrite = len(eids)
-        if len(eids) % 2 == 1:
-            nwrite -= 1
-            is_odd = True
+        #nwrite = len(eids)
+        #if len(eids) % 2 == 1:
+            #nwrite -= 1
+            #is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):

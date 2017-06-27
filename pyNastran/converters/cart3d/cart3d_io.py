@@ -410,7 +410,6 @@ class Cart3dIO(object):
         #i += 3
 
     def _fill_cart3d_results(self, cases, form, icase, ID, loads, model, mach):
-        new = False
         results_form = []
         cases_new = []
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',

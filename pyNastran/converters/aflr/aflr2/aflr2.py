@@ -1,3 +1,13 @@
+"""
+defines:
+ - read_bedge(bedge_filename, beta_reverse=179.7, log=None, debug=False)
+ - AFLR2(log=None, debug=False)
+   - read_bedge(self, bedge_filename, beta_reverse=179.7)
+   - write_nastran(self, bdf_filename)
+   - write_fixed_points(self, fixed_points_filename)
+   - merge_bedge(self, bedge, bedge_filename)
+ - export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, log=None)
+"""
 from __future__ import print_function
 import os
 import sys
@@ -410,7 +420,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
         # write the curves/subcurves
         nodes_pack = []
 
-        self.log.debug('looping over ucurves=%s' % ucurves)
+        log.debug('looping over ucurves=%s' % ucurves)
         nsubcurves_list = []
 
         all_usubcurves = set([])
@@ -475,10 +485,3 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
         #initial_normal_spacing = '112*1.0e-3'
 
 
-def main(): # : pragma: no conver
-    bedge_filename = 'circle.bedge'
-    model = AFLR2()
-    model.read_bedge(bedge_filename)
-
-if __name__ == '__main__': # : pragma: no conver
-    main()

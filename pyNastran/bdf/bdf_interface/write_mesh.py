@@ -197,10 +197,6 @@ class WriteMesh(BDFAttributes):
         if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
             bdf_file = out_filename
         else:
-            if PY2:
-                wb = 'wb'
-            else:
-                wb = 'w'
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self._write_header(bdf_file, encoding)
         self._write_params(bdf_file, size, is_double)
