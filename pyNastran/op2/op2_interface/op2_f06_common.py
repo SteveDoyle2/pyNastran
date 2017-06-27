@@ -21,6 +21,7 @@ class OP2_F06_Common(object):
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcase_id
         self.iSubcaseNameMap = {}
+        self.generalized_tables = {}
         self.subtitles = defaultdict(list)
         self.case_control_deck = CaseControlDeck([], log=self.log)
         self.labels = {}
@@ -927,7 +928,7 @@ class OP2_F06_Common(object):
                   and table not in [
                       'card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
                       'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
-                      'end_options', 'expected_times']]
+                      'end_options', 'expected_times', 'generalized_tables']]
         for table in tables:
             if self.make_geom:
                 break

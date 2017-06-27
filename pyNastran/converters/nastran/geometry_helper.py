@@ -396,10 +396,10 @@ class NastranGeometryHelper(NastranGuiAttributes):
         # dict
         if suport_id in model.suport1:
             suport1 = model.suport1[suport_id]
-            node_ids += suport1.IDs
+            node_ids += suport1.nodes
         else:
             for suport in model.suport:  # TODO: shouldn't this be included?
-                if suport_id in suport.IDs:
+                if suport_id in suport.nodes:
                     node_ids.append(suport_id)
         return np.unique(node_ids)
 

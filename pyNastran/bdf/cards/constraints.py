@@ -32,6 +32,15 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 
 
 class Constraint(BaseCard):
+    """
+    common class for:
+     - SUPORT / SUPORT1 / SESUP
+     - GMSPC
+     - MPC
+     - SPC / SPC1
+     - SPCAX
+     - SPCOFF / SPCOFF1
+     """
     def __init__(self):
         pass
 
@@ -107,7 +116,7 @@ class SUPORT1(Constraint):
         Cs = []
         for i in range(nterms):
             nstart = 2 + 2 * i
-            ID = integer(card, nstart, 'ID%s' % n)
+            nid = integer(card, nstart, 'ID%s' % n)
             C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
             nodes.append(nid)
             Cs.append(C)
@@ -162,7 +171,7 @@ class SUPORT1(Constraint):
             the BDF object
         """
         msg = ', which is required by SUPORT1'
-        self.IDs_ref = model.EmptyNodes(self.IDs, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -1295,16 +1304,6 @@ class SPCADD(ConstraintAdd):
         conid = data[0]
         sets = list(data[1:-1])
         return SPCADD(conid, sets, comment=comment)
-
-    def organize_constraints(self, model):
-        """
-        Figures out magnitudes of the loads to be applied to the various nodes.
-        This includes figuring out scale factors.
-        """
-        position_spcs = []
-        types_found = ['SPCADD']
-        (scale_factors, loads) = self.get_reduced_constraints()
-        return (types_found, position_spcs)
 
     @property
     def spc_ids(self):
