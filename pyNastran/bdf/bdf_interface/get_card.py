@@ -1435,7 +1435,9 @@ class GetCard(GetMethods):
             pids = iterkeys(self.properties)
         elif isinstance(pids, integer_types):
             pids = [int]
-        assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
+        else:
+            assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
+
         eids2 = []
         for eid, element in sorted(iteritems(self.elements)):
             pid = element.Pid()
@@ -1489,7 +1491,13 @@ class GetCard(GetMethods):
                 self.log.warning('skipping etype=%s' % etype)
                 continue
             eids = self._type_to_id_map[etype]
-            element0 = self.elements[eids[0]]
+            try:
+                eid = eids[0]
+            except:
+                self.log.warning('skipping etype=%s; eids=%s' % (etype, str(eids)))
+                continue
+
+            element0 = self.elements[eid]
             nnodes = len(element0.node_ids)
             neids = len(eids)
             node_ids = np.zeros((neids, nnodes), dtype='int32')
