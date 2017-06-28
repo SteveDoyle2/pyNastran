@@ -1448,7 +1448,7 @@ class GetCard(GetMethods):
                 eids2.append(eid)
         return eids2
 
-    def get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None):
+    def get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None, idtype='int32'):
         """
         a work in progress
 
@@ -1485,6 +1485,9 @@ class GetCard(GetMethods):
         etypes_ = self._slot_to_type_map['elements']
         etype_to_nids_map = {}
         pid_to_eids_ieids_map = defaultdict(list)
+
+        etypes_none_nodes = ['CDAMP2']
+
         if etypes is None:
             etypes = etypes_
         for etype in etypes_:
@@ -1503,16 +1506,25 @@ class GetCard(GetMethods):
             element0 = self.elements[eid]
             nnodes = len(element0.node_ids)
             neids = len(eids)
-            node_ids = np.zeros((neids, nnodes), dtype='int32')
-            for ieid, eid in enumerate(eids):
-                element = self.elements[eid]
-                node_ids[ieid, :] = element.node_ids
-                pid = element.Pid()
-                #nids_to_pids_map[]
-                pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
+            node_ids = np.zeros((neids, nnodes), dtype=idtype)
+            if etype in etypes_none_nodes:
+                for ieid, eid in enumerate(eids):
+                    element = self.elements[eid]
+                    node_ids[ieid, :] = [nid  if nid is not None else 0
+                                         for nid in element.node_ids]
+                    pid = element.Pid()
+                    #nids_to_pids_map[]
+                    pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
+            else:
+                for ieid, eid in enumerate(eids):
+                    element = self.elements[eid]
+                    node_ids[ieid, :] = element.node_ids
+                    pid = element.Pid()
+                    #nids_to_pids_map[]
+                    pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
             etype_to_nids_map[etype] = node_ids
         for key, value in iteritems(pid_to_eids_ieids_map):
-            pid_to_eids_ieids_map[key] = np.array(value, dtype='int32')
+            pid_to_eids_ieids_map[key] = np.array(value, dtype=idtype)
         return pid_to_eids_ieids_map
 
     def get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True):
@@ -1594,7 +1606,7 @@ class GetCard(GetMethods):
             nid_to_eids_map[nid] = []
 
         if self.spoints:  # SPOINTs
-            for nid in sorted(self.spoints.points):  # SPOINTs
+            for nid in sorted(self.spoints):  # SPOINTs
                 nid_to_eids_map[nid] = []
 
         for (eid, element) in iteritems(self.elements):  # load the mapper

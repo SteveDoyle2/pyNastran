@@ -3174,19 +3174,19 @@ def break_word_by_trailing_integer(pname_fid):
     ('THETA', '11')
     """
     nums = []
-    word = None
     for i, letter in enumerate(reversed(pname_fid)):
         if letter.isdigit():
             nums.append(letter)
         else:
             break
-        num = ''.join(nums[::-1])
-        word = pname_fid[:-i-1]
-        assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
-    if word is None:
+
+    num = ''.join(nums[::-1])
+    if not num:
         msg = ("pname_fid=%r does not follow the form 'T1', 'T11', 'THETA42' "
                "(letters and a number)" % pname_fid)
         raise SyntaxError(msg)
+    word = pname_fid[:-i]
+    assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
     return word, num
 
 
