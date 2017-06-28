@@ -1414,19 +1414,28 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif table_name.strip() in self.additional_matrices:
                 self._read_matrix(table_name)
             else:
-                msg = 'geom/results split: %r\n\n' % table_name
-                msg += 'If you the table is a result table, see:\n'
-                msg += '  model.set_additional_result_tables_to_read(methods_dict)\n'
-                msg += "  methods_dict = {\n"
-                msg += "      b'OUGV1' : [method3, method4],\n"
-                msg += "      b'OES1X1' : False,\n"
-                msg += '  }\n'
+                msg += 'Invalid Table\n\n'
                 msg += 'If you have matrices that you want to read, see:\n'
                 msg += '  model.set_additional_matrices_to_read(matrices)'
                 msg += '  matrices = {\n'
                 msg += "      b'BHH' : True,\n"
                 msg += "      b'KHH' : False,\n"
+                msg += '  }  # you want to read some matrices, but not others\n'
+                msg += "  matrices = [b'BHH', b'KHH']  # assumes True\n\n"
+
+                msg += 'If you the table is a geom/result table, see:\n'
+                msg += '  model.set_additional_result_tables_to_read(methods_dict)\n'
+                msg += "  methods_dict = {\n"
+                msg += "      b'OUGV1' : [method3, method4],\n"
+                msg += "      b'GEOM4SX' : [method3, method4],\n"
+                msg += "      b'OES1X1' : False,\n"
+                msg += '  }\n\n'
+
+                msg += 'If you want to take control of the OP2 reader (mainly useful for obscure tables), see:\n'
+                msg += "  methods_dict = {\n"
+                msg += "      b'OUGV1' : [method],\n"
                 msg += '  }\n'
+                msg += '  model.set_additional_generalized_tables_to_read(methods_dict)\n'
                 raise NotImplementedError(msg)
 
             table_name = self._read_table_name(rewind=True, stop_on_failure=False)
