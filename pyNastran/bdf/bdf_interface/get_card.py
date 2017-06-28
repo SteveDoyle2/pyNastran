@@ -1331,7 +1331,10 @@ class GetCard(GetMethods):
         for etype in etypes:
             if etype not in self._type_to_id_map:
                 continue
-            eids = np.array(self._type_to_id_map[etype], dtype=dtype)
+            eids_list = self._type_to_id_map[etype]
+            if not eids_list:
+                continue
+            eids = np.array(eids_list, dtype=dtype)
             neids = len(eids)
             eid0 = eids[0]
 
@@ -1481,20 +1484,20 @@ class GetCard(GetMethods):
         skip_elements = ['CONROD']
         etypes_ = self._slot_to_type_map['elements']
         etype_to_nids_map = {}
-        pid_to_eids_ieids_map = {}
+        pid_to_eids_ieids_map = defaultdict(list)
         if etypes is None:
             etypes = etypes_
         for etype in etypes_:
             if etype not in etypes_:
                 continue
             if etype in skip_elements:
-                self.log.warning('skipping etype=%s' % etype)
+                self.log.warning('skipping etype=%s because there are no properties' % etype)
                 continue
             eids = self._type_to_id_map[etype]
             try:
                 eid = eids[0]
             except:
-                self.log.warning('skipping etype=%s; eids=%s' % (etype, str(eids)))
+                #self.log.warning('skipping etype=%s; eids=%s' % (etype, str(eids)))
                 continue
 
             element0 = self.elements[eid]

@@ -256,6 +256,9 @@ class PCOMPS(SolidProperty):
         """
         pass
 
+    def Mid(self):
+        return self.pid_ref.mid
+
     def Rho(self):
         """
         Returns the density

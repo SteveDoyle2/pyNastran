@@ -1,11 +1,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
-from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types, ChainMap
 
 
 class GetMethods(BDFAttributes):
@@ -188,10 +187,17 @@ class GetMethods(BDFAttributes):
         return self.materials.keys()
 
     def get_material_ids(self):
-        return (self.materials.keys() + self.thermal_materials.keys() +
-                self.hyperelastic_materials.keys())
+        """gets the material ids"""
+        keys = ChainMap(
+            self.materials.keys(),
+            self.thermal_materials.keys(),
+            self.hyperelastic_materials.keys(),
+        )
+        return keys
+
 
     def get_thermal_material_ids(self):
+        """gets the thermal material ids"""
         return self.thermal_materials.keys()
 
     def Material(self, mid, msg=''):

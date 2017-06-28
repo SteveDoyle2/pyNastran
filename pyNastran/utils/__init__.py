@@ -21,6 +21,16 @@ else:
 float_types = (float, np.float32)
 
 
+if PY2:
+    def ChainMap(*keys):
+        """Python 2.7 hack to implement ChainMap"""
+        keys2 = []
+        for key in keys:
+            keys2 += list(key)
+        return keys2
+else:
+    from collections import ChainMap
+
 def ipython_info():
     # type: () -> Optional[str]
     """determines if iPython/Jupyter notebook is running"""

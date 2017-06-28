@@ -12,6 +12,8 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import read_op2
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.utils.log import get_logger
+from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 #from pyNastran.f06.test.f06_unit_tests import run_model
 
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
@@ -24,13 +26,14 @@ class TestOpt(unittest.TestCase):
     """
     def test_opt_1(self):
         """tests SOL 200"""
+        log = get_logger(level='warning')
         bdf_filename = os.path.join(model_path, 'sol200', 'model_200.bdf')
         model = read_bdf(bdf_filename, xref=True, debug=False)
         op2_filename = os.path.join(model_path, 'sol200', 'model_200.op2')
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
-        op2 = read_op2(op2_filename, debug=False)
+        op2 = read_op2(op2_filename, log=log, debug=False)
 
         subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
@@ -218,6 +221,28 @@ class TestOpt(unittest.TestCase):
 
         save_load_deck(model)
 
+    def test_dvprel1_02(self):
+        model = BDF()
+        oid = 1
+        pid = 2
+        prop_type = 'PCOMP'
+        pname_fid = 'THETA11'
+        dvids = [1, 2]
+        coeffs = [1., 2.]
+        dvprel1a = model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                                     p_min=None, p_max=1e20,
+                                     c0=0.0, validate=True,
+                                     comment='')
+
+        oid = 2
+        pname_fid = 'T42'
+        dvprel1b = model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                                     p_min=None, p_max=1e20,
+                                     c0=0.0, validate=True,
+                                     comment='')
+        assert 'THETA11' in dvprel1a.raw_fields(), dvprel1a
+        assert 'T42' in dvprel1b.raw_fields(), dvprel1b
+
     def test_dvmrel1(self):
         """tests a DVMREL1"""
         model = BDF(debug=False)
@@ -394,6 +419,14 @@ class TestOpt(unittest.TestCase):
         model2.add_card(dvcrel2_lines, 'DVCREL2', is_list=False)
         model2.add_card(desvar_lines, 'DESVAR', is_list=False)
         #save_load_deck(model2)
+
+    def test_break_words(self):
+        """tests break_word_by_trailing_integer"""
+        assert break_word_by_trailing_integer('T11') == ('T', '11'), break_word_by_trailing_integer('T11')
+        assert break_word_by_trailing_integer('THETA42') == ('THETA', '42'), break_word_by_trailing_integer('THETA42')
+        assert break_word_by_trailing_integer('T3') == ('T', '3'), break_word_by_trailing_integer('T3')
+        with self.assertRaises(SyntaxError):
+            assert break_word_by_trailing_integer('THETA32X')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

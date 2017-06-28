@@ -254,6 +254,8 @@ class RBAR(RigidElement):
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
+        self.ga_ref = None
+        self.gb_ref = None
 
     def validate(self):
         ncna = len(self.cna)
@@ -346,14 +348,14 @@ class RBAR(RigidElement):
         #return msg
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
-            return self.ga
-        return self.ga_ref.nid
+        if self.ga_ref is not None:
+            return self.ga_ref.nid
+        return self.ga
 
     def Gb(self):
-        if isinstance(self.gb, integer_types) or self.gb is None:
-            return self.gb
-        return self.gb_ref.nid
+        if self.gb_ref is not None:
+            return self.gb_ref.nid
+        return self.gb
 
     def cross_reference(self, model):
         """
@@ -365,15 +367,14 @@ class RBAR(RigidElement):
             the BDF object
         """
         msg = ' which is required by RBAR eid=%s' % (self.eid)
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
-        self.ga_ref = self.ga
-        self.gb_ref = self.gb
+        self.ga_ref = model.Node(self.Ga(), msg=msg)
+        self.gb_ref = model.Node(self.Gb(), msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.ga_ref, self.gb_ref
+        self.ga_ref = None
+        self.gb_ref = None
 
     @property
     def independent_nodes(self):
@@ -424,6 +425,8 @@ class RBAR1(RigidElement):
         self.gb = nids[1]
         self.cb = cb
         self.alpha = alpha
+        self.ga_ref = None
+        self.gb_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -465,14 +468,14 @@ class RBAR1(RigidElement):
         return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
-            return self.ga
-        return self.ga_ref.nid
+        if self.ga_ref is not None:
+            return self.ga_ref.nid
+        return self.ga
 
     def Gb(self):
-        if isinstance(self.gb, integer_types) or self.gb is None:
-            return self.gb
-        return self.gb_ref.nid
+        if self.gb_ref is not None:
+            return self.gb_ref.nid
+        return self.gb
 
     @property
     def independent_nodes(self):
@@ -494,15 +497,14 @@ class RBAR1(RigidElement):
             the BDF object
         """
         msg = ' which is required by RBAR1 eid=%s' % (self.eid)
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
-        self.ga_ref = self.ga
-        self.gb_ref = self.gb
+        self.ga_ref = model.Node(self.Ga(), msg=msg)
+        self.gb_ref = model.Node(self.Gb(), msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.ga_ref, self.gb_ref
+        self.ga_ref = None
+        self.gb_ref = None
 
     def raw_fields(self):
         list_fields = ['RBAR1', self.eid, self.Ga(), self.Gb(), self.cb, self.alpha]
@@ -950,9 +952,9 @@ class RBE2(RigidElement):
         self.gn_ref = None
 
     def Gn(self):
-        if self.gn_ref is None or self.gn is None:
-            return self.gn
-        return self.gn_ref.nid
+        if self.gn_ref is not None:
+            return self.gn_ref.nid
+        return self.gn
 
     @property
     def Gmi_node_ids(self):
