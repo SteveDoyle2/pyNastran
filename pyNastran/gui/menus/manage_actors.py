@@ -386,12 +386,12 @@ class EditGeometryProperties(PyDialog):
         obj : CoordProperties, AltGeometry
             the storage object for things like line_width, point_size, etc.
         """
-        old_obj = self.out_data[self.active_key]
-        old_obj.line_width = self.line_width_edit.value()
-        old_obj.point_size = self.point_size_edit.value()
-        old_obj.bar_scale = self.bar_scale_edit.value()
-        old_obj.opacity = self.opacity_edit.value()
-        old_obj.is_visible = self.checkbox_show.isChecked()
+        #old_obj = self.out_data[self.active_key]
+        #old_obj.line_width = self.line_width_edit.value()
+        #old_obj.point_size = self.point_size_edit.value()
+        #old_obj.bar_scale = self.bar_scale_edit.value()
+        #old_obj.opacity = self.opacity_edit.value()
+        #old_obj.is_visible = self.checkbox_show.isChecked()
 
         if qt_version == 4:
             name = str(index.data().toString())

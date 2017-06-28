@@ -168,20 +168,33 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if not self.has_caero:
             return
         self.show_caero_actor = not self.show_caero_actor
+
+        names = ['caero', 'caero_subpanels', 'caero_control_surfaces']
+        geometry_properties = {}
+        for name in names:
+            try:
+                prop = self.geometry_properties[name]
+            except KeyError:
+                continue
+            geometry_properties[name] = prop
+
         if self.show_caero_actor:
+            try:
+                geometry_properties['caero_control_surfaces'].is_visible = True
+            except KeyError:
+                pass
             if self.show_caero_sub_panels:
-                self.geometry_actors['caero_subpanels'].VisibilityOn()
-                self.geometry_properties['caero_subpanels'].is_visble = True
+                geometry_properties['caero_subpanels'].is_visible = True
             else:
-                self.geometry_actors['caero'].VisibilityOn()
-                self.geometry_properties['caero'].is_visble = True
+                geometry_properties['caero'].is_visible = True
         else:
-            self.geometry_actors['caero'].VisibilityOff()
-            self.geometry_properties['caero'].is_visble = False
-            self.geometry_actors['caero_subpanels'].VisibilityOff()
-            self.geometry_properties['caero_subpanels'].is_visble = False
-            self.on_update_geometry_properties_window(self.geometry_properties)
-        self.vtk_interactor.Render()
+            try:
+                geometry_properties['caero_control_surfaces'].is_visible = False
+            except KeyError:
+                pass
+            geometry_properties['caero'].is_visible = False
+            geometry_properties['caero_subpanels'].is_visible = False
+        self.on_update_geometry_properties_override_dialog(geometry_properties)
 
     def on_update_geometry_properties_window(self, geometry_properties):
         if self._edit_geometry_properties_window_shown:
@@ -194,35 +207,37 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         if not self.has_caero:
             return
+
+        names = ['caero', 'caero_subpanels']
+        geometry_properties = {}
+        for name in names:
+            try:
+                prop = self.geometry_properties[name]
+            except KeyError:
+                continue
+            geometry_properties[name] = prop
+
         self.show_caero_sub_panels = not self.show_caero_sub_panels
         if self.show_caero_actor:
             if self.show_caero_sub_panels:
-                self.geometry_actors['caero'].VisibilityOff()
-                self.geometry_properties['caero'].is_visble = False
-
-                self.geometry_actors['caero_subpanels'].VisibilityOn()
-                self.geometry_properties['caero_subpanels'].is_visble = True
+                geometry_properties['caero'].is_visible = False
+                geometry_properties['caero_subpanels'].is_visible = True
             else:
-                self.geometry_actors['caero'].VisibilityOn()
-                self.geometry_properties['caero'].is_visble = True
-
-                self.geometry_actors['caero_subpanels'].VisibilityOff()
-                self.geometry_properties['caero_subpanels'].is_visble = False
-        self.vtk_interactor.Render()
+                geometry_properties['caero'].is_visible = True
+                geometry_properties['caero_subpanels'].is_visible = False
+        self.on_update_geometry_properties_override_dialog(geometry_properties)
 
     def toggle_conms(self):
         """
         Toggle the visibility of the CONMS
         """
-        self.show_conm = not self.show_conm
-        if 'conm2' in self.geometry_actors:
-            if self.show_conm:
-                self.geometry_actors['conm2'].VisibilityOn()
-                self.geometry_properties['conm2'].is_visble = True
-            else:
-                self.geometry_actors['conm2'].VisibilityOff()
-                self.geometry_properties['conm2'].is_visble = False
-        self.vtk_interactor.Render()
+        name = 'conm2'
+        if name in self.geometry_actors:
+            geometry_properties_change = {name : self.geometry_properties[name]}
+            visibility_prev = geometry_properties_change[name].is_visible
+            geometry_properties_change[name].is_visible = not visibility_prev
+
+            self.on_update_geometry_properties_override_dialog(geometry_properties_change)
 
     def _create_coord(self, dim_max, cid, coord, cid_type):
         """
