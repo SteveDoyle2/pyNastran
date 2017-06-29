@@ -1272,7 +1272,6 @@ class PBMSECT(LineProperty):
 
         # int : floats
         self.ts = {}
-        assert 'OUTP' in options, 'options=%s' % str(options)
         for key, value in options.items():
             key = key.upper()
             if key == 'NSM':
@@ -1308,6 +1307,8 @@ class PBMSECT(LineProperty):
                     raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
             else:
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
+
+        assert self.outp is not None, 'options=%s' % str(options)
         self._validate_input()
         self.mid_ref = None
         self.outp_ref = None
@@ -1388,13 +1389,13 @@ class PBMSECT(LineProperty):
     @property
     def outp_id(self):
         if self.outp_ref is not None:
-            return self.outp.sid
+            return self.outp_ref.sid
         return self.outp
 
     @property
     def brp1_id(self):
         if self.brp1_ref is not None:
-            return self.brp1.sid
+            return self.brp1_ref.sid
         return self.brp1
 
     def uncross_reference(self):

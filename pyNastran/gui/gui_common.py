@@ -5759,6 +5759,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 raise NotImplementedError(geom_prop)
 
+    def on_update_geometry_properties_override_dialog(self, geometry_properties):
+        """
+        Update the goemetry properties and overwite the options in the edit geometry properties
+        dialog if it is open.
+
+        Parameters
+        -----------
+        geometry_properties : dict {str : CoordProperties or AltGeometry}
+            Dictionary from name to properties object. Only the names included in
+            ``geometry_properties`` are modified.
+
+        """
+        if self._edit_geometry_properties_window_shown:
+            # Overirde the output state in the edit geometry properties diaglog if the button is
+            # pushed while the dialog is open. This prevent the case where you close the dialog and
+            # the # state reverts back to before you hit the button.
+            for name, prop in iteritems(geometry_properties):
+                self._edit_geometry_properties.out_data[name] = prop
+                if self._edit_geometry_properties.active_key == name:
+                    index = self._edit_geometry_properties.table.currentIndex()
+                    self._edit_geometry_properties.update_active_key(index)
+        self.on_update_geometry_properties(geometry_properties)
+
     def on_set_modify_groups(self):
         """
         Opens a dialog box to set:

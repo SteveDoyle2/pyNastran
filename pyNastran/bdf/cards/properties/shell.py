@@ -1567,6 +1567,8 @@ class PSHELL(ShellProperty):
         ShellProperty.__init__(self)
         if comment:
             self.comment = comment
+        if mid2 == -1:
+            mid2 = None
 
         #: Property ID
         self.pid = pid

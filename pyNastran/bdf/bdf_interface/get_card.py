@@ -179,7 +179,7 @@ class GetCard(GetMethods):
 
             #print('card_type=%r' % card_type)
             try:
-                key = rslot_map[card_type]  # update attributes.py ~line 520
+                key = rslot_map[card_type]  # update attributes.py ~line 540
             except:
                 self.log.error("card_type=%r' hasn't been added to "
                                "self._slot_to_type_map...check for typos")
@@ -1486,45 +1486,64 @@ class GetCard(GetMethods):
         etype_to_nids_map = {}
         pid_to_eids_ieids_map = defaultdict(list)
 
-        etypes_none_nodes = ['CDAMP2']
+        etypes_none_nodes = [
+            'CELAS1', 'CELAS2', 'CELAS4',
+            'CDAMP1', 'CDAMP2', 'CDAMP5',
+            'CBUSH', 'CBUSH1D', 'CFAST',
+            'CTRIAX', 'CQUADX', 'CTRIAX6',
+            'CTRIA6', 'CQUAD8', 'CQUAD',
+            'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+            'CRAC2D', 'CRAC3D',
+        ]
 
         if etypes is None:
             etypes = etypes_
-        for etype in etypes_:
-            if etype not in etypes_:
-                continue
-            if etype in skip_elements:
-                self.log.warning('skipping etype=%s because there are no properties' % etype)
-                continue
-            eids = self._type_to_id_map[etype]
-            try:
-                eid = eids[0]
-            except:
-                #self.log.warning('skipping etype=%s; eids=%s' % (etype, str(eids)))
-                continue
 
-            element0 = self.elements[eid]
-            nnodes = len(element0.node_ids)
-            neids = len(eids)
-            node_ids = np.zeros((neids, nnodes), dtype=idtype)
-            if etype in etypes_none_nodes:
-                for ieid, eid in enumerate(eids):
-                    element = self.elements[eid]
-                    node_ids[ieid, :] = [nid  if nid is not None else 0
-                                         for nid in element.node_ids]
-                    pid = element.Pid()
-                    #nids_to_pids_map[]
-                    pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
-            else:
-                for ieid, eid in enumerate(eids):
-                    element = self.elements[eid]
-                    node_ids[ieid, :] = element.node_ids
-                    pid = element.Pid()
-                    #nids_to_pids_map[]
-                    pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
-            etype_to_nids_map[etype] = node_ids
-        for key, value in iteritems(pid_to_eids_ieids_map):
-            pid_to_eids_ieids_map[key] = np.array(value, dtype=idtype)
+        try:
+            for etype in etypes_:
+                if etype not in etypes_:
+                    continue
+                if etype in skip_elements:
+                    self.log.warning('skipping etype=%s because there are no properties' % etype)
+                    continue
+                eids = self._type_to_id_map[etype]
+                try:
+                    eid = eids[0]
+                except:
+                    #self.log.warning('skipping etype=%s; eids=%s' % (etype, str(eids)))
+                    continue
+
+                element0 = self.elements[eid]
+                nnodes = len(element0.node_ids)
+                neids = len(eids)
+                node_ids = np.zeros((neids, nnodes), dtype=idtype)
+                if etype in etypes_none_nodes:
+                    for ieid, eid in enumerate(eids):
+                        element = self.elements[eid]
+                        node_ids[ieid, :] = [nid  if nid is not None else 0
+                                             for nid in element.node_ids]
+                        pid = element.Pid()
+                        #nids_to_pids_map[]
+                        pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
+                else:
+                    try:
+                        for ieid, eid in enumerate(eids):
+                            element = self.elements[eid]
+                            node_ids[ieid, :] = element.node_ids
+                            pid = element.Pid()
+                            #nids_to_pids_map[]
+                            pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
+                    except TypeError:
+                        print(etype)
+                        print(element)
+                        raise
+                etype_to_nids_map[etype] = node_ids
+            for key, value in iteritems(pid_to_eids_ieids_map):
+                pid_to_eids_ieids_map[key] = np.array(value, dtype=idtype)
+        except OverflowError:
+            assert idtype == 'int32', 'idtype=%r while overflowing...' % idtype
+            pid_to_eids_ieids_map = self.get_pid_to_node_ids_and_elements_array(
+                pids=pids, etypes=etypes, idtype='int64')
         return pid_to_eids_ieids_map
 
     def get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True):
@@ -1533,7 +1552,7 @@ class GetCard(GetMethods):
 
         Parameters
         ----------
-        pids : List[int]
+        pids : List[int] / int
             list of property ID
         stop_if_no_eids : bool; default=True
             prevents crashing if there are no elements
@@ -1568,7 +1587,7 @@ class GetCard(GetMethods):
         if pids is None:
             pids = list(self.properties)
         elif isinstance(pids, integer_types):
-            pids = [int]
+            pids = [pids]
 
         assert isinstance(pids, (list, tuple, np.ndarray)), 'pids=%s type=%s' % (pids, type(pids))
         pid_to_eids_map = {}
@@ -1590,7 +1609,9 @@ class GetCard(GetMethods):
             for eids in itervalues(pid_to_eids_map):
                 if len(eids):
                     return pid_to_eids_map
-            raise RuntimeError('no elements found')
+            raise RuntimeError('no elements with properties found')
+        else:
+            self.log.warning('no elements with properties found')
         return pid_to_eids_map
 
     def get_node_id_to_element_ids_map(self):
