@@ -37,7 +37,7 @@ def cmd_line():
     QApplication.setApplicationVersion(pyNastran.__version__)
     inputs = get_inputs()
     MainWindow(inputs)
-    sys.exit(app.exec_())
+    app.exec_()
 
 if __name__ == '__main__':
     cmd_line()
