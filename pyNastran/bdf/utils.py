@@ -930,9 +930,9 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         # converting the xyz point arbitrary->global
         xyz_global = cp_ref.transform_node_to_global(xyz)
 
-        # a matrix global->local matrix is found
-        matrix = coord_to_ref.beta()
-        xyz_local = coord_to_ref.transformToLocal(xyz_global, matrix)
+        # now converting it to the output coordinate system
+        xyz_local = coord_to_ref.transform_node_to_local(xyz_global)
+
     return xyz_local
 
 
