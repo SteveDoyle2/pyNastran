@@ -635,7 +635,7 @@ class CBEAM(CBAR):
             nsm = self.Nsm()
             assert isinstance(mid, int), 'mid=%r' % mid
             assert isinstance(nsm, float), 'nsm=%r' % nsm
-            assert self.pid_ref.type in ['PBEAM', 'PBEAML', 'PBCOMP'], '%s%s' % (self, self.pid_ref)
+            assert self.pid_ref.type in ['PBEAM', 'PBEAML', 'PBCOMP', 'PBMSECT'], '%s%s' % (self, self.pid_ref)
             A = self.Area()
             mpl = self.MassPerLength()
             L = self.Length()

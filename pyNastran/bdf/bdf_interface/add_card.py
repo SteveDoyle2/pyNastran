@@ -60,7 +60,7 @@ from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                     GMCORD)
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
-    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
+    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
@@ -4658,6 +4658,12 @@ class AddCards(AddMethods):
         self._add_freq_object(freq)
         return freq
 
+    def add_freq3(self, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0,
+                  comment=''):
+        freq = FREQ3(f1, f2, Type, nef, cluster, comment)
+        self._add_freq_object(freq)
+        return freq
+
     def add_freq4(self, sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment=''):
         """
         Creates a FREQ4 card
@@ -4676,6 +4682,31 @@ class AddCards(AddMethods):
             a comment for the card
         """
         freq = FREQ4(sid, f1, f2, fspread, nfm, comment=comment)
+        self._add_freq_object(freq)
+        return freq
+
+    def add_freq5(sid, fractions, f1=0., f2=1e20, comment=''):
+        """
+        Creates a FREQ5 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float; default=0.0
+            Lower bound of frequency range in cycles per unit time.
+        f2 : float; default=1e20
+            Upper bound of frequency range in cycles per unit time.
+        fractions : List[float]
+            Fractions of the natural frequencies in the range F1 to F2.
+        comment : str; default=''
+            a comment for the card
+
+        .. note:: FREQ5 is only valid in modal frequency-response
+                  solutions (SOLs 111, 146, and 200) and is ignored in
+                  direct frequency response solutions.
+        """
+        freq = FREQ5(sid, fractions, f1=f1, f2=f2, comment=comment)
         self._add_freq_object(freq)
         return freq
 

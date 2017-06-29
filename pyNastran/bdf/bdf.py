@@ -80,7 +80,7 @@ from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                     GMCORD)
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
-    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4,
+    DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
@@ -500,7 +500,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'TIC', ## initial conditions - sid (set ID)
 
             ## frequencies
-            'FREQ', 'FREQ1', 'FREQ2', 'FREQ4',
+            'FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5',
 
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
@@ -2038,7 +2038,9 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'FREQ' : (FREQ, self._add_freq_object),
             'FREQ1' : (FREQ1, self._add_freq_object),
             'FREQ2' : (FREQ2, self._add_freq_object),
+            'FREQ3' : (FREQ3, self._add_freq_object),
             'FREQ4' : (FREQ4, self._add_freq_object),
+            'FREQ5' : (FREQ5, self._add_freq_object),
 
             'DOPTPRM' : (DOPTPRM, self._add_doptprm_object),
             'DESVAR' : (DESVAR, self._add_desvar_object),

@@ -561,7 +561,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 fem1.get_property_id_to_element_ids_map()
                 fem1.get_material_id_to_property_ids_map()
                 fem1.get_element_ids_list_with_pids(pids=None)
-                fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=True)
+                fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=False)
                 fem1.get_node_id_to_element_ids_map()
                 fem1.get_node_id_to_elements_map()
 

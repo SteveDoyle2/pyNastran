@@ -686,7 +686,7 @@ class BDFAttributes(object):
             'delays' : ['DELAY'],
             'rotors' : ['ROTORG', 'ROTORD'],
 
-            'frequencies' : ['FREQ', 'FREQ1', 'FREQ2', 'FREQ4'],
+            'frequencies' : ['FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5'],
 
             # direct matrix input cards
             'dmigs' : ['DMIG'],

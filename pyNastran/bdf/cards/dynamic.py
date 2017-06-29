@@ -554,19 +554,51 @@ class FREQ2(FREQ):
         #return FREQ(sid, freqs, comment=comment)
 
 
-#class FREQ3(FREQ):
-    #type = 'FREQ3'
+class FREQ3(FREQ):
+    """
+    +-------+-----+------+-------+--------+-----+---------+
+    |   1   |  2  |   3  |   4   |    5   |  6  |    7    |
+    +=======+=====+======+=======+========+=====+=========+
+    | FREQ3 | SID |  F1  |  F2   |  TYPE  | NEF | CLUSTER |
+    +-------+-----+------+-------+--------+-----+---------+
+    | FREQ3 |  6  | 20.0 | 200.0 | LINEAR | 10  |   2.0   |
+    +-------+-----+------+-------+--------+-----+---------+
+    """
+    type = 'FREQ3'
 
-    #def __init__(self, card=None, data=None, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError()
+    def __init__(self, sid, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0, comment=''):
+        if comment:
+            self.comment = comment
+        if f2 is None:
+            f2 = f1
+        self.sid = sid
+        self.f1 = f1
+        self.f2 = f2
+        self.Type = Type
+        self.nef = nef
+        self.cluster = cluster
 
-    #def write_card(self, size=8, is_double=False):
-        #card = self.repr_fields()
-        #if size == 8:
-            #return self.comment + print_card_8(card)
-        #return self.comment + print_card_16(card)
+    ##def get_freqs(self):
+        ##raise NameError()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        f1 = double(card, 2, 'f1')
+        f2 = double_or_blank(card, 3, 'f2', f1)
+        Type = string_or_blank(card, 4, 'Type', 'LINEAR')
+        nef = integer_or_blank(card, 5, 'nef', 10)
+        cluster = double_or_blank(card, 6, 'cluster', 1.0)
+        return FREQ3(sid, f1, f2=f2, Type=Type, nef=nef, cluster=cluster, comment=comment)
+
+    def raw_fields(self):
+        return ['FREQ3', self.sid, self.f1, self.f2, self.Type, self.nef, self.cluster]
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class FREQ4(FREQ):
@@ -647,19 +679,84 @@ class FREQ4(FREQ):
         return self.comment + print_card_16(card)
 
 
-#class FREQ5(FREQ):
-    #type = 'FREQ5'
+class FREQ5(FREQ):
+    """
+    Defines a set of frequencies used in the solution of modal
+    frequency-response problems by specification of a frequency
+    range and fractions of the natural frequencies within that range.
 
-    #def __init__(self, card=None, data=None, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError()
+    +-------+------+------+--------+------+-----+-----+-----+------+
+    |   1   |  2   |   3  |   4    |   5  |  6  |  7  |  8  |   9  |
+    +=======+======+======+========+======+=====+=====+=====+======+
+    | FREQ5 | SID  |  F1  |   F2   |  FR1 | FR2 | FR3 | FR4 | FR5  |
+    +-------+------+------+--------+------+-----+-----+-----+------+
 
-    #def write_card(self, size=8, is_double=False):
-        #card = self.repr_fields()
-        #if size == 8:
-            #return self.comment + print_card_8(card)
-        #return self.comment + print_card_16(card)
+    +-------+------+------+--------+------+-----+-----+-----+------+
+    | FREQ5 |  6   | 20.0 | 2000.0 | 1.0  | 0.6 | 0.8 | 0.9 | 0.95 |
+    +-------+------+------+--------+------+-----+-----+-----+------+
+    |       | 1.05 | 1.1  |  1.2   |      |     |     |     |      |
+    +-------+------+------+--------+------+-----+-----+-----+------+
+    """
+    type = 'FREQ5'
+
+    def __init__(self, sid, fractions, f1=0., f2=1e20, comment=''):
+        """
+        Creates a FREQ5 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float; default=0.0
+            Lower bound of frequency range in cycles per unit time.
+        f2 : float; default=1e20
+            Upper bound of frequency range in cycles per unit time.
+        fractions : List[float]
+            Fractions of the natural frequencies in the range F1 to F2.
+        comment : str; default=''
+            a comment for the card
+
+        .. note:: FREQ5 is only valid in modal frequency-response
+                  solutions (SOLs 111, 146, and 200) and is ignored in
+                  direct frequency response solutions.
+        """
+        if comment:
+            self.comment = comment
+        if f2 is None:
+            f2 = f1
+        self.sid = sid
+        self.f1 = f1
+        self.f2 = f2
+        self.fractions = fractions
+
+    def validate(self):
+        assert len(self.fractions) > 0, 'FREQ5: fractions=%s' % self.fractions
+
+    #def get_freqs(self):
+        #raise NameError()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        f1 = double(card, 2, 'f1')
+        f2 = double_or_blank(card, 3, 'f2', f1)
+
+        i = 1
+        fractions = []
+        for ifield in range(4, len(card)):
+            fraction = double(card, ifield, 'FR%i' % (i))
+            fractions.append(fraction)
+            i += 1
+        return FREQ5(sid, fractions, f1=f2, f2=f2, comment=comment)
+
+    def raw_fields(self):
+        return ['FREQ5', self.sid, self.f1, self.f2] + self.fractions
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class NLPARM(BaseCard):
