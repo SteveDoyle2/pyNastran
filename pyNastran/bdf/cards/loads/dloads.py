@@ -527,7 +527,7 @@ class RLOAD1(DynamicLoad):
 
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
-        self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
+        #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc_ref = model.TableD(self.tc, msg=msg)
         if isinstance(self.td, integer_types) and self.td:
