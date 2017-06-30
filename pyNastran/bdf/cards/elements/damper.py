@@ -136,6 +136,8 @@ class CDAMP1(LineDamper):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def get_edge_ids(self):
@@ -154,16 +156,13 @@ class CDAMP1(LineDamper):
             the BDF object
         """
         msg = ' which is required by CDAMP1 eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
         pid = self.pid
         if pid in model.properties:
-            self.pid = model.Property(pid, msg=msg)
-            self.pid_ref = self.pid
+            self.pid_ref = model.Property(pid, msg=msg)
         elif pid in model.pdampt:
-            self.pid = model.pdampt[pid]
-            self.pid_ref = self.pid
+            self.pid_ref = model.pdampt[pid]
         else:
             pids = model.properties.keys() + model.pdampt.keys()
             pids.sort()

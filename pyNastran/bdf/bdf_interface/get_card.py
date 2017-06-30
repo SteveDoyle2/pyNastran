@@ -1514,6 +1514,9 @@ class GetCard(GetMethods):
                     continue
 
                 element0 = self.elements[eid]
+                #if etype in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
+                    #nnodes_array = np.zeros(neids, dtype='int32')
+                    #eids_min =
                 nnodes = len(element0.node_ids)
                 neids = len(eids)
                 node_ids = np.zeros((neids, nnodes), dtype=idtype)

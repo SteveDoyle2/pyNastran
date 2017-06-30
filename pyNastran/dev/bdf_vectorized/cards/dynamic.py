@@ -105,8 +105,7 @@ class DELAY(BaseCard):
             #the BDF object
         #"""
         #msg = ', which is required by DELAY sid=%s' % self.sid
-        #self.nodes = model.Node(self.node_ids, msg=msg)
-        #self.nodes_ref = self.nodes
+        #self.nodes_ref = model.Node(self.node_ids, msg=msg)
 
     #@property
     #def node_id1(self):
@@ -212,8 +211,7 @@ class DPHASE(BaseCard):
             #the BDF object
         #"""
         #msg = ', which is required by DPHASE sid=%s' % self.sid
-        #self.nodes = model.Nodes(self.node_ids, msg=msg)
-        #self.nodes_ref = self.nodes
+        #self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
     #@property
     #def node_id1(self):

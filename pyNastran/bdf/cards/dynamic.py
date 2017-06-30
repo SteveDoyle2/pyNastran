@@ -88,6 +88,7 @@ class DELAY(BaseCard):
         self.components = components
         #: Time delay (tau) for designated point Pi and component Ci. (Real)
         self.delays = delays
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -137,23 +138,23 @@ class DELAY(BaseCard):
             the BDF object
         """
         msg = ', which is required by DELAY sid=%s' % self.sid
-        self.nodes = model.Node(self.node_ids, msg=msg)
+        self.nodes_ref = model.Node(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     @property
     def node_id1(self):
-        if isinstance(self.nodes[0], integer_types):
-            return self.nodes[0]
-        return self.nodes_ref[0].nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[0].nid
+        return self.nodes[0]
 
     @property
     def node_id2(self):
-        if isinstance(self.nodes[1], integer_types):
-            return self.nodes[1]
-        return self.nodes_ref[1].nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[1].nid
+        return self.nodes[1]
 
     @property
     def node_ids(self):
@@ -230,6 +231,7 @@ class DPHASE(BaseCard):
         self.nodes = nodes
         self.components = components
         self.phase_leads = phase_leads
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -276,30 +278,28 @@ class DPHASE(BaseCard):
             the BDF object
         """
         msg = ', which is required by DPHASE sid=%s' % self.sid
-        self.nodes = model.Nodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def get_dphase_at_freq(self, freq):
         return self.nodes, self.components, self.phase_leads
 
-    @property
     def node_id1(self):
-        if isinstance(self.nodes[0], integer_types):
-            return self.nodes[0]
-        return self.nodes_ref[0].nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[0].nid
+        return self.nodes[0]
 
     @property
     def node_id2(self):
-        if isinstance(self.nodes[1], integer_types):
-            return self.nodes[1]
-        return self.nodes_ref[1].nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[1].nid
+        return self.nodes[1]
 
     @property
     def node_ids(self):
@@ -310,12 +310,8 @@ class DPHASE(BaseCard):
 
     def raw_fields(self):
         list_fields = ['DPHASE', self.sid]
-        for nid, comp, delay in zip(self.nodes, self.components, self.phase_leads):
-            if isinstance(nid, integer_types):
-                nidi = nid
-            else:
-                nidi = nid.nid
-            list_fields += [nidi, comp, delay]
+        for nid, comp, delay in zip(self.node_ids, self.components, self.phase_leads):
+            list_fields += [nid, comp, delay]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

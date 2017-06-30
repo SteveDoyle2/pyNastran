@@ -438,7 +438,6 @@ class CTRIA3(TriShell):
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
-        self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
         self.theta_mcid_ref = None  # type: Optional[Any]
 
@@ -531,10 +530,8 @@ class CTRIA3(TriShell):
             the BDF object
         """
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
@@ -948,10 +945,8 @@ class CTRIA6(TriShell):
             the BDF object
         """
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.node_ids, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -2951,10 +2946,8 @@ class CQUADR(QuadShell):
             the BDF object
         """
         msg = ' which is required by CQUADR eid=%s' % self.eid
-        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -3153,10 +3146,8 @@ class CPLSTS3(TriShell):
             the BDF object
         """
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids

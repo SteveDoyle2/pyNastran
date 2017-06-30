@@ -73,11 +73,7 @@ from pyNastran.converters.nastran.displacements import (
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
-try:
-    from pyNastran.op2.op2_geom import OP2Geom
-    is_geom = True
-except ImportError:
-    is_geom = False
+from pyNastran.op2.op2_geom import OP2Geom
 
 GREEN = (0., 1., 0.)
 BLUE = (0., 0., 1.)
@@ -100,23 +96,32 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         gets the Nastran wildcard loader used in the file load menu
         """
-        if is_geom:
-            geom_methods1 = 'Nastran BDF ''(*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch)'
-            geom_methods2 = 'Nastran Punch (*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch)'
-        else:
-            geom_methods1 = 'Nastran BDF ''(*.bdf; *.dat; *.nas; *.ecd; *.pch)'
-            geom_methods2 = 'Nastran Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
+        geom_methods_bdf = 'Nastran Geometry - BDF ''(*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch)'
+        geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
+        combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
 
-        data_bdf = (
+        data_geom = (
             'nastran',
-            geom_methods1, self.load_nastran_geometry,
-            'Nastran OP2 (*.op2)', self.load_nastran_results)
-        data_pch = (
-            'nastran',
-            geom_methods2, self.load_nastran_geometry,
+            geom_methods_bdf, self.load_nastran_geometry,
             'Nastran OP2 (*.op2)', self.load_nastran_results)
 
-        return [data_bdf, data_pch]
+        data_geom_pch = (
+            'nastran',
+            geom_methods_pch, self.load_nastran_geometry,
+            'Nastran OP2 (*.op2)', self.load_nastran_results)
+
+        data_geom_results = (
+            'nastran',
+            combined_methods_op2, self.load_nastran_geometry_and_results,
+            'Nastran OP2 (*.op2)', self.load_nastran_results)
+
+        return [data_geom, data_geom_pch]
+        #return [data_geom, data_geom_pch, data_geom_results]
+
+    def load_nastran_geometry_and_results(self, op2_filename, name='main', plot=True):
+        """loads geometry and results, so you don't have to double define the same BDF/OP2"""
+        self.load_nastran_geometry(op2_filename, name='main', plot=False)
+        self.load_nastran_results(self.model, name='main', plot=True)
 
     def _cleanup_nastran_tools_and_menu_items(self):
         """
@@ -390,8 +395,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             punch = True
 
         self.model_type = 'nastran'
-        #print('ext=%r is_geom=%s' % (ext, is_geom))
-        if ext == '.op2' and is_geom:
+        if ext == '.op2':
             model = OP2Geom(make_geom=True, debug=False, log=self.log,
                             debug_file=None)
             model.clear_results()
@@ -631,8 +635,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     print(sout)
 
             assert icase is not None
-            icase = self._plot_applied_loads(
-                model, cases, formii, icase, subcase_id, xref_loads=xref_loads)
+            if self.normals is not None:
+                icase = self._plot_applied_loads(
+                    model, cases, formii, icase, subcase_id, xref_loads=xref_loads)
 
             if len(formii):
                 form0.append(formi)
@@ -1595,6 +1600,177 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _get_sphere_size(self, dim_max):
         return 0.01 * dim_max
 
+    def map_elements3(self, points, nid_map, model, j, dim_max,
+                      nid_cp_cd, plot=True, xref_loads=True):  # pragma: no cover
+        neids = len(model.elements)
+        ietypes = []
+        pids = []
+        #eids = []
+        pids_array = np.zeros(neids, dtype='int32')
+        eids_array = np.zeros(neids, dtype='int32')
+        nids_list = []
+        ieid = 0
+        cell_offset = 0
+
+        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
+        if isize == 4:
+            dtype = 'int32' # TODO: can we include endian?
+        elif isize == 8:
+            dtype = 'int64'
+        else:
+            msg = 'elements.dtype=%s' % str(elements.dtype)
+            raise NotImplementedError(msg)
+        print('isize = ', isize)
+        print('dtype = ', dtype)
+        cell_types_array = np.zeros(neids, dtype=dtype)
+        cell_offsets_array = np.zeros(neids, dtype=dtype)
+
+        cell_type_line = vtk.vtkLine().GetCellType()
+        cell_type_tri3 = vtkTriangle().GetCellType()
+        cell_type_quad4 = vtkQuad().GetCellType()
+        cell_type_tetra4 = vtkTetra().GetCellType()
+        cell_type_hexa8 = vtkHexahedron().GetCellType()
+        cell_type_hexa20 = vtkQuadraticHexahedron().GetCellType()
+        #1  = vtk.vtkVertex().GetCellType()
+        #3  = vtkLine().GetCellType()
+        #5  = vtkTriangle().GetCellType()
+        #9  = vtk.vtkQuad().GetCellType()
+        #10 = vtkTetra().GetCellType()
+        #vtkPenta().GetCellType()
+        #vtkHexa().GetCellType()
+        #vtkPyram().GetCellType()
+
+        skipped_etypes = set([])
+        all_nids = nid_cp_cd[:, 0]
+        for ieid, (eid, elem) in enumerate(sorted(iteritems(model.elements))):
+            etype = elem.type
+            if etype == 'CTRIA3':
+                nids = elem.nodes
+                pid = elem.pid
+                nnodes = 3
+                cell_type = cell_type_tri3 # 5
+            elif etype == 'CQUAD4':
+                nids = elem.nodes
+                pid = elem.pid
+                nnodes = 4
+                cell_type = cell_type_quad4 #9
+            elif etype == 'CTETRA':
+                # TODO: assuming 4
+                nids = elem.nodes[:4]
+                pid = elem.pid
+                nnodes = 4
+                cell_type = cell_type_tetra4
+            elif etype == 'CHEXA':
+                # TODO: assuming 8
+                nids = elem.nodes[:8]
+                pid = elem.pid
+                nnodes = 8
+                cell_type = cell_type_hexa8
+            elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
+                           'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                           'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
+                # TODO: assuming 2
+                nids = elem.nodes
+                pid = elem.pid
+                cell_type = cell_type_line
+            elif etype in ['CBAR', 'CBEAM']:
+                nids = elem.nodes
+                pid = elem.pid
+                cell_type = cell_type_line
+            else:
+                raise NotImplementedError(elem)
+                #skipped_etypes.add(etype)
+                #continue
+            for nid in nids:
+                assert isinstance(nid, integer_types), etype
+                assert nid != 0, elem
+
+            nids_list.append(nnodes)
+            inids = np.searchsorted(all_nids, nids)
+            nids_list.extend(inids)
+            eids_array[ieid] = eid
+            pids_array[ieid] = pid
+            cell_types_array[ieid] = cell_type
+            cell_offsets_array[ieid] = cell_offset
+            cell_offset += nnodes + 1
+
+        if skipped_etypes:
+            self.log.info('skipped_etypes = %s' % skipped_etypes)
+        assert len(pids_array) == neids, 'neids=%s len(pids_array)=%s' % (neids, len(pids_array))
+
+        elements_array = np.array(nids_list, dtype=dtype)
+        #elements_array = elements_array.astype(dtype)
+
+        self.log.info('elements_array = %s' % elements_array)
+        self.log.info('cell_offsets_array = %s' % cell_offsets_array)
+        self.log.info('cell_types_array = %s' % cell_types_array)
+
+        from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+
+        # Create the array of cells
+        cells_id_type = numpy_to_vtkIdTypeArray(elements_array, deep=1)
+        vtk_cells = vtk.vtkCellArray()
+        vtk_cells.SetCells(neids, cells_id_type)
+
+        # Cell types
+        vtk_cell_types = numpy_to_vtk(
+            cell_types_array, deep=0,
+            array_type=vtk.vtkUnsignedCharArray().GetDataType())
+
+        vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
+                                        array_type=vtk.VTK_ID_TYPE)
+
+        self.grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+
+        nid_to_pid_map = None
+        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        icase = 0
+        cases = OrderedDict()
+        form = ['Geometry', None, []]
+
+        #pids_array = np.array(pids)
+        subcase_id = 0
+        nid_res = GuiResult(subcase_id, 'Node ID', 'Node ID', 'node', all_nids,
+                            mask_value=0,
+                            nlabels=None,
+                            labelsize=None,
+                            ncolors=None,
+                            colormap='jet',
+                            data_format=None,
+                            uname='GuiResult')
+        eid_res = GuiResult(subcase_id, 'Element ID', 'Element ID', 'centroid', eids_array,
+                            mask_value=0,
+                            nlabels=None,
+                            labelsize=None,
+                            ncolors=None,
+                            colormap='jet',
+                            data_format=None,
+                            uname='GuiResult')
+        pid_res = GuiResult(subcase_id, 'Property ID', 'Property ID', 'centroid', pids_array,
+                            mask_value=0,
+                            nlabels=None,
+                            labelsize=None,
+                            ncolors=None,
+                            colormap='jet',
+                            data_format=None,
+                            uname='GuiResult')
+        form0 = form[2]
+
+        cases[icase] = (nid_res, (0, 'Node ID'))
+        form0.append(('Node ID', icase, []))
+        icase += 1
+
+        cases[icase] = (eid_res, (0, 'Element ID'))
+        form0.append(('Element ID', icase, []))
+        icase += 1
+
+        cases[icase] = (pid_res, (0, 'Property ID'))
+        form0.append(('Property ID', icase, []))
+        icase += 1
+
+
+        return nid_to_pid_map, icase, cases, form
+
     def map_elements2(self, points, nid_map, model, j, dim_max,
                       nid_cp_cd, plot=True, xref_loads=True):  # pragma: no cover
         #model = BDF()
@@ -1968,6 +2144,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         grid = self.grid
         grid.SetPoints(points)
+
+        #return self.map_elements3(points, nid_map, model, j, dim_max,
+                                  #nid_cp_cd, plot=plot, xref_loads=xref_loads)
         #return self.map_elements2(points, nid_map, model, j, dim_max,
                                   #nid_cp_cd, plot=plot, xref_loads=xref_loads)
 
@@ -3742,76 +3921,80 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        print("trying to read...%s" % op2_filename)
-        ext = os.path.splitext(op2_filename)[1].lower()
+        if isinstance(op2_filename, str):
+            print("trying to read...%s" % op2_filename)
+            ext = os.path.splitext(op2_filename)[1].lower()
 
-        if ext == '.op2':
-            model = OP2(log=self.log, debug=True)
+            if ext == '.op2':
+                model = OP2(log=self.log, debug=True)
 
-            if 0:
-                model._results.saved = set([])
-                all_results = model.get_all_results()
-                desired_results = [
-                    # nodal
-                    # ---------
-                    'displacements', 'velocities', 'accelerations', 'temperatures',
-                    'constraint_forces', 'spc_forces', 'mpc_forces', 'eigenvectors',
+                if 0:
+                    model._results.saved = set([])
+                    all_results = model.get_all_results()
+                    desired_results = [
+                        # nodal
+                        # ---------
+                        'displacements', 'velocities', 'accelerations', 'temperatures',
+                        'constraint_forces', 'spc_forces', 'mpc_forces', 'eigenvectors',
 
-                    #'gridPointForces',
-                    #'stress',
+                        #'gridPointForces',
+                        #'stress',
 
-                    # untested
-                    'load_vectors',
-                    'applied_loads',
-                    'force_vectors',
+                        # untested
+                        'load_vectors',
+                        'applied_loads',
+                        'force_vectors',
 
-                    # ---------
-                    # centroidal
-                    'stress',
-                    'chexa_stress', 'cpenta_stress', 'ctetra_stress',
+                        # ---------
+                        # centroidal
+                        'stress',
+                        'chexa_stress', 'cpenta_stress', 'ctetra_stress',
 
-                    'ctria3_stress', 'ctria3_stress',
-                    'cquad8_stress''cquad4_stress',
+                        'ctria3_stress', 'ctria3_stress',
+                        'cquad8_stress''cquad4_stress',
 
-                    'ctria3_composite_stress', 'ctria3_composite_stress',
-                    'cquad8_composite_stress''cquad4_composite_stress',
+                        'ctria3_composite_stress', 'ctria3_composite_stress',
+                        'cquad8_composite_stress''cquad4_composite_stress',
 
-                    'cbar_stress', 'cbeam_stress',
-                    'crod_stress', 'conrod_stress', 'ctube_stress',
-                    'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
-                    #=================================================
-                    'strain',
-                    'chexa_strain', 'cpenta_strain', 'ctetra_strein',
+                        'cbar_stress', 'cbeam_stress',
+                        'crod_stress', 'conrod_stress', 'ctube_stress',
+                        'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
+                        #=================================================
+                        'strain',
+                        'chexa_strain', 'cpenta_strain', 'ctetra_strein',
 
-                    'ctria3_strain', 'ctria3_strain',
-                    'cquad8_strain', 'cquad4_strain',
+                        'ctria3_strain', 'ctria3_strain',
+                        'cquad8_strain', 'cquad4_strain',
 
-                    'ctria3_composite_strain', 'ctria3_composite_strain',
-                    'cquad8_composite_strain', 'cquad4_composite_strain',
+                        'ctria3_composite_strain', 'ctria3_composite_strain',
+                        'cquad8_composite_strain', 'cquad4_composite_strain',
 
-                    'cbar_strain', 'cbeam_strain',
-                    'crod_strain', 'conrod_strain', 'ctube_strain',
-                    'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
-                ]
-                for result in desired_results:
-                    if result in all_results:
-                        model._results.saved.add(result)
-            model.read_op2(op2_filename, combine=False)
+                        'cbar_strain', 'cbeam_strain',
+                        'crod_strain', 'conrod_strain', 'ctube_strain',
+                        'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
+                    ]
+                    for result in desired_results:
+                        if result in all_results:
+                            model._results.saved.add(result)
+                model.read_op2(op2_filename, combine=False)
 
-            if not self.is_testing:
-                self.log.info(model.get_op2_stats())
-            # print(model.get_op2_stats())
+                if not self.is_testing:
+                    self.log.info(model.get_op2_stats())
+                # print(model.get_op2_stats())
 
-        elif ext == '.pch':
-            raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
-        #elif ext == '.f06':
-            #model = F06(log=self.log, debug=True)
-            #model.set_vectorization(True)
-            #model.read_f06(op2_filename)
+            elif ext == '.pch':
+                raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
+            #elif ext == '.f06':
+                #model = F06(log=self.log, debug=True)
+                #model.set_vectorization(True)
+                #model.read_f06(op2_filename)
+            else:
+                #print("error...")
+                msg = 'extension=%r is not supported; filename=%r' % (ext, op2_filename)
+                raise NotImplementedError(msg)
         else:
-            #print("error...")
-            msg = 'extension=%r is not supported; filename=%r' % (ext, op2_filename)
-            raise NotImplementedError(msg)
+            model = op2_filename
+            op2_filename = op2_filename.filename
 
         if self.save_data:
             self.model_results = model
