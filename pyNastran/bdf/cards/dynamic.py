@@ -290,6 +290,7 @@ class DPHASE(BaseCard):
     def get_dphase_at_freq(self, freq):
         return self.nodes, self.components, self.phase_leads
 
+    @property
     def node_id1(self):
         if self.nodes_ref is not None:
             return self.nodes_ref[0].nid
@@ -303,6 +304,8 @@ class DPHASE(BaseCard):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         node_ids = [self.node_id1]
         if len(self.components) == 2:
             node_ids.append(self.node_id2)

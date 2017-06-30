@@ -503,7 +503,7 @@ class XrefMesh(BDFAttributes):
                 #raise
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
-                self._stored_xref_errors.append((load, var))
+                self._stored_xref_errors.append((dphase, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 

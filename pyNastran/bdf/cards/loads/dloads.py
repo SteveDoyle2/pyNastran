@@ -190,6 +190,11 @@ class ACSRCE(BaseCard):
         #self.load_ids_ref = self.load_ids
 
     def uncross_reference(self):
+        self.power = self.Power()
+        self.dphase = self.DPhase()
+        self.delay = self.Delay()
+        #self.sloads = self.
+
         #self.tb = self.Tb()
         #self.tp = self.Tp()
         #self.delay = self.delay_id

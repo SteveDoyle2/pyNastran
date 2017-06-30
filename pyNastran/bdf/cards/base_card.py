@@ -490,9 +490,9 @@ class Element(BaseCard):
 
     def validate_node_ids(self, allow_empty_nodes=False):
         # type: (bool) -> None
-        nodes = []
         if allow_empty_nodes:
-            nids2 = [nid for nid in self.nodes if nid not in [None, 0]]
+            # only put valid nodes in here
+            nids2 = [nid for nid in self.nodes ]
             if len(nids2) == 0:
                 msg = '%s requires at least one node id be specified; node_ids=%s' % (
                     self.type, nids2)
@@ -502,25 +502,31 @@ class Element(BaseCard):
             #if len(nids2) != len(unique_nodes):
                 #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids2)
                 #raise IndexError(msg)
+
+            # remove 0 nodes
+            nodes = [nid if nid is not 0 else None
+                     for nid in self.nodes]
         else:
-            pass
+            nodes = self.nodes
             #unique_nodes = unique(self.nodes)
             #if len(self.nodes) != len(unique_nodes):
                 #msg = '%s requires that all node ids be unique; node_ids=%s' % (
                     #self.type, self.nodes)
                 #raise IndexError(msg)
 
-        for nid in self.nodes:
+
+        nodes2 = []
+        for nid in nodes:
             if isinstance(nid, integer_types):
-                nodes.append(nid)
+                nodes2.append(nid)
             elif nid is None and allow_empty_nodes:
-                nodes.append(None)
+                nodes2.append(None)
             else:  # string???
                 #nodes.append(int(nid))
                 msg = 'this element may have missing nodes...\n'
                 msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (self.nodes, type(nid))
                 raise RuntimeError(msg)
-        self.nodes = nodes
+        self.nodes = nodes2
 
     @property
     def faces(self):

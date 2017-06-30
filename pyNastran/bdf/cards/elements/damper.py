@@ -138,6 +138,8 @@ class CDAMP1(LineDamper):
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes
+        #return [nid if nid else None
+                #for nid in self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)]
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def get_edge_ids(self):
