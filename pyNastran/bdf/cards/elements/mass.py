@@ -1180,6 +1180,44 @@ class CONM2(PointMassElement):
             X2 = self.nid_ref.get_position() + dx
         return X2
 
+    def Centroid_no_xref(self, model):
+        """
+        This method seems way more complicated than it needs to be thanks
+        to all these little caveats that don't seem to be supported.
+        """
+        cid = self.cid
+        nid_ref = model.Node(self.nid)
+        if cid == 0:
+            # no transform needed
+            X2 = nid_ref.get_position() + self.X
+        elif cid == -1:
+            # case X1, X2, X3 are the coordinates, not offsets, of the center of gravity of
+            # the mass in the basic coordinate system.
+
+            # 4. If CID = -1, offsets are internally computed as the difference between the grid
+            # point location and X1, X2, X3.
+            # this statement is not supported...
+            return self.X
+        else:
+            cid_ref = model.Coord(self.cid)
+            # Offset distances from the grid point to the center of gravity of the mass
+            # in the coordinate system
+
+            # If CID > 0, then X1, X2, and X3 are defined by a local Cartesian system, even
+            # if CID references a spherical or cylindrical coordinate system. This is similar
+            # to the manner in which displacement coordinate systems are defined.
+            # this statement is not supported...
+
+            # convert self.X into the global frame
+            x = cid_ref.transform_node_to_global(self.X)
+
+            # self.X is an offset
+            dx = x - cid_ref.origin
+
+            # the actual position of the CONM2
+            X2 = nid_ref.get_position() + dx
+        return X2
+
     def center_of_mass(self):
         return self.Centroid()
 

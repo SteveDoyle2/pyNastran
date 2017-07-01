@@ -139,18 +139,21 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]
-            pid = elem.pid_ref
-            assert not isinstance(pid, integer_types), elem
-            if pid.type in ['PBAR', 'PBEAM']:
+            pid_ref = elem.pid_ref
+            if pid_ref is None:
+                pid_ref = model.Property(elem.pid)
+            assert not isinstance(pid_ref, integer_types), elem
+            ptype = pid_ref.type
+            if ptype in ['PBAR', 'PBEAM']:
                 bar_type = 'bar'
-            elif pid.type in ['PBEAM']:
+            elif ptype in ['PBEAM']:
                 bar_type = 'beam'
-            elif pid.type in ['PBARL', 'PBEAML']:
-                bar_type = pid.Type
+            elif ptype in ['PBARL', 'PBEAML']:
+                bar_type = pid_ref.Type
             else:
                 if debug:
-                    print('NotImplementedError(pid)')
-                raise NotImplementedError(pid)
+                    print('NotImplementedError(pid_ref)')
+                raise NotImplementedError(pid_ref)
             #print('bar_type =', bar_type)
 
             if debug:

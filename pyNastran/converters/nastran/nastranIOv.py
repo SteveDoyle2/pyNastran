@@ -1860,7 +1860,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif etype in ['CBAR', 'CBEAM']:
                 nids = elem.nodes
                 pid = elem.pid
-                areai = elem.pid_ref.Area()
+                pid_ref = model.Property(pid)
+                areai = pid_ref.Area()
                 cell_type = cell_type_line
                 inids = np.searchsorted(all_nids, nids)
                 p1, p2 = xyz_cid0[inids, :]
@@ -1870,7 +1871,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif etype in ['CROD', 'CTUBE']:
                 nids = elem.nodes
                 pid = elem.pid
-                areai = elem.pid_ref.Area()
+                pid_ref = model.Property(pid)
+                areai = pid_ref.Area()
                 cell_type = cell_type_line
                 inids = np.searchsorted(all_nids, nids)
                 p1, p2 = xyz_cid0[inids, :]
@@ -2307,7 +2309,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #----------------------------------------------------------
         # finishing up vtk
         # TODO: hardcoded
-        min_edge_length = 10.
         self.set_glyph_scale_factor(np.nanmean(min_edge_length) * 2.5)  # was 1.5
 
         grid.Modified()
