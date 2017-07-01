@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pyNastran.gui.menus.manage_actors import CustomQTableView
+from pyNastran.gui.menus.manage_actors import SingleChoiceQTableView
 from six import iteritems
 from PyQt4 import QtCore, QtGui
 from QtGui import QColorDialog
@@ -43,7 +43,7 @@ class EditBoundaryConditions(QtGui.QDialog):
         items = keys
         header_labels = ['Groups']
         table_model = Model(items, header_labels, self)
-        view = CustomQTableView(self) #Call your custom QTableView here
+        view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
         view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         self.table = view

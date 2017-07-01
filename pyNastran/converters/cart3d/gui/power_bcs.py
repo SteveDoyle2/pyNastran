@@ -11,7 +11,7 @@ from PyQt4 import QtCore, QtGui
 from QtGui import QColorDialog
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
-from pyNastran.gui.menus.manage_actors import Model, CustomQTableView
+from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
 
 
 
@@ -63,7 +63,7 @@ class BreakSurfaceMenu(QtGui.QDialog):
         items = ['Node %i' % val for val in keys]
         header_labels = ['Nodes']
         table_model = Model(items, header_labels, self)
-        view = CustomQTableView(self) #Call your custom QTableView here
+        view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
         view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         self.table = view
