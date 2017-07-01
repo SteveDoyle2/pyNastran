@@ -8,28 +8,31 @@ http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-wo
 from __future__ import print_function
 from six import iteritems
 
+
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.gui_interface.common import PyDialog
 if qt_version == 4:
+    from PyQt4.QtCore import Qt
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
         QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup, QColorDialog,
+        QButtonGroup, QColorDialog, QAbstractItemView,
     )
 elif qt_version == 5:
+    from PyQt5.QtCore import Qt
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
         QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup, QColorDialog,
+        QButtonGroup, QColorDialog, QAbstractItemView,
     )
 elif qt_version == 'pyside':
     from PySide import QtCore, QtGui
     from PySide.QtGui import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
         QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup, QColorDialog,
+        QButtonGroup, QColorDialog, QAbstractItemView,
     )
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
@@ -39,11 +42,13 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.testing_methods import CoordProperties
 
 
-class CustomQTableView(QTableView):
+class SingleChoiceQTableView(QTableView):
     def __init__(self, *args, **kwargs):
         self.parent2 = args[0]
-        #super(CustomQTableView, self).__init__()
+        #super(SingleChoiceQTableView, self).__init__()
         QTableView.__init__(self, *args, **kwargs) #Use QTableView constructor
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def update_data(self, data):
         #items = self.getModel()
@@ -63,12 +68,18 @@ class CustomQTableView(QTableView):
                 #data[row].append(str(model.data(index, role).toString()))
         #return data
 
-    def mouseDoubleClickEvent(self, event):
+    #def mouseDoubleClickEvent(self, event):
         #self.last = "Double Click"
-        index = self.currentIndex()
-        self.parent2.update_active_key(index)
+        #index = self.currentIndex()
+        #self.parent2.update_active_key(index)
 
     #def mousePressEvent(self, event):
+    def mouseReleaseEvent(self, event):
+        index = self.currentIndex()
+        #print('index.row() =', index.row())
+        self.selectRow(index.row())
+        self.parent2.update_active_key(index)
+
         #index = self.currentIndex()
         #self.parent2.update_active_key(index)
 
@@ -85,10 +96,29 @@ class CustomQTableView(QTableView):
             #self.message = "Click"
             #self.update()
 
-    #def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
+    def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
         #if event.key() == QtCore.Qt.Key_Escape:
             #self.close()
         #return
+        key = event.key()
+        if key == Qt.Key_Delete:
+            index = self.currentIndex()
+            self.parent().on_delete(index.row())
+            #print('pressed delete')
+        elif key in [Qt.Key_Up, Qt.Key_Left]:
+            index = self.currentIndex()
+            nrows = len(self.getModel())
+            irow = max(0, index.row() - 1)
+            irow = self.selectRow(irow)
+            #print('pressed up; nrows=%s' % nrows)
+        elif key in [Qt.Key_Down, Qt.Key_Right]:
+            index = self.currentIndex()
+            nrows = len(self.getModel())
+            irow = min(nrows - 1, index.row() + 1)
+            irow = self.selectRow(irow)
+            #print('pressed down; nrows=%s' % nrows)
+        else:
+            print('pressed %r' % key)
 
 class Model(QtCore.QAbstractTableModel):
 
@@ -201,12 +231,15 @@ class EditGeometryProperties(PyDialog):
 
         header_labels = ['Groups']
         table_model = Model(items, header_labels, self)
-        view = CustomQTableView(self) #Call your custom QTableView here
+        view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
         if qt_version == 4:
             view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
         self.table = view
+        #self.opacity_edit.valueChanged.connect(self.on_opacity)
+        #mListWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(itemClicked(QListWidgetItem*)));
+        #self.table.itemClicked.connect(self.table.mouseDoubleClickEvent)
 
         actor_obj = data[self.active_key]
         name = actor_obj.name
@@ -352,6 +385,10 @@ class EditGeometryProperties(PyDialog):
 
         self.create_layout()
         self.set_connections()
+
+    def on_delete(self, irow):
+        print('EditGeometryProperties.on_delete %r' % irow)
+        pass
 
     def on_update_geometry_properties_window(self, data):
         """Not Implemented"""
