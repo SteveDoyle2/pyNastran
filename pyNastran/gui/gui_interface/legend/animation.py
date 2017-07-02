@@ -138,7 +138,7 @@ class AnimationWindow(PyDialog):
 
         self.fps = QLabel("Frames/Second:")
         self.fps_edit = QSpinBox(self)
-        self.fps_edit.setRange(10, 60)
+        self.fps_edit.setRange(1, 60)
         self.fps_edit.setSingleStep(1)
         self.fps_edit.setValue(self._default_fps)
         self.fps_button = QPushButton("Default")
@@ -313,6 +313,10 @@ class AnimationWindow(PyDialog):
         horizontal_vertical_group.addButton(self.onesided_radio)
         horizontal_vertical_group.addButton(self.twosided_radio)
 
+        # animate in gui
+        self.animate_in_gui_checkbox = QCheckBox("Animate In GUI?")
+        self.animate_in_gui_checkbox.setChecked(True)
+
         # make images
         self.make_images_checkbox = QCheckBox("Make images?")
         self.make_images_checkbox.setChecked(True)
@@ -341,6 +345,7 @@ class AnimationWindow(PyDialog):
 
         # bottom buttons
         self.step_button = QPushButton("Step")
+        self.stop_button = QPushButton("Stop")
         self.run_button = QPushButton("Run All")
 
         #self.apply_button = QPushButton("Apply")
@@ -366,6 +371,7 @@ class AnimationWindow(PyDialog):
         self.gif_button.clicked.connect(self.on_default_name)
 
         self.step_button.clicked.connect(self.on_step)
+        self.stop_button.clicked.connect(self.on_stop)
         self.run_button.clicked.connect(self.on_run)
 
         #self.animate_scale_radio.clicked.connect(self.on_animate_scale)
@@ -377,6 +383,25 @@ class AnimationWindow(PyDialog):
         #self.apply_button.clicked.connect(self.on_apply)
         #self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
+
+        self.animate_in_gui_checkbox.clicked.connect(self.on_animate_in_gui)
+        self.animate_in_gui_checkbox.setChecked(True)
+        self.on_animate_in_gui()
+
+    def on_animate_in_gui(self):
+        animate_in_gui = self.animate_in_gui_checkbox.isChecked()
+        enable = not animate_in_gui
+        self.make_images_checkbox.setEnabled(enable)
+        self.delete_images_checkbox.setEnabled(enable)
+        self.make_gif_checkbox.setEnabled(enable)
+        self.repeat_checkbox.setEnabled(enable)
+        self.resolution_button.setEnabled(enable)
+        self.resolution_edit.setEnabled(enable)
+        self.gif_edit.setEnabled(enable)
+        self.gif_button.setEnabled(enable)
+        self.browse_folder_button.setEnabled(enable)
+        self.browse_folder_edit.setEnabled(enable)
+        self.step_button.setEnabled(enable)
 
     def on_animate(self, value):
         """
@@ -595,14 +620,15 @@ class AnimationWindow(PyDialog):
         #grid2.addWidget(self.animate_time_radio, 8, 2)
         #grid2.addWidget(self.animate_freq_sweeep_radio, 8, 3)
 
-        grid2.addWidget(self.make_images_checkbox, 10, 0)
-        #grid2.addWidget(self.overwrite_images_checkbox, 10, 0)
-        grid2.addWidget(self.delete_images_checkbox, 10, 1)
-        grid2.addWidget(self.make_gif_checkbox, 10, 2)
-        grid2.addWidget(self.repeat_checkbox, 11, 0)
+        grid2.addWidget(self.animate_in_gui_checkbox, 10, 0)
+        grid2.addWidget(self.make_images_checkbox, 11, 0)
+        #grid2.addWidget(self.overwrite_images_checkbox, 11, 0)
+        grid2.addWidget(self.delete_images_checkbox, 11, 1)
+        grid2.addWidget(self.make_gif_checkbox, 11, 2)
+        grid2.addWidget(self.repeat_checkbox, 12, 0)
 
 
-        grid2.addWidget(spacer, 12, 0)
+        grid2.addWidget(spacer, 13, 0)
         grid_hbox = QHBoxLayout()
         grid_hbox.addWidget(spacer)
         grid_hbox.addLayout(grid2)
@@ -611,6 +637,7 @@ class AnimationWindow(PyDialog):
         # bottom buttons
         step_run_box = QHBoxLayout()
         step_run_box.addWidget(self.step_button)
+        step_run_box.addWidget(self.stop_button)
         step_run_box.addWidget(self.run_button)
 
         ok_cancel_box = QHBoxLayout()
@@ -631,8 +658,17 @@ class AnimationWindow(PyDialog):
         """click the Step button"""
         passed, validate_out = self.on_validate()
         if passed:
-            self._make_gif(validate_out, istep=self.istep)
-            self.istep += 1
+            try:
+                self._make_gif(validate_out, istep=self.istep)
+                self.istep += 1
+            except IndexError:
+                self._make_gif(validate_out, istep=0)
+                self.istep += 1
+
+    def on_stop(self):
+        passed, validate_out = self.on_validate()
+        if passed:
+            self._make_gif(validate_out, stop_animation=True)
 
     def on_run(self):
         """click the Run button"""
@@ -642,12 +678,15 @@ class AnimationWindow(PyDialog):
             self._make_gif(validate_out, istep=None)
         return passed
 
-    def _make_gif(self, validate_out, istep=None):
+    def _make_gif(self, validate_out, istep=None, stop_animation=False):
         """interface for making the gif"""
-        icase, scale, time, fps, magnify, output_dir, gifbase = validate_out
-        if gifbase.lower().endswith('.gif'):
-            gifbase = gifbase[:-4]
-        gif_filename = os.path.join(output_dir, gifbase + '.gif')
+        icase, scale, time, fps, animate_in_gui, magnify, output_dir, gifbase = validate_out
+
+        gif_filename = None
+        if not stop_animation and not animate_in_gui:
+            if gifbase.lower().endswith('.gif'):
+                gifbase = gifbase[:-4]
+            gif_filename = os.path.join(output_dir, gifbase + '.gif')
 
         animate_scale = self.animate_scale_radio.isChecked()
         animate_phase = self.animate_phase_radio.isChecked()
@@ -698,6 +737,7 @@ class AnimationWindow(PyDialog):
                 time=time, onesided=onesided,
                 nrepeat=nrepeat, fps=fps, magnify=magnify,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,
+                stop_animation=stop_animation, animate_in_gui=animate_in_gui,
             )
 
         self.out_data['clicked_ok'] = True
@@ -709,11 +749,18 @@ class AnimationWindow(PyDialog):
         scale, flag1 = self.check_float(self.scale_edit)
         time, flag2 = self.check_float(self.time_edit)
         fps, flag3 = self.check_float(self.fps_edit)
+        animate_in_gui = self.animate_in_gui_checkbox.isChecked()
+
+        if animate_in_gui:
+            passed = all([flag0, flag1, flag2, flag3])
+            return passed, (icase, scale, time, fps, animate_in_gui, None, None, None)
+
         magnify, flag4 = self.check_int(self.resolution_edit)
         output_dir, flag5 = self.check_path(self.browse_folder_edit)
         gifbase, flag6 = self.check_name(self.gif_edit)
         passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6])
-        return passed, (icase, scale, time, fps, magnify, output_dir, gifbase)
+        return passed, (icase, scale, time, fps, animate_in_gui,
+                        magnify, output_dir, gifbase)
 
     @staticmethod
     def check_name(cell):
@@ -755,6 +802,7 @@ class AnimationWindow(PyDialog):
 
     def on_cancel(self):
         """click the Cancel button"""
+        self.on_stop()
         self.out_data['close'] = True
         self.close()
 
@@ -805,3 +853,4 @@ def main(): # pragma: no cover
 
 if __name__ == "__main__": # pragma: no cover
     main()
+

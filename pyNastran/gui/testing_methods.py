@@ -36,6 +36,7 @@ class GuiAttributes(object):
         self.res_widget = res_widget
         self._show_flag = True
         self._camera_mode = None
+        self.observers = {}
 
         self.is_testing = False
         self.is_groups = False
@@ -209,7 +210,7 @@ class GuiAttributes(object):
         self.glyphs.SetScaleFactor(scale)
 
     #-------------------------------------------------------------------
-    def numpy_to_vtk_points(self, nodes, points=None, dtype='<f'):
+    def numpy_to_vtk_points(self, nodes, points=None, dtype='<f', deep=1):
         """
         common method to account for vtk endian quirks and
         efficiently adding points
@@ -225,7 +226,7 @@ class GuiAttributes(object):
 
         points_array = numpy_to_vtk(
             num_array=nodes,
-            deep=True,
+            deep=deep,
             array_type=vtk.VTK_FLOAT,
         )
         points.SetData(points_array)

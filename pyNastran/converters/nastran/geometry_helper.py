@@ -408,12 +408,19 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
     def _get_material_arrays(self, model, mids):
         """gets e11, e22, e33"""
-        e11 = np.zeros(mids.shape, dtype='float32')
-        e22 = np.zeros(mids.shape, dtype='float32')
-        e33 = np.zeros(mids.shape, dtype='float32')
-        rho = np.zeros(mids.shape, dtype='float32')
-        bulk = np.zeros(mids.shape, dtype='float32')
-        speed_of_sound = np.zeros(mids.shape, dtype='float32')
+        #e11 = np.zeros(mids.shape, dtype='float32')
+        #e22 = np.zeros(mids.shape, dtype='float32')
+        #e33 = np.zeros(mids.shape, dtype='float32')
+        #rho = np.zeros(mids.shape, dtype='float32')
+        #bulk = np.zeros(mids.shape, dtype='float32')
+        #speed_of_sound = np.zeros(mids.shape, dtype='float32')
+
+        e11 = np.full(mids.shape, np.nan, dtype='float32')
+        e22 = np.full(mids.shape, np.nan, dtype='float32')
+        e33 = np.full(mids.shape, np.nan, dtype='float32')
+        rho = np.full(mids.shape, np.nan, dtype='float32')
+        bulk = np.full(mids.shape, np.nan, dtype='float32')
+        speed_of_sound = np.full(mids.shape, np.nan, dtype='float32')
 
         has_mat8 = False
         has_mat9 = False

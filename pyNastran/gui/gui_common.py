@@ -11,7 +11,7 @@ import cgi #  html lib
 import traceback
 from copy import deepcopy
 from collections import OrderedDict
-from itertools import count
+from itertools import count, cycle
 from math import ceil
 
 from six import string_types, iteritems, itervalues, PY2, PY3
@@ -109,11 +109,6 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
         #self.Highlight
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
-# old
-#class GuiCommon2(GuiCommon):
-#    def __init__(self, fmt_order, html_logging, inputs):
-
-# new
 class GuiCommon2(QMainWindow, GuiCommon):
     def __init__(self, **kwds):
         """
@@ -381,21 +376,28 @@ class GuiCommon2(QMainWindow, GuiCommon):
                             print(msg)
                         return
 
+        #is_geom_results = input_filename == results_filename and len(input_filenames) == 1
+        is_geom_results = False
         for i, input_filename in enumerate(input_filenames):
             if i == 0:
                 name = 'main'
             else:
                 name = input_filename
             #form = inputs['format'].lower()
+            #if is_geom_results:
+            #    is_failed = self.on_load_geometry_and_results(
+            #        infile_name=input_filename, name=name, geometry_format=form,
+            #        plot=plot, raise_error=True)
+            #else:
             is_failed = self.on_load_geometry(
                 infile_name=input_filename, name=name, geometry_format=form,
                 plot=plot, raise_error=True)
         self.name = 'main'
-        print('keys =', self.nid_maps.keys())
+        #print('keys =', self.nid_maps.keys())
 
         if is_failed:
             return
-        if results_filename:
+        if results_filename:  #  and not is_geom_results
             self.on_load_results(results_filename)
 
         post_script = inputs['postscript']
@@ -4091,7 +4093,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                  icase=None, icase_start=None, icase_end=None, icase_delta=None,
                  time=2.0, onesided=True,
                  nrepeat=0, fps=30, magnify=1,
-                 make_images=True, delete_images=False, make_gif=True):
+                 make_images=True, delete_images=False, make_gif=True, stop_animation=False,
+                 animate_in_gui=True):
         """
         Makes an animated gif
 
@@ -4104,6 +4107,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         istep : int; default=None
             the png file number (let's you pick a subset of images)
             useful for when you press ``Step``
+        stop_animation : bool; default=False
+            stops the animation; don't make any images/gif
+        animate_in_gui : bool; default=True
+            animates the model; don't make any images/gif
+            stop_animation overrides animate_in_gui
+            animate_in_gui overrides make_gif
 
         Pick One
         --------
@@ -4185,6 +4194,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - analysis_time should be one-sided
          - set onesided=False
         """
+        if stop_animation:
+            return self.stop_animation()
+
         if animate_time or animate_phase:
             onesided = True
         analysis_time = get_analysis_time(time, onesided)
@@ -4243,12 +4255,108 @@ class GuiCommon2(QMainWindow, GuiCommon):
             phases = (phases[istep],)
             isteps = (istep,)
 
+        parent = self
+        phases, icases, isteps, scales = self._update_animation_inputs(
+            phases, icases, isteps, scales)
+
+        animate_in_gui = True
+        self.stop_animation()
+        if len(icases) == 1:
+            pass
+        elif animate_in_gui:
+            class vtkAnimationCallback(object):
+                """
+                http://www.vtk.org/Wiki/VTK/Examples/Python/Animation
+                """
+                def __init__(self):
+                    self.timer_count = 0
+                    self.cycler = cycle(range(len(icases)))
+
+                    self.icase0 = -1
+                    self.ncases = len(icases)
+
+                def execute(self, obj, event):
+                    iren = obj
+                    i = self.timer_count % self.ncases
+                    #j = next(self.cycler)
+                    istep = isteps[i]
+                    icase = icases[i]
+                    scale = scales[i]
+                    phase = phases[i]
+                    if icase != self.icase0:
+                        #self.cycle_results(case=icase)
+                        parent.cycle_results_explicit(icase, explicit=True)
+                    try:
+                        parent.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
+                    except AttributeError:
+                        parent.log_error('Invalid Case %i' % icase)
+                        parent.stop_animation()
+                    self.icase0 = icase
+
+                    parent.vtk_interactor.Render()
+                    self.timer_count += 1
+
+            # Sign up to receive TimerEvent
+            callback = vtkAnimationCallback()
+
+            observer_name = self.iren.AddObserver('TimerEvent', callback.execute)
+            self.observers['TimerEvent'] = observer_name
+
+            # total_time not needed
+            # fps
+            # -> frames_per_second = 1/fps
+            delay = int(1. / fps * 1000)
+            timerId = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
+            return
+
         return self.make_gif_helper(
             gif_filename, icases, scales,
             phases=phases, isteps=isteps,
             time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
             onesided=onesided, nrepeat=nrepeat,
             make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+
+    def stop_animation(self):
+        """removes the animation timer"""
+        if 'TimerEvent' in self.observers:
+            observer_name = self.observers['TimerEvent']
+            self.iren.RemoveObserver(observer_name)
+            del self.observers['TimerEvent']
+
+    def _update_animation_inputs(self, phases, icases, isteps, scales):
+        """helper method for make_gif_helper"""
+        if phases is not None:
+            pass
+        elif phases is None:
+            phases = [0.] * len(scales)
+        else:
+            raise RuntimeError('phases=%r' % phases)
+
+        if isinstance(icases, integer_types):
+            icases = [icases] * len(scales)
+
+
+        if len(icases) != len(scales):
+            msg = 'ncases=%s nscales=%s' % (len(icases), len(scales))
+            print(msg)
+            raise ValueError(msg)
+
+        if len(icases) != len(phases):
+            msg = 'ncases=%s nphases=%s' % (len(icases), len(phases))
+            print(msg)
+            raise ValueError(msg)
+
+        if isteps is None:
+            isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
+            print("setting isteps in make_gif")
+
+        if len(scales) != len(isteps):
+            msg = 'len(scales)=%s len(isteps)=%s analysis_time=%s fps=%s' % (
+                len(scales), len(isteps), analysis_time, fps)
+            print(msg)
+            raise ValueError(msg)
+        assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
+        return phases, icases, isteps, scales
 
     def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
                         max_value=None, min_value=None,
@@ -4336,37 +4444,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if not os.path.exists(png_dirname):
             os.makedirs(png_dirname)
 
-        if phases is not None:
-            pass
-        elif phases is None:
-            phases = [0.] * len(scales)
-        else:
-            raise RuntimeError('phases=%r' % phases)
-
-        if isinstance(icases, integer_types):
-            icases = [icases] * len(scales)
-
-
-        if len(icases) != len(scales):
-            msg = 'ncases=%s nscales=%s' % (len(icases), len(scales))
-            print(msg)
-            raise ValueError(msg)
-
-        if len(icases) != len(phases):
-            msg = 'ncases=%s nphases=%s' % (len(icases), len(phases))
-            print(msg)
-            raise ValueError(msg)
-
-        if isteps is None:
-            isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
-            print("setting isteps in make_gif")
-
-        if len(scales) != len(isteps):
-            msg = 'len(scales)=%s len(isteps)=%s analysis_time=%s fps=%s' % (
-                len(scales), len(isteps), analysis_time, fps)
-            print(msg)
-            raise ValueError(msg)
-        assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
+        phases, icases, isteps, scales = self._update_animation_inputs(
+            phases, icases, isteps, scales)
 
         png_filenames = []
         fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))

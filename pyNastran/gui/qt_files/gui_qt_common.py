@@ -231,8 +231,8 @@ class GuiCommon(GuiAttributes):
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
-        print("subcase_id=%s result_type=%r subtitle=%r label=%r"
-              % (subcase_id, result_type, subtitle, label))
+        #print("subcase_id=%s result_type=%r subtitle=%r label=%r"
+              #% (subcase_id, result_type, subtitle, label))
 
         #================================================
         is_low_to_high = True
@@ -464,6 +464,7 @@ class GuiCommon(GuiAttributes):
         deflected_xyz : (nnodes, 3) float ndarray
             the deflected state
         """
+        #print('update_grid_by_icase_scale_phase')
         (obj, (i, res_name)) = self.result_cases[icase]
         xyz_nominal, vector_data = obj.get_vector_result_by_scale_phase(
             i, res_name, scale, phase)
@@ -641,7 +642,10 @@ class GuiCommon(GuiAttributes):
         """deflects the geometry"""
         grid = self.grid
         points = grid.GetPoints()
-        self.numpy_to_vtk_points(nodes, points=points, dtype='<f')
+        #inan = np.where(nodes.ravel() == np.nan)[0]
+        #if len(inan) > 0:
+            #raise RuntimeError('nan in nodes...')
+        self.numpy_to_vtk_points(nodes, points=points, dtype='<f', deep=1)
         grid.Modified()
         self.grid_selected.Modified()
         self._update_follower_grids(nodes)

@@ -434,7 +434,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #print('done with cross_reference')
         return model
 
-    def load_nastran_geometry(self, bdf_filename, name='main', plot=True):
+    def load_nastran_geometry(self, bdf_filename, name='main', plot=True, **kwargs):
         """
         The entry point for Nastran geometry loading.
 
@@ -447,6 +447,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         plot : bool; default=True
             should the model be generated or should we wait until
             after the results are loaded
+
+        kwargs:
+        -------
+        is_geometry_results : bool; default=True
+            code is being called from load_nastran_geometry_and_results
+            not used...
         """
         self.eid_maps[name] = {}
         self.nid_maps[name] = {}
@@ -1691,9 +1697,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         )
 
         nelements = len(model.elements)
-        ietypes = []
-        pids = []
-        #eids = []
         xyz_cid0 = self.xyz_cid0
         pids_array = np.zeros(nelements, dtype='int32')
         eids_array = np.zeros(nelements, dtype='int32')
@@ -1760,7 +1763,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         skipped_etypes = set([])
         all_nids = nid_cp_cd[:, 0]
-        for ieid, (eid, elem) in enumerate(sorted(iteritems(model.elements))):
+        ieid = 0
+        for eid, elem in sorted(iteritems(model.elements)):
             if ieid % 5000 == 0 and ieid > 0:
                 print('  map_elements = %i' % ieid)
             etype = elem.type
@@ -1781,8 +1785,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #areai = np.nan
             #area_ratioi = np.nan
             #taper_ratioi = np.nan
-            #min_edge_lengthi = np.nan
-            #normali = np.nan
+            min_edge_lengthi = np.nan
+            normali = np.nan
             if etype in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3']:
                 nids = elem.nodes
                 pid = elem.pid
@@ -1892,20 +1896,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 dim = 1
             #------------------------------
             # rare
-            elif etype == 'CIHEX1':
-                # TODO: assuming 8
-                nids = elem.nodes
-                pid = elem.pid
-                cell_type = cell_type_hexa8
-                inids = np.searchsorted(all_nids, nids)
-                min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
-                    _chexa_faces, nids, nid_map, xyz_cid0)
-                nnodes = 8
-                dim = 3
+            #elif etype == 'CIHEX1':
+                #nids = elem.nodes
+                #pid = elem.pid
+                #cell_type = cell_type_hexa8
+                #inids = np.searchsorted(all_nids, nids)
+                #min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
+                    #_chexa_faces, nids, nid_map, xyz_cid0)
+                #nnodes = 8
+                #dim = 3
             else:
-                raise NotImplementedError(elem)
-                #skipped_etypes.add(etype)
-                #continue
+                #raise NotImplementedError(elem)
+                skipped_etypes.add(etype)
+                nelements -= 1
+                continue
             #for nid in nids:
                 #assert isinstance(nid, integer_types), 'not an integer. nids=%s\n%s' % (nids, elem)
                 #assert nid != 0, 'not a positive integer. nids=%s\n%s' % (nids, elem)
@@ -1921,7 +1925,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             assert nnodes is not None
             nids_list.append(nnodes)
             nids_list.extend(inids)
-            #normals[ieid] = normali
+            normals[ieid] = normali
             eids_array[ieid] = eid
             pids_array[ieid] = pid
             dim_array[ieid] = dim
@@ -1939,13 +1943,35 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #area[ieid] = areai
             #area_ratio[ieid] = area_ratioi
             #taper_ratio[ieid] = taper_ratioi
-            #min_edge_length[ieid] = min_edge_lengthi
+            min_edge_length[ieid] = min_edge_lengthi
+            ieid += 1
 
         #print('self.eid_map =', self.eid_map)
+
+        icells_zero = np.where(cell_types_array == 0)[0]
+        # TODO: I'd like to get rid of deep=1, but it'll crash the edges
+        deep = 1
+        if len(icells_zero):
+            icells = np.where(cell_types_array != 0)[0]
+            eids_array = eids_array[icells]
+            pids_array = pids_array[icells]
+            dim_array = pids_array[dim_array]
+            cell_types_array = cell_types_array[icells]
+            cell_offsets_array = cell_offsets_array[icells]
+            nnodes_array = nnodes_array[icells]
+            normals = normals[icells, :]
+            #deep = 1
+        print('deep = %s' % deep)
         if skipped_etypes:
+            skipped_etypes = list(skipped_etypes)
             self.log.info('skipped_etypes = %s' % skipped_etypes)
             print('skipped_etypes = %s' % skipped_etypes)
-        assert len(pids_array) == nelements, 'nelements=%s len(pids_array)=%s' % (nelements, len(pids_array))
+        if len(pids_array) != nelements:
+            msg = 'nelements=%s len(pids_array)=%s' % (nelements, len(pids_array))
+            raise RuntimeError(msg)
+        if len(cell_offsets_array) != nelements:
+            msg = 'nelements=%s len(cell_offsets_array)=%s' % (nelements, len(cell_offsets_array))
+            raise RuntimeError(msg)
 
         nids_array = np.array(nids_list, dtype=dtype)
 
@@ -1967,10 +1993,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # Cell types
         vtk_cell_types = numpy_to_vtk(
-            cell_types_array, deep=0,
+            cell_types_array, deep=deep,
             array_type=vtk.vtkUnsignedCharArray().GetDataType())
 
-        vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
+        vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=deep,
                                         array_type=vtk.VTK_ID_TYPE)
 
         grid = self.grid
@@ -2065,21 +2091,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #form0.append(('PropertyID', icase, []))
         #icase += 1
 
-        #if len(model.properties):
-            #icase, upids, mids, thickness, nplies, is_pshell_pcomp = self._build_properties(
-                #model, nelements, eids_array, pids_array, cases, form0, icase)
-            #icase = self._build_materials(model, mids, thickness, nplies, is_pshell_pcomp,
-                                          #cases, form0, icase)
-            #try:
-                #icase = self._build_optimization(model, pids_array, upids,
-                                                 #nelements, cases, form0, icase)
-            #except:
-                ##raise
-                #s = StringIO()
-                #traceback.print_exc(file=s)
-                #sout = s.getvalue()
-                #self.log_error(sout)
-                #print(sout)
+        if len(model.properties):
+            icase, upids, mids, thickness, nplies, is_pshell_pcomp = self._build_properties(
+                model, nelements, eids_array, pids_array, cases, form0, icase)
+            icase = self._build_materials(model, mids, thickness, nplies, is_pshell_pcomp,
+                                          cases, form0, icase)
+            try:
+                icase = self._build_optimization(model, pids_array, upids,
+                                                 nelements, cases, form0, icase)
+            except:
+                #raise
+                s = StringIO()
+                traceback.print_exc(file=s)
+                sout = s.getvalue()
+                self.log_error(sout)
+                print(sout)
 
 
         #if mcid_array.max() > -1:
@@ -2319,6 +2345,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #form0.append(('MaterialCoord', icase, []))
             #icase += 1
         #self.normals = normals
+        #print(normals)
         #----------------------------------------------------------
         # finishing up vtk
         # TODO: hardcoded
