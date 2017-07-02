@@ -259,6 +259,13 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         flag that is used by op2_test.py to ignore certain errors
         False : crash on errors
         True : don't crash
+
+    Returns
+    -------
+    op2 : OP2()
+        the op2 object
+    is_passed : bool
+        did the test pass
     """
     if read_bdf is None:
         read_bdf = write_bdf

@@ -289,69 +289,69 @@ class OP2(OP2_Scalar):
         else:
             raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
 
-    def _set_ask_vectorized(self, ask=False):
-        """
-        Enables vectorization
+    #def _set_ask_vectorized(self, ask=False):
+        #"""
+        #Enables vectorization
 
-        The code will degenerate to dictionary based results when
-        a result does not support vectorization.
+        #The code will degenerate to dictionary based results when
+        #a result does not support vectorization.
 
-        Vectorization is always True here.
+        #Vectorization is always True here.
 
-        Parameters
-        ----------
-        ask: bool
-            Do you want to see a GUI of result types.
+        #Parameters
+        #----------
+        #ask: bool
+            #Do you want to see a GUI of result types.
 
-        +--------+---------------+---------+------------+
-        | Case # | Vectorization |  Ask    | Read Modes |
-        +========+===============+=========+============+
-        |    1   | True          |  True   |  1, 2      |
-        +--------+---------------+---------+------------+
-        |    2   | True          |  False  |  1, 2      |
-        +--------+---------------+---------+------------+
-        |    3   | False         |  True   |  1, 2      |
-        +--------+---------------+---------+------------+
-        |    4   | False         |  False  |  0         |
-        +--------+---------------+---------+------------+
+        #+--------+---------------+---------+------------+
+        #| Case # | Vectorization |  Ask    | Read Modes |
+        #+========+===============+=========+============+
+        #|    1   | True          |  True   |  1, 2      |
+        #+--------+---------------+---------+------------+
+        #|    2   | True          |  False  |  1, 2      |
+        #+--------+---------------+---------+------------+
+        #|    3   | False         |  True   |  1, 2      |
+        #+--------+---------------+---------+------------+
+        #|    4   | False         |  False  |  0         |
+        #+--------+---------------+---------+------------+
 
-        Definitions
-        ===========
-          Vectorization - A storage structure that allows for faster read/access
-                          speeds and better memory usage, but comes with a more
-                          difficult to use data structure.
+        #Definitions
+        #===========
+          #Vectorization - A storage structure that allows for faster read/access
+                          #speeds and better memory usage, but comes with a more
+                          #difficult to use data structure.
 
-                          It limits the node IDs to all be integers (e.g. element
-                          centroid).  Composite plate elements (even for just CTRIA3s)
-                          with an inconsistent number of layers will have a more
-                          difficult data structure.
-          Scanning   - a quick check used to figure out how many results to process
-                      that takes almost no time
-          Reading    - process the op2 data
-          Build      - call the __init__ on a results object (e.g. RealDisplacementArray)
-          Start Over - Go to the start of the op2 file
-          Ask        - launch a GUI dialog to let the user click which results to load
+                          #It limits the node IDs to all be integers (e.g. element
+                          #centroid).  Composite plate elements (even for just CTRIA3s)
+                          #with an inconsistent number of layers will have a more
+                          #difficult data structure.
+          #Scanning   - a quick check used to figure out how many results to process
+                      #that takes almost no time
+          #Reading    - process the op2 data
+          #Build      - call the __init__ on a results object (e.g. RealDisplacementArray)
+          #Start Over - Go to the start of the op2 file
+          #Ask        - launch a GUI dialog to let the user click which results to load
 
-        Read Mode Definitions
-        =====================
-          0.   The default OP2 dictionary based-approach with no asking GUI (removed)
-          1.   The first read of a result to get the shape of the data
-          2.   The second read of a result to get the results
+        #Read Mode Definitions
+        #=====================
+          #0.   The default OP2 dictionary based-approach with no asking GUI (removed)
+          #1.   The first read of a result to get the shape of the data
+          #2.   The second read of a result to get the results
 
-        Cases
-        ======
-          1.   Scan the block to get the size, build the object (read_mode=1),
-               ask the user, start over, fill the objects (read_mode=2).
-               Degenerate to read_mode=0 when read_mode=2 cannot be used based
-               upon the value of ask.
-          2.   Same as case #1, but don't ask the user.
-               Scan the block to get the size, build the object (read_mode=1),
-               start over, fill the objects (read_mode=2).
-          3.   Scan the block to get the object types (read_mode=1), ask the user,
-               build the object & fill it (read_mode=2)
-          4.   Read the block to get the size, build the object & fill it (read_mode=0; removed)
-        """
-        self.ask = ask
+        #Cases
+        #======
+          #1.   Scan the block to get the size, build the object (read_mode=1),
+               #ask the user, start over, fill the objects (read_mode=2).
+               #Degenerate to read_mode=0 when read_mode=2 cannot be used based
+               #upon the value of ask.
+          #2.   Same as case #1, but don't ask the user.
+               #Scan the block to get the size, build the object (read_mode=1),
+               #start over, fill the objects (read_mode=2).
+          #3.   Scan the block to get the object types (read_mode=1), ask the user,
+               #build the object & fill it (read_mode=2)
+          #4.   Read the block to get the size, build the object & fill it (read_mode=0; removed)
+        #"""
+        #self.ask = ask
 
     def read_op2(self, op2_filename=None, combine=True, build_dataframe=None,
                  skip_undefined_matrices=False, encoding=None):
@@ -401,7 +401,7 @@ class OP2(OP2_Scalar):
         self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
         OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
-        self.finalize()
+        self._finalize()
         if build_dataframe:
             self.build_dataframe()
         self.create_objects_from_matrices()
@@ -425,7 +425,8 @@ class OP2(OP2_Scalar):
             #                                                           :)       ?       :)      :)2     ?       ?
             self.monitor1 = MONPNT1(self._frequencies, self.matrices, ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
-    def finalize(self):
+    def _finalize(self):
+        """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
             result = getattr(self, result_type)
@@ -671,12 +672,10 @@ class OP2(OP2_Scalar):
             Dictionary from coordinate id to index of the nodes in
             ``BDF.point_ids`` that their output (`CD`) in that
             coordinate system.
-
         coords : dict{int cid :Coord()}
             Dictionary of coordinate id to the coordinate object
             Use this if CD is only rectangular
             Use this if CD is not rectangular
-
         xyz_cid0 : (nnodes+nspoints, 3) float ndarray
             the nodes in the global frame
             Don't use this if CD is only rectangular
@@ -686,6 +685,16 @@ class OP2(OP2_Scalar):
 
         .. warning:: only works if all nodes are included...
                      ``test_pynastrangui isat_tran.dat isat_tran.op2 -f nastran``
+        .. note:: Nastran has this concept of a basic (cid=0) and global (cid=cd)
+                  coordinate system.  They occur at the same time.  Basic is for
+                  positions/properties, while global is for result outputs.
+
+                  pyNastran's OP2 interface uses:
+                    - cd=0 for global frames
+                    - cd>0 are local frames
+                  pyNastran's BDF interface uses:
+                    - cp=0 for global frames
+                    - cp>0 are local frames
         """
         #output = {}
         disp_like_dicts = [
@@ -731,11 +740,12 @@ class OP2(OP2_Scalar):
                     coord_type = coord.type
                     cid_transform = coord.beta()
 
+                    # a global coordinate system has 1s along the main diagonal
                     is_global_cid = False
-                    if np.diagonal(cid_transform).sum() == 3.:
+                    if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
                         is_global_cid = True
 
-                    if debug:
+                    if not is_global_cid and debug:
                         self.log.debug('coord\n%s' % coord)
                         self.log.debug(cid_transform)
                         self.log.debug('inode = %s' % [str(val).rstrip('L') for val in inode.tolist()])
@@ -744,9 +754,9 @@ class OP2(OP2_Scalar):
                         assert np.array_equal(inode, np.unique(inode))
                     if coord_type in ['CORD2R', 'CORD1R']:
                         if is_global_cid:
-                            self.log.debug('is_global_cid')
+                            #self.log.debug('is_global_cid')
                             continue
-                        self.log.debug('rectangular')
+                        #self.log.debug('rectangular')
 
 
                         # isat_tran.op2
@@ -833,7 +843,6 @@ class OP2(OP2_Scalar):
                             data[itime, inode, 3:] = rotation.dot(cid_transform)
                     else:
                         raise RuntimeError(coord)
-        return
 
     def transform_gpforce_to_global(self, nids_all, nids_transform, i_transform, coords, xyz_cid0=None):
         """
@@ -848,18 +857,20 @@ class OP2(OP2_Scalar):
 
         Parameters
         ----------
+        nids_all : ???
+            ???
         nids_transform : dict{int cid : int ndarray nds}
             Dictionary from coordinate id to corresponding node ids.
-
         i_transform : dict{int cid : int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``BDF.point_ids`` that their output (`CD`) in that
             coordinate system.
-
         coords : dict{int cid :Coord()}
             Dictionary of coordinate id to the coordinate object
             Use this if CD is only rectangular
             Use this if CD is not rectangular
+        xyz_cid0 : ???
+            ???
         """
         disp_like_dicts = [
             # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail
@@ -884,8 +895,9 @@ class OP2(OP2_Scalar):
                     coord_type = coord.type
                     cid_transform = coord.beta()
 
+                    # a global coordinate system has 1s along the main diagonal
                     is_global_cid = False
-                    if np.diagonal(cid_transform).sum() == 3.:
+                    if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
                         is_global_cid = True
                     nids = np.array(nids_transform[cid])
 

@@ -607,7 +607,7 @@ class RLOAD1(DynamicLoad):
             dphase = 0.0
         else:
             nids, comps, dphases = self.dphase_ref.get_dphase_at_freq(freq)
-            assert len(dphases) == 1, dphases
+            assert len(dphases) == 1, 'dphases=%s\n%s' % (dphases, self.dphase_ref)
             dphase = dphases[0]
 
         if isinstance(self.delay, float):
@@ -616,7 +616,7 @@ class RLOAD1(DynamicLoad):
             tau = 0.0
         else:
             nids, comps, taus = self.delay_ref.get_delay_at_freq(freq)
-            assert len(taus) == 1, taus
+            assert len(taus) == 1, 'taus=%s\n%s' % (taus, self.delay_ref)
             tau = taus[0]
 
         out = (c + 1.j * d) * np.exp(dphase - 2 * np.pi * freq * tau)

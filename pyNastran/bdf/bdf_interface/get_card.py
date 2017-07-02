@@ -238,7 +238,7 @@ class GetCard(GetMethods):
             print('spc_id=%r' % spc_id)
             raise
 
-
+        warnings = ''
         node_ids = []
         for card in spcs:
             if card.type == 'SPC':
@@ -251,10 +251,14 @@ class GetCard(GetMethods):
                     nidsi = self.get_SPCx_node_ids(new_spc_id, exclude_spcadd=False,
                                                    stop_on_failure=stop_on_failure)
                     nids += nidsi
+            elif card.type in ['GMSPC', 'SPCAX']:
+                warnings += str(card)
             else:
-                self.log.warning('get_SPCx_node_ids doesnt supprt %r' % card.type)
+                warnings += str(card)
                 continue
             node_ids += nids
+        if warnings:
+            self.log.warning("get_SPCx_node_ids doesn't consider:\n%s" % warnings.rstrip('\n'))
         return node_ids
 
     def get_SPCx_node_ids_c1(self, spc_id, exclude_spcadd=False, stop_on_failure=True):
@@ -281,6 +285,7 @@ class GetCard(GetMethods):
 
         node_ids_c1 = defaultdict(str)
         #print('spcs = ', spcs)
+        warnings = ''
         for card in spcs:  # used to be sorted(spcs)
             if card.type == 'SPC':
                 for nid, c1 in zip(card.node_ids, card.components):
@@ -299,13 +304,17 @@ class GetCard(GetMethods):
                     for nid, c1 in iteritems(nids_c1i):
                         node_ids_c1[nid] += c1
             elif card.type in ['GMSPC', 'SPCAX']:
-                self.log.warning('get_SPCx_node_ids doesnt supprt %r' % card.type)
+                warnings += str(card)
             else:
                 msg = 'get_SPCx_node_ids_c1 doesnt supprt %r' % card.type
                 if stop_on_failure:
                     raise RuntimeError(msg)
                 else:
                     self.log.warning(msg)
+
+        if warnings:
+            self.log.warning("get_SPCx_node_ids_c1 doesn't consider:\n%s" % warnings.rstrip('\n'))
+
         return node_ids_c1
 
     def get_MPCx_node_ids_c1(self, mpc_id, exclude_mpcadd=False, stop_on_failure=True):
@@ -1831,7 +1840,9 @@ class GetCard(GetMethods):
 
         Doesn't consider:
           - non-zero enforced value on SPC
+          - GMSPC
         """
+        warnings = ''
         spcs = self.get_reduced_spcs(spc_id)
         #self.spcs[key] = [constraint]
         nids = []
@@ -1847,8 +1858,10 @@ class GetCard(GetMethods):
                     nids.append(nid)
                     comps.append(comp)
             else:
-                self.log.warning('not considering:\n%s' % str(spc))
+                warnings += str(spc)
                 #raise NotImplementedError(spc.type)
+        if warnings:
+            self.log.warning("get_spcs doesn't consider:\n%s" % warnings.rstrip('\n'))
 
         if consider_nodes:
             for nid, node in iteritems(self.nodes):
