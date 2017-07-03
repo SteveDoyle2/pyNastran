@@ -2760,8 +2760,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         grid.SetPoints(points)
 
         if 'test' in sys.argv[0]:
-            return self.map_elements3(points, nid_map, model, j, dim_max,
-                                      nid_cp_cd, plot=plot, xref_loads=xref_loads)
+            self.map_elements3(points, nid_map, model, j, dim_max,
+                               nid_cp_cd, plot=plot, xref_loads=xref_loads)
         #return self.map_elements3(points, nid_map, model, j, dim_max,
                                   #nid_cp_cd, plot=plot, xref_loads=xref_loads)
 
