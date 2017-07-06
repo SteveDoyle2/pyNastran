@@ -60,27 +60,6 @@ class LOAD(LoadCombination):
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
 
-    def get_load_ids(self):
-        """
-        .. note:: requires a cross referenced load
-        """
-        load_ids = []
-        for loads in self.load_ids:
-            for load in loads:
-                if isinstance(load, integer_types):
-                    load_ids.append(load)
-                if isinstance(load, LOAD):
-                    load_ids.append(load.sid)
-                elif isinstance(load, (Force, Moment, PLOAD4, GRAV)):
-                    load_ids.append(load.sid)
-                else:
-                    msg = ('The get_load_ids method doesnt support %s cards.\n'
-                           '%s' % (load.__class__.__name__, str(load)))
-                    raise NotImplementedError(msg)
-
-        load_ids = list(set(load_ids))
-        return load_ids
-
     def get_load_types(self):
         """
         .. note:: requires a cross referenced load
@@ -176,8 +155,7 @@ class LOAD(LoadCombination):
             load_id2 = model.Load(load_id, msg=msg)
             assert isinstance(load_id2, list), load_id2
             load_ids2.append(load_id2)
-        self.load_ids = load_ids2
-        self.load_ids_ref = self.load_ids
+        self.load_ids_ref = load_ids2
 
     def safe_cross_reference(self, model, debug=True):
         load_ids2 = []
@@ -192,12 +170,11 @@ class LOAD(LoadCombination):
                     print(msg)
                 continue
             load_ids2.append(load_id2)
-        self.load_ids = load_ids2
-        self.load_ids_ref = self.load_ids
+        self.load_ids_ref = load_ids2
 
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
-        for (scale_factor, load_id) in zip(self.scale_factors, self.load_ids):
+        for (scale_factor, load_id) in zip(self.scale_factors, self.get_load_ids()):
             list_fields += [scale_factor, self.LoadID(load_id)]
         return list_fields
 
@@ -213,12 +190,9 @@ class LOAD(LoadCombination):
 
     def uncross_reference(self):
         ids = []
-        for i, load_id in enumerate(self.load_ids):
-            idi = self.LoadID(load_id)
-            ids.append(idi)
-        self.load_ids = ids
+        self.load_ids = self.get_load_ids()
         #assert ids == ['cat'], ids
-        del self.load_ids_ref
+        self.load_ids_ref = None
 
 
 class GRAV(BaseCard):
@@ -276,6 +250,7 @@ class GRAV(BaseCard):
         #: the assembly basic coordinate system. See Remark 10.
         #: (Integer; Default = 0)
         self.mb = mb
+        self.cid_ref = None
 
         assert not allclose(max(abs(self.N)), 0.), ('GRAV N is a zero vector, '
                                                     'N=%s' % str(self.N))
@@ -346,23 +321,21 @@ class GRAV(BaseCard):
             the BDF object
         """
         msg = ' which is required by GRAV sid=%s' % self.sid
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
         msg = ' which is required by GRAV sid=%s' % self.sid
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()
-        del self.cid_ref
+        self.cid_ref = None
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def GravityVector(self):
         """returns the gravity vector in absolute coordinates"""
@@ -446,6 +419,7 @@ class ACCEL(BaseCard):
         self.direction = direction
         self.locs = array(locs, dtype='float64')
         self.vals = array(vals, dtype='float64')
+        self.cid_ref = None
 
     def validate(self):
         assert max(abs(self.N)) > 0.
@@ -496,12 +470,11 @@ class ACCEL(BaseCard):
             the BDF object
         """
         msg = ' which is required by ACCEL sid=%s' % self.sid
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()
-        del self.cid_ref
+        self.cid_ref = None
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by ACCEL sid=%s' % self.sid
@@ -512,9 +485,9 @@ class ACCEL(BaseCard):
             pass
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def get_loads(self):
         return [self]
