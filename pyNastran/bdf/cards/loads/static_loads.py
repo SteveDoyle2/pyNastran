@@ -67,17 +67,12 @@ class LOAD(LoadCombination):
         load_ids = []
         for loads in self.load_ids:
             for load in loads:
-                #if isinstance(load, int):
-                    #load_ids += [load]
-
+                if isinstance(load, integer_types):
+                    load_ids.append(load)
                 if isinstance(load, LOAD):
-                    lid = load.lid
-                    if isinstance(lid, list):
-                        load_ids += load.lid
-                    else:  # int
-                        load_ids += load.get_load_ids()
+                    load_ids.append(load.sid)
                 elif isinstance(load, (Force, Moment, PLOAD4, GRAV)):
-                    load_ids += [load.sid]
+                    load_ids.append(load.sid)
                 else:
                     msg = ('The get_load_ids method doesnt support %s cards.\n'
                            '%s' % (load.__class__.__name__, str(load)))
