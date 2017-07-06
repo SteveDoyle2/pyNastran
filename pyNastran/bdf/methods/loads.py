@@ -7,10 +7,10 @@ Defines:
 """
 from __future__ import print_function
 from six import iteritems
-from pyNastran.utils import integer_types
 import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.loads.static_loads import LOAD
 
 
@@ -80,26 +80,8 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
         #if key != loadcase_id:
             #continue
 
-    scale_factors2 = []
-    loads2 = []
-    is_grav = False
-    for load in load_case:
-        if isinstance(load, LOAD):
-            scale_factors, loads = load.get_reduced_loads()
-            for scale_factor, loadi in zip(scale_factors, loads):
-                if scale_factor == 0.0:
-                    continue
-                scale_factors2.append(scale_factor)
-                loads2.append(loadi)
-            #scale_factors2 += scale_factors
-            #loads2 += loads
-        elif load.type in 'GRAV':
-            scale_factors2.append(1.)
-            loads2.append(load)
-            is_grav = True
-        else:
-            scale_factors2.append(1.)
-            loads2.append(load)
+    loads, scale_factors, is_grav = model.get_reduced_loads(
+        loadcase_id, skip_scale_factor0=True)
 
     F = array([0., 0., 0.])
     M = array([0., 0., 0.])
@@ -112,7 +94,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
         xyz = xyz_cid0
 
     unsupported_types = set([])
-    for load, scale in zip(loads2, scale_factors2):
+    for load, scale in zip(loads, scale_factors):
         #if load.type not in ['FORCE1']:
             #continue
         if load.type == 'FORCE':
@@ -279,17 +261,17 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                         r = (1. - x) * n1 + x * n2
                         # print('r=%s n1=%s n2=%s' % (r, n1, n2))
                         if load.Type == 'FX':
-                            Fdir = array([1., 0., 0.])
+                            force_dir = array([1., 0., 0.])
                         elif load.Type == 'FY':
-                            Fdir = array([0., 1., 0.])
+                            force_dir = array([0., 1., 0.])
                         elif load.Type == 'FZ':
-                            Fdir = array([0., 0., 1.])
+                            force_dir = array([0., 0., 1.])
                         else:
                             raise NotImplementedError('Type=%r is not supported.  '
                                                       'Use "FX", "FY", "FZ".' % load.Type)
 
-                    Fi = Ftotal * Fdir
-                    Mi = cross(r - p, Fdir * Ftotal)
+                    Fi = Ftotal * force_dir
+                    Mi = cross(r - p, force_dir * Ftotal)
                     F += Fi
                     M += Mi
                     print('Fi=%s Mi=%s x=%s' % (Fi, Mi, x))
@@ -304,67 +286,67 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                         r = (1 - x1) * n1 + x1 * n2
                         if load.Type == 'FX':
                             if x1 == x2:
-                                Fdir = array([1., 0., 0.])
+                                force_dir = array([1., 0., 0.])
                         elif load.Type == 'FY':
                             if x1 == x2:
-                                Fdir = array([0., 1., 0.])
+                                force_dir = array([0., 1., 0.])
                         elif load.Type == 'FZ':
                             if x1 == x2:
-                                Fdir = array([0., 0., 1.])
-                        F += p1 * Fdir
+                                force_dir = array([0., 0., 1.])
+                        F += p1 * force_dir
                         M += cross(r - p, F)
                     elif load.Type in ['MX', 'MY', 'MZ']:
                         if load.Type == 'MX':
                             if x1 == x2:
-                                Mdir = array([1., 0., 0.])
+                                moment_dir = array([1., 0., 0.])
                         elif load.Type == 'MY':
                             if x1 == x2:
-                                Mdir = array([0., 1., 0.])
+                                moment_dir = array([0., 1., 0.])
                         elif load.Type == 'MZ':
                             if x1 == x2:
-                                Mdir = array([0., 0., 1.])
-                        M += p1 * Mdir
+                                moment_dir = array([0., 0., 1.])
+                        M += p1 * moment_dir
                     elif load.Type in ['FXE', 'FYE', 'FZE']:
                         r = (1 - x1) * n1 + x1 * n2
                         if load.Type == 'FXE':
                             if x1 == x2:
-                                Fdir = i
+                                force_dir = i
                         elif load.Type == 'FYE':
                             if x1 == x2:
-                                Fdir = j
+                                force_dir = j
                         elif load.Type == 'FZE':
                             if x1 == x2:
-                                Fdir = k
-                        #print('    Fdir =', Fdir, load.Type)
+                                force_dir = k
+                        #print('    force_dir =', force_dir, load.Type)
                         try:
-                            F += p1 * Fdir
+                            F += p1 * force_dir
                         except FloatingPointError:
                             msg = 'eid = %s\n' % elem.eid
                             msg += 'i = %s\n' % Ldir
-                            msg += 'Fdir = %s\n' % Fdir
+                            msg += 'force_dir = %s\n' % force_dir
                             msg += 'load = \n%s' % str(load)
                             raise FloatingPointError(msg)
                         M += cross(r - p, F)
-                        del Fdir
+                        del force_dir
 
                     elif load.Type in ['MXE', 'MYE', 'MZE']:
                         if load.Type == 'MXE':
                             if x1 == x2:
-                                Mdir = i
+                                moment_dir = i
                         elif load.Type == 'MYE':
                             if x1 == x2:
-                                Mdir = j
+                                moment_dir = j
                         elif load.Type == 'MZE':
                             if x1 == x2:
-                                Mdir = k
+                                moment_dir = k
                         try:
-                            M += p1 * Mdir
+                            M += p1 * moment_dir
                         except FloatingPointError:
                             msg = 'eid = %s\n' % elem.eid
-                            msg += 'Mdir = %s\n' % Mdir
+                            msg += 'moment_dir = %s\n' % moment_dir
                             msg += 'load = \n%s' % str(load)
                             raise FloatingPointError(msg)
-                        del Mdir
+                        del moment_dir
                     else:
                         raise NotImplementedError('Type=%r is not supported.  '
                                                   'Use "FX", "FXE".' % load.Type)
@@ -595,31 +577,12 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     if nids is None:
         nids = list(model.node_ids)
 
-    load_case = model.loads[loadcase_id]
     #for (key, load_case) in iteritems(model.loads):
         #if key != loadcase_id:
             #continue
 
-    scale_factors2 = []
-    loads2 = []
-    is_grav = False
-    for load in load_case:
-        if isinstance(load, LOAD):
-            scale_factors, loads = load.get_reduced_loads()
-            for scale_factor, loadi in zip(scale_factors, loads):
-                if scale_factor == 0.0:
-                    continue
-                scale_factors2.append(scale_factor)
-                loads2.append(loadi)
-            #scale_factors2 += scale_factors
-            #loads2 += loads
-        elif load.type in 'GRAV':
-            scale_factors2.append(1.)
-            loads2.append(load)
-            is_grav = True
-        else:
-            scale_factors2.append(1.)
-            loads2.append(load)
+    loads, scale_factors, is_grav = model.get_reduced_loads(
+        loadcase_id, skip_scale_factor0=True)
 
     F = array([0., 0., 0.])
     M = array([0., 0., 0.])
@@ -632,7 +595,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
         xyz = xyz_cid0
 
     unsupported_types = set([])
-    for load, scale in zip(loads2, scale_factors2):
+    for load, scale in zip(loads, scale_factors):
         #if load.type not in ['FORCE1']:
             #continue
         #print(load.type)
@@ -824,26 +787,26 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     #print('    deltaL =', deltaL)
                     if load.Type == 'FX':
                         if x1 == x2:
-                            Fdir = array([1., 0., 0.])
+                            force_dir = array([1., 0., 0.])
                     elif load.Type == 'FY':
                         if x1 == x2:
-                            Fdir = array([0., 1., 0.])
+                            force_dir = array([0., 1., 0.])
                     elif load.Type == 'FZ':
                         if x1 == x2:
-                            Fdir = array([0., 0., 1.])
-                    F += p1 * Fdir
+                            force_dir = array([0., 0., 1.])
+                    F += p1 * force_dir
                     M += cross(r - p, F)
                 elif load.Type in ['MX', 'MY', 'MZ']:
                     if load.Type == 'MX':
                         if x1 == x2:
-                            Mdir = array([1., 0., 0.])
+                            moment_dir = array([1., 0., 0.])
                     elif load.Type == 'MY':
                         if x1 == x2:
-                            Mdir = array([0., 1., 0.])
+                            moment_dir = array([0., 1., 0.])
                     elif load.Type == 'MZ':
                         if x1 == x2:
-                            Mdir = array([0., 0., 1.])
-                    M += p1 * Mdir
+                            moment_dir = array([0., 0., 1.])
+                    M += p1 * moment_dir
                 elif load.Type in ['FXE', 'FYE', 'FZE']:
                     r = (1 - x1) * n1 + x1 * n2
                     #print('\n    r =', r)
@@ -856,43 +819,43 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     #print('    k    =', k)
                     if load.Type == 'FXE':
                         if x1 == x2:
-                            Fdir = i
+                            force_dir = i
                     elif load.Type == 'FYE':
                         if x1 == x2:
-                            Fdir = j
+                            force_dir = j
                     elif load.Type == 'FZE':
                         if x1 == x2:
-                            Fdir = k
-                    #print('    Fdir =', Fdir, load.Type)
+                            force_dir = k
+                    #print('    force_dir =', force_dir, load.Type)
                     try:
-                        F += p1 * Fdir
+                        F += p1 * force_dir
                     except FloatingPointError:
                         msg = 'eid = %s\n' % elem.eid
                         msg += 'i = %s\n' % Ldir
-                        msg += 'Fdir = %s\n' % Fdir
+                        msg += 'force_dir = %s\n' % force_dir
                         msg += 'load = \n%s' % str(load)
                         raise FloatingPointError(msg)
                     M += cross(r - p, F)
-                    del Fdir
+                    del force_dir
 
                 elif load.Type in ['MXE', 'MYE', 'MZE']:
                     if load.Type == 'MXE':
                         if x1 == x2:
-                            Mdir = i
+                            moment_dir = i
                     elif load.Type == 'MYE':
                         if x1 == x2:
-                            Mdir = j
+                            moment_dir = j
                     elif load.Type == 'MZE':
                         if x1 == x2:
-                            Mdir = k
+                            moment_dir = k
                     try:
-                        M += p1 * Mdir
+                        M += p1 * moment_dir
                     except FloatingPointError:
                         msg = 'eid = %s\n' % elem.eid
-                        msg += 'Mdir = %s\n' % Mdir
+                        msg += 'moment_dir = %s\n' % moment_dir
                         msg += 'load = \n%s' % str(load)
                         raise FloatingPointError(msg)
-                    del Mdir
+                    del moment_dir
                 else:
                     raise NotImplementedError('Type=%r is not supported.  '
                                               'Use "FX", "FXE".' % load.Type)

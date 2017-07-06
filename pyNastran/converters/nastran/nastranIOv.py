@@ -1215,7 +1215,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     ## TODO: this line seems too loose
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
-                        lines = model.get_MPCx_node_ids_c1(mpc_id, exclude_mpcadd=False)
+                        lines = model.get_MPCx_node_ids(mpc_id, exclude_mpcadd=False)
                         lines2 = list(lines) + rigid_lines
                         mpc_names += self._fill_dependent_independent(
                             mpc_id, dim_max, model, lines2, nid_to_pid_map)
@@ -2760,8 +2760,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         grid.SetPoints(points)
 
         if 'test' in sys.argv[0]:
-            return self.map_elements3(points, nid_map, model, j, dim_max,
-                                      nid_cp_cd, plot=plot, xref_loads=xref_loads)
+            self.map_elements3(points, nid_map, model, j, dim_max,
+                               nid_cp_cd, plot=plot, xref_loads=xref_loads)
         #return self.map_elements3(points, nid_map, model, j, dim_max,
                                   #nid_cp_cd, plot=plot, xref_loads=xref_loads)
 

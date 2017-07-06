@@ -1,6 +1,41 @@
-# pylint: disable=E1101,C0103
+"""
+defines various methods to access high level BDF data:
+ - GetCard()
+   - get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
+                                   stop_on_missing_card=False, combine=False)
+   - get_rslot_map(self, reset_type_to_slot_map=False)
+   - get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
+                                stop_on_missing_card=False)
+   - get_SPCx_node_ids(self, spc_id, exclude_spcadd=False, stop_on_failure=True)
+   - get_SPCx_node_ids_c1( spc_id, exclude_spcadd=False, stop_on_failure=True)
+   - get_MPCx_node_ids( mpc_id, exclude_mpcadd=False, stop_on_failure=True)
+   - get_MPCx_node_ids_c1( mpc_id, exclude_mpcadd=False, stop_on_failure=True)
+   - get_load_arrays(self, subcase_id, nid_map, eid_map, node_ids, normals)
+   - get_pressure_array(self, load_case, eids, normals)
+   - get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=True, msg='')
+   - get_reduced_dloads(self, dload_id, scale=1., skip_scale_factor0=True, msg='')
+   - get_rigid_elements_with_node_ids(self, node_ids)
+   - get_dependent_nid_to_components(self, mpc_id=None)
+   - get_node_ids_with_elements(self, eids, msg='')
+   - get_elements_nodes_by_property_type(self, dtype='int32',
+                                            save_element_types=False)
+   - get_element_nodes_by_element_type(self, dtype='int32', solids=None)
+   - get_element_ids_list_with_pids(self, pids=None)
+   - get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None, idtype='int32')
+   - get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True)
+   - get_node_id_to_element_ids_map(self)
+   - get_node_id_to_elements_map(self)
+   - get_property_id_to_element_ids_map(self):
+   - get_material_id_to_property_ids_map(self)
+   - get_reduced_mpcs(self, mpc_id)
+   - get_reduced_spcs(self, spc_id)
+   - get_spcs(self, spc_id, consider_nodes=False)
+   - get_mpcs(self, mpc_id)
+"""
+# pylint: disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from copy import deepcopy
 from collections import defaultdict
 from typing import List, Dict, Set, Optional, Any
 from six import string_types, iteritems, iterkeys, itervalues
@@ -13,6 +48,7 @@ from pyNastran.utils import integer_types
 
 
 class GetCard(GetMethods):
+    """defines various methods to access high level BDF data"""
     def __init__(self):
         self._type_to_slot_map = {}
         GetMethods.__init__(self)
@@ -93,6 +129,7 @@ class GetCard(GetMethods):
         return out_dict
 
     def _reset_type_to_slot_map(self):
+        """resets self._type_to_slot_map"""
         rslot_map = defaultdict(list)
         for dict_name, card_names in iteritems(self._slot_to_type_map):
             print('card_names=%s dict_name=%s' % (card_names, dict_name))
@@ -129,6 +166,7 @@ class GetCard(GetMethods):
         return rslot_map
 
     def get_rslot_map(self, reset_type_to_slot_map=False):
+        """gets the rslot_map"""
         if (reset_type_to_slot_map or self._type_to_slot_map is None or
                 len(self._type_to_slot_map) == 0):
             rslot_map = {}
@@ -228,6 +266,11 @@ class GetCard(GetMethods):
             need to apply SPCADD=N twice.
         stop_on_failure : bool; default=True
             errors if parsing something new
+
+        Returns
+        -------
+        node_ids : List[int]
+            the constrained associated node ids
         """
         try:
             spcs = self.spcs[spc_id]
@@ -276,6 +319,14 @@ class GetCard(GetMethods):
             need to apply SPCADD=N twice.
         stop_on_failure : bool; default=True
             errors if parsing something new
+
+        Returns
+        -------
+        node_ids_c1 : Dict[component] = node_ids
+            component : str
+                the DOF to constrain
+            node_ids : List[int]
+                the constrained node ids
         """
         try:
             spcs = self.spcs[spc_id]
@@ -317,7 +368,7 @@ class GetCard(GetMethods):
 
         return node_ids_c1
 
-    def get_MPCx_node_ids_c1(self, mpc_id, exclude_mpcadd=False, stop_on_failure=True):
+    def get_MPCx_node_ids(self, mpc_id, exclude_mpcadd=False, stop_on_failure=True):
         r"""
         Get the MPC/MPCADD IDs.
 
@@ -333,6 +384,14 @@ class GetCard(GetMethods):
             TODO: not used
         stop_on_failure : bool; default=True
             errors if parsing something new
+
+        Returns
+        -------
+        lines : List[[independent, dependent]]
+            independent : int
+               the independent node id
+            dependent : int
+               the dependent node id
 
         I      I
           \   /
@@ -363,15 +422,96 @@ class GetCard(GetMethods):
             elif card.type == 'MPCADD':
                 nids = []
                 for new_mpc_id in card.mpc_ids:
-                    linesi = self.get_MPCx_node_ids_c1(new_mpc_id, exclude_mpcadd=False)
+                    linesi = self.get_MPCx_node_ids(new_mpc_id, exclude_mpcadd=False)
                     lines += linesi
             else:
-                msg = 'get_MPCx_node_ids_c1 doesnt supprt %r' % card.type
+                msg = 'get_MPCx_node_ids doesnt support %r' % card.type
                 if stop_on_failure:
                     raise RuntimeError(msg)
                 else:
                     self.log.warning(msg)
         return lines
+
+    def get_MPCx_node_ids_c1(self, mpc_id, exclude_mpcadd=False, stop_on_failure=True):
+        r"""
+        Get the MPC/MPCADD IDs.
+
+        Parameters
+        ----------
+        mpc_id : int
+            the MPC id
+        exclude_mpcadd : bool
+            you can exclude MPCADD if you just want a list of all the
+            MPCs in the model.  For example, apply all the MPCs when
+            there is no MPC=N in the case control deck, but you don't
+            need to apply MPCADD=N twice.
+            TODO: not used
+        stop_on_failure : bool; default=True
+            errors if parsing something new
+
+        Returns
+        -------
+        independent_node_ids_c1 : Dict[component] = node_ids
+            component : str
+                the DOF to constrain
+            node_ids : List[int]
+                the constrained node ids
+
+        dependent_node_ids_c1 : Dict[component] = node_ids
+            component : str
+                the DOF to constrain
+            node_ids : List[int]
+                the constrained node ids
+
+        I      I
+          \   /
+        I---D---I
+        """
+        if not isinstance(mpc_id, integer_types):
+            msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
+            raise TypeError(msg)
+
+        try:
+            mpcs = self.mpcs[mpc_id]
+        except KeyError:
+            self.log.warning('mpc_id=%s not found' % mpc_id)
+            asdf
+            return {}, {}
+
+        # dependent, independent
+        independent_node_ids_c1 = defaultdict(list)
+        dependent_node_ids_c1 = defaultdict(list)
+        for card in mpcs:
+            if card.type == 'MPC':
+                nids = card.node_ids
+                nid0 = nids[0]
+                #constraint0 = card.constraints[0]
+                #enforced0 = card.enforced[0]
+                #card.constraints[1:]
+                dofs = card.components
+                for dof in dofs:
+                    independent_node_ids_c1[dof].append(nid0)
+                for nid, enforced in zip(nids[1:], card.enforced[1:]):
+                    if enforced != 0.0:
+                        for dof in dofs:
+                            dependent_node_ids_c1[dof].append(nid)
+
+            elif card.type == 'MPCADD':
+                nids = []
+                for new_mpc_id in card.mpc_ids:
+                    independent_node_ids_c1i, dependent_node_ids_c1i = self.get_MPCx_node_ids_c1(
+                        new_mpc_id, exclude_mpcadd=False)
+                    for key, value in iteritems(independent_node_ids_c1i):
+                        independent_node_ids_c1[key] += value
+                    for key, value in iteritems(dependent_node_ids_c1i):
+                        dependent_node_ids_c1[key] += value
+            else:
+                msg = 'get_MPCx_node_ids_c1 doesnt support %r' % card.type
+                if stop_on_failure:
+                    raise RuntimeError(msg)
+                else:
+                    self.log.warning(msg)
+        return independent_node_ids_c1, dependent_node_ids_c1
 
     def get_load_arrays(self, subcase_id, nid_map, eid_map, node_ids, normals):
         """
@@ -592,8 +732,8 @@ class GetCard(GetMethods):
         nids = sorted(self.nodes.keys())
         nnodes = len(nids)
 
-        load_case = self.loads[load_case_id]
-        loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
+        loads, scale_factors = self.get_reduced_loads(
+            load_case_id, skip_scale_factor0=True)[:2]
 
         #eids = sorted(self.elements.keys())
         centroidal_pressures = np.zeros(len(self.elements), dtype='float32')
@@ -608,7 +748,7 @@ class GetCard(GetMethods):
         fail_nids = set()
         fail_count = 0
         fail_count_max = 3
-        for load, scale in zip(loads2, scale_factors2):
+        for load, scale in zip(loads, scale_factors):
             if load.type == 'FORCE':
                 scale2 = load.mag * scale  # does this need a magnitude?
                 nid = load.node
@@ -864,25 +1004,15 @@ class GetCard(GetMethods):
         if 'PLOAD4' not in self.card_count:
             return False, None
 
-        # account for scale factors
-        loads2 = []
-        scale_factors2 = []
-        for load in load_case:
-            if load.type == 'LOAD':
-                scale_factors, loads = load.get_reduced_loads()
-                scale_factors2 += scale_factors
-                loads2 += loads
-            else:
-                scale_factors2.append(1.)
-                loads2.append(load)
+        loads, scale_factors = self.get_reduced_loads(loadcase_id)[:2]
 
         pressures = np.zeros(len(self.elements), dtype='float32')
 
         iload = 0
-        nloads = len(loads2)
+        nloads = len(loads)
         show_nloads = nloads > 5000
         # loop thru scaled loads and plot the pressure
-        for load, scale in zip(loads2, scale_factors2):
+        for load, scale in zip(loads, scale_factors):
             if show_nloads and iload % 5000 == 0:
                 self.log.debug('  NastranIOv iload=%s/%s' % (iload, nloads))
             if load.type == 'PLOAD4':
@@ -935,11 +1065,10 @@ class GetCard(GetMethods):
         is_temperatures = True
         nids = sorted(self.nodes.keys())
 
-        load_case = self.loads[load_case_id]
-        loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
+        loads, scale_factors = self.get_reduced_loads(loadcase_id)[:2]
         tempd = self.tempds[load_case_id].temperature if load_case_id in self.tempds else 0.
         temperatures = np.ones(len(self.nodes), dtype=dtype) * tempd
-        for load, scale in zip(loads2, scale_factors2):
+        for load, scale in zip(loads, scale_factors):
             if load.type == 'TEMP':
                 temps_dict = load.temperatures
                 for nid, val in iteritems(temps_dict):
@@ -986,6 +1115,89 @@ class GetCard(GetMethods):
                 print(str(elem))
         return lines_rigid
 
+    def get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=True, msg=''):
+        """
+        Accounts for scale factors.
+
+        Parameters
+        ----------
+        load_id : int
+            the desired LOAD id
+        scale : float; default=1.0
+            additional scale factor on top of the existing LOADs
+        skip_scale_factor0 : bool; default=False
+            Skip loads with scale factor=0.0.
+            Nastran does not do this.
+            Nastran will fail if referenced loads do not exist.
+        msg : str
+            debug message
+
+        Returns
+        -------
+        loads : List[loads]
+            a series of load objects
+        scale_factors : List[float]
+            the associated scale factors
+        is_grav : bool
+            is there a gravity card
+
+        .. warning:: assumes xref=True
+        """
+        load_case = self.Load(load_id, msg=msg)
+        loads, scale_factors, is_grav = self._reduce_load_case(load_case, scale=scale)
+        return loads, scale_factors, is_grav
+
+    def _reduce_load_case(self, load_case, scale=1., unallowed_load_ids=None, msg=''):
+        """reduces a load case"""
+        scale_factors_out = []
+        loads_out = []
+        is_grav_out = False
+        if unallowed_load_ids is None:
+            unallowed_load_ids = []
+
+        for load in load_case:
+            if load.type == 'LOAD':
+                load_ids = load.get_load_ids()
+                load_scale = load.scale * scale
+                scale_factors, load_ids = load.scale_factors, load.get_load_ids()
+                scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
+                for load_idi, scalei in zip(load_ids, scale_factors_temp):
+                    # prevents recursion
+                    if load_idi in unallowed_load_ids:
+                        msg = 'There is a recursion error.  LOAD trace=%s; load_id=%s' % (
+                            unallowed_load_ids, load_idi)
+                        raise RuntimeError(msg)
+                    unallowed_load_ids2 = deepcopy(unallowed_load_ids)
+                    unallowed_load_ids2.append(load_idi)
+
+                    load_casei = self.Load(load_idi, msg=msg)
+                    loadsi, scale_factorsi, is_gravi = self._reduce_load_case(
+                        load_casei, scale=scalei, unallowed_load_ids=unallowed_load_ids2)
+                    if is_gravi:
+                        is_grav_out = True
+                    scale_factors_out += scale_factorsi
+                    loads_out += loadsi
+
+                # old...
+                #scale_factors, loads = load.get_reduced_loads()
+                #for scale_factor, loadi in zip(scale_factors, loads):
+                    #if skip_scale_factor0 and scale_factor == 0.0:
+                        #continue
+                    #scale_factors2.append(scale_factor)
+                    #loads2.append(loadi)
+
+                # very old....
+                #scale_factors2 += scale_factors
+                #loads2 += loads
+            elif load.type in 'GRAV':
+                scale_factors_out.append(scale)
+                loads_out.append(load)
+                is_grav_out = True
+            else:
+                scale_factors_out.append(scale)
+                loads_out.append(load)
+        return loads_out, scale_factors_out, is_grav_out
+
     def _get_loads_and_scale_factors(self, load_case):
         """account for scale factors"""
         loads2 = []
@@ -998,13 +1210,72 @@ class GetCard(GetMethods):
                         continue
                     scale_factors2.append(scale_factor)
                     loads2.append(loadi)
-                #else:
-                    #scale_factors2 += scale_factors
-                    #loads2 += loads
             else:
                 scale_factors2.append(1.)
                 loads2.append(load)
         return loads2, scale_factors2
+
+    def get_reduced_dloads(self, dload_id, scale=1., skip_scale_factor0=True, msg=''):
+        """
+        Accounts for scale factors.
+
+        Parameters
+        ----------
+        dload_id : int
+            the desired DLOAD id
+        scale : float; default=1.0
+            additional scale factor on top of the existing LOADs
+        skip_scale_factor0 : bool; default=False
+            Skip loads with scale factor=0.0.
+            Nastran does not do this.
+            Nastran will fail if referenced loads do not exist.
+        msg : str
+            debug message
+
+        Returns
+        -------
+        dloads : List[loads]
+            a series of dload objects
+        scale_factors : List[float]
+            the associated scale factors
+
+        .. warning:: assumes xref=True
+        """
+        dload_case = self.DLoad(dload_id, msg=msg)
+        dloads, scale_factors = self._reduce_dload_case(dload_case, scale=scale, msg=msg)
+        return dloads, scale_factors
+
+    def _reduce_dload_case(self, dload_case, scale=1., unallowed_dload_ids=None, msg=''):
+        """reduces a dload case"""
+        scale_factors_out = []
+        dloads_out = []
+        if unallowed_dload_ids is None:
+            unallowed_dload_ids = []
+
+        for dload in dload_case:
+            if dload.type == 'DLOAD':
+                dload_ids = dload.get_dload_ids()
+                load_scale = dload.scale * scale
+                scale_factors, load_ids = load.scale_factors, dload.get_dload_ids()
+                scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
+                for load_idi, scalei in zip(dload_ids, scale_factors_temp):
+                    # prevents recursion
+                    if load_idi in unallowed_dload_ids:
+                        msg = 'There is a recursion error.  DLOAD trace=%s; dload_id=%s' % (
+                            unallowed_dload_ids, dload_idi)
+                        raise RuntimeError(msg)
+                    unallowed_dload_ids2 = deepcopy(unallowed_dload_ids)
+                    unallowed_dload_ids2.append(load_idi)
+
+                    dload_casei = self.DLoad(dload_idi, msg=msg)
+                    dloadsi, scale_factorsi = self._reduce_dload_case(
+                        dload_casei, scale=scalei, unallowed_dload_ids=unallowed_dload_ids2, )
+                    scale_factors_out += scale_factorsi
+                    dloads_out += dloadsi
+            else:
+                scale_factors_out.append(scale)
+                dloads_out.append(dload)
+        return dloads_out, scale_factors_out
 
     def get_rigid_elements_with_node_ids(self, node_ids):
         """
@@ -1365,7 +1636,7 @@ class GetCard(GetMethods):
                         #print(elem)
                         #print('nidsi =', nidsi)
                         nidsi2 = [nid  if nid is not None else 0
-                                 for nid in nidsi]
+                                  for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
                         except:
@@ -1400,7 +1671,7 @@ class GetCard(GetMethods):
                         #print(elem)
                         #print('nidsi =', nidsi)
                         nidsi2 = [nid  if nid is not None else 0
-                                 for nid in nidsi]
+                                  for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
                         except:
@@ -1837,6 +2108,7 @@ class GetCard(GetMethods):
           - SPC
           - SPC1
           - SPCADD
+          - GRID
 
         Doesn't consider:
           - non-zero enforced value on SPC

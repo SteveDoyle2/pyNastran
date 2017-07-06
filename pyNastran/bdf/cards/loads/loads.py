@@ -91,6 +91,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
             load_ids = [load_ids]
         self.load_ids = load_ids
         assert 0 not in load_ids, self
+        self.load_ids_ref = None
 
     def validate(self):
         msg = ''
@@ -102,8 +103,9 @@ class LoadCombination(Load):  # LOAD, DLOAD
             msg += 'scale_factors=%s load_ids=%s\n' % (self.scale_factors, self.load_ids)
         if msg:
             raise RuntimeError(msg)
-        for scalei, load_id in zip(self.scale_factors, self.load_ids):
+        for scalei, load_id in zip(self.scale_factors, self.get_load_ids()):
             assert isinstance(scalei, float_types), scalei
+            assert isinstance(load_id, integer_types), load_id
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -139,12 +141,35 @@ class LoadCombination(Load):  # LOAD, DLOAD
         else:
             raise NotImplementedError(lid)
 
+    def get_load_ids(self):
+        """
+        xref/non-xref way to get the load ids
+        """
+        if self.load_ids_ref is None:
+            return self.load_ids
+        load_ids = []
+        for loads in self.load_ids_ref:
+            for load in loads:
+                if isinstance(load, integer_types):
+                    load_ids.append(load)
+                elif load.type == 'LOAD':
+                    load_ids.append(load.sid)
+                elif load.type in ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
+                                   'PLOAD4', 'GRAV', 'SPCD']:
+                    load_ids.append(load.sid)
+                else:
+                    msg = ('The get_load_ids method doesnt support %s cards.\n'
+                           '%s' % (load.__class__.__name__, str(load)))
+                    raise NotImplementedError(msg)
+        load_ids = list(set(load_ids))
+        return load_ids
+
     def get_loads(self):
         """
         .. note:: requires a cross referenced load
         """
         loads = []
-        for all_loads in self.load_ids:
+        for all_loads in self.load_ids_ref:
             assert not isinstance(all_loads, int), 'all_loads=%s\n%s' % (str(all_loads), str(self))
             for load in all_loads:
                 try:
