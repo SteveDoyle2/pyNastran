@@ -135,6 +135,7 @@ def compare_card_content(fem1, fem2):
         #assert_fields(card1, card2)
 
     for mpc_id in fem1.mpcs:
+        fem1.get_MPCx_node_ids(mpc_id, exclude_mpcadd=False)
         fem1.get_MPCx_node_ids_c1(mpc_id, exclude_mpcadd=False)
         fem1.get_reduced_mpcs(mpc_id)
         fem1.get_mpcs(mpc_id)
@@ -252,6 +253,7 @@ def compare_card_content(fem1, fem2):
 
 
 def compare_matrices(fem1, fem2):
+    """verifies that the DMIG, DMIJ, DMIJI, and DMIK matrices are the same"""
     for key in fem1.dmigs:
         card1 = fem1.dmigs[key]
         card2 = fem2.dmigs[key]
@@ -280,15 +282,16 @@ def compare_matrices(fem1, fem2):
 
 
 def compare_thermal_content(fem1, fem2):
+    """compares thermal cards"""
     assert len(fem1.bcs) == len(fem2.bcs)
     assert len(fem1.thermal_materials) == len(fem2.thermal_materials)
     assert len(fem1.phbdys) == len(fem2.phbdys)
     assert len(fem1.convection_properties) == len(fem2.convection_properties)
 
     for key in fem1.bcs:
-        BCs1 = fem1.bcs[key]
-        BCs2 = fem2.bcs[key]
-        for (card1, card2) in zip(BCs1, BCs2):
+        bcs1 = fem1.bcs[key]
+        bcs2 = fem2.bcs[key]
+        for (card1, card2) in zip(bcs1, bcs2):
             assert_fields(card1, card2)
 
     for key in fem1.thermal_materials:

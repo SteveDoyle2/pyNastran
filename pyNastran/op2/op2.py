@@ -176,9 +176,11 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
     if exclude_results and include_results:
-        msg = 'exclude_results or include_results must be None\n'
-        msg += 'exclude_results=%r\n' % exclude_results
-        msg += 'include_results=%r\n' % include_results
+        msg = (
+            'exclude_results or include_results must be None\n'
+            'exclude_results=%r\n'
+            'include_results=%r\n' % (exclude_results, include_results)
+        )
         raise RuntimeError(msg)
     elif exclude_results:
         model.remove_results(exclude_results)

@@ -1,4 +1,4 @@
-#pylint: disable=W0613,W0612,R0913
+#pylint: disable=R0913
 """
 Defines the OP2 class.
 """
@@ -1414,28 +1414,30 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif table_name.strip() in self.additional_matrices:
                 self._read_matrix(table_name)
             else:
-                msg += 'Invalid Table\n\n'
-                msg += 'If you have matrices that you want to read, see:\n'
-                msg += '  model.set_additional_matrices_to_read(matrices)'
-                msg += '  matrices = {\n'
-                msg += "      b'BHH' : True,\n"
-                msg += "      b'KHH' : False,\n"
-                msg += '  }  # you want to read some matrices, but not others\n'
-                msg += "  matrices = [b'BHH', b'KHH']  # assumes True\n\n"
+                msg += (
+                    'Invalid Table\n\n'
+                    'If you have matrices that you want to read, see:\n'
+                    '  model.set_additional_matrices_to_read(matrices)'
+                    '  matrices = {\n'
+                    "      b'BHH' : True,\n"
+                    "      b'KHH' : False,\n"
+                    '  }  # you want to read some matrices, but not others\n'
+                    "  matrices = [b'BHH', b'KHH']  # assumes True\n\n"
 
-                msg += 'If you the table is a geom/result table, see:\n'
-                msg += '  model.set_additional_result_tables_to_read(methods_dict)\n'
-                msg += "  methods_dict = {\n"
-                msg += "      b'OUGV1' : [method3, method4],\n"
-                msg += "      b'GEOM4SX' : [method3, method4],\n"
-                msg += "      b'OES1X1' : False,\n"
-                msg += '  }\n\n'
+                    'If you the table is a geom/result table, see:\n'
+                    '  model.set_additional_result_tables_to_read(methods_dict)\n'
+                    "  methods_dict = {\n"
+                    "      b'OUGV1' : [method3, method4],\n"
+                    "      b'GEOM4SX' : [method3, method4],\n"
+                    "      b'OES1X1' : False,\n"
+                    '  }\n\n'
 
-                msg += 'If you want to take control of the OP2 reader (mainly useful for obscure tables), see:\n'
-                msg += "  methods_dict = {\n"
-                msg += "      b'OUGV1' : [method],\n"
-                msg += '  }\n'
-                msg += '  model.set_additional_generalized_tables_to_read(methods_dict)\n'
+                    'If you want to take control of the OP2 reader (mainly useful for obscure tables), see:\n'
+                    "  methods_dict = {\n"
+                    "      b'OUGV1' : [method],\n"
+                    '  }\n'
+                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n'
+                )
                 raise NotImplementedError(msg)
 
             table_name = self._read_table_name(rewind=True, stop_on_failure=False)
@@ -1521,10 +1523,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.is_debug_file:
             self.binary_debug.write('_read_table_name - rewind=%s\n' % rewind)
         ni = self.n
-        s = self.struct_8s
+        structi = self.struct_8s
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
-            table_name, = s.unpack(data)
+            table_name, = structi.unpack(data)
             if self.is_debug_file and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
@@ -1532,7 +1534,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             try:
                 data = self._read_record(macro_rewind=rewind)
-                table_name, = s.unpack(data)
+                table_name, = structi.unpack(data)
                 table_name = table_name.strip()
             except:
                 # we're done reading
