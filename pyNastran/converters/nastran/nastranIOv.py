@@ -2175,11 +2175,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #----------------------------------------------------------
 
-        is_shell = True
-        if True in i_not_nan:
+        is_shell = False
+        if False in i_not_nan:
             #max_normal = np.nanmax(normal_mag[i_not_nan])
             #is_shell = np.abs(max_normal) > 0.
-            is_shell = False
+            is_shell = True
         is_solid = np.any(np.isfinite(max_interior_angle)) and np.nanmax(np.abs(max_interior_angle)) > 0.
         #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
         if is_shell:
