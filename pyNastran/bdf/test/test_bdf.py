@@ -1058,10 +1058,15 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         spc_id = subcase.get_parameter('SPC')[0]
         fem2.get_spcs(spc_id)
         fem2.get_reduced_spcs(spc_id)
+        fem2.get_SPCx_node_ids_c1(spc_id)
+        fem2.get_SPCx_node_ids(spc_id)
+
     if 'MPC' in subcase:
         mpc_id = subcase.get_parameter('MPC')[0]
         fem2.get_mpcs(mpc_id)
         fem2.get_reduced_mpcs(mpc_id)
+        fem2.get_MPCx_node_ids_c1(mpc_id)
+        fem2.get_MPCx_node_ids(mpc_id)
 
     if 'SDAMPING' in subcase:
         sdamping_id = subcase.get_parameter('SDAMPING')[0]
@@ -1070,10 +1075,13 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     if 'LOADSET' in subcase:
         loadset_id = subcase.get_parameter('LOADSET')[0]
         lseq = fem2.loads[loadset_id]
+        fem2.get_reduced_loads(loadset_id)
 
     if 'DLOAD' in subcase:
         assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
                        153, 159, 400, 401, 601], 'sol=%s DLOAD\n%s' % (sol, subcase)
+        dload_id = subcase.get_parameter('DLOAD')[0]
+        fem2.get_reduced_dloads(dload_id)
         #if 'LOADSET' in subcase:
             #raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
         if 'IC' in subcase:
@@ -1113,7 +1121,6 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         # TYPE 1/2/3 (DISP, VELO, ACCE)
         #  - no LOADSET -> SPCD
         #  -    LOADSET -> SPCDs as specified by LSEQ
-        dload_id = subcase.get_parameter('DLOAD')[0]
         scale_factors, loads = resolve_dloads(fem2, dload_id)
 
         if sol in [108, 111]:  # direct frequency, modal frequency

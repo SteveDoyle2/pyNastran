@@ -10,7 +10,7 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types, PY3
+from six import PY3
 from six.moves import zip, range
 import numpy as np
 
@@ -23,7 +23,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
-from pyNastran.utils import float_types
+from pyNastran.utils import float_types, integer_types
 
 
 class Load(BaseCard):
