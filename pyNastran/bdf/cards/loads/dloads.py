@@ -304,7 +304,7 @@ class DLOAD(LoadCombination):
             Scale factors. See Remarks 2., 7. and 8. (Real)
         load_ids : List[int]
             Load set identification numbers of RLOAD1, RLOAD2, TLOAD1,
-            TLOAD2, and ACSRCE entries. See Remarks 3. and 7. (Integer > 0)
+            TLOAD2, and ACSRCE entries. See Remarks 3 and 7. (Integer > 0)
         comment : str; default=''
             the card comment
         """
@@ -325,8 +325,7 @@ class DLOAD(LoadCombination):
         for load_id in self.load_ids:
             load_id2 = model.get_dload_entries(load_id, msg=msg)
             load_ids2.append(load_id2)
-        self.load_ids = load_ids2
-        self.load_ids_ref = self.load_ids
+        self.load_ids_ref = load_ids2
 
     def safe_cross_reference(self, model, debug=True):
         load_ids2 = []
@@ -341,16 +340,15 @@ class DLOAD(LoadCombination):
                     print(msg)
                 continue
             load_ids2.append(load_id2)
-        self.load_ids = load_ids2
-        self.load_ids_ref = self.load_ids
+        self.load_ids_ref = load_ids2
 
     def uncross_reference(self):
-        self.load_ids = [self.LoadID(load) for load in self.load_ids]
-        del self.load_ids_ref
+        self.load_ids = [self.LoadID(load) for load in self.get_load_ids()]
+        self.load_ids_ref = None
 
     def raw_fields(self):
         list_fields = ['DLOAD', self.sid, self.scale]
-        for (scale_factor, load_id) in zip(self.scale_factors, self.load_ids):
+        for (scale_factor, load_id) in zip(self.scale_factors, self.get_load_ids()):
             list_fields += [scale_factor, self.LoadID(load_id)]
         return list_fields
 

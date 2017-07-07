@@ -1563,7 +1563,6 @@ def main():
     if data['--quiet']:
         debug = None
     if data['--profile']:
-        #import cProfile
         import pstats
 
         import cProfile
@@ -1574,7 +1573,6 @@ def main():
             data['BDF_FILENAME'],
             debug=debug,
             xref=['--xref'],
-            # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
             punch=data['--punch'],
             size=size,

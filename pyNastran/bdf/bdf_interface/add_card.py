@@ -5461,17 +5461,17 @@ class AddCards(AddMethods):
         self._add_dload_entry(load)
         return load
 
-    def add_chbdyg(self, eid, Type, nodes,
+    def add_chbdyg(self, eid, surface_type, nodes,
                    iview_front=0, ivew_back=0,
                    rad_mid_front=0, rad_mid_back=0, comment=''):
-        elem = CHBDYG(eid, Type, nodes,
+        elem = CHBDYG(eid, surface_type, nodes,
                       iview_front=iview_front, ivew_back=ivew_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
         self._add_thermal_element_object(elem)
         return elem
 
-    def add_chbdyp(self, eid, pid, Type, g1, g2,
+    def add_chbdyp(self, eid, pid, surface_type, g1, g2,
                    g0=0, gmid=None, ce=0,
                    iview_front=0, ivew_back=0,
                    rad_mid_front=0, rad_mid_back=0,
@@ -5486,7 +5486,7 @@ class AddCards(AddMethods):
             Surface element ID
         pid : int
             PHBDY property entry identification numbers. (Integer > 0)
-        Type : str
+        surface_type : str
             Surface type
             Must be {POINT, LINE, ELCYL, FTUBE, TUBE}
         iview_front : int; default=0
@@ -5512,7 +5512,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        elem = CHBDYP(eid, pid, Type, g1, g2,
+        elem = CHBDYP(eid, pid, surface_type, g1, g2,
                       g0=g0, gmid=gmid, ce=ce,
                       iview_front=iview_front, ivew_back=ivew_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,

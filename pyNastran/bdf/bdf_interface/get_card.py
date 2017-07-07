@@ -296,6 +296,7 @@ class GetCard(GetMethods):
                     nids += nidsi
             elif card.type in ['GMSPC', 'SPCAX']:
                 warnings += str(card)
+                continue
             else:
                 warnings += str(card)
                 continue
@@ -1065,7 +1066,7 @@ class GetCard(GetMethods):
         is_temperatures = True
         nids = sorted(self.nodes.keys())
 
-        loads, scale_factors = self.get_reduced_loads(loadcase_id)[:2]
+        loads, scale_factors = self.get_reduced_loads(load_case_id)[:2]
         tempd = self.tempds[load_case_id].temperature if load_case_id in self.tempds else 0.
         temperatures = np.ones(len(self.nodes), dtype=dtype) * tempd
         for load, scale in zip(loads, scale_factors):
@@ -1254,7 +1255,7 @@ class GetCard(GetMethods):
 
         for dload in dload_case:
             if dload.type == 'DLOAD':
-                dload_ids = dload.get_dload_ids()
+                dload_ids = dload.get_load_ids()
                 load_scale = dload.scale * scale
                 scale_factors, load_ids = load.scale_factors, dload.get_dload_ids()
                 scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
@@ -1773,7 +1774,7 @@ class GetCard(GetMethods):
             'CTRIAX', 'CQUADX', 'CTRIAX6',
             'CTRIA6', 'CQUAD8', 'CQUAD',
             'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
-            'CRAC2D', 'CRAC3D',
+            'CRAC2D', 'CRAC3D', 'CHBDYP', #'CHBDYG',
         ]
 
         if etypes is None:

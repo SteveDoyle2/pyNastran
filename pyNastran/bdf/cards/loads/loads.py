@@ -155,7 +155,11 @@ class LoadCombination(Load):  # LOAD, DLOAD
                 elif load.type == 'LOAD':
                     load_ids.append(load.sid)
                 elif load.type in ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
-                                   'PLOAD4', 'GRAV', 'SPCD']:
+                                   'PLOAD', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
+                                   'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2',
+                                   'RFORCE', 'RFORCE1', #'RFORCE2'
+                                   'ACCEL', #'',
+                                   ]:
                     load_ids.append(load.sid)
                 else:
                     msg = ('The get_load_ids method doesnt support %s cards.\n'
@@ -324,13 +328,11 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             the BDF object
         """
         msg = ', which is required by LSEQ=%s' % (self.sid)
-        self.lid = model.Load(self.lid, msg=msg)
-        self.lid_ref = self.lid
+        self.lid_ref = model.Load(self.lid, msg=msg)
         #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
             # TODO: temperature set, not a table?
-            self.tid = model.Table(self.tid, msg=msg)
-            self.tid_ref = self.tid
+            self.tid_ref = model.Table(self.tid, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -338,26 +340,25 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def uncross_reference(self):
         self.lid = self.Lid()
         self.tid = self.Tid()
-
         self.lid_ref = None
         self.tid_ref = None
 
     def LoadID(self, lid):
-        if isinstance(lid, integer_types):
-            return lid
-        elif isinstance(lid, list):
-            return self.LoadID(lid[0])
+        if isinstance(lid, list):
+            sid = self.LoadID(lid[0])
+        elif isinstance(lid, integer_types):
+            sid = lid
         else:
-            return lid.sid
+            sid = lid.sid
+        return sid
 
     def get_loads(self):
-        return self.lid
+        return self.lid_ref
 
     def Lid(self):
-        if isinstance(self.lid, integer_types):
-            return self.lid
-        else:
-            return self.LoadID(self.lid)
+        if self.lid_ref is not None:
+            return self.LoadID(self.lid_ref)
+        return self.lid
 
     #@property
     #def node_id(self):
@@ -367,9 +368,9 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         #return self.excite_id.nid
 
     def Tid(self):
-        if self.tid_ref is None:
-            return self.tid
-        return self.tid_ref.tid
+        if self.tid_ref is not None:
+            return self.tid_ref.tid
+        return self.tid
 
     def raw_fields(self):
         list_fields = ['LSEQ', self.sid, self.excite_id, self.Lid(), self.Tid()]
@@ -641,6 +642,7 @@ class SPCD(Load):
         self.nodes = nodes
         self.constraints = constraints
         self.enforced = enforced
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -769,6 +771,7 @@ class SLOAD(Load):
         self.sid = sid
         self.nodes = nodes
         self.mags = mags
+        self.nodes_ref = None
 
     def validate(self):
         assert len(self.nodes) == len(self.mags), 'len(nodes)=%s len(mags)=%s' % (len(self.nodes), len(self.mags))
