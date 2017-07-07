@@ -11,14 +11,14 @@ All dynamic loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, itervalues
 from six.moves import zip
 import numpy as np
 
-from pyNastran.utils import integer_types, integer_float_types
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, integer_string_or_blank,
+    integer, double_or_blank, integer_string_or_blank,
     integer_double_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -88,6 +88,8 @@ class ACSRCE(BaseCard):
         self.sloads_ref = None
         self.delay_ref = None
         self.dphase_ref = None
+        #self.dphases_ref = None
+        #self.delays_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -135,7 +137,7 @@ class ACSRCE(BaseCard):
                     for nid in load.node_ids:
                         sloads_ref[(load_id, nid, 0)] = load
                 elif load.type == 'LSEQ':
-                    load_idi = load.lid[0].sid
+                    load_idi = load.lid_ref[0].sid
                     #print(load)
                     #print(load.lid)
                     excite_idi = load.excite_id
@@ -169,7 +171,8 @@ class ACSRCE(BaseCard):
                 nid = sload_key[1]
                 delay_key = (self.delay, nid, 0)
                 delays_ref[sload_key] = model.DELAY(self.delay, msg=cmsg)
-            self.delays_ref = delays_ref
+            if delays_ref:
+                self.delay_ref = delays_ref
 
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             dphases_ref = {}
@@ -177,7 +180,8 @@ class ACSRCE(BaseCard):
                 nid = sload_key[1]
                 dphase_key = (self.dphase, nid, 0)
                 dphases_ref[sload_key] = model.DPHASE(self.dphase, msg=cmsg)
-            self.dphases_ref = dphases_ref
+            if dphases_ref:
+                self.dphase_ref = dphases_ref
 
         if isinstance(self.power, integer_types) and self.power > 0:
             self.power_ref = model.TableD(self.power, msg=cmsg)
@@ -206,6 +210,8 @@ class ACSRCE(BaseCard):
         self.sloads_ref = None
         self.delay_ref = None
         self.dphase_ref = None
+        #self.dphases_ref = None
+        #self.delays_ref = None
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -215,8 +221,8 @@ class ACSRCE(BaseCard):
         #del self.load_ids_ref
 
     def Delay(self):
-        if self.dphase_ref is not None:
-            return self.delay_ref.sid
+        if self.delay_ref is not None:
+            return next(itervalues(self.delay_ref)).sid
         elif self.delay in [0, 0.0]:
             return 0
         else:
@@ -224,19 +230,16 @@ class ACSRCE(BaseCard):
 
     def DPhase(self):
         if self.dphase_ref is not None:
-            return self.dphase_ref.tid
+            return next(itervalues(self.delay_ref)).tid
         elif self.dphase in [0, 0.0]:
             return 0
         else:
             return self.dphase
 
     def Power(self):
-        #if self.power in [0, 0.0]:
-            #return 0
-        if isinstance(self.power, integer_float_types):
-            return self.power
-        #print('self.power =', self.power)
-        return self.power_ref.tid
+        if self.power_ref is not None:
+            return self.power_ref.tid
+        return self.power
 
     def get_load_at_freq(self, freq):
         r"""
@@ -251,13 +254,13 @@ class ACSRCE(BaseCard):
         if self.delay in [0, 0.]:
             tau = 0.
         else:
-            print('delay\n', self.delay)
+            #print('delay\n', self.delay_ref)
             tau = self.delay_ref.value
         Pf = self.power_ref.interpolate(freq)
         if self.dphase in [0, 0.]:
             theta = 0.
         else:
-            print('dphase\n', self.dphase)
+            #print('dphase\n', self.dphase_ref)
             theta = self.dphase_ref.interpolate(freq)
         strength = A / (2.* pi * freq) * np.sqrt(8*pi*C*Pf / self.rho) ** (ei*(theta + 2*pi*freq*tau))
 
@@ -320,30 +323,30 @@ class DLOAD(LoadCombination):
         model : BDF()
             the BDF object
         """
-        load_ids2 = []
+        dload_ids2 = []
         msg = ' which is required by DLOAD=%s' % (self.sid)
-        for load_id in self.load_ids:
-            load_id2 = model.get_dload_entries(load_id, msg=msg)
-            load_ids2.append(load_id2)
-        self.load_ids_ref = load_ids2
+        for dload_id in self.load_ids:
+            dload_id2 = model.get_dload_entries(dload_id, msg=msg)
+            dload_ids2.append(dload_id2)
+        self.load_ids_ref = dload_ids2
 
     def safe_cross_reference(self, model, debug=True):
-        load_ids2 = []
+        dload_ids2 = []
         msg = ' which is required by DLOAD=%s' % (self.sid)
-        for load_id in self.load_ids:
+        for dload_id in self.load_ids:
             try:
-                load_id2 = model.get_dload_entries(load_id, msg=msg)
+                dload_id2 = model.get_dload_entries(dload_id, msg=msg)
             except KeyError:
                 if debug:
-                    msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (
-                        load_id, self.type, self.sid)
+                    msg = 'Couldnt find dload_id=%i, which is required by %s=%s' % (
+                        dload_id, self.type, self.sid)
                     print(msg)
                 continue
-            load_ids2.append(load_id2)
-        self.load_ids_ref = load_ids2
+            dload_ids2.append(dload_id2)
+        self.load_ids_ref = dload_ids2
 
     def uncross_reference(self):
-        self.load_ids = [self.LoadID(load) for load in self.get_load_ids()]
+        self.load_ids = [self.LoadID(dload) for dload in self.get_load_ids()]
         self.load_ids_ref = None
 
     def raw_fields(self):
@@ -480,28 +483,28 @@ class RLOAD1(DynamicLoad):
         assert len(card) <= 8, 'len(RLOAD1 card) = %i\ncard=%s' % (len(card), card)
         return RLOAD1(sid, excite_id, delay, dphase, tc, td, Type, comment=comment)
 
-    def _cross_reference_excite_id(self, model, msg):
-        """not quite done...not sure how to handle the very odd xref"""
-        case_control = model.case_control_deck
-        if case_control is not None:
-            #print('cc = %r' % case_control)
-            #print('asdf')
-            for key, subcase in sorted(iteritems(model.case_control_deck.subcases)):
-                print(subcase, type(subcase))
-                if 'LOADSET' in subcase:
-                    lseq_id = subcase['LOADSET'][0]
-                    lseq = model.Load(lseq_id, msg=msg)[0]
-                    self.excite_id_ref = lseq
-                    #self.dload_id = lseq.
-                elif 'DLOAD' in subcase:
-                    #dload_id = subcase['DLOAD'][0]
-                    self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
-                else:
-                    msg = ('LOADSET and DLOAD are not found in the case control deck\n%s' %
-                           str(model.case_control_deck))
-                    raise RuntimeError(msg)
-        else:
-            self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
+    #def _cross_reference_excite_id(self, model, msg):
+        #"""not quite done...not sure how to handle the very odd xref"""
+        #case_control = model.case_control_deck
+        #if case_control is not None:
+            ##print('cc = %r' % case_control)
+            ##print('asdf')
+            #for key, subcase in sorted(iteritems(model.case_control_deck.subcases)):
+                #print(subcase, type(subcase))
+                #if 'LOADSET' in subcase:
+                    #lseq_id = subcase['LOADSET'][0]
+                    #lseq = model.Load(lseq_id, msg=msg)[0]
+                    #self.excite_id_ref = lseq
+                    ##self.dload_id = lseq.
+                #elif 'DLOAD' in subcase:
+                    ##dload_id = subcase['DLOAD'][0]
+                    #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
+                #else:
+                    #msg = ('LOADSET and DLOAD are not found in the case control deck\n%s' %
+                           #str(model.case_control_deck))
+                    #raise RuntimeError(msg)
+        #else:
+            #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
 
     def cross_reference(self, model):
         """

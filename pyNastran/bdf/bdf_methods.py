@@ -128,7 +128,8 @@ class BDFMethods(BDFAttributes):
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
             volumes = []
-            if prop.type in ['PSHELL', 'PSHEAR']:
+            if prop.type == 'PSHELL':
+                # TODO: doesn't support PSHELL differential thicknesses
                 t = prop.t
                 areas = []
                 for eid in eids:
@@ -164,6 +165,14 @@ class BDFMethods(BDFAttributes):
                         if key not in skipped_eid_pid:
                             skipped_eid_pid.add(key)
                             self.log.debug('skipping volume %s' % str(key))
+            elif prop.type == 'PSHEAR':
+                t = prop.t
+                areas = []
+                for eid in eids:
+                    elem = self.elements[eid]
+                    areas.append(elem.Area())
+                volumesi = [area * t for area in areas]
+                volumes.extend(volumesi)
             elif prop.type in no_volume:
                 pass
             else:
@@ -199,7 +208,8 @@ class BDFMethods(BDFAttributes):
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
             masses = []
-            if prop.type in ['PSHELL', 'PSHEAR']:
+            if prop.type == 'PSHELL':
+                # TODO: doesn't support PSHELL differential thicknesses
                 t = prop.t
                 nsm = prop.nsm
                 rho = prop.Rho()
@@ -237,6 +247,14 @@ class BDFMethods(BDFAttributes):
                                'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
                                'PVISC', 'PBCOMP', 'PBEND']:
                 pass
+            elif prop.type == 'PSHEAR':
+                t = prop.t
+                nsm = prop.nsm
+                rho = prop.Rho()
+                for eid in eids:
+                    elem = self.elements[eid]
+                    area = elem.Area()
+                    masses.append(area * (rho * t + nsm))
             else:
                 raise NotImplementedError(prop)
             if masses:

@@ -1257,7 +1257,7 @@ class GetCard(GetMethods):
             if dload.type == 'DLOAD':
                 dload_ids = dload.get_load_ids()
                 load_scale = dload.scale * scale
-                scale_factors, load_ids = load.scale_factors, dload.get_dload_ids()
+                scale_factors, load_ids = dload.scale_factors, dload.get_dload_ids()
                 scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
                 for load_idi, scalei in zip(dload_ids, scale_factors_temp):
                     # prevents recursion
@@ -1584,6 +1584,10 @@ class GetCard(GetMethods):
                     useful if you only have CTETRA4s or only want CTETRA10s
                     fails if you're wrong
         """
+        etypes_no_pids = [
+            'CELAS4', 'CHBDYG',
+        ]
+
         etypes = [
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
@@ -1627,7 +1631,10 @@ class GetCard(GetMethods):
                 nids = np.zeros((neids, nnodes), dtype=dtype)
                 for i, eid in enumerate(eids):
                     elem = self.elements[eid]
-                    pid = elem.Pid()
+                    if elem.type in etypes_no_pids:
+                        pid = 0
+                    else:
+                        pid = elem.Pid()
                     assert pid is not None, elem
                     nidsi = elem.node_ids
                     #self.log.info(str(elem))
@@ -1715,6 +1722,10 @@ class GetCard(GetMethods):
           pids = [1, 2, 3]
           eids_list = model.get_element_ids_list_with_pids(pids)
         """
+        etypes_no_pids = [
+            'CELAS4', 'CHBDYG',
+        ]
+
         if pids is None:
             pids = iterkeys(self.properties)
         elif isinstance(pids, integer_types):
@@ -1724,7 +1735,10 @@ class GetCard(GetMethods):
 
         eids2 = []
         for eid, element in sorted(iteritems(self.elements)):
-            pid = element.Pid()
+            if element.type in etypes_no_pids:
+                pid = 0
+            else:
+                pid = element.Pid()
             if pid in pids:
                 eids2.append(eid)
         return eids2
@@ -1767,6 +1781,9 @@ class GetCard(GetMethods):
         etype_to_nids_map = {}
         pid_to_eids_ieids_map = defaultdict(list)
 
+        etypes_no_pids = [
+            'CELAS4', 'CHBDYG',
+        ]
         etypes_none_nodes = [
             'CELAS1', 'CELAS2', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP5',
@@ -1806,7 +1823,10 @@ class GetCard(GetMethods):
                         element = self.elements[eid]
                         node_ids[ieid, :] = [nid  if nid is not None else 0
                                              for nid in element.node_ids]
-                        pid = element.Pid()
+                        if etype in etypes_no_pids:
+                            pid = 0
+                        else:
+                            pid = element.Pid()
                         #nids_to_pids_map[]
                         pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
                 else:
@@ -1814,7 +1834,10 @@ class GetCard(GetMethods):
                         for ieid, eid in enumerate(eids):
                             element = self.elements[eid]
                             node_ids[ieid, :] = element.node_ids
-                            pid = element.Pid()
+                            if etype in etypes_no_pids:
+                                pid = 0
+                            else:
+                                pid = element.Pid()
                             #nids_to_pids_map[]
                             pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
                     except TypeError:
@@ -2017,7 +2040,7 @@ class GetCard(GetMethods):
                         if hasattr(prop, 'mid') and prop.Mid() in mids:
                             if pid not in mid_to_pids_map[mid]:
                                 mid_to_pids_map[mid].append(pid)
-            elif prop_type in ['PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST']:
+            elif prop_type in ['PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST', 'PBUSH1D']:
                 pass
             elif prop_type in ['PSHELL']:
                 mids = prop.material_ids

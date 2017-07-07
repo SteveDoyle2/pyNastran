@@ -5384,6 +5384,25 @@ class AddCards(AddMethods):
         return tempd
 
     def add_qhbdy(self, sid, flag, q0, grids, af=None, comment=''):
+        """
+        Creates a QHBDY card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        flag : str
+            valid_flags = {POINT, LINE, REV, AREA3, AREA4, AREA6, AREA8}
+        q0 : float
+            Magnitude of thermal flux into face. Q0 is positive for heat
+            into the surface
+        af : float; default=None
+            Area factor depends on type
+        grids : List[int]
+            Grid point identification of connected grid points
+        comment : str; default=''
+            a comment for the card
+        """
         load = QHBDY(sid, flag, q0, grids, af=af, comment=comment)
         self._add_thermal_load_object(load)
         return load

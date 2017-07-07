@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import  iteritems
@@ -519,7 +519,7 @@ class QBDY2(ThermalLoad):  # not tested
 
     def Eid(self):
         if self.eid_ref is not None:
-            return self.eid.eid
+            return self.eid_ref.eid
         return self.eid
 
     def nQFluxTerms(self):
@@ -672,10 +672,7 @@ class QBDY3(ThermalLoad):
         return list_fields
 
     def get_loads(self):
-        """
-        .. todo:: return loads
-        """
-        return []
+        return [self]
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -702,6 +699,25 @@ class QHBDY(ThermalLoad):
     }
 
     def __init__(self, sid, flag, q0, grids, af=None, comment=''):
+        """
+        Creates a QHBDY card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        flag : str
+            valid_flags = {POINT, LINE, REV, AREA3, AREA4, AREA6, AREA8}
+        q0 : float
+            Magnitude of thermal flux into face. Q0 is positive for heat
+            into the surface
+        af : float; default=None
+            Area factor depends on type
+        grids : List[int]
+            Grid point identification of connected grid points
+        comment : str; default=''
+            a comment for the card
+        """
         ThermalLoad.__init__(self)
         if comment:
             self.comment = comment
@@ -709,7 +725,6 @@ class QHBDY(ThermalLoad):
         #: Load set identification number. (Integer > 0)
         self.sid = sid
         self.flag = flag
-        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8']
 
         #: Magnitude of thermal flux into face. Q0 is positive for heat
         #: into the surface. (Real)
@@ -721,6 +736,8 @@ class QHBDY(ThermalLoad):
         #: Grid point identification of connected grid points.
         #: (Integer > 0 or blank)
         self.grids = grids
+
+        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], self
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -735,10 +752,7 @@ class QHBDY(ThermalLoad):
             a comment for the card
         """
         sid = integer(card, 1, 'eid')
-
         flag = string(card, 2, 'flag')
-        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
-                        'AREA6', 'AREA8']
 
         q0 = double(card, 3, 'q0')
         af = double_or_blank(card, 4, 'af')
@@ -876,8 +890,8 @@ class TEMP(ThermalLoad):
         for i in range(ntemps):
             n = i * 2 + 2
             gi = integer(card, n, 'g' + str(i))
-            Ti = double(card, n + 1, 'T' + str(i))
-            temperatures[gi] = Ti
+            temperaturei = double(card, n + 1, 'T' + str(i))
+            temperatures[gi] = temperaturei
         return TEMP(sid, temperatures, comment=comment)
 
     @classmethod
@@ -925,10 +939,7 @@ class TEMP(ThermalLoad):
         return self.raw_fields()
 
     def get_loads(self):
-        """
-        .. todo:: return loads
-        """
-        return []
+        return [self]
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
