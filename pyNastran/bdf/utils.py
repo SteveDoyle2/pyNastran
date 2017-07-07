@@ -302,18 +302,156 @@ def get_include_filename(card_lines, include_dir=''):
         line = line.strip('\t\r\n ')
         card_lines2.append(line)
 
-    card_lines2[0] = card_lines2[0][7:].strip()  # truncate the cardname
+    # combine the lines
+    # -----------------
+    # initial:
+    # INCLUDE '/dir123
+    #          /dir456
+    #          /dir789/filename.dat'
+    #
+    # final (not the extra single quotes):
+    # "'/dir123/dir456/dir789/filename.dat'"
+    card_lines2[0] = card_lines2[0][7:].strip()  # remove the INCLUDE
     filename = ''.join(card_lines2)
+
+    # drop the single quotes:
+    #     "'path1/path2/model.inc'" to "path1/path2/model.inc"
     filename = filename.strip('"').strip("'")
+
+    # not handled...
+    #    include '/mydir' /level1 /level2/ 'myfile.x'
+    #
+    # -> /proj/dept123/sect 456/joe/flange.bdf
+
+    # probably not handled...
+    # include c:\project,
+    # $ A comment line
+    # '\Data Files' \subdir\thisfile
+    #
+    # -> C:\PROJECT\Data Files\SUBDIR\THISFILE
+
     if ':' in filename:
+        # old
         ifilepaths = filename.split(':')
         filename = os.path.join(*ifilepaths)
+
+        # new
+        #tokens = split_filename_into_tokens(include_dir, filename, is_windows)
+        #filename = os.path.join(tokens)
+
     if is_windows:
         filename = os.path.join(include_dir, filename).replace('/', '\\')
     else:
         filename = os.path.join(include_dir, filename).replace('\\', '/')
     return filename
 
+def split_filename_into_tokens(include_dir, filename, is_windows):
+    """tokens are the individula components of paths"""
+    #print('--------------')
+
+    #  attempt #1
+    #
+    #if not include_dir:
+        #print('setting inc')
+        #include_dir = '.'
+
+    # # attempt #2
+    #
+    # remove extra / and \ characters
+    # 1. change \\ into & to not break network paths
+    # 2. remove / and \ characters
+    # 3. change & back into //
+    #filename = filename.replace(r'\\', '&').lstrip('/\\').replace('&', r'//')
+    #if include_dir:
+        #include_dir = include_dir.replace(r'\\', '&').lstrip('/\\').replace('&', r'//')
+    #else:
+        #include_dir = '.'
+
+    #print('  include_dir_in = %r' % include_dir)
+    #print('  filename_in = %r' % filename)
+
+    # attempt #3
+    if include_dir:
+        if filename[0] in ['/', '\\']:
+            raise SyntaxError('filename=%r cannot start with / or \ if '
+                              'there is an include directory' % filename)
+    elif is_windows:
+        filename = filename.replace(r'\\', '&').lstrip('\\').lstrip('/\\').replace('&', r'//')
+    else:
+        pass
+        #print('setting inc')
+
+    #if include_dir:
+        #print('setting include_dir=%r' % include_dir)
+
+    if include_dir:
+        inc_path = os.path.join(include_dir, filename)
+    else:
+        inc_path = filename
+    #print('  inc_path = %r' % inc_path)
+
+    if is_windows:
+        #print('windows')
+        #print('  include_dir = %r' % include_dir)
+        #print('  filename = %r' % filename)
+        # TODO: what about network paths like:
+        #    \\COMPUTER\Share\model.bdf
+        pth = inc_path.replace('\\', '/')
+        pth2 = inc_path
+        #print('  pth = %r' % pth)
+        #print('  pth2 = %r' % pth2)
+    else:
+        # linux mounted drives look like /mnt/name
+        pth = inc_path.replace('\\', '/')
+        #print('linux/mac')
+        #print('  include_dir = %r' % include_dir)
+        #print('  filename = %r' % filename)
+        #print('  pth = %r' % pth)
+
+    tokens = pth.split('/')
+    tokens2 = split_tokens(tokens, is_windows)
+    if not is_windows and pth[0] == '/' and len(tokens) > 1:
+        #print(pth)
+        #print(tokens2)
+        tokens2[1] = '/' + tokens2[1]
+        tokens2 = tokens2[1:]
+        #print('tokens2 =', tokens2)
+    return tokens2
+
+def split_tokens(tokens, is_windows):
+    """converts a series of path tokens into a joinable path"""
+    tokens2 = []
+    is_mac_linux = not is_windows
+    for itoken, token in enumerate(tokens):
+        # this is technically legal...
+        #   INCLUDE '/testdir/dir1/dir2/*/myfile.dat'
+        assert '*' not in token, '* in path not supported; tokens=%s' % tokens
+        assert '$' not in token, '$ in path not supported; tokens=%s' % tokens
+        if itoken == 0 and is_mac_linux and ':' in token:
+            # no C:/dir/model.bdf on linux/mac
+            raise SyntaxError('token cannot include colons (:); tokens=%s' % tokens)
+        elif ':' in token:
+            # this has an environment variable or a drive letter
+            stokens = token.split(':')
+            assert len(stokens) == 2, stokens
+            stokens2 = []
+            if len(stokens[0]) == 1:
+                assert len(stokens[1]) == 0, 'stokens=%s' % stokens
+                # drive letter
+                if itoken != 0:
+                    raise SyntaxError('the drive letter is in the wrong place; '
+                                      'itoken=%s; token=%r; stoken=%s; tokens=%s' % (
+                                          itoken, token, stokens, tokens))
+                tokens2.append(token)
+            else:
+                # variables in Windows are not case sensitive
+                tokeni = os.path.expandvars('$' + stokens[0])
+                tokens2.append(tokeni)
+                tokens2.append(stokens[1])
+        else:
+            # standard
+            tokens2.append(token)
+    return tokens2
 
 def parse_executive_control_deck(executive_control_lines):
     """

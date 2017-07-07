@@ -79,6 +79,7 @@ class Part(object):
 
         # bars
         self.r2d2 = None
+        self.r2d2_eids = None
 
         # shells
         self.cpe3 = None
@@ -106,12 +107,11 @@ class Part(object):
 
         # solids
         self.c3d10h_eids = None
-
         if 'r2d2' in element_types: # similar to CBAR
             elements = element_types['r2d2']
             self.r2d2 = np.array(elements, dtype='int32')
             self.r2d2_eids = self.r2d2[:, 0]
-            assert r2d2.shape[1] == 3, r2d2.shape
+            assert self.r2d2.shape[1] == 3, self.r2d2.shape
 
         # shells
         if 'cpe3' in element_types: # similar to CTRIA3

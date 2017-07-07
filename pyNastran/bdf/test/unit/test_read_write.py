@@ -7,6 +7,7 @@ from six import PY2, StringIO
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, get_logger2
 from pyNastran.bdf.test.test_case_control_deck import compare_lines
+from pyNastran.bdf.utils import split_filename_into_tokens
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
@@ -410,6 +411,64 @@ class TestReadWrite(unittest.TestCase):
         eigb = model2.methods[42]
         assert eigb.comment == '$ this is a preload buckling case\n', 'comment=%r\n%s' % (eigb.comment, str(eigb))
         os.remove(bdf_filename2)
+
+    def test_paths(self):
+        """tests parsing paths"""
+        include_dir = ''
+        filename = 'model.bdf'
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        assert filename_out == ['model.bdf'], 'filename_out=%r windows' % filename_out
+
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
+        assert filename_out == ['model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        #-----------------------------------------------------------------------
+
+        include_dir = 'dir'
+        filename = 'model.bdf'
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        assert filename_out == ['dir', 'model.bdf'], 'filename_out=%r windows' % filename_out
+
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
+        assert filename_out == ['dir', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        #-----------------------------------------------------------------------
+        include_dir = 'dir1'
+        filename = 'dir2/model.bdf'
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        assert filename_out == ['dir1', 'dir2', 'model.bdf'], 'filename_out=%r windows' % filename_out
+
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
+        assert filename_out == ['dir1', 'dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        #-----------------------------------------------------------------------
+        include_dir = 'dir1/'
+        filename = '/dir2/model.bdf'
+        with self.assertRaises(SyntaxError):
+            filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        #assert filename_out == ['dir1', 'dir2', 'model.bdf'], 'filename_out=%r windows' % filename_out
+
+        with self.assertRaises(SyntaxError):
+            filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
+        #assert filename_out == ['dir1', 'dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+
+        #-----------------------------------------------------------------------
+        include_dir = ''
+        filename = 'C:/dir2/model.bdf'
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        assert filename_out == ['C:', 'dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+
+        with self.assertRaises(SyntaxError):
+            filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
+            #assert filename_out == ['C:', 'dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+
+        #-----------------------------------------------------------------------
+        include_dir = ''
+        filename = '/dir2/model.bdf'
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        assert filename_out == ['dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
+        assert filename_out == ['/dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        #-----------------------------------------------------------------------
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
