@@ -107,9 +107,9 @@ class TestOpt(unittest.TestCase):
         save_load_deck(model)
 
     def test_dvprel1(self):
-        """tests a DESVAR, DVPREL1, DRESP1, DCONSTR"""
+        """tests a DESVAR, DVPREL1, DVPREL2, DRESP1, DRESP2, DRESP3, DCONSTR"""
         model = BDF(debug=False)
-        oid = 10
+        dvprel1_id = 10
         desvar_id = 12
         desvar_ids = 12
         Type = 'PSHELL'
@@ -136,14 +136,15 @@ class TestOpt(unittest.TestCase):
         model.add_pshell(pid, mid1=30, t=0.1, comment='pshell')
         model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
         desvar = model.add_desvar(desvar_id, label, xinit, xlb, xub, comment='desvar')
-        dvprel1 = model.add_dvprel1(oid, Type, pid, pname_fid,
+        dvprel1 = model.add_dvprel1(dvprel1_id, Type, pid, pname_fid,
                                     desvar_ids, coeffs, p_min=None, p_max=1e20, c0=0.0,
                                     validate=True, comment='dvprel')
 
+        dvprel2_id = dvprel1_id + 1
         deqation = 100
         dvids = desvar_id
         labels = None
-        dvprel2 = model.add_dvprel2(oid+1, Type, pid, pname_fid, deqation,
+        dvprel2 = model.add_dvprel2(dvprel2_id, Type, pid, pname_fid, deqation,
                                     dvids, labels, p_min=None, p_max=1e20,
                                     validate=True, comment='')
         equation_id = 100
@@ -164,12 +165,13 @@ class TestOpt(unittest.TestCase):
         dresp1 = model.add_dresp1(dresp1_id, label, response_type,
                                   property_type, region,
                                   atta, attb, atti, validate=True, comment='dresp1')
-        dconstr = model.add_dconstr(oid, dresp1_id, lid=-1.e20, uid=1.e20,
+        dconstr = model.add_dconstr(dresp1_id, dresp1_id, lid=-1.e20, uid=1.e20,
                                     lowfq=0., highfq=1.e20, comment='dconstr')
 
         params = {
             (0, 'DRESP1') : [42],
             (1, 'DESVAR') : [12],
+            (3, 'DNODE') : [[100, 101], [1, 2]],
         }
         dresp2_id = 43
         dequation = equation_id
@@ -178,6 +180,27 @@ class TestOpt(unittest.TestCase):
         dresp2 = model.add_dresp2(dresp2_id, label, dequation, region, params,
                                   method='MIN', c1=100., c2=0.005, c3=None,
                                   comment='dresp2')
+
+        dresp3_id = 44
+        label = 'dresp3'
+        group = 'cat'
+        Type = 'dog'
+        region = None
+        params = {
+            (0, 'DRESP1') : [42],
+            (1, 'DESVAR') : [12],
+            (2, 'DRESP2') : [dresp2_id],
+            (2, 'DVPREL1') : [dvprel1_id],
+            (3, 'DVPREL2') : [dvprel2_id],
+            (3, 'DNODE') : [[100, 101], [1, 2]],
+        }
+        dresp3 = model.add_dresp3(dresp3_id, label, group, Type, region,
+                                  params, comment='dresp3')
+        dresp3.raw_fields()
+        #print(dresp3)
+        grid = model.add_grid(100)
+        model.add_grid(101)
+        model.pop_parse_errors()
 
         desvar.write_card(size=8)
         desvar.write_card(size=16)
@@ -191,14 +214,18 @@ class TestOpt(unittest.TestCase):
         dresp2.write_card(size=8)
         dresp2.write_card(size=16)
         dresp2.write_card(size=16, is_double=True)
+        dresp3.write_card(size=8)
+        dresp3.write_card(size=16)
+        dresp3.write_card(size=16, is_double=True)
 
         dvprel2.write_card(size=8)
         dvprel2.write_card(size=16)
         dvprel2.write_card(size=16, is_double=True)
 
         model.validate()
-        #model._verify_bdf(xref=False)
+        model._verify_bdf(xref=False)
         model.cross_reference()
+        model.pop_xref_errors()
 
         desvar.write_card(size=8)
         desvar.write_card(size=16)
@@ -215,9 +242,14 @@ class TestOpt(unittest.TestCase):
         dresp2.write_card(size=8)
         dresp2.write_card(size=16)
         dresp2.write_card(size=16, is_double=True)
+        dresp3.write_card(size=8)
+        dresp3.write_card(size=16)
+        dresp3.write_card(size=16, is_double=True)
         dvprel2.write_card(size=8)
         dvprel2.write_card(size=16)
         dvprel2.write_card(size=16, is_double=True)
+        grid.nid = 200
+        assert '200' in str(dresp3), dresp3
 
         save_load_deck(model)
 

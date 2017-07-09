@@ -1260,14 +1260,14 @@ class GetCard(GetMethods):
                 load_scale = dload.scale * scale
                 scale_factors, load_ids = dload.scale_factors, dload.get_load_ids()
                 scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
-                for load_idi, scalei in zip(dload_ids, scale_factors_temp):
+                for dload_idi, scalei in zip(dload_ids, scale_factors_temp):
                     # prevents recursion
-                    if load_idi in unallowed_dload_ids:
+                    if dload_idi in unallowed_dload_ids:
                         msg = 'There is a recursion error.  DLOAD trace=%s; dload_id=%s' % (
                             unallowed_dload_ids, dload_idi)
                         raise RuntimeError(msg)
                     unallowed_dload_ids2 = deepcopy(unallowed_dload_ids)
-                    unallowed_dload_ids2.append(load_idi)
+                    unallowed_dload_ids2.append(dload_idi)
 
                     dload_casei = self.DLoad(dload_idi, msg=msg)
                     dloadsi, scale_factorsi = self._reduce_dload_case(

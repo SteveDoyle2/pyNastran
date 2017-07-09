@@ -4929,6 +4929,77 @@ class AddCards(AddMethods):
 
     def add_dresp1(self, dresp_id, label, response_type, property_type, region,
                    atta, attb, atti, validate=True, comment=''):
+        """
+        Creates a DRESP1 card.
+
+        A DRESP1 is used to define a "simple" output result that may be
+        optimized on.  A simple result is a result like stress, strain,
+        force, displacement, eigenvalue, etc. for a node/element that
+        may be found in a non-optimization case.
+
+        Parameters
+        ----------
+        dresp_id : int
+            response id
+        lable : str
+            Name of the response
+        response_type : str
+            Response type
+        property_type : str
+            Element flag (PTYPE = 'ELEM'), or property entry name, or panel
+            flag for ERP responses (PTYPE = 'PANEL' - See Remark 34), or
+            RANDPS ID. Blank for grid point responses. 'ELEM' or property
+            name used only with element type responses (stress, strain,
+            force, etc.) to identify the relevant element IDs, or the property
+            type and relevant property IDs.
+
+            Must be {ELEM, PBAR, PSHELL, PCOMP, PANEL, etc.)
+            PTYPE = RANDPS ID when RTYPE=PSDDISP, PSDVELO, or PSDACCL.
+        region : str
+            Region identifier for constraint screening
+        atta : int / float / str / blank
+            Response attribute
+        attb : int / float / str / blank
+            Response attribute
+        atti : List[int / float / str]
+            the response values to pull from
+            List[int]:
+                list of grid ids
+                list of property ids
+            List[str]
+                'ALL'
+        comment : str; default=''
+            a comment for the card
+        validate : bool; default=True
+            should the card be validated when it's created
+
+        Example 1
+        ---------
+        dresp_id = 103
+        label = 'resp1'
+        response_type = 'STRESS'
+        property_type = 'PSHELL'
+        pid = 3
+        atta = 9 # von mises upper surface stress
+        region = None
+        attb = None
+        atti = [pid]
+        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        Example 2
+        ---------
+        dresp_id = 104
+        label = 'resp2'
+        response_type = 'STRESS'
+        property_type = 'PCOMP'
+        pid = 3
+        layer = 4
+        atta = 9 # von mises upper surface stress
+        region = None
+        attb = layer
+        atti = [pid]
+        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        """
         dresp = DRESP1(dresp_id, label, response_type, property_type, region,
                        atta, attb, atti, validate=validate, comment=comment)
         self._add_dresp_object(dresp)
@@ -4936,16 +5007,68 @@ class AddCards(AddMethods):
 
     def add_dresp2(self, dresp_id, label, dequation, region, params,
                    method='MIN', c1=1., c2=0.005, c3=10.,
-                   comment=''):
+                   validate=True, comment=''):
+        """
+        Creates a DRESP2 card.
+
+        A DRESP2 is used to define a "complex" output result that may be
+        optimized on.  A complex result is a result that uses:
+          - simple (DRESP1) results
+          - complex (DRESP2) results
+          - default values (DTABLE)
+          - DVCRELx values
+          - DVMRELx values
+          - DVPRELx values
+          - DESVAR values
+        Then, an equation (DEQATN) is used to formulate an output response.
+
+        Parameters
+        ----------
+        dresp_id : int
+            response id
+        label : str
+            Name of the response
+        dequation : int
+            DEQATN id
+        region : str
+            Region identifier for constraint screening
+        params : dict[(index, card_type)] = values
+            the storage table for the response function
+            index : int
+                a counter
+            card_type : str
+                the type of card to pull from
+                DESVAR, DVPREL1, DRESP2, etc.
+            values : List[int]
+                the values for this response
+        method : str; default=MIN
+            flag used for FUNC=BETA/MATCH
+            FUNC = BETA
+                valid options are {MIN, MAX}
+            FUNC = MATCH
+                valid options are {LS, BETA}
+        c1 / c2 / c3 : float; default=1. / 0.005 / 10.0
+            constants for FUNC=BETA or FUNC=MATCH
+        comment : str; default=''
+            a comment for the card
+        validate : bool; default=False
+            should the card be validated when it's created
+
+        params = {
+           (0, 'DRESP1') = [10, 20],
+           (1, 'DESVAR') = [30],
+           (2, 'DRESP1') = [40],
+        }
+        """
         dresp = DRESP2(dresp_id, label, dequation, region, params,
                        method=method, c1=c1, c2=c2, c3=c3, comment=comment)
         self._add_dresp_object(dresp)
         return dresp
 
     def add_dresp3(self, dresp_id, label, group, Type, region, params,
-                   comment=''):
+                   validate=True, comment=''):
         dresp = DRESP3(dresp_id, label, group, Type, region, params,
-                       comment=comment)
+                       validate=validate, comment=comment)
         self._add_dresp_object(dresp)
         return dresp
 
