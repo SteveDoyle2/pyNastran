@@ -326,64 +326,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #import time
         #t0 = time.time()
 
-        if 1:
-            # t=.578
-            #print("get_displacement_index_xyz_cp_cd")
-            out = model.get_displacement_index_xyz_cp_cd(
-                fdtype=fdtype, idtype='int32', sort_ids=True)
-            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-            self.i_transform = icd_transform
+        # t=.578
+        #print("get_displacement_index_xyz_cp_cd")
+        out = model.get_displacement_index_xyz_cp_cd(
+            fdtype=fdtype, idtype='int32', sort_ids=True)
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        self.i_transform = icd_transform
 
-            #print("transform_xyzcp_to_xyz_cid")
-            xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
-                                                        in_place=False)
+        #print("transform_xyzcp_to_xyz_cid")
+        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
+                                                    in_place=False)
 
-            nid_map = self.nid_map
-            for i, nid in enumerate(nid_cp_cd[:, 0]):
-                nid_map[nid] = i
-        elif 0:  # pragma: no cover
-            # t=.573
-            out = model.get_displacement_index_xyz_cp_cd(
-                fdtype='float32', idtype='int32', sort_ids=True)
-            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-            self.i_transform = icd_transform
-            xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
-
-            nid_map = self.nid_map
-            for i, nid in enumerate(nid_cp_cd[:, 0]):
-                nid_map[nid] = i
-        else:  # pragma: no cover
-            # t=.75
-            nid_map = self.nid_map
-            assert cid == 0, cid
-            nnodes = len(model.nodes)
-            nspoints = 0
-            spoints = None
-            if model.spoints:
-                spoints = model.spoints.points
-                nspoints = len(spoints)
-
-            xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=fdtype)
-            if nspoints:
-                nids = model.nodes.keys()
-                newpoints = nids + list(spoints)
-                newpoints.sort()
-                for i, nid in enumerate(newpoints):
-                    if nid in spoints:
-                        nid_map[nid] = i
-                    else:
-                        node = model.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position()
-                        nid_map[nid] = i
-            else:
-                for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-                    xyz = node.get_position()
-                    xyz_cid0[i, :] = xyz
-                    nid_map[nid] = i
-
-            # get indicies and transformations for displacements
-            #self.i_transform, self.transforms = model.get_displacement_index_transforms()
-            self.i_transform = model.get_displacement_index()
+        nid_map = self.nid_map
+        for i, nid in enumerate(nid_cp_cd[:, 0]):
+            nid_map[nid] = i
 
         self._add_nastran_spoints_to_grid(model)
         #print('dt_nastran_xyz =', time.time() - t0)

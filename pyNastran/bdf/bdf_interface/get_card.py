@@ -554,6 +554,7 @@ class GetCard(GetMethods):
             spcd : (nnodes, 3) float ndarray
                 the SPCD load application
         """
+        assert len(nid_map) == len(node_ids), 'len(nid_map)=%s len(node_ids)=%s' % (len(nid_map), len(node_ids))
         subcase = self.subcases[subcase_id]
         is_loads = False
         is_temperatures = False
@@ -730,8 +731,8 @@ class GetCard(GetMethods):
         if not any(['FORCE' in self.card_count, 'PLOAD2' in self.card_count,
                     'PLOAD4' in self.card_count, 'SPCD' in self.card_count]):
             return None, None, None
-        nids = sorted(self.nodes.keys())
-        nnodes = len(nids)
+        nnodes = len(node_ids)
+        assert len(nid_map) == len(node_ids), 'len(nid_map)=%s len(node_ids)=%s' % (len(nid_map), len(node_ids))
 
         loads, scale_factors = self.get_reduced_loads(
             load_case_id, skip_scale_factor0=True)[:2]
@@ -1257,7 +1258,7 @@ class GetCard(GetMethods):
             if dload.type == 'DLOAD':
                 dload_ids = dload.get_load_ids()
                 load_scale = dload.scale * scale
-                scale_factors, load_ids = dload.scale_factors, dload.get_dload_ids()
+                scale_factors, load_ids = dload.scale_factors, dload.get_load_ids()
                 scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
                 for load_idi, scalei in zip(dload_ids, scale_factors_temp):
                     # prevents recursion

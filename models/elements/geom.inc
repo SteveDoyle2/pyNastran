@@ -1,3 +1,8 @@
+$ Point array  with 3 components, only has 33 tuples but there are 54 points
+$SPOINT,100,THRU,120
+
+$ vtkUnstructuredGrid (000000000AFD7F80): Point array  with 3 components, only has 33 tuples but there are 34 points
+SPOINT,100
 GRID     13             .5      .5      3.
 $
 GRID     5              1.      1.      1.

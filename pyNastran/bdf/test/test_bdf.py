@@ -573,15 +573,21 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 remake = pickle_obj
                 if remake:
                     #log = fem1.log
-                    fem1.save('model.obj')
-                    fem1.save('model.obj', unxref=False)
-                    fem1.write_bdf('spike_out.bdf')
+                    model_name = os.path.splitext(bdf_model)[0]
+                    obj_model = '%s.test_bdf.obj' % (model_name)
+                    #out_model_8 = '%s.test_bdf.bdf' % (model_name)
+                    #out_model_16 = '%s.test_bdf.bdf' % (model_name)
+
+                    fem1.save(obj_model)
+                    fem1.save(obj_model, unxref=False)
+                    #fem1.write_bdf(out_model_8)
                     fem1.get_bdf_stats()
 
                     fem1 = BDF(debug=fem1.debug, log=fem1.log)
-                    fem1.load('model.obj')
-                    fem1.write_bdf('spike_in.bdf')
+                    fem1.load(obj_model)
+                    #fem1.write_bdf(out_model_8)
                     #fem1.log = log
+                    os.remove(obj_model)
                     fem1.get_bdf_stats()
 
                     fem1.cross_reference()
