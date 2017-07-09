@@ -1586,7 +1586,7 @@ class GetCard(GetMethods):
                     fails if you're wrong
         """
         etypes_no_pids = [
-            'CELAS4', 'CHBDYG',
+            'CELAS4', 'CDAMP4', 'CHBDYG',
         ]
 
         etypes = [
@@ -1724,7 +1724,7 @@ class GetCard(GetMethods):
           eids_list = model.get_element_ids_list_with_pids(pids)
         """
         etypes_no_pids = [
-            'CELAS4', 'CHBDYG',
+            'CELAS4', 'CDAMP4', 'CHBDYG',
         ]
 
         if pids is None:
@@ -1783,11 +1783,11 @@ class GetCard(GetMethods):
         pid_to_eids_ieids_map = defaultdict(list)
 
         etypes_no_pids = [
-            'CELAS4', 'CHBDYG',
+            'CELAS4', 'CDAMP4', 'CHBDYG',
         ]
         etypes_none_nodes = [
             'CELAS1', 'CELAS2', 'CELAS4',
-            'CDAMP1', 'CDAMP2', 'CDAMP5',
+            'CDAMP1', 'CDAMP2', 'CDAMP4', 'CDAMP5',
             'CBUSH', 'CBUSH1D', 'CFAST',
             'CTRIAX', 'CQUADX', 'CTRIAX6',
             'CTRIA6', 'CQUAD8', 'CQUAD',
@@ -1834,7 +1834,11 @@ class GetCard(GetMethods):
                     try:
                         for ieid, eid in enumerate(eids):
                             element = self.elements[eid]
-                            node_ids[ieid, :] = element.node_ids
+                            try:
+                                node_ids[ieid, :] = element.node_ids
+                            except TypeError:
+                                print(element)
+                                raise
                             if etype in etypes_no_pids:
                                 pid = 0
                             else:

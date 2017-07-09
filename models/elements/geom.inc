@@ -1,8 +1,4 @@
-$ Point array  with 3 components, only has 33 tuples but there are 54 points
-$SPOINT,100,THRU,120
-
-$ vtkUnstructuredGrid (000000000AFD7F80): Point array  with 3 components, only has 33 tuples but there are 34 points
-SPOINT,100
+SPOINT,100,THRU,102
 GRID     13             .5      .5      3.
 $
 GRID     5              1.      1.      1.
@@ -119,6 +115,21 @@ CDAMP1	42	12	25	5	31	5
 CDAMP1	43	12	25	6	31	6
 PDAMP	12	2.
 CDAMP2	44	12.	22	6	30	6
+
+CDAMP3	45	13	101	102
+CELAS3	46	14	101	102
+CDAMP4	47	15.	102
+CELAS4	48	16.	102
+CELAS2	49	17.	25	1	101	0
+PDAMP	13	13.
+PELAS	14	14.
+
+$CDAMP1	41	12	25	3	31	3
+$CDAMP1	42	12	25	5	31	5
+$CDAMP1	43	12	25	6	31	6
+$PDAMP	12	2.
+$CDAMP2	44	12.	22	6	30	6
+
 
 $ visc
 GRID     32              -1.	0.	-2.
