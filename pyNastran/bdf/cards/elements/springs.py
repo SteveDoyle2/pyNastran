@@ -465,8 +465,8 @@ class CELAS3(SpringElement):
     def _verify(self, xref=True):
         eid = self.eid
         node_ids = self.node_ids
-        s1 = self.s1
-        s2 = self.s2
+        s1 = self.nodes[0]
+        s2 = self.nodes[1]
         #ge = self.ge
         #s = self.s
 
@@ -480,7 +480,7 @@ class CELAS3(SpringElement):
             assert self.pid_ref.type in ['PELAS'], self.pid_ref
             assert isinstance(k, float), 'k=%r' % k
             assert len(node_ids) == len(self.nodes)
-            #for nodeID, node in zip(node_ids, self.nodes):
+            #for nid, node in zip(node_ids, self.nodes):
                 #assert node.node.nid
 
     def raw_fields(self):
@@ -526,7 +526,8 @@ class CELAS4(SpringElement):
         #: stiffness of the scalar spring
         self.k = k
         #: Scalar point identification numbers
-        self.nodes = nodes
+        #self.nodes = nodes
+        self.prepare_node_ids(nodes, allow_empty_nodes=True)
         self.nodes_ref = None
 
     def validate(self):
@@ -574,6 +575,8 @@ class CELAS4(SpringElement):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         msg = ', which is required by CELAS4 eid=%s' % (self.eid)
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 

@@ -646,6 +646,45 @@ class CaseControlDeck(object):
             #param_type = 'OBJ-type'
             #key = obj.type
 
+        elif line_upper.startswith('TEMP'):
+            if '=' in line:
+                (key, value) = line_upper.strip().split('=')
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            assert equals_count == 1, line_upper
+            assert '(' in line_upper, line_upper
+            options = None
+            param_type = 'STRESS-type'
+            key = key.strip().upper()
+            value = value.strip()
+            if self.debug:
+                self.log.debug("key=%r value=%r" % (key, value))
+            param_type = 'STRESS-type'
+            assert key.upper() == key, key
+
+            #param_type = 'STRESS-type'
+            sline = key.strip(')').split('(')
+            key = sline[0]
+            options = sline[1].split(',')
+
+            assert len(options) == 1, line_upper
+            # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
+            key = 'TEMPERATURE(%s)' % options[0]
+            options = []
+        elif line_upper.startswith('RIGID'):
+            if '=' in line:
+                (key, value) = line_upper.strip().split('=')
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            assert key == 'RIGID', line_upper
+            param_type = 'STRESS-type'
+            options = []
+            #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
+            if value == 'LAGR':
+                value = 'LAGRANGE'
+
         elif equals_count == 1:  # STRESS
             if '=' in line:
                 (key, value) = line_upper.strip().split('=')
@@ -666,24 +705,13 @@ class CaseControlDeck(object):
                 key = sline[0]
                 options = sline[1].split(',')
 
-                # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
-                if key in ['TEMPERATURE', 'TEMP']:
-                    option = options[0]
-                    if option == '':
-                        option = 'BOTH'
-                    key = 'TEMPERATURE'
-                    options = [option]
-
             elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
                 #print('A ??? line = ',line)
                 #raise RuntimeError(line)
                 pass
             else:  # STRESS-type; TITLE = stuff
                 #print('B ??? line = ',line)
-                if key in ['TEMPERATURE', 'TEMP']:
-                    assert len(options) == 0, options
-                    key = 'TEMPERATURE'
-                    options = ['BOTH']
+                pass
 
             key = update_param_name(key)
             verify_card(key, value, options, line)

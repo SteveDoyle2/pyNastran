@@ -326,64 +326,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #import time
         #t0 = time.time()
 
-        if 1:
-            # t=.578
-            #print("get_displacement_index_xyz_cp_cd")
-            out = model.get_displacement_index_xyz_cp_cd(
-                fdtype=fdtype, idtype='int32', sort_ids=True)
-            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-            self.i_transform = icd_transform
+        # t=.578
+        #print("get_displacement_index_xyz_cp_cd")
+        out = model.get_displacement_index_xyz_cp_cd(
+            fdtype=fdtype, idtype='int32', sort_ids=True)
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        self.i_transform = icd_transform
 
-            #print("transform_xyzcp_to_xyz_cid")
-            xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
-                                                        in_place=False)
+        #print("transform_xyzcp_to_xyz_cid")
+        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
+                                                    in_place=False)
 
-            nid_map = self.nid_map
-            for i, nid in enumerate(nid_cp_cd[:, 0]):
-                nid_map[nid] = i
-        elif 0:  # pragma: no cover
-            # t=.573
-            out = model.get_displacement_index_xyz_cp_cd(
-                fdtype='float32', idtype='int32', sort_ids=True)
-            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-            self.i_transform = icd_transform
-            xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
-
-            nid_map = self.nid_map
-            for i, nid in enumerate(nid_cp_cd[:, 0]):
-                nid_map[nid] = i
-        else:  # pragma: no cover
-            # t=.75
-            nid_map = self.nid_map
-            assert cid == 0, cid
-            nnodes = len(model.nodes)
-            nspoints = 0
-            spoints = None
-            if model.spoints:
-                spoints = model.spoints.points
-                nspoints = len(spoints)
-
-            xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=fdtype)
-            if nspoints:
-                nids = model.nodes.keys()
-                newpoints = nids + list(spoints)
-                newpoints.sort()
-                for i, nid in enumerate(newpoints):
-                    if nid in spoints:
-                        nid_map[nid] = i
-                    else:
-                        node = model.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position()
-                        nid_map[nid] = i
-            else:
-                for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-                    xyz = node.get_position()
-                    xyz_cid0[i, :] = xyz
-                    nid_map[nid] = i
-
-            # get indicies and transformations for displacements
-            #self.i_transform, self.transforms = model.get_displacement_index_transforms()
-            self.i_transform = model.get_displacement_index()
+        nid_map = self.nid_map
+        for i, nid in enumerate(nid_cp_cd[:, 0]):
+            nid_map[nid] = i
 
         self._add_nastran_spoints_to_grid(model)
         #print('dt_nastran_xyz =', time.time() - t0)
@@ -796,7 +752,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 if aesurf.alid2 is not None:
                     aelist = aesurf.alid2_ref
                     ncaeros_cs += len(aelist.elements)
-                    cs_box_ids.extend(aelist.elements)
+                    cs_box_ids[cs_name].extend(aelist.elements)
                     cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
         out = (
             caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
@@ -1215,7 +1171,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     ## TODO: this line seems too loose
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
-                        lines = model.get_MPCx_node_ids(mpc_id, exclude_mpcadd=False)
+                        lines = model.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
                         lines2 = list(lines) + rigid_lines
                         mpc_names += self._fill_dependent_independent(
                             mpc_id, dim_max, model, lines2, nid_to_pid_map)
@@ -1264,9 +1220,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.create_alternate_vtk_grid(spc_name, color=PURPLE, line_width=5, opacity=1.,
                                        point_size=5, representation='point', is_visible=False)
 
-        # node_ids = model.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
+        # node_ids = model.get_SPCx_node_ids(spc_id)
         node_ids_c1 = model.get_SPCx_node_ids_c1(
-            spc_id, exclude_spcadd=False, stop_on_failure=False)
+            spc_id, stop_on_failure=False)
 
         node_ids = []
         for nid, c1 in iteritems(node_ids_c1):
@@ -1737,7 +1693,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_types_array = np.zeros(nelements, dtype=dtype)
         cell_offsets_array = np.zeros(nelements, dtype=dtype)
 
-        #cell_type_point = vtk.vtkVertex().GetCellType()
+        cell_type_point = vtk.vtkVertex().GetCellType()
         cell_type_line = vtk.vtkLine().GetCellType()
         cell_type_tri3 = vtkTriangle().GetCellType()
         #cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
@@ -1874,12 +1830,32 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     _cpyram_faces, nids, nid_map, xyz_cid0)
                 nnodes = 5
                 dim = 3
+            elif etype in ['CELAS4', 'CDAMP4']:
+                # these can have empty nodes and have no property
+                nids = elem.nodes
+                assert nids[0] != nids[1]
+                if None in nids:
+                    assert nids[0] is not None, nids
+                    assert nids[1] is None, nids
+                    nids = [nids[0]]
+                    cell_type = cell_type_point
+                    nnodes = 1
+                else:
+                    nids = elem.nodes
+                    assert nids[0] != nids[1]
+                    cell_type = cell_type_line
+                    nnodes = 2
+                inids = np.searchsorted(all_nids, nids)
+                print(nids, inids)
+                pid = 0
+                dim = 0
             elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
-                           'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                           'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                           'CELAS1', 'CELAS2', 'CELAS3',
+                           'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP5',
                            'CFAST', 'CGAP', 'CVISC']:
                 nids = elem.nodes
                 assert nids[0] != nids[1]
+                assert None not in nids, 'nids=%s\n%s' % (nids, elem)
                 pid = elem.pid
                 cell_type = cell_type_line
                 inids = np.searchsorted(all_nids, nids)
@@ -1938,7 +1914,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #assert nid != 0, 'not a positive integer. nids=%s\n%s' % (nids, elem)
 
             assert inids is not None
-            assert np.array_equal(all_nids[inids], nids)
+            assert np.array_equal(all_nids[inids], nids), 'all_nids[inids]=%s nids=%s\n%s' % (all_nids[inids], nids, elem)
 
             assert cell_type is not None
             assert cell_offset is not None
@@ -3522,7 +3498,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # CBUSH, CBUSH1D, CFAST, CELAS1, CELAS3
                 # CDAMP1, CDAMP3, CDAMP4, CDAMP5, CVISC
                 if hasattr(element, 'pid'):
-                    pid = element.Pid()
+                    pid = element.pid
                 else:
                     # CELAS2, CELAS4?
                     pid = 0
@@ -3756,8 +3732,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     # this happens when you have a degenerate tri
                     msg = 'eid=%i normal=nan...setting to [2, 2, 2]\n'
                     msg += '%s' % (element)
-                    for node in element.nodes:
-                        msg += str(node)
+                    msg += 'nodes = %s' % str(element.nodes)
                     self.log.error(msg)
                     normali = np.ones(3) * 2.
                     #raise
@@ -4433,18 +4408,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          - Temperature(BOTH)
         """
         if not self.plot_applied_loads:
+            model.log.debug('self.plot_applied_loads=False')
             return icase
 
         if not xref_loads:
-            print('returning from plot_applied_loads_early')
+            model.log.debug('returning from plot_applied_loads_early')
             return icase
 
         try:
             form = []
             out = model.get_load_arrays(
-                subcase_id, nid_map=self.nid_map,
+                subcase_id,
                 eid_map=self.eid_map, node_ids=self.node_ids,
-                normals=self.normals)
+                normals=self.normals, nid_map=self.nid_map,)
             is_loads, is_temperatures, temperature_data, load_data = out
 
             if is_loads:
@@ -4501,6 +4477,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     t123 = spcd[:, :3]
                     tnorm = norm(t123, axis=1)
                     assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
+                    assert len(tnorm) == len(self.nid_map)
 
                     spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
                                            location='node', scalar=forces[:, 0])
@@ -4529,10 +4506,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if is_temperatures:
                 temperature_key, temperatures = temperature_data
+                assert len(temperatures) == len(self.nid_map)
                 temperature_res = GuiResult(subcase_id, header=temperature_key, title=temperature_key,
                                             location='node', scalar=temperatures)
                 cases[icase] = (temperature_res, (0, temperature_key))
-                form.append((temperature_key, icase, []))
+                form0.append((temperature_key, icase, []))
                 icase += 1
         except KeyError:
             s = StringIO()

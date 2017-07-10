@@ -885,6 +885,7 @@ class TEMP(ThermalLoad):
 
         ntemps = (nfields -2) // 2
         assert nfields % 2 == 0, card
+        assert nfields // 2 > 1, card
 
         temperatures = {}
         for i in range(ntemps):

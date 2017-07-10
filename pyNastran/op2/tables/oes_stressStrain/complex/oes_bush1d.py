@@ -204,7 +204,7 @@ class ComplexCBush1DStressArray(ComplexCBush1DArray, StressObject):
 
         if self.element_type == 102:
             element_header = '                         C O M P L E X   S T R E S S E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
-            ''
+            #''
             #' '
             #
             #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'

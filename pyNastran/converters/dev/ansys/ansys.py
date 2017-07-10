@@ -162,10 +162,8 @@ real,cid
 tshape,pilo
 en,501925,_npilot
 tshape
-"""
 
 
-"""
 
 et,2,187
 et,27,187   # element, group 27, element_type=187 -> tet10

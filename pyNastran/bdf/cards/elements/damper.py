@@ -492,6 +492,7 @@ class CDAMP4(LineDamper):
         self.nids = nids
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
@@ -535,8 +536,11 @@ class CDAMP4(LineDamper):
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         msg = ', which is required by CDAMP4 eid=%s' % (self.eid)
-        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
+        return nids
 
     def B(self):
         return self.b

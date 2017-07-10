@@ -105,10 +105,11 @@ def compare_card_content(fem1, fem2):
         card2 = fem2.creep_materials[key]
         assert_fields(card1, card2)
 
+    nid_map = fem2.nid_map
     for key in fem1.loads:
         loads1 = fem1.loads[key]
         loads2 = fem2.loads[key]
-        fem1._get_temperatures_array(key)
+        fem1._get_temperatures_array(key, nid_map)
         for (card1, card2) in zip(loads1, loads2):
             assert_fields(card1, card2)
 
@@ -126,8 +127,8 @@ def compare_card_content(fem1, fem2):
         assert_fields(card1, card2)
 
     for spc_id in fem1.spcs:
-        fem1.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
-        fem1.get_SPCx_node_ids_c1(spc_id, exclude_spcadd=False)
+        fem1.get_SPCx_node_ids(spc_id)
+        fem1.get_SPCx_node_ids_c1(spc_id)
         fem1.get_reduced_spcs(spc_id)
         fem1.get_spcs(spc_id)
         #card1 = fem1.spcs[key]
@@ -135,8 +136,8 @@ def compare_card_content(fem1, fem2):
         #assert_fields(card1, card2)
 
     for mpc_id in fem1.mpcs:
-        fem1.get_MPCx_node_ids(mpc_id, exclude_mpcadd=False)
-        fem1.get_MPCx_node_ids_c1(mpc_id, exclude_mpcadd=False)
+        fem1.get_MPCx_node_ids(mpc_id)
+        fem1.get_MPCx_node_ids_c1(mpc_id)
         fem1.get_reduced_mpcs(mpc_id)
         fem1.get_mpcs(mpc_id)
         #card1 = fem1.mpcs[key]

@@ -467,17 +467,21 @@ class OES(OP2Common):
             (1, 2, 5, b'OES1X') : ('crod_stress', ComplexRodStressArray), # real/imag
             (1, 3, 5, b'OES1X') : ('crod_stress', ComplexRodStressArray), # mag/phase
             (1, 2, 5, b'OESVM1') : ('crod_stress', ComplexRodStressArray), # real/imag
+            (1, 3, 5, b'OESVM1') : ('crod_stress', ComplexRodStressArray), # mag/phase
 
             (3, 1, 5, b'OES1X1') : ('ctube_stress', RealRodStressArray),
             (3, 1, 5, b'OES1X') : ('ctube_stress', RealRodStressArray),
             (3, 2, 5, b'OES1X') : ('ctube_stress', ComplexRodStressArray),
             (3, 2, 5, b'OESVM1') : ('ctube_stress', ComplexRodStressArray),  # freq nx
+            (3, 3, 5, b'OESVM1') : ('ctube_stress', ComplexRodStressArray),  # freq nx
+
             #(3, 3, 5) : ('ctube_stress', ComplexRodStressArray),
 
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X1') : ('conrod_stress', RealRodStressArray),
             (10, 2, 5, b'OESVM1') : ('conrod_stress', ComplexRodStressArray),
+            (10, 3, 5, b'OESVM1') : ('conrod_stress', ComplexRodStressArray),
             #(10, 2, 5) : ('conrod_stress', ComplexRodStressArray),
             #(10, 3, 5) : ('conrod_stress', ComplexRodStressArray),
 
@@ -487,17 +491,20 @@ class OES(OP2Common):
             (2, 1, 111, b'OES1') : ('cbeam_stress', RealBeamStressArray),
             (2, 2, 111, b'OES1X') : ('cbeam_stress', 'ComplexBeamStressArray'),
             (2, 3, 111, b'OES1X') : ('cbeam_stress', 'ComplexBeamStressArray'),
+            (2, 3, 111, b'OESVM1') : ('cbeam_stress', 'ComplexBeamStressArray'),
 
             (4, 1, 4, b'OES1X1') : ('cshear_stress', RealShearStressArray),
             #(4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 5) : ('cshear_stress', ComplexShearStressArray),
             (4, 2, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
+            (4, 3, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 3) : ('cshear_stress', RandomShearStressArray),
 
             (11, 1, 2, b'OES1X1') : ('celas1_stress', RealSpringStressArray), # real
             (11, 2, 3, b'OES1X') : ('celas1_stress', ComplexSpringStressArray), # real/imag
             (11, 3, 3, b'OES1X') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
             (11, 2, 3, b'OESVM1') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
+            (11, 3, 3, b'OESVM1') : ('celas1_stress', ComplexSpringStressArray), # mag/phase
 
             (12, 1, 2, b'OES1X1') : ('celas2_stress', RealSpringStressArray),
             (12, 1, 2, b'OES1X') : ('celas2_stress', RealSpringStressArray),
@@ -505,11 +512,14 @@ class OES(OP2Common):
             (12, 2, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
             (12, 3, 3, b'OES1X') : ('celas2_stress', ComplexSpringStressArray),
             (12, 2, 3, b'OESVM1') : ('celas2_stress', ComplexSpringStressArray),
+            (12, 3, 3, b'OESVM1') : ('celas2_stress', ComplexSpringStressArray),
 
             (13, 1, 2, b'OES1X1') : ('celas3_stress', RealSpringStressArray),
             #(13, 2, 3) : ('celas3_stress', ComplexSpringStressArray),
             #(13, 3, 3) : ('celas3_stress', ComplexSpringStressArray),
-            (13, 2, 3, b'OES1X') : ('celas3_stress', RealSpringStressArray),
+            (13, 2, 3, b'OES1X') : ('celas3_stress', ComplexSpringStressArray),
+            (13, 2, 3, b'OESVM1') : ('celas3_stress', ComplexSpringStressArray),
+            (13, 3, 3, b'OESVM1') : ('celas3_stress', ComplexSpringStressArray),
 
             (14, 1, 2) : ('celas4_stress', RealSpringStressArray),
             (14, 2, 3) : ('celas4_stress', ComplexSpringStressArray),
@@ -520,6 +530,7 @@ class OES(OP2Common):
             (34, 1, 16, b'OES1') : ('cbar_stress', RealBarStressArray),
             (34, 2, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
             (34, 3, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
+            (34, 3, 19, b'OESVM1') : ('cbar_stress', ComplexBarStressArray),
             #(34, 1, 19) : ('cbar_stress', RandomBarStressArray),
             (100, 1, 10, b'OES1X1') : ('cbar_stress_10nodes', RealBar10NodesStressArray),
             (100, 1, 10, b'OES1X') : ('cbar_stress_10nodes', RealBar10NodesStressArray),
@@ -528,6 +539,7 @@ class OES(OP2Common):
             (39, 1, 109, b'OES1X1') : ('ctetra_stress', RealSolidStressArray), # real
             (39, 1, 109, b'OES1X') : ('ctetra_stress', RealSolidStressArray), # real
             (39, 1, 109, b'OES1') : ('ctetra_stress', RealSolidStressArray), # real
+            (39, 3, 74, b'OESVM1') : ('ctetra_stress', ComplexSolidStressArray), # mag/phase
 
             (67, 1, 193, b'OES1X1') : ('chexa_stress', RealSolidStressArray),
             (67, 1, 193, b'OES1X') : ('chexa_stress', RealSolidStressArray),
@@ -536,6 +548,7 @@ class OES(OP2Common):
             (68, 1, 151, b'OES1X1') : ('cpenta_stress', RealSolidStressArray),
             (68, 1, 151, b'OES1X') : ('cpenta_stress', RealSolidStressArray),
             (68, 1, 151, b'OES1') : ('cpenta_stress', RealSolidStressArray),
+            (68, 3, 102, b'OESVM1') : ('cpenta_stress', ComplexSolidStressArray),
 
             (39, 2, 69, b'OES1X') : ('ctetra_stress', ComplexSolidStressArray), # real/imag
             (39, 2, 74, b'OESVM1') : ('ctetra_stress', 'NA'), # real/imag
@@ -543,6 +556,7 @@ class OES(OP2Common):
 
             (67, 2, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
             (67, 3, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
+            (67, 3, 130, b'OESVM1') : ('chexa_stress', ComplexSolidStressArray),
 
             (68, 2, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
             (68, 3, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
@@ -559,7 +573,8 @@ class OES(OP2Common):
             (74, 1, 17, b'OES1') : ('ctria3_stress', RealPlateStrainArray),
             (74, 2, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
             (74, 3, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
-            (74, 2, 17, b'OESVM1') :  ('cquad4_stress', 'NA'),
+            (74, 2, 17, b'OESVM1') : ('cquad4_stress', 'NA'),
+            (74, 3, 17, b'OESVM1') : ('cquad4_stress', 'NA'),
             #(74, 1, 9) : ('ctria3_stress', RandomPlateStressArray),
 
             (82, 1, 87, b'OES1X1') : ('cquadr_stress', RealPlateStressArray),
@@ -572,6 +587,8 @@ class OES(OP2Common):
             (64, 1, 87, b'OES1') : ('cquad8_stress', RealPlateStressArray),
             (64, 2, 77, b'OES1X') : ('cquad8_stress', ComplexPlateStressArray), # real/imag
             (64, 3, 77, b'OES1X') : ('cquad8_stress', ComplexPlateStressArray), # mag/phase
+            (64, 2, 87, b'OESVM1') : ('cquad8_stress', ComplexPlateStressArray), # real/imag
+            (64, 3, 87, b'OESVM1') : ('cquad8_stress', ComplexPlateStressArray), # mag/phase
 
             (70, 1, 70, b'OES1X1') : ('ctriar_stress', RealPlateStressArray),
             (70, 1, 70, b'OES1X') : ('ctriar_stress', RealPlateStressArray),
@@ -581,11 +598,14 @@ class OES(OP2Common):
             (75, 1, 70, b'OES1X1') : ('ctria6_stress', RealPlateStressArray),
             (75, 2, 62, b'OES1X') : ('ctria6_stress', ComplexPlateStressArray),
             (75, 3, 62, b'OES1X') : ('ctria6_stress', ComplexPlateStressArray),
+            (75, 2, 70, b'OESVM1') : ('ctria6_stress', ComplexPlateStressArray),
+            (75, 3, 70, b'OESVM1') : ('ctria6_stress', ComplexPlateStressArray),
 
             (144, 1, 87, b'OES1X1') : ('cquad4_stress', RealPlateStressArray),
             (144, 1, 87, b'OES1') : ('cquad4_stress', RealPlateStressArray),
             (144, 2, 77, b'OES1X') : ('cquad4_stress', ComplexPlateStressArray),
-            (144, 3, 77, b'OES1X') :  ('cquad4_stress', ComplexPlateStressArray),
+            (144, 3, 77, b'OES1X') : ('cquad4_stress', ComplexPlateStressArray),
+            (144, 3, 87, b'OESVM1') : ('cquad4_stress', ComplexPlateStressArray),
             #(144, 3, 77) : ('cquad4_stress', ComplexPlateStressArray),
             #(64, 1, 47) : ('cquad8_stress', RandomPlateStressArray), # random
             #(70, 1, 39) : ('ctriar_stress', RandomPlateStressArray),
@@ -798,10 +818,12 @@ class OES(OP2Common):
             (232, 1, 11, b'OES1C') : ('cquadr', 'NA'),
             (232, 1, 11, b'OESCP') : ('cquadr', 'NA'),
             (232, 2, 13, b'OESVM1C') : ('cquadr', 'NA'),  # freq nx
+            (232, 3, 13, b'OESVM1C') : ('cquadr', 'NA'),  # freq nx
             #(234, 1, 11) : ('cquadr', 'NA'), # bad?
             # 233-TRIARLC
             (233, 1, 11, b'OES1C') : ('ctriar', 'NA'),
             (233, 2, 13, b'OESVM1C') : ('ctriar', 'NA'),  # freq nx
+            (233, 3, 13, b'OESVM1C') : ('ctriar', 'NA'),  # freq nx
             # 235-CQUADR
             (235, 1, 17, b'OES1X1') : ('NA', 'NA'),
             (235, 2, 15, b'OES1X') : ('NA', 'NA'),
@@ -855,7 +877,9 @@ class OES(OP2Common):
             (144, 2, 87, b'OESVM1') : ('cquad4', 'NA'),
 
             (95, 2, 13, b'OESVM1C') : ('cquad4', 'NA'),
+            (95, 3, 13, b'OESVM1C') : ('cquad4', 'NA'),
             (97, 2, 13, b'OESVM1C') : ('ctria3', 'NA'),
+            (97, 3, 13, b'OESVM1C') : ('ctria3', 'NA'),
 
             (102, 2, 13, b'OESVM1') : ('cbush', 'NA'),
 
@@ -1184,10 +1208,10 @@ class OES(OP2Common):
                 return ndata
             elif self.format_code == 1 and self.num_wide == 67: # random
                 raise RuntimeError(self.code_information())
-                msg = self.code_information()
-                if self.is_debug_file:
-                    self.binary_debug.write('skipping OES-CBEAM\n')
-                return self._not_implemented_or_skip(data, ndata, msg)
+                #msg = self.code_information()
+                #if self.is_debug_file:
+                    #self.binary_debug.write('skipping OES-CBEAM\n')
+                #return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
 
@@ -1881,10 +1905,12 @@ class OES(OP2Common):
                             obj.add_node_sort1(dt, eid, grid, inode,
                                                ex, ey, ez, etxy, etyz, etzx)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
-                raise RuntimeError(self.code_information())
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
-            elif self.format_code == 2 and self.num_wide == numwide_random2:
+                raise RuntimeError(self.code_information() +
+                                   '\nnumwide real=%s imag=%s random=%s' % (
+                                       numwide_real, numwide_imag, numwide_random2))
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, ndata, msg)
+            elif self.format_code in [2, 3] and self.num_wide == numwide_random2:
                 #raise RuntimeError(self.code_information())
                 ## a = 18
                 ## b = 14
@@ -1932,7 +1958,9 @@ class OES(OP2Common):
                     #self.num_wide, numwide_real, numwide_imag, numwide_random)
                 #return self._not_implemented_or_skip(data, ndata, msg)
             else:
-                raise RuntimeError(self.code_information())
+                raise RuntimeError(self.code_information() +
+                                   '\nnumwide real=%s imag=%s random=%s' % (
+                                       numwide_real, numwide_imag, numwide_random2))
 
         #=========================
         # plates
@@ -2278,7 +2306,7 @@ class OES(OP2Common):
             #elif self.format_code == 1 and self.num_wide == 9: # random?
                 #msg = self.code_information()
                 #return self._not_implemented_or_skip(data, ndata, msg)
-            elif self.format_code == 2 and self.num_wide == 17: # random; CTRIA3
+            elif self.format_code in [2, 3] and self.num_wide == 17: # random; CTRIA3
                 assert self.table_name in [b'OESVM1', b'OSTRVM1'], self.code_information()
                 #OESVM
                 #msg = self.code_information()
@@ -2586,10 +2614,16 @@ class OES(OP2Common):
                 msg += '  numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                     self.num_wide, numwide_real, numwide_imag, numwide_random)
                 return self._not_implemented_or_skip(data, ndata, msg)
-            elif self.format_code == 2 and self.num_wide == 87:
+            elif self.format_code in [2, 3] and self.num_wide == 87:
                 # 87 - CQUAD4-144
                 #msg = self.code_information()
                 msg = '%s-CQUAD4-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
+                    self.table_name_str, self.num_wide, numwide_real, numwide_imag, numwide_random)
+                return self._not_implemented_or_skip(data, ndata, msg)
+            elif self.format_code in [2, 3] and self.num_wide == 70:
+                # 87 - CQUAD4-144
+                #msg = self.code_information()
+                msg = '%s-CTRIA6-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                     self.table_name_str, self.num_wide, numwide_real, numwide_imag, numwide_random)
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
