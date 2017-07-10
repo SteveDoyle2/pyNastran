@@ -4454,7 +4454,7 @@ class AddCards(AddMethods):
         label : str
             the AESURF name
         list1 / list2 : int / None
-            the list (AELIST) of node ids for the primary/secondary
+            the list (SET1) of node ids for the primary/secondary
             control surface(s) on the AESURF card
         comment : str; default=''
             a comment for the card

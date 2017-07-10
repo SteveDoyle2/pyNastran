@@ -764,7 +764,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert 'NLPARM' in subcase, subcase
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), subcase
+            assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
     elif sol == 99:
         assert 'DLOAD' in subcase, subcase
         assert 'LOADSET' in subcase, subcase
@@ -775,7 +775,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 101:
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), subcase
+        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)', 'P2G'), subcase
     elif sol == 103:
         assert True in subcase.has_parameter('METHOD', 'RSMETHOD'), subcase
     elif sol == 105: # buckling
@@ -801,7 +801,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 107: # ???
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert 'LOAD' in subcase, subcase
+            assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
@@ -866,7 +866,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             _assert_has_spc(subcase, fem2)
         assert 'NLPARM' in subcase, subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
-            assert 'TEMPERATURE' in subcase, subcase
+            assert 'TEMPERATURE(LOAD)' in subcase, subcase
         else:
             assert any(subcase.has_parameter('LOAD')), 'sol=%s\n%s' % (sol, subcase)
 
@@ -875,7 +875,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
         #assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
-            assert 'TEMPERATURE' in subcase, 'sol=%s\n%s' % (sol, subcase)
+            assert 'TEMPERATURE(LOAD)' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
     elif sol == 200:
         # local level
@@ -1030,9 +1030,25 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert sol in [110, 111], 'sol=%s RMETHOD\n%s' % (sol, subcase)
 
     if 'FMETHOD' in subcase:
+        # FLUTTER
         method_id = subcase.get_parameter('FMETHOD')[0]
         method = fem2.flutters[method_id]
         assert sol in [145], 'sol=%s FMETHOD\n%s' % (sol, subcase)
+
+    nid_map = fem2.nid_map
+    if 'TEMPERATURE(LOAD)' in subcase:
+        loadcase_id = subcase.get_parameter('TEMPERATURE(LOAD)')[0]
+        fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
+    if 'TEMPERATURE(BOTH)' in subcase:
+        loadcase_id = subcase.get_parameter('TEMPERATURE(BOTH)')[0]
+        fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
+    if 'TEMPERATURE(INITIAL)' in subcase:
+        loadcase_id = subcase.get_parameter('TEMPERATURE(INITIAL)')[0]
+        fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
+    if 'TEMPERATURE(MATERIAL)' in subcase:
+        loadcase_id = subcase.get_parameter('TEMPERATURE(MATERIAL)')[0]
+        fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
+
     if 'LOAD' in subcase:
         loadcase_id = subcase.get_parameter('LOAD')[0]
         force, moment = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
@@ -1062,17 +1078,17 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         # print(lseq)
     if 'SPC' in subcase:
         spc_id = subcase.get_parameter('SPC')[0]
-        fem2.get_spcs(spc_id)
-        fem2.get_reduced_spcs(spc_id)
-        fem2.get_SPCx_node_ids_c1(spc_id)
-        fem2.get_SPCx_node_ids(spc_id)
+        fem2.get_spcs(spc_id, stop_on_failure=False)
+        fem2.get_reduced_spcs(spc_id, stop_on_failure=False)
+        fem2.get_SPCx_node_ids_c1(spc_id, stop_on_failure=False)
+        fem2.get_SPCx_node_ids(spc_id, stop_on_failure=False)
 
     if 'MPC' in subcase:
         mpc_id = subcase.get_parameter('MPC')[0]
-        fem2.get_mpcs(mpc_id)
-        fem2.get_reduced_mpcs(mpc_id)
-        fem2.get_MPCx_node_ids_c1(mpc_id)
-        fem2.get_MPCx_node_ids(mpc_id)
+        fem2.get_mpcs(mpc_id, stop_on_failure=False)
+        fem2.get_reduced_mpcs(mpc_id, stop_on_failure=False)
+        fem2.get_MPCx_node_ids_c1(mpc_id, stop_on_failure=False)
+        fem2.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
 
     if 'SDAMPING' in subcase:
         sdamping_id = subcase.get_parameter('SDAMPING')[0]

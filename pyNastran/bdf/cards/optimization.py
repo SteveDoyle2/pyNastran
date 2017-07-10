@@ -1645,7 +1645,7 @@ class DRESP2(OptConstraint):
             assert isinstance(iorder, int), 'iorder=%s key=%s' % (iorder, str(key))
             assert isinstance(name, str), 'name=%r key=%s' % (name, str(key))
             if name == 'DNODE':
-                assert len(values) == 2, 'name=%r val=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
+                assert len(values) == 2, 'name=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
                 nids, components = values
                 for nid in nids:
                     assert isinstance(nid, int), 'name=%r nid=%r is not an int; values=%s' % (name, nid, values)

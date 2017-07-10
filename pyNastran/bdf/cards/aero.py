@@ -1033,7 +1033,7 @@ class AESURFS(BaseCard):  # not integrated
         label : str
             the AESURF name
         list1 / list2 : int / None
-            the list (AELIST) of node ids for the primary/secondary
+            the list (SET1) of node ids for the primary/secondary
             control surface(s) on the AESURF card
         comment : str; default=''
             a comment for the card
@@ -1072,6 +1072,36 @@ class AESURFS(BaseCard):  # not integrated
         list2 = data[3]
         assert len(data) == 4, 'data = %s' % data
         return AESURFS(aesid, label, list1, list2, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by AESURFS aesid=%s' % self.aesid
+        self.list1_ref = model.Set(self.list1, msg)
+        self.list1_ref.cross_reference(model, 'Node')
+
+        self.list2_ref = model.Set(self.list1, msg=msg)
+        self.list2_ref.cross_reference(model, 'Node')
+
+    def safe_cross_reference(self, model):
+        msg = ' which is required by AESURFS aesid=%s' % self.aesid
+        try:
+            self.list1_ref = model.Set(self.list1, msg=msg)
+            self.list1_ref.cross_reference(model, 'Node')
+        except KeyError:
+            pass
+
+        try:
+            self.list2_ref = model.Set(self.list1, msg=msg)
+            self.list2_ref.cross_reference(model, 'Node')
+        except KeyError:
+            pass
 
     #def uncross_reference(self):
         #pass

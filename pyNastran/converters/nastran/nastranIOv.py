@@ -752,7 +752,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 if aesurf.alid2 is not None:
                     aelist = aesurf.alid2_ref
                     ncaeros_cs += len(aelist.elements)
-                    cs_box_ids.extend(aelist.elements)
+                    cs_box_ids[cs_name].extend(aelist.elements)
                     cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
         out = (
             caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
@@ -1171,7 +1171,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     ## TODO: this line seems too loose
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
-                        lines = model.get_MPCx_node_ids(mpc_id, exclude_mpcadd=False)
+                        lines = model.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
                         lines2 = list(lines) + rigid_lines
                         mpc_names += self._fill_dependent_independent(
                             mpc_id, dim_max, model, lines2, nid_to_pid_map)
@@ -1220,9 +1220,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.create_alternate_vtk_grid(spc_name, color=PURPLE, line_width=5, opacity=1.,
                                        point_size=5, representation='point', is_visible=False)
 
-        # node_ids = model.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
+        # node_ids = model.get_SPCx_node_ids(spc_id)
         node_ids_c1 = model.get_SPCx_node_ids_c1(
-            spc_id, exclude_spcadd=False, stop_on_failure=False)
+            spc_id, stop_on_failure=False)
 
         node_ids = []
         for nid, c1 in iteritems(node_ids_c1):
@@ -1693,7 +1693,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_types_array = np.zeros(nelements, dtype=dtype)
         cell_offsets_array = np.zeros(nelements, dtype=dtype)
 
-        #cell_type_point = vtk.vtkVertex().GetCellType()
+        cell_type_point = vtk.vtkVertex().GetCellType()
         cell_type_line = vtk.vtkLine().GetCellType()
         cell_type_tri3 = vtkTriangle().GetCellType()
         #cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
@@ -1830,12 +1830,32 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     _cpyram_faces, nids, nid_map, xyz_cid0)
                 nnodes = 5
                 dim = 3
+            elif etype in ['CELAS4', 'CDAMP4']:
+                # these can have empty nodes and have no property
+                nids = elem.nodes
+                assert nids[0] != nids[1]
+                if None in nids:
+                    assert nids[0] is not None, nids
+                    assert nids[1] is None, nids
+                    nids = [nids[0]]
+                    cell_type = cell_type_point
+                    nnodes = 1
+                else:
+                    nids = elem.nodes
+                    assert nids[0] != nids[1]
+                    cell_type = cell_type_line
+                    nnodes = 2
+                inids = np.searchsorted(all_nids, nids)
+                print(nids, inids)
+                pid = 0
+                dim = 0
             elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
-                           'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                           'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                           'CELAS1', 'CELAS2', 'CELAS3',
+                           'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP5',
                            'CFAST', 'CGAP', 'CVISC']:
                 nids = elem.nodes
                 assert nids[0] != nids[1]
+                assert None not in nids, 'nids=%s\n%s' % (nids, elem)
                 pid = elem.pid
                 cell_type = cell_type_line
                 inids = np.searchsorted(all_nids, nids)
@@ -1894,7 +1914,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #assert nid != 0, 'not a positive integer. nids=%s\n%s' % (nids, elem)
 
             assert inids is not None
-            assert np.array_equal(all_nids[inids], nids)
+            assert np.array_equal(all_nids[inids], nids), 'all_nids[inids]=%s nids=%s\n%s' % (all_nids[inids], nids, elem)
 
             assert cell_type is not None
             assert cell_offset is not None
@@ -3478,7 +3498,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # CBUSH, CBUSH1D, CFAST, CELAS1, CELAS3
                 # CDAMP1, CDAMP3, CDAMP4, CDAMP5, CVISC
                 if hasattr(element, 'pid'):
-                    pid = element.Pid()
+                    pid = element.pid
                 else:
                     # CELAS2, CELAS4?
                     pid = 0
@@ -4389,18 +4409,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          - Temperature(BOTH)
         """
         if not self.plot_applied_loads:
+            model.log.debug('self.plot_applied_loads=False')
             return icase
 
         if not xref_loads:
-            print('returning from plot_applied_loads_early')
+            model.log.debug('returning from plot_applied_loads_early')
             return icase
 
         try:
             form = []
             out = model.get_load_arrays(
-                subcase_id, nid_map=self.nid_map,
+                subcase_id,
                 eid_map=self.eid_map, node_ids=self.node_ids,
-                normals=self.normals)
+                normals=self.normals, nid_map=self.nid_map,)
             is_loads, is_temperatures, temperature_data, load_data = out
 
             if is_loads:
@@ -4457,6 +4478,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     t123 = spcd[:, :3]
                     tnorm = norm(t123, axis=1)
                     assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
+                    assert len(tnorm) == len(self.nid_map)
 
                     spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
                                            location='node', scalar=forces[:, 0])
@@ -4485,10 +4507,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if is_temperatures:
                 temperature_key, temperatures = temperature_data
+                assert len(temperatures) == len(self.nid_map)
                 temperature_res = GuiResult(subcase_id, header=temperature_key, title=temperature_key,
                                             location='node', scalar=temperatures)
                 cases[icase] = (temperature_res, (0, temperature_key))
-                form.append((temperature_key, icase, []))
+                form0.append((temperature_key, icase, []))
                 icase += 1
         except KeyError:
             s = StringIO()

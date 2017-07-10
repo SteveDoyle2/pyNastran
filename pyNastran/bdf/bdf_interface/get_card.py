@@ -6,10 +6,10 @@ defines various methods to access high level BDF data:
    - get_rslot_map(self, reset_type_to_slot_map=False)
    - get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
                                 stop_on_missing_card=False)
-   - get_SPCx_node_ids(self, spc_id, exclude_spcadd=False, stop_on_failure=True)
-   - get_SPCx_node_ids_c1( spc_id, exclude_spcadd=False, stop_on_failure=True)
-   - get_MPCx_node_ids( mpc_id, exclude_mpcadd=False, stop_on_failure=True)
-   - get_MPCx_node_ids_c1( mpc_id, exclude_mpcadd=False, stop_on_failure=True)
+   - get_SPCx_node_ids(self, spc_id, stop_on_failure=True)
+   - get_SPCx_node_ids_c1( spc_id, stop_on_failure=True)
+   - get_MPCx_node_ids( mpc_id, stop_on_failure=True)
+   - get_MPCx_node_ids_c1( mpc_id, stop_on_failure=True)
    - get_load_arrays(self, subcase_id, nid_map, eid_map, node_ids, normals)
    - get_pressure_array(self, load_case, eids, normals)
    - get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=True, msg='')
@@ -179,6 +179,17 @@ class GetCard(GetMethods):
         assert 'GRID' in rslot_map
         return rslot_map
 
+    @property
+    def nid_map(self):
+        out = self.get_displacement_index_xyz_cp_cd(
+            fdtype='float32', idtype='int32', sort_ids=True)
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        del icd_transform, icp_transform, xyz_cp
+        nid_map = {}
+        for i, nid in enumerate(nid_cp_cd[:, 0]):
+            nid_map[nid] = i
+        return nid_map
+
     def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
                                 stop_on_missing_card=False):
         """
@@ -251,7 +262,7 @@ class GetCard(GetMethods):
             out[card_type] = cards
         return out
 
-    def get_SPCx_node_ids(self, spc_id, exclude_spcadd=False, stop_on_failure=True):
+    def get_SPCx_node_ids(self, spc_id, stop_on_failure=True):
         """
         Get the SPC/SPCADD/SPC1/SPCAX IDs.
 
@@ -259,11 +270,6 @@ class GetCard(GetMethods):
         ----------
         spc_id : int
             the SPC id
-        exclude_spcadd : bool
-            you can exclude SPCADD if you just want a list of all the
-            SPCs in the model.  For example, apply all the SPCs when
-            there is no SPC=N in the case control deck, but you don't
-            need to apply SPCADD=N twice.
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -272,14 +278,7 @@ class GetCard(GetMethods):
         node_ids : List[int]
             the constrained associated node ids
         """
-        try:
-            spcs = self.spcs[spc_id]
-        except KeyError:
-            self.log.warning('spc_id=%s not found' % spc_id)
-            return []
-        except TypeError:
-            print('spc_id=%r' % spc_id)
-            raise
+        spcs = self.get_reduced_spcs(spc_id, stop_on_failure=stop_on_failure)
 
         warnings = ''
         node_ids = []
@@ -288,12 +287,6 @@ class GetCard(GetMethods):
                 nids = card.node_ids
             elif card.type == 'SPC1':
                 nids = card.node_ids
-            elif card.type == 'SPCADD':
-                nids = []
-                for new_spc_id in card.spc_ids:
-                    nidsi = self.get_SPCx_node_ids(new_spc_id, exclude_spcadd=False,
-                                                   stop_on_failure=stop_on_failure)
-                    nids += nidsi
             elif card.type in ['GMSPC', 'SPCAX']:
                 warnings += str(card)
                 continue
@@ -305,7 +298,7 @@ class GetCard(GetMethods):
             self.log.warning("get_SPCx_node_ids doesn't consider:\n%s" % warnings.rstrip('\n'))
         return node_ids
 
-    def get_SPCx_node_ids_c1(self, spc_id, exclude_spcadd=False, stop_on_failure=True):
+    def get_SPCx_node_ids_c1(self, spc_id, stop_on_failure=True):
         """
         Get the SPC/SPCADD/SPC1/SPCAX IDs.
 
@@ -313,11 +306,6 @@ class GetCard(GetMethods):
         ----------
         spc_id : int
             the SPC id
-        exclude_spcadd : bool
-            you can exclude SPCADD if you just want a list of all the
-            SPCs in the model.  For example, apply all the SPCs when
-            there is no SPC=N in the case control deck, but you don't
-            need to apply SPCADD=N twice.
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -329,11 +317,7 @@ class GetCard(GetMethods):
             node_ids : List[int]
                 the constrained node ids
         """
-        try:
-            spcs = self.spcs[spc_id]
-        except KeyError:
-            self.log.warning('spc_id=%s not found' % spc_id)
-            return {}
+        spcs = self.get_reduced_spcs(spc_id, stop_on_failure=stop_on_failure)
 
         node_ids_c1 = defaultdict(str)
         #print('spcs = ', spcs)
@@ -348,13 +332,6 @@ class GetCard(GetMethods):
                 c1 = card.components
                 for nid in nids:
                     node_ids_c1[nid] += c1
-            elif card.type == 'SPCADD':
-                nids = []
-                for new_spc_id in card.spc_ids:
-                    nids_c1i = self.get_SPCx_node_ids_c1(new_spc_id, exclude_spcadd=False,
-                                                         stop_on_failure=stop_on_failure)
-                    for nid, c1 in iteritems(nids_c1i):
-                        node_ids_c1[nid] += c1
             elif card.type in ['GMSPC', 'SPCAX']:
                 warnings += str(card)
             else:
@@ -369,7 +346,7 @@ class GetCard(GetMethods):
 
         return node_ids_c1
 
-    def get_MPCx_node_ids(self, mpc_id, exclude_mpcadd=False, stop_on_failure=True):
+    def get_MPCx_node_ids(self, mpc_id, stop_on_failure=True):
         r"""
         Get the MPC/MPCADD IDs.
 
@@ -377,12 +354,6 @@ class GetCard(GetMethods):
         ----------
         mpc_id : int
             the MPC id
-        exclude_mpcadd : bool
-            you can exclude MPCADD if you just want a list of all the
-            MPCs in the model.  For example, apply all the MPCs when
-            there is no MPC=N in the case control deck, but you don't
-            need to apply MPCADD=N twice.
-            TODO: not used
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -399,15 +370,7 @@ class GetCard(GetMethods):
         I---D---I
         """
         lines = []
-        if not isinstance(mpc_id, integer_types):
-            msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
-            raise TypeError(msg)
-
-        try:
-            mpcs = self.mpcs[mpc_id]
-        except KeyError:
-            self.log.warning('mpc_id=%s not found' % mpc_id)
-            return []
+        mpcs = self.get_reduced_mpcs(mpc_id, stop_on_failure=stop_on_failure)
 
         # dependent, independent
         for card in mpcs:
@@ -420,11 +383,6 @@ class GetCard(GetMethods):
                 for nid, enforced in zip(nids[1:], card.enforced[1:]):
                     if enforced != 0.0:
                         lines.append([nid0, nid])
-            elif card.type == 'MPCADD':
-                nids = []
-                for new_mpc_id in card.mpc_ids:
-                    linesi = self.get_MPCx_node_ids(new_mpc_id, exclude_mpcadd=False)
-                    lines += linesi
             else:
                 msg = 'get_MPCx_node_ids doesnt support %r' % card.type
                 if stop_on_failure:
@@ -433,7 +391,7 @@ class GetCard(GetMethods):
                     self.log.warning(msg)
         return lines
 
-    def get_MPCx_node_ids_c1(self, mpc_id, exclude_mpcadd=False, stop_on_failure=True):
+    def get_MPCx_node_ids_c1(self, mpc_id, stop_on_failure=True):
         r"""
         Get the MPC/MPCADD IDs.
 
@@ -441,12 +399,6 @@ class GetCard(GetMethods):
         ----------
         mpc_id : int
             the MPC id
-        exclude_mpcadd : bool
-            you can exclude MPCADD if you just want a list of all the
-            MPCs in the model.  For example, apply all the MPCs when
-            there is no MPC=N in the case control deck, but you don't
-            need to apply MPCADD=N twice.
-            TODO: not used
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -472,12 +424,7 @@ class GetCard(GetMethods):
             msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
             raise TypeError(msg)
 
-        try:
-            mpcs = self.mpcs[mpc_id]
-        except KeyError:
-            self.log.warning('mpc_id=%s not found' % mpc_id)
-            asdf
-            return {}, {}
+        mpcs = self.get_reduced_mpcs(mpc_id, stop_on_failure=stop_on_failure)
 
         # dependent, independent
         independent_node_ids_c1 = defaultdict(list)
@@ -496,16 +443,6 @@ class GetCard(GetMethods):
                     if enforced != 0.0:
                         for dof in dofs:
                             dependent_node_ids_c1[dof].append(nid)
-
-            elif card.type == 'MPCADD':
-                nids = []
-                for new_mpc_id in card.mpc_ids:
-                    independent_node_ids_c1i, dependent_node_ids_c1i = self.get_MPCx_node_ids_c1(
-                        new_mpc_id, exclude_mpcadd=False)
-                    for key, value in iteritems(independent_node_ids_c1i):
-                        independent_node_ids_c1[key] += value
-                    for key, value in iteritems(dependent_node_ids_c1i):
-                        dependent_node_ids_c1[key] += value
             else:
                 msg = 'get_MPCx_node_ids_c1 doesnt support %r' % card.type
                 if stop_on_failure:
@@ -514,7 +451,7 @@ class GetCard(GetMethods):
                     self.log.warning(msg)
         return independent_node_ids_c1, dependent_node_ids_c1
 
-    def get_load_arrays(self, subcase_id, nid_map, eid_map, node_ids, normals):
+    def get_load_arrays(self, subcase_id, eid_map, node_ids, normals, nid_map=None):
         """
         Gets the following load arrays for the GUI
 
@@ -554,6 +491,8 @@ class GetCard(GetMethods):
             spcd : (nnodes, 3) float ndarray
                 the SPCD load application
         """
+        if nid_map is None:
+            nid_map = self.nid_map
         assert len(nid_map) == len(node_ids), 'len(nid_map)=%s len(node_ids)=%s' % (len(nid_map), len(node_ids))
         subcase = self.subcases[subcase_id]
         is_loads = False
@@ -587,16 +526,16 @@ class GetCard(GetMethods):
                 p0 = np.array([0., 0., 0.], dtype='float32')
                 centroidal_pressures, forces, spcd = self._get_forces_moments_array(
                     p0, load_case_id,
-                    nid_map=nid_map,
                     eid_map=eid_map,
                     node_ids=node_ids,
                     normals=normals,
                     dependents_nodes=self.node_ids,
+                    nid_map=nid_map,
                     include_grav=False)
                 if centroidal_pressures is not None: # or any of the others
                     is_loads = True
             elif key in temperature_keys:
-                is_temperatures, temperatures = self._get_temperatures_array(load_case_id)
+                is_temperatures, temperatures = self._get_temperatures_array(load_case_id, nid_map=nid_map)
                 temperature_key = key
             else:
                 raise NotImplementedError(key)
@@ -676,10 +615,11 @@ class GetCard(GetMethods):
         return dvprel_t_init, dvprel_t_min, dvprel_t_max, design_region
 
     def _get_forces_moments_array(self, p0, load_case_id,
-                                  nid_map, eid_map, node_ids, normals, dependents_nodes,
-                                  include_grav=False):
+                                  eid_map, node_ids, normals, dependents_nodes,
+                                  nid_map=None, include_grav=False):
         """
-        Gets the forces/moments on the nodes
+        Gets the forces/moments on the nodes for the GUI, but there may
+        be a use outside of that
 
         Parameters
         ----------
@@ -687,9 +627,9 @@ class GetCard(GetMethods):
             the reference location
         load_case_id : int
             the load id
-        nidmap : ???
+        nid_map : ???
             ???
-        eidmap : ???
+        eid_map : ???
             ???
         node_ids : ???
             ???
@@ -728,6 +668,8 @@ class GetCard(GetMethods):
                  CTETRA, CPENTA, CHEXA
         SPCD
         """
+        if nid_map is None:
+            nid_map = self.nid_map
         if not any(['FORCE' in self.card_count, 'PLOAD2' in self.card_count,
                     'PLOAD4' in self.card_count, 'SPCD' in self.card_count]):
             return None, None, None
@@ -799,7 +741,7 @@ class GetCard(GetMethods):
                 #pressure = load.pressures[0] * scale
 
                 # multiple elements
-                for elem in load.eids:
+                for elem in load.eids_ref:
                     ie = eid_map[elem.eid]
                     normal = normals[ie, :]
                     # pressures[eids.index(elem.eid)] += p
@@ -971,6 +913,8 @@ class GetCard(GetMethods):
                         spcd[nid_map[nid], c1 - 1] = d1
             elif load.type in ['FORCE1', 'MOMENT1']:
                 pass
+            elif load.type in ['TEMP']:
+                pass
             else:
                 print(load)
                 if load.type not in cards_ignored:
@@ -1043,7 +987,7 @@ class GetCard(GetMethods):
             iload += 1
         return True, pressures
 
-    def _get_temperatures_array(self, load_case_id, dtype='float32'):
+    def _get_temperatures_array(self, load_case_id, nid_map=None, dtype='float32'):
         """
         Builds the temperature array based on thermal cards.
         Used by the GUI.
@@ -1052,6 +996,8 @@ class GetCard(GetMethods):
         ----------
         load_case_id : int
             the load id
+        nid_map : ???; default=None -> auto
+            ???
         dtype : str; default='float32'
             the type of the temperature array
 
@@ -1065,16 +1011,17 @@ class GetCard(GetMethods):
         if 'TEMP' not in self.card_count:
             return False, None
         is_temperatures = True
-        nids = sorted(self.nodes.keys())
 
+        if nid_map is None:
+            nid_map = self.nid_map
         loads, scale_factors = self.get_reduced_loads(load_case_id)[:2]
         tempd = self.tempds[load_case_id].temperature if load_case_id in self.tempds else 0.
-        temperatures = np.ones(len(self.nodes), dtype=dtype) * tempd
+        temperatures = np.ones(len(nid_map), dtype=dtype) * tempd
         for load, scale in zip(loads, scale_factors):
             if load.type == 'TEMP':
                 temps_dict = load.temperatures
                 for nid, val in iteritems(temps_dict):
-                    nidi = nids.index(nid)
+                    nidi = nid_map[nid]
                     temperatures[nidi] = val
             else:
                 self.log.debug(load.type)
@@ -1117,7 +1064,7 @@ class GetCard(GetMethods):
                 print(str(elem))
         return lines_rigid
 
-    def get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=True, msg=''):
+    def get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=True, stop_on_failure=True, msg=''):
         """
         Accounts for scale factors.
 
@@ -1131,6 +1078,8 @@ class GetCard(GetMethods):
             Skip loads with scale factor=0.0.
             Nastran does not do this.
             Nastran will fail if referenced loads do not exist.
+        stop_on_failure : bool; default=True
+            errors if parsing something new
         msg : str
             debug message
 
@@ -1145,7 +1094,19 @@ class GetCard(GetMethods):
 
         .. warning:: assumes xref=True
         """
-        load_case = self.Load(load_id, msg=msg)
+        if not isinstance(load_id, integer_types):
+            msg = 'load_id must be an integer; type=%s, load_id=\n%r' % (type(load_id), load_id)
+            raise TypeError(msg)
+
+        try:
+            load_case = self.Load(load_id, msg=msg)
+        except KeyError:
+            if stop_on_failure:
+                raise
+            else:
+                self.log.error("could not find expected LOAD/LOADSET id=%s" % load_id)
+                return []
+
         loads, scale_factors, is_grav = self._reduce_load_case(load_case, scale=scale)
         return loads, scale_factors, is_grav
 
@@ -2066,9 +2027,35 @@ class GetCard(GetMethods):
                     raise KeyError('mid=%s is invalid for card=\n%s' % (mid, str(prop)))
         return mid_to_pids_map
 
-    def get_reduced_mpcs(self, mpc_id):
-        """get all MPCs that are part of a set"""
-        mpcs = self.MPC(mpc_id)
+    def get_reduced_mpcs(self, mpc_id, stop_on_failure=True):
+        """
+        Get all traced MPCs that are part of a set
+
+        Parameters
+        ----------
+        mpc_id : int
+            the MPC id
+        stop_on_failure : bool; default=True
+            errors if parsing something new
+
+        Returns
+        -------
+        mpcs : List[MPC]
+            the various MPCs
+        """
+        if not isinstance(mpc_id, integer_types):
+            msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
+            raise TypeError(msg)
+
+        try:
+            mpcs = self.MPC(mpc_id)
+        except KeyError:
+            if stop_on_failure:
+                raise
+            else:
+                self.log.error("could not find expected MPC id=%s" % mpc_id)
+                return []
+
         mpcs2 = []
         for mpc in mpcs:
             if mpc.type == 'MPCADD':
@@ -2079,19 +2066,45 @@ class GetCard(GetMethods):
                                 mpciii = mpcii
                             else:
                                 mpciii = mpcii.conid
-                            mpcs2i = self.get_reduced_mpcs(mpciii)
+                            mpcs2i = self.get_reduced_mpcs(mpciii, stop_on_failure=stop_on_failure)
                             mpcs2 += mpcs2i
                     else:
                         assert isinstance(mpci, integer_types), mpci
-                        mpcs2i = self.get_reduced_mpcs(mpci)
+                        mpcs2i = self.get_reduced_mpcs(mpci, stop_on_failure=stop_on_failure)
                         mpcs2 += mpcs2i
             else:
                 mpcs2.append(mpc)
         return mpcs2
 
-    def get_reduced_spcs(self, spc_id):
-        """get all SPCs that are part of a set"""
-        spcs = self.SPC(spc_id)
+    def get_reduced_spcs(self, spc_id, stop_on_failure=True):
+        """
+        Get all traced SPCs that are part of a set
+
+        Parameters
+        ----------
+        spc_id : int
+            the SPC id
+        stop_on_failure : bool; default=True
+            errors if parsing something new
+
+        Returns
+        -------
+        spcs : List[SPC]
+            the various SPCs
+        """
+        if not isinstance(spc_id, integer_types):
+            msg = 'spc_id must be an integer; type=%s, spc_id=\n%r' % (type(spc_id), spc_id)
+            raise TypeError(msg)
+
+        try:
+            spcs = self.SPC(spc_id)
+        except KeyError:
+            if stop_on_failure:
+                raise
+            else:
+                self.log.error("could not find expected SPC id=%s" % spc_id)
+                return []
+
         spcs2 = []
         for spc in spcs:
             if spc.type == 'SPCADD':
@@ -2102,19 +2115,19 @@ class GetCard(GetMethods):
                                 spciii = spcii
                             else:
                                 spciii = spcii.conid
-                            spcs2i = self.get_reduced_spcs(spciii)
+                            spcs2i = self.get_reduced_spcs(spciii, stop_on_failure=stop_on_failure)
                             spcs2 += spcs2i
                     else:
                         # print('spci =', spci)
                         # print(spci.object_attributes())
                         assert isinstance(spci, integer_types), spci
-                        spcs2i = self.get_reduced_spcs(spci)
+                        spcs2i = self.get_reduced_spcs(spci, stop_on_failure=stop_on_failure)
                         spcs2 += spcs2i
             else:
                 spcs2.append(spc)
         return spcs2
 
-    def get_spcs(self, spc_id, consider_nodes=False):
+    def get_spcs(self, spc_id, consider_nodes=False, stop_on_failure=True):
         """
         Gets the SPCs in a semi-usable form.
 
@@ -2144,7 +2157,7 @@ class GetCard(GetMethods):
           - GMSPC
         """
         warnings = ''
-        spcs = self.get_reduced_spcs(spc_id)
+        spcs = self.get_reduced_spcs(spc_id, stop_on_failure=stop_on_failure)
         #self.spcs[key] = [constraint]
         nids = []
         comps = []
@@ -2171,7 +2184,7 @@ class GetCard(GetMethods):
                     comps.append(node.ps)
         return nids, comps
 
-    def get_mpcs(self, mpc_id):
+    def get_mpcs(self, mpc_id, stop_on_failure=True):
         """
         Gets the MPCs in a semi-usable form.
 
@@ -2179,6 +2192,8 @@ class GetCard(GetMethods):
         ----------
         mpc_id : int
             the desired MPC ID
+        stop_on_failure : bool; default=True
+            errors if parsing something new
 
         Returns
         -------
@@ -2191,7 +2206,7 @@ class GetCard(GetMethods):
           - MPC
           - MPCADD
         """
-        mpcs = self.get_reduced_mpcs(mpc_id)
+        mpcs = self.get_reduced_mpcs(mpc_id, stop_on_failure=stop_on_failure)
         nids = []
         comps = []
         for mpc in mpcs:

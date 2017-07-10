@@ -731,7 +731,7 @@ class AddMethods(BDFAttributes):
         # type: (Any) -> None
         """adds an AESURFS object"""
         key = aesurfs.aesid
-        assert key not in self.aesurf, '\naesurfs=\n%s old=\n%s' % (
+        assert key not in self.aesurfs, '\naesurfs=\n%s old=\n%s' % (
             aesurfs, self.aesurfs[key])
         assert key >= 0
         self.aesurfs[key] = aesurfs
