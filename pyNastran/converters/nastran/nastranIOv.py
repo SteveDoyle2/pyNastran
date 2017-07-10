@@ -3732,8 +3732,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     # this happens when you have a degenerate tri
                     msg = 'eid=%i normal=nan...setting to [2, 2, 2]\n'
                     msg += '%s' % (element)
-                    for node in element.nodes:
-                        msg += str(node)
+                    msg += 'nodes = %s' % str(element.nodes)
                     self.log.error(msg)
                     normali = np.ones(3) * 2.
                     #raise

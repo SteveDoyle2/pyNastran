@@ -1184,10 +1184,10 @@ class OES(OP2Common):
                 return ndata
             elif self.format_code == 1 and self.num_wide == 67: # random
                 raise RuntimeError(self.code_information())
-                msg = self.code_information()
-                if self.is_debug_file:
-                    self.binary_debug.write('skipping OES-CBEAM\n')
-                return self._not_implemented_or_skip(data, ndata, msg)
+                #msg = self.code_information()
+                #if self.is_debug_file:
+                    #self.binary_debug.write('skipping OES-CBEAM\n')
+                #return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
 

@@ -18,12 +18,14 @@ $ Subcase name : Default
    GPKE=ALL
    ESE(PLOT)=ALL
    FORCE(PLOT,PRINT)=ALL
-SUBCASE 2
+$SUBCASE 2
 $ Subcase name : Default
-   SUBTITLE=Default
-   SPC = 2
-   TEMPERATURE(LOAD) = 10001
-   DISPLACEMENT(PLOT,PRINT,SORT1,REAL)=ALL
+$   ANALYSIS = HEAT
+$   SUBTITLE=Default
+$   SPC = 2
+$   LOAD = 10000
+$   TEMPERATURE(INIT) = 10001
+$   DISPLACEMENT(PLOT,PRINT,SORT1,REAL)=ALL
 BEGIN BULK
 PARAM    POST    -1
 PARAM    AUTOSPC NO
@@ -45,9 +47,10 @@ FORCE    10000   13      0      10000.   0.      0.     1.
 $CQUAD4   17      7      17      16       20      21
 $CTRIA3   18      6      18      14       17
 $	sid	eid	p1	p2	p3	p4	thru	eid2
-PLOAD4	10000	17	100.0				thru	18
+PLOAD4	10000	17	20000.0				thru	18
 
-TEMP	10001	13	100.
+$TEMP	10001	13	100.
+$FORCE    10001   13      0      10000.   0.      0.     1.
 $ Referenced Coordinate Frames
 $ global xyz
 CORD2R   1       0       0.      0.      0.      0.      0.      1.

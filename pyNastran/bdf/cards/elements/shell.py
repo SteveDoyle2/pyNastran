@@ -94,7 +94,24 @@ def _normal(a, b):
     """Finds the unit normal vector of 2 vectors"""
     vector = cross(a, b)
     normal = vector / norm(vector)
-    assert allclose(norm(normal), 1.)
+    if not allclose(norm(normal), 1.):
+        msg = ('function _normal, check...\n'
+               'a = {0}\nb = {1}\nnormal = {2}\n'.format(
+                   a, b, normal))
+        raise RuntimeError(msg)
+    return normal
+
+def _normal4(n1, n2, n3, n4, card):
+    """Finds the unit normal vector of 2 vectors"""
+    a = n1 - n3
+    b = n2 - n4 #_normal(n1 - n3, n2 - n4)
+    vector = cross(a, b)
+    normal = vector / norm(vector)
+    if not allclose(norm(normal), 1.):
+        msg = ('function _normal, check...\n'
+               'a = {0}\nb = {1}\nnormal = {2}\n'.format(
+                   a, b, normal))
+        raise RuntimeError(msg)
     return normal
 
 
@@ -3598,7 +3615,7 @@ class CQUAD8(QuadShell):
 
     def Normal(self):
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
-        return _normal(n1 - n3, n2 - n4)
+        return _normal4(n1, n2, n3, n4, self)
 
     def AreaCentroid(self):
         """
