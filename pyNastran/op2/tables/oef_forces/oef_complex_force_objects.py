@@ -626,6 +626,10 @@ class ComplexSpringDamperForceArray(ScalarObject):
             msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 1 )\n']
         elif self.element_type == 21: # CDAMP2
             msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 2 )\n']
+        elif self.element_type == 22: # CDAMP3
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 3 )\n']
+        elif self.element_type == 23: # CDAMP4
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 4 )\n']
         else:
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
 
