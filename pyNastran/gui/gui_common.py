@@ -5184,8 +5184,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self.log_command('clear_application_log(force=%s)' % force)
 
     def delete_actor(self, name):
-        """deletes an actor and associated labels"""
-        pass
+        """deletes an actor and associated properties"""
+        if name != 'main':
+            if name in self.geometry_actors:
+                actor = self.geometry_actors[name]
+                self.rend.RemoveActor(actor)
+                del self.geometry_actors[name]
+            if name in self.geometry_properties:
+                prop = self.geometry_properties[name]
+                del self.geometry_properties[name]
+            self.Render()
 
     def reset_labels(self, reset_minus1=True):
         """
@@ -5855,7 +5863,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if name in ['clicked_ok', 'clicked_cancel']:
                 continue
 
-            #color2 = group.color_float
+            if name not in self.geometry_properties:
+                # we've deleted the actor
+                continue
+
             geom_prop = self.geometry_properties[name]
             if isinstance(geom_prop, CoordProperties):
                 pass
@@ -5955,6 +5966,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _update_ith_geometry_properties(self, namei, group, lines, render=True):
         """updates a geometry"""
+        if namei not in self.geometry_actors:
+            # we've deleted the actor
+            return
         actor = self.geometry_actors[namei]
         if isinstance(actor, vtk.vtkActor):
             lines += self._update_geomtry_properties_actor(namei, group, actor)
