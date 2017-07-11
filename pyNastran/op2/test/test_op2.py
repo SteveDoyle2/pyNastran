@@ -36,7 +36,7 @@ except ImportError:
 # we need to check the memory usage
 is_linux = None
 is_memory = True
-try:
+try:  # pragma: no cover
     if os.name == 'nt':  # windows
         windows_flag = True
         is_linux = False
@@ -324,7 +324,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
     op2.remove_results(exclude)
     op2_nv.remove_results(exclude)
 
-    if is_memory and check_memory:
+    if is_memory and check_memory:  # pragma: no cover
         if is_linux: # linux
             kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         else: # windows
@@ -367,7 +367,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         if compare:
             assert op2 == op2_nv
 
-        if is_memory and check_memory:
+        if is_memory and check_memory:  # pragma: no cover
             if is_linux: # linux
                 kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             else: # windows

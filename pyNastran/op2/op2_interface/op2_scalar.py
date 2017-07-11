@@ -69,8 +69,7 @@ GEOM_TABLES = [
 
     # eigenvalues
     b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
-    # strain energy
-    b'ONRGY1',
+
     # grid point weight
     b'OGPWG', b'OGPWGM',
 
@@ -250,6 +249,10 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'AXIC',
     b'BOPHIG',
     b'HOEF1',
+
+    #------------------------------------------
+    # strain energy
+    b'ONRGY1',
     b'ONRGY2',
 
     #------------------------------------------
@@ -1414,8 +1417,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif table_name.strip() in self.additional_matrices:
                 self._read_matrix(table_name)
             else:
-                msg += (
-                    'Invalid Table\n\n'
+                msg = (
+                    'Invalid Table = %r\n\n'
                     'If you have matrices that you want to read, see:\n'
                     '  model.set_additional_matrices_to_read(matrices)'
                     '  matrices = {\n'
@@ -1436,7 +1439,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     "  methods_dict = {\n"
                     "      b'OUGV1' : [method],\n"
                     '  }\n'
-                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n'
+                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n' % table_name
                 )
                 raise NotImplementedError(msg)
 
