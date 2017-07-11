@@ -77,7 +77,10 @@ class SingleChoiceQTableView(QTableView):
     def mouseReleaseEvent(self, event):
         index = self.currentIndex()
         #print('index.row() =', index.row())
-        self.selectRow(index.row())
+        irow = index.row()
+        self.selectRow(irow)
+        if irow == -1:  # null case
+            return
         self.parent2.update_active_key(index)
 
         #index = self.currentIndex()
@@ -139,6 +142,7 @@ class Model(QtCore.QAbstractTableModel):
         return 1
 
     def change_data(self, items):
+        raise RuntimeError('is this used?')
         #self.emit(SIGNAL("LayoutAboutToBeChanged()"))
         self.items = items
         #self.emit(SIGNAL("LayoutChanged()"))
@@ -388,7 +392,48 @@ class EditGeometryProperties(PyDialog):
 
     def on_delete(self, irow):
         print('EditGeometryProperties.on_delete %r' % irow)
-        pass
+        #return
+        nkeys = len(self.keys)
+        if nkeys == 0:
+            return
+        name = self.keys[irow]
+        nrows = nkeys - 1
+        self.keys.pop(irow)
+
+        header_labels = ['Groups']
+        table_model = Model(self.keys, header_labels, self)
+        self.table.setModel(table_model)
+
+        if len(self.keys) == 0:
+            self.update()
+            self.set_as_null()
+            return
+        if irow == nrows:
+            irow -= 1
+        new_name = self.keys[irow]
+        self.update_active_name(new_name)
+        if self.is_gui:
+            self.parent.delete_actor(name)
+
+    def set_as_null(self):
+        """sets the null case"""
+        self.name.setVisible(False)
+        self.name_edit.setVisible(False)
+        self.color.setVisible(False)
+        self.color_edit.setVisible(False)
+        self.line_width.setVisible(False)
+        self.line_width_edit.setVisible(False)
+        self.point_size.setVisible(False)
+        self.point_size_edit.setVisible(False)
+        self.bar_scale.setVisible(False)
+        self.bar_scale_edit.setVisible(False)
+        self.opacity.setVisible(False)
+        self.opacity_edit.setVisible(False)
+        self.opacity_slider_edit.setVisible(False)
+        self.point_size_slider_edit.setVisible(False)
+        self.line_width_slider_edit.setVisible(False)
+        self.checkbox_show.setVisible(False)
+        self.checkbox_hide.setVisible(False)
 
     def on_update_geometry_properties_window(self, data):
         """Not Implemented"""
@@ -420,9 +465,11 @@ class EditGeometryProperties(PyDialog):
             name = str(index.data().toString())
         else:
             name = str(index.data())
-            print('name = %r' % name)
+            #print('name = %r' % name)
         #i = self.keys.index(self.active_key)
+        self.update_active_name(name)
 
+    def update_active_name(self, name):
         self.active_key = name
         self.name_edit.setText(name)
         obj = self.out_data[name]
@@ -861,10 +908,14 @@ class EditGeometryProperties(PyDialog):
             #return True
         #return False
 
+    @property
+    def is_gui(self):
+        return hasattr(self.win_parent, 'on_update_geometry_properties')
+
     def on_apply(self, force=False):
         passed = self.on_validate()
         #print("passed=%s force=%s allow=%s" % (passed, force, self.allow_update))
-        if (passed or force) and self.allow_update and hasattr(self.win_parent, 'on_update_geometry_properties'):
+        if (passed or force) and self.allow_update and self.is_gui:
             #print('obj = %s' % self.out_data[self.active_key])
             self.win_parent.on_update_geometry_properties(self.out_data, name=self.active_key)
         return passed

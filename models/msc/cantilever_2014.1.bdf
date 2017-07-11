@@ -1,0 +1,79 @@
+$ NASTRAN input file created by the Patran 2014.1 64-Bit input file
+$ translator on June      21, 2017 at 17:15:03.
+$ Direct Text Input for Nastran System Cell Section
+$ Direct Text Input for File Management Section
+$ Direct Text Input for Executive Control
+$ Linear Static Analysis, Database
+SOL 101
+CEND
+$ Direct Text Input for Global Case Control Data
+TITLE = MSC.Nastran job created on 27-Feb-17 at 18:03:10
+ECHO = NONE
+SUBCASE 1
+   SUBTITLE=Default
+   SPC = 2
+   LOAD = 2
+   DISPLACEMENT(PLOT,SORT1,REAL)=ALL
+   SPCFORCES(PLOT,SORT1,REAL)=ALL
+   GPFORCE(PLOT)=ALL
+   FORCE(PLOT,SORT1,REAL,BILIN)=ALL
+$ Direct Text Input for this Subcase
+BEGIN BULK
+$ Direct Text Input for Bulk Data
+PARAM    POST    1
+PARAM   PRTMAXIM YES
+$ Elements and Element Properties for region : channel
+PBEAM*   1               1              1.84375         27.7245
+*       .488696          0.             .00960286
+        5.5     2.43802 -5.5    2.43802 -5.5    .438021 5.5     .438021
+        .728814 .254237                                 10.9761 10.9761
+                                         0.     .754758  0.     .754758
+$ Pset: "channel" will be imported as: "pbeam.1"
+CBEAM    1       1       1       2       0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    2       1       2       3       0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    3       1       3       4       0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    4       1       4       5       0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    5       1       5       6       0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    6       1       6       7       0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    7       1       7       8       0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    8       1       8       9       0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    9       1       9       10      0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+CBEAM    10      1       10      11      0.      0.     1.
+                         0.     .438     0.      0.     .438     0.
+$ Referenced Material Records
+$ Material Record : st
+$ Description of Material : Date: 27-Feb-17           Time: 18:00:35
+MAT1     1      2.+6            .3      7.8-4
+$ Nodes of the Entire Model
+GRID     1               0.      0.      0.
+GRID     2              1.       0.      0.
+GRID     3              2.       0.      0.
+GRID     4              3.       0.      0.
+GRID     5              4.       0.      0.
+GRID     6              5.       0.      0.
+GRID     7              6.       0.      0.
+GRID*    8                              7.00000047683716 0.
+*        0.
+GRID*    9                              8.00000095367432 0.
+*        0.
+GRID*    10                             9.00000095367432 0.
+*        0.
+GRID     11             10.      0.      0.
+$ Loads for Load Case : Default
+SPCADD   2       1
+LOAD     2      1.      1.       1
+$ Displacement Constraints of Load Set : fixed
+SPC1     1       123456  1
+$ Nodal Forces of Load Set : force
+FORCE    1       11      0      1000.    0.      0.     -1.
+$ Referenced Coordinate Frames
+ENDDATA 12acb613
