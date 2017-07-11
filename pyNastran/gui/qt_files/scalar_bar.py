@@ -107,12 +107,39 @@ class ScalarBar(object):
 
     def update(self, title, min_value, max_value, norm_value,
                data_format,
-               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+               nlabels=None, labelsize=None, ncolors=None, colormap='jet', colormap_order=None,
                is_low_to_high=True, is_horizontal=True,
                is_shown=True):
         self.color_function.RemoveAllPoints()
 
-        if colormap in [None, 'jet']:
+        # jet - HSV :)
+        # jet with RGB is red to blue (not a bad colormap, but not jet)
+
+        # viridis and plasma look good as HSV
+        # (not sure on the exact difference, but it probably should be
+        #  RGB based on the others)
+        #
+        # viridis - RGB :)
+        # plasma  - RGB :)
+        # magma   - not HSV, RGB :)
+        # inferno - not HSV, RGB :)
+        if colormap_order is None:
+            if colormap in ['jet', None]:
+                colormap_order = 'hsv'
+                colormap = 'jet'
+            elif colormap in ['plasma', 'viridis', 'magma', 'inferno']:  # #2
+                colormap_order = 'rgb'
+            else:
+                raise NotImplementedError(colormap)
+
+        if colormap_order == 'rgb':
+            self.color_function.SetColorSpaceToRGB()
+        elif colormap_order == 'hsv':
+            self.color_function.SetColorSpaceToHSV()
+        else:
+            raise NotImplementedError(colormap_order)
+
+        if colormap == 'jet':
             if is_low_to_high:
                 self.color_function.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
                 self.color_function.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
