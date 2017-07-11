@@ -4685,7 +4685,7 @@ class AddCards(AddMethods):
         self._add_freq_object(freq)
         return freq
 
-    def add_freq5(sid, fractions, f1=0., f2=1e20, comment=''):
+    def add_freq5(self, sid, fractions, f1=0., f2=1e20, comment=''):
         """
         Creates a FREQ5 card
 

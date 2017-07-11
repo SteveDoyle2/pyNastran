@@ -751,6 +751,15 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
        SUPORT1 = 5 # implicit point to SUPORT1
        # implicit call to SUPORT
     """
+    if 'POST' in fem2.params:
+        value = fem2.params['POST'].values[0]
+        if value >= 0:
+            msg = 'PARAM,POST,%i is not supported by the OP2 reader' % value
+            fem2.log.error(msg)
+    else:
+        msg = 'PARAM,POST,0 is not supported by the OP2 reader'
+        fem2.log.error(msg)
+
     if sol == 24:
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)

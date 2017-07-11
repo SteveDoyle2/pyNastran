@@ -535,7 +535,8 @@ class GetCard(GetMethods):
                 if centroidal_pressures is not None: # or any of the others
                     is_loads = True
             elif key in temperature_keys:
-                is_temperatures, temperatures = self._get_temperatures_array(load_case_id, nid_map=nid_map)
+                is_temperatures, temperatures = self._get_temperatures_array(
+                    load_case_id, nid_map=nid_map)
                 temperature_key = key
             else:
                 raise NotImplementedError(key)
@@ -543,12 +544,12 @@ class GetCard(GetMethods):
         load_data = (centroidal_pressures, forces, spcd)
         return is_loads, is_temperatures, temperature_data, load_data
 
-    def _get_dvprel_ndarrays(self, nelements, pids):
+    def _get_dvprel_ndarrays(self, nelements, pids, fdtype='float32', idtype='int32'):
         """creates arrays for dvprel results"""
-        dvprel_t_init = np.zeros(nelements, dtype='float32')
-        dvprel_t_min = np.zeros(nelements, dtype='float32')
-        dvprel_t_max = np.zeros(nelements, dtype='float32')
-        design_region = np.zeros(nelements, dtype='int32')
+        dvprel_t_init = np.zeros(nelements, dtype=fdtype)
+        dvprel_t_min = np.zeros(nelements, dtype=fdtype)
+        dvprel_t_max = np.zeros(nelements, dtype=fdtype)
+        design_region = np.zeros(nelements, dtype=idtype)
 
         for key, dvprel in iteritems(self.dvprels):
             if dvprel.type == 'DVPREL1':
@@ -927,15 +928,16 @@ class GetCard(GetMethods):
             self.log.warning('fail_nids = %s' % np.array(fail_nids_list))
         return centroidal_pressures, forces, spcd
 
-    def get_pressure_array(self, load_case, eids, normals):
+    def get_pressure_array(self, loadcase_id, eids, normals):
         """
         Gets the pressures for a load case
 
         Parameters
         ----------
-        load_case : int
+        loadcase_id : int
             the load case to get the pressure contour for
         eids : ???
+            ???
         normals : (nelements, 3) float ndarray
             the element normals
 
@@ -1018,6 +1020,7 @@ class GetCard(GetMethods):
         tempd = self.tempds[load_case_id].temperature if load_case_id in self.tempds else 0.
         temperatures = np.ones(len(nid_map), dtype=dtype) * tempd
         for load, scale in zip(loads, scale_factors):
+            assert scale == 1.0, str(load)
             if load.type == 'TEMP':
                 temps_dict = load.temperatures
                 for nid, val in iteritems(temps_dict):
@@ -1064,7 +1067,8 @@ class GetCard(GetMethods):
                 print(str(elem))
         return lines_rigid
 
-    def get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=True, stop_on_failure=True, msg=''):
+    def get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=False,
+                          stop_on_failure=True, msg=''):
         """
         Accounts for scale factors.
 
@@ -1122,7 +1126,7 @@ class GetCard(GetMethods):
             if load.type == 'LOAD':
                 load_ids = load.get_load_ids()
                 load_scale = load.scale * scale
-                scale_factors, load_ids = load.scale_factors, load.get_load_ids()
+                scale_factors = load.scale_factors
                 scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
                 for load_idi, scalei in zip(load_ids, scale_factors_temp):
                     # prevents recursion
@@ -1178,7 +1182,7 @@ class GetCard(GetMethods):
                 loads2.append(load)
         return loads2, scale_factors2
 
-    def get_reduced_dloads(self, dload_id, scale=1., skip_scale_factor0=True, msg=''):
+    def get_reduced_dloads(self, dload_id, scale=1., skip_scale_factor0=False, msg=''):
         """
         Accounts for scale factors.
 
@@ -1219,7 +1223,7 @@ class GetCard(GetMethods):
             if dload.type == 'DLOAD':
                 dload_ids = dload.get_load_ids()
                 load_scale = dload.scale * scale
-                scale_factors, load_ids = dload.scale_factors, dload.get_load_ids()
+                scale_factors = dload.scale_factors
                 scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
                 for dload_idi, scalei in zip(dload_ids, scale_factors_temp):
                     # prevents recursion
