@@ -23,16 +23,19 @@ from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
+        QMessageBox, QWidget,
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from PyQt4.QtCore import QString
 elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
+        QMessageBox, QWidget,
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from six import text_type as QString
 elif qt_version == 'pyside':
     from PySide import QtCore, QtGui
     from PySide.QtGui import (
+        QMessageBox, QWidget,
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from six import text_type as QString
 else:
@@ -444,6 +447,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
 
             tools = file_tools + [
+                ('log_clear', 'Clear Application Log', '', None, 'Clear Application Log', self.clear_application_log),
                 ('label_clear', 'Clear Current Labels', '', None, 'Clear current labels', self.clear_labels),
                 ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
@@ -623,7 +627,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'set_preferences', '',
-            'label_clear', 'label_reset', '',
+            'log_clear', 'label_clear', 'label_reset', '',
             'legend', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
             #'anti_alias_4', 'anti_alias_8',],
@@ -5157,6 +5161,31 @@ class GuiCommon2(QMainWindow, GuiCommon):
         data2 = [('node/centroid', None, [])]
         self.res_widget.update_methods(data2)
 
+    def clear_application_log(self, force=False):
+        """
+        Clears the application log
+
+        Parameters
+        ----------
+        force : bool; default=False
+            clears the dialog without asking
+        """
+        # popup menu
+        if force:
+            self.log_widget.clear()
+            self.log_command('clear_application_log(force=%s)' % force)
+        else:
+            widget = QWidget()
+            title = 'Clear Application Log'
+            msg = 'Are you sure you want to clear the Application Log?'
+            result = QMessageBox.question(widget, title, msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if result == QMessageBox.Yes:
+                self.log_widget.clear()
+                self.log_command('clear_application_log(force=%s)' % force)
+
+    def delete_actor(self, name):
+        """deletes an actor and associated labels"""
+        pass
 
     def reset_labels(self, reset_minus1=True):
         """

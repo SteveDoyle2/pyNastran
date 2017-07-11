@@ -287,7 +287,7 @@ class Sidebar(QWidget):
         if isinstance(method, string_types):
             datai = self.result_data_window.data[0]
             self.result_data_window.data[0] = (method, datai[1], datai[2])
-            print('method=%s datai=%s' % (method, datai))
+            #print('method=%s datai=%s' % (method, datai))
             self.result_data_window.update_data(self.result_data_window.data)
         else:
             return

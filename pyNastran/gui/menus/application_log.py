@@ -1,7 +1,9 @@
 from __future__ import print_function
 from pyNastran.gui.qt_version import qt_version, is_pygments
 
+
 if qt_version == 4:
+    from PyQt4.QtCore import Qt
     from PyQt4 import QtCore
     from PyQt4.QtGui import (
         QPushButton, QTextEdit, QDockWidget,
@@ -13,6 +15,7 @@ if qt_version == 4:
         is_scintilla = False
 
 elif qt_version == 5:
+    from PyQt5.QtCore import Qt
     #from PyQt5 import QtCore, QtGui
     from PyQt5.QtGui import QFont, QFontMetrics, QColor
     from PyQt5 import QtCore
@@ -48,12 +51,23 @@ class HtmlLog(QTextEdit):
         if qApp.mouseButtons() & QtCore.Qt.RightButton:
             print(self.sender().toolTip())
 
+    def clear(self):
+        """clears out the text"""
+        self.setText('')
+
 class ApplicationLogWidget(QDockWidget):
     def __init__(self, parent=None):
         QDockWidget.__init__(self, 'Application log', parent=parent)
         self.setObjectName('application_log')
         self.log_widget = HtmlLog(parent=self)
         self.setWidget(self.log_widget)
+
+    #def keyPressEvent(self, event):
+        #key = event.key()
+        #if key == Qt.Key_Delete:
+            #index = self.currentIndex()
+            #self.parent().on_delete(index.row())
+            #print('pressed delete')
 
 #class QSyntaxHighlighting(Qsci.QsciScintilla):
     #def __init__(self):
@@ -191,6 +205,7 @@ class PythonConsoleWidget(QDockWidget):
         menu_item1.triggered.connect(self.menuItemClicked_1)
         menu_item2.triggered.connect(self.menuItemClicked_2)
         menu_item3.triggered.connect(self.menuItemClicked_3)
+
         #self.connect(menu_item1, QtCore.SIGNAL("triggered()"), self.menuItemClicked_1)
         #self.connect(menu_item2, QtCore.SIGNAL("triggered()"), self.menuItemClicked_2)
         #self.connect(menu_item3, QtCore.SIGNAL("triggered()"), self.menuItemClicked_3)
@@ -222,3 +237,35 @@ class PythonConsoleWidget(QDockWidget):
 
     def menuItemClicked_3(self):
         print(3)
+
+
+def main():  # pragma: no cover
+    # kills the program when you hit Cntl+C from the command line
+    # doesn't save the current state as presumably there's been an error
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    from pyNastran.gui.qt_version import qt_version
+    if qt_version == 4:
+        #from PyQt4 import QtCore, QtGui
+        from PyQt4.QtGui import QApplication
+    elif qt_version == 5:
+        from PyQt5.QtWidgets import QApplication
+
+    import sys
+    import pyNastran
+    app = QApplication(sys.argv)
+    url = pyNastran.__website__
+    version = '1.0.0'
+    main_window = ApplicationLogWidget()
+    log_widget = main_window.log_widget
+    msg = 'This is a message asdf'
+    text_cursor = log_widget.textCursor()
+    text_cursor.insertHtml(msg + r"<br />")
+    #log_widget.clear()
+    main_window.show()
+    app.exec_()
+
+
+if __name__ == '__main__':  # pragma: no cover
+    main()
