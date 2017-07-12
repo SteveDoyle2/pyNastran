@@ -124,7 +124,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def load_nastran_geometry_and_results(self, op2_filename, name='main', plot=True):
         """loads geometry and results, so you don't have to double define the same BDF/OP2"""
         self.load_nastran_geometry(op2_filename, name='main', plot=False)
-        self.load_nastran_results(self.model, name='main', plot=True)
+        self.load_nastran_results(self.model) # name='main', plot=True
 
     def _cleanup_nastran_tools_and_menu_items(self):
         """
@@ -440,22 +440,26 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         model = self._get_model(bdf_filename, xref_loads=xref_loads)
 
         nnodes = len(model.nodes)
-        nspoints = 0
-        spoints = None
-        if model.spoints:
-            spoints = sorted([spoint.nid for spoint in itervalues(model.spoints)])
-            nspoints = len(spoints)
+        nspoints = len(model.spoints)
+        nepoints = len(model.epoints)
+        #if model.spoints:
+            #spoints = sorted([spoint.nid for spoint in itervalues(model.spoints)])
+        #if model.epoints:
+            #epoints = sorted([epoint.nid for epoint in itervalues(model.epoints)])
 
-        if nnodes + nspoints == 0:
-            msg = 'nnodes + nspoints = 0\n'
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes + nspoints + nepoints = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
         nelements = len(model.elements)
+        nmasses = len(model.masses)
         nplotels = len(model.plotels)
         ncaero_cards = len(model.caeros)
-        if nelements + ncaero_cards + nplotels == 0:
-            msg = 'nelements + ncaero_cards + nplotels = 0\n'
+        nrigid = len(model.rigid_elements)
+        #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
+        if nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:
+            msg = 'nelements + nmasses + ncaero_cards + nplotels + nrigid = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
@@ -906,7 +910,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     # 3D version
                     xyz, elems = element.get_points_elements_3d()
-                    xyz[:, 2] +=  zfighting_offset
+                    xyz[:, 2] += zfighting_offset
                     for elemi in elems:
                         elem = vtkQuad()
                         elem.GetPointIds().SetId(0, j)
@@ -2067,13 +2071,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         if nnodes_array.max() > -1:
             nnodes_res = GuiResult(subcase_id, 'NNodes/Elem', 'NNodes/Elem', 'centroid', nnodes_array,
-                                mask_value=0,
-                                nlabels=None,
-                                labelsize=None,
-                                ncolors=None,
-                                colormap='jet',
-                                data_format=None,
-                                uname='GuiResult')
+                                   mask_value=0,
+                                   nlabels=None,
+                                   labelsize=None,
+                                   ncolors=None,
+                                   colormap='jet',
+                                   data_format=None,
+                                   uname='GuiResult')
             cases[icase] = (nnodes_res, (0, 'NNodes/Elem'))
             form0.append(('NNodes/Elem', icase, []))
             icase += 1
@@ -2426,10 +2430,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 elif card_type in ['CQUAD4']:
                     nnodes = 4
-                    nid = np.array([model.elements[eid].node_ids for eid in eids],
-                                    dtype='int32')
-                    pids = np.array([model.elements[eid].Pid() for eid in eids],
-                                    dtype='int32')
+                    nid = np.array([model.elements[eid].node_ids for eid in eids], dtype='int32')
+                    pids = np.array([model.elements[eid].Pid() for eid in eids], dtype='int32')
                     inids = np.searchsorted(all_nids, nid)
 
                     for elem_nid in inids:
@@ -4202,7 +4204,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         if nplies.max() > 0:
             nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
-                              location='centroid', scalar=nplies)
+                                   location='centroid', scalar=nplies)
             cases[icase] = (nplies_res, (0, 'Number of Plies'))
             form0.append(('Number of Plies', icase, []))
             icase += 1
