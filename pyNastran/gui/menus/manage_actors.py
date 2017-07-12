@@ -50,11 +50,11 @@ class SingleChoiceQTableView(QTableView):
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-    def update_data(self, data):
+    def update_data(self, data):  # not needed?
         #items = self.getModel()
         self.model().change_data(data)
 
-    def getModel(self):
+    def getModel(self):  # not needed?
         model = self.model() #tableView.model()
         return model.items
         #data = []
@@ -391,10 +391,11 @@ class EditGeometryProperties(PyDialog):
         self.set_connections()
 
     def on_delete(self, irow):
-        print('EditGeometryProperties.on_delete %r' % irow)
-        #return
+        """deletes an actor based on the row number"""
+        if irow == 0:  # main
+            return
         nkeys = len(self.keys)
-        if nkeys == 0:
+        if nkeys in [0, 1]:
             return
         name = self.keys[irow]
         nrows = nkeys - 1
@@ -413,7 +414,7 @@ class EditGeometryProperties(PyDialog):
         new_name = self.keys[irow]
         self.update_active_name(new_name)
         if self.is_gui:
-            self.parent.delete_actor(name)
+            self.win_parent.delete_actor(name)
 
     def set_as_null(self):
         """sets the null case"""

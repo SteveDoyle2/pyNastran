@@ -1055,7 +1055,7 @@ colormap_dict = {
 }
 colormap_keys = ['jet', 'magma', 'inferno', 'plasma', 'viridis']
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     from matplotlib.colors import ListedColormap
 
     cmaps = {}

@@ -16,6 +16,8 @@ $ Subcase name : Default
    MPCFORCES(PLOT,PRINT,PHASE)=ALL
    GPFORCE(PLOT,PRINT,PHASE)=ALL
    $GPKE(PLOT,PHASE)=ALL
+
+   $ breaks because there aren't enough elements that produce a large strain energy?
    $ESE(PLOT,PHASE)=ALL   $ breaks because of CQUAD8/CTRIA6?
    FORCE(PLOT,PRINT,PHASE)=ALL
    METHOD = 42

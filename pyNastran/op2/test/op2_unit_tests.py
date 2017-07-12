@@ -225,6 +225,7 @@ class TestOP2(Tester):
         #os.remove(f06_filename)
 
     def test_set_results(self):
+        """tests setting only a subset of results"""
         op2_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
         f06_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.test_op2.f06')
 
@@ -512,6 +513,7 @@ class TestOP2(Tester):
         os.remove(f06_filename)
 
     def test_op2_solid_shell_bar_01(self):
+        """tests sol_101_elements/static_solid_shell_bar.op2"""
         op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.join(model_path, 'sol_101_elements')
         op2_filename = os.path.join(folder, op2_filename)
@@ -617,6 +619,7 @@ class TestOP2(Tester):
         os.remove(vtk_filename)
 
     def test_op2_solid_shell_bar_01_straincurvature(self):
+        """tests sol_101_elements/static_solid_shell_bar_straincurve.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         bdf_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve.op2')
@@ -663,6 +666,7 @@ class TestOP2(Tester):
         assert cquad4_strain.is_von_mises(), cquad4_strain
 
     def test_op2_solid_shell_bar_01_fiberdistance(self):
+        """tests sol_101_elements/static_solid_shell_bar_fiberdist.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist.op2')
@@ -708,6 +712,7 @@ class TestOP2(Tester):
         assert cquad4_strain.is_von_mises(), '%s\n%s' % (cquad4_strain, sword)
 
     def test_op2_solid_shell_bar_01_straincurvature_shear(self):
+        """tests sol_101_elements/static_solid_shell_bar_straincurve_shear.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         bdf_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve_shear.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_straincurve_shear.op2')
@@ -752,6 +757,7 @@ class TestOP2(Tester):
         assert not cquad4_strain.is_von_mises(), cquad4_strain
 
     def test_op2_solid_shell_bar_01_fiberdistance_shear(self):
+        """tests sol_101_elements/static_solid_shell_bar_fiberdist_shear.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         bdf_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist_shear.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_fiberdist_shear.op2')
@@ -796,6 +802,7 @@ class TestOP2(Tester):
         assert cquad4_strain.is_von_mises() == False, cquad4_strain
 
     def test_op2_solid_shell_bar_mode(self):
+        """tests sol_101_elements/mode_solid_shell_bar.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
         make_geom = False
@@ -861,6 +868,7 @@ class TestOP2(Tester):
         os.remove(debug_file)
 
     def test_op2_solid_shell_bar_mode_export(self):
+        """tests sol_101_elements/mode_solid_shell_bar.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         bdf_filename = os.path.join(folder, 'mode_solid_shell_bar.bdf')
         op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
@@ -869,6 +877,7 @@ class TestOP2(Tester):
         os.remove(vtk_filename)
 
     def test_op2_solid_shell_bar_buckling(self):
+        """tests sol_101_elements/buckling_solid_shell_bar.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
         make_geom = False
@@ -942,6 +951,7 @@ class TestOP2(Tester):
 
     #@unittest.expectedFailure
     def test_op2_solid_shell_bar_freq(self):
+        """tests sol_101_elements/freq_solid_shell_bar.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
         make_geom = False
@@ -1032,6 +1042,7 @@ class TestOP2(Tester):
         os.remove(debug_file)
 
     def test_op2_solid_shell_bar_freq_export(self):
+        """tests sol_101_elements/freq_solid_shell_bar.op2"""
         folder = os.path.join(model_path, 'sol_101_elements')
         bdf_filename = os.path.join(folder, 'freq_solid_shell_bar.bdf')
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
@@ -1186,6 +1197,7 @@ class TestOP2(Tester):
         os.remove(debug_file)
 
     def test_op2_plate_py_01(self):
+        """tests plate_py/plate_py.op2"""
         make_geom = False
         write_bdf = False
         write_f06 = False
@@ -1204,6 +1216,7 @@ class TestOP2(Tester):
                 debug=debug, stop_on_failure=True, quiet=True)
 
     def test_op2_good_sine_01(self):
+        """tests freq_sine/good_sine.op2"""
         op2_filename = os.path.join(model_path, 'freq_sine', 'good_sine.op2')
         make_geom = False
         write_bdf = False
@@ -1241,6 +1254,7 @@ class TestOP2(Tester):
                 #debug=debug, stopOnFailure=True)
 
     def test_op2_good_sine_02(self):
+        """tests freq_sine/good_sine.op2"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         bdf_filename = os.path.join(folder, 'freq_sine', 'good_sine.dat')
         op2_filename = os.path.join(folder, 'freq_sine', 'good_sine.op2')
@@ -1263,6 +1277,7 @@ class TestOP2(Tester):
         os.remove(debug_file)
 
     def test_op2_bcell_01(self):
+        """tests other/bcell9p0.op2"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         bdf_filename = os.path.join(folder, 'other', 'bcell9p0.bdf')
         op2_filename = os.path.join(folder, 'other', 'bcell9p0.op2')
@@ -1297,6 +1312,7 @@ class TestOP2(Tester):
         os.remove('junk.f06')
 
     def test_op2_cbush_01(self):
+        """tests cbush/cbush.op2"""
         op2_filename = os.path.join(model_path, 'cbush', 'cbush.op2')
         make_geom = False
         write_bdf = False
@@ -1310,7 +1326,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
-                                 write_f06=write_f06,
+                                 write_f06=write_f06, compare=True,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
 
@@ -1326,9 +1342,7 @@ class TestOP2(Tester):
         assert cbush_force.nelements == 1, cbush_force.nelements
         assert cbush_force.data.shape == (1, 1, 6), cbush_force.data.shape
         if is_pandas:
-            cbush_stress.build_dataframe()
-            cbush_strain.build_dataframe()
-            cbush_force.build_dataframe()
+            op2.build_dataframe()
 
         assert os.path.exists(debug_file), os.listdir(os.path.dirname(op2_filename))
         os.remove(debug_file)
