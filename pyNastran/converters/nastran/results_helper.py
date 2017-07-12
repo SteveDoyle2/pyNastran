@@ -72,6 +72,9 @@ class NastranGuiResults(NastranGuiAttributes):
             else:
                 has_cycle = False
                 code_name = None
+            if not case.is_sort1():
+                self.log.warning('Skipping because SORT2\n' + str(case))
+                continue
             assert case.is_sort1(), case.is_sort1()
 
             itime0 = 0
@@ -80,7 +83,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if nnodes != ndata:
                 #print('nnodes=%s ndata=%s' % (nnodes, ndata))
                 nidsi = case.node_gridtype[:, 0]
-                assert len(nidsi) == nnodes
+                #assert len(nidsi) == nnodes, 'nidsi=%s nnodes=%s' % (nidsi, nnodes)
                 j = np.searchsorted(nids, nidsi)  # searching for nidsi
 
                 try:
@@ -95,16 +98,27 @@ class NastranGuiResults(NastranGuiAttributes):
             # (itime, nnodes, xyz)
             # (901, 6673, 3)
             t123 = case.data[:, :, :3]
+            ntimes = case.ntimes
+
             if nnodes != ndata:
-                t123i = np.zeros((nnodes, 3), dtype='float32')
-                t123i[j, :] = t123
+                t123i = np.zeros((ntimes, nnodes, 3), dtype='float32')
+                t123i[:, j, :] = t123
                 t123 = t123i
 
-            # (itime, nnodes, xyz)
-            # tnorm (901, 3)
-            tnorm = norm(t123, axis=1)   # I think this is wrong...
-            assert len(tnorm) == t123.shape[0]
-            ntimes = case.ntimes
+                # (itime, nnodes, xyz)
+                # tnorm (901, 3)
+                tnorm = norm(t123, axis=2)   # I think this is wrong...
+                print('tnorm.shape ', tnorm.shape)
+                assert len(tnorm) == t123.shape[0]
+            else:
+                # (itime, nnodes, xyz)
+                # tnorm (901, 3)
+                tnorm = norm(t123, axis=1)   # I think this is wrong...
+                assert len(tnorm) == t123.shape[0]
+
+            assert t123.shape[0] == ntimes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
+            assert t123.shape[1] == nnodes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
+
             titles = []
             scales = []
             headers = []
@@ -187,6 +201,11 @@ class NastranGuiResults(NastranGuiAttributes):
             subcase_idi = case.isubcase
             if not hasattr(case, 'data'):
                 continue
+
+            if not case.is_sort1():
+                self.log.warning('Skipping because SORT2\n' + str(case))
+                continue
+            assert case.is_sort1(), case.is_sort1()
 
             ntimes = case.ntimes
             for itime in range(ntimes):

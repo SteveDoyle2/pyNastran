@@ -1700,7 +1700,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_type_point = vtk.vtkVertex().GetCellType()
         cell_type_line = vtk.vtkLine().GetCellType()
         cell_type_tri3 = vtkTriangle().GetCellType()
-        #cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
+        cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
         cell_type_quad4 = vtkQuad().GetCellType()
         #cell_type_quad8 = vtkQuadraticQuad().GetCellType()
         cell_type_tetra4 = vtkTetra().GetCellType()
@@ -1781,6 +1781,30 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     mcid_array[ieid] = elem.theta_mcid
                 nnodes = 4
                 dim = 2
+            elif etype in ['CTRIA6']:
+                nids = elem.nodes
+                pid = elem.pid
+                if None in nids:
+                    cell_type = cell_type_tri3
+                    inids = np.searchsorted(all_nids, nids[:3])
+                    nids = nids[:3]
+                    p1, p2, p3 = xyz_cid0[inids, :]
+                    nnodes = 3
+                else:
+                    cell_type = cell_type_tri6
+                    inids = np.searchsorted(all_nids, nids)
+                    p1, p2, p3, p4, p5, p6 = xyz_cid0[inids, :]
+                    nnodes = 6
+                out = tri_quality(p1, p2, p3)
+                (areai, max_skew, aspect_ratio,
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                normali = np.cross(p1 - p2, p1 - p3)
+                if isinstance(elem.theta_mcid, float):
+                    theta_array[ieid] = elem.theta_mcid
+                else:
+                    mcid_array[ieid] = elem.theta_mcid
+                dim = 2
+
             elif etype in ['CSHEAR']:
                 nids = elem.nodes
                 pid = elem.pid
@@ -1834,7 +1858,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     _cpyram_faces, nids, nid_map, xyz_cid0)
                 nnodes = 5
                 dim = 3
-            elif etype in ['CELAS4', 'CDAMP4']:
+            elif etype in ['CELAS2', 'CELAS4', 'CDAMP4']:
                 # these can have empty nodes and have no property
                 nids = elem.nodes
                 assert nids[0] != nids[1]
@@ -1854,7 +1878,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 pid = 0
                 dim = 0
             elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
-                           'CELAS1', 'CELAS2', 'CELAS3',
+                           'CELAS1', 'CELAS3',
                            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP5',
                            'CFAST', 'CGAP', 'CVISC']:
                 nids = elem.nodes
@@ -1956,6 +1980,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         deep = 1
         if len(icells_zero):
             icells = np.where(cell_types_array != 0)[0]
+            if len(icells) == 0:
+                self.log.info('skipped_etypes = %s' % skipped_etypes)
+                raise RuntimeError('there are no elements...')
             eids_array = eids_array[icells]
             pids_array = pids_array[icells]
             dim_array = pids_array[dim_array]
@@ -3584,7 +3611,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif etype == 'CHBDYG':
                 node_ids = element.node_ids
-                pid = element.Pid()
+                pid = 0
+                #pid = element.Pid()
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
@@ -3641,6 +3669,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     del self.eid_map[eid]
                     self.log_info("skipping %s" % element.type)
                     continue
+            #elif etype == 'CBYDYP':
             else:
                 print('removing\n%s' % (element))
                 print('removing eid=%s; %s' % (eid, element.type))
@@ -3882,9 +3911,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     element_dimi = -1
                     nnodesi = -1
                     print('element.type=%s doesnt have a dimension' % element.type)
-
+            elif etype == 'CHBDYP':
+                continue
             else:
-                ie = self.eid_map[eid]
+                try:
+                    ie = self.eid_map[eid]
+                except KeyError:
+                    print('didnt add element to eid_map')
+                    print(model.elements[eid])
+                    raise
                 element_dimi = -1
                 nnodesi = -1
                 print('element.type=%s doesnt have a dimension' % element.type)

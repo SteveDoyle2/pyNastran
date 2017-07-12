@@ -172,6 +172,37 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
 
+    def test_gui_thermal_01(self):
+        """tests thermal"""
+        #bdf_filename = os.path.join(model_path, 'thermal', 'thermal_test_153.bdf')
+        op2_filename = os.path.join(model_path, 'thermal', 'thermal_test_153.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_thermal_02(self):
+        """tests thermal"""
+        #bdf_filename = os.path.join(model_path, 'thermal', 'hd15901.bdf')
+        op2_filename = os.path.join(model_path, 'thermal', 'hd15901.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_thermal_03(self):
+        """tests thermal"""
+        #bdf_filename = os.path.join(model_path, 'other', 'hd15306.bdf')
+        op2_filename = os.path.join(model_path, 'other', 'hd15306.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_dvprel(self):
+        """tests dvprel"""
+        bdf_filename = os.path.join(model_path, 'other', 'dofm12.bdf')
+        #op2_filename = os.path.join(model_path, 'other', 'dofm12.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        #test.load_nastran_results(op2_filename)
 
 def test_bottle():  # pragma: no cover
     """
