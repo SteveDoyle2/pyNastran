@@ -78,6 +78,13 @@ try:
 except ImportError:
     py_packages.append('typing >= 3.6.1')
 
+
+if PY2:
+    try:
+        import pathlib2
+    except ImportError:
+        py_packages.append('pathlib2 >= 2.2.0')
+
 #py_packages = [
 #    'numpy >= 1.9.2',
 #    'scipy >= 0.16.0, scipy < 0.18.0',

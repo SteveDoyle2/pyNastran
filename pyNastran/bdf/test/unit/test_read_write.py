@@ -7,10 +7,14 @@ from six import PY2, StringIO
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, get_logger2
 from pyNastran.bdf.test.test_case_control_deck import compare_lines
-from pyNastran.bdf.utils import split_filename_into_tokens
+from pyNastran.bdf.bdf_interface.include_file import (
+    split_filename_into_tokens, get_include_filename,
+    PurePosixPath, PureWindowsPath,
+) # ,_split_to_tokens
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
+model_path = os.path.join(root_path, '../', 'models')
 
 log = get_logger2(debug=None)
 
@@ -417,58 +421,105 @@ class TestReadWrite(unittest.TestCase):
         include_dir = ''
         filename = 'model.bdf'
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
-        assert filename_out == ['model.bdf'], 'filename_out=%r windows' % filename_out
+        assert filename_out == PureWindowsPath('model.bdf'), 'filename_out=%r windows' % filename_out
 
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
-        assert filename_out == ['model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        assert filename_out == PurePosixPath('model.bdf'), 'filename_out=%r linux/mac' % filename_out
         #-----------------------------------------------------------------------
 
         include_dir = 'dir'
         filename = 'model.bdf'
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
-        assert filename_out == ['dir', 'model.bdf'], 'filename_out=%r windows' % filename_out
+        assert filename_out == PureWindowsPath('dir/model.bdf'), 'filename_out=%r windows' % filename_out
 
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
-        assert filename_out == ['dir', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        assert filename_out == PurePosixPath('dir/model.bdf'), 'filename_out=%r linux/mac' % filename_out
         #-----------------------------------------------------------------------
         include_dir = 'dir1'
         filename = 'dir2/model.bdf'
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
-        assert filename_out == ['dir1', 'dir2', 'model.bdf'], 'filename_out=%r windows' % filename_out
+        assert filename_out == PureWindowsPath('dir1', 'dir2', 'model.bdf'), 'filename_out=%r windows' % filename_out
 
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
-        assert filename_out == ['dir1', 'dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        assert filename_out == PurePosixPath('dir1', 'dir2', 'model.bdf'), 'filename_out=%r linux/mac' % filename_out
         #-----------------------------------------------------------------------
         include_dir = 'dir1/'
         filename = '/dir2/model.bdf'
         with self.assertRaises(SyntaxError):
             filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
-        #assert filename_out == ['dir1', 'dir2', 'model.bdf'], 'filename_out=%r windows' % filename_out
+        #assert filename_out == PureWindowsPath('dir1', 'dir2', 'model.bdf'), 'filename_out=%r windows' % filename_out
 
-        with self.assertRaises(SyntaxError):
-            filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
-        #assert filename_out == ['dir1', 'dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        #with self.assertRaises(SyntaxError):
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
+        assert filename_out == PurePosixPath('/dir2', 'model.bdf'), 'filename_out=%r linux/mac' % filename_out
 
         #-----------------------------------------------------------------------
         include_dir = ''
         filename = 'C:/dir2/model.bdf'
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
-        assert filename_out == ['C:', 'dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        assert filename_out == PureWindowsPath('C:/dir2/model.bdf'), 'filename_out=%r linux/mac' % filename_out
 
         with self.assertRaises(SyntaxError):
             filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
-            #assert filename_out == ['C:', 'dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        #assert filename_out == PurePosixPath('C:', 'dir2', 'model.bdf'), 'filename_out=%r linux/mac' % filename_out
 
         #-----------------------------------------------------------------------
         include_dir = ''
         filename = '/dir2/model.bdf'
-        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
-        assert filename_out == ['dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        with self.assertRaises(SyntaxError):
+            filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        #assert filename_out == PureWindowsPath('dir2', 'model.bdf'), 'filename_out=%r linux/mac' % filename_out
 
         filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
-        assert filename_out == ['/dir2', 'model.bdf'], 'filename_out=%r linux/mac' % filename_out
+        assert filename_out == PurePosixPath('/dir2', 'model.bdf'), 'filename_out=%r linux/mac' % filename_out
+        #-----------------------------------------------------------------------
+        include_dir = ''
+        filename = '\\\\nas\\dir2\\model.bdf'
+        filename_out = split_filename_into_tokens(include_dir, filename, is_windows=True)
+        assert filename_out == PureWindowsPath('\\\\nas\\dir2\\model.bdf'), 'filename_out=%r linux/mac' % filename_out
+
+        with self.assertRaises(SyntaxError):
+            filename_out = split_filename_into_tokens(include_dir, filename, is_windows=False)
+        #assert filename_out == PurePosixPath('\\\\nas\\dir2\\model.bdf'), 'filename_out=%r linux/mac' % filename_out
         #-----------------------------------------------------------------------
 
+
+    def test_paths_satellite(self):
+        sat_path = os.path.abspath(os.path.join(model_path, 'Satellite_V02'))
+        os.environ['Satellite_V02_base'] = sat_path
+        os.environ['Satellite_V02_bddm'] = os.path.join(sat_path, 'BULK', 'MATERIAUX')
+        os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
+        os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
+
+        pths = [
+            "INCLUDE 'Satellite_V02_bddm:Satellite_V02_Materiaux.blk'",
+            "INCLUDE 'Satellite_V02_BULK:CONM2/Satellite_V02_CONM2.blk'",
+            "INCLUDE 'Satellite_V02_BULK:RBE2/Satellite_V02_RBE2.blk'",
+            "INCLUDE 'Satellite_V02_BULK:TUBE/Satellite_V02_TubeCentral.blk'",
+            "INCLUDE 'Satellite_V02_BULK:TUBE/Satellite_V02_Barre_TubeCentral.blk'",
+            "INCLUDE 'Satellite_V02_INCLUDE:Satellite_V02_Panneau_Etoile.dat'",
+            "INCLUDE 'Satellite_V02_BULK:ETOILE/Satellite_V02_Barre_Panneau_Etoile.blk'",
+            "INCLUDE 'Satellite_V02_BULK:TOP/Satellite_V02_Panneau_PZ.blk'",
+            "INCLUDE 'Satellite_V02_BULK:TOP/Satellite_V02_Barre_Panneau_PZ.blk'",
+            "INCLUDE 'Satellite_V02_BULK:BOTTOM/Satellite_V02_Panneau_MZ.blk'",
+            "INCLUDE 'Satellite_V02_INCLUDE:Satellite_V02_Tube_Cone.dat'",
+            "INCLUDE 'Satellite_V02_BULK:COORDS/satellite_V02_Coord.blk'",
+            "INCLUDE 'Satellite_V02_INCLUDE:Satellite_V02_Panneau_Externe.dat'",
+        ]
+        for pth in pths:
+            pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=True)
+            assert os.path.exists(pth2), 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
+            print('pth1 =', pth2)
+
+            pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=False)
+            print('pth2 =', pth2, '\n')
+        #filename_tokens = _split_to_tokens(r'\\nas3\dir1\dir2', is_windows=True)
+
+        #Satellite_V02_base = M:\ACA\Satellite_V02
+        #Satellite_V02_bddm = M:\ACA\Satellite_V02/BULK/MATERIAUX
+        #Satellite_V02_BULK = M:\ACA\Satellite_V02/INCLUDE
+        #Satellite_V02_INCLUDE = M:\ACA\Satellite_V02/BULK
+        #split_filename_into_tokens
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

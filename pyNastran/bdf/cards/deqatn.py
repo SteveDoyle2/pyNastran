@@ -6,7 +6,6 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from copy import deepcopy
 from six import exec_
 
 import numpy as np
@@ -295,6 +294,7 @@ def lines_to_eqs(eqs_temp1):
     eqs = []
     neqs = len(eqs_temp)
     is_join = False
+    eqi = ''
     for i, eq in enumerate(eqs_temp):
         #print('i=%s join=%s eq=%r' % (i, is_join, eq))
         if is_join:
@@ -485,7 +485,7 @@ def fortran_to_python(lines, default_values, comment=''):
     return func_name, nargs, msg
 
 
-def write_function_header(f, eq, default_values, comment=''):
+def write_function_header(func_header, eq, default_values, comment=''):
     """
     initializes the python function
 
@@ -533,7 +533,7 @@ def write_function_header(f, eq, default_values, comment=''):
     except ValueError:
         is_float = False
 
-    func_name, arguments = f.strip('(,)').split('(')
+    func_name, arguments = func_header.strip('(,)').split('(')
     func_name = func_name.strip(' ')
     variables = arguments.split(',')
 

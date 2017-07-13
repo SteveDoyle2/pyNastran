@@ -21,9 +21,9 @@ import numpy as np
 
 from pyNastran.utils import object_attributes, print_bad_path, _filename
 from pyNastran.utils.log import get_logger2
+from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.utils import (
-    _parse_pynastran_header, to_fields, get_include_filename,
-    parse_executive_control_deck, parse_patran_syntax)
+    _parse_pynastran_header, to_fields, parse_executive_control_deck, parse_patran_syntax)
 
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

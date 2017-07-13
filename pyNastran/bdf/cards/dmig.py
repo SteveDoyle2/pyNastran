@@ -85,7 +85,7 @@ class DTI(BaseCard):
         return DTI(name, fields, comment=comment)
 
     def raw_fields(self):
-        if self.name ==  'UNITS':
+        if self.name == 'UNITS':
             mass = self.fields['mass']
             force = self.fields['force']
             length = self.fields['length']
@@ -373,15 +373,14 @@ class NastranMatrix(BaseCard):
         """
         return get_matrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
 
-    def rename(self, new_name):
-        self.name = new_name
-
     @property
     def is_real(self):
+        """real vs. complex attribute"""
         return not self.is_complex
 
     @property
     def is_complex(self):
+        """real vs. complex attribute"""
         if self.tin in [1, 2]: # real
             return False
         elif self.tin in [3, 4]: # complex
@@ -474,9 +473,6 @@ class NastranMatrix(BaseCard):
         return
 
     def write_card(self, size=8, is_double=False):
-        """
-        .. todo:: support double precision
-        """
         if self.tin in [1, 3]:
             is_double = False
         elif self.tin in [2, 4]:
@@ -1104,14 +1100,25 @@ class DMIAX(object):
         self.polar = polar
 
         self.ncols = ncols
-        self.GCj = GCj
-        self.GCi = GCi
+        self.GCNj = GCNj
+        self.GCNi = GCNi
 
         self.Real = Real
         if self.is_complex:
             self.Complex = Complex
         assert isinstance(ifo, integer_types), 'ifo=%r type=%s' % (ifo, type(ifo))
         assert not isinstance(ifo, bool), 'ifo=%r type=%s' % (ifo, type(ifo))
+
+    def is_real(self):
+        if self.tin == 1:
+            return True
+        return False
+
+    def is_complex(self):
+        return not self.is_real
+
+    def is_polar(self):
+        return False
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1147,7 +1154,7 @@ class DMIAX(object):
         GCi = []
         Real = []
         Complex = []
-        return DMIAX(name, ifo, tin, tout, polar, ncols,
+        return DMIAX(name, ifo, tin, tout,
                      GCj, GCi, Real, Complex, comment=comment)
 
     def _add_column(self, card, comment=''):
@@ -1158,13 +1165,13 @@ class DMIAX(object):
                 self.comment = comment
 
         name = string(card, 1, 'name')
-        if name == 'UACCEL':
-            return  self._add_column_uaccel()
 
         Gj = integer(card, 2, 'Gj')
         # Cj = integer(card, 3, 'Cj')
         Cj = integer_or_blank(card, 3, 'Cj', 0)
         #Cj = parse_components(card, 3, 'Cj')
+        Nj = integer(card, 4, 'Nj')
+
         assert 0 <= Cj <= 6, 'C%i must be between [0, 6]; Cj=%s' % (0, Cj)
 
         nfields = len(card)
@@ -1180,37 +1187,23 @@ class DMIAX(object):
         assert nloops > 0, 'nloops=%s' % nloops
 
         for i in range(nloops):
-            self.GCj.append((Gj, Cj))
+            self.GCNj.append((Gj, Cj, Nj))
 
         if self.is_complex:
-            if self.is_polar:
-                for i in range(nloops):
-                    n = 5 + 4 * i
-                    Gi = integer(card, n, 'Gi')
-                    # Ci = integer(card, n + 1, 'Ci')
-                    Ci = integer_or_blank(card, n + 1, 'Ci', 0)
-                    #Ci = parse_components(card, n + 1, 'Ci')
-                    assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
-                    self.GCi.append((Gi, Ci))
-                    magi = double(card, n + 2, 'ai')
-                    phasei = double(card, n + 3, 'bi')
-                    reali = magi * cos(radians(phasei))
-                    complexi = magi * sin(radians(phasei))
-                    self.Real.append(reali)
-                    self.Complex.append(complexi)
-            else:
-                for i in range(nloops):
-                    n = 5 + 4 * i
-                    Gi = integer(card, n, 'Gi')
-                    # Ci = integer(card, n + 1, 'Ci')
-                    Ci = integer_or_blank(card, n + 1, 'Ci', 0)
-                    #Ci = parse_components(card, n + 1, 'Ci')
-                    assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
-                    self.GCi.append((Gi, Ci))
-                    reali = double(card, n + 2, 'real')
-                    complexi = double(card, n + 3, 'complex')
-                    self.Real.append(reali)
-                    self.Complex.append(complexi)
+            for i in range(nloops):
+                n = 5 + 4 * i
+                Gi = integer(card, n, 'Gi')
+                # Ci = integer(card, n + 1, 'Ci')
+                Ci = integer_or_blank(card, n + 1, 'Ci', 0)
+                #Ci = parse_components(card, n + 1, 'Ci')
+                Ni = integer(card, n + 2, 'Ni')
+
+                assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
+                self.GCNi.append((Gi, Ci, Ni))
+                reali = double(card, n + 3, 'real')
+                complexi = double(card, n + 4, 'complex')
+                self.Real.append(reali)
+                self.Complex.append(complexi)
         else:
             # real
             for i in range(nloops):
@@ -1219,14 +1212,16 @@ class DMIAX(object):
                 # Ci = integer(card, n + 1, 'Ci')
                 Ci = integer_or_blank(card, n + 1, 'Ci', 0)
                 #Ci = parse_components(card, n + 1, 'Ci')
+                Ni = integer(card, n + 2, 'Ni')
+
                 assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
-                reali = double(card, n + 2, 'real')
-                self.GCi.append((Gi, Ci))
+                reali = double(card, n + 3, 'real')
+                self.GCNi.append((Gi, Ci, Ni))
                 self.Real.append(reali)
                 #print("GC=%s,%s real=%s" % (Gi, Ci, reali))
 
-        msg = '(len(GCj)=%s len(GCi)=%s' % (len(self.GCj), len(self.GCi))
-        assert len(self.GCj) == len(self.GCi), msg
+        msg = '(len(GCNj)=%s len(GCNi)=%s' % (len(self.GCNj), len(self.GCNi))
+        assert len(self.GCNj) == len(self.GCNi), msg
         #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
 
@@ -1527,7 +1522,8 @@ class DMI(NastranMatrix):
         ##elif self.nrows > 1 and self.ncols > 1:
             ##ifo = 2
         #else:
-            #raise NotImplementedError('form=%r nrows=%s ncols=%s' % (self.form, self.nrows, self.ncols))
+            #raise NotImplementedError('form=%r nrows=%s ncols=%s' % (
+                #self.form, self.nrows, self.ncols))
         #return ifo
 
     def _add_column(self, card, comment=''):
@@ -1608,15 +1604,14 @@ class DMI(NastranMatrix):
                 else:
                     raise NotImplementedError()
 
-    def rename(self, new_name):
-        self.name = new_name
-
     @property
     def is_real(self):
+        """real vs. complex attribute"""
         return not self.is_complex
 
     @property
     def is_complex(self):
+        """real vs. complex attribute"""
         if self.tin in [3, 4]:
             return True
         return False
@@ -1643,6 +1638,7 @@ class DMI(NastranMatrix):
         return list_fields
 
     def write_card_8(self):
+        """writes the card in single precision"""
         return self._write_card(print_card_8)
 
     def _get_real_fields(self, func):
@@ -1700,12 +1696,15 @@ class DMI(NastranMatrix):
         return msg
 
     def write_card_16(self):
+        """writes the card in single precision"""
         return self._write_card(print_card_16)
 
     def write_card_double(self):
+        """writes the card in double precision"""
         return self._write_card(print_card_16)
 
     def _write_card(self, func):
+        """writes the card in single/double precision"""
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
