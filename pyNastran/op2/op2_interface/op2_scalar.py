@@ -1242,7 +1242,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
             self.post = -1
             self.read_markers([3])
-            data = self.read_block()
+            data = self.read_block()   # TODO: is this the date?
             #assert len(data) == 12, len(data)
 
             self.read_markers([7])
@@ -1282,6 +1282,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif version == b'OS11XXXX':
                 self.set_as_radioss()
                 self.set_table_type()
+            #elif data[:20] == b'XXXXXXXX20141   0   ':
+                #self.set_as_msc()
+                #self.set_table_type()
             else:
                 raise RuntimeError('unknown version=%r' % version)
 
