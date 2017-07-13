@@ -638,7 +638,28 @@ class CMASS4(PointMassElement):
 
     @property
     def node_ids(self):
-        return [self.s1, self.s2]
+        return [self.S1(), self.S2()]
+
+    def S1(self):
+        if self.s1_ref is not None:
+            return self.s1_ref.nid
+        return self.s1
+
+    def S2(self):
+        if self.s2_ref is not None:
+            return self.s2_ref.nid
+        return self.s2
+
+    @property
+    def node_ids(self):
+        s1 = self.S1()
+        s2 = self.S2()
+        nodes = []
+        if s1:
+            nodes.append(s1)
+        if s2:
+            nodes.append(s2)
+        return nodes
 
     def cross_reference(self, model):
         """
@@ -649,18 +670,17 @@ class CMASS4(PointMassElement):
         model : BDF()
             the BDF object
         """
-        #self.s1 = model.Node(self.s1)
-        #self.s2 = model.Node(self.s2)
-        pass
+        self.s1 = model.Node(self.S1())
+        self.s2 = model.Node(self.S2())
 
     def safe_cross_reference(self, model):
-        pass
+        self.cross_reference(model)
 
     def uncross_reference(self):
         pass
 
     def raw_fields(self):
-        fields = ['CMASS4', self.eid, self.mass, self.s1, self.s2]
+        fields = ['CMASS4', self.eid, self.mass] + self.node_ids
         return fields
 
     def write_card(self, size=8, is_double=False):

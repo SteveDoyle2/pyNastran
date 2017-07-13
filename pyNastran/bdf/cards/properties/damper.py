@@ -117,6 +117,7 @@ class PDAMP5(DamperProperty):
         #: B is the mass that multiplies the heat capacity CP on the MAT4
         #: or MAT5 entry.
         self.b = b
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -168,17 +169,16 @@ class PDAMP5(DamperProperty):
         model : BDF()
             the BDF object
         """
-        self.mid = model.Material(self.mid)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
-            return self.mid
-        return self.mid_ref.mid
+        if self.mid_ref is not None:
+            return self.mid_ref.mid
+        return self.mid
 
     def repr_fields(self):
         return self.raw_fields()
@@ -209,6 +209,7 @@ class PDAMPT(DamperProperty):
         #: Identification number of a TABLEDi entry that defines the
         #: damping force per-unit velocity versus frequency relationship
         self.tbid = tbid
+        self.tbid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -256,19 +257,18 @@ class PDAMPT(DamperProperty):
         model : BDF()
             the BDF object
         """
-        self.tbid = model.TableD(self.tbid)
-        self.tbid_ref = self.tbid
+        self.tbid_ref = model.TableD(self.tbid)
 
     def uncross_reference(self):
         self.tbid = self.Tbid()
-        del self.tbid_ref
+        self.tbid_ref = None
 
     def Tbid(self):
-        if self.tbid == 0:
+        if self.tbid_ref is not None:
+            return self.tbid_ref.tid
+        elif self.tbid == 0:
             return None
-        elif isinstance(self.tbid, integer_types):
-            return self.tbid
-        return self.tbid_ref.tid
+        return self.tbid
 
     def repr_fields(self):
         return self.raw_fields()

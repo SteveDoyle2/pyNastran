@@ -307,6 +307,7 @@ class NSMADD(BaseCard):
         self.sid = sid
         self.sets = expand_thru(sets)
         self.sets.sort()
+        self.sets_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -342,8 +343,11 @@ class NSMADD(BaseCard):
 
     @property
     def nsm_ids(self):
+        if self.sets_ref is None:
+            return self.sets
+
         nsm_ids = []
-        for nsm in self.sets:
+        for nsm in self.sets_ref:
             if isinstance(nsm, integer_types):
                 nsm_ids.append(nsm)
             elif isinstance(nsm, list):
@@ -366,9 +370,10 @@ class NSMADD(BaseCard):
             the BDF object
         """
         msg = ', which is required by NSMADD=%s' % self.sid
+        nsms = []
         for i, nsm in enumerate(self.sets):
-            self.sets[i] = model.NSM(nsm, msg=msg)
-        self.sets_ref = self.sets
+            nsms.append(model.NSM(nsm, msg=msg))
+        self.sets_ref = nsms
 
     def safe_cross_reference(self, model, debug=True):
         nsms = []
@@ -383,12 +388,11 @@ class NSMADD(BaseCard):
                     print(msg)
                 continue
             nsms.append(nsm)
-        self.sets = nsms
-        self.sets_ref = self.sets
+        self.sets_ref = nsms
 
     def uncross_reference(self):
         self.sets = self.nsm_ids
-        del self.sets_ref
+        self.sets_ref = None
 
     def raw_fields(self):
         fields = ['NSMADD', self.sid] + self.nsm_ids

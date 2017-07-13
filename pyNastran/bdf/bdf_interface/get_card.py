@@ -595,6 +595,9 @@ class GetCard(GetMethods):
                         dvprel_t_init[i] = xinit
                         dvprel_t_min[i] = lower_bound
                         dvprel_t_max[i] = upper_bound
+                    elif var_to_change == 6:
+                        # 12I/t3
+                        pass
                     else:
                         msg = 'var_to_change=%r; dvprel=\n%s' % (var_to_change, str(dvprel))
                         raise NotImplementedError(msg)
@@ -612,6 +615,8 @@ class GetCard(GetMethods):
             # TODO: haven't quite decided what to do
             if dvprel.p_min is not None:
                 dvprel.p_min
+
+        #dvprel_dict['PSHELL']['T']  = dvprel_t_init, dvprel_t_min, dvprel_t_max
         return dvprel_t_init, dvprel_t_min, dvprel_t_max, design_region
 
     def _get_forces_moments_array(self, p0, load_case_id,

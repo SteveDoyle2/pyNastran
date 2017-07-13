@@ -345,17 +345,6 @@ class Property(BaseCard):
             return self.mid
         return self.mid_ref.mid
 
-    #def cross_reference(self, model):
-        ## type: (Any) -> None
-        #"""dummy cross reference method for a Property"""
-        #msg = ' which is required by %s pid=%s' % (self.type, self.pid)
-        #self.mid_ref = model.Material(self.mid, msg)
-
-    #def uncross_reference(self):
-        ## type: () -> None
-        #self.mid = self.Mid()
-        #self.mid_ref = None
-
     def write_card_8(self):
         # type: () -> str
         return self.write_card()

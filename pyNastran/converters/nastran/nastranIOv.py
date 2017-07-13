@@ -8,7 +8,7 @@ import os
 import sys
 from collections import defaultdict, OrderedDict
 import traceback
-from six import iteritems, itervalues, StringIO
+from six import iteritems, itervalues, StringIO, string_types
 from six.moves import range
 
 #VTK_TRIANGLE = 5
@@ -103,20 +103,27 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
 
+        fmts = [
+            'Nastran OP2 (*.op2)',
+            'Patran nod (*.nod)',
+        ]
+        fmt = ';;'.join(fmts)
+        #fmt = 'Nastran OP2 (*.op2)'
+
         data_geom = (
             'nastran',
             geom_methods_bdf, self.load_nastran_geometry,
-            'Nastran OP2 (*.op2)', self.load_nastran_results)
+            fmt, self.load_nastran_results)
 
         data_geom_pch = (
             'nastran',
             geom_methods_pch, self.load_nastran_geometry,
-            'Nastran OP2 (*.op2)', self.load_nastran_results)
+            fmt, self.load_nastran_results)
 
         data_geom_results = (
             'nastran',
             combined_methods_op2, self.load_nastran_geometry_and_results,
-            'Nastran OP2 (*.op2)', self.load_nastran_results)
+            fmt, self.load_nastran_results)
 
         return [data_geom, data_geom_pch]
         #return [data_geom, data_geom_pch, data_geom_results]
@@ -2267,7 +2274,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form_checks.append(('Aspect Ratio', icase + 11, []))
             icase += 12
 
-            if np.nanmax(area_ratio) > 1.:
+            if np.any(np.isfinite(area_ratio)) and np.nanmax(area_ratio) > 1.:
                 arearatio_res = GuiResult(
                     0, header='Area Ratio', title='Area Ratio',
                     location='centroid', scalar=area_ratio)
@@ -2275,7 +2282,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form_checks.append(('Area Ratio', icase, []))
                 icase += 1
 
-            if np.nanmax(taper_ratio) > 1.:
+            if np.any(np.isfinite(taper_ratio)) and np.nanmax(taper_ratio) > 1.:
                 taperratio_res = GuiResult(
                     0, header='Taper Ratio', title='Taper Ratio',
                     location='centroid', scalar=taper_ratio)
@@ -2283,7 +2290,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form_checks.append(('Taper Ratio', icase, []))
                 icase += 1
 
-            if np.nanmax(max_warp_angle) > 0.0:
+            if np.any(np.isfinite(max_warp_angle)) and np.nanmax(max_warp_angle) > 0.0:
                 warp_res = GuiResult(
                     0, header='Max Warp Angle', title='MaxWarpAngle',
                     location='centroid', scalar=np.degrees(max_warp_angle))
@@ -4018,7 +4025,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form_checks.append(('Aspect Ratio', icase + 11, []))
             icase += 12
 
-            if np.nanmax(area_ratio) > 1.:
+            if np.any(np.isfinite(area_ratio)) and np.nanmax(area_ratio) > 1.:
                 arearatio_res = GuiResult(
                     0, header='Area Ratio', title='Area Ratio',
                     location='centroid', scalar=area_ratio)
@@ -4026,7 +4033,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form_checks.append(('Area Ratio', icase, []))
                 icase += 1
 
-            if np.nanmax(taper_ratio) > 1.:
+            if np.any(np.isfinite(taper_ratio)) and np.nanmax(taper_ratio) > 1.:
                 taperratio_res = GuiResult(
                     0, header='Taper Ratio', title='Taper Ratio',
                     location='centroid', scalar=taper_ratio)
@@ -4034,7 +4041,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form_checks.append(('Taper Ratio', icase, []))
                 icase += 1
 
-            if np.nanmax(max_warp_angle) > 0.0:
+            if np.any(np.isfinite(max_warp_angle)) and np.nanmax(max_warp_angle) > 0.0:
                 warp_res = GuiResult(
                     0, header='Max Warp Angle', title='MaxWarpAngle',
                     location='centroid', scalar=np.degrees(max_warp_angle))
@@ -4561,11 +4568,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         Loads the Nastran results into the GUI
         """
-        #gridResult.SetNumberOfComponents(self.nElements)
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        if isinstance(op2_filename, str):
+        if isinstance(op2_filename, string_types):
             print("trying to read...%s" % op2_filename)
             ext = os.path.splitext(op2_filename)[1].lower()
 
@@ -4626,6 +4632,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     self.log.info(model.get_op2_stats())
                 # print(model.get_op2_stats())
 
+            elif ext == '.nod':
+                self._load_patran_nod(op2_filename)
+                self.cycle_results_explicit()  # start at nCase=0
+                return
             elif ext == '.pch':
                 raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
             #elif ext == '.f06':

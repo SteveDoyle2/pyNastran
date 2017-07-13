@@ -122,6 +122,12 @@ class TestDynamic(unittest.TestCase):
         freq4 = model.add_freq4(sid, f1, f2, fspread=0.1, nfm=3, comment='freq4')
         #print(model.frequencies[sid])
         #print(freq4)
+
+        fractions = [0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        freq5 = model.add_freq5(sid, fractions, f1=0., f2=100., comment='freq5')
+
+        fractions = np.linspace(0., 1.)
+        freq5b = model.add_freq5(sid, fractions, f1=0., f2=100., comment='freq5')
         model.validate()
 
         freq.raw_fields()
@@ -139,6 +145,10 @@ class TestDynamic(unittest.TestCase):
         freq4.raw_fields()
         freq4.write_card()
         freq4.write_card(size=16)
+
+        freq5.raw_fields()
+        freq5.write_card()
+        freq5.write_card(size=16)
 
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)

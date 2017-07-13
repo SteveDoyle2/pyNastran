@@ -44,9 +44,9 @@ class Constraint(BaseCard):
     def __init__(self):
         pass
 
-    def raw_fields(self):
-        fields = [self.type, self.conid]
-        return fields
+    #def raw_fields(self):
+        #fields = [self.type, self.conid]
+        #return fields
 
     def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
         """returns nodeIDs for repr functions"""
@@ -351,6 +351,14 @@ class SESUP(SUPORT):
 
 class MPC(Constraint):
     """
+    Multipoint Constraint
+    Defines a multipoint constraint equation of the form:
+      sum(A_j * u_j) = 0
+
+    where:
+      uj represents degree-of-freedom Cj at grid or scalar point Gj.
+      Aj represents the scale factor
+
     +-----+-----+----+----+-----+----+----+----+-----+
     |  1  |  2  |  3 |  4 |  5  |  6 |  7 |  8 |  9  |
     +=====+=====+====+====+=====+====+====+====+=====+
@@ -361,7 +369,21 @@ class MPC(Constraint):
     """
     type = 'MPC'
 
-    def __init__(self, conid, gids, components, enforced, comment=''):
+    def __init__(self, conid, nodes, components, coefficients, comment=''):
+        """
+        Creates an MPC card
+
+        Parameters
+        ----------
+        conid : int
+            Case Control MPC id
+        nodes : List[int]
+            GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        coefficients : List[float]
+            the scaling coefficients
+        """
         Constraint.__init__(self)
         if comment:
             self.comment = comment
@@ -369,23 +391,23 @@ class MPC(Constraint):
         self.conid = conid
 
         #: Identification number of grid or scalar point. (Integer > 0)
-        self.gids = gids
+        self.nodes = nodes
 
         #: Component number. (Any one of the Integers 1 through 6 for grid
         #: points; blank or zero for scalar points.)
         self.components = components
 
         #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
-        self.enforced = enforced
+        self.coefficients = coefficients
 
-        self.gids_ref = None
+        self.nodes_ref = None
 
     def validate(self):
-        assert isinstance(self.gids, list), type(self.gids)
+        assert isinstance(self.nodes, list), type(self.nodes)
         assert isinstance(self.components, list), type(self.components)
-        assert isinstance(self.enforced, list), type(self.enforced)
-        assert len(self.gids) == len(self.components)
-        assert len(self.gids) == len(self.enforced)
+        assert isinstance(self.coefficients, list), type(self.coefficients)
+        assert len(self.nodes) == len(self.components)
+        assert len(self.nodes) == len(self.coefficients)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -400,40 +422,40 @@ class MPC(Constraint):
             a comment for the card
         """
         conid = integer(card, 1, 'conid')
-        gids = []
-        constraints = []
-        enforced = []
+        nodes = []
+        components = []
+        coefficients = []
 
         fields = card.fields(0)
         nfields = len(fields)
 
         i = 1
         for ifield in range(2, nfields, 8):
-            grid = integer(card, ifield, 'G%i' % i)
+            nid = integer(card, ifield, 'G%i' % i)
             component = components_or_blank(card, ifield + 1, 'constraint%i' % i, 0)  # scalar point
             if i == 1:
-                enforcedi = double(card, ifield + 2, 'enforced%i' % i)
-                if enforcedi == 0.0:
-                    raise RuntimeError('enforced1 must be nonzero; enforcedi=%r' % enforcedi)
+                coefficient = double(card, ifield + 2, 'coefficient%i' % i)
+                if coefficient == 0.0:
+                    raise RuntimeError('coefficient1 must be nonzero; coefficient=%r' % coefficient)
             else:
-                enforcedi = double_or_blank(card, ifield + 2, 'enforced%i' % i, 0.0)
-            gids.append(grid)
-            constraints.append(component)
-            enforced.append(enforcedi)
+                coefficient = double_or_blank(card, ifield + 2, 'coefficient%i' % i, 0.0)
+            nodes.append(nid)
+            components.append(component)
+            coefficients.append(coefficient)
             i += 1
 
             if ifield + 4 > nfields and i != 2:
                 # if G2 is empty (it's ifield+4 because nfields is length based
                 # and not loop friendly)
                 break
-            grid = integer(card, ifield + 3, 'G%i' % i)
+            nid = integer(card, ifield + 3, 'G%i' % i)
             component = components_or_blank(card, ifield + 4, 'constraint%i' % i, 0)  # scalar point
-            enforcedi = double_or_blank(card, ifield + 5, 'enforced%i' % i)
-            gids.append(grid)
-            constraints.append(component)
-            enforced.append(enforcedi)
+            coefficient = double_or_blank(card, ifield + 5, 'coefficient%i' % i)
+            nodes.append(nid)
+            components.append(component)
+            coefficients.append(coefficient)
             i += 1
-        return MPC(conid, gids, constraints, enforced, comment=comment)
+        return MPC(conid, nodes, components, coefficients, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -449,10 +471,10 @@ class MPC(Constraint):
         """
         #msg = 'MPC has not implemented data parsing'
         conid = data[0]
-        gids = data[1]
+        nodes = data[1]
         constraints = data[2]
         enforced = data[3]
-        return MPC(conid, gids, constraints, enforced, comment=comment)
+        return MPC(conid, nodes, constraints, enforced, comment=comment)
 
     @property
     def constraints(self):
@@ -462,11 +484,33 @@ class MPC(Constraint):
         self.components = constraints
 
     @property
+    def enforced(self):
+        return self.coefficients
+    @enforced.setter
+    def enforced(self, enforced):
+        self.coefficients = enforced
+
+
+    @property
+    def gids_ref(self):
+        return self.nodes_ref
+    @gids_ref.setter
+    def gids_ref(self, nodes_ref):
+        self.nodes_ref = nodes_ref
+
+    @property
+    def gids(self):
+        return self.nodes
+    @gids.setter
+    def gids(self, nodes):
+        self.nodes = nodes
+
+    @property
     def node_ids(self):
         if self.gids_ref is None:
             return self.gids
         msg = ', which is required by MPC=%s' % self.conid
-        return self._node_ids(nodes=self.gids_ref, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -478,12 +522,12 @@ class MPC(Constraint):
             the BDF object
         """
         msg = ', which is required by MPC=%s' % self.conid
-        self.gids_ref = model.EmptyNodes(self.gids, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
         msg = ' which is required by SPC=%s' % self.conid
-        for nid in self.node_ids:
+        for nid in self.nodes:
             try:
                 nid2 = model.Node(nid, msg=msg)
             except KeyError:
@@ -493,16 +537,16 @@ class MPC(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.gids_ref = nids2
+        self.nodes_ref = nids2
 
     def uncross_reference(self):
-        self.gids = self.node_ids
-        self.gids_ref = None
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
-        for i, gid, component, enforced in zip(count(), self.node_ids, self.components, self.enforced):
-            fields += [gid, component, enforced]
+        for i, gid, component, coefficient in zip(count(), self.node_ids, self.components, self.coefficients):
+            fields += [gid, component, coefficient]
             if i % 2 == 1 and i > 0:
                 fields.append(None)
                 fields.append(None)
@@ -517,9 +561,9 @@ class MPC(Constraint):
 
     def write_card_8(self):
         msg = 'MPC     %8s' % self.conid
-        grids, components, enforceds = self.node_ids, self.components, self.enforced
-        for i, grid, component, enforced in zip(count(), grids, components, enforceds):
-            msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
+        grids, components, coefficients = self.node_ids, self.components, self.coefficients
+        for i, grid, component, coefficient in zip(count(), grids, components, coefficients):
+            msg += '%8i%8s%8s' % (grid, component, print_float_8(coefficient))
             if i % 2 == 1 and i > 0:
                 msg += '\n%8s%8s' % ('', '')
         return self.comment + msg.rstrip() + '\n'
@@ -527,28 +571,28 @@ class MPC(Constraint):
     def write_card_16(self, is_double=False):
         # TODO: we're sure MPCs support double precision?
         msg = 'MPC*    %16s' % self.conid
-        grids, constraints, enforceds = self.node_ids, self.constraints, self.enforced
+        grids, constraints, coefficients = self.node_ids, self.constraints, self.coefficients
         if is_double:
-            for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
+            for i, grid, component, coefficient in zip(count(), grids, constraints, coefficients):
                 if i == 0:
                     msg += '%16i%16s%16s\n' % (
-                        grid, component, print_scientific_double(enforced))
+                        grid, component, print_scientific_double(coefficient))
                 elif i % 2 == 1:
                     msg += '%-8s%16i%16s%16s\n' % (
-                        '*', grid, component, print_scientific_double(enforced))
+                        '*', grid, component, print_scientific_double(coefficient))
                 else:
                     msg += '%-8s%16s%16i%16s%16s\n' % (
-                        '*', '', grid, component, print_scientific_double(enforced))
+                        '*', '', grid, component, print_scientific_double(coefficient))
         else:
-            for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
+            for i, grid, component, coefficient in zip(count(), grids, constraints, coefficients):
                 if i == 0:
-                    msg += '%16i%16s%16s\n' % (grid, component, print_float_16(enforced))
+                    msg += '%16i%16s%16s\n' % (grid, component, print_float_16(coefficient))
                 elif i % 2 == 1:
                     msg += '%-8s%16i%16s%16s\n' % (
-                        '*', grid, component, print_float_16(enforced))
+                        '*', grid, component, print_float_16(coefficient))
                 else:
                     msg += '%-8s%16s%16i%16s%16s\n' % (
-                        '*', '', grid, component, print_float_16(enforced))
+                        '*', '', grid, component, print_float_16(coefficient))
         if i % 2 == 0:
             msg += '*'
         return self.comment + msg.rstrip() + '\n'
@@ -1002,23 +1046,23 @@ class SPC1(Constraint):
 class SPCOFF(Constraint):
     type = 'SPCOFF'
 
-    def __init__(self, gids, components, enforced, comment=''):
+    def __init__(self, nodes, components, enforced, comment=''):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
-        self.gids = gids
+        self.nodes = nodes
         self.components = components
         self.enforced = enforced
-        self.gids_ref = None
+        self.nodes_ref = None
 
     def validate(self):
-        assert isinstance(self.gids, list), self.gids
+        assert isinstance(self.nodes, list), self.nodes
         assert isinstance(self.components, list), self.components
         assert isinstance(self.enforced, list), self.enforced
-        assert len(self.gids) == len(self.components), 'len(self.gids)=%s len(self.components)=%s' % (len(self.gids), len(self.components))
-        assert len(self.gids) == len(self.enforced), 'len(self.gids)=%s len(self.enforced)=%s' % (len(self.gids), len(self.enforced))
-        for nid, comp, enforcedi in zip(self.gids, self.components, self.enforced):
-            assert isinstance(nid, integer_types), self.gids
+        assert len(self.nodes) == len(self.components), 'len(self.nodes)=%s len(self.components)=%s' % (len(self.nodes), len(self.components))
+        assert len(self.nodes) == len(self.enforced), 'len(self.nodes)=%s len(self.enforced)=%s' % (len(self.nodes), len(self.enforced))
+        for nid, comp, enforcedi in zip(self.nodes, self.components, self.enforced):
+            assert isinstance(nid, integer_types), self.nodes
             assert isinstance(comp, string_types), self.components
             assert isinstance(enforcedi, float), self.enforced
 
@@ -1036,11 +1080,11 @@ class SPCOFF(Constraint):
         """
         raise NotImplementedError()
         #if card.field(5) in [None, '']:
-            #gids = [integer(card, 2, 'G1'),]
+            #nodes = [integer(card, 2, 'G1'),]
             #components = [components_or_blank(card, 3, 'C1', '0')]
             #enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         #else:
-            #gids = [
+            #nodes = [
                 #integer(card, 2, 'G1'),
                 #integer_or_blank(card, 5, 'G2'),
             #]
@@ -1049,7 +1093,7 @@ class SPCOFF(Constraint):
                           #components_or_blank(card, 6, 'C2', '0')]
             #enforced = [double_or_blank(card, 4, 'D1', 0.0),
                         #double_or_blank(card, 7, 'D2', 0.0)]
-        #return cls(gids, components, enforced, comment=comment)
+        #return cls(nodes, components, enforced, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1063,11 +1107,11 @@ class SPCOFF(Constraint):
         comment : str; default=''
             a comment for the card
         """
-        gids = [data[0]]
+        nodes = [data[0]]
         components = data[1]
         assert 0 <= components <= 123456, data
         enforced = [data[2]]
-        assert gids[0] > 0, data
+        assert nodes[0] > 0, data
         components_str = str(components)
         assert len(components_str) <= 6, data
         components = [components_str]
@@ -1078,7 +1122,7 @@ class SPCOFF(Constraint):
         #else:
             #raise RuntimeError('SPC; components=%s data=%s' % (components, data))
         #assert 0 < components[0] > 1000, data
-        return cls(gids, components, enforced, comment=comment)
+        return cls(nodes, components, enforced, comment=comment)
 
     @property
     def constraints(self):
@@ -1090,10 +1134,10 @@ class SPCOFF(Constraint):
 
     @property
     def node_ids(self):
-        if self.gids_ref is None:
-            return self.gids
+        if self.nodes_ref is None:
+            return self.nodes
         msg = ', which is required by SPCOFF'
-        return self._node_ids(nodes=self.gids_ref, allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -1105,7 +1149,7 @@ class SPCOFF(Constraint):
             the BDF object
         """
         msg = ', which is required by SPCOFF=%s' % (self.conid)
-        self.gids_ref = model.EmptyNodes(self.gids, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -1120,11 +1164,11 @@ class SPCOFF(Constraint):
                     print(msg)
                 continue
             nids2.append(nid2)
-        self.gids_ref = nids2
+        self.nodes_ref = nids2
 
     def uncross_reference(self):
-        self.gids = self.node_ids
-        self.gids_ref = None
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def raw_fields(self):
         fields = ['SPCOFF']
@@ -1200,8 +1244,8 @@ class SPCOFF1(Constraint):
 
     @property
     def node_ids(self):
-        if self.gids_ref is None:
-            return self.gids
+        if self.nodes_ref is None:
+            return self.nodes
         msg = ', which is required by SPCOFF1'
         return self._node_ids(self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
