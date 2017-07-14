@@ -12,7 +12,7 @@ except ImportError:
     IS_IMAGEIO = False
 
 
-def write_gif(gif_filename, png_filenames, time=2.0, fps=30,
+def write_gif(gif_filename, png_filenames, time=2.0,
               onesided=True, nrepeat=0,
               delete_images=False, make_gif=True):
     """
@@ -26,8 +26,6 @@ def write_gif(gif_filename, png_filenames, time=2.0, fps=30,
         the pictures to make the gif from
     time : float; default=2.0
         the runtime of the gif (seconds)
-    fps : int; default=30
-        the frames/second
 
     Options
     -------
@@ -53,7 +51,6 @@ def write_gif(gif_filename, png_filenames, time=2.0, fps=30,
     if not IS_IMAGEIO:
         return False
 
-    assert fps >= 1, fps
     nframes = len(png_filenames)
     duration = time / nframes
 

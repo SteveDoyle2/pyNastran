@@ -4328,7 +4328,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
         return write_gif(gif_filename, png_filenames, time=time,
-                         fps=fps, onesided=onesided,
+                         onesided=onesided,
                          nrepeat=nrepeat, delete_images=delete_images,
                          make_gif=make_gif)
 

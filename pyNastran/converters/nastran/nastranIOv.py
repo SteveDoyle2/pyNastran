@@ -1881,7 +1881,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     cell_type = cell_type_line
                     nnodes = 2
                 inids = np.searchsorted(all_nids, nids)
-                print(nids, inids)
                 pid = 0
                 dim = 0
             elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
