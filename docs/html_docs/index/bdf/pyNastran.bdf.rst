@@ -146,17 +146,6 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-************************
-:mod:`write_path` Module
-************************
-
-.. inheritance-diagram:: pyNastran.bdf.write_path
-
-.. automodule:: pyNastran.bdf.write_path
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 
