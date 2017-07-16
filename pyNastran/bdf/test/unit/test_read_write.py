@@ -509,10 +509,10 @@ class TestReadWrite(unittest.TestCase):
         for pth in pths:
             pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=True)
             assert os.path.exists(pth2), 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
-            print('pth1 =', pth2)
+            #print('pth1 =', pth2)
 
-            pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=False)
-            print('pth2 =', pth2, '\n')
+            pth2 = get_include_filename([pth], include_dir='', is_windows=False)
+            #print('pth2 =', pth2, '\n')
         #filename_tokens = _split_to_tokens(r'\\nas3\dir1\dir2', is_windows=True)
 
         #Satellite_V02_base = M:\ACA\Satellite_V02

@@ -16,60 +16,6 @@ IS_WINDOWS = 'nt' in os.name
 #is_linux = 'posix' in os.name
 #is_mac = 'darwin' in os.name
 
-#class PurePosixPath(object):
-    #def __init__(self, path):
-        #self.path = path
-
-#class PureWindowsPath(object):
-    #def __init__(self, path):
-        ##self.path = path
-        #if isinstance(path, list):
-            #self._parts = path
-        #else:
-            #self._parts = self._split_path_by_slash(path)
-
-    #@classmethod
-    #def path_from_parts(parts):
-        #pth = PureWindowsPath(parts)
-        #print(pth)
-        #return pth
-
-    #def _split_path_by_slash(self, path):
-        #print(path)
-        #parts = []
-        #partsi = os.path.splitunc(path)
-        #if not partsi[0]:
-            #partsi = os.path.splitdrive(path)
-        #parts.append(partsi[0])
-        #pth = os.path.normcase(partsi[1])
-        ##pth2 = os.path.split(pth)
-        #parts.append(pth)
-        ##print(pth2)
-        ##print(parts)
-        ##print(partsi)
-        #return parts
-
-    #@property
-    #def parts(self):
-        #return self._parts
-
-    ##def __truediv__ (self, pth):
-        ##print(pth)
-        ##print(self._parts)
-    ##def __rdiv__(self, pth):
-        ##print(pth)
-        ##print(self._parts)
-    #def __div__(self, right_path):
-        #print('div...')
-        #print('right_path =', right_path)
-        #print(self._parts)
-        #parts = os.path.join(self._parts,  right_path)
-        #return PureWindowsPath.path_from_parts(parts)
-
-
-    #def __repr__(self):
-        #print("repr parts = %s" % self._parts)
-        #return '%r' % str(os.path.join(*self._parts))
 
 def get_include_filename(card_lines, include_dir='', is_windows=None):
     # type: (List[str], str) -> str
@@ -111,7 +57,6 @@ def get_include_filename(card_lines, include_dir='', is_windows=None):
     # drop the single quotes:
     #     "'path1/path2/model.inc'" to "path1/path2/model.inc"
     filename = filename.strip('"').strip("'")
-    print("filename = %r" % filename)
 
     # not handled...
     #    include '/mydir' /level1 /level2/ 'myfile.x'
@@ -124,19 +69,9 @@ def get_include_filename(card_lines, include_dir='', is_windows=None):
     # '\Data Files' \subdir\thisfile
     #
     # -> C:\PROJECT\Data Files\SUBDIR\THISFILE
-
     tokens = split_filename_into_tokens(include_dir, filename, is_windows)
-    print("tokens = ", tokens)
     filename = str(tokens)
-    #print("filename = ", filename)
     return filename
-
-#def _split_to_tokens(pth, is_windows):
-    #if is_windows:
-        #tokens = pth.split(ntpath.sep)
-    #else:
-        #tokens = pth.split(posixpath.sep)
-    #return tokens
 
 
 def split_filename_into_tokens(include_dir, filename, is_windows):
@@ -158,42 +93,31 @@ def split_filename_into_tokens(include_dir, filename, is_windows):
     * (asterisk)
     All control codes (<= 31)
     """
-    #print('--------------')
-    #print('  include_dir_in = %r' % include_dir)
-    #print('  filename_in = %r' % filename)
     if is_windows:
-        inc = PureWindowsPath(include_dir)#.parts
+        inc = PureWindowsPath(include_dir)
         pth = PureWindowsPath(filename).parts
-        #print("pth[0] = %r" % pth[0])
+
+        # Linux style paths
+        # /work/model.bdf
         if len(pth[0]) == 1 and pth[0][0] == '\\':
             # utterly breaks os.path.join
             raise SyntaxError('filename=%r cannot start with / on Windows' % filename)
     else:
-        inc = PurePosixPath(include_dir)#.parts
+        inc = PurePosixPath(include_dir)
         pth = PurePosixPath(filename).parts
         pth0 = pth[0]
-        #print("pth[:1] = %r" % pth0, '%r' % pth0[:2])
-        #print('pth1 = %r' % pth0[:2], len(pth0[:2]))
         if len(pth0) >= 2 and pth0[:2] == r'\\':
-            # network path
+            # Windows network paths
+            # \\nas3\work\model.bdf
             raise SyntaxError("filename=%r cannot start with \\\\ on Linux" % filename)
-    print('inc =', inc)
-    print('pth.parts =', pth)
 
-    #inc2 = split_tokens(inc, is_windows)
     pth2 = split_tokens(pth, is_windows)
-
-    #print('inc2 =', inc2)
-    print('pth2 (tokens) =', pth2)
-
     if is_windows:
         pth3 = ntpath.join(*pth2)
     else:
         pth3 = posixpath.join(*pth2)
 
-    #print('pth3 =', pth3)
     pth_out = inc / pth3
-    #print('pth_out =', pth_out)
     return pth_out
 
 def split_tokens(tokens, is_windows):
@@ -201,8 +125,6 @@ def split_tokens(tokens, is_windows):
     tokens2 = []
     is_mac_linux = not is_windows
     for itoken, token in enumerate(tokens):
-        print('tokens[%i] = %r' % (itoken, token))
-
         # this is technically legal...
         #   INCLUDE '/testdir/dir1/dir2/*/myfile.dat'
         assert '*' not in token, '* in path not supported; tokens=%s' % tokens
@@ -240,10 +162,7 @@ def split_tokens(tokens, is_windows):
         elif ':' in token:
             # this has an environment variable or a drive letter
             stokens = token.split(':')
-            print('  stokens = %r' % stokens)
-            if len(stokens) != 2:
-                msg = 'stokens=%s h', stokens
-            #stokens2 = []
+
             if len(stokens[0]) == 1:
                 if len(stokens[1]) not in [0, 1]:
                     raise SyntaxError('tokens=%r token=%r stokens=%s stoken[1]=%r len=%r' % (
@@ -269,12 +188,9 @@ def split_tokens(tokens, is_windows):
                     else:
                         tokensi = PurePosixPath(env_vari).parts
                     tokens2.extend(tokensi)
-                    print("    expanding env_var=%r to %r" % (env_var, tokensi))
                 tokens2.append(stokens[-1])
         else:
             # standard
             tokens2.append(token)
 
-    print("tokens2 =", tokens2)
-    #print(os.path.join(*tokens2))
     return tokens2

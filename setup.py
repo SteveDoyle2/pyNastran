@@ -17,12 +17,6 @@ packages = find_packages()+['gui/icons/*.*']
 #print "packages = ",packages
 #sys.exit()
 
-#extra = {}
-#if sys.version_info >= (3,):
-    #extra['use_2to3'] = True
-    #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
-    #extra['use_2to3_fixers'] = ['your.fixers']
-
 py2_gui_scripts = []
 py2_packages = []
 py3_gui_scripts = []
@@ -44,17 +38,8 @@ if sys.version_info <= (3,) or not is_dev:
     except ImportError:
         py2_packages.append('vtk >= 5.10.1')
 
-    #try:
-        #import PIL
-        #if PIL.VERSION < '2.7.0':
-            ##print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
-            #py2_packages.append('pillow >= 2.7.0')
-    #except ImportError:
-        #py2_packages.append('pillow >= 2.7.0')
-
     py2_packages += [
         #'vtk >= 5.10.1',
-        #'pillow >= 2.7.0',
         ##'dill'
         ##'wx >= 2.8.12.0',
     ]
@@ -67,14 +52,6 @@ if sys.version_info <= (3,) or not is_dev:
 #            py3_packages.append('vtk >= 7.0.0')
 #    except ImportError:
 #        py3_packages.append('vtk >= 7.0.0')
-
-    #try:  # is this still required?
-        #import PIL
-        #if PIL.VERSION < '2.7.0':
-            #print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
-            #py3_packages.append('pillow >= 2.7.0')
-    #except ImportError:
-        #py3_packages.append('pillow >= 2.7.0')
 
     py3_packages += [
         #'vtk >= 5.10.0',
@@ -138,6 +115,7 @@ try:
 except ImportError:
     py_packages.append('typing >= 3.6.1')
 
+
 if PY2:
     try:
         import pathlib2
@@ -146,11 +124,11 @@ if PY2:
 
 try:
     import imageio
-    if imageio.__version__ < '2.1.2':
-        #print("imageio.version = %r < '2.1.2'" % imageio.__version__)
-        py_packages.append('imageio >= 2.1.2')
+    if imageio.__version__ < '2.2.0':
+        #print("imageio.version = %r < '2.2.0'" % imageio.__version__)
+        py_packages.append('imageio >= 2.2.0')
 except ImportError:
-    py_packages.append('imageio >= 2.1.2')
+    py_packages.append('imageio >= 2.2.0')
 
 #py_packages = [
 #    'numpy >= 1.9.2',
