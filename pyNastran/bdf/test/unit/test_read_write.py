@@ -11,6 +11,7 @@ from pyNastran.bdf.bdf_interface.include_file import (
     split_filename_into_tokens, get_include_filename,
     PurePosixPath, PureWindowsPath,
 ) # ,_split_to_tokens
+from pyNastran.utils import print_bad_path
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
@@ -488,8 +489,17 @@ class TestReadWrite(unittest.TestCase):
         sat_path = os.path.abspath(os.path.join(model_path, 'Satellite_V02'))
         os.environ['Satellite_V02_base'] = sat_path
         os.environ['Satellite_V02_bddm'] = os.path.join(sat_path, 'BULK', 'MATERIAUX')
-        os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
         os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
+        os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
+
+        assert os.path.exists(sat_path), print_bad_path(sat_path)
+        assert os.path.exists(os.path.join(sat_path, 'BULK')
+                              ), print_bad_path(os.path.join(sat_path, 'BULK'))
+        assert os.path.exists(os.path.join(sat_path, 'BULK', 'MATERIAUX')
+                              ), print_bad_path(os.path.join(sat_path, 'BULK', 'MATERIAUX'))
+        assert os.path.exists(os.path.join(sat_path, 'INCLUDE')
+                              ), print_bad_path(os.path.join(sat_path, 'INCLUDE'))
+
 
         pths = [
             "INCLUDE 'Satellite_V02_bddm:Satellite_V02_Materiaux.blk'",
@@ -508,7 +518,11 @@ class TestReadWrite(unittest.TestCase):
         ]
         for pth in pths:
             pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=True)
-            assert os.path.exists(pth2), 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
+            if not os.path.exists(pth2):
+                msg = 'Invalid Path\nold:  %r\nnew:  %r' % (pth, pth2)
+                msg += print_bad_path(pth2)
+                raise RuntimeError(msg)
+
             #print('pth1 =', pth2)
 
             pth2 = get_include_filename([pth], include_dir='', is_windows=False)
