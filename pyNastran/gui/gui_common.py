@@ -84,9 +84,6 @@ from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
 
-from pyNastran.converters.nastran.displacements import DisplacementResults
-from pyNastran.gui.gui_objects.gui_result import GuiResult
-
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -2859,7 +2856,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self._load_deflection(out_filename)
                 restype = 'Deflection'
             elif iwildcard == 3:
-                self._load_load_patran_nod(out_filename)
+                self._load_patran_nod(out_filename)
                 restype = 'Patran_nod'
             else:
                 raise NotImplementedError('wildcard_level = %s' % wildcard_level)
@@ -2870,39 +2867,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
         is_failed = False
         return is_failed
-
-    def _load_load_patran_nod(self, nod_filename):
-        """reads a Patran formatted *.nod file"""
-        from pyNastran.bdf.patran_utils.read_patran import read_patran
-        data_dict = read_patran(nod_filename, fdtype='float32', idtype='int32')
-        nids = data_dict['nids']
-        data = data_dict['data']
-        data_headers = data_dict['headers']
-        ndata = data.shape[0]
-        if len(data.shape) == 1:
-            shape = (ndata, 1)
-            data = data.reshape(shape)
-
-        if ndata != self.node_ids.shape[0]:
-            inids = np.searchsorted(self.node_ids, nids)
-            assert np.array_equal(nids, self.node_ids[inids]), 'the node ids are invalid'
-            data2 = np.full(data.shape, np.nan, data.dtype)
-            data2[inids, :] = data
-        else:
-            data2 = data
-
-        A = {}
-        fmt_dict = {}
-        headers = data_headers['SEC']
-        for i, header in enumerate(headers):
-            A[header] = data2[:, i]
-            fmt_dict[header] = '%f'
-
-        out_filename_short = os.path.relpath(nod_filename)
-        result_type = 'node'
-        self._add_cases_to_form(A, fmt_dict, headers, result_type,
-                                out_filename_short, update=True)
-
 
     def _on_load_nodal_elemental_results(self, result_type, out_filename=None):
         """
@@ -2988,114 +2952,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #A = A2
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
                                 out_filename_short, update=True)
-
-    def _add_cases_to_form(self, A, fmt_dict, headers, result_type,
-                           out_filename_short, update=True):
-        """
-        common method between:
-          - _load_csv
-          - _load_deflection_csv
-
-        Parameters
-        ----------
-        A : dict[key] = (n, m) array
-            the numpy arrays
-            key : str
-                the name
-            n : int
-                number of nodes/elements
-            m : int
-                secondary dimension
-                N/A : 1D array
-                3 : deflection
-        fmt_dict : dict[header] = fmt
-            the format of the arrays
-            header : str
-                the name
-            fmt : str
-                '%i', '%f'
-        headers : List[str]???
-            the titles???
-        result_type : str
-            'node', 'centroid'
-        out_filename_short : str
-            the display name
-        update : bool; default=True
-            ???
-
-        # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
-        # dtype=[('f0', '<f8'), ('f1', '<i4')])
-        # A['f0']
-        # A['f1']
-        """
-        #print('A =', A)
-        formi = []
-        form = self.get_form()
-        icase = len(self.case_keys)
-        islot = 0
-        for case_key in self.case_keys:
-            if isinstance(case_key, tuple):
-                islot = case_key[0]
-                break
-
-        for header in headers:
-            datai = A[header]
-            fmti = fmt_dict[header]
-            title = header
-            location = result_type
-
-            dimension = len(datai.shape)
-            if dimension == 1:
-                vector_size = 1
-            elif dimension == 2:
-                vector_size = datai.shape[1]
-            else:
-                raise RuntimeError('dimension=%s' % (dimension))
-
-            if vector_size == 1:
-                res_obj = GuiResult(
-                    islot, header, title, location, datai,
-                    nlabels=None, labelsize=None, ncolors=None,
-                    colormap='jet', data_format=fmti,
-                )
-            elif vector_size == 3:
-                # title is 3 values
-                # header is 3 values
-                # scale is 3 values
-                titles = [header]
-                headers = header
-
-                norm_max = np.linalg.norm(datai, axis=1).max()
-                scales = [self.dim_max / norm_max * 0.25]
-                data_formats = [fmti] * 3
-                scalar = None
-                dxyz = datai
-                xyz = self.xyz_cid0
-                res_obj = DisplacementResults(
-                    islot, titles, headers,
-                    xyz, dxyz, scalar, scales, data_formats=data_formats,
-                    nlabels=None, labelsize=None, ncolors=None,
-                    colormap='jet',
-                    set_max_min=True, deflects=True)
-            else:
-                raise RuntimeError('vector_size=%s' % (vector_size))
-
-            #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
-            #form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
-            #key = (res_obj, (0, title))
-            self.case_keys.append(icase)
-            self.result_cases[icase] = (res_obj, (islot, title))
-            formi.append((header, icase, []))
-
-            # TODO: double check this should be a string instead of an int
-            self.label_actors[icase] = []
-            self.label_ids[icase] = set([])
-            icase += 1
-        form.append((out_filename_short, None, formi))
-
-        self.ncases += len(headers)
-        #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
-        self.res_widget.update_results(form, 'main')
 
     def on_load_results(self, out_filename=None):
         """
@@ -4472,7 +4328,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
         return write_gif(gif_filename, png_filenames, time=time,
-                         fps=fps, onesided=onesided,
+                         onesided=onesided,
                          nrepeat=nrepeat, delete_images=delete_images,
                          make_gif=make_gif)
 

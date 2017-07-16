@@ -833,7 +833,6 @@ class SLOAD(Load):
         self.nodes_ref = []
         for i, nid in enumerate(self.nodes):
             self.nodes_ref.append(model.Node(nid, msg=msg))
-        self.nodes_ref = self.nodes
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -861,8 +860,8 @@ class SLOAD(Load):
 
     def raw_fields(self):
         list_fields = ['SLOAD', self.sid]
-        for (nid, mag) in zip(self.nodes, self.mags):
-            list_fields += [self.Nid(nid), mag]
+        for nid, mag in zip(self.node_ids, self.mags):
+            list_fields += [nid, mag]
         return list_fields
 
     def repr_fields(self):
@@ -1120,11 +1119,9 @@ class RFORCE1(Load):
             the BDF object
         """
         msg = ' which is required by RFORCE1 sid=%s' % self.sid
-        if self.nid > 0:
-            self.nid_ref = model.Node(self.nid, msg=msg)
+        #if self.nid > 0:  # TODO: why was this every here?
+        self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
-        self.nid_ref = None
-        self.cid_ref = None
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)

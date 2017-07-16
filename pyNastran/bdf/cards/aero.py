@@ -5417,30 +5417,28 @@ class PAERO2(BaseCard):
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             try:
                 self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
-                self.lrsb = self.lrsb_ref
             except KeyError:
                 pass
         if self.lrib is not None and isinstance(self.lrib, integer_types):
             try:
                 self.lrib_ref = model.AEFact(self.lrib, msg=msg)
-                self.lrib = self.lrib_ref
             except KeyError:
                 pass
 
     def uncross_reference(self):
-        if self.lrsb_ref is not None:
-            self.lrsb = self.lrsb_ref.sid # AEFACT id
-        if self.lrib_ref is not None:
-            self.lrib = self.lrib_ref.sid # AEFACT id
+        self.lrsb = self.Lrsb()
+        self.lrib = self.Lrib()
         self.lrsb_ref = None
         self.lrib_ref = None
 
     def Lrsb(self):
+        """AEFACT id"""
         if self.lrsb_ref is not None:
             return self.lrsb_ref.sid
         return self.lrsb
 
     def Lrib(self):
+        """AEFACT id"""
         if self.lrib_ref is not None:
             return self.lrib_ref.sid
         return self.lrib

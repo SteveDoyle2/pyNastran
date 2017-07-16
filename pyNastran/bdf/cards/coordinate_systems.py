@@ -555,7 +555,7 @@ class Coord(BaseCard):
             return p
 
         if not self.is_resolved:
-            if isinstance(self.rid, integer_types) and self.rid != 0:
+            if self.rid_ref is None and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 self.rid_ref.setup()
@@ -1396,6 +1396,8 @@ class Cord2x(Coord):
             self.e3 = np.array([1., 0., 0.], dtype='float64')
         else:
             self.e3 = np.asarray(xzplane)
+
+        self.rid_ref = None
         self._finish_setup()
 
     @classmethod
@@ -1709,20 +1711,19 @@ class Cord2x(Coord):
         """
         if self.Rid() != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
-            self.rid = model.Coord(self.rid, msg=msg)
-            self.rid_ref = self.rid
+            self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self):
         if self.rid == 0:
             return
         self.rid = self.Rid()
-        del self.rid_ref
+        self.rid_ref = None
 
     def Rid(self):
         """Gets the reference coordinate system self.rid"""
-        if isinstance(self.rid, integer_types):
-            return self.rid
-        return self.rid_ref.cid
+        if self.rid_ref is not None:
+            return self.rid_ref.cid
+        return self.rid
 
 
 class Cord1x(Coord):
@@ -1761,6 +1762,9 @@ class Cord1x(Coord):
         self.g2 = g2
         #: a Node on the xz-plane
         self.g3 = g3
+        self.g1_ref = None
+        self.g2_ref = None
+        self.g3_ref = None
 
     def validate(self):
         assert self.g1 != self.g2, str(self)
@@ -1870,20 +1874,19 @@ class Cord1x(Coord):
         """
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         #: grid point 1
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g1_ref = self.g1
+        self.g1_ref = model.Node(self.g1, msg=msg)
         #: grid point 2
-        self.g2 = model.Node(self.g2, msg=msg)
-        self.g2_ref = self.g2
+        self.g2_ref = model.Node(self.g2, msg=msg)
         #: grid point 3
-        self.g3 = model.Node(self.g3, msg=msg)
-        self.g3_ref = self.g3
+        self.g3_ref = model.Node(self.g3, msg=msg)
 
     def uncross_reference(self):
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.g3 = self.G3()
-        del self.g1_ref, self.g2_ref, self.g3_ref
+        self.g1_ref = None
+        self.g2_ref = None
+        self.g3_ref = None
 
     def setup(self):
         """
@@ -2025,6 +2028,7 @@ class CORD3G(Coord):  # not done
         self.form = form
         self.thetas = thetas
         self.rid = rid
+        self.rid_ref = None
 
         assert 0 < self.method_int < 1000
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
@@ -2074,17 +2078,16 @@ class CORD3G(Coord):  # not done
             the BDF object
         """
         msg = ' which is required by CORD3G cid=%s' % (self.cid)
-        self.rid = model.Coord(self.rid, msg=msg)
-        self.rid_ref = self.rid
+        self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self):
         self.rid = self.Rid()
-        del self.rid_ref
+        self.rid_ref = None
 
     def Rid(self):
-        if isinstance(self.rid, integer_types):
-            return self.rid
-        return self.rid_ref.cid
+        if self.rid_ref is not None:
+            return self.rid_ref.cid
+        return self.rid
 
     def coord3g_transform_to_global(self, p):
         """

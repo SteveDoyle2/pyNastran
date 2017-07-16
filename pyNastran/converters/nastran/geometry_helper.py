@@ -435,8 +435,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             try:
                 mat = model.materials[umid]
             except KeyError:
-                print('mids = %s' % mids)
-                print('mids = %s' % model.materials.keys())
+                print("can't find mid=%s" % umid)
+                print('  mids = %s' % mids)
+                print('  mids = %s' % model.materials.keys())
                 continue
                 #raise
             if mat.type == 'MAT1':

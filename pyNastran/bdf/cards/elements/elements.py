@@ -675,10 +675,9 @@ class PLOTEL(BaseCard):
             the BDF object
         """
         msg = ' which is required by PLOTEL eid=%s' % self.eid
-        node_ids = self.node_ids
         self.nodes_ref = [
-            model.Node(node_ids[0], msg=msg),
-            model.Node(node_ids[1], msg=msg),
+            model.Node(self.nodes[0], msg=msg),
+            model.Node(self.nodes[1], msg=msg),
         ]
 
     def uncross_reference(self):

@@ -749,7 +749,7 @@ class FREQ5(FREQ):
         return FREQ5(sid, fractions, f1=f2, f2=f2, comment=comment)
 
     def raw_fields(self):
-        return ['FREQ5', self.sid, self.f1, self.f2] + self.fractions
+        return ['FREQ5', self.sid, self.f1, self.f2] + list(self.fractions)
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

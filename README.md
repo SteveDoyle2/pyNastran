@@ -60,6 +60,7 @@ Unfortunately, the GUI is more complicated.
  - For open source projects : LGPL 2/3
  - For companies that pay a license to Riverbank : LGPL 2/3
  - For companies that don't pay a license fee : GPL 2/3
+
 However, you may distribute an unmodified binary.
 
  - Programmatics:

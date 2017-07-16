@@ -204,6 +204,14 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         #test.load_nastran_results(op2_filename)
 
+    def test_gui_patran(self):
+        """tests patran format"""
+        bdf_filename = os.path.join(model_path, 'patran_fmt', '0012_20.bdf')
+        nod_filename = os.path.join(model_path, 'patran_fmt', 'normals.nod')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(nod_filename)
+
 def test_bottle():  # pragma: no cover
     """
     Tests Nastran GUI loading
