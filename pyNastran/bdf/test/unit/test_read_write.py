@@ -521,5 +521,20 @@ class TestReadWrite(unittest.TestCase):
         #Satellite_V02_INCLUDE = M:\ACA\Satellite_V02/BULK
         #split_filename_into_tokens
 
+    def test_two_envs(self):
+        sat_path = os.path.abspath(os.path.join(model_path, 'Satellite_V02'))
+        os.environ['Satellite_V02_base'] = sat_path
+        os.environ['Satellite_V02_bddm'] = os.path.join('BULK', 'MATERIAUX')
+        #os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
+        #os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
+
+        pth = "INCLUDE 'Satellite_V02_base:Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"
+        with self.assertRaises(SyntaxError):
+            pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=True)
+        with self.assertRaises(SyntaxError):
+            pth2 = get_include_filename([pth], include_dir=r'C:\dir\dir2', is_windows=False)
+
+        #print('Path:\nold:  %r\nnew:  %r' % (pth, pth2))
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
