@@ -3504,41 +3504,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                 break
             uline = line.upper()
             if uline.startswith('INCLUDE'):
-                j = i + 1
-                line_base = line.split('$')[0]
-                include_lines = [line_base.strip()]
-                if "'" not in line_base:
-                    pass
-                else:
-                    #print('----------------------')
-
-                    line_base = line_base[8:].strip()
-                    if line_base.startswith("'") and line_base.endswith("'"):
-                        pass
-                    else:
-                        while not line.split('$')[0].endswith("'") and j < nlines:
-                            #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
-                            try:
-                                line = lines[j].split('$')[0].strip()
-                            except IndexError:
-                                #print('bdf_filename=%r' % bdf_filename)
-                                crash_name = 'pyNastran_crash.bdf'
-                                self._dump_file(crash_name, lines, i+1)
-                                msg = 'There was an invalid filename found while parsing (index).\n'
-                                msg += 'Check the end of %r\n' % crash_name
-                                #msg += 'bdf_filename2 = %r\n' % bdf_filename
-                                msg += 'include_lines = %s' % include_lines
-                                raise IndexError(msg)
-                             #print('endswith_quote=%s; %r' % (
-                                 #line.split('$')[0].strip().endswith(""), line.strip()))
-                            include_lines.append(line.strip())
-                            j += 1
-                        #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
-
-                        #print('*** %s' % line)
-                        #bdf_filename2 = line[7:].strip(" '")
-                        #include_lines = [line] + lines[i+1:j]
-                #print(include_lines)
+                j, include_lines = self._get_include_lines(lines, line, i, nlines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
                 if self.read_includes:
                     try:
@@ -3589,6 +3555,50 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
         return _lines_to_decks(lines, i, punch)
+
+    def _get_include_lines(self, lines, line, i, nlines):
+        """
+        gets the lines for the include file
+
+        INCLUDE 'Satellite_V02_INCLUDE:Satellite_V02_Panneau_Externe.dat'
+        INCLUDE '../../BULK/COORDS/satellite_V02_Coord.blk'
+        """
+        j = i + 1
+        line_base = line.split('$')[0]
+        include_lines = [line_base.strip()]
+        if "'" not in line_base:
+            pass
+        else:
+            #print('----------------------')
+
+            line_base = line_base[8:].strip()
+            if line_base.startswith("'") and line_base.endswith("'"):
+                pass
+            else:
+                while not line.split('$')[0].endswith("'") and j < nlines:
+                    #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                    try:
+                        line = lines[j].split('$')[0].strip()
+                    except IndexError:
+                        #print('bdf_filename=%r' % bdf_filename)
+                        crash_name = 'pyNastran_crash.bdf'
+                        self._dump_file(crash_name, lines, i+1)
+                        msg = 'There was an invalid filename found while parsing (index).\n'
+                        msg += 'Check the end of %r\n' % crash_name
+                        #msg += 'bdf_filename2 = %r\n' % bdf_filename
+                        msg += 'include_lines = %s' % include_lines
+                        raise IndexError(msg)
+                     #print('endswith_quote=%s; %r' % (
+                         #line.split('$')[0].strip().endswith(""), line.strip()))
+                    include_lines.append(line.strip())
+                    j += 1
+                #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+
+                #print('*** %s' % line)
+                #bdf_filename2 = line[7:].strip(" '")
+                #include_lines = [line] + lines[i+1:j]
+        #print(include_lines)
+        return j, include_lines
 
     def _dump_file(self, bdf_dump_filename, lines, i):
         # type: (str, List[str], int) -> None

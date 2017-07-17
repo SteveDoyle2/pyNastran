@@ -58,6 +58,10 @@ def get_include_filename(card_lines, include_dir='', is_windows=None):
     #     "'path1/path2/model.inc'" to "path1/path2/model.inc"
     filename = filename.strip('"').strip("'")
 
+    if len(filename.strip()) == 0:
+        raise SyntaxError('INCLUDE file is empty...card_lines=%s\n'
+                          'there is a $ sign in the INCLUDE card' % card_lines)
+
     # not handled...
     #    include '/mydir' /level1 /level2/ 'myfile.x'
     #
@@ -97,14 +101,19 @@ def split_filename_into_tokens(include_dir, filename, is_windows):
         inc = PureWindowsPath(include_dir)
         pth = PureWindowsPath(filename).parts
 
+        # fails if the comment has stripped out the file (e.g., "INCLUDE '$ENV/model.bdf'")
+        pth0 = pth[0]
+
         # Linux style paths
         # /work/model.bdf
-        if len(pth[0]) == 1 and pth[0][0] == '\\':
+        if len(pth0) == 1 and pth0[0] == '\\':
             # utterly breaks os.path.join
             raise SyntaxError('filename=%r cannot start with / on Windows' % filename)
     else:
         inc = PurePosixPath(include_dir)
         pth = PurePosixPath(filename).parts
+
+        # fails if the comment has stripped out the file (e.g., "INCLUDE '$ENV/model.bdf'")
         pth0 = pth[0]
         if len(pth0) >= 2 and pth0[:2] == r'\\':
             # Windows network paths
@@ -128,7 +137,11 @@ def split_tokens(tokens, is_windows):
         # this is technically legal...
         #   INCLUDE '/testdir/dir1/dir2/*/myfile.dat'
         assert '*' not in token, '* in path not supported; tokens=%s' % tokens
-        assert '$' not in token, '$ in path not supported; tokens=%s' % tokens
+        if is_windows:
+            assert '$' not in token, '$ in path not supported; tokens=%s' % tokens
+        else:
+            assert '%' not in token, '%% in path not supported; tokens=%s' % tokens
+
         if itoken == 0 and is_mac_linux and ':' in token:
             ## no C:/dir/model.bdf on linux/mac
             #raise SyntaxError('token cannot include colons (:); token=%r; tokens=%s' % (
@@ -150,10 +163,28 @@ def split_tokens(tokens, is_windows):
                     token, str(tokens)))
             else:
                 # variables in Windows are not case sensitive; not handled?
-                tokeni = os.path.expandvars('$' + stokens[0])
+                token0 = stokens[0]
                 if is_windows:
+                    assert '$' not in stokens[0], token0
+                    assert '%' not in stokens[0], token0
+
+                    if '%' in token0:
+                        assert token0[0] == '%', token0
+                        assert token0[-1] == '%', token0
+                        token0 = '%' + token0 + '%'
+                    else:
+                        token0 = '$' + token0
+
+                    #tokeni = os.path.expandvars('$' + stokens[0])
+                    tokeni = os.path.expandvars(token0)
                     tokensi = PureWindowsPath(tokeni).parts
                 else:
+                    if '$' in token0:
+                        assert token0[0] == '$', token0
+                    else:
+                        token0 = '$' + token0
+                    assert '%' not in stokens[0], token0
+                    tokeni = os.path.expandvars(token0)
                     tokensi = PurePosixPath(tokeni).parts
 
                 tokens2.extend(tokensi)
