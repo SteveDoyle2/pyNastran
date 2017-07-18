@@ -50,6 +50,18 @@ class PDAMP(DamperProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a PDAMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            the index of the card that's being parsed
+        comment : str; default=''
+            a comment for the card
+        """
         noffset = icard * 2
         pid = integer(card, 1 + noffset, 'pid')
 
@@ -291,6 +303,20 @@ class PVISC(DamperProperty):
     }
 
     def __init__(self, pid, ce, cr, comment=''):
+        """
+        Creates a PVISC card
+
+        Parameters
+        ----------
+        pid : int
+            property id for a CVISC
+        ce : float
+            ???
+        cr : float
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         DamperProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -300,6 +326,18 @@ class PVISC(DamperProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a PMASS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            the index of the card that's being parsed
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1 + 4 * icard, 'pid')
         ce = double(card, 2 + 4 * icard, 'ce')
         cr = double_or_blank(card, 3 + 4 * icard, 'cr', 0.)

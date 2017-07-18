@@ -18,14 +18,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
-class PointProperty(Property):
-    def __init__(self):
-        Property.__init__(self)
-
-    def cross_reference(self, model):
-        pass
-
-class NSM1(PointProperty):
+class NSM1(Property):
     """
     Defines a set of non structural mass.
 
@@ -44,7 +37,7 @@ class NSM1(PointProperty):
         'ELEMENT',
     ]
 
-    def __init__(self, sid, Type, value, ids, comment=''):
+    def __init__(self, sid, nsm_type, value, ids, comment=''):
         """
         Creates an NSM1 card
 
@@ -52,7 +45,7 @@ class NSM1(PointProperty):
         ----------
         sid : int
             Case control NSM id
-        Type : str
+        nsm_type : str
             Type of card the NSM is applied to
             valid_properties = {
                 PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
@@ -62,36 +55,57 @@ class NSM1(PointProperty):
         value : float
             the non-structural pass per unit length/area
         ids : List[int]
-            property ids or element ids depending on Type
+            property ids or element ids depending on nsm_type
         comment : str; default=''
             a comment for the card
         """
-        PointProperty.__init__(self)
+        Property.__init__(self)
         if comment:
             self.comment = comment
         if isinstance(ids, integer_types):
             ids = [ids]
         self.sid = sid
-        self.Type = Type
+        self.nsm_type = nsm_type
         self.ids = ids
         self.value = value
-        if self.Type not in self.valid_properties:
-            msg = 'Type=%r must be in [%s]' % (self.Type, ', '.join(self.valid_properties))
-            raise TypeError(msg)
+        if self.nsm_type not in self.valid_properties:
+            raise TypeError('nsm_type=%r must be in [%s]' % (
+                self.nsm_type, ', '.join(self.valid_properties)))
         assert isinstance(ids, list), 'ids=%r is not a list' % (ids)
 
+    @property
+    def Type(self):
+        """gets the nsm_type"""
+        return self.nsm_type
+    @Type.setter
+    def Type(self, nsm_type):
+        """sets the nsm_type"""
+        self.nsm_type = nsm_type
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a NSM1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
-        Type = string(card, 2, 'Type')
+        nsm_type = string(card, 2, 'Type')
         value = double(card, 3, 'value')
         ids = card[4:]
-        return NSM1(sid, Type, value, ids, comment=comment)
+        return NSM1(sid, nsm_type, value, ids, comment=comment)
+
+    def cross_reference(self, model):
+        pass
 
     def raw_fields(self):
         #nodes = self.node_ids
-        list_fields = ['NSM1', self.sid, self.Type, self.value] + self.ids
+        list_fields = ['NSM1', self.sid, self.nsm_type, self.value] + self.ids
         return list_fields
 
     def repr_fields(self):
@@ -103,7 +117,7 @@ class NSM1(PointProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-class NSM(PointProperty):
+class NSM(Property):
     """
     Defines a set of non structural mass.
 
@@ -126,7 +140,7 @@ class NSM(PointProperty):
         'ELEMENT',
     ]
 
-    def __init__(self, sid, Type, id, value, comment=''):
+    def __init__(self, sid, nsm_type, id, value, comment=''):
         """
         Creates an NSM card
 
@@ -134,7 +148,7 @@ class NSM(PointProperty):
         ----------
         sid : int
             Case control NSM id
-        Type : str
+        nsm_type : str
             Type of card the NSM is applied to
             valid_properties = {
                 PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
@@ -142,31 +156,43 @@ class NSM(PointProperty):
                 ELEMENT
             }
         id : int
-            property id or element id depending on Type
+            property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        PointProperty.__init__(self)
+        Property.__init__(self)
         if comment:
             self.comment = comment
         self.sid = sid
-        self.Type = Type
+        self.nsm_type = nsm_type
         self.id = id
         self.value = value
-        if self.Type not in self.valid_properties:
-            msg = 'Type=%r must be in [%s]' % (self.Type, ', '.join(self.valid_properties))
-            raise TypeError(msg)
+        if self.nsm_type not in self.valid_properties:
+            raise TypeError('nsm_type=%r must be in [%s]' % (
+                self.nsm_type, ', '.join(self.valid_properties)))
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds an NSM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            the index of the card that's being parsed
+        comment : str; default=''
+            a comment for the card
+        """
         noffset = 2 * icard
         sid = integer(card, 1, 'sid')
-        Type = string(card, 2, 'Type')
+        nsm_type = string(card, 2, 'Type')
         id = integer(card, 3 + noffset, 'id')
         value = double(card, 4 + noffset, 'value')
-        return NSM(sid, Type, id, value, comment=comment)
+        return NSM(sid, nsm_type, id, value, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -184,14 +210,26 @@ class NSM(PointProperty):
         #sid=9  prop_set=PBEA ID=538976333 value=0.0
         #sid=10 prop_set=PDUM ID=538976312 value=2.80259692865e-45
         #sid=10 prop_set=ELEM ID=542395973 value=0.0
-        Type = data[1]
+        nsm_type = data[1]
         id = data[2]
         value = data[3]
-        return NSM(sid, Type, id, value, comment=comment)
+        return NSM(sid, nsm_type, id, value, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
+    @property
+    def Type(self):
+        """gets the nsm_type"""
+        return self.nsm_type
+    @Type.setter
+    def Type(self, nsm_type):
+        """sets the nsm_type"""
+        self.nsm_type = nsm_type
 
     def raw_fields(self):
         #nodes = self.node_ids
-        list_fields = [self.type, self.sid, self.Type, self.id, self.value]
+        list_fields = [self.type, self.sid, self.nsm_type, self.id, self.value]
         return list_fields
 
     def repr_fields(self):
@@ -214,7 +252,7 @@ class NSML(NSM):
     +------+-----+------+----+-------+----+-------+----+-------+
     """
     type = 'NSML'
-    def __init__(self, sid, Type, id, value, comment=''):
+    def __init__(self, sid, nsm_type, id, value, comment=''):
         """
         Creates an NSML card, which defines lumped non-structural mass
 
@@ -222,7 +260,7 @@ class NSML(NSM):
         ----------
         sid : int
             Case control NSM id
-        Type : str
+        nsm_type : str
             Type of card the NSM is applied to
             valid_properties = {
                 PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
@@ -230,13 +268,13 @@ class NSML(NSM):
                 ELEMENT
             }
         id : int
-            property id or element id depending on Type
+            property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        NSM.__init__(self, sid, Type, id, value, comment=comment)
+        NSM.__init__(self, sid, nsm_type, id, value, comment=comment)
 
 class NSML1(NSM1):
     """
@@ -251,7 +289,7 @@ class NSML1(NSM1):
     +-------+-----+------+-------+-----+----+----+----+----+
     """
     type = 'NSML1'
-    def __init__(self, sid, Type, ids, value, comment=''):
+    def __init__(self, sid, nsm_type, ids, value, comment=''):
         """
         Creates an NSML card, which defines lumped non-structural mass
 
@@ -259,7 +297,7 @@ class NSML1(NSM1):
         ----------
         sid : int
             Case control NSM id
-        Type : str
+        nsm_type : str
             Type of card the NSM is applied to
             valid_properties = {
                 PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
@@ -267,13 +305,13 @@ class NSML1(NSM1):
                 ELEMENT
             }
         id : int
-            property id or element id depending on Type
+            property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        NSM1.__init__(self, sid, Type, value, ids, comment=comment)
+        NSM1.__init__(self, sid, nsm_type, value, ids, comment=comment)
 
 
 class NSMADD(BaseCard):
@@ -343,6 +381,7 @@ class NSMADD(BaseCard):
 
     @property
     def nsm_ids(self):
+        """gets the nonstructural-mass ids"""
         if self.sets_ref is None:
             return self.sets
 
@@ -355,10 +394,6 @@ class NSMADD(BaseCard):
             else:
                 raise TypeError('type=%s; nsm=\n%s' % (type(nsm), nsm))
         return nsm_ids
-
-    @property
-    def ids(self):
-        return self.nsm_ids
 
     def cross_reference(self, model):
         """
@@ -407,14 +442,26 @@ class NSMADD(BaseCard):
         return self.comment + print_card_16(card)
 
 
-class PMASS(PointProperty):
+class PMASS(Property):
     type = 'PMASS'
     _field_map = {
         1: 'pid', 2:'mass',
     }
 
     def __init__(self, pid, mass, comment=''):
-        PointProperty.__init__(self)
+        """
+        Creates an PMASS card, which defines a mass applied to a single DOF
+
+        Parameters
+        ----------
+        pid : int
+            Property id used by a CMASS1/CMASS3 card
+        mass : float
+            the mass to apply
+        comment : str; default=''
+            a comment for the card
+        """
+        Property.__init__(self)
         if comment:
             self.comment = comment
         self.pid = pid
@@ -422,6 +469,18 @@ class PMASS(PointProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a PMASS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            the index of the card that's being parsed
+        comment : str; default=''
+            a comment for the card
+        """
         icard *= 2
         #: Property ID
         pid = integer(card, 1 + icard, 'pid')

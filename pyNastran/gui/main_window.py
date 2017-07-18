@@ -42,7 +42,7 @@ from pyNastran.gui.gui_utils.utils import check_for_newer_version
 #from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import (
     NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
-    STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
+    STL_IO, TecplotIO, TetgenIO, Usm3dIO, ShabpIO, ADB_IO, FastIO, # Plot3d_io,
     AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
 )
 from pyNastran.gui.gui_common import GuiCommon2
@@ -66,7 +66,7 @@ except:
 
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
-                 LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, Plot3d_io, ADB_IO,
+                 LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, ADB_IO, # Plot3d_io,
                  FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
@@ -131,7 +131,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             FastIO.__init__(self)
             LaWGS_IO.__init__(self)
             PanairIO.__init__(self)
-            Plot3d_io.__init__(self)
+            #Plot3d_io.__init__(self)
             STL_IO.__init__(self)
             ShabpIO.__init__(self)
             SurfIO.__init__(self)
