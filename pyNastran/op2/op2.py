@@ -1,111 +1,24 @@
 #pylint: disable=W0201,W0223,R0901,R0902,R0904
 """
-Main OP2 class
-ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
+Defines the main OP2 class.  Defines:
 
-Datablock	Type	Description
-EFMFSMS	Matrix	6 x 1 Total Effective mass matrix
-EFMASSS	Matrix	6 x 6 Effective mass matrix
-RBMASS	Matrix	6 x 6 Rigid body mass matrix
-EFMFACS	Matrix	6 X N Modal effective mass fraction matrix
-MPFACS	Matrix	6 x N Modal participation factor matrix
-MEFMASS	Matrix	6 x N Modal effective mass matrix
-MEFWTS	Matrix	6 x N Modal effective weight matrix
-RAFGEN	Matrix	N x M Generalized force matrix
-RADEFMP	Matrix	N X U2 Effective inertia loads
-BHH	Matrix	N x N Viscous damping matrix
-K4HH	Matrix	N x N Structural damping matrix
-RADAMPZ	Matrix	N x N equivalent viscous damping ratios
-RADAMPG	Matrix	N X N equivalent structural damping ratio
+ - read_op2(op2_filename=None, combine=True, subcases=None,
+            exclude_results=None, include_results=None,
+            log=None, debug=True, debug_file=None, build_dataframe=None,
+            skip_undefined_matrices=True, mode='msc', encoding=None)
 
-LAMA	LAMA	Eigenvalue summary table
-OGPWG	OGPWG	Mass properties output
-OQMG1	OQMG	Modal MPC forces
-RANCONS	ORGY1	Constraint mode element strain energy table
-RANEATC	ORGY1	Attachment mode element strain energy table
-RAGCONS	OGPFB	Constraint mode grid point force table
-RAGEATC	OGPFB	Attachment mode grid point force table
-RAPCONS	OES	Constraint mode ply stress table
-RAPEATC	OES	Attachment mode ply stress table
-RASCONS	OES	Constraint mode element stress table
-RAECONS	OES	Constraint mode element strain table
-RASEATC	OES	Attachment mode element stress table
-RAEEATC	OES	Attachment mode element strain table
-OES1C	OES	Modal Element Stress Table
-OES1X	OES	Modal Element Stress Table
-OSTR1C	OES	Modal Element Strain Table
-OSTR1X	OSTR	Modal Element Strain Table
-RAQCONS	OUG	Constraint mode MPC force table
-RADCONS	OUG	Constraint mode displacement table
-RADEFFM	OUG	Effective inertia displacement table
-RAQEATC	OUG	Attachment mode  MPC force table
-RADEATC	OUG	Attachment mode displacement table
-OUGV1	OUG	Eigenvector Table
-RAFCONS	OEF	Constraint mode element force table
-RAFEATC	OEF	Attachment mode element force table
-OEF1X	OEF	Modal Element Force Table
-OGPFB1	OGPFB	Modal Grid Point Force Table
-ONRGY1	ONRGY1	Modal Element Strain Energy Table
-ONRGY2	ONRGY1
-
-#--------------------
-
-RADCONS - Displacement Constraint Mode
-RADDATC - Displacement Distributed Attachment Mode
-RADNATC - Displacement Nodal Attachment Mode
-RADEATC - Displacement Equivalent Inertia Attachment Mode
-RADEFFM - Displacement Effective Inertia Mode
-
-RAECONS - Strain Constraint Mode
-RAEDATC - Strain Distributed Attachment Mode
-RAENATC - Strain Nodal Attachment Mode
-RAEEATC - Strain Equivalent Inertia Attachment Mode
-
-RAFCONS - Element Force Constraint Mode
-RAFDATC - Element Force Distributed Attachment Mode
-RAFNATC - Element Force Nodal Attachment Mode
-RAFEATC - Element Force Equivalent Inertia Attachment Mode
-
-RALDATC - Load Vector Used to Compute the Distributed Attachment M
-
-RANCONS - Strain Energy Constraint Mode
-RANDATC - Strain Energy Distributed Attachment Mode
-RANNATC - Strain Energy Nodal Attachment Mode
-RANEATC - Strain Energy Equivalent Inertia Attachment Mode
-
-RAQCONS - Ply Strains Constraint Mode
-RAQDATC - Ply Strains Distributed Attachment Mode
-RAQNATC - Ply Strains Nodal Attachment Mode
-RAQEATC - Ply Strains Equivalent Inertia Attachment Mode
-
-RARCONS - Reaction Force Constraint Mode
-RARDATC - Reaction Force Distributed Attachment Mode
-RARNATC - Reaction Force Nodal Attachment Mode
-RAREATC - Reaction Force Equivalent Inertia Attachment Mode
-
-RASCONS - Stress Constraint Mode
-RASDATC - Stress Distributed Attachment Mode
-RASNATC - Stress Nodal Attachment Mode
-RASEATC - Stress Equivalent Inertia Attachment Mode
-
-RAPCONS - Ply Stresses Constraint Mode
-RAPDATC - Ply Stresses Distributed Attachment Mode
-RAPNATC - Ply Stresses Nodal Attachment Mode
-RAPEATC - Ply Stresses Equivalent Inertia Attachment Mode
-
-RAGCONS - Grid Point Forces Constraint Mode
-RAGDATC - Grid Point Forces Distributed Attachment Mode
-RAGNATC - Grid Point Forces Nodal Attachment Mode
-RAGEATC - Grid Point Forces Equivalent Inertia Attachment Mode
-
-RADEFMP - Displacement PHA^T * Effective Inertia Mode
-
-RADAMPZ - Viscous Damping Ratio Matrix
-RADAMPG - Structural Damping Ratio Matrix
-
-RAFGEN  - Generalized Forces
-BHH     - Modal Viscous Damping Matrix
-K4HH    - Modal Structural Damping Matrix
+ - OP2(debug=True, log=None, debug_file=None, mode='msc')
+   - build_dataframe()
+   - combine_results(combine=True)
+   - create_objects_from_matrices()
+   - object_attributes(mode='public', keys_to_skip=None)
+   - object_methods(mode='public', keys_to_skip=None)
+   - print_subcase_key()
+   - read_op2(op2_filename=None, combine=True, build_dataframe=None,
+              skip_undefined_matrices=False, encoding=None)
+   - set_mode(mode)
+   - transform_displacements_to_global(i_transform, coords, xyz_cid0=None, debug=False)
+   - transform_gpforce_to_global(nids_all, nids_transform, i_transform, coords, xyz_cid0=None)
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -231,6 +144,28 @@ class OP2(OP2_Scalar):
         self.ask = False
 
     def object_attributes(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
+        """
+        List the names of attributes of a class as strings. Returns public
+        attributes as default.
+
+        Parameters
+        ----------
+        mode : str
+            defines what kind of attributes will be listed
+            * 'public' - names that do not begin with underscore
+            * 'private' - names that begin with single underscore
+            * 'both' - private and public
+            * 'all' - all attributes that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        attribute_names : List[str]
+            sorted list of the names of attributes of a given type or None
+            if the mode is wrong
+        """
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -240,6 +175,30 @@ class OP2(OP2_Scalar):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
+        """
+        List the names of methods of a class as strings. Returns public methods
+        as default.
+
+        Parameters
+        ----------
+        obj : instance
+            the object for checking
+        mode : str
+            defines what kind of methods will be listed
+            * "public" - names that do not begin with underscore
+            * "private" - names that begin with single underscore
+            * "both" - private and public
+            * "all" - all methods that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        method : List[str]
+            sorted list of the names of methods of a given type
+            or None if the mode is wrong
+        """
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
@@ -250,7 +209,17 @@ class OP2(OP2_Scalar):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model):
-        """diffs the current op2 model vs. another op2 model"""
+        """
+        Diffs the current op2 model vs. another op2 model.
+        Crashes if they're not equal.
+        """
+        return self.op2_equal(op2_model)
+
+    def op2_equal(self, op2_model):
+        """
+        Diffs the current op2 model vs. another op2 model.
+        Crashes if they're not equal.
+        """
         if not self.read_mode == op2_model.read_mode:
             print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
                 self.read_mode, op2_model.read_mode))
@@ -1060,7 +1029,6 @@ def main():  # pragma: no cover
                                  'sol_101_elements', 'solid_shell_bar.op2')
 
     model = OP2()
-    model.set_as_vectorized(ask=False)
     model.read_op2(_op2_filename)
     isubcase = 1
 

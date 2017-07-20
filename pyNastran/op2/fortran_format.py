@@ -399,7 +399,7 @@ class FortranFormat(object):
 
         # we've finished reading all subtables, but have one last marker to read
         self.read_markers([0])
-        self.finish()
+        self._finish()
 
     def _finish(self):
         raise NotImplementedError('overwrite this')

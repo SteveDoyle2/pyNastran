@@ -392,7 +392,7 @@ class TestOpt(unittest.TestCase):
         save_load_deck(model)
 
     def test_dvcrel1(self):
-        """tests a DVCREL"""
+        """tests a DVCREL1, DVCREL2, DVGRID"""
         model = BDF(debug=False)
         oid = 10
         conm2_eid = 100

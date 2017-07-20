@@ -1,6 +1,55 @@
 #pylint: disable=R0913
 """
-Defines the OP2 class.
+Defines the sub-OP2 class.  This should never be called outisde of the OP2 class.
+
+ - OP2_Scalar(debug=False, log=None, debug_file=None)
+
+   Methods
+   -------
+   - set_subcases(subcases=None)
+   - set_transient_times(times)
+   - read_op2(op2_filename=None, combine=False)
+   - set_additional_generalized_tables_to_read(tables)
+   - set_additional_result_tables_to_read(tables)
+   - set_additional_matrices_to_read(matrices)
+
+   Attributes
+   ----------
+   - total_effective_mass_matrix
+   - effective_mass_matrix
+   - rigid_body_mass_matrix
+   - modal_effective_mass_fraction
+   - modal_participation_factors
+   - modal_effective_mass
+   - modal_effective_weight
+   - set_as_msc()
+   - set_as_optistruct()
+   - set_as_radioss()
+
+   Private Methods
+   ---------------
+   - _get_table_mapper()
+   - _not_available(data, ndata)
+   - _table_crasher(data, ndata)
+   - _table_passer(data, ndata)
+   - _validate_op2_filename(op2_filename)
+   - _create_binary_debug()
+   - _make_tables()
+   - _read_tables(table_name)
+   - _read_tol()
+   - _skip_table(table_name)
+   - _read_dit()
+   - _read_table_name(rewind=False, stop_on_failure=True)
+   - _update_generalized_tables(tables)
+   - _skip_table_helper()
+   - _read_omm2()
+   - _read_cmodext()
+   - _read_cmodext_helper(marker_orig, debug=False)
+   - _get_marker_n(nmarkers)
+   - _read_geom_table()
+   - _read_results_table()
+   - _print_month(month, day, year, zero, one)
+   - _finish()
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -41,6 +90,113 @@ from pyNastran.op2.fortran_format import FortranFormat
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
+"""
+ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
+
+Datablock	Type	Description
+EFMFSMS	Matrix	6 x 1 Total Effective mass matrix
+EFMASSS	Matrix	6 x 6 Effective mass matrix
+RBMASS	Matrix	6 x 6 Rigid body mass matrix
+EFMFACS	Matrix	6 X N Modal effective mass fraction matrix
+MPFACS	Matrix	6 x N Modal participation factor matrix
+MEFMASS	Matrix	6 x N Modal effective mass matrix
+MEFWTS	Matrix	6 x N Modal effective weight matrix
+RAFGEN	Matrix	N x M Generalized force matrix
+RADEFMP	Matrix	N X U2 Effective inertia loads
+BHH	Matrix	N x N Viscous damping matrix
+K4HH	Matrix	N x N Structural damping matrix
+RADAMPZ	Matrix	N x N equivalent viscous damping ratios
+RADAMPG	Matrix	N X N equivalent structural damping ratio
+
+LAMA	LAMA	Eigenvalue summary table
+OGPWG	OGPWG	Mass properties output
+OQMG1	OQMG	Modal MPC forces
+RANCONS	ORGY1	Constraint mode element strain energy table
+RANEATC	ORGY1	Attachment mode element strain energy table
+RAGCONS	OGPFB	Constraint mode grid point force table
+RAGEATC	OGPFB	Attachment mode grid point force table
+RAPCONS	OES	Constraint mode ply stress table
+RAPEATC	OES	Attachment mode ply stress table
+RASCONS	OES	Constraint mode element stress table
+RAECONS	OES	Constraint mode element strain table
+RASEATC	OES	Attachment mode element stress table
+RAEEATC	OES	Attachment mode element strain table
+OES1C	OES	Modal Element Stress Table
+OES1X	OES	Modal Element Stress Table
+OSTR1C	OES	Modal Element Strain Table
+OSTR1X	OSTR	Modal Element Strain Table
+RAQCONS	OUG	Constraint mode MPC force table
+RADCONS	OUG	Constraint mode displacement table
+RADEFFM	OUG	Effective inertia displacement table
+RAQEATC	OUG	Attachment mode  MPC force table
+RADEATC	OUG	Attachment mode displacement table
+OUGV1	OUG	Eigenvector Table
+RAFCONS	OEF	Constraint mode element force table
+RAFEATC	OEF	Attachment mode element force table
+OEF1X	OEF	Modal Element Force Table
+OGPFB1	OGPFB	Modal Grid Point Force Table
+ONRGY1	ONRGY1	Modal Element Strain Energy Table
+ONRGY2	ONRGY1
+
+#--------------------
+
+RADCONS - Displacement Constraint Mode
+RADDATC - Displacement Distributed Attachment Mode
+RADNATC - Displacement Nodal Attachment Mode
+RADEATC - Displacement Equivalent Inertia Attachment Mode
+RADEFFM - Displacement Effective Inertia Mode
+
+RAECONS - Strain Constraint Mode
+RAEDATC - Strain Distributed Attachment Mode
+RAENATC - Strain Nodal Attachment Mode
+RAEEATC - Strain Equivalent Inertia Attachment Mode
+
+RAFCONS - Element Force Constraint Mode
+RAFDATC - Element Force Distributed Attachment Mode
+RAFNATC - Element Force Nodal Attachment Mode
+RAFEATC - Element Force Equivalent Inertia Attachment Mode
+
+RALDATC - Load Vector Used to Compute the Distributed Attachment M
+
+RANCONS - Strain Energy Constraint Mode
+RANDATC - Strain Energy Distributed Attachment Mode
+RANNATC - Strain Energy Nodal Attachment Mode
+RANEATC - Strain Energy Equivalent Inertia Attachment Mode
+
+RAQCONS - Ply Strains Constraint Mode
+RAQDATC - Ply Strains Distributed Attachment Mode
+RAQNATC - Ply Strains Nodal Attachment Mode
+RAQEATC - Ply Strains Equivalent Inertia Attachment Mode
+
+RARCONS - Reaction Force Constraint Mode
+RARDATC - Reaction Force Distributed Attachment Mode
+RARNATC - Reaction Force Nodal Attachment Mode
+RAREATC - Reaction Force Equivalent Inertia Attachment Mode
+
+RASCONS - Stress Constraint Mode
+RASDATC - Stress Distributed Attachment Mode
+RASNATC - Stress Nodal Attachment Mode
+RASEATC - Stress Equivalent Inertia Attachment Mode
+
+RAPCONS - Ply Stresses Constraint Mode
+RAPDATC - Ply Stresses Distributed Attachment Mode
+RAPNATC - Ply Stresses Nodal Attachment Mode
+RAPEATC - Ply Stresses Equivalent Inertia Attachment Mode
+
+RAGCONS - Grid Point Forces Constraint Mode
+RAGDATC - Grid Point Forces Distributed Attachment Mode
+RAGNATC - Grid Point Forces Nodal Attachment Mode
+RAGEATC - Grid Point Forces Equivalent Inertia Attachment Mode
+
+RADEFMP - Displacement PHA^T * Effective Inertia Mode
+
+RADAMPZ - Viscous Damping Ratio Matrix
+RADAMPG - Structural Damping Ratio Matrix
+
+RAFGEN  - Generalized Forces
+BHH     - Modal Viscous Damping Matrix
+K4HH    - Modal Structural Damping Matrix
+"""
 GEOM_TABLES = [
     # GEOM2 - Table of Bulk Data entry images related to element connectivity andscalar points
     # GEOM4 - Table of Bulk Data entry images related to constraints, degree-of-freedom membership and rigid element connectivity.
@@ -545,16 +701,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             assert isinstance(debug_file, string_types), debug_file
             self.debug_file = debug_file
-
-    def set_as_vectorized(self, vectorized=False, ask=False):
-        """don't call this...testing"""
-        if vectorized is True:
-            msg = 'OP2_Scalar class doesnt support vectorization.  Use OP2 '
-            msg += 'from pyNastran.op2.op2 instead.'
-            raise RuntimeError(msg)
-        if ask is True:
-            msg = 'OP2_Scalar class doesnt support ask.'
-            raise RuntimeError(msg)
 
     def set_subcases(self, subcases=None):
         """
@@ -1935,7 +2081,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 
-    def finish(self):
+    def _finish(self):
         """
         Clears out the data members contained within the self.words variable.
         This prevents mixups when working on the next table, but otherwise
