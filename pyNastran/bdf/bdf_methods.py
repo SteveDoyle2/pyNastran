@@ -23,10 +23,10 @@ import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
-from pyNastran.bdf.methods.mass_properties import (
+from pyNastran.bdf.mesh_utils.mass_properties import (
     _mass_properties_elements_init, _mass_properties_no_xref, _apply_mass_symmetry,
     _mass_properties, _mass_properties_new)
-from pyNastran.bdf.methods.loads import sum_forces_moments, sum_forces_moments_elements
+from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 
 

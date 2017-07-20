@@ -1,3 +1,9 @@
+"""
+defines:
+ - SolidSection
+ - Material
+ - Part
+"""
 from __future__ import print_function
 from six import iteritems
 import numpy as np
@@ -89,6 +95,7 @@ class Part(object):
         self.cohax4 = None
         self.cax3 = None
         self.cax4r = None
+        self.cps4r = None
 
         # solids
         self.c3d10h = None
@@ -105,7 +112,7 @@ class Part(object):
         self.cax3_eids = None
         self.cax4r_eids = None
 
-        # solids
+        # rigid elements
         self.c3d10h_eids = None
         if 'r2d2' in element_types: # similar to CBAR
             elements = element_types['r2d2']
@@ -113,6 +120,7 @@ class Part(object):
             self.r2d2_eids = self.r2d2[:, 0]
             assert self.r2d2.shape[1] == 3, self.r2d2.shape
 
+        #-------------------------------------------------------
         # shells
         if 'cpe3' in element_types: # similar to CTRIA3
             elements = element_types['cpe3']
@@ -125,7 +133,6 @@ class Part(object):
             self.cpe4 = np.array(elements, dtype='int32')
             self.cpe4_eids = self.cpe4[:, 0]
             assert self.cpe4.shape[1] == 5, self.cpe4.shape
-            #print('  n_cpe4=%r' % str(self.cpe4.shape))
 
         if 'cpe4r' in element_types: # similar to CQUAD4
             elements = element_types['cpe4r']
@@ -135,36 +142,35 @@ class Part(object):
 
         if 'coh2d4' in element_types:
             elements = element_types['coh2d4']
-            #print(elements)
             self.coh2d4 = np.array(elements, dtype='int32')
             self.coh2d4_eids = self.coh2d4[:, 0]
             assert self.coh2d4.shape[1] == 5, self.coh2d4.shape
-            #print('  n_coh2d4=%r' % str(self.coh2d4.shape))
 
         if 'cohax4' in element_types:
             elements = element_types['cohax4']
-            #print(elements)
             self.cohax4 = np.array(elements, dtype='int32')
             self.cohax4_eids = self.cohax4[:, 0]
             assert self.cohax4.shape[1] == 5, self.cohax4.shape
-            #print('  n_cohax4=%r' % str(self.cohax4.shape))
 
         if 'cax3' in element_types:
             elements = element_types['cax3']
-            #print(elements)
             self.cax3 = np.array(elements, dtype='int32')
             self.cax3_eids = self.cax3[:, 0]
             assert self.cax3.shape[1] == 4, self.cax3.shape
-            #print('  n_cax3=%r' % str(self.cax3.shape))
 
         if 'cax4r' in element_types:
             elements = element_types['cax4r']
-            #print(elements)
             self.cax4r = np.array(elements, dtype='int32')
             self.cax4r_eids = self.cax4r[:, 0]
             assert self.cax4r.shape[1] == 5, self.cax4r.shape
-            #print('  n_cax4r=%r' % str(self.cax4r.shape))
 
+        if 'cps4r' in element_types:
+            elements = element_types['cps4r']
+            self.cps4r = np.array(elements, dtype='int32')
+            self.cps4r_eids = self.cps4r[:, 0]
+            assert self.cps4r.shape[1] == 5, self.cps4r.shape
+
+        #-------------------------------------------------------
         # solids
         if 'c3d10h' in element_types: # similar to CTRIA3
             elements = element_types['c3d10h']
@@ -178,7 +184,6 @@ class Part(object):
         # bars
         if self.r2d2_eids is not None:
             ieid = np.where(eid == self.r2d2_eids)[0]
-            #print('self.cpe3_eids =', self.cpe3_eids)
             self.log.info('ieid_r2d2 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
@@ -186,10 +191,11 @@ class Part(object):
                 elem = self.r2d2[ieid, :]
                 return etype, ieid, elem
 
+        #-------------------------------------------------------
+
          # shells
         if self.cpe3_eids is not None:
             ieid = np.where(eid == self.cpe3_eids)[0]
-            #print('self.cpe3_eids =', self.cpe3_eids)
             self.log.debug('ieid_cpe3 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
@@ -199,8 +205,6 @@ class Part(object):
 
         if self.cpe4_eids is not None:
             ieid = np.where(eid == self.cpe4_eids)[0]
-            #print('self.cpe4_eids =', self.cpe4_eids)
-            #print('ieid = %s' % ieid)
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'cpe4'
@@ -209,8 +213,6 @@ class Part(object):
 
         if self.cpe4r_eids is not None:
             ieid = np.where(eid == self.cpe4r_eids)[0]
-            #print('self.cpe4r_eids =', self.cpe4r_eids)
-            #print('ieid = %s' % ieid)
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'cpe4r'
@@ -219,7 +221,6 @@ class Part(object):
 
         if self.coh2d4_eids is not None:
             ieid = np.where(eid == self.coh2d4_eids)[0]
-            #print('self.coh2d4_eids =', self.coh2d4_eids)
             self.log.debug('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
@@ -231,7 +232,6 @@ class Part(object):
 
         if self.coh2d4_eids is not None:
             ieid = np.where(eid == self.coh2d4_eids)[0]
-            #print('self.coh2d4_eids =', self.coh2d4_eids)
             print('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
@@ -243,7 +243,6 @@ class Part(object):
 
         if self.cohax4_eids is not None:
             ieid = np.where(eid == self.cohax4_eids)[0]
-            #print('self.cohax4_eids =', self.cohax4_eids)
             print('ieid_cohax4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
@@ -277,6 +276,7 @@ class Part(object):
         n_cohax4 = 0
         n_cax3 = 0
         n_cax4r = 0
+        n_cps4r = 0
         if self.r2d2 is not None:
             n_r2d2 = self.r2d2.shape[0]
         if self.cpe3 is not None:
@@ -296,6 +296,8 @@ class Part(object):
             n_cax3 = self.cax3.shape[0]
         if self.cax4r is not None:
             n_cax4r = self.cax4r.shape[0]
+        if self.cps4r is not None:
+            n_cps4r = self.cps4r.shape[0]
 
         neids = (n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 +
                  n_c3d10h + n_cohax4 + n_cax3 + n_cax4r)
