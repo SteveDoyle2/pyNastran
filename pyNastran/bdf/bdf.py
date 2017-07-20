@@ -113,7 +113,7 @@ from pyNastran.bdf.cards.optimization import (
     DVCREL1, DVCREL2,
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
-    DVGRID)
+    DVGRID, DSCREEN)
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
@@ -512,7 +512,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'DVPREL1', 'DVPREL2',
             'DVMREL1', 'DVMREL2',
             'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
-            #'DSCREEN',
+            'DSCREEN',
 
             # sets
             'SET1', 'SET3',  ## sets
@@ -605,11 +605,15 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             del state['_card_parser_prepare']
         return state
 
+    def saves(self, unxref=True):
+        """Saves a pickled string"""
+        if unxref:
+            self.uncross_reference()
+        return dumps(self)
+
     def save(self, obj_filename='model.obj', unxref=True):
         # type: (str, bool) -> None
-        """
-        ..warning:: doesn't work right
-        """
+        """Saves a pickleable object"""
         #del self.log
         #del self._card_parser, self._card_parser_prepare
 
@@ -627,12 +631,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
     def load(self, obj_filename='model.obj'):
         # type: (str) -> None
-        """
-        ..warning:: doesn't work right
-        """
+        """Loads a pickleable object"""
         #del self.log
-        #del self.spcObject
-        #del self.mpcObject
         #lines = print(self.case_control_deck)
         #self.case_control_lines = lines.split('\n')
         #del self.case_control_deck
@@ -2119,6 +2119,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'DCONSTR' : (DCONSTR, self._add_dconstr_object),
             'DDVAL' : (DDVAL, self._add_ddval_object),
             'DLINK' : (DLINK, self._add_dlink_object),
+            'DSCREEN' : (DSCREEN, self._add_dscreen_object),
 
             'DTABLE' : (DTABLE, self._add_dtable_object),
             'DRESP1' : (DRESP1, self._add_dresp_object),

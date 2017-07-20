@@ -881,6 +881,15 @@ class AddMethods(BDFAttributes):
         self.dlinks[key] = dlink
         self._type_to_id_map[dlink.type].append(key)
 
+    def _add_dscreen_object(self, dscreen):
+        """adds a DSCREEN object"""
+        key = dscreen.rtype
+        assert key not in self.dscreen, 'DSCREEN=%s old=\n%snew=\n%s' % (
+            key, self.dscreen[key], dscreen)
+        assert key > 0
+        self.dscreen[key] = dscreen
+        self._type_to_id_map[dscreen.type].append(key)
+
     def _add_dresp_object(self, dresp):
         """adds a DRESP1/DRESP2/DRESP3 object"""
         key = dresp.dresp_id

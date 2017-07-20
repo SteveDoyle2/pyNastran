@@ -92,7 +92,7 @@ from pyNastran.bdf.cards.optimization import (
     DVCREL1, DVCREL2,
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
-    DVGRID)
+    DVGRID, DSCREEN)
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
@@ -5316,6 +5316,24 @@ class AddCards(AddMethods):
         return dvmrel
 
     def add_dvgrid(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
+        """
+        Creates a DVGRID card
+
+        Parameters
+        ----------
+        dvid : int
+            DESVAR id
+        nid : int
+            GRID/POINT id
+        dxyz : (3, ) float ndarray
+            the amount to move the grid point
+        cid : int; default=0
+            Coordinate system for dxyz
+        coeff : float; default=1.0
+            the dxyz scale factor
+        comment : str; default=''
+            a comment for the card
+        """
         dvgrid = DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
         self._add_dvgrid_object(dvgrid)
         return dvgrid
@@ -5346,6 +5364,26 @@ class AddCards(AddMethods):
         doptprm = DOPTPRM(params, comment=comment)
         self._add_doptprm_object(doptprm)
         return doptprm
+
+    def add_dscreen(self, rtype, trs=-0.5, nstr=20, comment=''):
+        """
+        Creates a DSCREEN object
+
+        Parameters
+        ----------
+        rtype : str
+            Response type for which the screening criteria apply
+        trs : float
+            Truncation threshold
+        nstr : int
+            Maximum number of constraints to be retained per region per
+            load case
+        comment : str; default=''
+            a comment for the card
+        """
+        dscreen = DSCREEN(rtype, trs=trs, nstr=nstr, comment=comment)
+        self._add_dscreen_object(dscreen)
+        return dscreen
 
     def add_monpnt1(self, name, label, axes, comp, xyz, cp=0, cd=None,
                     comment=''):

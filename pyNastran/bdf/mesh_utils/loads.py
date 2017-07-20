@@ -74,7 +74,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                 msg += '  SUBCASE %i; LOAD=%s\n' % (subcase_id, load_id)
             else:
                 msg += '  SUBCASE %i has no LOAD\n' % (subcase_id)
-            print(msg)
+        model.log.error(msg)
         raise KeyError(msg)
     #for (key, load_case) in iteritems(model.loads):
         #if key != loadcase_id:
@@ -185,14 +185,15 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                 n1 += elem.wa
                 n2 += elem.wb
 
-                deltaL = n2 - n1
-                L = norm(deltaL)
+                bar_vector = n2 - n1
+                L = norm(bar_vector)
                 try:
-                    Ldir = deltaL / L
+                    Ldir = bar_vector / L
                 except:
                     msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
                     msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
                     raise FloatingPointError(msg)
+
                 if load.scale == 'FR':  # x1, x2 are fractional lengths
                     x1 = load.x1
                     x2 = load.x2
@@ -201,12 +202,12 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                     x1 = load.x1 / L
                     x2 = load.x2 / L
                 elif load.scale == 'LEPR':
-                    print('PLOAD1 LEPR continue')
+                    model.log.warning('PLOAD1 LEPR continue')
                     continue
                     #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
                     #raise NotImplementedError(msg)
                 elif load.scale == 'FRPR':
-                    print('PLOAD1 FRPR continue')
+                    model.log.warning('PLOAD1 FRPR continue')
                     continue
                     #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
                     #raise NotImplementedError(msg)
@@ -220,10 +221,10 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                 if x1 != x2:
                     # continue
                     if not load.type in ['FX', 'FY', 'FZ']:
-                        print('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (
+                        model.log.warning('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (
                             x1, x2, load.scale, str(elem), str(load)))
                         continue
-                    print('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (
+                    model.log.warning('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (
                         x1, x2, load.scale, str(elem), str(load)))
 
                     # y = (y2-y1)/(x2-x1)*(x-x1) + y1
@@ -253,13 +254,13 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                         Ftotal = L * (x2-x1) * (p1 + p2)/2.
                         Mx = L * p1 * (x2-x1)/2. + L * (p2-p1) * (2./3. * x2 + 1./3. * x1)
                         x = Mx / Ftotal
-                    print('L=%s x1=%s x2=%s p1/L=%s p2/L=%s Ftotal=%s Mtotal=%s x=%s' % (
+                    model.log.info('L=%s x1=%s x2=%s p1/L=%s p2/L=%s Ftotal=%s Mtotal=%s x=%s' % (
                         L, x1, x2, p1, p2, Ftotal, Mx, x))
 
                     i = Ldir
                     if load.Type in ['FX', 'FY', 'FZ']:
                         r = (1. - x) * n1 + x * n2
-                        # print('r=%s n1=%s n2=%s' % (r, n1, n2))
+                        #print('r=%s n1=%s n2=%s' % (r, n1, n2))
                         if load.Type == 'FX':
                             force_dir = array([1., 0., 0.])
                         elif load.Type == 'FY':
@@ -274,7 +275,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                     Mi = cross(r - p, force_dir * Ftotal)
                     F += Fi
                     M += Mi
-                    print('Fi=%s Mi=%s x=%s' % (Fi, Mi, x))
+                    model.log.info('Fi=%s Mi=%s x=%s' % (Fi, Mi, x))
                 else:
                     v = elem.get_orientation_vector(xyz)
                     i = Ldir
@@ -284,39 +285,30 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
 
                     if load.Type in ['FX', 'FY', 'FZ']:
                         r = (1 - x1) * n1 + x1 * n2
-                        if load.Type == 'FX':
-                            if x1 == x2:
-                                force_dir = array([1., 0., 0.])
-                        elif load.Type == 'FY':
-                            if x1 == x2:
-                                force_dir = array([0., 1., 0.])
-                        elif load.Type == 'FZ':
-                            if x1 == x2:
-                                force_dir = array([0., 0., 1.])
+                        if load.Type == 'FX' and x1 == x2:
+                            force_dir = array([1., 0., 0.])
+                        elif load.Type == 'FY' and x1 == x2:
+                            force_dir = array([0., 1., 0.])
+                        elif load.Type == 'FZ' and x1 == x2:
+                            force_dir = array([0., 0., 1.])
                         F += p1 * force_dir
                         M += cross(r - p, F)
                     elif load.Type in ['MX', 'MY', 'MZ']:
-                        if load.Type == 'MX':
-                            if x1 == x2:
-                                moment_dir = array([1., 0., 0.])
-                        elif load.Type == 'MY':
-                            if x1 == x2:
-                                moment_dir = array([0., 1., 0.])
-                        elif load.Type == 'MZ':
-                            if x1 == x2:
-                                moment_dir = array([0., 0., 1.])
+                        if load.Type == 'MX' and x1 == x2:
+                            moment_dir = array([1., 0., 0.])
+                        elif load.Type == 'MY' and x1 == x2:
+                            moment_dir = array([0., 1., 0.])
+                        elif load.Type == 'MZ' and x1 == x2:
+                            moment_dir = array([0., 0., 1.])
                         M += p1 * moment_dir
                     elif load.Type in ['FXE', 'FYE', 'FZE']:
                         r = (1 - x1) * n1 + x1 * n2
-                        if load.Type == 'FXE':
-                            if x1 == x2:
-                                force_dir = i
-                        elif load.Type == 'FYE':
-                            if x1 == x2:
-                                force_dir = j
-                        elif load.Type == 'FZE':
-                            if x1 == x2:
-                                force_dir = k
+                        if load.Type == 'FXE' and x1 == x2:
+                            force_dir = i
+                        elif load.Type == 'FYE' and x1 == x2:
+                            force_dir = j
+                        elif load.Type == 'FZE' and x1 == x2:
+                            force_dir = k
                         #print('    force_dir =', force_dir, load.Type)
                         try:
                             F += p1 * force_dir
@@ -330,15 +322,12 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                         del force_dir
 
                     elif load.Type in ['MXE', 'MYE', 'MZE']:
-                        if load.Type == 'MXE':
-                            if x1 == x2:
-                                moment_dir = i
-                        elif load.Type == 'MYE':
-                            if x1 == x2:
-                                moment_dir = j
-                        elif load.Type == 'MZE':
-                            if x1 == x2:
-                                moment_dir = k
+                        if load.Type == 'MXE' and x1 == x2:
+                            moment_dir = i
+                        elif load.Type == 'MYE' and x1 == x2:
+                            moment_dir = j
+                        elif load.Type == 'MZE' and x1 == x2:
+                            moment_dir = k
                         try:
                             M += p1 * moment_dir
                         except FloatingPointError:
@@ -348,8 +337,10 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                             raise FloatingPointError(msg)
                         del moment_dir
                     else:
-                        raise NotImplementedError('Type=%r is not supported.  '
-                                                  'Use "FX", "FXE".' % load.Type)
+                        raise NotImplementedError(
+                            'Type=%r is not supported.\n'
+                            'Use [FX, FXE, FY, FYE, FZ, FZE,\n'
+                            '     MX, MXE, MY, MYE, MZ, MZE]' % load.Type)
             elif elem.type == 'CBEND':
                 model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
                     loadcase_id, elem.type, load.type))
@@ -462,7 +453,9 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                 if load.surf_or_line == 'SURF':
                     if norm(load.nvector) != 0.0 or load.Cid() != 0:
                         normal = load.nvector / np.linalg.norm(load.nvector)
-                        assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                        if load.Cid() != 0:
+                            raise NotImplementedError('cid=%r on a PLOAD4 is not supported\n%s' % (
+                                load.Cid(), str(load)))
                 else:
                     msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                         load.surf_or_line, str(load))
@@ -603,10 +596,10 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
             if load.node_id not in nids:
                 continue
             if load.Cid() != 0:
-                cp = load.cid_ref
+                cp_ref = load.cid_ref
                 #from pyNastran.bdf.bdf import CORD2R
                 #cp = CORD2R()
-                f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                f = load.mag * cp_ref.transform_vector_to_global(load.xyz) * scale
             else:
                 f = load.mag * load.xyz * scale
 
@@ -741,9 +734,9 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                 n1 += elem.wa
                 n2 += elem.wb
 
-                deltaL = n2 - n1
-                L = norm(deltaL)
-                Ldir = deltaL / L
+                bar_vector = n2 - n1
+                L = norm(bar_vector)
+                Ldir = bar_vector / L
                 if load.scale == 'FR':  # x1, x2 are fractional lengths
                     x1 = load.x1
                     x2 = load.x2
@@ -752,12 +745,12 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     x1 = load.x1 / L
                     x2 = load.x2 / L
                 elif load.scale == 'LEPR':
-                    print('PLOAD1 LEPR continue')
+                    model.log.warning('PLOAD1 LEPR continue')
                     continue
                     #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
                     #raise NotImplementedError(msg)
                 elif load.scale == 'FRPR':
-                    print('PLOAD1 FRPR continue')
+                    model.log.warning('PLOAD1 FRPR continue')
                     continue
                     #msg = 'scale=%r is not supported.  Use "FR", "LE".' % load.scale
                     #raise NotImplementedError(msg)
@@ -766,7 +759,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     raise NotImplementedError(msg)
 
                 if x1 != x2:
-                    print('PLOAD1 x1 != x2 continue\n%s%s'% (str(elem), str(load)))
+                    model.log.warning('PLOAD1 x1 != x2 continue\n%s%s'% (str(elem), str(load)))
                     continue
 
                 #print(load)
@@ -785,27 +778,21 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     #print('    x1 =', x1)
                     #print('    1-x1 =', 1-x1)
                     #print('    deltaL =', deltaL)
-                    if load.Type == 'FX':
-                        if x1 == x2:
-                            force_dir = array([1., 0., 0.])
-                    elif load.Type == 'FY':
-                        if x1 == x2:
-                            force_dir = array([0., 1., 0.])
-                    elif load.Type == 'FZ':
-                        if x1 == x2:
-                            force_dir = array([0., 0., 1.])
+                    if load.Type == 'FX' and x1 == x2:
+                        force_dir = array([1., 0., 0.])
+                    elif load.Type == 'FY' and x1 == x2:
+                        force_dir = array([0., 1., 0.])
+                    elif load.Type == 'FZ' and x1 == x2:
+                        force_dir = array([0., 0., 1.])
                     F += p1 * force_dir
                     M += cross(r - p, F)
                 elif load.Type in ['MX', 'MY', 'MZ']:
-                    if load.Type == 'MX':
-                        if x1 == x2:
-                            moment_dir = array([1., 0., 0.])
-                    elif load.Type == 'MY':
-                        if x1 == x2:
-                            moment_dir = array([0., 1., 0.])
-                    elif load.Type == 'MZ':
-                        if x1 == x2:
-                            moment_dir = array([0., 0., 1.])
+                    if load.Type == 'MX' and x1 == x2:
+                        moment_dir = array([1., 0., 0.])
+                    elif load.Type == 'MY' and x1 == x2:
+                        moment_dir = array([0., 1., 0.])
+                    elif load.Type == 'MZ' and x1 == x2:
+                        moment_dir = array([0., 0., 1.])
                     M += p1 * moment_dir
                 elif load.Type in ['FXE', 'FYE', 'FZE']:
                     r = (1 - x1) * n1 + x1 * n2
@@ -817,15 +804,12 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     #print('    i    =', i)
                     #print('    j    =', j)
                     #print('    k    =', k)
-                    if load.Type == 'FXE':
-                        if x1 == x2:
-                            force_dir = i
-                    elif load.Type == 'FYE':
-                        if x1 == x2:
-                            force_dir = j
-                    elif load.Type == 'FZE':
-                        if x1 == x2:
-                            force_dir = k
+                    if load.Type == 'FXE' and x1 == x2:
+                        force_dir = i
+                    elif load.Type == 'FYE' and x1 == x2:
+                        force_dir = j
+                    elif load.Type == 'FZE' and x1 == x2:
+                        force_dir = k
                     #print('    force_dir =', force_dir, load.Type)
                     try:
                         F += p1 * force_dir
@@ -839,15 +823,12 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     del force_dir
 
                 elif load.Type in ['MXE', 'MYE', 'MZE']:
-                    if load.Type == 'MXE':
-                        if x1 == x2:
-                            moment_dir = i
-                    elif load.Type == 'MYE':
-                        if x1 == x2:
-                            moment_dir = j
-                    elif load.Type == 'MZE':
-                        if x1 == x2:
-                            moment_dir = k
+                    if load.Type == 'MXE' and x1 == x2:
+                        moment_dir = i
+                    elif load.Type == 'MYE' and x1 == x2:
+                        moment_dir = j
+                    elif load.Type == 'MZE' and x1 == x2:
+                        moment_dir = k
                     try:
                         M += p1 * moment_dir
                     except FloatingPointError:
@@ -857,8 +838,10 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                         raise FloatingPointError(msg)
                     del moment_dir
                 else:
-                    raise NotImplementedError('Type=%r is not supported.  '
-                                              'Use "FX", "FXE".' % load.Type)
+                    raise NotImplementedError(
+                        'Type=%r is not supported.\n'
+                        'Use [FX, FXE, FY, FYE, FZ, FZE,\n'
+                        '     MX, MXE, MY, MYE, MZ, MZE]' % load.Type)
             elif elem.type == 'CBEND':
                 model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
                     loadcase_id, elem.type, load.type))
@@ -971,7 +954,9 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                 if  load.surf_or_line == 'SURF':
                     if norm(load.nvector) != 0.0 or load.Cid() != 0:
                         normal = load.nvector / np.linalg.norm(load.nvector)
-                        assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                        if load.Cid() != 0:
+                            raise NotImplementedError('cid=%r on a PLOAD4 is not supported\n%s' % (
+                                load.Cid(), str(load)))
                 else:
                     msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                         load.surf_or_line, str(load))
