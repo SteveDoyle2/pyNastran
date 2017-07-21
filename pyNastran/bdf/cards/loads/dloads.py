@@ -721,6 +721,15 @@ class RLOAD2(DynamicLoad):
         self.delay_ref = None
         self.dphase_ref = None
 
+    #@property
+    #def Type(self):
+        #"""gets the load_type"""
+        #return self.load_type
+    #@Type.setter
+    #def Type(self, load_type):
+        #"""sets the load_type"""
+        #self.load_type = load_type
+
     def validate(self):
         msg = ''
         is_failed = False

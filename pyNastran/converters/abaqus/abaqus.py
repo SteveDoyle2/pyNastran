@@ -669,8 +669,10 @@ class Abaqus(object):
         allowed_element_types = [
             'r2d2', 'conn2d2',
             'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
-            'cax3', 'cax4r']
-        assert len(sline) == 1, 'looking for element_type; line0=%r sline=%s' % (line0, sline)
+            'cax3', 'cax4r', 'cps4r']
+        if len(sline) != 1:
+            raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
+                               "line0=%r\nsline=%s" % (line0, sline))
         etype_sline = sline[0]
         assert 'type' in etype_sline, etype_sline
         etype = etype_sline.split('=')[1]

@@ -92,7 +92,7 @@ from pyNastran.bdf.cards.optimization import (
     DVCREL1, DVCREL2,
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
-    DVGRID)
+    DVGRID, DSCREEN)
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
@@ -495,7 +495,7 @@ class AddCards(AddMethods):
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_nsm(self, sid, Type, id, value, comment=''):
+    def add_nsm(self, sid, nsm_type, id, value, comment=''):
         # type: (int, str, int, float, str) -> NSM
         """
         Creates an NSM card
@@ -504,7 +504,7 @@ class AddCards(AddMethods):
         ----------
         sid : int
             Case control NSM id
-        Type : str
+        nsm_type : str
             Type of card the NSM is applied to
             valid_properties = {
                 PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
@@ -512,17 +512,17 @@ class AddCards(AddMethods):
                 ELEMENT
             }
         id : int
-            property id or element id depending on Type
+            property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSM(sid, Type, id, value, comment=comment)
+        nsm = NSM(sid, nsm_type, id, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsm1(self, sid, Type, value, ids, comment=''):
+    def add_nsm1(self, sid, nsm_type, value, ids, comment=''):
         # type: (int, str, float, List[int], str) -> NSM1
         """
         Creates an NSM1 card
@@ -531,7 +531,7 @@ class AddCards(AddMethods):
         ----------
         sid : int
             Case control NSM id
-        Type : str
+        nsm_type : str
             Type of card the NSM is applied to
             valid_properties = {
                 PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
@@ -541,15 +541,15 @@ class AddCards(AddMethods):
         value : float
             the non-structural pass per unit length/area
         ids : List[int]
-            property ids or element ids depending on Type
+            property ids or element ids depending on nsm_type
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSM1(sid, Type, value, ids, comment=comment)
+        nsm = NSM1(sid, nsm_type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsml(self, sid, Type, id, value, comment=''):
+    def add_nsml(self, sid, nsm_type, id, value, comment=''):
         # type: (int, str, int, float, str) -> NSML
         """
         Creates an NSML card, which defines lumped non-structural mass
@@ -558,7 +558,7 @@ class AddCards(AddMethods):
         ----------
         sid : int
             Case control NSM id
-        Type : str
+        nsm_type : str
             Type of card the NSM is applied to
             valid_properties = {
                 PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
@@ -566,17 +566,17 @@ class AddCards(AddMethods):
                 ELEMENT
             }
         id : int
-            property id or element id depending on Type
+            property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSML(sid, Type, id, value, comment=comment)
+        nsm = NSML(sid, nsm_type, id, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsml1(self, sid, Type, value, ids, comment=''):
+    def add_nsml1(self, sid, nsm_type, value, ids, comment=''):
         # type: (int, str, float, List[int], str) -> NSML1
         """
         Creates an NSM1 card, which defines lumped non-structural mass
@@ -585,7 +585,7 @@ class AddCards(AddMethods):
         ----------
         sid : int
             Case control NSM id
-        Type : str
+        nsm_type : str
             Type of card the NSM is applied to
             valid_properties = {
                 PSHELL, PCOMP, PBAR, PBARL, PBEAM, PBEAML, PBCOMP,
@@ -595,11 +595,11 @@ class AddCards(AddMethods):
         value : float
             the non-structural pass per unit length/area
         ids : List[int]
-            property ids or element ids depending on Type
+            property ids or element ids depending on nsm_type
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSML1(sid, Type, value, ids, comment=comment)
+        nsm = NSML1(sid, nsm_type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
@@ -623,30 +623,110 @@ class AddCards(AddMethods):
 
     def add_pmass(self, pid, mass, comment=''):
         # type: (int, float, str) -> PMASS
+        """
+        Creates an PMASS card, which defines a mass applied to a single DOF
+
+        Parameters
+        ----------
+        pid : int
+            Property id used by a CMASS1/CMASS3 card
+        mass : float
+            the mass to apply
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PMASS(pid, mass, comment=comment)
         self._add_property_mass_object(prop)
         return prop
 
     def add_cmass1(self, eid, pid, g1, c1, g2, c2, comment=''):
         # type: (int, int, int, int, int, int, str) -> CMASS1
+        """
+        Creates a CMASS1 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PMASS)
+        g1 : int
+            node id
+        g2 : int; default=None
+            node id
+        c1 / c2 : int; default=None
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         mass_obj = CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
 
     def add_cmass2(self, eid, mass, g1, c1, g2, c2, comment=''):
         # type: (int, float, int, int, int, int, str) -> CMASS2
+        """
+        Creates a CMASS2 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mass : float
+            mass
+        g1 : int
+            node id
+        g2 : int; default=None
+            node id
+        c1 / c2 : int; default=None
+            DOF for nid1 / nid2
+        comment : str; default=''
+            a comment for the card
+        """
         mass_obj = CMASS2(eid, mass, g1, c1, g2, c2, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
 
     def add_cmass3(self, eid, pid, s1, s2, comment=''):
         # type: (int, int, int, int, str) -> CMASS3
+        """
+        Creates a CMASS3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PMASS)
+        s1 : int
+            SPOINT id
+        s2 : int
+            SPOINT id
+        comment : str; default=''
+            a comment for the card
+        """
         mass = CMASS3(eid, pid, s1, s2, comment=comment)
         self._add_mass_object(mass)
         return mass
 
     def add_cmass4(self, eid, mass, s1, s2=0, comment=''):
         # type: (int, float, int, int, str) -> CMASS4
+        """
+        Creates a CMASS4 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        mass : float
+            SPOINT mass
+        s1 : int
+            SPOINT id
+        s2 : int; default=0
+            SPOINT id
+        comment : str; default=''
+            a comment for the card
+        """
         mass_obj = CMASS4(eid, mass, s1, s2=s2, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
@@ -5236,6 +5316,24 @@ class AddCards(AddMethods):
         return dvmrel
 
     def add_dvgrid(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
+        """
+        Creates a DVGRID card
+
+        Parameters
+        ----------
+        dvid : int
+            DESVAR id
+        nid : int
+            GRID/POINT id
+        dxyz : (3, ) float ndarray
+            the amount to move the grid point
+        cid : int; default=0
+            Coordinate system for dxyz
+        coeff : float; default=1.0
+            the dxyz scale factor
+        comment : str; default=''
+            a comment for the card
+        """
         dvgrid = DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
         self._add_dvgrid_object(dvgrid)
         return dvgrid
@@ -5266,6 +5364,26 @@ class AddCards(AddMethods):
         doptprm = DOPTPRM(params, comment=comment)
         self._add_doptprm_object(doptprm)
         return doptprm
+
+    def add_dscreen(self, rtype, trs=-0.5, nstr=20, comment=''):
+        """
+        Creates a DSCREEN object
+
+        Parameters
+        ----------
+        rtype : str
+            Response type for which the screening criteria apply
+        trs : float
+            Truncation threshold
+        nstr : int
+            Maximum number of constraints to be retained per region per
+            load case
+        comment : str; default=''
+            a comment for the card
+        """
+        dscreen = DSCREEN(rtype, trs=trs, nstr=nstr, comment=comment)
+        self._add_dscreen_object(dscreen)
+        return dscreen
 
     def add_monpnt1(self, name, label, axes, comp, xyz, cp=0, cd=None,
                     comment=''):

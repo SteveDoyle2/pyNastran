@@ -87,7 +87,7 @@ RED = (1., 0., 0.)
 YELLOW = (1., 1., 0.)
 PURPLE = (1., 0., 1.)
 
-
+IS_TESTING = 'test' in sys.argv[0]
 class NastranIO(NastranGuiResults, NastranGeometryHelper):
     """
     Defines the GUI class for Nastran.
@@ -2324,7 +2324,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #form_checks.append(('OffsetZ', icase + 3, []))
             #icase += 4
 
-            if self.make_xyz:
+            if self.make_xyz or IS_TESTING:
                 x_res = GuiResult(
                     0, header='X', title='X',
                     location='node', scalar=xyz_cid0[:, 0], data_format='%g')
@@ -2770,7 +2770,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         grid = self.grid
         grid.SetPoints(points)
 
-        if 'test' in sys.argv[0]:
+        if IS_TESTING:
             self.map_elements3(points, nid_map, model, j, dim_max,
                                nid_cp_cd, plot=plot, xref_loads=xref_loads)
         #return self.map_elements3(points, nid_map, model, j, dim_max,
@@ -4075,7 +4075,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form_checks.append(('OffsetZ', icase + 3, []))
             icase += 4
 
-            if self.make_xyz:
+            if self.make_xyz or IS_TESTING:
                 x_res = GuiResult(
                     0, header='X', title='X',
                     location='node', scalar=xyz_cid0[:, 0], data_format='%g')
@@ -4635,8 +4635,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self._load_patran_nod(op2_filename)
                 self.cycle_results_explicit()  # start at nCase=0
                 return
-            elif ext == '.pch':
-                raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
+            #elif ext == '.pch':
+                #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
             #elif ext == '.f06':
                 #model = F06(log=self.log, debug=True)
                 #model.set_vectorization(True)

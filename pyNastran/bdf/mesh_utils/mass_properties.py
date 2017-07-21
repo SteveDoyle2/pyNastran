@@ -441,6 +441,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
     for etype, eids in iteritems(model._type_to_id_map):
         if etype in no_mass:
             continue
+        elif len(eids) == 0:
+            continue
         elif etype in ['CROD', 'CONROD']:
             eids2 = get_sub_eids(all_eids, eids)
             for eid in eids2:
@@ -733,8 +735,6 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                 centroid = (centroid1 + centroid2) / 2.
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
-        elif etype in no_mass:
-            continue
         elif etype == 'CBEND':
             model.log.info('elem.type=%s doesnt have mass' % etype)
             continue

@@ -11,6 +11,8 @@ def save_load_deck(model):
     bdf_file.seek(0)
     model.write_bdf(bdf_file, size=16, close=False)
     bdf_file.seek(0)
+    model.write_bdf(bdf_file, size=16, is_double=True, close=False)
+    bdf_file.seek(0)
 
     model2 = BDF(log=model.log)
     model2.read_bdf(bdf_file, punch=True)

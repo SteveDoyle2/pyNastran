@@ -579,7 +579,7 @@ class CMASS4(PointMassElement):
 
     def __init__(self, eid, mass, s1, s2=0, comment=''):
         """
-        Creates a CMASS3 card
+        Creates a CMASS4 card
 
         Parameters
         ----------
@@ -649,17 +649,6 @@ class CMASS4(PointMassElement):
         if self.s2_ref is not None:
             return self.s2_ref.nid
         return self.s2
-
-    @property
-    def node_ids(self):
-        s1 = self.S1()
-        s2 = self.S2()
-        nodes = []
-        if s1:
-            nodes.append(s1)
-        if s2:
-            nodes.append(s2)
-        return nodes
 
     def cross_reference(self, model):
         """

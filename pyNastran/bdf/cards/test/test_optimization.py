@@ -7,6 +7,7 @@ import os
 import unittest
 
 from six import StringIO, iteritems, integer_types
+import numpy as np
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
@@ -107,7 +108,7 @@ class TestOpt(unittest.TestCase):
         save_load_deck(model)
 
     def test_dvprel1(self):
-        """tests a DESVAR, DVPREL1, DVPREL2, DRESP1, DRESP2, DRESP3, DCONSTR"""
+        """tests a DESVAR, DVPREL1, DVPREL2, DRESP1, DRESP2, DRESP3, DCONSTR, DSCREEN, DCONADD"""
         model = BDF(debug=False)
         dvprel1_id = 10
         desvar_id = 12
@@ -197,6 +198,23 @@ class TestOpt(unittest.TestCase):
         dresp3 = model.add_dresp3(dresp3_id, label, group, Type, region,
                                   params, comment='dresp3')
         dresp3.raw_fields()
+
+        oid = 1001
+        dconstr = model.add_dconstr(oid, dresp1_id, lid=-1.e20, uid=1.e20,
+                                   lowfq=0., highfq=1.e20, comment='dconstr1')
+        oid = 1002
+        dconstr = model.add_dconstr(oid, dresp2_id, lid=-1.e20, uid=1.e20,
+                                    lowfq=0., highfq=1.e20)
+        oid = 1003
+        dconstr = model.add_dconstr(oid, dresp3_id, lid=-1.e20, uid=1.e20,
+                                    lowfq=0., highfq=1.e20)
+
+        oid = 45
+        dconstrs = [1001, 1002, 1003]
+        dconadd = model.add_dconadd(oid, dconstrs, comment='dconadd')
+
+        dscreen = model.add_dscreen('dunno', comment='dscreen')
+
         #print(dresp3)
         grid = model.add_grid(100)
         model.add_grid(101)
@@ -217,10 +235,15 @@ class TestOpt(unittest.TestCase):
         dresp3.write_card(size=8)
         dresp3.write_card(size=16)
         dresp3.write_card(size=16, is_double=True)
-
         dvprel2.write_card(size=8)
         dvprel2.write_card(size=16)
         dvprel2.write_card(size=16, is_double=True)
+        dconadd.write_card(size=8)
+        dconadd.write_card(size=16)
+        dconadd.write_card(size=16, is_double=True)
+        dscreen.write_card(size=8)
+        dscreen.write_card(size=16)
+        dscreen.write_card(size=16, is_double=True)
 
         model.validate()
         model._verify_bdf(xref=False)
@@ -248,6 +271,10 @@ class TestOpt(unittest.TestCase):
         dvprel2.write_card(size=8)
         dvprel2.write_card(size=16)
         dvprel2.write_card(size=16, is_double=True)
+        dconadd.write_card(size=8)
+        dconadd.write_card(size=16)
+        dconadd.write_card(size=16, is_double=True)
+
         grid.nid = 200
         assert '200' in str(dresp3), dresp3
 
@@ -307,7 +334,7 @@ class TestOpt(unittest.TestCase):
         dvmrel2_1 = model.add_dvmrel2(oid, mat_type, mid1, mp_name, deqation,
                                       dvids, labels, mp_min=None, mp_max=1e20,
                                       validate=True,
-                                      comment='')
+                                      comment='dvmrel')
         E = 30.e7
         G = None
         nu = 0.3
@@ -365,17 +392,17 @@ class TestOpt(unittest.TestCase):
         save_load_deck(model)
 
     def test_dvcrel1(self):
-        """tests a DVCREL"""
+        """tests a DVCREL1, DVCREL2, DVGRID"""
         model = BDF(debug=False)
         oid = 10
-        eid = 100
+        conm2_eid = 100
         cp_min = 0.01
         cp_max = 1.
         desvar_id = 11
         desvar_ids = 11
         coeffs = 1.0
-        dvcrel1 = model.add_dvcrel1(oid, 'CONM2', eid, 'X2', desvar_ids, coeffs,
-                                    cp_min, cp_max, c0=0., validate=True, comment='')
+        dvcrel1 = model.add_dvcrel1(oid, 'CONM2', conm2_eid, 'X2', desvar_ids, coeffs,
+                                    cp_min, cp_max, c0=0., validate=True, comment='dvcrel')
 
         label = 'X2_MASS'
         xinit = 0.1
@@ -386,8 +413,8 @@ class TestOpt(unittest.TestCase):
         mass = 1.
         nid1 = 100
         nid2 = 101
-        model.add_conm2(eid, nid1, mass, cid=0, X=None, I=None,
-                        comment='conm2')
+        conm2 = model.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
+                                comment='conm2')
         model.add_grid(100, xyz=[1., 2., 3.])
         model.add_grid(101, xyz=[2., 2., 4.])
 
@@ -416,21 +443,40 @@ class TestOpt(unittest.TestCase):
         eqs = ['fx2(x) = x + 10.']
         deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
 
+        nid = 100
+        dvid = 10000
+        dxyz = [1., 2., 3.]
+        dvgrid1 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+                                   comment='dvgrid')
+
+        nid = 101
+        dvid = 10001
+        dxyz = np.array([1., 2., 3.])
+        dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+                                   comment='dvgrid')
+
+        model.pop_parse_errors()
+
         dvcrel1.raw_fields()
-        dvcrel2.raw_fields()
         dvcrel1.write_card(size=16)
+        dvcrel2.raw_fields()
         dvcrel2.write_card(size=16)
+        dvgrid1.raw_fields()
+        dvgrid1.write_card(size=16)
 
         dvcrel1.comment = ''
         dvcrel2.comment = ''
         desvar.comment = ''
+        dvgrid1.comment = ''
         dvcrel1_msg = dvcrel1.write_card(size=8)
         dvcrel2_msg = dvcrel2.write_card(size=8)
         desvar_msg = desvar.write_card(size=8)
-
+        dvgrid_msg = dvgrid1.write_card(size=8)
 
         model.validate()
         model.cross_reference()
+        model.pop_xref_errors()
+
         dvcrel1.raw_fields()
         dvcrel1.write_card(size=16)
         dvcrel1.write_card(size=8)
@@ -439,17 +485,29 @@ class TestOpt(unittest.TestCase):
         dvcrel2.write_card(size=16)
         dvcrel2.write_card(size=8)
 
+        dvgrid1.raw_fields()
+        dvgrid1.write_card(size=16)
+        dvgrid1.write_card(size=8)
+
         deqatn.write_card()
         assert cbar.Mass() > 0, cbar.Mass()
+        model.uncross_reference()
 
         #-------------------------------------------
         dvcrel1_lines = dvcrel1_msg.split('\n')
         dvcrel2_lines = dvcrel2_msg.split('\n')
         desvar_lines = desvar_msg.split('\n')
-        model2 = BDF(debug=False)
+        dvgrid_lines = dvgrid_msg.split('\n')
+        model2 = BDF(debug=True)
+
         model2.add_card(dvcrel1_lines, 'DVCREL1', is_list=False)
         model2.add_card(dvcrel2_lines, 'DVCREL2', is_list=False)
         model2.add_card(desvar_lines, 'DESVAR', is_list=False)
+        model2.add_card(dvgrid_lines, 'DVGRID', is_list=False)
+        #model2.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
+                         #comment='conm2')
+        #model2.add_grid(100, xyz=[1., 2., 3.])
+        #model2.add_grid(101, xyz=[2., 2., 4.])
         #save_load_deck(model2)
 
     def test_break_words(self):

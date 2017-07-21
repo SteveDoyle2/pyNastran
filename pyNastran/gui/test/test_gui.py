@@ -49,7 +49,7 @@ FORMAT_TO_EXTENSION = {
     'cart3d' : ['.tri', '.triq'],
     'tecplot' : ['.plt', '.dat'],
     'ugrid' : ['.ugrid'],
-    'plot3d' : ['.p3d', '.p3da'],
+    #'plot3d' : ['.p3d', '.p3da'],
     'surf' : ['.surf'],
     'lawgs' : ['.wgs'],
     'shabp' : ['.mk5'],
@@ -77,7 +77,7 @@ EXTENSION_TO_OUPUT_FORMATS = {
 
 class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
               PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
-              #Plot3d_io, ADB_IO, DegenGeomIO,
+              #ADB_IO, DegenGeomIO, #Plot3d_io,
               # AbaqusIO,
               AvusIO,
               TecplotIO, FastIO, SurfIO, UGRID_IO, BEdge_IO, SU2_IO):

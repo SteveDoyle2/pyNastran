@@ -4,8 +4,8 @@
 Main BDF class.  Defines:
   - BDF
 
-see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 """
+# see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
@@ -113,7 +113,7 @@ from pyNastran.bdf.cards.optimization import (
     DVCREL1, DVCREL2,
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
-    DVGRID)
+    DVGRID, DSCREEN)
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
@@ -512,7 +512,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'DVPREL1', 'DVPREL2',
             'DVMREL1', 'DVMREL2',
             'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
-            #'DSCREEN',
+            'DSCREEN',
 
             # sets
             'SET1', 'SET3',  ## sets
@@ -605,11 +605,15 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             del state['_card_parser_prepare']
         return state
 
+    def saves(self, unxref=True):
+        """Saves a pickled string"""
+        if unxref:
+            self.uncross_reference()
+        return dumps(self)
+
     def save(self, obj_filename='model.obj', unxref=True):
         # type: (str, bool) -> None
-        """
-        ..warning:: doesn't work right
-        """
+        """Saves a pickleable object"""
         #del self.log
         #del self._card_parser, self._card_parser_prepare
 
@@ -627,12 +631,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
     def load(self, obj_filename='model.obj'):
         # type: (str) -> None
-        """
-        ..warning:: doesn't work right
-        """
+        """Loads a pickleable object"""
         #del self.log
-        #del self.spcObject
-        #del self.mpcObject
         #lines = print(self.case_control_deck)
         #self.case_control_lines = lines.split('\n')
         #del self.case_control_deck
@@ -2119,6 +2119,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'DCONSTR' : (DCONSTR, self._add_dconstr_object),
             'DDVAL' : (DDVAL, self._add_ddval_object),
             'DLINK' : (DLINK, self._add_dlink_object),
+            'DSCREEN' : (DSCREEN, self._add_dscreen_object),
 
             'DTABLE' : (DTABLE, self._add_dtable_object),
             'DRESP1' : (DRESP1, self._add_dresp_object),
@@ -3504,41 +3505,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                 break
             uline = line.upper()
             if uline.startswith('INCLUDE'):
-                j = i + 1
-                line_base = line.split('$')[0]
-                include_lines = [line_base.strip()]
-                if "'" not in line_base:
-                    pass
-                else:
-                    #print('----------------------')
-
-                    line_base = line_base[8:].strip()
-                    if line_base.startswith("'") and line_base.endswith("'"):
-                        pass
-                    else:
-                        while not line.split('$')[0].endswith("'") and j < nlines:
-                            #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
-                            try:
-                                line = lines[j].split('$')[0].strip()
-                            except IndexError:
-                                #print('bdf_filename=%r' % bdf_filename)
-                                crash_name = 'pyNastran_crash.bdf'
-                                self._dump_file(crash_name, lines, i+1)
-                                msg = 'There was an invalid filename found while parsing (index).\n'
-                                msg += 'Check the end of %r\n' % crash_name
-                                #msg += 'bdf_filename2 = %r\n' % bdf_filename
-                                msg += 'include_lines = %s' % include_lines
-                                raise IndexError(msg)
-                             #print('endswith_quote=%s; %r' % (
-                                 #line.split('$')[0].strip().endswith(""), line.strip()))
-                            include_lines.append(line.strip())
-                            j += 1
-                        #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
-
-                        #print('*** %s' % line)
-                        #bdf_filename2 = line[7:].strip(" '")
-                        #include_lines = [line] + lines[i+1:j]
-                #print(include_lines)
+                j, include_lines = self._get_include_lines(lines, line, i, nlines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
                 if self.read_includes:
                     try:
@@ -3589,6 +3556,50 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
         return _lines_to_decks(lines, i, punch)
+
+    def _get_include_lines(self, lines, line, i, nlines):
+        """
+        gets the lines for the include file
+
+        INCLUDE 'Satellite_V02_INCLUDE:Satellite_V02_Panneau_Externe.dat'
+        INCLUDE '../../BULK/COORDS/satellite_V02_Coord.blk'
+        """
+        j = i + 1
+        line_base = line.split('$')[0]
+        include_lines = [line_base.strip()]
+        if "'" not in line_base:
+            pass
+        else:
+            #print('----------------------')
+
+            line_base = line_base[8:].strip()
+            if line_base.startswith("'") and line_base.endswith("'"):
+                pass
+            else:
+                while not line.split('$')[0].endswith("'") and j < nlines:
+                    #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                    try:
+                        line = lines[j].split('$')[0].strip()
+                    except IndexError:
+                        #print('bdf_filename=%r' % bdf_filename)
+                        crash_name = 'pyNastran_crash.bdf'
+                        self._dump_file(crash_name, lines, i+1)
+                        msg = 'There was an invalid filename found while parsing (index).\n'
+                        msg += 'Check the end of %r\n' % crash_name
+                        #msg += 'bdf_filename2 = %r\n' % bdf_filename
+                        msg += 'include_lines = %s' % include_lines
+                        raise IndexError(msg)
+                     #print('endswith_quote=%s; %r' % (
+                         #line.split('$')[0].strip().endswith(""), line.strip()))
+                    include_lines.append(line.strip())
+                    j += 1
+                #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+
+                #print('*** %s' % line)
+                #bdf_filename2 = line[7:].strip(" '")
+                #include_lines = [line] + lines[i+1:j]
+        #print(include_lines)
+        return j, include_lines
 
     def _dump_file(self, bdf_dump_filename, lines, i):
         # type: (str, List[str], int) -> None

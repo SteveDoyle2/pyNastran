@@ -2285,12 +2285,27 @@ class DCONADD(OptConstraint):
 class DSCREEN(OptConstraint):
     type = 'DSCREEN'
 
-    def __init__(self, rType, trs=-0.5, nstr=20, comment=''):
+    def __init__(self, rtype, trs=-0.5, nstr=20, comment=''):
+        """
+        Creates a DSCREEN object
+
+        Parameters
+        ----------
+        rtype : str
+            Response type for which the screening criteria apply
+        trs : float
+            Truncation threshold
+        nstr : int
+            Maximum number of constraints to be retained per region per
+            load case
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
 
         #: Response type for which the screening criteria apply. (Character)
-        self.rType = rType
+        self.rtype = rtype
         #: Truncation threshold. (Real; Default = -0.5)
         self.trs = trs
         #: Maximum number of constraints to be retained per region per load
@@ -2309,20 +2324,20 @@ class DSCREEN(OptConstraint):
         comment : str; default=''
             a comment for the card
         """
-        rType = string(card, 1, 'rType')
+        rtype = string(card, 1, 'rtype')
         trs = double_or_blank(card, 2, 'trs', -0.5)
         nstr = integer_or_blank(card, 3, 'nstr', 20)
-        assert len(card) == 4, 'len(DSCREEN card) = %i\ncard=%s' % (len(card), card)
-        return DSCREEN(rType, trs=trs, nstr=nstr, comment=comment)
+        assert len(card) <= 4, 'len(DSCREEN card) = %i\ncard=%s' % (len(card), card)
+        return DSCREEN(rtype, trs=trs, nstr=nstr, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['DSCREEN', self.rType, self.trs, self.nstr]
+        list_fields = ['DSCREEN', self.rtype, self.trs, self.nstr]
         return list_fields
 
     def repr_fields(self):
         trs = set_blank_if_default(self.trs, -0.5)
         nstr = set_blank_if_default(self.nstr, 20)
-        list_fields = ['DSCREEN', self.rType, trs, nstr]
+        list_fields = ['DSCREEN', self.rtype, trs, nstr]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2460,7 +2475,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
                          'CDAMP2', 'CGAP', 'CBUSH']:
             self.eid = model.Element(self.eid, msg=msg)
         elif self.Type in ['CONM1', 'CONM2', 'CMASS2', 'CMASS4']:
-            self.eid = model.masses[self.eid]
+            self.eid = model.Mass(self.eid, msg=msg)
         #elif Type in ['CBUSH']:
         else:
             raise NotImplementedError(self.Type)
@@ -3791,7 +3806,7 @@ class DVPREL2(OptConstraint):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-class DVGRID(OptConstraint):
+class DVGRID(BaseCard):
     type = 'DVGRID'
 
     """
@@ -3802,6 +3817,25 @@ class DVGRID(OptConstraint):
     +--------+------+-----+-----+-------+----+----+----+
     """
     def __init__(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
+        """
+        Creates a DVGRID card
+
+        Parameters
+        ----------
+        dvid : int
+            DESVAR id
+        nid : int
+            GRID/POINT id
+        dxyz : (3, ) float ndarray
+            the amount to move the grid point
+        cid : int; default=0
+            Coordinate system for dxyz
+        coeff : float; default=1.0
+            the dxyz scale factor
+        comment : str; default=''
+            a comment for the card
+        """
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.dvid = dvid
@@ -3809,6 +3843,9 @@ class DVGRID(OptConstraint):
         self.cid = cid
         self.coeff = coeff
         self.dxyz = np.asarray(dxyz)
+        self.nid_ref = None
+        self.cid_ref = None
+        self.dvid_ref = None
 
     def validate(self):
         if np.linalg.norm(self.dxyz) == 0.:
@@ -3817,6 +3854,16 @@ class DVGRID(OptConstraint):
 
     @staticmethod
     def add_card(card, comment=''):
+        """
+        Adds a DVGRID card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         dvid = integer(card, 1, 'dvid')
         nid = integer(card, 2, 'nid')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -3843,13 +3890,37 @@ class DVGRID(OptConstraint):
         #self.dconstrs = [model.dconstrs[oid] for oid in self.dconstr_ids]
         #self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
 
+    @property
+    def node_id(self):
+        if self.nid_ref is not None:
+            return self.nid_ref.nid
+        return self.nid
+
+    @property
+    def coord_id(self):
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
+
+    @property
+    def desvar_id(self):
+        if self.dvid_ref is not None:
+            return self.dvid_ref.dvid
+        return self.dvid
+
     def uncross_reference(self):
-        return
+        self.nid = self.node_id
+        self.cid = self.coord_id
+        self.dvid = self.desvar_id
+        self.nid_ref = None
+        self.cid_ref = None
+        self.desvar_id = None
         #self.dconstrs = self.dconstr_ids
         #del self.dconstrs_ref
 
     def raw_fields(self):
-        list_fields = ['DVGRID', self.dvid, self.nid, self.cid, self.coeff] + list(self.dxyz)
+        list_fields = [
+            'DVGRID', self.desvar_id, self.node_id, self.coord_id, self.coeff] + list(self.dxyz)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
