@@ -15,7 +15,7 @@ from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
                                                 CQUADR, CQUAD8, CQUAD,
                                                 CSHEAR)
 from pyNastran.bdf.cards.elements.rods import CROD, CTUBE, CONROD
-from pyNastran.bdf.cards.elements.bars import CBAR
+from pyNastran.bdf.cards.elements.bars import CBAR, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2,
                                                CMASS3, CMASS4)
@@ -224,6 +224,7 @@ class GEOM2(GeomCommon):
         }
 
     def add_op2_element(self, elem):
+        """checks that eids are positive and that -1 node ids become None"""
         if elem.eid <= 0:
             self.log.debug(elem)
             raise ValueError(elem)
@@ -374,9 +375,67 @@ class GEOM2(GeomCommon):
     def _read_cbend(self, data, n):
         """
         CBEND(4601,46,298) - the marker for Record 12
+
+        1 EID I Element identification number
+        2 PID I Property identification number
+        3 GA  I Grid point End A identification number
+        4 GB  I Grid point End B identification number
+
+        F = 0 Z
+          5 X1 RS T1 component of orientation vector from GA
+          6 X2 RS T2 component of orientation vector from GA
+          7 X3 RS T3 component of orientation vector from GA
+        8 F    I     Orientation vector flag = 0
+        F = 1 XYZ option - global cooridnate system
+          5 X1 RS T1 component of orientation vector from GA
+          6 X2 RS T2 component of orientation vector from GA
+          7 X3 RS T3 component of orientation vector from GA
+          8 F   I    Orientation vector flag = 1
+        F = 2 Grid option
+          5 GO       I Grid point ID at end of orientation vector
+          6 UNDEF(2)    None
+          8 F        I Orientation vector flag = 2
+        End F
+        9 UNDEF(4) None
+        13 GEOM I Element geometry option
         """
-        self.log.info('skipping CBEND in GEOM2\n')
-        return len(data)
+        ntotal = 52 # 4*13
+        nentries = (len(data) - n) // ntotal
+        istruc = Struct(b(self._endian + '4i 3f 6i'))
+        fstruc = Struct(b(self._endian + '4i 3f 6i'))
+
+        for i in range(nentries):
+            edata = data[n:n + 52]  # 13*4
+            fe, = self.struct_i.unpack(edata[28:32])
+            # per DMAP: F = FE bit-wise AND with 3
+            f = fe & 3
+            if f == 0:
+                out = istruc.unpack(edata)
+                (eid, pid, ga, gb, x1, x2, x3, fe,
+                 dunnoa, dunnob, dunnoc, dunnod, geom) = out
+                data_in = [[eid, pid, ga, gb, geom],
+                           [f, x1, x2, x3]]
+            elif f == 1:
+                out = fstruc.unpack(edata)
+                (eid, pid, ga, gb, x1, x2, x3, fe,
+                 dunnoa, dunnob, dunnoc, dunnod, geom) = out
+                data_in = [[eid, pid, ga, gb, geom],
+                           [f, x1, x2, x3]]
+            elif f == 2:
+                out = fstruc.unpack(edata)
+                (eid, pid, ga, gb, g0, junk, junk, fe,
+                 dunnoa, dunnob, dunnoc, dunnod, geom) = out
+                data_in = [[eid, pid, ga, gb, geom],
+                           [f, g0]]
+            else:
+                raise RuntimeError('invalid f value...f=%s' % (f))
+            elem = CBEND.add_op2_data(data_in)
+            assert f == fe, 'f=%s type(f)=%s fe=%s\n%s' % (f, type(f), fe, elem)
+
+            self.add_op2_element(elem)
+            n += 52
+        self._increase_card_count('CBEND', nentries)
+        return n
 
     def _read_cbush(self, data, n):
         """
@@ -969,6 +1028,7 @@ class GEOM2(GeomCommon):
                 n, elements = nx_read(data, n0)
 
         nelements = len(elements)
+        assert n is not None
         for elem in elements:
             add_method(elem)
         self.card_count[card_name] = nelements
@@ -1593,9 +1653,6 @@ class GEOM2(GeomCommon):
 
 # RADINT
 # SINT
-
-    def add_spoint(self, spoint):
-        raise RuntimeError('this should be overwritten by the BDF')
 
     def _read_spoint(self, data, n):
         """

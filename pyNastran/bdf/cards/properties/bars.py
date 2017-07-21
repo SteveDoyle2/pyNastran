@@ -102,7 +102,7 @@ def get_inertia_rectangular(sections):
 
 class LineProperty(Property):
     def __init__(self):
-        self.Type = None
+        self.beam_type = None
         self.dim = None
         self.A = None
         self.i1 = None
@@ -153,13 +153,13 @@ class LineProperty(Property):
         return self.mid_ref.nu
 
     def IAreaL(self, dim):
-        if self.Type == 'ROD':
+        if self.beam_type == 'ROD':
             R = dim[0]
             A = pi * R ** 2
             Iyy = A * R ** 2 / 4.
             Izz = Iyy
             Iyz = 0.
-        elif self.Type == 'TUBE':
+        elif self.beam_type == 'TUBE':
             R1 = dim[0]
             R2 = dim[1]
             A1 = pi * R1 ** 2
@@ -170,7 +170,7 @@ class LineProperty(Property):
             Iyy = Iyy1 - Iyy2
             Izz = Iyy
             Iyz = 0.
-        elif self.Type == 'TUBE2':
+        elif self.beam_type == 'TUBE2':
             R1 = dim[0]
             t = dim[1]
             R2 = R1 - t
@@ -183,7 +183,7 @@ class LineProperty(Property):
             Izz = Iyy
             Iyz = 0.
 
-        elif self.Type == 'I':
+        elif self.beam_type == 'I':
             # |  ------------
             # |  |    A     | d5
             # |  ------------
@@ -212,7 +212,7 @@ class LineProperty(Property):
             (A, Iyy, Izz, Iyz) = get_inertia_rectangular(sections)
             assert Iyz == 0.
 
-        elif self.Type == 'BAR':
+        elif self.beam_type == 'BAR':
             #: *-------*
             #: |       |
             #: |  BAR  |h1
@@ -229,8 +229,8 @@ class LineProperty(Property):
             Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
 
         else:
-            msg = 'Type=%s is not supported for %s class...' % (
-                self.Type, self.type)
+            msg = 'beam_type=%s is not supported for %s class...' % (
+                self.beam_type, self.type)
             raise NotImplementedError(msg)
         return (A, Iyy, Izz, Iyz)
 
@@ -271,39 +271,39 @@ class LineProperty(Property):
         .. math:: I_2 = \frac{1}{12} h b^3
         """
         dim = self.dim
-        if self.Type == 'ROD':
+        if self.beam_type == 'ROD':
             R = dim[0]
             A = pi * R ** 2
             I1 = A * R ** 2 / 4.
             I2 = I1
             I12 = 0.
-        elif self.Type == 'BAR':
+        elif self.beam_type == 'BAR':
             I1 = 1 / 12. * dim[0] * dim[1] ** 3
             I2 = 1 / 12. * dim[1] * dim[0] ** 3
             I12 = 0.
         else:
-            msg = 'I1_I2_I12; Type=%s is not supported for %s class...' % (
-                self.Type, self.type)
+            msg = 'I1_I2_I12; beam_type=%s is not supported for %s class...' % (
+                self.beam_type, self.type)
             raise NotImplementedError(msg)
         return(I1, I2, I12)
 
-def _bar_areaL(class_name, Type, dim, prop):
+def _bar_areaL(class_name, beam_type, dim, prop):
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
     Parameters
     ----------
     dim : List[float]
-        a list of the dimensions associated with **Type**
+        a list of the dimensions associated with **beam_type**
 
     Returns
     -------
     Area : float
-        Area of the given cross section defined by **self.Type**
+        Area of the given cross section defined by **self.beam_type**
 
     .. note:: internal method
     """
-    if Type == 'ROD':
+    if beam_type == 'ROD':
         # This is a circle if you couldn't tell...
         #   __C__
         #  /     \
@@ -315,18 +315,18 @@ def _bar_areaL(class_name, Type, dim, prop):
         #
         # Radius = dim1
         A = pi * dim[0] ** 2
-    elif Type == 'TUBE':
+    elif beam_type == 'TUBE':
         r_outer, r_inner = dim
         A = pi * (r_outer ** 2 - r_inner ** 2)
         assert r_outer > r_inner, 'TUBE; r_outer=%s r_inner=%s' % (r_outer, r_inner)
-    elif Type == 'TUBE2':
+    elif beam_type == 'TUBE2':
         r_outer, thick = dim
         r_inner = r_outer - thick
         assert r_outer > r_inner, 'TUBE2; r_outer=%s r_inner=%s' % (r_outer, r_inner)
         A = pi * (r_outer ** 2 - r_inner ** 2)
 
     #I = (DIM3*DIM6)+(DIM2*DIM5) + ((DIM1-(DIM5+DIM6))*DIM4)
-    elif Type == 'I':
+    elif beam_type == 'I':
         # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
         #  <----d3---->
         #
@@ -382,7 +382,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         #CAN NOT BE GREATER THAT THE WEB HEIGHT, DIM1.
 
     #I1 = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
-    elif Type == 'I1':
+    elif beam_type == 'I1':
         #
         #  d1/2   d2  d1/2
         #  <---><---><--->
@@ -417,7 +417,7 @@ def _bar_areaL(class_name, Type, dim, prop):
 
         A = 2. * (h1 * w1) + h2 * w2
 
-    elif Type == 'L':
+    elif beam_type == 'L':
         # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
         #
         #  D4
@@ -464,7 +464,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         #zna = zc
 
     #CHAN = 2*(DIM1*DIM4) + (DIM2-(2*DIM4))*DIM3
-    elif Type == 'CHAN':
+    elif beam_type == 'CHAN':
         #
         # +-+----+   ^  ^
         # | |    |   |  | d4
@@ -527,7 +527,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = A1
 
     #CHAN1 = DIM2*DIM3 + (DIM4-DIM3)*(DIM1+DIM2)
-    elif Type == 'CHAN1':
+    elif beam_type == 'CHAN1':
         h2 = dim[2]
         w2 = dim[1]
 
@@ -539,7 +539,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         assert np.allclose(A, A2), 'A=%s A2=%s' % (A, A2)
 
     #CHAN2 = 2*(DIM1*DIM3)+((DIM4-(2*DIM1))*DIM2)
-    elif Type == 'CHAN2':
+    elif beam_type == 'CHAN2':
         #  d1        d1
         # <-->      <-->
         # +--+      +--+        ^
@@ -569,7 +569,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         assert np.allclose(A, A3), 'A=%s A2=%s A3=%s' % (A, A2, A3)
 
     #T = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
-    elif Type == 'T':
+    elif beam_type == 'T':
         # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
         #           ^ y
         #           |
@@ -605,7 +605,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         #j = 1/3 * (tf**3*d + tw**3 * h)
 
     #T1 = (DIM1*DIM3)+(DIM2*DIM4)
-    elif Type == 'T1':
+    elif beam_type == 'T1':
         h1 = dim[0]
         w1 = dim[2]
 
@@ -614,7 +614,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = h1 * w1 + h2 * w2
 
     #T2 = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
-    elif Type == 'T2':
+    elif beam_type == 'T2':
         h1 = dim[3]
         w1 = dim[1]
 
@@ -623,7 +623,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = h1 * w1 + h2 * w2
 
     #BOX = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
-    elif Type == 'BOX':
+    elif beam_type == 'BOX':
         #
         # +----------+ ^     ^
         # |          | | d3  |
@@ -659,7 +659,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         #j = (2*t2*t1*(b-t2)**2*(h-t1)**2)/(b*t2+h*t1-t2**2-t1**2)
 
     #BOX1 = (DIM2*DIM6)+(DIM2*DIM5)+((DIM1-DIM5-DIM6)*DIM3)+((DIM1-DIM5-DIM6)*DIM4)
-    elif Type == 'BOX1':
+    elif beam_type == 'BOX1':
         h1 = dim[2]  # top
         w1 = dim[0]
 
@@ -674,7 +674,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = A1 + A2
 
     #BAR   = DIM1*DIM2
-    elif Type == 'BAR':
+    elif beam_type == 'BAR':
         #per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
         # <------> D1
         #
@@ -693,7 +693,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         #J = b*h**3*(1/3. - 0.21*h/b*(1-h**4/(12*b**4)))
 
     #CROSS = (DIM2*DIM3)+2*((0.5*DIM1)*DIM4)
-    elif Type == 'CROSS':
+    elif beam_type == 'CROSS':
         h1 = dim[2]
         w1 = dim[1]
 
@@ -702,7 +702,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = h1 * w1 + h2 * w2
 
     #H = 2*((0.5*DIM2)*DIM3)+(DIM1*DIM4)
-    elif Type == 'H':
+    elif beam_type == 'H':
         h1 = dim[2]
         w1 = dim[1]
 
@@ -711,7 +711,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = h1 * w1 + h2 * w2
 
     #Z = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
-    elif Type == 'Z':
+    elif beam_type == 'Z':
         #dim1, dim2, dim3, dim4 = dim
         h2 = dim[2]
         w2 = dim[1]
@@ -721,7 +721,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = h1 * w1 + h2 * w2
 
     #HEXA = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
-    elif Type == 'HEXA':
+    elif beam_type == 'HEXA':
         #     _______
         #   /        \     ^
         #  /          \    |
@@ -741,7 +741,7 @@ def _bar_areaL(class_name, Type, dim, prop):
             #hbox, wbox, hbox*wbox, 2*wtri*hbox, A))
 
     #HAT = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
-    elif Type == 'HAT':
+    elif beam_type == 'HAT':
         #
         #        <--------d3------->
         #
@@ -763,7 +763,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = wa * t + (2. * wc * t) + (2. * hb * t)
 
     #HAT1 = (DIM1*DIM5)+(DIM3*DIM4)+((DIM1-DIM3)*DIM4)+2*((DIM2-DIM5-DIM4)*DIM4)
-    elif Type == 'HAT1':
+    elif beam_type == 'HAT1':
         # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
         w = dim[3]
 
@@ -787,7 +787,7 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = 2. * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
     #DBOX = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
     #       (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
-    elif Type == 'DBOX':
+    elif beam_type == 'DBOX':
         #
         #  |--2------5----
         #  |     |       |
@@ -826,10 +826,10 @@ def _bar_areaL(class_name, Type, dim, prop):
         A = (h1 * w1 + h2 * w2 + h3 * w3 + h4 * w4 +
              h5 * w5 + h6 * w6 + h7 * w7)
     else:
-        msg = 'areaL; Type=%s is not supported for %s class...' % (
-            Type, class_name)
+        msg = 'areaL; beam_type=%s is not supported for %s class...' % (
+            beam_type, class_name)
         raise NotImplementedError(msg)
-    assert A > 0, 'Type=%r dim=%r A=%s\n%s' % (Type, dim, A, prop)
+    assert A > 0, 'beam_type=%r dim=%r A=%s\n%s' % (beam_type, dim, A, prop)
     #A = 1.
     return A
 
@@ -1344,11 +1344,20 @@ class PBARL(LineProperty):
             mpl = self.MassPerLength()
             assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
 
+    @property
+    def Type(self):
+        """gets Type"""
+        return self.beam_type
+    @Type.setter
+    def Type(self, beam_type):
+        """sets Type"""
+        self.beam_type = beam_type
+
     def Area(self):
         """
         Gets the area :math:`A` of the CBAR.
         """
-        return _bar_areaL('PBARL', self.Type, self.dim, self)
+        return _bar_areaL('PBARL', self.beam_type, self.dim, self)
 
     def Nsm(self):
         """
@@ -1369,14 +1378,14 @@ class PBARL(LineProperty):
 
     def I11(self):
         return self.I1()
-        #if self.Type in ['ROD']:
+        #if self.beam_type in ['ROD']:
             #assert len(self.dim) == 1, 'dim=%r' % self.dim
             #r = self.dim[0]
             ##Ix = pi*r**4/4.
             ##J = pi*r**4/2.
             #(Ix, Iy, Ixy) = self.I1_I2_I12()
 
-        #elif self.Type in ['BAR']:
+        #elif self.beam_type in ['BAR']:
             #assert len(self.dim) == 2, 'dim=%r' % self.dim
             #b, h = self.dim
             ##Ix = self.I11()
@@ -1385,15 +1394,15 @@ class PBARL(LineProperty):
             ##print
             ##J = Ix + Iy
         #else:
-            #msg = 'I11 for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
+            #msg = 'I11 for beam_type=%r dim=%r on PBARL is not supported' % (self.beam_type, self.dim)
             #raise NotImplementedError(msg)
         #return Ix
 
     #def I12(self):
         #return self.I12()
 
-    def _points(self, Type, dim):
-        if Type == 'BAR':  # origin ar center
+    def _points(self, beam_type, dim):
+        if beam_type == 'BAR':  # origin ar center
             (d1, d2) = dim
             Area = d1 * d2
             y1 = d2 / 2.
@@ -1404,7 +1413,7 @@ class PBARL(LineProperty):
                 [-x1, -y1],  # p3
                 [-x1, -y1],  # p4
             ]
-        elif Type == 'CROSS':
+        elif beam_type == 'CROSS':
             (d1, d2, d3, d4) = dim  # origin at center
             x1 = d2 / 2.
             x2 = d2 / 2. + d1
@@ -1428,7 +1437,7 @@ class PBARL(LineProperty):
                 [-x1, y4],  # p12
             ]
             Area = d2*d3 + 2*d1*d4
-        elif Type in ['HEXA']:
+        elif beam_type in ['HEXA']:
             (d1, d2, d3) = dim
             x1 = d2 / 2. - d1
             x2 = d2 / 2.
@@ -1445,11 +1454,11 @@ class PBARL(LineProperty):
             ]
             Area = d1 * (d2 + 2 * d3)
 
-        elif Type in ['I']:
+        elif beam_type in ['I']:
             (d1, d2, d3) = dim
-            raise NotImplementedError('PBARL Type=%r' % Type)
+            raise NotImplementedError('PBARL beam_type=%r' % beam_type)
 
-        elif Type in ['H']:
+        elif beam_type in ['H']:
             (d1, d2, d3, d4) = dim
             x1 = d1 / 2.
             x2 = (d1 + d2) / 2.
@@ -1474,7 +1483,7 @@ class PBARL(LineProperty):
             ]
             Area = d2 * d3 + d1 * d4
 
-        elif Type in ['T2']:
+        elif beam_type in ['T2']:
             d1, d2, d3, d4 = dim  # check origin, y3 at bottom, x1 innner
             x1 = d4 / 2.
             x2 = d1 / 2.
@@ -1493,29 +1502,29 @@ class PBARL(LineProperty):
             ]
             Area = d1*d3 + (d2-d3)*d4
         else:
-            msg = '_points for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
+            msg = '_points for beam_type=%r dim=%r on PBARL is not supported' % (self.beam_type, self.dim)
             raise NotImplementedError(msg)
         return array(points), Area
 
     def J(self):
-        if self.Type in ['ROD']:
+        if self.beam_type in ['ROD']:
             r = self.dim[0]
             Ixx = pi * r**4 / 4.
             Iyy = Ixx
             Ixy = 0.
-        elif self.Type in ['TUBE']:
+        elif self.beam_type in ['TUBE']:
             rout, rin = self.dim
             #rin = rout - 2*t
             Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
             Ixy = 0.
-        elif self.Type in ['TUBE2']:
+        elif self.beam_type in ['TUBE2']:
             rout, t = self.dim
             rin = rout - 2*t
             Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
             Ixy = 0.
-        elif self.Type in ['BOX']:
+        elif self.beam_type in ['BOX']:
             (d1, d2, d3, d4) = self.dim
             hout = d2
             wout = d1
@@ -1549,13 +1558,13 @@ class PBARL(LineProperty):
             Iyy = Iyy1 - Iyy2
             #Ixy = Ixy1 - Ixy2
 
-        #elif self.Type in ['BAR']:
+        #elif self.beam_type in ['BAR']:
             #assert len(self.dim) == 2, 'dim=%r' % self.dim
             #b, h = self.dim
             #(Ix, Iy, Ixy) = self.I1_I2_I12()
             #J = Ix + Iy
-        elif self.Type in ['BAR', 'CROSS', 'HEXA', 'T2', 'H']:
-            points, Area = self._points(self.Type, self.dim)
+        elif self.beam_type in ['BAR', 'CROSS', 'HEXA', 'T2', 'H']:
+            points, Area = self._points(self.beam_type, self.dim)
             yi = points[0, :-1]
             yip1 = points[0, 1:]
 
@@ -1567,7 +1576,7 @@ class PBARL(LineProperty):
             Ixx = 1/12 * sum((yi**2 + yi*yip1+yip1**2)*ai)
             Iyy = 1/12 * sum((xi**2 + xi*xip1+xip1**2)*ai)
             #Ixy = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
-        elif self.Type == 'I':
+        elif self.beam_type == 'I':
             # http://www.efunda.com/designstandards/beams/SquareIBeam.cfm
             # d - outside height
             # h - inside height
@@ -1580,19 +1589,19 @@ class PBARL(LineProperty):
             #cy = d / 2.
             (d, b1, b2, t, s1, s2) = self.dim
             if b1 != b2:
-                msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (
-                    self.Type, self.dim)
+                msg = 'J for beam_type=%r dim=%r on PBARL b1 != b2 is not supported' % (
+                    self.beam_type, self.dim)
                 raise NotImplementedError(msg)
             if s1 != s2:
-                msg = 'J for Type=%r dim=%r on PBARL s1 != s2 is not supported' % (
-                    self.Type, self.dim)
+                msg = 'J for beam_type=%r dim=%r on PBARL s1 != s2 is not supported' % (
+                    self.beam_type, self.dim)
                 raise NotImplementedError(msg)
             h = d - b1 - b2
             s = s1
             b = b1
             Ixx = (b*d**3-h**3*(b-t)) / 12.
             Iyy = (2.*s*b**3 + h*t**3) / 12.
-        #elif self.Type == 'T': # test
+        #elif self.beam_type == 'T': # test
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # d - outside height
@@ -1604,12 +1613,12 @@ class PBARL(LineProperty):
             #h = d - 2 * s
             #(b, d, s, t) = self.dim
             #if b1 != b2:
-                #msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (
-                    #self.Type, self.dim)
+                #msg = 'J for beam_type=%r dim=%r on PBARL b1 != b2 is not supported' % (
+                    #self.beam_type, self.dim)
                 #raise NotImplementedError(msg)
             #if s1 != s2:
-                #msg = 'J for Type=%r dim=%r on PBARL s1 != s2 is not supported' % (
-                    #self.Type, self.dim)
+                #msg = 'J for beam_type=%r dim=%r on PBARL s1 != s2 is not supported' % (
+                    #self.beam_type, self.dim)
                 #raise NotImplementedError(msg)
             #h = d - b1 - b2
             #s = s1
@@ -1621,7 +1630,7 @@ class PBARL(LineProperty):
             #Iyy = t**3*(h-s)/12. + b**3*s/12.
             #A = b*s + h*t
 
-        elif self.Type == 'C':
+        elif self.beam_type == 'C':
             # http://www.efunda.com/math/areas/squarechannel.cfm
             # d - outside height
             # h - inside height
@@ -1635,7 +1644,7 @@ class PBARL(LineProperty):
             Ixx = (b * d**3 - h **3 * (b-t)) / 12.
             #Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
         else:
-            msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
+            msg = 'J for beam_type=%r dim=%r on PBARL is not supported' % (self.beam_type, self.dim)
             raise NotImplementedError(msg)
 
         #: .. seealso:: http://en.wikipedia.org/wiki/Perpendicular_axis_theorem
@@ -1646,15 +1655,15 @@ class PBARL(LineProperty):
         return self.I2()
 
     def raw_fields(self):
-        list_fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type,
+        list_fields = ['PBARL', self.pid, self.Mid(), self.group, self.beam_type,
                        None, None, None, None] + self.dim + [self.nsm]
         return list_fields
 
     def repr_fields(self):
         group = set_blank_if_default(self.group, 'MSCBML0')
-        ndim = self.valid_types[self.Type]
+        ndim = self.valid_types[self.beam_type]
         assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
-        list_fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None,
+        list_fields = ['PBARL', self.pid, self.Mid(), group, self.beam_type, None,
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
@@ -1741,16 +1750,16 @@ class PBRSECT(LineProperty):
         pid = data[0]
         mid = data[1]
         group = data[2].strip()
-        Type = data[3].strip()
+        beam_type = data[3].strip()
         dim = list(data[4:-1])
         nsm = data[-1]
         #print("group = %r" % self.group)
-        #print("Type  = %r" % self.Type)
+        #print("beam_type  = %r" % self.beam_type)
         #print("dim = ",self.dim)
         #print(str(self))
         #print("*PBARL = ",data)
         raise NotImplementedError('not finished...')
-        #return PBRSECT(pid, mid, group, Type, dim, nsm, comment=comment)
+        #return PBRSECT(pid, mid, group, beam_type, dim, nsm, comment=comment)
 
     def _validate_input(self):
         pass
@@ -2185,11 +2194,21 @@ class PBEND(LineProperty):
                             self.theta_b, self.c1, self.c2, self.d1, self.d2,
                             self.e1, self.e2, self.f1, self.f2, self.k1, self.k2,
                             self.nsm, self.rc, self.zc, self.delta_n]
+            #print("beam_type=0 I1=%s I2=%s; J=%s RM=%s T=%s P=%s" % (
+                #self.i1, self.i2, self.j, self.rm, self.t, self.p), list_fields)
         elif self.beam_type == 2:
             list_fields += [self.fsi, self.rm, self.t, self.p, self.rb,
                             self.theta_b, None, None, self.nsm, self.rc, self.zc]
+        elif self.beam_type == 0:
+            # dunno
+            list_fields += [self.A, self.i1, self.i2, self.j, self.rb,
+                            self.theta_b, self.c1, self.c2, self.d1, self.d2,
+                            self.e1, self.e2, self.f1, self.f2, self.k1, self.k2,
+                            self.nsm, self.rc, self.zc, self.delta_n]
+            #print("beam_type=0 I1=%s I2=%s; J=%s RM=%s T=%s P=%s" % (
+                #self.i1, self.i2, self.j, self.rm, self.t, self.p), list_fields)
         else:
-            raise ValueError('only beam_type=1 and 2 supported')
+            raise ValueError('only beam_type=1 and 2 supported; beam_type/fsi=%s' % self.beam_type)
         return list_fields
 
     def write_card(self, size=8, is_double=False):

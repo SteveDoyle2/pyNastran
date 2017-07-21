@@ -173,10 +173,6 @@ class DYNAMICS(GeomCommon):
         3 C   I Component number
         4 TH  RS Phase lead
         """
-        #self.log.info('skipping DPHASE in DYNAMICS\n')
-        #if self.is_debug_file:
-            #self.binary_debug.write('skipping DPHASE in DYNAMICS\n')
-        #return len(data)
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self._increase_card_count('DPHASE', nentries)
@@ -437,11 +433,44 @@ class DYNAMICS(GeomCommon):
         return n
 
     def _read_freq5(self, data, n):
-        """FREQ5(1607,16,41) - Record 18"""
-        self.log.info('skipping FREQ5 in DYNAMICS\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping FREQ5 in DYNAMICS\n')
+        """
+        FREQ5(1607,16,41) - Record 18
+
+        1 SID  I Load set identification number
+        2 F1  RS Lower bound of modal frequency range
+        3 F2  RS Upper bound of modal frequency range
+        4 FRI RS Fractions of natural frequencies
+        """
+        ints = np.fromstring(data, dtype='int32')
+        floats = np.fromstring(data, dtype='float32')
+        i_minus_1s = np.where(ints == -1)[0]
+
+        i0 = 0
+        for i_minus_1 in i_minus_1s:
+            sid = ints[i0]
+            floatsi = floats[i0 + 1:i_minus_1]
+            f1 = floatsi[0]
+            f2 = floatsi[1]
+            fractions = floatsi[2:]
+            #print('fractions =', fractions)
+            freq = self.add_freq5(sid, fractions, f1=f1, f2=f2)
+            #print('freq =', freq)
+            i0 = i_minus_1 + 1
         return len(data)
+
+        #ntotal = 20 # 4*5
+        #nentries = (len(data) - n) // ntotal
+        #struc = Struct(b('i 3f'))
+        #for i in range(nentries):
+            #edata = data[n:n+ntotal]
+            #out = struc.unpack(edata)
+            #sid, f1, f2, fspread, nfm = out
+            #if self.is_debug_file:
+                #self.binary_debug.write('  FREQ5=%s\n' % str(out))
+            #freq = self.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
+            #n += ntotal
+        self._increase_card_count('FREQ5', nentries)
+
 
 #NLRSFD
 #NOLIN1
@@ -700,6 +729,7 @@ class DYNAMICS(GeomCommon):
 #SEQEP(5707,57,135)
 
     def _read_tf(self, data, n):
+        """TF"""
         nfields = (len(data) - n) // 4
 
         # subtract of the header (sid, nid, component, b0, b1, b2)
@@ -749,11 +779,26 @@ class DYNAMICS(GeomCommon):
         return n
 
     def _read_tic(self, data, n):
-        """TIC"""
-        self.log.info('skipping TIC in DYNAMICS\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping TIC in DYNAMICS\n')
-        return len(data)
+        """
+        TIC(6607,66,137)
+
+        1 SID I Load set identification number
+        2 G   I Grid, scalar, or extra point identification number
+        3 C   I Component number for point GD
+        4 U0 RS Initial displacement
+        5 V0 RS Initial velocity
+        """
+        ntotal = 20  # 5*4
+        s = Struct(b(self._endian + '3i 2f'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n+ntotal])
+            sid, nid, comp, u0, v0 = out
+            tic = self.add_tic(sid, [nid], [comp], u0=u0, v0=v0)
+            #print(tic)
+            n += ntotal
+        self.card_count['TIC'] = nentries
+        return n
 
 #TIC3
 
@@ -791,6 +836,7 @@ class DYNAMICS(GeomCommon):
         return n
 
     def _read_tload2(self, data, n):
+        """TLOAD2"""
         return self._read_tload2_nx(data, n)
 
     def _read_tload2_nx(self, data, n):

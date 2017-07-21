@@ -1035,6 +1035,29 @@ class CBEND(LineElement):
         assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
         return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        #data = [[eid, pid, ga, gb, geom], [f, x1, x2, x3]]
+        #data = [[eid, pid, ga, gb, geom], [f, g0]]
+
+        main = data[0]
+        flag = data[1][0]
+        if flag in [0, 1]:
+            g0 = None
+            x = np.array([data[1][1],
+                          data[1][2],
+                          data[1][3]], dtype='float64')
+        else:
+            g0 = data[1][1]
+            x = None
+
+        eid = main[0]
+        pid = main[1]
+        ga = main[2]
+        gb = main[3]
+        geom = main[4]
+        return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
+
     def get_x_g0_defaults(self):
         if self.g0 is not None:
             return (self.g0, None, None)
