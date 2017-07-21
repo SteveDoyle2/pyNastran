@@ -583,7 +583,7 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('7i 4f', edata)
-            sid, darea, delayi, dphasei, tci, tdi, Type, delayr, dphaser, tcr, tdr = out # 44
+            sid, darea, delayi, dphasei, tci, tdi, load_type, delayr, dphaser, tcr, tdr = out # 44
 
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD1=%s\n' % str(out))
@@ -601,7 +601,7 @@ class DYNAMICS(GeomCommon):
             if tdi == 0:
                 td = tdr
             dload = RLOAD1(sid, darea, delay=delay, dphase=dphase, tc=tc, td=td,
-                           Type=Type, comment='')
+                           Type=load_type, comment='')
             dloads.append(dload)
             n += ntotal
         return n, dloads
@@ -627,7 +627,7 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('2i 2f 3i 2f', edata)
-            sid, darea, dphaser, delayr, tci, tdi, Type, tau, phi = out # 36
+            sid, darea, dphaser, delayr, tci, tdi, load_type, tau, phi = out # 36
 
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD1=%s\n' % str(out))
@@ -637,7 +637,7 @@ class DYNAMICS(GeomCommon):
             delay = delayr
             dphase = dphaser
             dload = RLOAD1(sid, darea, delay=delay, dphase=dphase, tc=tc, td=td,
-                           Type=Type, comment='')
+                           Type=load_type, comment='')
             dloads.append(dload)
             n += ntotal
         return n, dloads
@@ -670,7 +670,7 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('7i 4f', edata)
-            sid, darea, delayi, dphasei, tbi, tpi, Type, delayr, dphaser, tbr, tpr = out
+            sid, darea, delayi, dphasei, tbi, tpi, load_type, delayr, dphaser, tbr, tpr = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
 
@@ -687,7 +687,7 @@ class DYNAMICS(GeomCommon):
             if dphasei == 0:
                 dphase = dphaser
             dload = RLOAD2(sid, darea, delay=delay, dphase=dphase, tb=tb, tp=tp,
-                           Type=Type, comment='')
+                           Type=load_type, comment='')
             dloads.append(dload)
             n += ntotal
         return n, dloads
@@ -712,12 +712,12 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('7i 2f', edata)
-            sid, darea, dphasei, delayi, tbi, tpi, Type, tau, phase = out
+            sid, darea, dphasei, delayi, tbi, tpi, load_type, tau, phase = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
 
             dload = RLOAD2(sid, darea, delay=delayi, dphase=dphasei, tb=tbi, tp=tpi,
-                           Type=Type, comment='')
+                           Type=load_type, comment='')
             dloads.append(dload)
             n += ntotal
         return n, dloads
@@ -822,13 +822,13 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('5i 3f', edata)
-            sid, darea, delayi, Type, tid, delayr, us0, vs0 = out
+            sid, darea, delayi, load_type, tid, delayr, us0, vs0 = out
             if self.is_debug_file:
                 self.binary_debug.write('TLOAD1=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
-            dload = TLOAD1(sid, darea, tid, delay=delay, Type=Type,
+            dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type,
                            us0=us0, vs0=vs0)
             self._add_dload_entry(dload)
             n += ntotal
@@ -863,13 +863,13 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('4i 7f 2f', edata)
-            sid, darea, delayi, Type, t1, t2, freq, p, c, growth, delayr, us0, vs0 = out
+            sid, darea, delayi, load_type, t1, t2, freq, p, c, growth, delayr, us0, vs0 = out
             if self.is_debug_file:
                 self.binary_debug.write('  TLOAD2=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
-            dload = TLOAD2(sid, darea, delay=delay, Type=Type, T1=t1,
+            dload = TLOAD2(sid, darea, delay=delay, Type=load_type, T1=t1,
                            T2=t2, frequency=freq,
                            phase=p, c=c, b=growth,
                            us0=us0, vs0=vs0)

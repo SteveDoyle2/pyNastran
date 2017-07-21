@@ -1007,7 +1007,7 @@ class PBEAML(IntegratedLineProperty):
         beam_type = string(card, 4, 'Type')
 
         # determine the number of required dimensions on the PBEAM
-        ndim = cls.valid_types[Type]
+        ndim = cls.valid_types[beam_type]
 
         #: dimension list
         dims = []
@@ -1074,10 +1074,10 @@ class PBEAML(IntegratedLineProperty):
         TODO: this doesn't work right for the calculation of area
               the card is all messed up
         """
-        (pid, mid, group, Type, fvalues) = data
+        (pid, mid, group, beam_type, fvalues) = data
         group = group.strip()
-        Type = Type.strip()
-        ndim = cls.valid_types[Type]
+        beam_type = beam_type.strip()
+        ndim = cls.valid_types[beam_type]
         nfvalues = len(fvalues)
         nsections = nfvalues // (3+ndim)
         sections = fvalues.reshape(nsections, ndim+3)
@@ -1108,7 +1108,7 @@ class PBEAML(IntegratedLineProperty):
             so.append(sos)
             dims.append(dim)
             nsm.append(nsmi)
-        return PBEAML(pid, mid, Type, xxb, dims, group=group,
+        return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 
     @property

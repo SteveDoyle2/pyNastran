@@ -3964,19 +3964,19 @@ class OES(OP2Common):
             #elif self.element_type == 64:  # CQUAD8
                 #ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
                 #nnodes = 4    # centroid + 4 corner points
-                #eType = 'CQUAD8'
+                #etype = 'CQUAD8'
             #elif self.element_type == 82:  # CQUADR
                 #ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
                 #nnodes = 4    # centroid + 4 corner points
-                #eType = 'CQUADR'
+                #etype = 'CQUADR'
             #elif self.element_type == 75:  # CTRIA6
                 #ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
                 #nnodes = 3    # centroid + 3 corner points
-                #eType = 'CTRIA6'
+                #etype = 'CTRIA6'
             #elif self.element_type == 70:  # CTRIAR
                 #ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
                 #nnodes = 3    # centroid + 3 corner points
-                #eType = 'CTRIAR'
+                #etype = 'CTRIAR'
             else:
                 return self._not_implemented_or_skip(data, ndata, self.code_information())
 

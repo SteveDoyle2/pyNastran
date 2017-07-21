@@ -194,15 +194,15 @@ class EPT(GeomCommon):
             n += 28
 
             out = s.unpack(edata)
-            (pid, mid, group, Type, value) = out
-            Type = Type.strip().decode('latin1')
+            (pid, mid, group, beam_type, value) = out
+            beam_type = beam_type.strip().decode('latin1')
             group = group.strip().decode('latin1')
-            data_in = [pid, mid, group, Type, value]
-            #self.log.debug("  pid=%s mid=%s group=%r Type=%r value=%s" % (
-                #pid, mid, group, Type, value))
+            data_in = [pid, mid, group, beam_type, value]
+            #self.log.debug("  pid=%s mid=%s group=%r beam_type=%r value=%s" % (
+                #pid, mid, group, beam_type, value))
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
-            expected_length = valid_types[Type]
+            expected_length = valid_types[beam_type]
             iformat = b('%if' % expected_length)
 
             ndelta = expected_length * 4
@@ -369,15 +369,15 @@ class EPT(GeomCommon):
         struct1 = Struct(self._endian + '2i8s8s')
         for i, (istarti, iendi) in enumerate(zip(istart, iend)):
             idata = data[n+istarti*4 : n+(istarti+6)*4]
-            pid, mid, group, Type = struct1.unpack(idata)
+            pid, mid, group, beam_type = struct1.unpack(idata)
             group = group.decode('latin1')
-            Type = Type.decode('latin1')
+            beam_type = beam_type.decode('latin1')
             fvalues = floats[istarti+6: iendi]
             if self.is_debug_file:
                 self.binary_debug.write('     %s\n' % str(fvalues))
-                self.log.debug('pid=%i mid=%i group=%r Type=%r' % (pid, mid, group, Type))
+                self.log.debug('pid=%i mid=%i group=%r beam_type=%r' % (pid, mid, group, beam_type))
                 self.log.debug(fvalues)
-            data_in = [pid, mid, group, Type, fvalues]
+            data_in = [pid, mid, group, beam_type, fvalues]
             prop = PBEAML.add_op2_data(data_in)
             self._add_op2_property(prop)
         nproperties = len(istart)

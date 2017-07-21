@@ -365,8 +365,7 @@ class GEOM3(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD1=%s\n' % str(out))
-            (sid, eid, Type, scale, x1, p1, x2, p2) = out
-            #print("PLOAD1 = ", out)
+            (sid, eid, load_type, scale, x1, p1, x2, p2) = out
             load = PLOAD1.add_op2_data(out)
             self._add_load_object(load)
             n += 32
