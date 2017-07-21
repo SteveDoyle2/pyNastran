@@ -1520,7 +1520,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             (e.g. GRID)
         icard : int
             the unique 1-based index identifier for the card
-
             (e.g. the GRID id)
         ifield : int
             the index on the card
