@@ -4635,8 +4635,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self._load_patran_nod(op2_filename)
                 self.cycle_results_explicit()  # start at nCase=0
                 return
-            elif ext == '.pch':
-                raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
+            #elif ext == '.pch':
+                #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
             #elif ext == '.f06':
                 #model = F06(log=self.log, debug=True)
                 #model.set_vectorization(True)
