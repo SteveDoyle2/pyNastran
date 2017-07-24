@@ -6,7 +6,7 @@ import os
 from six import iteritems
 from six.moves import range
 
-from numpy import arange, mean, vstack, zeros, unique, where, sqrt
+from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
 
 import vtk
@@ -126,7 +126,7 @@ class Cart3dIO(object):
         self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
-        form, cases, icase = self._fill_cart3d_case2(cases, ID, nodes, elements, regions, model)
+        form, cases, icase = self._fill_cart3d_geometry_objects(cases, ID, nodes, elements, regions, model)
         mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
         #mach = None
         self._fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
@@ -140,9 +140,10 @@ class Cart3dIO(object):
         mach = None
         alpha = None
         beta = None
+        gamma = None
         if os.path.exists(input_cntl_filename):
             cntl = read_input_cntl(input_cntl_filename, log=self.log, debug=self.debug)
-            mach, alpha, beta = cntl.get_flow_conditions()
+            mach, alpha, beta, gamma = cntl.get_flow_conditions()
             bcs = cntl.get_boundary_conditions()
             bc_xmin, bc_xmax, bc_ymin, bc_ymax, bc_xmin, bc_xmax, surfbcs = bcs
             #stack = False
@@ -158,12 +159,12 @@ class Cart3dIO(object):
                 ]
                 icase += 5
                 nelements = self.nElements
-                rho = zeros(nelements, dtype='float32')
-                xvel = zeros(nelements, dtype='float32')
-                yvel = zeros(nelements, dtype='float32')
-                zvel = zeros(nelements, dtype='float32')
-                #vel = zeros(nelements, dtype='float32')
-                pressure = zeros(nelements, dtype='float32')
+                rho = np.full(elements, np.nan, dtype='float32')
+                xvel = np.full(nelements, np.nan, dtype='float32')
+                yvel = np.full(nelements, np.nan, dtype='float32')
+                zvel = np.full(nelements, np.nan, dtype='float32')
+                #vel = np.full(nelements, np.nan, dtype='float32')
+                pressure = np.full(nelements, np.nan, dtype='float32')
 
                 uregions = set(unique(regions))
                 surf_bc_regions = set(surfbcs.keys())
@@ -179,6 +180,14 @@ class Cart3dIO(object):
                     yvel[i] = yveli
                     zvel[i] = zveli
                     pressure[i] = pressi
+
+                inan = np.where(rho == 0.0)
+                rho[inan] = np.nan
+                xvel[inan] = np.nan
+                yvel[inan] = np.nan
+                zvel[inan] = np.nan
+                #vel[inan] = np.nan
+                pressure[inan] = np.nan
 
                 mach = sqrt(xvel ** 2 + yvel ** 2 + zvel ** 2)
 
@@ -356,7 +365,7 @@ class Cart3dIO(object):
     def load_cart3d_results(self, cart3d_filename):
         self.load_cart3d_geometry(cart3d_filename)
 
-    def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
+    def _fill_cart3d_geometry_objects(self, cases, ID, nodes, elements, regions, model):
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
@@ -415,11 +424,13 @@ class Cart3dIO(object):
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                         'rhoU', 'rhoV', 'rhoW', 'rhoE', 'a', 'T', 'q', 'Pressure']
 
+        rho = loads['rho']
+        inan = np.where(rho == 0.)
         for result_name in result_names:
             #print('result_name = %r' % result_name)
             if result_name in loads:
                 nodal_data = loads[result_name]
-
+                nodal_data[inan] = np.nan
                 rho_res = GuiResult(ID, header=result_name, title=result_name,
                                     location='node', scalar=nodal_data)
                 cases[icase] = (rho_res, (0, result_name))
