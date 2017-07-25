@@ -25,7 +25,7 @@ from numpy import array, cross, allclose, unique
 from numpy.linalg import norm  # type: ignore
 
 #from pyNastran.bdf.errors import CrossReferenceError
-from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types, float_types
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by, range
@@ -514,6 +514,14 @@ class ACCEL1(BaseCard):
     Acceleration Load
 
     Defines static acceleration loads at individual GRID points.
+
+    +--------+---------+---------+-----+----+----+----+
+    |    1   |    2    |    3    |  4  |  5 |  6 |  7 |
+    +========+=========+=========+=====+====+====+====+
+    | ACCEL1 |   SID   |   CID   |  A  | N1 | N2 | N3 |
+    +--------+---------+---------+-----+----+----+----+
+    |        | GRIDID1 | GRIDID2 | etc |    |    |    |
+    +--------+---------+---------+-----+----+----+----+
     """
     type = 'ACCEL1'
 
@@ -564,7 +572,7 @@ class ACCEL1(BaseCard):
     def validate(self):
         assert len(self.N) == 3, 'N=%r' % self.N
         assert isinstance(self.cid, integer_types), 'cid=%r' % self.cid
-        assert isinstance(self.scale, float), 'cid=%r' % self.scale
+        assert isinstance(self.scale, float_types), 'scale=%r' % self.scale
         assert isinstance(self.nodes, list), 'nodes=%r' % self.nodes
 
     @classmethod

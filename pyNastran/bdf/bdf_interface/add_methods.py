@@ -886,7 +886,7 @@ class AddMethods(BDFAttributes):
         key = dscreen.rtype
         assert key not in self.dscreen, 'DSCREEN=%s old=\n%snew=\n%s' % (
             key, self.dscreen[key], dscreen)
-        assert key > 0
+        assert len(key) > 0, 'key=%r' % key
         self.dscreen[key] = dscreen
         self._type_to_id_map[dscreen.type].append(key)
 

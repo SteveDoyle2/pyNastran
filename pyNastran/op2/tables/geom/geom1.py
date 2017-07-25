@@ -86,7 +86,7 @@ class GEOM1(GeomCommon):
             (3901,   39,  50): ['CVISC', self._read_cvisc],  # record
             (13301, 133, 509): ['', self._read_fake],  # record
             (1127,   11, 461) : ['SELOAD', self._read_fake],  # record NX
-            #(4501, 45, 1120001) : ['', self._read_fake],  # record
+            (4501, 45, 1120001): ['', self._read_fake],  # record ???; test_ibulk
         }
 
     def _read_cord1c(self, data, n):

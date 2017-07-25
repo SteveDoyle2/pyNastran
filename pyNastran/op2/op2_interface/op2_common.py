@@ -422,24 +422,25 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #ni = self.f.tell() - len(data) + 12
         #self.binary_debug.write('**:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), ni, self.n))
 
-        if 0:
-            # we're only going to use the keys if istream=0 (so the beginning of the record)
-            if self.istream == 0 and keys in mapper:
-                pass
-            elif self.isubtable_old == self.isubtable:
-                # we didn't increment the record, so we fix the n+=12 statement we called before
-                # then we toss the keys and use the old geom_keys
-                n = 0
-                keys = self.geom_keys
-            else:
-                msg = 'keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s\n mapper=%s' % (
-                    str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old,
-                    mapper.keys())
-                raise NotImplementedError(msg)
+        #if 0:
+            ## we're only going to use the keys if istream=0 (so the beginning of the record)
+            #if self.istream == 0 and keys in mapper:
+                #pass
+            #elif self.isubtable_old == self.isubtable:
+                ## we didn't increment the record, so we fix the n+=12 statement we called before
+                ## then we toss the keys and use the old geom_keys
+                #n = 0
+                #keys = self.geom_keys
+            #else:
+                #msg = 'keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s\n mapper=%s' % (
+                    #str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old,
+                    #mapper.keys())
+                #raise NotImplementedError(msg)
 
         try:
             name, func = mapper[keys]
         except KeyError:
+            raise
             return n
         if self.is_debug_file:
             self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))

@@ -11,7 +11,7 @@ from six.moves import range
 import numpy as np
 
 from pyNastran.bdf.cards.properties.mass import PMASS, NSM
-from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.properties.bush import PBUSH
 from pyNastran.bdf.cards.properties.damper import PDAMP, PVISC
@@ -194,15 +194,15 @@ class EPT(GeomCommon):
             n += 28
 
             out = s.unpack(edata)
-            (pid, mid, group, Type, value) = out
-            Type = Type.strip().decode('latin1')
+            (pid, mid, group, beam_type, value) = out
+            beam_type = beam_type.strip().decode('latin1')
             group = group.strip().decode('latin1')
-            data_in = [pid, mid, group, Type, value]
-            #self.log.debug("  pid=%s mid=%s group=%r Type=%r value=%s" % (
-                #pid, mid, group, Type, value))
+            data_in = [pid, mid, group, beam_type, value]
+            #self.log.debug("  pid=%s mid=%s group=%r beam_type=%r value=%s" % (
+                #pid, mid, group, beam_type, value))
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
-            expected_length = valid_types[Type]
+            expected_length = valid_types[beam_type]
             iformat = b('%if' % expected_length)
 
             ndelta = expected_length * 4
@@ -369,16 +369,15 @@ class EPT(GeomCommon):
         struct1 = Struct(self._endian + '2i8s8s')
         for i, (istarti, iendi) in enumerate(zip(istart, iend)):
             idata = data[n+istarti*4 : n+(istarti+6)*4]
-            #print('len(idata)=', len(idata))
-            pid, mid, group, Type = struct1.unpack(idata)
+            pid, mid, group, beam_type = struct1.unpack(idata)
             group = group.decode('latin1')
-            Type = Type.decode('latin1')
+            beam_type = beam_type.decode('latin1')
             fvalues = floats[istarti+6: iendi]
             if self.is_debug_file:
                 self.binary_debug.write('     %s\n' % str(fvalues))
-                self.log.debug('pid=%i mid=%i group=%r Type=%r' % (pid, mid, group, Type))
+                self.log.debug('pid=%i mid=%i group=%r beam_type=%r' % (pid, mid, group, beam_type))
                 self.log.debug(fvalues)
-            data_in = [pid, mid, group, Type, fvalues]
+            data_in = [pid, mid, group, beam_type, fvalues]
             prop = PBEAML.add_op2_data(data_in)
             self._add_op2_property(prop)
         nproperties = len(istart)
@@ -386,8 +385,136 @@ class EPT(GeomCommon):
         return len(data)
 
     def _read_pbend(self, data, n):
-        self.log.info('skipping PBEND in EPT\n')
-        return len(data)
+        """PBEND"""
+        n = self._read_dual_card(data, n, self._read_pbend_nx, self._read_pbend_msc,
+                                 'PBEND', self._add_property_object)
+        return n
+
+    def _read_pbend_msc(self, data, n):
+        """
+        PBEND
+
+        1 PID     I Property identification number
+        2 MID     I Material identification number
+        3 A       RS Area
+        4 I1      RS Area moment of inertia in plane 1
+        5 I2      RS Area moment of inertia in plane 2
+        6 J       RS Torsional constant
+        7 FSI     I flexibility and stress intensification factors
+        8 RM      RS Mean cross-sectional radius of the curved pipe
+        9 T       RS Wall thickness of the curved pipe
+        10 P      RS Internal pressure
+        11 RB     RS Bend radius of the line of centroids
+        12 THETAB RS Arc angle of element
+        13 C1     RS Stress recovery location at point C in element y-axis
+        14 C2     RS Stress recovery location at point C in element z-axis
+        15 D1     RS Stress recovery location at point D in element y-axis
+        16 D2     RS Stress recovery location at point D in element z-axis
+        17 E1     RS Stress recovery location at point E in element y-axis
+        18 E2     RS Stress recovery location at point E in element z-axis
+        19 F1     RS Stress recovery location at point F in element y-axis
+        20 F2     RS Stress recovery location at point F in element z-axis
+        21 K1     RS Area factor for shear in plane 1
+        22 K2     RS Area factor for shear in plane 2
+        23 NSM    RS Nonstructural mass per unit length
+        24 RC     RS Radial offset of the geometric centroid
+        25 ZC     RS Offset of the geometric centroid
+        26 DELTAN I Radial offset of the neutral axis from the geometric
+                  centroid
+        """
+        ntotal = 104  # 26*4
+        s = Struct(b(self._endian + '2i 4f i 18f i'))
+        nproperties = (len(data) - n) // ntotal
+        assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        properties = []
+        for i in range(nproperties):
+            edata = data[n:n+104]
+            out = s.unpack(edata)
+            (pid, mid, area, i1, i2, j, fsi, rm, t, p, rb, theta_b,
+             c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, nsm, rc, zc,
+             delta_n) = out
+            beam_type = fsi
+
+            if (area, rm, t, p) == (0., 0., 0., 0.):
+                area = None
+                rm = None
+                t = None
+                p = None
+                delta_n = None
+                beam_type = 2
+            if delta_n == 0:
+                delta_n = None
+            pbend = PBEND(pid, mid, beam_type, area, i1, i2, j,
+                          c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                          nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b)
+            properties.append(pbend)
+            n += ntotal
+        return n, properties
+
+    def _read_pbend_nx(self, data, n):
+        """
+        PBEND
+
+        1 PID     I  Property identification number
+        2 MID     I  Material identification number
+        3 A       RS Area
+        4 I1      RS Area moment of inertia in plane 1
+        5 I2      RS Area moment of inertia in plane 2
+        6 J       RS Torsional constant
+        7 FSI     I  Flexibility and stress intensification factors
+        8 RM      RS Mean cross-sectional radius of the curved pipe
+        9 T       RS Wall thickness of the curved pipe
+        10 P      RS Internal pressure
+        11 RB     RS Bend radius of the line of centroids
+        12 THETAB RS Arc angle of element
+        13 C1     RS Stress recovery location at point C in element y-axis
+        14 C2     RS Stress recovery location at point C in element z-axis
+        15 D1     RS Stress recovery location at point D in element y-axis
+        16 D2     RS Stress recovery location at point D in element z-axis
+        17 E1     RS Stress recovery location at point E in element y-axis
+        18 E2     RS Stress recovery location at point E in element z-axis
+        19 F1     RS Stress recovery location at point F in element y-axis
+        20 F2     RS Stress recovery location at point F in element z-axis
+        21 K1     RS Area factor for shear in plane 1
+        22 K2     RS Area factor for shear in plane 2
+        23 NSM    RS Nonstructural mass per unit length
+        24 RC     RS Radial offset of the geometric centroid
+        25 ZC     RS Offset of the geometric centroid
+        26 DELTAN RS Radial offset of the neutral axis from the geometric
+                     centroid
+        27 SACL   RS Miter spacing at center line.
+        28 ALPHA  RS One-half angle between the adjacent miter axis
+                     (Degrees).
+        29 FLANGE I  For FSI=5, defines the number of flanges attached.
+        30 KX     RS For FSI=6, the user defined flexibility factor for the
+                  torsional moment.
+        31 KY     RS For FSI=6, the user defined flexibility factor for the
+                  out-of-plane bending moment.
+        32 KZ     RS For FSI=6, the user defined flexbility factor for the
+                  in-plane bending moment.
+        33 Not used
+        """
+        #self.log.info('skipping PBEND in EPT\n')
+        #return len(data)
+        ntotal = 132  # 33*4
+        s = Struct(b(self._endian + '2i 4f i 21f i 4f'))
+        nproperties = (len(data) - n) // ntotal
+        assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        properties = []
+        for i in range(nproperties):
+            edata = data[n:n+132]
+            out = s.unpack(edata)
+            (pid, mid, area, i1, i2, j, fsi, rm, t, p, rb, theta_b,
+             c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, nsm, rc, zc,
+             delta_n, sacl, alpha, flange, kx, ky, kz, junk,) = out
+            beam_type = fsi
+
+            pbend = PBEND(pid, mid, beam_type, area, i1, i2, j,
+                          c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
+                          nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b)
+            properties.append(pbend)
+            n += ntotal
+        return n, properties
 
 # PBMSECT
 # PBRSECT

@@ -928,7 +928,7 @@ class PBEAML(IntegratedLineProperty):
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, pid, mid, Type, xxb, dims, so=None, nsm=None,
+    def __init__(self, pid, mid, beam_type, xxb, dims, so=None, nsm=None,
                  group='MSCBML0', comment=''):
         """
         Creates a PBEAML card
@@ -939,6 +939,8 @@ class PBEAML(IntegratedLineProperty):
             property id
         mid : int
             material id
+        beam_type : str
+            ???
         xxb : List[float]
             The percentage locations along the beam [0., ..., 1.]
         dims : List[dim]
@@ -965,8 +967,8 @@ class PBEAML(IntegratedLineProperty):
         self.mid = mid
         self.group = group
         #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
-        self.Type = Type
-        ndim = self.valid_types[self.Type]
+        self.beam_type = beam_type
+        ndim = self.valid_types[self.beam_type]
 
         nxxb = len(xxb)
         if nsm is None:
@@ -1002,10 +1004,10 @@ class PBEAML(IntegratedLineProperty):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         group = string_or_blank(card, 3, 'group', 'MSCBML0')
-        Type = string(card, 4, 'Type')
+        beam_type = string(card, 4, 'Type')
 
         # determine the number of required dimensions on the PBEAM
-        ndim = cls.valid_types[Type]
+        ndim = cls.valid_types[beam_type]
 
         #: dimension list
         dims = []
@@ -1041,7 +1043,7 @@ class PBEAML(IntegratedLineProperty):
             nsm.append(nsmi)
             n += 1
             i += 1
-        return PBEAML(pid, mid, Type, xxb, dims, group=group,
+        return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 
     def _verify(self, xref=False):
@@ -1072,10 +1074,10 @@ class PBEAML(IntegratedLineProperty):
         TODO: this doesn't work right for the calculation of area
               the card is all messed up
         """
-        (pid, mid, group, Type, fvalues) = data
+        (pid, mid, group, beam_type, fvalues) = data
         group = group.strip()
-        Type = Type.strip()
-        ndim = cls.valid_types[Type]
+        beam_type = beam_type.strip()
+        ndim = cls.valid_types[beam_type]
         nfvalues = len(fvalues)
         nsections = nfvalues // (3+ndim)
         sections = fvalues.reshape(nsections, ndim+3)
@@ -1106,15 +1108,24 @@ class PBEAML(IntegratedLineProperty):
             so.append(sos)
             dims.append(dim)
             nsm.append(nsmi)
-        return PBEAML(pid, mid, Type, xxb, dims, group=group,
+        return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
+
+    @property
+    def Type(self):
+        """gets Type"""
+        return self.beam_type
+    @Type.setter
+    def Type(self, beam_type):
+        """sets Type"""
+        self.beam_type = beam_type
 
     def get_mass_per_lengths(self):
         """helper method for MassPerLength"""
         rho = self.Rho()
         mass_per_lengths = []
         for (dim, nsm) in zip(self.dim, self.nsm):
-            a = _bar_areaL('PBEAML', self.Type, dim, self)
+            a = _bar_areaL('PBEAML', self.beam_type, dim, self)
             try:
                 mass_per_lengths.append(a * rho + nsm)
             except:
@@ -1144,11 +1155,12 @@ class PBEAML(IntegratedLineProperty):
         """
         areas = []
         for dim in self.dim:
-            areas.append(_bar_areaL('PBEAML', self.Type, dim, self))
+            areas.append(_bar_areaL('PBEAML', self.beam_type, dim, self))
         try:
             A = integrate_unit_line(self.xxb, areas)
         except ValueError:
-            print('PBEAML integration error; pid=%s x/xb=%s areas=%s' % (self.pid, self.xxb, areas))
+            print('PBEAML integration error; pid=%s x/xb=%s areas=%s' % (
+                self.pid, self.xxb, areas))
             A = mean(areas)
         return A
 
@@ -1214,7 +1226,7 @@ class PBEAML(IntegratedLineProperty):
         return i12
 
     def raw_fields(self):
-        list_fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type,
+        list_fields = ['PBEAML', self.pid, self.Mid(), self.group, self.beam_type,
                        None, None, None, None]
         #print("xxb=%s so=%s dim=%s nsm=%s" % (
             #self.xxb,self.so, self.dim,self.nsm))
