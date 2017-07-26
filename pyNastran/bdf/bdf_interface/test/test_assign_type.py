@@ -75,7 +75,7 @@ class TestAssignType(ExtendedTestCase):
                     f(bdf_card, i, fieldname)
             else:
 
-                value = f(card, i, fieldname)
+                value = f(bdf_card, i, fieldname)
                 self.assertEqual(value, exacti)
             i += 1
 
