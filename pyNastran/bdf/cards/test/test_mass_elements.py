@@ -42,6 +42,27 @@ class TestMassElements(unittest.TestCase):
         model.validate()
         save_load_deck(model)
 
+    def test_conm2(self):
+        """tests a conm2"""
+        model = BDF(debug=False)
+        nid = 10
+        eid = 20
+        massi = 42.
+        model.add_conm2(eid, nid, massi, cid=0, X=None, I=None, comment='conm2')
+        model.add_grid(nid)
+        model.validate()
+        model.cross_reference()
+        save_load_deck(model)
+        pids_to_mass, mass_type_to_mass = model.get_mass_breakdown(property_ids=None)
+        assert len(pids_to_mass) == 0, pids_to_mass
+        assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
+
+        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=None, reference_point=None,
+                                            sym_axis=None, scale=None)
+        assert np.allclose(mass, massi), 'massi=%s mass=%s' % (massi, mass)
+        assert np.array_equal(cg, np.zeros(3))
+        assert np.array_equal(I, np.zeros(6))
+
     def test_cmass1(self):
         """tests a CMASS1, PMASS, CMASS2, DDVAL"""
         model = BDF(debug=False)

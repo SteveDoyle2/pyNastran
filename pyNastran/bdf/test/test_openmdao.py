@@ -7,14 +7,14 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, GRID
 
 pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'bdf', 'test')
-#print("test_path = %r" % test_path)
+mesh_utils_path = os.path.join(pkg_path, 'bdf', 'mesh_utils', 'test')
 
 
 
 class TestOpenMDAO(unittest.TestCase):
 
     def test_openmdao_good_1(self):
+        """we replace WTMASS, YES_A, YES_B, YES_C with values"""
         updates = [
             #['MAT1', 3, 10.0],  # 3 is E -> set to 10.0
             #['MAT1', 4, 10.0],  # 3 is G -> set to 10.0
@@ -43,7 +43,7 @@ class TestOpenMDAO(unittest.TestCase):
         #PSOLID   4       1       0
         #CTETRA         8       4      11      12      13      15
 
-        bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
+        bdf_filename = os.path.join(mesh_utils_path, 'test_mass.dat')
 
         model = BDF(debug=False)
         model.read_bdf(bdf_filename)
@@ -60,7 +60,7 @@ class TestOpenMDAO(unittest.TestCase):
             ['CHEXA', 100, 3, 20],
             ['FAKECARD', 100, 3, 20],
         ]
-        bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
+        bdf_filename = os.path.join(mesh_utils_path, 'test_mass.dat')
 
         model = BDF(debug=False)
         model.read_bdf(bdf_filename)
@@ -75,7 +75,7 @@ class TestOpenMDAO(unittest.TestCase):
             ['PARAM', 'WTMASS', 3, 0.005],  # value2; invalid b/c WTMASS
             ['PCOMP', 1, 24, 'YES_D'],  # too many plies
         ]
-        bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
+        bdf_filename = os.path.join(mesh_utils_path, 'test_mass.dat')
 
         model = BDF(debug=False)
         model.read_bdf(bdf_filename)
