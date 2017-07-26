@@ -415,7 +415,7 @@ class FREQ(BaseCard):
         return self.comment + print_card_16(card)
 
 
-class FREQ1(FREQ):
+class FREQ1(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency
     response problems by specification of a starting frequency, frequency
@@ -479,6 +479,10 @@ class FREQ1(FREQ):
         assert len(card) <= 5, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
+    def raw_fields(self):
+        list_fields = ['FREQ1', self.sid, self.f1, self.df, self.ndf]
+        return list_fields
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
@@ -486,7 +490,7 @@ class FREQ1(FREQ):
         return self.comment + print_card_16(card)
 
 
-class FREQ2(FREQ):
+class FREQ2(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency
     response problems by specification of a starting frequency, final
@@ -526,6 +530,8 @@ class FREQ2(FREQ):
         self.f2 = f2
         self.nf = nf
 
+        assert f1 > 0., 'FREQ2: f1=%s f2=%s nf=%s' % (f1, f2, nf)
+        assert nf > 0, 'FREQ2: f1=%s f2=%s nf=%s' % (f1, f2, nf)
         d = 1. / nf * log(f2 / f1)
         freqs = [f1]
         for i in range(1, nf + 1):
@@ -552,6 +558,15 @@ class FREQ2(FREQ):
         return FREQ2(sid, f1, f2, nf, comment=comment)
         #return FREQ(sid, freqs, comment=comment)
 
+    def raw_fields(self):
+        list_fields = ['FREQ2', self.sid, self.f1, self.f2, self.nf]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class FREQ3(FREQ):
     """

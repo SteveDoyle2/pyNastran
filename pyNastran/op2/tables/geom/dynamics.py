@@ -444,6 +444,7 @@ class DYNAMICS(GeomCommon):
         ints = np.fromstring(data, dtype='int32')
         floats = np.fromstring(data, dtype='float32')
         i_minus_1s = np.where(ints == -1)[0]
+        nentries = len(i_minus_1s)
 
         i0 = 0
         for i_minus_1 in i_minus_1s:
@@ -456,6 +457,7 @@ class DYNAMICS(GeomCommon):
             freq = self.add_freq5(sid, fractions, f1=f1, f2=f2)
             #print('freq =', freq)
             i0 = i_minus_1 + 1
+        self._increase_card_count('FREQ5', nentries)
         return len(data)
 
         #ntotal = 20 # 4*5
@@ -469,7 +471,7 @@ class DYNAMICS(GeomCommon):
                 #self.binary_debug.write('  FREQ5=%s\n' % str(out))
             #freq = self.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
             #n += ntotal
-        self._increase_card_count('FREQ5', nentries)
+        #self._increase_card_count('FREQ5', nentries)
 
 
 #NLRSFD

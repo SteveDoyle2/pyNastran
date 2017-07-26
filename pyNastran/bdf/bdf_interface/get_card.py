@@ -860,6 +860,7 @@ class GetCard(GetMethods):
                                     g1, load.g34.nid)
                                 nface = 4
                             #assert face == face1
+                        #elif elem.type == 'CPYRAM':
                         else:
                             msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
                                    % (load_case_id, eid, elem.type, load.type))
@@ -876,8 +877,8 @@ class GetCard(GetMethods):
                                        #load.sid)
                             #print(msg % (pressure, eid))
                         else:
+                            #centroidal_pressures
                             pressure = pressures[0]
-                        #centroidal_pressures
 
                         if  load.surf_or_line == 'SURF':
                             if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
@@ -901,7 +902,6 @@ class GetCard(GetMethods):
                         #m = cross(r, f)
                         #M += m
 
-            #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
             elif load.type == 'SPCD':
                 #self.gids = [integer(card, 2, 'G1'),]
                 #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
@@ -933,18 +933,21 @@ class GetCard(GetMethods):
             self.log.warning('fail_nids = %s' % np.array(fail_nids_list))
         return centroidal_pressures, forces, spcd
 
-    def get_pressure_array(self, loadcase_id, eids, normals):
+    def get_pressure_array(self, load_case_id, eids, normals, stop_on_failure=True):
         """
-        Gets the pressures for a load case
+        Gets the shell pressures for a load case.
+        Used by the GUI.
 
         Parameters
         ----------
-        loadcase_id : int
+        load_case_id : int
             the load case to get the pressure contour for
-        eids : ???
-            ???
+        eids : (nelements, ) int ndarray
+            the element ids in sorted order
         normals : (nelements, 3) float ndarray
-            the element normals
+            the element normals that correspond to eids
+        stop_on_failure : bool; default=True
+            crashes if the load_case_id doesn't exist
 
         Returns
         -------
@@ -957,10 +960,18 @@ class GetCard(GetMethods):
         if 'PLOAD4' not in self.card_count:
             return False, None
 
-        loads, scale_factors = self.get_reduced_loads(loadcase_id)[:2]
+        if not isinstance(load_case_id, integer_types):
+            msg = 'load_case_id must be an integer; type=%s, load_case_id=\n%r' % (
+                type(load_case_id), load_case_id)
+            raise TypeError(msg)
 
+        loads, scale_factors = self.get_reduced_loads(
+            load_case_id, stop_on_failure=stop_on_failure)[:2]
+        if len(scale_factors) == 0:
+            return False, None
         pressures = np.zeros(len(self.elements), dtype='float32')
 
+        etypes_skipped = set([])
         iload = 0
         nloads = len(loads)
         show_nloads = nloads > 5000
@@ -970,7 +981,7 @@ class GetCard(GetMethods):
                 self.log.debug('  NastranIOv iload=%s/%s' % (iload, nloads))
             if load.type == 'PLOAD4':
                 #print(load.object_attributes())
-                for elem in load.eids:
+                for elem in load.eids_ref:
                     #elem = self.elements[eid]
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
                                      'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
@@ -991,7 +1002,11 @@ class GetCard(GetMethods):
                         #A, centroid, normal = elem.get_face_area_centroid_normal(
                             #load.g34.nid, load.g1.nid)
                         #r = centroid - p
+                    else:
+                        etypes_skipped.add(elem.type)
             iload += 1
+        if len(etypes_skipped):
+            self.log.warning('skipping pressure on %s' % list(etypes_skipped))
         return True, pressures
 
     def _get_temperatures_array(self, load_case_id, nid_map=None, dtype='float32'):
@@ -1070,16 +1085,17 @@ class GetCard(GetMethods):
                 lines_rigid.append([dependent, independent])
             else:
                 print(str(elem))
+                raise NotImplementedError(elem)
         return lines_rigid
 
-    def get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=False,
+    def get_reduced_loads(self, load_case_id, scale=1., skip_scale_factor0=False,
                           stop_on_failure=True, msg=''):
         """
         Accounts for scale factors.
 
         Parameters
         ----------
-        load_id : int
+        load_case_id : int
             the desired LOAD id
         scale : float; default=1.0
             additional scale factor on top of the existing LOADs
@@ -1103,17 +1119,18 @@ class GetCard(GetMethods):
 
         .. warning:: assumes xref=True
         """
-        if not isinstance(load_id, integer_types):
-            msg = 'load_id must be an integer; type=%s, load_id=\n%r' % (type(load_id), load_id)
+        if not isinstance(load_case_id, integer_types):
+            msg = 'load_case_id must be an integer; type=%s, load_case_id=\n%r' % (
+                type(load_case_id), load_case_id)
             raise TypeError(msg)
 
         try:
-            load_case = self.Load(load_id, msg=msg)
+            load_case = self.Load(load_case_id, msg=msg)
         except KeyError:
             if stop_on_failure:
                 raise
             else:
-                self.log.error("could not find expected LOAD/LOADSET id=%s" % load_id)
+                self.log.error("could not find expected LOAD/LOADSET id=%s" % load_case_id)
                 return []
 
         loads, scale_factors, is_grav = self._reduce_load_case(load_case, scale=scale)

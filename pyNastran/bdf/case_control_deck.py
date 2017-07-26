@@ -675,15 +675,21 @@ class CaseControlDeck(object):
         elif line_upper.startswith('RIGID'):
             if '=' in line:
                 (key, value) = line_upper.strip().split('=')
+                key = key.strip()
+                value = value.strip()
             else:
                 msg = 'expected item of form "name = value"   line=%r' % line.strip()
                 raise RuntimeError(msg)
-            assert key == 'RIGID', line_upper
+            assert key == 'RIGID', 'key=%r value=%r line=%r'  % (key, value, line)
             param_type = 'STRESS-type'
             options = []
             #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
             if value == 'LAGR':
                 value = 'LAGRANGE'
+            elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR']:
+                pass
+            else:
+                raise NotImplementedError('key=%r value=%r line=%r'  % (key, value, line))
 
         elif equals_count == 1:  # STRESS
             if '=' in line:

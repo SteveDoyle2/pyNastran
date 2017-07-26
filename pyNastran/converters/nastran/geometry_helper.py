@@ -423,8 +423,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
         speed_of_sound = np.full(mids.shape, np.nan, dtype='float32')
 
         has_mat8 = False
-        has_mat9 = False
         #has_mat10 = False
+        has_mat11 = False
         for umid in np.unique(mids):
             if umid == 0:
                 continue
@@ -448,11 +448,14 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 e22i = mat.e22
                 has_mat8 = True
                 rhoi = mat.rho
+            #elif mat.type == 'MAT9':
+                # Defines the material properties for linear, temperature-independent,
+                #anisotropic materials for solid isoparametric elements (PSOLID)
             elif mat.type in ['MAT11', 'MAT3D']:
                 e11i = mat.e1
                 e22i = mat.e2
                 e33i = mat.e3
-                has_mat9 = True
+                has_mat11 = True
                 rhoi = mat.rho
             elif mat.type == 'MAT10':
                 bulki = mat.bulk
@@ -473,7 +476,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             rho[i] = rhoi
             bulk[i] = bulki
             speed_of_sound[i] = speed_of_soundi
-        return has_mat8, has_mat9, e11, e22, e33
+        return has_mat8, has_mat11, e11, e22, e33
 
 def tri_quality(p1, p2, p3):
     """gets the quality metrics for a tri"""
