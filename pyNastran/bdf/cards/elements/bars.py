@@ -1114,7 +1114,12 @@ class CBEND(LineElement):
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
-
+        #BEND ELEMENT %1 BEND RADIUS OR ARC ANGLE INCONSISTENT
+        #WITH GEOM OPTION
+        #RB is nonzero on PBEND entry when GEOM option on CBEND entry is 1,
+        #2, or 4 or RB is zero when GEOM option is 3 or AB is nonzero when
+        #when GEOM option is 1, 2, or 3 or B is <= 0. or > 180, when
+        #GEOM option is 4.
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
@@ -1122,6 +1127,11 @@ class CBEND(LineElement):
     @property
     def nodes(self):
         return [self.ga, self.gb]
+
+    @nodes.setter
+    def nodes(self, values):
+        self.ga = values[0]
+        self.gb = values[1]
 
     def Ga(self):
         if self.ga_ref is None:
@@ -1132,6 +1142,19 @@ class CBEND(LineElement):
         if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
+
+    #def get_edge_ids(self):
+        #return [tuple(sorted(self.node_ids))]
+
+    @property
+    def nodes_ref(self):
+        return [self.ga_ref, self.gb_ref]
+
+    @nodes_ref.setter
+    def nodes_ref(self, values):
+        assert values is not None, values
+        self.ga_ref = values[0]
+        self.gb_ref = values[1]
 
     def Area(self):
         if isinstance(self.pid, integer_types):

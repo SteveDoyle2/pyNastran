@@ -4813,7 +4813,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.show_elements_mask(np.arange(self.nElements))
 
     def get_result_by_cell_id(self, cell_id, world_position, icase=None):
-        """TODO: should handle multiple cell_ids"""
+        """should handle multiple cell_ids"""
         if icase is None:
             icase = self.icase
         case_key = self.case_keys[icase] # int for object
@@ -4856,6 +4856,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         elif cell_type in [24, 25, 26, 27]: # CTETRA10, CHEXA20, CPENTA15, CPYRAM13
             xyz = world_position
         elif cell_type in [3]: # CBAR, CBEAM, CELASx, CDAMPx, CBUSHx
+            node_xyz = np.zeros((nnodes, 3), dtype='float32')
+            for ipoint in range(nnodes):
+                point = points.GetPoint(ipoint)
+                node_xyz[ipoint, :] = point
+            xyz = node_xyz.mean(axis=0)
+        elif cell_type in [21]: # CBEND
+            # 21-QuadraticEdge
             node_xyz = np.zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):
                 point = points.GetPoint(ipoint)

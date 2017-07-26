@@ -415,7 +415,7 @@ class FREQ(BaseCard):
         return self.comment + print_card_16(card)
 
 
-class FREQ1(FREQ):
+class FREQ1(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency
     response problems by specification of a starting frequency, frequency
@@ -479,6 +479,10 @@ class FREQ1(FREQ):
         assert len(card) <= 5, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
+    def raw_fields(self):
+        list_fields = ['FREQ1', self.sid, self.f1, self.df, self.ndf]
+        return list_fields
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
@@ -486,7 +490,7 @@ class FREQ1(FREQ):
         return self.comment + print_card_16(card)
 
 
-class FREQ2(FREQ):
+class FREQ2(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency
     response problems by specification of a starting frequency, final
@@ -526,6 +530,8 @@ class FREQ2(FREQ):
         self.f2 = f2
         self.nf = nf
 
+        assert f1 > 0., 'FREQ2: f1=%s f2=%s nf=%s' % (f1, f2, nf)
+        assert nf > 0, 'FREQ2: f1=%s f2=%s nf=%s' % (f1, f2, nf)
         d = 1. / nf * log(f2 / f1)
         freqs = [f1]
         for i in range(1, nf + 1):
@@ -552,6 +558,15 @@ class FREQ2(FREQ):
         return FREQ2(sid, f1, f2, nf, comment=comment)
         #return FREQ(sid, freqs, comment=comment)
 
+    def raw_fields(self):
+        list_fields = ['FREQ2', self.sid, self.f1, self.f2, self.nf]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class FREQ3(FREQ):
     """
@@ -565,7 +580,27 @@ class FREQ3(FREQ):
     """
     type = 'FREQ3'
 
-    def __init__(self, sid, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0, comment=''):
+    def __init__(self, sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment=''):
+        """
+        Creates a FREQ4 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float; default=0.0???
+            Lower bound of frequency range in cycles per unit time.
+        f2 : float; default=1E20???
+            Upper bound of frequency range in cycles per unit time.
+        freq_type : str; default=LINEAR
+            valid_types={LINEAR, LOG}
+        nef : int; default=10
+            ???
+        cluster : float; default=1.0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         if f2 is None:
@@ -573,25 +608,38 @@ class FREQ3(FREQ):
         self.sid = sid
         self.f1 = f1
         self.f2 = f2
-        self.Type = Type
+        self.freq_type = freq_type
         self.nef = nef
         self.cluster = cluster
 
-    ##def get_freqs(self):
-        ##raise NameError()
+    #def get_freqs(self):
+        #raise NameError()
+    def validate(self):
+        assert self.freq_type in ['LINEAR', 'LOG'], 'freq_type=%r' % self.freq_type
 
     @classmethod
     def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
         sid = integer(card, 1, 'sid')
         f1 = double(card, 2, 'f1')
         f2 = double_or_blank(card, 3, 'f2', f1)
-        Type = string_or_blank(card, 4, 'Type', 'LINEAR')
+        freq_type = string_or_blank(card, 4, 'Type', 'LINEAR')
         nef = integer_or_blank(card, 5, 'nef', 10)
         cluster = double_or_blank(card, 6, 'cluster', 1.0)
-        return FREQ3(sid, f1, f2=f2, Type=Type, nef=nef, cluster=cluster, comment=comment)
+        return FREQ3(sid, f1, f2=f2, freq_type=freq_type, nef=nef, cluster=cluster,
+                     comment=comment)
 
     def raw_fields(self):
-        return ['FREQ3', self.sid, self.f1, self.f2, self.Type, self.nef, self.cluster]
+        return ['FREQ3', self.sid, self.f1, self.f2, self.freq_type, self.nef, self.cluster]
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

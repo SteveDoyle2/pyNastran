@@ -4738,9 +4738,9 @@ class AddCards(AddMethods):
         self._add_freq_object(freq)
         return freq
 
-    def add_freq3(self, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0,
+    def add_freq3(self, sid, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0,
                   comment=''):
-        freq = FREQ3(f1, f2, Type, nef, cluster, comment)
+        freq = FREQ3(sid, f1, f2, Type, nef, cluster, comment)
         self._add_freq_object(freq)
         return freq
 
