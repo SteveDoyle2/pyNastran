@@ -91,9 +91,10 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self._increase_card_count('DAREA', nentries)
+        struc = Struct('3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('iiif', edata)
+            out = struc.unpack(edata)
             #(sid,p,c,a) = out
             darea = DAREA.add_op2_data(data=out)
             self._add_darea_object(darea)
@@ -112,9 +113,10 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self._increase_card_count('DELAY', nentries)
+        struc = Struct('3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('iiif', edata)
+            out = struc.unpack(edata)
             sid, nodes, components, delays = out
             if self.is_debug_file:
                 self.binary_debug.write('  DELAY=%s\n' % str(out))
@@ -134,7 +136,7 @@ class DYNAMICS(GeomCommon):
         Words 3 through 4 repeat until (-1,-1) occurs
         """
         ndata = len(data)
-        nfields = (ndata - n) // 4
+        #nfields = (ndata - n) // 4
 
         datan = data[n:]
         ints = np.fromstring(data[n:], self.idtype)
@@ -176,9 +178,10 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self._increase_card_count('DPHASE', nentries)
+        struc = Struct('3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('iiif', edata)
+            out = struc.unpack(edata)
             sid, nodes, components, delays = out
             if self.is_debug_file:
                 self.binary_debug.write('  DPHASE=%s\n' % str(out))
@@ -194,11 +197,12 @@ class DYNAMICS(GeomCommon):
         ntotal = 60
         nentries = (len(data) - n) // ntotal
         self._increase_card_count('EIGB', nentries)
+        struc = Struct('i8s ff 3i i 8s 4i')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             #self.show_data(edata[44:])
             # int, 8s, 2f, 3i, i, 8s, 4i
-            out = unpack('i8s ff 3i i 8s 4i', edata)
+            out = struc.unpack(edata)
             sid, method, L1, L2, nep, ndp, ndn, dunno, norm, g, c, dunno_a, dunno_b = out
             if self.is_debug_file:
                 self.binary_debug.write('EIGB=%s\n' % str(out))
@@ -365,9 +369,10 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
+        struc = Struct('iffi')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('iffi', edata)
+            out = struc.unpack(edata)
             sid, f1, df, ndf = out
             if self.is_debug_file:
                 self.binary_debug.write('FREQ1=%s\n' % str(out))
@@ -389,24 +394,45 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
+        struc = Struct('iffi')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('iffi', edata)
+            out = struc.unpack(edata)
             sid, f1, f2, nf = out
             if self.is_debug_file:
                 self.binary_debug.write('  FREQ2=%s\n' % str(out))
             #print('out = %s' % str(out))
-            freq = self.add_freq2(sid, f1, f2, nf)
+            self.add_freq2(sid, f1, f2, nf)
             n += ntotal
         self._increase_card_count('FREQ2', nentries)
         return n
 
     def _read_freq3(self, data, n):
-        """FREQ3(1407,14,39) - Record 16"""
-        self.log.info('skipping FREQ3 in DYNAMICS\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping FREQ3 in DYNAMICS\n')
-        return len(data)
+        """
+        FREQ3(1407,14,39) - Record 16
+
+        1 SID      I Set identification number
+        2 F1      RS Lower bound of modal frequency range
+        3 F2      RS Upper bound of modal frequency range
+        4 TYPE CHAR4 Type of interpolation: LINE or LOG
+        5 NEF      I Number of frequencies
+        6 BIAS    RS Clustering bias parameter
+        """
+        ntotal = 24 # 4*6
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(b('i 2f 4s if'))
+        for i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            sid, f1, f2, freq_type, nef, bias = out
+            if self.is_debug_file:
+                self.binary_debug.write('  FREQ3=%s\n' % str(out))
+
+            freq_type = freq_type.strip().decode('latin1')
+            self.add_freq3(sid, f1, f2=f2, Type=freq_type, nef=nef, cluster=bias)
+            n += ntotal
+        self._increase_card_count('FREQ3', nentries)
+        return n
 
     def _read_freq4(self, data, n):
         """
@@ -427,7 +453,7 @@ class DYNAMICS(GeomCommon):
             sid, f1, f2, fspread, nfm = out
             if self.is_debug_file:
                 self.binary_debug.write('  FREQ4=%s\n' % str(out))
-            freq = self.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
+            self.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
             n += ntotal
         self._increase_card_count('FREQ4', nentries)
         return n
@@ -450,11 +476,12 @@ class DYNAMICS(GeomCommon):
         for i_minus_1 in i_minus_1s:
             sid = ints[i0]
             floatsi = floats[i0 + 1:i_minus_1]
+            if self.is_debug_file:
+                self.binary_debug.write('  FREQ5=(%s, %s)\n' % (sid, floatsi.tolist()))
             f1 = floatsi[0]
             f2 = floatsi[1]
             fractions = floatsi[2:]
-            #print('fractions =', fractions)
-            freq = self.add_freq5(sid, fractions, f1=f1, f2=f2)
+            self.add_freq5(sid, fractions, f1=f1, f2=f2)
             #print('freq =', freq)
             i0 = i_minus_1 + 1
         self._increase_card_count('FREQ5', nentries)
@@ -582,9 +609,10 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 44
         nentries = (len(data) - n) // ntotal
+        struc = Struct('7i 4f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('7i 4f', edata)
+            out = struc.unpack(edata)
             sid, darea, delayi, dphasei, tci, tdi, load_type, delayr, dphaser, tcr, tdr = out # 44
 
             if self.is_debug_file:
@@ -626,9 +654,10 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 36
         nentries = (len(data) - n) // ntotal
+        struc = Struct('2i 2f 3i 2f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('2i 2f 3i 2f', edata)
+            out = struc.unpack(edata)
             sid, darea, dphaser, delayr, tci, tdi, load_type, tau, phi = out # 36
 
             if self.is_debug_file:
@@ -669,9 +698,10 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 44
         nentries = (len(data) - n) // ntotal
+        struc = Struct('7i 4f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('7i 4f', edata)
+            out = struc.unpack(edata)
             sid, darea, delayi, dphasei, tbi, tpi, load_type, delayr, dphaser, tbr, tpr = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
@@ -711,9 +741,10 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 36
         nentries = (len(data) - n) // ntotal
+        struc = Struct('7i 2f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('7i 2f', edata)
+            out = struc.unpack(edata)
             sid, darea, dphasei, delayi, tbi, tpi, load_type, tau, phase = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
@@ -732,8 +763,6 @@ class DYNAMICS(GeomCommon):
 
     def _read_tf(self, data, n):
         """TF"""
-        nfields = (len(data) - n) // 4
-
         # subtract of the header (sid, nid, component, b0, b1, b2)
         # divide by 5 (nid1, component1, a0, a1, a2)
         #nrows = (nfields - 6) // 5
@@ -795,9 +824,10 @@ class DYNAMICS(GeomCommon):
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
+            if self.is_debug_file:
+                self.binary_debug.write('  TIC=%s\n' % str(out))
             sid, nid, comp, u0, v0 = out
-            tic = self.add_tic(sid, [nid], [comp], u0=u0, v0=v0)
-            #print(tic)
+            self.add_tic(sid, [nid], [comp], u0=u0, v0=v0)
             n += ntotal
         self.card_count['TIC'] = nentries
         return n
@@ -821,9 +851,10 @@ class DYNAMICS(GeomCommon):
         ntotal = 8*4
         #self.show_data(data[n:], 'if')
         nentries = (len(data) - n) // ntotal
+        struc = Struct('5i 3f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('5i 3f', edata)
+            out = struc.unpack(edata)
             sid, darea, delayi, load_type, tid, delayr, us0, vs0 = out
             if self.is_debug_file:
                 self.binary_debug.write('TLOAD1=%s\n' % str(out))
@@ -862,9 +893,10 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 52
         nentries = (len(data) - n) // ntotal
+        struc = Struct('4i 7f 2f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('4i 7f 2f', edata)
+            out = struc.unpack(edata)
             sid, darea, delayi, load_type, t1, t2, freq, p, c, growth, delayr, us0, vs0 = out
             if self.is_debug_file:
                 self.binary_debug.write('  TLOAD2=%s\n' % str(out))
