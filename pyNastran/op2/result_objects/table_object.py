@@ -283,12 +283,13 @@ class TableArray(ScalarObject):  # displacement style table
                 #a = xarray.DataArray(self.data, items=column_values,
                                      #major_axis=node_gridtype, minor_axis=headers)
                 a = xarray.DataArray(self.data, coords=coords)
-                print(a)
-
-            self.data_frame.columns.names = column_names
-            #print(column_names)
-            #print(self.data_frame)
-            #print(self.data_frame.index.names)
+                #print(a)
+            else:
+                self.data_frame.columns.names = column_names
+                self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+                #print(column_names)
+                #print(self.data_frame)
+                #print(self.data_frame.index.names)
 
             letter_dims = [
                 ('G', 6),
