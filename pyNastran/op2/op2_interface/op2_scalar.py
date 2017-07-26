@@ -1368,6 +1368,28 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.read_mode == 1:
             self._set_structs()
 
+        self._read_version()
+
+        #=================
+        table_name = self._read_table_name(rewind=True, stop_on_failure=False)
+        if table_name is None:
+            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nNo tables exist...')
+
+        self._make_tables()
+        table_names = self._read_tables(table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('-' * 80 + '\n')
+            self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
+            self.binary_debug.close()
+        if self._close_op2:
+            self.f.close()
+            del self.binary_debug
+            del self.f
+        #self.remove_unpickable_data()
+        return table_names
+
+    def _read_version(self):
+        """reads the version header"""
         #try:
         markers = self.get_nmarkers(1, rewind=True)
         #except:
@@ -1393,46 +1415,70 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             self.read_markers([7])
             data = self.read_block()
-            assert data == b'NASTRAN FORT TAPE ID CODE - ', '%r' % data
+
+            if data == b'NASTRAN FORT TAPE ID CODE - ':
+                macro_version = 'nastran'
+            elif b'IMAT v' in data:
+                imat_version = data[6:11].encode('utf8')
+                macro_version = 'IMAT %s' % imat_version
+            else:
+                version_ints = Struct(b(self._endian + '7i')).unpack(data)
+                if version_ints == (1, 2, 3, 4, 5, 6 , 7):
+                    macro_version = 'MSFC'
+                else:
+                    self.show_data(data)
+                    raise NotImplementedError(data)
+                #self.show_data(data)
             if self.is_debug_file:
                 self.binary_debug.write('%r\n' % data)
+            #print('macro_version = %r' % macro_version)
+
 
             data = self._read_record()
             if self.is_debug_file:
                 self.binary_debug.write('%r\n' % data)
             version = data.strip()
-            if version.startswith(b'NX'):
-                self.set_as_nx()
-                self.set_table_type()
-            elif version.startswith(b'MODEP'):
-                # TODO: why is this separate?
-                # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
-                self.set_as_nx()
-                self.set_table_type()
-            elif version.startswith(b'AEROFREQ'):
-                # TODO: why is this separate?
-                # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                self.set_as_msc()
-                self.set_table_type()
-            elif version.startswith(b'AEROTRAN'):
-                # TODO: why is this separate?
-                # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                self.set_as_msc()
-                self.set_table_type()
-            elif version in [b'XXXXXXXX', b'V2005R3B']:
-                self.set_as_msc()
-                self.set_table_type()
-            elif version == b'OS12.210':
-                self.set_as_optistruct()
-                self.set_table_type()
-            elif version == b'OS11XXXX':
-                self.set_as_radioss()
-                self.set_table_type()
-            #elif data[:20] == b'XXXXXXXX20141   0   ':
-                #self.set_as_msc()
-                #self.set_table_type()
-            else:
-                raise RuntimeError('unknown version=%r' % version)
+
+            if macro_version == 'nastran':
+                if version.startswith(b'NX'):
+                    self.set_as_nx()
+                    self.set_table_type()
+                elif version.startswith(b'MODEP'):
+                    # TODO: why is this separate?
+                    # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
+                    self.set_as_nx()
+                    self.set_table_type()
+                elif version.startswith(b'AEROFREQ'):
+                    # TODO: why is this separate?
+                    # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+                    self.set_as_msc()
+                    self.set_table_type()
+                elif version.startswith(b'AEROTRAN'):
+                    # TODO: why is this separate?
+                    # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+                    self.set_as_msc()
+                    self.set_table_type()
+                elif version in [b'XXXXXXXX', b'V2005R3B']:
+                    self.set_as_msc()
+                    self.set_table_type()
+                elif version == b'OS12.210':
+                    self.set_as_optistruct()
+                    self.set_table_type()
+                elif version == b'OS11XXXX':
+                    self.set_as_radioss()
+                    self.set_table_type()
+                #elif data[:20] == b'XXXXXXXX20141   0   ':
+                    #self.set_as_msc()
+                    #self.set_table_type()
+                else:
+                    raise RuntimeError('unknown version=%r' % version)
+            elif macro_version.startswith('IMAT'):
+                assert version.startswith(b'ATA'), version
+                self._nastran_format = macro_version
+            elif macro_version == 'MSFC':
+                self._nastran_format = macro_version
+                #self.show_data(version)
+                #assert version.startswith(b'ATA'), version
 
             if self.is_debug_file:
                 self.binary_debug.write(data.decode(self._encoding) + '\n')
@@ -1443,24 +1489,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.post = -2
         else:
             raise NotImplementedError(markers)
-
-        #=================
-        table_name = self._read_table_name(rewind=True, stop_on_failure=False)
-        if table_name is None:
-            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nNo tables exist...')
-
-        self._make_tables()
-        table_names = self._read_tables(table_name)
-        if self.is_debug_file:
-            self.binary_debug.write('-' * 80 + '\n')
-            self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
-            self.binary_debug.close()
-        if self._close_op2:
-            self.f.close()
-            del self.binary_debug
-            del self.f
-        #self.remove_unpickable_data()
-        return table_names
 
     #def create_unpickable_data(self):
         #raise NotImplementedError()
@@ -1698,8 +1726,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self.read_markers([0], macro_rewind=rewind)
                 except:
                     # if we hit this block, we have a FATAL error
-                    raise FatalError('There was a Nastran FATAL Error.  '
-                                     'Check the F06.\nlast table=%r' % self.table_name)
+                    if not self._nastran_format.lower().startswith('imat'):
+                        raise FatalError('There was a Nastran FATAL Error.  '
+                                         'Check the F06.\nlast table=%r' % self.table_name)
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind

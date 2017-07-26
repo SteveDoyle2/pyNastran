@@ -24,6 +24,10 @@ class InputCntlReader(object):
         section = self.sections['Case_Information']
         name, comment, table = section
 
+        mach = None
+        alpha = None
+        beta = None
+        gamma = None
         for line, commenti in table:
             sline = line.split()
             flow_type = sline[0]
@@ -36,12 +40,14 @@ class InputCntlReader(object):
                 alpha = float(sline[1])
             elif flow_type == 'beta':
                 beta = float(sline[1])
+            elif flow_type == 'gamma':
+                gamma = float(sline[1])
             else:
-                msg = 'flow_type=%r allowed=[Mach, alpha, beta]\nsline=%s' % (
+                msg = 'flow_type=%r allowed=[Mach, alpha, beta, gamma]\nsline=%s' % (
                     flow_type, str(sline))
                 raise NotImplementedError(msg)
 
-        return mach, alpha, beta
+        return mach, alpha, beta, gamma
 
     def get_post_processing(self):
         section = self.sections['Post_Processing']

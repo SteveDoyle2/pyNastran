@@ -339,7 +339,8 @@ def run_and_compare_fems(
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
                         size, is_double, cid,
                         run_extract_bodies=run_extract_bodies,
-                        encoding=encoding, crash_cards=crash_cards, pickle_obj=pickle_obj)
+                        encoding=encoding, crash_cards=crash_cards, pickle_obj=pickle_obj,
+                        stop=stop)
         if stop:
             if not quiet:
                 print('card_count:')
@@ -483,7 +484,8 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
-             run_extract_bodies=False, encoding=None, crash_cards=None, pickle_obj=False):
+             run_extract_bodies=False, encoding=None, crash_cards=None, pickle_obj=False,
+             stop=False):
     """
     Reads/writes the BDF
 
@@ -529,11 +531,12 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 if card in fem1.card_count:
                     raise DisabledCardError('card=%r has been disabled' % card)
             #fem1.geom_check(geom_check=True, xref=False)
-            skin_filename = 'skin_file.bdf'
-            fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
-            if os.path.exists(skin_filename):
-                model = read_bdf(skin_filename, log=fem1.log)
-                os.remove(skin_filename)
+            if not stop:
+                skin_filename = 'skin_file.bdf'
+                fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
+                if os.path.exists(skin_filename):
+                    model = read_bdf(skin_filename, log=fem1.log)
+                    os.remove(skin_filename)
             if xref:
                 if run_extract_bodies:
                     extract_bodies(fem1)
