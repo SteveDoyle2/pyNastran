@@ -43,6 +43,7 @@ class ComplexPlateArray(OES_Object):
         return get_nnodes(self)
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexPlateArray"""
         #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']

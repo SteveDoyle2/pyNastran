@@ -60,6 +60,16 @@ $ this is a preload buckling case
 $FREQ   FreqID          Freq1           Freq2           etc
 FREQ*   22                         1.e-5            1.e1            2.e1
 *                   3.e1            4.e1
+$ freq1
+FREQ1	23		10.
+$ freq2
+FREQ2	24	2.	10000.
+$ freq3
+FREQ3	25	0.
+$ freq4
+FREQ4	26
+$ freq5
+FREQ5	27	0.	1000.	0.1	0.2	0.3	0.4
 $
 $DLOAD  dLoadID         GlobalScale     Scale           LoadID
 $       Scale           LoadID

@@ -456,9 +456,9 @@ class ScalarObject(BaseScalarObject):
         raise RuntimeError(msg)
         #assert dt>=0.
         #print("updating dt...dt=%s" % dt)
-        if dt is not None:
-            self.dt = dt
-            self.add_new_transient()
+        #if dt is not None:
+            #self.dt = dt
+            #self.add_new_transient()
 
     def _write_table_header(self, f, fascii, date):
         table_name = '%-8s' % self.table_name # 'BOUGV1  '

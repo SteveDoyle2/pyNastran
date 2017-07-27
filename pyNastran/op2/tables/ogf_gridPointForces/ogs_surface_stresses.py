@@ -21,6 +21,7 @@ class GridPointStressesArray(ScalarObject):
         self.ntimes = 0
 
     def build(self):
+        """sizes the vectorized attributes of the GridPointStressesArray"""
         self.grid_element = zeros((self.ntotal, 2), dtype='int32')
         #oxx, oyy, txy, angle, major, minor, ovm
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')

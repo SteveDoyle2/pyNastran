@@ -783,7 +783,7 @@ class PCOMP(CompositeShellProperty):
     def _verify(self, xref=False):
         pid = self.Pid()
         is_sym = self.is_symmetrical()
-        nplies = self.nPlies()
+        nplies = self.nplies
         nsm = self.Nsm()
         mids = self.Mids()
 

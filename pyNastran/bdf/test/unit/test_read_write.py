@@ -546,7 +546,7 @@ class TestReadWrite(unittest.TestCase):
         os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
         os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
         bdf_filename = os.path.join(sat_path, 'JOBS', 'QS', 'satellite_V02_ACA_QS_SOL101_VarEnv.dat')
-        read_bdf(bdf_filename)
+        read_bdf(bdf_filename, debug=False)
 
     def test_two_envs(self):
         """fails for two environment variables"""
@@ -574,7 +574,7 @@ class TestReadWrite(unittest.TestCase):
 
         pth = "INCLUDE '%Satellite_V02_bddm%:Satellite_V02_Materiaux.blk'"
         pth2 = get_include_filename([pth], include_dir='', is_windows=True)
-        print(pth2)
+        #print(pth2)
 
         #pth = "INCLUDE '$Satellite_V02_bddm:Satellite_V02_Materiaux.blk'"
         #pth2 = get_include_filename([pth], include_dir='', is_windows=False)

@@ -21,6 +21,7 @@ class AppliedLoadsVectorArray(ScalarObject):
         self.itotal = 0
 
     def build(self):
+        """sizes the vectorized attributes of the AppliedLoadsVectorArray"""
         if self.is_built:
             return
         self.eids = zeros(self.itotal, dtype='int32')

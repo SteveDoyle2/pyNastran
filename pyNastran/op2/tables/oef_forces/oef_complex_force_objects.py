@@ -48,6 +48,7 @@ class ComplexRodForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexRodForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -262,6 +263,7 @@ class ComplexCShearForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCShearForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -514,6 +516,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexSpringDamperForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -736,6 +739,7 @@ class ComplexViscForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexViscForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -933,6 +937,7 @@ class ComplexPlateForceArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexPlateForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1159,6 +1164,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexPlate2ForceArray"""
         if self.is_built:
             return
 
@@ -1416,6 +1422,7 @@ class ComplexCBarForceArray(ScalarObject):
         return True
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBarForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
@@ -1671,6 +1678,7 @@ class ComplexCBeamForceArray(ScalarObject):
         return True
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBeamForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
@@ -1935,6 +1943,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBendForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2190,6 +2199,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexSolidPressureForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2405,6 +2415,7 @@ class ComplexCBushForceArray(ScalarObject):
         self.ielement = 0
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBushForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
@@ -2693,6 +2704,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         return ['xxb', 'force_x', 'shear_y', 'shear_z', 'torsion', 'bending_y', 'bending_z']
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBendForceVUArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:

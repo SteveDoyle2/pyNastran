@@ -3279,6 +3279,14 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
         Returns
         -------
+        nids_all : (nnodes,) int ndarray
+            the GRID/SPOINT/EPOINT ids
+        nids_transform : dict[cd] : (nnodesi,) int ndarray
+            the indicies in nids_all that correspond to cd > 0
+            cd : int
+                the CD coordinate system
+            nnodesi : int
+                nnodesi <= nnodes
         icd_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
@@ -3316,61 +3324,19 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
     def get_displacement_index_transforms(self):
         """
-        Get index and transformation matricies for nodes with
-        their output in coordinate systems other than the global.
-        Used in combination with ``OP2.transform_displacements_to_global``
+        Deprecated in v1.0
+        Removed in v1.1
 
-        Returns
-        -------
-        icd_transform : dict{int cid : (n,) int ndarray}
-            Dictionary from coordinate id to index of the nodes in
-            ``self.point_ids`` that their output (`CD`) in that
-            coordinate system.
-        beta_transforms : dict{in:3x3 float ndarray}
-            Dictionary from coordinate id to 3 x 3 transformation
-            matrix for that coordinate system.
+        Old
+        ---
+        icd_transform, beta_transforms = model.get_displacement_index_transforms()
 
-        Example
-        -------
-        # assume GRID 1 has a CD=10
-        # assume GRID 2 has a CD=10
-        # assume GRID 5 has a CD=50
-        >>> model.point_ids
-        [1, 2, 5]
-        >>> icd_transform, beta_transforms = model.get_displacement_index_transforms()
-        >>> icd_transform[10]
-        [0, 1]
-        >>> beta_transforms[10]
-        [1., 0., 0.]
-        [0., 0., 1.]
-        [0., 1., 0.]
-
-        >>> icd_transform[50]
-        [2]
-        >>> beta_transforms[50]
-        [1., 0., 0.]
-        [0., 1., 0.]
-        [0., 0., 1.]
+        New
+        ---
+        nids_all, nids_transform, icd_transform = model.get_displacement_index()
         """
-        self.deprecated('icd_transform, model.get_displacement_index_transforms()',
-                        'icd_transform, beta_transforms = model.get_displacement_index()', '1.1')
-        nids_transform = defaultdict(list)
-        icd_transform = {}
-        beta_transforms = {}
-        if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
-            return icd_transform, beta_transforms
-
-        for nid, node in sorted(iteritems(self.nodes)):
-            cid_d = node.Cd()
-            if cid_d:
-                nids_transform[cid_d].append(nid)
-
-        nids_all = np.array(sorted(self.point_ids))
-        for cid in sorted(iterkeys(nids_transform)):
-            nids = np.array(nids_transform[cid])
-            icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
-            beta_transforms[cid] = self.coords[cid].beta()
-        return icd_transform, beta_transforms
+        self.deprecated('icd_transform, beta_transforms = model.get_displacement_index_transforms()',
+                        'nids_all, nids_transform, icd_transform = model.get_displacement_index()', '1.0')
 
     def _get_card_name(self, lines):
         # type: (List[str]) -> str

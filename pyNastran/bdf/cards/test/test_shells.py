@@ -151,7 +151,7 @@ class TestShells(unittest.TestCase):
         # pcomp
         pcomp = model.Property(pid + 1)
         self.assertEqual(pcomp.Pid(), pid + 1)
-        self.assertEqual(pcomp.nPlies(), 4)
+        self.assertEqual(pcomp.nplies, 4)
 
         self.assertEqual(pcomp.Mid(0), mid)
         self.assertEqual(pcomp.Nsm(), nsm)
@@ -312,7 +312,7 @@ class TestShells(unittest.TestCase):
 
         p = PCOMP.add_op2_data(data)
         self.assertFalse(p.is_symmetrical())
-        self.assertEqual(p.nPlies(), 3)
+        self.assertEqual(p.nplies, 3)
 
         self.assertAlmostEqual(p.Thickness(), 0.6)
         self.assertAlmostEqual(p.Thickness(0), 0.1)
@@ -444,7 +444,7 @@ class TestShells(unittest.TestCase):
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
         p = PCOMP.add_op2_data(data)
         self.assertTrue(p.is_symmetrical())
-        self.assertEqual(p.nPlies(), 6)
+        self.assertEqual(p.nplies, 6)
 
         self.assertAlmostEqual(p.Thickness(), 1.2)
         self.assertAlmostEqual(p.Thickness(0), 0.1)

@@ -42,6 +42,7 @@ class ComplexBarArray(OES_Object):
         return True
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBarArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:

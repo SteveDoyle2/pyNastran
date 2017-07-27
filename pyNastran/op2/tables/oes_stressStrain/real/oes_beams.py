@@ -62,6 +62,7 @@ class RealBeamArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
+        """sizes the vectorized attributes of the RealBeamArray"""
         #print("self.ielement =", self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
@@ -137,17 +138,24 @@ class RealBeamArray(OES_Object):
             i = 0
             if self.is_sort1():
                 for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
+                    for ieid, (eid, nid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
-                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                        (axial_stress1, equiv_stress1, total_strain1, eff_plastic_creep_strain1,
+                         eff_creep_strain1, linear_torsional_stress1) = t1
+                        (axial_stress2, equiv_stress2, total_strain2, eff_plastic_creep_strain2,
+                         eff_creep_strain2, linear_torsional_stress2) = t2
                         if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
-                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
-                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                                axial_stress1, equiv_stress1, total_strain1,
+                                eff_plastic_creep_strain1, eff_creep_strain1,
+                                linear_torsional_stress1,
+
+                                axial_stress2, equiv_stress2, total_strain2,
+                                eff_plastic_creep_strain2, eff_creep_strain2,
+                                linear_torsional_stress2)
                             i += 1
                         if i > 10:
                             print(msg)
@@ -286,6 +294,7 @@ class RealBeamArray(OES_Object):
 
 
 class RealNonlinearBeamArray(OES_Object):
+    """tested by elements/loadstep_elements.op2"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -318,6 +327,7 @@ class RealNonlinearBeamArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
+        """sizes the vectorized attributes of the RealNonlinearBeamArray"""
         #print("self.ielement =", self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
@@ -446,6 +456,39 @@ class RealNonlinearBeamArray(OES_Object):
         #ind.sort()
         #return ind
 
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, (eid, nid) in enumerate(self.element_node):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (force1, stress1) = t1
+                        (force2, stress2) = t2
+                        if not np.allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s)\n  (%s, %s)\n' % (
+                                eid,
+                                force1, stress1,
+                                force2, stress2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
+
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1,
                   is_mag_phase=False, is_sort1=True):
         if header is None:
@@ -478,8 +521,8 @@ class RealNonlinearBeamArray(OES_Object):
             #'0               1         1     C        1.738817E+03      1.738817E+03      5.796055E-05      0.0               0.0\n',
             #'                                D        1.229523E+03      1.229523E+03      4.098411E-05      0.0               0.0\n',
             eid_old = None
-            for (i, eid, nid, loc, longi, eqs, te, eps, ecs) in zip(
-                count(), eids, nids, locs, longs, eqss, tes, epss, ecss):
+            for (eid, nid, loc, longi, eqs, te, eps, ecs) in zip(
+                eids, nids, locs, longs, eqss, tes, epss, ecss):
 
                 vals = [longi, eqs, te, eps, ecs]
                 vals2 = write_floats_13e(vals)
@@ -557,6 +600,7 @@ class RealBeamStrainArray(RealBeamArray, StrainObject):
 
 
 class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
+    """tested by elements/loadstep_elements.op2"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealNonlinearBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)

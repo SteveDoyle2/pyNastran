@@ -41,6 +41,7 @@ class RealShearArray(OES_Object):
         raise NotImplementedError()
 
     def build(self):
+        """sizes the vectorized attributes of the RealShearArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return

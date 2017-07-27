@@ -18,9 +18,11 @@ class DeprecatedCompositeShellProperty(object):
         return self.get_thickness(iply)
 
     def nPlies(self):
-        return self.get_nplies()
+        self.deprecated('prop.nPlies()', 'prop.nplies', '1.1')
+        return self.nplies
 
     def get_nplies(self):
+        self.deprecated('prop.get_nplies()', 'prop.nplies', '1.1')
         return self.nplies
 
     def get_material_ids(self):

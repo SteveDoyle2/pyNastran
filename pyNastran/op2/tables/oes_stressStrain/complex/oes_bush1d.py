@@ -34,6 +34,7 @@ class ComplexCBush1DArray(OES_Object):
         raise NotImplementedError()
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBush1DArray"""
         if self.is_built:
             return
 

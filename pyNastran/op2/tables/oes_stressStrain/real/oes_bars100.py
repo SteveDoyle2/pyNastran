@@ -53,6 +53,7 @@ class RealBar10NodesArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
+        """sizes the vectorized attributes of the RealBar10NodesArray"""
         #print("self.ielement =", self.ielement)
         # print('RealBar10NodesArray isubcase=%s ntimes=%s nelements=%s ntotal=%s' % (
             # self.isubcase, self.ntimes, self.nelements, self.ntotal))
@@ -209,7 +210,7 @@ class RealBar10NodesArray(OES_Object):
         return page_num
 
     def _write_sort1_as_sort1(self, f06_file, header, page_stamp, msg, page_num):
-        (ntimes, ntotal) = self.data.shape[:2]
+        ntimes = self.data.shape[0]
         eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]

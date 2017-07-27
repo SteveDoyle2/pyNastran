@@ -41,6 +41,7 @@ class RealTriaxArray(OES_Object):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealTriaxArray"""
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)

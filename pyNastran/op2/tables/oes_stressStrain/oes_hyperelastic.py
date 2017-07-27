@@ -12,6 +12,7 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 class HyperelasticQuadArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        #HyperelasticQuad
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -55,6 +56,7 @@ class HyperelasticQuadArray(OES_Object):
             #raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
 
     def build(self):
+        """sizes the vectorized attributes of the HyperelasticQuadArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:

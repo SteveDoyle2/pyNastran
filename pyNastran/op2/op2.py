@@ -221,7 +221,7 @@ class OP2(OP2_Scalar):
         Crashes if they're not equal.
         """
         if not self.read_mode == op2_model.read_mode:
-            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
+            self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
                 self.read_mode, op2_model.read_mode))
             return True
         table_types = self.get_table_types()
@@ -229,7 +229,7 @@ class OP2(OP2_Scalar):
             adict = getattr(self, table_type)
             bdict = getattr(op2_model, table_type)
             if len(adict) != len(bdict):
-                print('len(self.%s)=%s len(op2_model.%s)=%s' % (
+                self.log.warning('len(self.%s)=%s len(op2_model.%s)=%s' % (
                     table_type, len(adict), table_type, len(bdict)))
                 return False
             for key, avalue in iteritems(adict):
@@ -237,15 +237,16 @@ class OP2(OP2_Scalar):
                 aname = avalue.__class__.__name__
                 bname = bvalue.__class__.__name__
                 if not aname == bname:
-                    print('type(a)=%s type(b)=%s' % (aname, bname))
+                    self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
                     return False
                 if not any(word in aname for word in ['Array', 'Eigenvalues']):
                     msg = '%s is not an Array ... assume equal' % aname
-                    print(msg)
+                    self.log.warning(msg)
                     raise NotImplementedError('%s __eq__' % aname)
                     #continue
                 if avalue != bvalue:
-                    print('key=%s table_type=%r is different; class_name=%r' % (key, table_type, aname))
+                    self.log.warning('key=%s table_type=%r are not equal; class_name=%r' % (
+                        key, table_type, aname))
                     return False
         return True
 

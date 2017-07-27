@@ -49,6 +49,7 @@ class RealSolidArray(OES_Object):
         self.ielement = 0
 
     def build(self):
+        """sizes the vectorized attributes of the RealSolidArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return

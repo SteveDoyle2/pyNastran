@@ -974,6 +974,24 @@ class TestLoads(unittest.TestCase):
         os.remove('skin.bdf')
         save_load_deck(model2)
 
+    def test_load(self):
+        """makes sure LOAD cards don't get sorted"""
+        model = BDF(debug=False)
+
+        load = model.add_load(sid=13, scale=1., scale_factors=[0.5, 0.1], load_ids=[11, 10])
+        msg8 = load.write_card(size=8, is_double=False)
+        load_expected = 'LOAD          13      1.      .5      11      .1      10'
+        assert msg8.rstrip() == load_expected, '%r' % msg8
+
+        load2_expected = 'LOAD          14      1.      .5      11      .1      10      .4      11'
+        load2 = model.add_load(sid=14, scale=1., scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10, 11])
+        msg8 = load2.write_card(size=8, is_double=False)
+        assert msg8.rstrip() == load2_expected, '%r' % msg8
+        model.validate()
+
+        load2 = model.add_load(sid=14, scale=1., scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
+        with self.assertRaises(RuntimeError):
+            model.validate()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

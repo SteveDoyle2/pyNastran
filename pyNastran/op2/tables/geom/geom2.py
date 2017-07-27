@@ -401,8 +401,8 @@ class GEOM2(GeomCommon):
         """
         ntotal = 52 # 4*13
         nentries = (len(data) - n) // ntotal
-        istruc = Struct(b(self._endian + '4i 3f 6i'))
         fstruc = Struct(b(self._endian + '4i 3f 6i'))
+        istruc = Struct(b(self._endian + '4i 3i 6i'))
 
         for i in range(nentries):
             edata = data[n:n + 52]  # 13*4
@@ -410,7 +410,7 @@ class GEOM2(GeomCommon):
             # per DMAP: F = FE bit-wise AND with 3
             f = fe & 3
             if f == 0:
-                out = istruc.unpack(edata)
+                out = fstruc.unpack(edata)
                 (eid, pid, ga, gb, x1, x2, x3, fe,
                  dunnoa, dunnob, dunnoc, dunnod, geom) = out
                 data_in = [[eid, pid, ga, gb, geom],
@@ -422,7 +422,7 @@ class GEOM2(GeomCommon):
                 data_in = [[eid, pid, ga, gb, geom],
                            [f, x1, x2, x3]]
             elif f == 2:
-                out = fstruc.unpack(edata)
+                out = istruc.unpack(edata)
                 (eid, pid, ga, gb, g0, junk, junk, fe,
                  dunnoa, dunnob, dunnoc, dunnod, geom) = out
                 data_in = [[eid, pid, ga, gb, geom],
@@ -430,6 +430,7 @@ class GEOM2(GeomCommon):
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
             elem = CBEND.add_op2_data(data_in)
+            elem.validate()
             assert f == fe, 'f=%s type(f)=%s fe=%s\n%s' % (f, type(f), fe, elem)
 
             self.add_op2_element(elem)

@@ -106,7 +106,7 @@ class DeprecatedCompositeShellProperty(object):
         return self.get_thickness(iply)
 
     def nPlies(self):
-        return self.get_nplies()
+        return self.nplies
 
     def Nsm(self):
         return self.get_nonstructural_mass()

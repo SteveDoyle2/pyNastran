@@ -573,10 +573,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def deprecated(self, old_name, new_name, deprecated_version):
         deprecated(old_name, new_name, deprecated_version, levels=[-1])
 
-    #def add_tools(self, tools):
-        #self.deprecated('add_tools', 'removed...', '0.7')
-        #self.tools += tools
-
     def on_flip_picker(self):
         return
         # if self.pick_state == 'centroidal':

@@ -37,6 +37,7 @@ class ComplexRodArray(OES_Object):
         raise NotImplementedError()
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexRodArray"""
         if self.is_built:
             return
 

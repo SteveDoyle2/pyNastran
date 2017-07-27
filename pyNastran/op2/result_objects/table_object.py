@@ -199,6 +199,7 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal = 0
 
     def build(self):
+        """sizes the vectorized attributes of the TableArray"""
         #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1(),
                                                                           #self.ntotal, self._nnodes // self.ntimes))
         if self.is_built:

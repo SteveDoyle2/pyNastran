@@ -1134,6 +1134,7 @@ class GetCard(GetMethods):
                 return []
 
         loads, scale_factors, is_grav = self._reduce_load_case(load_case, scale=scale)
+        assert len(loads) == len(scale_factors)
         return loads, scale_factors, is_grav
 
     def _reduce_load_case(self, load_case, scale=1., unallowed_load_ids=None, msg=''):
@@ -1340,10 +1341,6 @@ class GetCard(GetMethods):
             else:
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components
-
-    #def get_node_ids_with_element(self, eid, msg=''):
-        #self.deprecated('get_node_ids_with_element(eid)', 'get_node_ids_with_elements(eid)', '0.9')
-        #return self.get_node_ids_with_elements(eid, msg=msg)
 
     def _get_maps(self, eids=None, map_names=None,
                   consider_0d=True, consider_0d_rigid=True,

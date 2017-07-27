@@ -1111,6 +1111,8 @@ class CBEND(LineElement):
         #return L
 
     def validate(self):
+        if self.g0 is not None:
+            assert isinstance(self.g0, integer_types), 'g0=%s must be an integer' % self.g0
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
@@ -1120,6 +1122,7 @@ class CBEND(LineElement):
         #2, or 4 or RB is zero when GEOM option is 3 or AB is nonzero when
         #when GEOM option is 1, 2, or 3 or B is <= 0. or > 180, when
         #GEOM option is 4.
+
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]

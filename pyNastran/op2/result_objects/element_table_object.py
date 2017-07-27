@@ -144,6 +144,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
         self.ielement = 0
 
     def build(self):
+        """sizes the vectorized attributes of the ElementTableArray"""
         #print('_nelements=%s ntimes=%s sort1?=%s ntotal=%s -> _nelements=%s' % (
             #self._nelements, self.ntimes, self.is_sort1(),
             #self.ntotal, self._nelements // self.ntimes))

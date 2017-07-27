@@ -38,6 +38,7 @@ class RealSpringArray(OES_Object):
         raise NotImplementedError()
 
     def build(self):
+        """sizes the vectorized attributes of the RealSpringArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -317,6 +318,7 @@ class RealNonlinearSpringStressArray(OES_Object):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealNonlinearSpringStressArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return

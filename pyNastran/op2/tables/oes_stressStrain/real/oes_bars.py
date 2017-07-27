@@ -59,6 +59,7 @@ class RealBarArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
+        """sizes the vectorized attributes of the RealBarArray"""
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)
