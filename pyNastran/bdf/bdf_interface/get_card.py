@@ -1134,6 +1134,7 @@ class GetCard(GetMethods):
                 return []
 
         loads, scale_factors, is_grav = self._reduce_load_case(load_case, scale=scale)
+        assert len(loads) == len(scale_factors)
         return loads, scale_factors, is_grav
 
     def _reduce_load_case(self, load_case, scale=1., unallowed_load_ids=None, msg=''):
