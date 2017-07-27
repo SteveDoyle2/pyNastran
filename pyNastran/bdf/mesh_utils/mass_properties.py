@@ -76,12 +76,16 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
 
     # if either element_id or mass_ids are specified and the other is not, use only the
     # specified ids
+    #
+    # TODO: If eids are requested, but don't exist no warning is thrown.
+    #       Decide if this is the desired behavior.
     else:
         if element_ids is None:
             elements = []
         else:
             assert len(model.elements) > 0
             elements = [element for eid, element in model.elements.items() if eid in element_ids]
+
         if mass_ids is None:
             masses = []
         else:

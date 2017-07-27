@@ -254,7 +254,7 @@ def main():
     msg += '  format_converter -h | --help\n'
     msg += '  format_converter -v | --version\n'
     msg += "\n"
-    msg += "Options:\n"
+    msg += "Required Arguments:\n"
     msg += "  format1        format type (nastran, cart3d, stl, ugrid, tecplot)\n"
     msg += "  format2        format type (nastran, cart3d, stl, ugrid, tecplot)\n"
     msg += "  INPUT          path to input file\n"

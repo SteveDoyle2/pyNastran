@@ -1166,18 +1166,6 @@ class GetCard(GetMethods):
                         is_grav_out = True
                     scale_factors_out += scale_factorsi
                     loads_out += loadsi
-
-                # old...
-                #scale_factors, loads = load.get_reduced_loads()
-                #for scale_factor, loadi in zip(scale_factors, loads):
-                    #if skip_scale_factor0 and scale_factor == 0.0:
-                        #continue
-                    #scale_factors2.append(scale_factor)
-                    #loads2.append(loadi)
-
-                # very old....
-                #scale_factors2 += scale_factors
-                #loads2 += loads
             elif load.type in 'GRAV':
                 scale_factors_out.append(scale)
                 loads_out.append(load)

@@ -63,6 +63,16 @@ class TestMassElements(unittest.TestCase):
         assert np.array_equal(cg, np.zeros(3))
         assert np.array_equal(I, np.zeros(6))
 
+        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=[20], reference_point=None,
+                                            sym_axis=None, scale=None)
+        assert np.allclose(mass, massi), 'massi=%s mass=%s' % (massi, mass)
+        assert np.array_equal(cg, np.zeros(3))
+        assert np.array_equal(I, np.zeros(6))
+
+        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=[42], reference_point=None,
+                                            sym_axis=None, scale=None)
+        assert np.allclose(mass, 0.), 'massi=%s mass=%s' % (massi, mass) ## TODO: is this reasonable behavior
+
     def test_cmass1(self):
         """tests a CMASS1, PMASS, CMASS2, DDVAL"""
         model = BDF(debug=False)
