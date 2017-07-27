@@ -478,8 +478,8 @@ class RealNonlinearBeamArray(OES_Object):
             #'0               1         1     C        1.738817E+03      1.738817E+03      5.796055E-05      0.0               0.0\n',
             #'                                D        1.229523E+03      1.229523E+03      4.098411E-05      0.0               0.0\n',
             eid_old = None
-            for (i, eid, nid, loc, longi, eqs, te, eps, ecs) in zip(
-                count(), eids, nids, locs, longs, eqss, tes, epss, ecss):
+            for (eid, nid, loc, longi, eqs, te, eps, ecs) in zip(
+                eids, nids, locs, longs, eqss, tes, epss, ecss):
 
                 vals = [longi, eqs, te, eps, ecs]
                 vals2 = write_floats_13e(vals)

@@ -831,7 +831,7 @@ class SLOAD(Load):
         """
         msg = ' which is required by SLOAD=%s' % (self.sid)
         self.nodes_ref = []
-        for i, nid in enumerate(self.nodes):
+        for nid in self.nodes:
             self.nodes_ref.append(model.Node(nid, msg=msg))
 
     def safe_cross_reference(self, model):

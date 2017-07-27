@@ -2921,8 +2921,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         [0., 1., 0.]
         [0., 0., 1.]
         """
-        self.deprecated('icd_transform, model.get_displacement_index_transforms()',
-                        'icd_transform, beta_transforms = model.get_displacement_index()', '1.1')
+        self.deprecated('icd_transform, beta_transforms= model.get_displacement_index_transforms()',
+                        'nids_all, nids_transform, icd_transform = model.get_displacement_index()', '1.0')
         nids_transform = defaultdict(list)
         icd_transform = {}
         beta_transforms = {}

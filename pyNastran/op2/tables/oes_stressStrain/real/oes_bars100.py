@@ -209,7 +209,7 @@ class RealBar10NodesArray(OES_Object):
         return page_num
 
     def _write_sort1_as_sort1(self, f06_file, header, page_stamp, msg, page_num):
-        (ntimes, ntotal) = self.data.shape[:2]
+        ntimes = self.data.shape[0]
         eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]

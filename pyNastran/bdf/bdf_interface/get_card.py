@@ -1353,10 +1353,6 @@ class GetCard(GetMethods):
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components
 
-    #def get_node_ids_with_element(self, eid, msg=''):
-        #self.deprecated('get_node_ids_with_element(eid)', 'get_node_ids_with_elements(eid)', '0.9')
-        #return self.get_node_ids_with_elements(eid, msg=msg)
-
     def _get_maps(self, eids=None, map_names=None,
                   consider_0d=True, consider_0d_rigid=True,
                   consider_1d=True, consider_2d=True, consider_3d=True):
