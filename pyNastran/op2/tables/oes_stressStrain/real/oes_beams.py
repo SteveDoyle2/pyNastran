@@ -294,6 +294,7 @@ class RealBeamArray(OES_Object):
 
 
 class RealNonlinearBeamArray(OES_Object):
+    """tested by elements/loadstep_elements.op2"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -599,6 +600,7 @@ class RealBeamStrainArray(RealBeamArray, StrainObject):
 
 
 class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
+    """tested by elements/loadstep_elements.op2"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealNonlinearBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)

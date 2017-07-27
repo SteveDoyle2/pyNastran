@@ -172,7 +172,7 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
 
-    def test_gui_elements_04(self):
+    def test_gui_elements_05(self):
         """tests a large number of elements and results in SOL 106-loadstep"""
         #bdf_filename = os.path.join(model_path, 'elements', 'loadstep_elements.bdf')
         op2_filename = os.path.join(model_path, 'elements', 'loadstep_elements.op2')
