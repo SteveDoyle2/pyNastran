@@ -64,6 +64,7 @@ class RealStrainEnergyArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealStrainEnergyArray"""
         if self.is_built:
             return
         del self.dt_temp
@@ -399,6 +400,7 @@ class ComplexStrainEnergyArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexStrainEnergyArray"""
         if self.is_built:
             return
         del self.dt_temp

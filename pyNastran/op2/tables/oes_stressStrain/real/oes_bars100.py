@@ -53,6 +53,7 @@ class RealBar10NodesArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
+        """sizes the vectorized attributes of the RealBar10NodesArray"""
         #print("self.ielement =", self.ielement)
         # print('RealBar10NodesArray isubcase=%s ntimes=%s nelements=%s ntotal=%s' % (
             # self.isubcase, self.ntimes, self.nelements, self.ntotal))

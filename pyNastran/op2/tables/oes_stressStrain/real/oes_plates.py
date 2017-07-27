@@ -56,6 +56,7 @@ class RealPlateArray(OES_Object):
             raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
 
     def build(self):
+        """sizes the vectorized attributes of the RealPlateArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
@@ -495,6 +496,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
 
     def build(self):
+        """sizes the vectorized attributes of the RealCPLSTRNPlateArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:

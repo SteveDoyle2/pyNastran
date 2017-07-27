@@ -42,6 +42,7 @@ class NonlinearGapStressArray(OES_Object):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the NonlinearGapStressArray"""
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)

@@ -65,6 +65,7 @@ class FailureIndices(RealForceObject):
             raise NotImplementedError('SORT2')
 
     def build(self):
+        """sizes the vectorized attributes of the FailureIndices"""
         if self.is_built:
             return
 
@@ -177,6 +178,7 @@ class RealSpringDamperForceArray(RealForceObject):
             raise NotImplementedError('SORT2')
 
     def build(self):
+        """sizes the vectorized attributes of the RealSpringDamperForceArray"""
         if self.is_built:
             return
 
@@ -453,6 +455,7 @@ class RealRodForceArray(RealForceObject):
         return crod_msg, conrod_msg, ctube_msg
 
     def build(self):
+        """sizes the vectorized attributes of the RealRodForceArray"""
         if self.is_built:
             return
 
@@ -663,6 +666,7 @@ class RealCBeamForceArray(ScalarObject):
         return False
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBeamForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
@@ -922,6 +926,7 @@ class RealCShearForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCShearForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1146,6 +1151,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealViscForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1346,6 +1352,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def build(self):
+        """sizes the vectorized attributes of the RealPlateForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1560,6 +1567,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def build(self):
+        """sizes the vectorized attributes of the RealPlateBilinearForceArray"""
         # print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1847,6 +1855,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBarForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2036,6 +2045,7 @@ class RealConeAxForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealConeAxForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2225,6 +2235,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBar100ForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2428,6 +2439,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCGapForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2593,6 +2605,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealBendForceArray"""
         if self.is_built:
             return
 
@@ -2822,6 +2835,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealSolidPressureForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -3063,6 +3077,7 @@ class RealCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBeamForceVUArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -3290,6 +3305,7 @@ class RealCBushForceArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBushForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return

@@ -19,7 +19,7 @@ class DeprecatedCompositeShellProperty(object):
 
     def nPlies(self):
         self.deprecated('prop.nPlies()', 'prop.nplies', '1.1')
-        return self.get_nplies()
+        return self.nplies
 
     def get_nplies(self):
         self.deprecated('prop.get_nplies()', 'prop.nplies', '1.1')

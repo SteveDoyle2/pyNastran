@@ -17,7 +17,6 @@ except ImportError:
 
 class RealNonlinearPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        #asdfasdfasdf
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -58,6 +57,7 @@ class RealNonlinearPlateArray(OES_Object):
             #raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
 
     def build(self):
+        """sizes the vectorized attributes of the RealNonlinearPlateArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
@@ -273,8 +273,7 @@ class RealNonlinearPlateArray(OES_Object):
         # write the f06
         ntimes = self.data.shape[0]
 
-        eids = self.element_node[:, 0]
-        nids = self.element_node[:, 1]
+        eids = self.element
 
         #cen_word = 'CEN/%i' % nnodes
         for itime in range(ntimes):
@@ -298,8 +297,8 @@ class RealNonlinearPlateArray(OES_Object):
             ezz = self.data[itime, :, 10]
             exy = self.data[itime, :, 11]
 
-            for (i, eid, nid, fdi, oxxi, oyyi, ozzi, txyi, exxi, eyyi, ezzi, exyi, esi, epsi, ecsi) in zip(
-                 cycle([0, 1]), eids, nids, fiber_dist, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs):
+            for (i, eid, fdi, oxxi, oyyi, ozzi, txyi, exxi, eyyi, ezzi, exyi, esi, epsi, ecsi) in zip(
+                 cycle([0, 1]), eids, fiber_dist, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs):
                 #[fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
                     #[fdi, oxxi, oyyi, txyi, major, minor, ovmi])
 

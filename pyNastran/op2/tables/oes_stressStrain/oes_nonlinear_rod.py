@@ -50,6 +50,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealNonlinearRodArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return

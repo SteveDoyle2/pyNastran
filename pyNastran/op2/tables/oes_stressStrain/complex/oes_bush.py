@@ -35,6 +35,7 @@ class ComplexCBushArray(OES_Object):
         raise NotImplementedError()
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBushArray"""
         if self.is_built:
             return
 

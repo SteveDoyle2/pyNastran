@@ -55,6 +55,7 @@ class RealGridPointForcesArray(ScalarObject):
         return str(', '.join(headers))
 
     def build(self):
+        """sizes the vectorized attributes of the RealGridPointForcesArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
@@ -926,6 +927,7 @@ class ComplexGridPointForcesArray(ScalarObject):
         return str(', '.join(headers))
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexGridPointForcesArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return

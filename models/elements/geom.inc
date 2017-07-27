@@ -166,8 +166,21 @@ GRID	64		-0.5	1.	0.5
 GRID	65		-0.5	1.	-0.
 
 $ bend
-$CBEND	33	12	21	31	0.	0.	1.	1
-$PBEND	12	1	1.0	1.0	0.0	0.0
+$ 21
+$ |
+$ |
+$ 31-----G0
+$
+$GRID     21             1.       0.     -2.
+$GRID     31              2.      0.     -3.
+$GRID     33              2.	0.	-2.
+GRID	70		1.5	0.	-2.6
+$
+$	EID	PID	GA	GB	X1	X2	X3	GEOM
+$CBEND	70	70	21	31	70			1
+$CBEND	70	70	21	31	0.	0.	1.	1
+$	PID	MID	A	I1	I2	J	RB THETAB
+PBEND	70	1	1.0	1.0	0.1	0.1	0.	45.
 
 $ bush
 $CBUSH1D	70	71	19	32
