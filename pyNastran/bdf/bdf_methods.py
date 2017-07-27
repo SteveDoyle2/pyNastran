@@ -181,9 +181,17 @@ class BDFMethods(BDFAttributes):
                 pids_to_volume[pid] = sum(volumes)
         return pids_to_volume
 
-    def get_mass_breakdown(self, property_ids=None):
+    def get_mass_breakdown(self, property_ids=None, stop_if_no_eids=True):
         """
         gets a breakdown of the mass by property region
+
+        Parameters
+        ----------
+        property_ids : List[int] / int
+            list of property ID
+        stop_if_no_eids : bool; default=True
+            prevents crashing if there are no elements
+            setting this to False really doesn't make sense for non-DMIG models
 
         TODO: What about CONRODs, CONM2s?
         #'PBRSECT',
@@ -194,7 +202,7 @@ class BDFMethods(BDFAttributes):
         #'PIHEX',
         #'PCOMPS',
         """
-        pid_eids = self.get_element_ids_dict_with_pids(property_ids)
+        pid_eids = self.get_element_ids_dict_with_pids(property_ids, stop_if_no_eids=False)
 
         mass_type_to_mass = {}
         pids_to_mass = {}
@@ -259,6 +267,9 @@ class BDFMethods(BDFAttributes):
                 raise NotImplementedError(prop)
             if masses:
                 pids_to_mass[pid] = sum(masses)
+
+        if stop_if_no_eids and len(mass_type_to_mass) == 0 and len(pids_to_mass) == 0:
+            raise RuntimeError('No elements with mass were found')
         return pids_to_mass, mass_type_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,

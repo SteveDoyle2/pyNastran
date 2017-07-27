@@ -47,11 +47,11 @@ def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     dx2 = xref2 - xcg
     dy2 = yref2 - ycg
     dz2 = zref2 - zcg
-    print('dx1 = <%s, %s, %s>' % (dx1, dy1, dz1))
-    print('dx2 = <%s, %s, %s>' % (dx2, dy2, dz2))
+    #print('dx1 = <%s, %s, %s>' % (dx1, dy1, dz1))
+    #print('dx2 = <%s, %s, %s>' % (dx2, dy2, dz2))
 
     # consistent with mass_properties, not CONM2
-    print('I_ref =', I_ref)
+    #print('I_ref =', I_ref)
     Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = I_ref
     Ixx2 = Ixx_ref - mass * (dx1**2 - dx2**2)
     Iyy2 = Iyy_ref - mass * (dy1**2 - dy2**2)
@@ -85,7 +85,7 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
         if mass_ids is None:
             masses = []
         else:
-            assert len(model.mass_ids) > 0
+            assert len(model.masses) > 0
             masses = [mass for eid, mass in model.masses.items() if eid in mass_ids]
     return elements, masses
 

@@ -15,6 +15,7 @@ from pyNastran.utils import print_bad_path
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
+mesh_utils_path = os.path.join(root_path, 'bdf', 'mesh_utils', 'test')
 model_path = os.path.join(root_path, '../', 'models')
 
 log = get_logger2(debug=None)
@@ -28,19 +29,19 @@ class TestReadWrite(unittest.TestCase):
         """
         model = BDF(log=log, debug=False)
 
-        bdf_name = os.path.join(test_path, 'test_mass.dat')
+        bdf_name = os.path.join(mesh_utils_path, 'test_mass.dat')
         model.read_bdf(bdf_name)
-        model.write_bdf(os.path.join(test_path, 'test_mass1a.out'), size=8)
-        model.write_bdf(os.path.join(test_path, 'test_mass2a.out'), size=8)
+        model.write_bdf(os.path.join(mesh_utils_path, 'test_mass1a.out'), size=8)
+        model.write_bdf(os.path.join(mesh_utils_path, 'test_mass2a.out'), size=8)
         msg = model.get_bdf_stats(return_type='list')
         str('\n'.join(msg))
 
-        model.write_bdf(os.path.join(test_path, 'test_mass1b.out'), size=8, interspersed=False)
-        model.write_bdf(os.path.join(test_path, 'test_mass2b.out'), size=8, interspersed=True)
-        os.remove(os.path.join(test_path, 'test_mass1a.out'))
-        os.remove(os.path.join(test_path, 'test_mass2a.out'))
-        os.remove(os.path.join(test_path, 'test_mass1b.out'))
-        os.remove(os.path.join(test_path, 'test_mass2b.out'))
+        model.write_bdf(os.path.join(mesh_utils_path, 'test_mass1b.out'), size=8, interspersed=False)
+        model.write_bdf(os.path.join(mesh_utils_path, 'test_mass2b.out'), size=8, interspersed=True)
+        os.remove(os.path.join(mesh_utils_path, 'test_mass1a.out'))
+        os.remove(os.path.join(mesh_utils_path, 'test_mass2a.out'))
+        os.remove(os.path.join(mesh_utils_path, 'test_mass1b.out'))
+        os.remove(os.path.join(mesh_utils_path, 'test_mass2b.out'))
 
     def test_punch_1(self):
         """
@@ -55,9 +56,7 @@ class TestReadWrite(unittest.TestCase):
         model2.read_bdf(bdf_name, xref=False, punch=True)
 
     def test_read_include_dir_1(self):
-        """
-        Tests various read methods using various include files
-        """
+        """Tests various read methods using various include files"""
         # fails correctly
         model = BDF(log=log, debug=False)
         bdf_name = os.path.join(test_path, 'test_include.bdf')
@@ -85,9 +84,7 @@ class TestReadWrite(unittest.TestCase):
 
 
     def test_enddata_1(self):
-        """
-        There is an ENDDATA is in the baseline BDF, so None -> ENDDATA
-        """
+        """There is an ENDDATA is in the baseline BDF, so None -> ENDDATA"""
         model2 = BDF(log=log, debug=False)
 
         bdf_filename = 'test_include.bdf'
@@ -102,7 +99,8 @@ class TestReadWrite(unittest.TestCase):
         ]
         for out_filename, is_enddata, write_flag in cases:
             out_filename = os.path.join(test_path, out_filename)
-            model2.write_bdf(out_filename=out_filename+'.out', interspersed=True, size=8,
+            bdf_filename_out = out_filename + '.out'
+            model2.write_bdf(out_filename=bdf_filename_out, interspersed=True, size=8,
                              is_double=False, enddata=write_flag)
 
             with codec_open(out_filename + '.out', 'r') as bdf_file:
@@ -112,14 +110,14 @@ class TestReadWrite(unittest.TestCase):
                 self.assertTrue('ENDDATA' in data)
             else:
                 self.assertFalse('ENDDATA' in data)
-            os.remove(out_filename + '.out')
+            os.remove(bdf_filename_out)
 
     def test_enddata_2(self):
         """
         There is no ENDDATA is in the baseline BDF, so None -> no ENDDATA
         """
         model2 = BDF(log=log, debug=False)
-        bdf_name = os.path.join(test_path, 'test_mass.dat')
+        bdf_name = os.path.join(mesh_utils_path, 'test_mass.dat')
         model2.read_bdf(bdf_name, xref=True, punch=False)
 
         cases = [
@@ -143,6 +141,7 @@ class TestReadWrite(unittest.TestCase):
             os.remove(out_filename)
 
     def test_add_card_skip(self):
+        """tests that a fake card 'JUNK' is skipped"""
         model = BDF(log=log, debug=False)
 
         card_name = 'JUNK'
@@ -176,6 +175,7 @@ class TestReadWrite(unittest.TestCase):
         model.add_card(card_lines4, 'GRDSET')
 
     def test_include_end(self):
+        """tests multiple levels of includes"""
         with codec_open('a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -202,6 +202,7 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 3, 'nnodes=%s' % model.nnodes)
 
     def test_include_end_02(self):
+        """tests multiple levels of includes"""
         with codec_open('a.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -229,6 +230,7 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
     def test_include_03(self):
+        """tests executive/case control includes"""
         with codec_open('a.bdf', 'w') as bdf_file:
             bdf_file.write("INCLUDE 'executive_control.inc'\n\n")
             bdf_file.write('CEND\n')
@@ -267,6 +269,7 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
     def test_include_04(self):
+        """tests pyNastran: punch=True with includes"""
         with codec_open('include4.bdf', 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             bdf_file.write('$ pyNastran: dumplines=True\n')
@@ -328,6 +331,7 @@ class TestReadWrite(unittest.TestCase):
 
 
     def test_encoding_write(self):
+        """tests encodings in BDF header"""
         mesh = BDF(log=log, debug=False)
         mesh.add_card(['GRID', 100000, 0, 43.91715, -29., .8712984], 'GRID')
         mesh.write_bdf('out.bdf')

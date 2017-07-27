@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import object_methods
 
 rootpath = pyNastran.__path__[0]
-testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')
+mesh_utils_path = os.path.join(rootpath, 'bdf', 'mesh_utils', 'test')
 
 
 class TestMass(unittest.TestCase):
@@ -67,7 +67,7 @@ class TestMass(unittest.TestCase):
 
     def test_mass_shell_1(self):  # passes
         model = BDF(debug=False, log=None)
-        bdfname = os.path.join(testpath, 'test_mass.dat')
+        bdfname = os.path.join(mesh_utils_path, 'test_mass.dat')
         model.read_bdf(bdfname, xref=True)
 
         # quad - pcomp
@@ -112,7 +112,7 @@ class TestMass(unittest.TestCase):
 
     def test_mass_solid_1(self):  # passes
         model = BDF(debug=False, log=None)
-        bdfname = os.path.join(testpath, 'test_mass.dat')
+        bdfname = os.path.join(mesh_utils_path, 'test_mass.dat')
         model.read_bdf(bdfname, xref=True)
 
         # hexa - psolid - nsm = 0
