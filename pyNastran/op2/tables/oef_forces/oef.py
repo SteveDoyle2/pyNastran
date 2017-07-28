@@ -45,6 +45,8 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
 
     # TODO: vectorize 1
     RealForce_VU_2D,
+    RealForceVU2DArray,
+
     RealCBeamForceVUArray,
 
 )
@@ -2954,58 +2956,138 @@ class OEF(OP2Common):
             # 189-VUQUAD
             # 190-VUTRIA
 
-            self._results._found_result('force_VU_2D')
             if self.element_type in [189]:  # VUQUAD
                 nnodes = 4
                 etype = 'VUQUAD4'
+                result_name = 'vuquad_force'
             elif self.element_type in [190]:  # VUTRIA
                 nnodes = 3
                 etype = 'VUTRIA3'
+                result_name = 'vutria_force'
             else:
                 raise NotImplementedError(self.code_information())
+
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+
+            slot = getattr(self, result_name)
             numwide_real = 6 + 13 * nnodes
             numwide_imag = 6 + 25 * nnodes
 
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
-                if self.read_mode == 1:
-                    return ndata
+                # real - format_code == 1
+                # random - format_code == 2
 
-                # TODO: vectorize
-                self.create_transient_object(self.force_VU_2D, RealForce_VU_2D)
+                use_new = True
+                if use_new:
+                    #ntotal = (6 + nnodes * 13) * 4 # 6+n*13
+                    ntotal = 24 + 52 * nnodes
+                    nelements = ndata // ntotal
+                    #result_name = 'force_VU_2D'
+                    self._results._found_result(result_name)
 
-                ntotal = 24 + 52 * nnodes
-                nelements = ndata // ntotal
-                obj = self.obj
 
-                s1 = Struct(b(self._endian + '3i4s2i'))
-                s2 = Struct(b(self._endian + 'i3f3i5fi'))
-                for i in range(nelements):
-                    edata = data[n:n+24]  # 6*4
-                    n += 24
+                    auto_return, is_vectorized = self._create_oes_object4(
+                        nelements, result_name, slot, RealForceVU2DArray)
+                    if auto_return:
+                        self._data_factor = nnodes
+                        return nelements * self.num_wide * 4
 
-                    out = s1.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
-                            etype, self.element_type, str(out)))
-                    (eid_device, parent, coord, icord, theta, _) = out
+                    obj = self.obj
+                    if self.use_vector and is_vectorized and 0:
+                        # self.itime = 0
+                        # self.ielement = 0
+                        # self.itotal = 0
+                        #self.ntimes = 0
+                        #self.nelements = 0
+                        n = nelements * self.num_wide * 4
 
-                    eid = eid_device // 10
-                    data_in = [eid, parent, coord, icord, theta]
+                        istart = obj.itotal
+                        iend = istart + nelements
+                        obj._times[obj.itime] = dt
 
-                    forces = []
-                    for i in range(nnodes):
-                        edata = data[n:n+52]  # 13*4
-                        n += 52
-                        out = s2.unpack(edata)
+                        if obj.itime == 0:
+                            ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                            eids = ints[:, 0] // 10
+                            obj.element_node[istart:iend] = eids_nids
+                        results = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+
+                        #[fx, fy, fz, mx, my, mz]
+                        obj.data[obj.itime, istart:iend, :] = results[:, 1:]
+                    else:
+                        # 6+n*13
+                        s1 = Struct(b(self._endian + '3i4s2i')) # 6
+                        s2 = Struct(b(self._endian + 'i3f3i5fi')) # 13
+                        for i in range(nelements):
+                            edata = data[n:n+24]  # 6*4
+                            n += 24
+
+                            out = s1.unpack(edata)
+                            if self.is_debug_file:
+                                self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
+                                    etype, self.element_type, str(out)))
+                            (eid_device, parent, coord, icord, theta, _) = out
+
+                            eid = eid_device // 10
+                            data_in = [eid, parent, coord, icord, theta]
+
+                            forces = []
+                            for i in range(nnodes):
+                                edata = data[n:n+52]  # 13*4
+                                n += 52
+                                out = s2.unpack(edata)
+                                if self.is_debug_file:
+                                    self.binary_debug.write('%s\n' % (str(out)))
+                                (vugrid, mfx, mfy, mfxy, ai, bi, ci, bmx, bmy,
+                                 bmxy, syz, szx, di) = out
+                                out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
+                                obj.add_sort1(dt, eid, parent, coord, icord, theta,
+                                              vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
+                                forces.append(out2)
+                            data_in.append(forces)
+                            #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
+                            #obj.add_sort1(dt, data_in)
+                else:  # pragma: no cover
+                    if self.read_mode == 1:
+                        return ndata
+
+                    # TODO: vectorize
+                    self.create_transient_object(slot, RealForce_VU_2D)
+
+                    ntotal = 24 + 52 * nnodes
+                    nelements = ndata // ntotal
+                    obj = self.obj
+
+                    s1 = Struct(b(self._endian + '3i4s2i'))
+                    s2 = Struct(b(self._endian + 'i3f3i5fi'))
+                    for i in range(nelements):
+                        edata = data[n:n+24]  # 6*4
+                        n += 24
+
+                        out = s1.unpack(edata)
                         if self.is_debug_file:
-                            self.binary_debug.write('%s\n' % (str(out)))
-                        (vugrid, mfx, mfy, mfxy, ai, bi, ci, bmx, bmy,
-                         bmxy, syz, szx, di) = out
-                        out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
-                        forces.append(out2)
-                    data_in.append(forces)
-                    #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
-                    obj.add(nnodes, dt, data_in)
+                            self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
+                                etype, self.element_type, str(out)))
+                        (eid_device, parent, coord, icord, theta, _) = out
+
+                        eid = eid_device // 10
+                        data_in = [eid, parent, coord, icord, theta]
+
+                        forces = []
+                        for i in range(nnodes):
+                            edata = data[n:n+52]  # 13*4
+                            n += 52
+                            out = s2.unpack(edata)
+                            if self.is_debug_file:
+                                self.binary_debug.write('%s\n' % (str(out)))
+                            (vugrid, mfx, mfy, mfxy, ai, bi, ci, bmx, bmy,
+                             bmxy, syz, szx, di) = out
+                            out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
+                            forces.append(out2)
+                        data_in.append(forces)
+                        #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
+                        obj.add(nnodes, dt, data_in)
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 #aasdfasdfasdf
@@ -3152,7 +3234,7 @@ class OEF(OP2Common):
                         return ndata
 
                     # TODO: vectorize
-                    self.create_transient_object(self.force_VU_2D, ComplexForce_VU_2D)
+                    self.create_transient_object(slot, ComplexForce_VU_2D)
                     obj = self.obj
                     ntotal = 24 + 100 * nnodes
                     s1 = Struct(b(self._endian + 'iii4sii'))

@@ -366,7 +366,10 @@ class OP2_F06_Common(object):
         self.cvisc_force = {}
 
         self.force_VU = {}
-        self.force_VU_2D = {}
+
+        #self.force_VU_2D = {}
+        self.vuquad_force = {}
+        self.vutria_force = {}
 
         #OEF - Fluxes - tCode=4 thermal=1
         self.thermalLoad_CONV = {}
@@ -773,7 +776,9 @@ class OP2_F06_Common(object):
             'cvisc_force',
 
             'force_VU',
-            'force_VU_2D',
+            #'force_VU_2D',
+            'vuquad_force',
+            'vutria_force',
 
             #OEF - Fluxes - tCode=4 thermal=1
             'thermalLoad_CONV',

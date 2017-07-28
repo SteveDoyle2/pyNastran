@@ -3484,8 +3484,247 @@ class RealCBushForceArray(ScalarObject):
         return page_num - 1
 
 
-class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
+class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
+    """
+                    F O R C E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+                 TIME =   2.500000E-03,  P-ELEMENT ID =      11,  OUTPUT COORD. ID =       0,  P OF EDGES =  3  3  3
+                       LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000
+
+     VUGRID                - MEMBRANE  FORCES -      - BENDING  MOMENTS -             - TRANSVERSE SHEAR FORCES -
+       ID.            FX            FY            FXY MX            MY            MXY             QX            QY
+    111001001     1.497761E+02  4.493284E+01  1.755556E+01    4.601057E+02  1.380317E+02  3.821717E+01  1.924838E+01  1.298280E-13
+    111001002    -1.284408E+01 -9.296992E-01 -6.540499E+00   -3.195809E+01  9.447659E+01  2.340929E+00 -4.620755E-01  1.074264E+01
+    111001003    -1.336704E+02 -4.010114E+01  1.236144E+01    4.553836E+02  1.366151E+02 -2.018654E+01  9.028288E+01 -1.651896E-13
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealForceObject.__init__(self, data_code, isubcase)
+
+        self.dt = dt
+        self.nelements = 0
+
+        #if is_sort1:
+            #if dt is not None:
+                #self.add = self.add_sort1
+        #else:
+            #assert dt is not None
+            #self.add = self.add_sort2
+
+    def get_headers(self):
+        return ['mfx', 'mfy', 'mfxy', 'bmx', 'bmy', 'bmxy', 'syz', 'szx']
+
+    def build(self):
+        """sizes the vectorized attributes of the RealForceVU2DArray"""
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        #self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, integer_types):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+
+        #[mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def build_dataframe(self):
+        return
+        #headers = self.get_headers()
+        #assert 0 not in self.element_node
+        #if self.nonlinear_factor is not None:
+            #column_names, column_values = self._build_dataframe_transient_header()
+            #self.data_frame = pd.Panel(self.data, items=column_values,
+                                       #major_axis=self.element, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = column_names
+        #else:
+            #self.data_frame = pd.Panel(self.data,
+                                       #major_axis=self.element, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = ['Static']
+        #self.data_frame.index.names = ['ElementID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+
+        self._eq_header(table)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element_node):
+                    (eid, nid) = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx) = t1
+                    (mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx) = t2
+
+                    # vm stress can be NaN for some reason...
+                    if not np.array_equal(t1[:-1], t2[:-1]):
+                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid, nid,
+                            mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx,
+                            mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add_sort1(self, dt, eid, parent, coord, icord, theta,
+                  vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx):
+        """unvectorized method for adding SORT1 transient data"""
+        #print('adding %s, %s' % (eid, vugrid))
+        self._times[self.itime] = dt
+        self.element_node[self.itotal, :] = [eid, vugrid]
+        self.data[self.itime, self.itotal, :] = [mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
+        self.itotal += 1
+
+    #def add_sort2(self, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        #raise NotImplementedError('SORT2')
+        #if dt not in self.mx:
+            #self.add_new_transient(dt)
+        #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+
+    def get_stats(self, short=False):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = '1'
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        if 'VUTRIA' in self.element_name:
+            msg = [
+                '                    F O R C E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )'
+                '                 TIME =   2.500000E-03,  P-ELEMENT ID =      11,  OUTPUT COORD. ID =       0,  P OF EDGES =  3  3  3'
+                '                       LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000'
+                ''
+                '     VUGRID                - MEMBRANE  FORCES -      - BENDING  MOMENTS -             - TRANSVERSE SHEAR FORCES -                    '
+                '       ID.            FX            FY            FXY MX            MY            MXY             QX            QY                   '
+                #'    111001001     1.497761E+02  4.493284E+01  1.755556E+01    4.601057E+02  1.380317E+02  3.821717E+01  1.924838E+01  1.298280E-13'
+                #'    111001002    -1.284408E+01 -9.296992E-01 -6.540499E+00   -3.195809E+01  9.447659E+01  2.340929E+00 -4.620755E-01  1.074264E+01'
+                #'    111001003    -1.336704E+02 -4.010114E+01  1.236144E+01    4.553836E+02  1.366151E+02 -2.018654E+01  9.028288E+01 -1.651896E-13'
+            ]
+            nnodes = 3
+        #elif 'CQUAD4' in self.element_name:
+            #msg = [
+                #'                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
+                #' \n'
+                #'    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -\n'
+                #'      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
+            #]
+            #nnodes = 4
+        else:
+            raise NotImplementedError(self.element_name)
+        return self.element_name, nnodes, msg
+
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
+        """
+                        F O R C E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+                     TIME =   2.500000E-03,  P-ELEMENT ID =      11,  OUTPUT COORD. ID =       0,  P OF EDGES =  3  3  3
+                           LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000
+
+         VUGRID                - MEMBRANE  FORCES -      - BENDING  MOMENTS -             - TRANSVERSE SHEAR FORCES -
+           ID.            FX            FY            FXY MX            MY            MXY             QX            QY
+        111001001     1.497761E+02  4.493284E+01  1.755556E+01    4.601057E+02  1.380317E+02  3.821717E+01  1.924838E+01  1.298280E-13
+        111001002    -1.284408E+01 -9.296992E-01 -6.540499E+00   -3.195809E+01  9.447659E+01  2.340929E+00 -4.620755E-01  1.074264E+01
+        111001003    -1.336704E+02 -4.010114E+01  1.236144E+01    4.553836E+02  1.366151E+02 -2.018654E+01  9.028288E+01 -1.651896E-13
+        """
+        if header is None:
+            header = []
+        (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        cen_word = 'CEN/%i' % nnodes
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            ##print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            ##[mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
+            mfx = self.data[itime, :, 0]
+            mfy = self.data[itime, :, 1]
+            mfxy = self.data[itime, :, 2]
+            bmx = self.data[itime, :, 3]
+            bmy = self.data[itime, :, 4]
+            bmxy = self.data[itime, :, 5]
+            syz = self.data[itime, :, 6]
+            szx = self.data[itime, :, 7]
+
+            if self.element_type == 190: # VUTRIA
+                # TODO: format the data properly
+                for nid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi in zip(
+                    nids, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx):
+                    [mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi] = write_floats_13e(
+                        [mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi])
+                    f.write('   %8i  %13s %13s %13s   %13s %13s %13s  %13s %s\n' % (
+                        nid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi))
+
+            #elif self.element_type == 33:
+                #for nid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                    #[mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi] = write_floats_13e(
+                        #[mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi])
+                    ##Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+                    ##f.write(Fmt % (eid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi))
+                    ##
+                    #f.write('0 %8i %8s %13s %13s %13s %13s %13s %13s %13s %s\n' % (
+                        #eid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi))
+            else:
+                raise NotImplementedError(self.element_type)
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
+class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
+    """deprecated"""
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        """deprecated"""
         self.element_type = None
         self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
@@ -3513,6 +3752,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             self.add = self.add_sort2
 
     def get_stats(self, short=False):
+        """deprecated"""
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
@@ -3528,6 +3768,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         return msg
 
     def add_new_transient(self, dt):
+        """deprecated"""
         self.membrane_x[dt] = {}
         self.membrane_y[dt] = {}
         self.membrane_xy[dt] = {}
@@ -3538,6 +3779,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.shear_xz[dt] = {}
 
     def add(self, nnodes, dt, data):
+        """deprecated"""
         [eid, parent, coord, icord, theta, forces] = data
         self.parent[eid] = parent
         self.coord[eid] = coord
@@ -3571,10 +3813,12 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
     def add_sort2(self, nnodes, eid, data):
+        """deprecated"""
         [dt, parent, coord, icord, theta, forces] = data
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
     def _fill_object(self, dt, eid, parent, coord, icord, theta, forces):
+        """deprecated"""
         if dt not in self.membrane_x:
             self.add_new_transient(dt)
         self.parent[eid] = parent
@@ -3594,6 +3838,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         for force in forces:
             [nid, membrane_x, membrane_y, membrane_xy, bending_x,
              bending_y, bending_xy, shear_yz, shear_xz] = force
+            #print(eid, nid)
             self.membrane_x[dt][eid][nid] = membrane_x
             self.membrane_y[dt][eid][nid] = membrane_y
             self.membrane_xy[dt][eid][nid] = membrane_xy

@@ -804,6 +804,8 @@ class F06Writer(OP2_F06_Common):
             self.thermalLoad_VU,
             self.thermalLoad_VU_3D,
             self.thermalLoad_VUBeam,
+            self.vuquad_force,
+            self.vutria_force,
 
             #------------------------------------------
 
