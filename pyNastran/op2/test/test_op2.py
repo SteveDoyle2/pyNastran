@@ -138,7 +138,7 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
-                      delete_f06=True, write_op2=False,
+                      delete_f06=True, skip_dataframe=False, write_op2=False,
                       is_vector=False, vector_stop=True,
                       debug=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000,
@@ -183,6 +183,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                           write_f06=write_f06, write_op2=write_op2,
                                           is_mag_phase=False,
                                           delete_f06=delete_f06,
+                                          skip_dataframe=skip_dataframe,
                                           short_stats=short_stats,
                                           subcases=subcases, debug=debug,
                                           stop_on_failure=stop_on_failure,
@@ -204,7 +205,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             write_f06=True, write_op2=False, write_xlsx=False,
             is_mag_phase=False, is_sort2=False, is_nx=None,
-            delete_f06=False,
+            delete_f06=False, skip_dataframe=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True, dev=False):
@@ -385,7 +386,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
                     pass
 
         # we put it down here so we don't blame the dataframe for real errors
-        if is_pandas:
+        if is_pandas and not skip_dataframe:
             op2.build_dataframe()
         #if compare:
             #op2_nv.build_dataframe()
@@ -506,10 +507,11 @@ def get_test_op2_data():
 
     msg = "Usage:\n"
     is_release = True
+    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx]'
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n]      [-f]           [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n]      [-f]           %s OP2_FILENAME\n" % options
     else:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] %s OP2_FILENAME\n" % options
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -523,21 +525,22 @@ def get_test_op2_data():
     msg += "  OP2_FILENAME         Path to OP2 file\n"
     msg += "\n"
     msg += "Options:\n"
-    msg += "  -b, --binarydebug     Dumps the OP2 as a readable text file\n"
-    msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
-    msg += "  -q, --quiet           Suppresses debug messages [default: False]\n"
-    msg += "  -t, --short_stats     Short get_op2_stats printout\n"
+    msg += "  -b, --binarydebug      Dumps the OP2 as a readable text file\n"
+    msg += "  -c, --disablecompare   Doesn't do a validation of the vectorized result\n"
+    msg += "  -q, --quiet            Suppresses debug messages [default: False]\n"
+    msg += "  -t, --short_stats      Short get_op2_stats printout\n"
     #if not is_release:
-    msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
+    msg += "  -g, --geometry         Reads the OP2 for geometry, which can be written out\n"
     # n is for NAS
-    msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n"
-    msg += "  -f, --write_f06       Writes the f06 to fem.test_op2.f06\n"
-    msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
-    msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
-    msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
-    msg += "  -w, --is_sort2        Sets the F06 transient to SORT2\n"
-    msg += "  -x <arg>, --exclude   Exclude specific results\n"
-    msg += "  --nx                  Assume NX Nastran\n"
+    msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
+    msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
+    msg += "  -z, --is_mag_phase     F06 Writer writes Magnitude/Phase instead of\n"
+    msg += "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
+    msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
+    msg += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
+    msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
+    msg += "  -x <arg>, --exclude    Exclude specific results\n"
+    msg += "  --nx                   Assume NX Nastran\n"
 
     if not is_release:
         msg += "\n"
@@ -593,6 +596,7 @@ def main():
             write_f06=data['--write_f06'],
             write_op2=data['--write_op2'],
             is_mag_phase=data['--is_mag_phase'],
+            skip_dataframe=data['--skip_dataframe'],
             subcases=data['--subcase'],
             exclude=data['--exclude'],
             debug=not data['--quiet'],
@@ -618,6 +622,7 @@ def main():
             write_op2=data['--write_op2'],
             write_xlsx=data['--write_xlsx'],
             is_mag_phase=data['--is_mag_phase'],
+            skip_dataframe=data['--skip_dataframe'],
             subcases=data['--subcase'],
             exclude=data['--exclude'],
             short_stats=data['--short_stats'],

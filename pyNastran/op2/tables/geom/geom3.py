@@ -46,6 +46,7 @@ class GEOM3(GeomCommon):
             (6802, 68, 199): ['PLOAD2', self._read_pload2],    # record 18 - buggy
             (7109, 81, 255): ['PLOAD3', self._read_pload3],    # record 19 - not done
             (7209, 72, 299): ['PLOAD4', self._read_pload4],    # record 20 - buggy - g1/g3/g4
+            (7001, 70, 278) : ['PLOADX', self._read_ploadx],
             (7309, 73, 351): ['PLOADX1', self._read_ploadx1],  # record 22
             (4509, 45, 239): ['QBDY1', self._read_qbdy1],      # record 24
             (4909, 49, 240): ['QBDY2', self._read_qbdy2],      # record 25
@@ -438,7 +439,10 @@ class GEOM3(GeomCommon):
         self.card_count['PLOAD4'] = nentries
         return n
 
-# PLOADX - obsolete
+    def _read_ploadx(self, data, n):
+        self.log.info('skipping PLOADX in GEOM4\n')
+        return len(data)
+
     def _read_ploadx1(self, data, n):
         ntotal = 28  # 7*4
         nentries = (len(data) - n) // ntotal

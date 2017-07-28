@@ -3494,14 +3494,14 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.icord = {}
         self.theta = {}
 
-        self.membraneX = {}
-        self.membraneY = {}
-        self.membraneXY = {}
-        self.bendingX = {}
-        self.bendingY = {}
-        self.bendingXY = {}
-        self.shearYZ = {}
-        self.shearXZ = {}
+        self.membrane_x = {}
+        self.membrane_y = {}
+        self.membrane_xy = {}
+        self.bending_x = {}
+        self.bending_y = {}
+        self.bending_xy = {}
+        self.shear_yz = {}
+        self.shear_xz = {}
 
         # handle SORT1 case
         self.dt = dt
@@ -3516,26 +3516,26 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
-            ntimes = len(self.membraneX)
+            ntimes = len(self.membrane_x)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  parent, coord, icord, theta, membraneX, membraneY, '
-                   'membraneXY, bendingX, bendingY, bendingXY, '
-                   'shearYZ, shearXZ\n')
+        msg.append('  parent, coord, icord, theta, membrane_x, membrane_y, '
+                   'membrane_xy, bending_x, bending_y, bending_xy, '
+                   'shear_yz, shear_xz\n')
         return msg
 
     def add_new_transient(self, dt):
-        self.membraneX[dt] = {}
-        self.membraneY[dt] = {}
-        self.membraneXY[dt] = {}
-        self.bendingX[dt] = {}
-        self.bendingY[dt] = {}
-        self.bendingXY[dt] = {}
-        self.shearYZ[dt] = {}
-        self.shearXZ[dt] = {}
+        self.membrane_x[dt] = {}
+        self.membrane_y[dt] = {}
+        self.membrane_xy[dt] = {}
+        self.bending_x[dt] = {}
+        self.bending_y[dt] = {}
+        self.bending_xy[dt] = {}
+        self.shear_yz[dt] = {}
+        self.shear_xz[dt] = {}
 
     def add(self, nnodes, dt, data):
         [eid, parent, coord, icord, theta, forces] = data
@@ -3544,26 +3544,26 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.icord[eid] = icord
         self.theta[eid] = theta
 
-        self.membraneX[eid] = {}
-        self.membraneY[eid] = {}
-        self.membraneXY[eid] = {}
-        self.bendingX[eid] = {}
-        self.bendingY[eid] = {}
-        self.bendingXY[eid] = {}
-        self.shearYZ[eid] = {}
-        self.shearXZ[eid] = {}
+        self.membrane_x[eid] = {}
+        self.membrane_y[eid] = {}
+        self.membrane_xy[eid] = {}
+        self.bending_x[eid] = {}
+        self.bending_y[eid] = {}
+        self.bending_xy[eid] = {}
+        self.shear_yz[eid] = {}
+        self.shear_xz[eid] = {}
 
         for force in forces:
-            [nid, membraneX, membraneY, membraneXY, bendingX,
-             bendingY, bendingXY, shearYZ, shearXZ] = force
-            self.membraneX[eid][nid] = membraneX
-            self.membraneY[eid][nid] = membraneY
-            self.membraneXY[eid][nid] = membraneXY
-            self.bendingX[eid][nid] = bendingX
-            self.bendingY[eid][nid] = bendingY
-            self.bendingXY[eid][nid] = bendingXY
-            self.shearYZ[eid][nid] = shearYZ
-            self.shearXZ[eid][nid] = shearXZ
+            [nid, membrane_x, membrane_y, membrane_xy, bending_x,
+             bending_y, bending_xy, shear_yz, shear_xz] = force
+            self.membrane_x[eid][nid] = membrane_x
+            self.membrane_y[eid][nid] = membrane_y
+            self.membrane_xy[eid][nid] = membrane_xy
+            self.bending_x[eid][nid] = bending_x
+            self.bending_y[eid][nid] = bending_y
+            self.bending_xy[eid][nid] = bending_xy
+            self.shear_yz[eid][nid] = shear_yz
+            self.shear_xz[eid][nid] = shear_xz
 
     def add_sort1(self, nnodes, dt, data):
         """unvectorized method for adding SORT1 transient data"""
@@ -3575,30 +3575,30 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
     def _fill_object(self, dt, eid, parent, coord, icord, theta, forces):
-        if dt not in self.membraneX:
+        if dt not in self.membrane_x:
             self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
 
-        self.membraneX[dt][eid] = {}
-        self.membraneY[dt][eid] = {}
-        self.membraneXY[dt][eid] = {}
-        self.bendingX[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingXY[dt][eid] = {}
-        self.shearYZ[dt][eid] = {}
-        self.shearXZ[dt][eid] = {}
+        self.membrane_x[dt][eid] = {}
+        self.membrane_y[dt][eid] = {}
+        self.membrane_xy[dt][eid] = {}
+        self.bending_x[dt][eid] = {}
+        self.bending_y[dt][eid] = {}
+        self.bending_xy[dt][eid] = {}
+        self.shear_yz[dt][eid] = {}
+        self.shear_xz[dt][eid] = {}
 
         for force in forces:
-            [nid, membraneX, membraneY, membraneXY, bendingX,
-             bendingY, bendingXY, shearYZ, shearXZ] = force
-            self.membraneX[dt][eid][nid] = membraneX
-            self.membraneY[dt][eid][nid] = membraneY
-            self.membraneXY[dt][eid][nid] = membraneXY
-            self.bendingX[dt][eid][nid] = bendingX
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingXY[dt][eid][nid] = bendingXY
-            self.shearYZ[dt][eid][nid] = shearYZ
-            self.shearXZ[dt][eid][nid] = shearXZ
+            [nid, membrane_x, membrane_y, membrane_xy, bending_x,
+             bending_y, bending_xy, shear_yz, shear_xz] = force
+            self.membrane_x[dt][eid][nid] = membrane_x
+            self.membrane_y[dt][eid][nid] = membrane_y
+            self.membrane_xy[dt][eid][nid] = membrane_xy
+            self.bending_x[dt][eid][nid] = bending_x
+            self.bending_y[dt][eid][nid] = bending_y
+            self.bending_xy[dt][eid][nid] = bending_xy
+            self.shear_yz[dt][eid][nid] = shear_yz
+            self.shear_xz[dt][eid][nid] = shear_xz

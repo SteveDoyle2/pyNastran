@@ -440,7 +440,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         try:
             name, func = mapper[keys]
         except KeyError:
-            raise
+            raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
             return n
         if self.is_debug_file:
             self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))

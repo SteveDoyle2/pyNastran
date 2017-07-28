@@ -2784,9 +2784,12 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
                     (xxb2, fx2, fy2, fz2, mx2, my2, mz2) = t2
 
                     if not np.array_equal(t1, t2):
-                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s)\n' % (
-                            eid, nid,
+                        eid_nid1 = '(%s, %s)  ' % (eid, nid)
+                        eid_nid2 = ' ' * len(eid_nid1)
+                        msg += ('%s(%s, %s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid_nid1,
                             xxb1, fx1, fy1, fz1, mx1, my1, mz1,
+                            eid_nid2,
                             xxb2, fx2, fy2, fz2, mx2, my2, mz2))
                         i += 1
                         if i > 10:
