@@ -125,7 +125,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
             #pname_fid = 'C'
         else:
             raise NotImplementedError('PROD pname_fid=%r is invalid' % pname_fid)
-        assert pname_fid in [4, 'A', 5, 'J'], msg
+        assert pname_fid in [4, 'A', 5, 'J', 'NSM'], msg
     elif prop_type == 'PTUBE':
         assert pname_fid in [4, 5], msg
 
@@ -231,6 +231,10 @@ def validate_dvprel(prop_type, pname_fid, validate):
 
     elif prop_type == 'PWELD':
         assert pname_fid in ['D'], msg
+    elif prop_type == 'PFAST':
+        assert pname_fid in ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS'], msg
+    elif prop_type == 'PBMSECT':
+        assert pname_fid in ['T', 'W', 'H'], msg
 
     elif prop_type == 'PBEND':
         raise RuntimeError('Nastran does not support the PBEND')

@@ -68,7 +68,8 @@ class BDFMethods(BDFAttributes):
         ]
         #skip_elems = []
 
-        pid_eids = self.get_element_ids_dict_with_pids(property_ids)
+        pid_eids = self.get_element_ids_dict_with_pids(
+            property_ids,  msg=' which is required by get_area_breakdown')
         pids_to_area = {}
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
@@ -114,7 +115,8 @@ class BDFMethods(BDFAttributes):
         #'PBEND',
         #'PIHEX',
         """
-        pid_eids = self.get_element_ids_dict_with_pids(property_ids)
+        pid_eids = self.get_element_ids_dict_with_pids(
+            property_ids, msg=' which is required by get_area_breakdown')
 
         no_volume = [
             'PLPLANE', 'PPLANE', 'PELAS',
@@ -202,7 +204,8 @@ class BDFMethods(BDFAttributes):
         #'PIHEX',
         #'PCOMPS',
         """
-        pid_eids = self.get_element_ids_dict_with_pids(property_ids, stop_if_no_eids=False)
+        pid_eids = self.get_element_ids_dict_with_pids(
+            property_ids, stop_if_no_eids=False, msg=' which is required by get_area_breakdown')
 
         mass_type_to_mass = {}
         pids_to_mass = {}

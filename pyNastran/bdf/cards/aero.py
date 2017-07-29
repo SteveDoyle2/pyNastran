@@ -1044,6 +1044,8 @@ class AESURFS(BaseCard):  # not integrated
         self.label = label
         self.list1 = list1
         self.list2 = list2
+        self.list1_ref = None
+        self.list2_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1103,8 +1105,21 @@ class AESURFS(BaseCard):  # not integrated
         except KeyError:
             pass
 
-    #def uncross_reference(self):
-        #pass
+    def uncross_reference(self):
+        self.list1 = self.List1()
+        self.list2 = self.List2()
+        self.list1_ref = None
+        self.list2_ref = None
+
+    def List1(self):
+        if self.list1_ref is not None:
+            return self.list1_ref.sid
+        return self.list1
+
+    def List2(self):
+        if self.list2_ref is not None:
+            return self.list2_ref.sid
+        return self.list2
 
     def raw_fields(self):
         """
@@ -1115,8 +1130,8 @@ class AESURFS(BaseCard):  # not integrated
         fields : List[int/float/str]
             the fields that define the card
         """
-        list_fields = ['AESURFS', self.aesid, self.label, None, self.list1, None,
-                       self.list2]
+        list_fields = ['AESURFS', self.aesid, self.label, None, self.List1(), None,
+                       self.List2()]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

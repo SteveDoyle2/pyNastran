@@ -490,7 +490,11 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                 #cda = model.nodes[n1].cid_ref
                 #cdb = model.nodes[n2].cid_ref
 
-                is_failed, wa, wb, _ihat, jhat, khat = elem.get_axes(model)
+                is_failed, out = elem.get_axes(model)
+                if is_failed:
+                    model.log.error(out)
+                    raise RuntimeError(out)
+                wa, wb, _ihat, jhat, khat = out
                 p1 = node1 + wa
                 p2 = node2 + wb
                 if prop.type == 'PBEAM':
@@ -524,6 +528,11 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                     nsm_n1 = (p1 + jhat * prop.m1 + khat * prop.m2)
                     nsm_n2 = (p2 + jhat * prop.m1 + khat * prop.m2)
                     nsm_centroid = (nsm_n1 + nsm_n2) / 2.
+                elif prop.type == 'PBMSECT':
+                    continue
+                    #mass_per_length = prop.MassPerLength()
+                    #m = mass_per_length * length
+                    #nsm = prop.nsm
                 else:
                     raise NotImplementedError(prop.type)
 

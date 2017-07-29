@@ -314,7 +314,7 @@ class CHBDYG(ThermalElement):
         #assert self.surface_type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'surface_type=%r' % self.surface_type
         if self.surface_type == 'REV':
             assert len(self.nodes) == 3, 'CHBDYG: REV; nodes=%s' % str(self.nodes)
-        if self.surface_type == 'REV1':
+        elif self.surface_type == 'REV1':
             assert len(self.nodes) == 3, 'CHBDYG: REV; nodes=%s' % str(self.nodes)
         else:
             if self.surface_type == 'AREA3':

@@ -67,7 +67,7 @@ def write_skin_solid_faces(model, skin_filename,
                 prop = model.properties[pid] # PSOLID
                 if prop.type in ['PSOLID', 'PLSOLID']:
                     mid = prop.Mid()
-                elif prop.type == 'PCOMPS':
+                elif prop.type in ['PCOMPS', 'PCOMP', 'PCOMPG']:
                     mid = prop.mids[0]
                 else:
                     raise NotImplementedError(prop)
@@ -246,6 +246,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
             for face, eids in iteritems(eid_set):
                 face_raw = face_map[face]
                 nface = len(face)
+                #print("eids =", eids)
                 #assert len(eids) == 1, eids
                 #for eid in sorted(eids):
                     #elem = model.elements[eid]
@@ -253,14 +254,18 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
                     #break
 
                 #elem = next(itervalues(model.elements)) # old
+                assert len(eids) == 1, eids
                 elem = model.elements[eids[0]]
                 #pid = next(iterkeys(model.properties))
                 pid = elem.Pid()
                 prop = model.properties[pid]
-                try:
+                if prop.type in ['PSOLID']: # 'PSHELL',
                     mid = prop.Mid()
-                except AttributeError:
-                    continue
+                #elif prop.type in ['PCOMP', 'PCOMPG']:
+                    #mid = prop.mids[0]
+                else:
+                    raise NotImplementedError(prop)
+
                 #print('mids_to_write = %s' % mids_to_write)
                 #print('mids = ', model.materials.keys())
                 imid = mids_to_write.index(mid)

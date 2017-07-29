@@ -711,6 +711,10 @@ class TestBeams(unittest.TestCase):
         pbrsect.write_card()
         pbrsect.write_card(size=16)
 
+        #PBMSECT 32      10      OP
+            #OUTP=101,T=0.1,brp=102,brp=103,brp=104,nsm=0.015
+
+
     def test_pbeam3(self):
         """tests a PBEAM3"""
         model = BDF(debug=False)
