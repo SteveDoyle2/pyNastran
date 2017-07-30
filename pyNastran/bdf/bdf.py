@@ -1504,6 +1504,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
         if self.sol == 600:
             #: solution 600 method modifier
+            if method is None:
+                method = ''
             self.sol_method = method.strip()
             self.log.debug("sol=%s method=%s" % (self.sol, self.sol_method))
         else:  # very common

@@ -1716,7 +1716,7 @@ class GetCard(GetMethods):
                 eids2.append(eid)
         return eids2
 
-    def get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None, idtype='int32'):
+    def get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None, idtype='int32', msg=''):
         """
         a work in progress
 
@@ -1775,7 +1775,7 @@ class GetCard(GetMethods):
                 if etype not in etypes_:
                     continue
                 if etype in skip_elements:
-                    self.log.warning('skipping etype=%s because there are no properties' % etype)
+                    self.log.warning('skipping etype=%s because there are no properties%s' % (etype, msg))
                     continue
                 eids = self._type_to_id_map[etype]
                 try:
@@ -1830,7 +1830,7 @@ class GetCard(GetMethods):
                 pids=pids, etypes=etypes, idtype='int64')
         return pid_to_eids_ieids_map
 
-    def get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True):
+    def get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True, msg=''):
         """
         Gets all the element IDs with a specific property ID.
 
@@ -1893,9 +1893,9 @@ class GetCard(GetMethods):
             for eids in itervalues(pid_to_eids_map):
                 if len(eids):
                     return pid_to_eids_map
-            raise RuntimeError('no elements with properties found')
+            raise RuntimeError('no elements with properties found%s' % msg)
         else:
-            self.log.warning('no elements with properties found')
+            self.log.warning('no elements with properties found%s' % msg)
         return pid_to_eids_map
 
     def get_node_id_to_element_ids_map(self):
@@ -1957,7 +1957,7 @@ class GetCard(GetMethods):
 
         return nid_to_elements_map
 
-    def get_property_id_to_element_ids_map(self):
+    def get_property_id_to_element_ids_map(self, msg=''):
         """
         Returns a dictionary that maps a property ID to a list of elemnents
         """
@@ -1977,10 +1977,10 @@ class GetCard(GetMethods):
                     pid_to_eids_map[pid].append(eid)
                 except KeyError:
                     print(element)
-                    raise KeyError('pid=%s is invalid for card=\n%s' % (pid, str(element)))
+                    raise KeyError('pid=%s is invalid for card%s=\n%s' % (pid, msg, str(element)))
         return pid_to_eids_map
 
-    def get_material_id_to_property_ids_map(self):
+    def get_material_id_to_property_ids_map(self, msg=''):
         """
         Returns a dictionary that maps a material ID to a list of properties
 
@@ -2028,14 +2028,14 @@ class GetCard(GetMethods):
                         mid_to_pids_map[mid].append(pid)
                     except KeyError:
                         print(prop)
-                        raise KeyError('i=%s mid=%s is invalid for card=\n%s' % (i, mid, str(prop)))
+                        raise KeyError('i=%s mid=%s is invalid for card%s=\n%s' % (i, mid, msg, str(prop)))
             else:
                 mid = prop.Mid()
                 try:
                     mid_to_pids_map[mid].append(pid)
                 except KeyError:
                     print(prop)
-                    raise KeyError('mid=%s is invalid for card=\n%s' % (mid, str(prop)))
+                    raise KeyError('mid=%s is invalid for card %s=\n%s' % (mid, msg, str(prop)))
         return mid_to_pids_map
 
     def get_reduced_mpcs(self, mpc_id, stop_on_failure=True):

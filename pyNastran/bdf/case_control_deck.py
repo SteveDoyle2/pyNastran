@@ -653,25 +653,29 @@ class CaseControlDeck(object):
                 msg = 'expected item of form "name = value"   line=%r' % line.strip()
                 raise RuntimeError(msg)
             assert equals_count == 1, line_upper
-            assert '(' in line_upper, line_upper
-            options = None
-            param_type = 'STRESS-type'
-            key = key.strip().upper()
-            value = value.strip()
-            if self.debug:
-                self.log.debug("key=%r value=%r" % (key, value))
-            param_type = 'STRESS-type'
-            assert key.upper() == key, key
+            if '(' in line_upper:
+                options = None
+                param_type = 'STRESS-type'
+                key = key.strip().upper()
+                value = value.strip()
+                if self.debug:
+                    self.log.debug("key=%r value=%r" % (key, value))
+                param_type = 'STRESS-type'
+                assert key.upper() == key, key
 
-            #param_type = 'STRESS-type'
-            sline = key.strip(')').split('(')
-            key = sline[0]
-            options = sline[1].split(',')
+                #param_type = 'STRESS-type'
+                sline = key.strip(')').split('(')
+                key = sline[0]
+                options = sline[1].split(',')
 
-            assert len(options) == 1, line_upper
-            # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
-            key = 'TEMPERATURE(%s)' % options[0]
-            options = []
+                assert len(options) == 1, line_upper
+                # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
+                key = 'TEMPERATURE(%s)' % options[0]
+                value = value.strip()
+                options = []
+            else:
+                key = 'TEMPERATURE(BOTH)'
+                options = []
         elif line_upper.startswith('RIGID'):
             if '=' in line:
                 (key, value) = line_upper.strip().split('=')

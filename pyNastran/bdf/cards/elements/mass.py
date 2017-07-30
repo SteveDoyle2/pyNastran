@@ -636,8 +636,12 @@ class CMASS4(PointMassElement):
     def Mass(self):
         return self.mass
 
+    def Centroid(self):
+        return np.zeros(3)
+
     @property
     def node_ids(self):
+        print(self.S1(), self.S2())
         return [self.S1(), self.S2()]
 
     def S1(self):
@@ -659,14 +663,17 @@ class CMASS4(PointMassElement):
         model : BDF()
             the BDF object
         """
-        self.s1 = model.Node(self.S1())
-        self.s2 = model.Node(self.S2())
+        self.s1_ref = model.Node(self.S1())
+        self.s2_ref = model.Node(self.S2())
 
     def safe_cross_reference(self, model):
         self.cross_reference(model)
 
     def uncross_reference(self):
-        pass
+        self.s1 = self.S1()
+        self.s2 = self.S2()
+        self.s1_ref = self.S1()
+        self.s2_ref = self.S2()
 
     def raw_fields(self):
         fields = ['CMASS4', self.eid, self.mass] + self.node_ids

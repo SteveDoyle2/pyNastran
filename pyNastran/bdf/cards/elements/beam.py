@@ -447,7 +447,6 @@ class CBEAM(CBAR):
             wa = cd1_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
         else:
             msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, self.offt)
-            self.log.error(msg)
             return is_failed, msg
             #raise NotImplementedError(msg)
 
@@ -523,7 +522,7 @@ class CBEAM(CBAR):
         #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
         #print('   Li=%s' % (Li))
         is_failed = False
-        return is_failed, wa, wb, ihat, yhat, zhat
+        return is_failed, (wa, wb, ihat, yhat, zhat)
 
     @property
     def nodes_ref(self):

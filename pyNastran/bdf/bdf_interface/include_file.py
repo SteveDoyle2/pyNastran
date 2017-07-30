@@ -177,6 +177,10 @@ def split_tokens(tokens, is_windows):
 
                     #tokeni = os.path.expandvars('$' + stokens[0])
                     tokeni = os.path.expandvars(token0)
+                    if '$' in tokeni:
+                        raise SyntaxError('tokeni=%r has a $ in it after expanding (token0=%r)...\n'
+                                          'tokens=%s' % (tokeni, token0, tokens))
+
                     tokensi = PureWindowsPath(tokeni).parts
                 else:
                     if '$' in token0:
@@ -191,6 +195,8 @@ def split_tokens(tokens, is_windows):
                 tokens2.append(stokens[1])
 
         elif ':' in token:
+            # Windows
+
             # this has an environment variable or a drive letter
             stokens = token.split(':')
 
@@ -213,7 +219,10 @@ def split_tokens(tokens, is_windows):
                         'Only 1 environment variable can be expanded; '
                         'environment_vars_to_expand = %r' % environment_vars_to_expand)
                 for env_var in environment_vars_to_expand:
-                    env_vari = os.path.expandvars('$' + env_var)
+                    env_vari = os.path.expandvars('$' + env_var.strip('%'))
+                    if '$' in env_vari:
+                        raise SyntaxError('env_vari=%r has a $ in it after expanding (token0=%r)...\n'
+                                          'tokens=%s' % (env_vari, env_var, tokens))
                     if is_windows:
                         tokensi = PureWindowsPath(env_vari).parts
                     else:

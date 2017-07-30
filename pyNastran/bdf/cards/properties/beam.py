@@ -1317,6 +1317,8 @@ class PBMSECT(LineProperty):
                     self.ts[0] = int(value)
                 else:
                     raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
+            elif key == 'T':
+                self.ts[0] = float(value)
             else:
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
 
