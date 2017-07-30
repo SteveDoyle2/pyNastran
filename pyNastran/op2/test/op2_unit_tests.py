@@ -917,7 +917,7 @@ class TestOP2(Tester):
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
-        isubcases = [(1, 1, 1, 0, 'DEFAULT1'), (1, 8, 1, 0, 'DEFAULT1')]
+        isubcases = [(1, 1, 1, 0, ''), (1, 8, 1, 0, '')]
         isubcase = isubcases[1]
 
         try:

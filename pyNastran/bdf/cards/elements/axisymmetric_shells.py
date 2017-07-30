@@ -675,6 +675,34 @@ class CTRIAX6(TriShell):
             return self.mid
         return self.mid_ref.mid
 
+    def Normal(self):
+        # () -> np.ndarray
+        r"""
+        Get the normal vector, :math:`n`.
+
+              5
+             / \
+            6   4
+          /       \
+         1----2----3
+
+
+        .. math::
+          n = \frac{(n_0-n_1) \times (n_0-n_2)}
+             {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
+        """
+        nodes = [self.nodes_ref[inid] for inid in [0, 2, 4]]
+        n1, n3, n5  = self.get_node_positions(nodes=nodes)
+        try:
+            n = _normal(n1 - n3, n1 - n5)
+        except:
+            msg = 'ERROR computing normal vector for eid=%i.\n' % self.eid
+            msg += '  nid1=%i n1=%s\n' % (self.nodes_ref[0].nid, n1)
+            msg += '  nid3=%i n3=%s\n' % (self.nodes_ref[2].nid, n3)
+            msg += '  nid5=%i n5=%s\n' % (self.nodes_ref[4].nid, n5)
+            raise RuntimeError(msg)
+        return n
+
     def flip_normal(self):
         r"""
         ::

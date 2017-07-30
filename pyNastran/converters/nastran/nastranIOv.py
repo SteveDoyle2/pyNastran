@@ -3244,7 +3244,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # |       \
                 # 1----2----3
                 #
-                material_coord[i] = element.theta_mcid
+                material_coord[i] = element.theta # TODO: no mcid
                 # midside nodes are required, nodes out of order
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -3821,10 +3821,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if isinstance(element, ShellElement):
                 ieid = None
                 element_dimi = 2
+                #assert element.nodes_ref is not None, element.nodes_ref
                 try:
                     normali = element.Normal()
-                #except AttributeError:
-                    #raise
+                except AttributeError:
+                    msg = str(element)
+                    msg += 'nodes_ref = %s\n' % element
+                    msg += 'nodes = %s' % element.node_ids
+                    raise AttributeError(msg)
                 except RuntimeError:
                     # this happens when you have a degenerate tri
                     msg = 'eid=%i normal=nan...setting to [2, 2, 2]\n'
@@ -3835,19 +3839,24 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #raise
 
                 prop = element.pid_ref
-                ptype = prop.type
-                if ptype == 'PSHELL':
-                    z0 = prop.z1
-                elif ptype in ['PCOMP', 'PCOMPG']:
-                    z0 = prop.z0
-                elif ptype == 'PLPLANE':
-                    z0 = 0.
-                elif ptype == 'PSHEAR':
-                    z0 = 0.
-                elif ptype in ['PSOLID', 'PLSOLID']:
-                    z0 = 0.
+                if prop is None:
+                    # F:\work\pyNastran\examples\Dropbox\move_tpl\ehbus69.op2
+                    # CTRIAX
+                    z0 = np.nan
                 else:
-                    raise NotImplementedError(ptype) # PSHEAR, PCOMPG
+                    ptype = prop.type
+                    if ptype == 'PSHELL':
+                        z0 = prop.z1
+                    elif ptype in ['PCOMP', 'PCOMPG']:
+                        z0 = prop.z0
+                    elif ptype == 'PLPLANE':
+                        z0 = 0.
+                    elif ptype == 'PSHEAR':
+                        z0 = 0.
+                    elif ptype in ['PSOLID', 'PLSOLID']:
+                        z0 = 0.
+                    else:
+                        raise NotImplementedError(ptype) # PSHEAR, PCOMPG
 
                 if z0 is None:
                     if etype in ['CTRIA3', 'CTRIAR']:
@@ -4242,6 +4251,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if pid == 0:
                 print('skipping pid=0')
                 continue
+            elif pid < 0:
+                continue
+
             prop = model.properties[pid]
             #try:
             if prop.type in prop_types_with_mid:

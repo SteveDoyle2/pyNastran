@@ -857,7 +857,15 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             obj.node_gridtype[obj.itotal:itotal2, 0] = nids
             obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
             obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
-            assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
+            if np.abs(floats[:, 1:]).max() != 0:
+                msg = '%s is not a scalar result...do you have p-elements?\n' % (
+                    obj.__class__.__name__)
+                for icol in range(1, 6):
+                    abs_max = np.abs(floats[:, icol]).max()
+                    if abs_max != 0:
+                        msg += 'itime=%s icol=%s max=%s min=%s\n' % (
+                            obj.itime, icol, floats[:, icol].max(), floats[:, icol].min())
+                raise ValueError(msg.rstrip())
             obj.itotal = itotal2
         else:
             dt = None
