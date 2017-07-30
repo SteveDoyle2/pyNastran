@@ -649,7 +649,7 @@ class GuiAttributes(object):
         self.eid_map = {}
         self.nid_map = {}
         params_to_delete = (
-            'case_keys', 'icase', 'iSubcaseNameMap',
+            'case_keys', 'icase', 'isubcase_name_map',
             'result_cases', 'eid_map', 'nid_map',
         )
         if geom_filename is None or geom_filename is '':

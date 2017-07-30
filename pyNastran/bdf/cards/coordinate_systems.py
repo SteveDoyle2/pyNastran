@@ -1297,14 +1297,15 @@ class SphericalCoord(object):
         x = p[:, 0]
         y = p[:, 1]
         z = p[:, 2]
-        R = np.sqrt(x * x + y * y + z * z)
+        radius = np.sqrt(x * x + y * y + z * z)
         phi = np.degrees(np.arctan2(y, x))
-        theta = np.degrees(np.arccos(z / R))
 
-        i = np.where(R == 0.0)
+        i = np.where(radius == 0.0)
         if len(i):
-            theta[i] = 0.0
-        return np.array([R, theta, phi], dtype='float64').T
+            theta = np.zeros(len(z), dtype=z.dtype)
+            ir = np.where(radius != 0.0)
+            theta[ir] = np.degrees(np.arccos(z[ir] / radius[ir]))
+        return np.array([radius, theta, phi], dtype='float64').T
 
     @staticmethod
     def coord_to_xyz(p):
@@ -1314,12 +1315,12 @@ class SphericalCoord(object):
         xyz : (3,) float ndarray
             the R, \theta, \phi in the local coordinate system
         """
-        R = p[0]
+        radius = p[0]
         theta = radians(p[1])
         phi = radians(p[2])
-        x = R * sin(theta) * cos(phi)
-        y = R * sin(theta) * sin(phi)
-        z = R * cos(theta)
+        x = radius * sin(theta) * cos(phi)
+        y = radius * sin(theta) * sin(phi)
+        z = radius * cos(theta)
         return np.array([x, y, z], dtype='float64')
 
     @staticmethod
@@ -1356,8 +1357,14 @@ class SphericalCoord(object):
         t = phi
         return np.array([r, t, z], dtype='float64')
 
-class Cord2x(Coord):
 
+class Cord2x(Coord):
+    """
+    Parent class for:
+     - CORD2R
+     - CORD2C
+     - CORD2S
+    """
     def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
         This method emulates the CORD2x card.
@@ -1727,6 +1734,12 @@ class Cord2x(Coord):
 
 
 class Cord1x(Coord):
+    """
+    Parent class for:
+     - CORD1R
+     - CORD1C
+     - CORD1S
+    """
     rid = 0  # used only for transform to global
 
     def Rid(self):
@@ -1810,7 +1823,7 @@ class Cord1x(Coord):
         assert len(data) == 4, 'data = %s' % (data)
         return cls(cid, g1, g2, g3, comment=comment)
 
-    def to_CORD2x(self, model, rid=0):
+    def to_cord2x(self, model, rid=0):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
 

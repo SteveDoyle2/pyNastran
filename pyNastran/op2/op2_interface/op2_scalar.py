@@ -315,10 +315,11 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # displacement/velocity/acceleration/eigenvector/temperature
     # OUPV1 - Scaled Response Spectra - displacements
     b'OUG1', b'OAG1',
-    b'OUGV1', b'BOUGV1', b'OUPV1', b'OUGV1PAT',
+    b'OUGV1', b'BOUGV1', b'OUGV1PAT',
+    b'OUPV1',
 
     # OUGV1PAT - Displacements in the basic coordinate system
-    # OUGV1  - Displacements in the global coordinate system
+    # OUGV1  - Output (O) Displacements (U) in the global/g-set (G) coordinate system in vector (V) format and SORT1
     # BOUGV1 - Displacements in the basic coordinate system
     # BOPHIG - Eigenvectors in the basic coordinate system
     # ROUGV1 - Relative OUGV1
@@ -329,7 +330,8 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # applied loads
     # OPG1 - Applied static loads
     b'OPNL1', # nonlinear applied loads - sort 1
-    b'OPG1', b'OPGV1', # applied loads - gset? - sort 1
+    b'OPG1', # applied loads - gset? - sort 1
+    b'OPGV1',
     b'OPG2', # applied loads - sort 2 - v0.8
 
     # grid point stresses
@@ -461,6 +463,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 
     b'OUG2T',
     b'AEMONPT',
+    #b'KDICT',
 ]
 
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
@@ -489,6 +492,8 @@ NX_MATRIX_TABLES = [
     # MATRIX/MATPOOL - testing-remove this
     b'PATRN', b'IDENT', b'RANDM', b'CMPLX',
     b'MPATRN', b'MIDENT', b'MRANDM', b'MCMPLX',
+    b'MATPOOL',
+    #b'KELM',
 ]
 
 
@@ -569,7 +574,7 @@ MSC_MATRIX_TABLES = [
 ] # type: List[bytes]
 AUTODESK_MATRIX_TABLES = [
     #b'BELM',
-    #b'KELM',
+    b'KELM',
     #b'MELM',
 ] # type: List[bytes]
 # this will be split later
@@ -765,7 +770,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # common tables
 
             # unorganized
-            b'RADCONS': [self._read_oug1_3, self._read_oug_4],     # Displacement Constraint Mode (OUG)
+            b'RADCONS': [self._read_oug1_3, self._read_oug_4], # Displacement Constraint Mode (OUG)
             b'RADEFFM': [self._read_oug1_3, self._read_oug_4], # Displacement Effective Inertia Mode (OUG)
             b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
 
@@ -806,9 +811,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
+
+            #F:\work\pyNastran\examples\Dropbox\pyNastran\bdf\cards\test\test_mass_01.op2
+            #F:\work\pyNastran\examples\matpool\gpsc1.op2
+            #b'CSTM':    [self._table_crasher, self._table_crasher],
             b'CSTM':    [self._table_passer, self._table_passer],
             b'AXIC':    [self._table_passer, self._table_passer],
-            b'ONRGY2':  [self._table_passer, self._table_passer],
 
             b'RSOUGV1': [self._table_passer, self._table_passer],
             b'RESOES1': [self._table_passer, self._table_passer],
@@ -879,9 +887,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # applied loads
             b'OPG1'  : [self._read_opg1_3, self._read_opg1_4],  # applied loads in the nodal frame
             b'OPG2' : [self._table_passer, self._table_passer],
-
             b'OPGV1' : [self._read_opg1_3, self._read_opg1_4],  # solution set applied loads?
             b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],  # nonlinear loads
+            b'OCRPG' : [self._read_opg1_3, self._read_opg1_4],  # post-buckling loads
 
             b'OPGATO1' : [self._table_passer, self._table_passer],
             b'OPGCRM1' : [self._table_passer, self._table_passer],
@@ -904,6 +912,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # strain energy density
             b'ONRGY'  : [self._read_onr1_3, self._read_onr1_4],
             b'ONRGY1' : [self._read_onr1_3, self._read_onr1_4],  # strain energy density
+            b'ONRGY2':  [self._table_passer, self._table_passer],
             #=======================
             # OES
             # stress
@@ -974,6 +983,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # OUG
             # displacement/velocity/acceleration/eigenvector/temperature
             b'OUG1'    : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
+            # OVG1?
             b'OAG1'    : [self._read_oug1_3, self._read_oug_4],  # accelerations in nodal frame
 
             b'OUGV1'   : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
@@ -982,6 +992,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUPV1'   : [self._read_oug1_3, self._read_oug_4],  # scaled response spectra - displacement
             b'TOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # grid point temperature
             b'ROUGV1'  : [self._read_oug1_3, self._read_oug_4], # relative OUG
+
+            #F:\work\pyNastran\examples\Dropbox\move_tpl\sbuckl2a.op2
+            b'OCRUG' : [self._read_oug1_3, self._read_oug_4],  # post-buckling displacement
 
             b'OPHIG' :  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
             b'BOPHIG':  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
@@ -1041,7 +1054,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'CLAMA' : [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],   # complex eigenvalues
             b'LAMA'  : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues
 
-            # ===geom passers===
+            # ===========================geom passers===========================
             # geometry
             b'GEOM1' : [self._table_passer, self._table_passer], # GEOM1-Geometry-related bulk data
             b'GEOM2' : [self._table_passer, self._table_passer], # GEOM2-element connectivity and SPOINT-related data
@@ -1079,39 +1092,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'DYNAMICS' : [self._table_passer, self._table_passer],
             b'DIT' : [self._table_passer, self._table_passer],
             b'DITS' : [self._table_passer, self._table_passer],
-
-            # geometry
-            #b'GEOM1': [self._read_geom1_4, self._read_geom1_4],
-            #b'GEOM2': [self._read_geom2_4, self._read_geom2_4],
-            #b'GEOM3': [self._read_geom3_4, self._read_geom3_4],
-            #b'GEOM4': [self._read_geom4_4, self._read_geom4_4],
-
-            # superelements
-            #b'GEOM1S': [self._read_geom1_4, self._read_geom1_4],
-            #b'GEOM2S': [self._read_geom2_4, self._read_geom2_4],
-            #b'GEOM3S': [self._read_geom3_4, self._read_geom3_4],
-            #b'GEOM4S': [self._read_geom4_4, self._read_geom4_4],
-
-            #b'GEOM1N': [self._read_geom1_4, self._read_geom1_4],
-            #b'GEOM2N': [self._read_geom2_4, self._read_geom2_4],
-            #b'GEOM3N': [self._read_geom3_4, self._read_geom3_4],
-            #b'GEOM4N': [self._read_geom4_4, self._read_geom4_4],
-
-            #b'GEOM1OLD': [self._read_geom1_4, self._read_geom1_4],
-            #b'GEOM2OLD': [self._read_geom2_4, self._read_geom2_4],
-            #b'GEOM3OLD': [self._read_geom3_4, self._read_geom3_4],
-            #b'GEOM4OLD': [self._read_geom4_4, self._read_geom4_4],
-
-            #b'EPT' : [self._read_ept_4, self._read_ept_4],
-            #b'EPTS': [self._read_ept_4, self._read_ept_4],
-            #b'EPTOLD' : [self._read_ept_4, self._read_ept_4],
-
-            #b'MPT' : [self._read_mpt_4, self._read_mpt_4],
-            #b'MPTS': [self._read_mpt_4, self._read_mpt_4],
-
-            #b'DYNAMIC': [self._read_dynamics_4, self._read_dynamics_4],
-            #b'DYNAMICS': [self._read_dynamics_4, self._read_dynamics_4],
-            #b'DIT': [self._read_dit_4, self._read_dit_4],   # table objects (e.g. TABLED1)
+            # =========================end geom passers=========================
 
             # ===passers===
             b'EQEXIN': [self._table_passer, self._table_passer],
@@ -1138,7 +1119,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'EDTS' : [self._table_passer, self._table_passer],
 
             b'FOL' : [self._table_passer, self._table_passer],
-            #b'MONITOR' : [self._read_monitor_3, self._read_monitor_4],  # monitor points
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
@@ -1178,9 +1158,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OMM2' : [self._table_passer, self._table_passer],
             b'ERRORN' : [self._table_passer, self._table_passer],  # p-element error summary table
             #==================================
-
-            b'OCRPG' : [self._table_passer, self._table_passer],
-            b'OCRUG' : [self._table_passer, self._table_passer],
 
             b'EDOM' : [self._table_passer, self._table_passer],
             b'OUG2T' : [self._table_passer, self._table_passer],

@@ -111,7 +111,7 @@ class GuiCommon(GuiAttributes):
 
     def get_subtitle_label(self, subcase_id):
         try:
-            subtitle, label = self.iSubcaseNameMap[subcase_id]
+            subtitle, label = self.isubcase_name_map[subcase_id]
         except KeyError:
             subtitle = 'case=NA'
             label = 'label=NA'

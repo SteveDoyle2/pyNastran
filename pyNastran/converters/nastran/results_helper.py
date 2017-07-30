@@ -24,7 +24,7 @@ class NastranGuiResults(NastranGuiAttributes):
         #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is not really an OUG table
 
     def _fill_op2_oug_oqg(self, cases, model, key, icase,
-                          form_dict, header_dict):
+                          form_dict, header_dict, keys_map):
         """
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
@@ -53,7 +53,6 @@ class NastranGuiResults(NastranGuiAttributes):
         for (result, name, deflects) in displacement_like:
             if key not in result:
                 continue
-
             title1 = name + ' T_XYZ'
             #title2 = name + ' R_XYZ'
 
@@ -142,6 +141,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     # mode = 2; freq = 75.9575 Hz
                     header = self._get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
+                    keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
                     tnorm_abs_max = tnorm.max()
                     #if tnorm_abs_max == 0.0:
@@ -162,7 +162,8 @@ class NastranGuiResults(NastranGuiAttributes):
 
                 if name == 'Displacement':
                     # Displacement; itime=361 time=3.61 tnorm=1.46723
-                    print('dmax = ', max(dmax))
+                    #print('dmax = ', max(dmax))
+                    pass
                 nastran_res.save_defaults()
             else:
                 nastran_res = ForceTableResults(subcase_idi, titles, headers,
@@ -173,6 +174,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     dt = case._times[itime]
                     header = self._get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
+                    keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
                     tnorm_abs_max = tnorm.max()
                     #if tnorm_abs_max == 0.0:
@@ -212,6 +214,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = self._get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
+                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
                 loads = case.data[itime, :, :]
                 nxyz = norm(loads[:, :3], axis=1)
@@ -336,7 +339,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 #icase += 7
 
     def _fill_op2_force(self, cases, model, key, icase, itime,
-                        form_dict, header_dict, is_static):
+                        form_dict, header_dict, keys_map, is_static):
         """creates the force plots"""
         #assert isinstance(key, int), key
         assert isinstance(icase, int), icase
@@ -344,7 +347,7 @@ class NastranGuiResults(NastranGuiAttributes):
         try:
             icase = self._fill_op2_time_centroidal_force(
                 cases, model, key, icase, itime,
-                form_dict, header_dict, is_static)
+                form_dict, header_dict, keys_map, is_static)
         except IndexError as e:
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
@@ -352,13 +355,13 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_stress(self, cases, model, key, icase, itime,
-                         form_dict, header_dict, is_static, is_stress=True):
+                         form_dict, header_dict, keys_map, is_static, is_stress=True):
         """creates the stress plots"""
         assert isinstance(icase, int), icase
         assert isinstance(form_dict, dict), form_dict
         try:
             icase = self._fill_op2_time_centroidal_stress(
-                cases, model, key, icase, itime, form_dict, header_dict,
+                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
                 is_static, is_stress=is_stress)
         except TypeError as e:
             self.log_error('\n' + ''.join(traceback.format_stack()))
@@ -367,10 +370,10 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_strain(self, cases, model, key, icase, itime,
-                         form_dict, header_dict, is_static):
+                         form_dict, header_dict, keys_map, is_static):
         """creates the strain plots"""
         return self._fill_op2_stress(cases, model, key, icase, itime,
-                                     form_dict, header_dict,
+                                     form_dict, header_dict, keys_map,
                                      is_static, is_stress=False)
 
     def _get_times(self, model, isubcase):
@@ -571,7 +574,7 @@ class NastranGuiResults(NastranGuiAttributes):
             header += '; freq = %g Hz' % cycle
         elif hasattr(case, 'dt'):
             time = case._times[itime]
-            header += 'time = %g sec' % time
+            header += '; time = %g sec' % time
             pass
         elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
             pass
@@ -585,7 +588,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
     def _fill_op2_time_centroidal_strain_energy(self, cases, model,
                                                 key, icase, itime,
-                                                form_dict, header_dict, is_static):
+                                                form_dict, header_dict, keys_map, is_static):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -657,6 +660,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
             #print('key =', key)
             case = resdict[key]
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
             if case.is_complex():
                 continue
@@ -715,7 +719,8 @@ class NastranGuiResults(NastranGuiAttributes):
         #cases, model, subcase_id, icase, itime, form_dict,
         #is_static)
 
-    def _create_op2_time_centroidal_force_arrays(self, model, nelements, key, itime, header_dict):
+    def _create_op2_time_centroidal_force_arrays(self, model, nelements, key, itime,
+                                                 header_dict, keys_map):
         """
         creates the following force outputs:
          - fx, fy, fz, mx, my, mz
@@ -742,6 +747,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 case = res_type[key]
                 if case.is_complex():
                     continue
+                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
                 data = case.data
                 if case.nonlinear_factor is None:
                     ntimes = data.shape[:1]
@@ -776,6 +782,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = self._get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
+                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
                 #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
                 # shear1, shear2, axial, torque]
@@ -814,6 +821,7 @@ class NastranGuiResults(NastranGuiAttributes):
             dt = case._times[itime]
             header = self._get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
             j = np.searchsorted(self.element_ids, ueids)
             is_element_on[j] = 1.
@@ -875,12 +883,13 @@ class NastranGuiResults(NastranGuiAttributes):
 
     def _fill_op2_time_centroidal_force(self, cases, model,
                                         key, icase, itime,
-                                        form_dict, header_dict, is_static):
+                                        form_dict, header_dict, keys_map, is_static):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
         nelements = self.nElements
-        out = self._create_op2_time_centroidal_force_arrays(model, nelements, key, itime, header_dict)
+        out = self._create_op2_time_centroidal_force_arrays(
+            model, nelements, key, itime, header_dict, keys_map)
         found_force, fx, fy, fz, rx, ry, rz, is_element_on = out
 
         #new_cases = True
@@ -976,8 +985,8 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_time_centroidal_stress(self, cases, model, key, icase, itime,
-                                         form_dict, header_dict, is_static,
-                                         is_stress=True):
+                                         form_dict, header_dict, keys_map,
+                                         is_static, is_stress=True):
         """
         Creates the time accurate stress objects for the pyNastranGUI
         """
@@ -1031,6 +1040,7 @@ class NastranGuiResults(NastranGuiAttributes):
             dt = case._times[itime]
             header = self._get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
             # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
             oxx[i] = case.data[itime, :, 0]
@@ -1060,6 +1070,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = self._get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
+                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
                 #s1a = case.data[itime, :, 0]
                 #s2a = case.data[itime, :, 1]
                 #s3a = case.data[itime, :, 2]
@@ -1120,6 +1131,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = self._get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
+                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+
                 #  0    1    2    3    4     5     6     7     8
                 # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
 
@@ -1175,6 +1188,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = self._get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
+                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
                 sxc = case.data[itime, :, 0]
                 sxd = case.data[itime, :, 1]
                 sxe = case.data[itime, :, 2]
@@ -1261,6 +1275,7 @@ class NastranGuiResults(NastranGuiAttributes):
             dt = case._times[itime]
             header = self._get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
             oxxi = case.data[itime, j, 1]
             oyyi = case.data[itime, j, 2]
             txyi = case.data[itime, j, 3]
@@ -1320,6 +1335,7 @@ class NastranGuiResults(NastranGuiAttributes):
             dt = case._times[itime]
             header = self._get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
             eidsi = case.element_layer[:, 0]
             layers = case.element_layer[:, 1]
             ntotal = case.data.shape[1]
@@ -1423,6 +1439,7 @@ class NastranGuiResults(NastranGuiAttributes):
             dt = case._times[itime]
             header = self._get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
             oxxi = case.data[itime, j, 0]
             oyyi = case.data[itime, j, 1]
             ozzi = case.data[itime, j, 2]
@@ -1651,8 +1668,8 @@ class NastranGuiResults(NastranGuiAttributes):
 
         # subcase_ids = model.subcase_key.keys()
 
-        #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
-        subcase_ids = list(model.iSubcaseNameMap.keys())
+        #self.isubcase_name_map[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
+        subcase_ids = list(model.isubcase_name_map.keys())
         subcase_ids.sort()
         #print('subcase_ids =', subcase_ids)
 

@@ -137,7 +137,7 @@ class XlsxWriter(OP2_F06_Common):
         # then eigenvectors
         # has a special header
         for isubcase, result in sorted(iteritems(self.eigenvectors)):
-            (subtitle, label) = self.iSubcaseNameMap[isubcase]
+            (subtitle, label) = self.isubcase_name_map[isubcase]
 
             if hasattr(result, 'write_xlsx'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
@@ -288,7 +288,7 @@ class XlsxWriter(OP2_F06_Common):
             #self.loadVectors,
             self.thermal_load_vectors,
         ]
-        isubcases = sorted(self.iSubcaseNameMap.keys())
+        isubcases = sorted(self.isubcase_name_map.keys())
         #title = self.title
 
         res_categories = [
@@ -316,7 +316,7 @@ class XlsxWriter(OP2_F06_Common):
                 for res_key in res_keys:
                     isubcase = res_key
                     if isubcase in res_type:
-                        #(subtitle, label) = self.iSubcaseNameMap[isubcase]
+                        #(subtitle, label) = self.isubcase_name_map[isubcase]
                         result = res_type[isubcase]
                         element_name = ''
                         if hasattr(result, 'element_name'):

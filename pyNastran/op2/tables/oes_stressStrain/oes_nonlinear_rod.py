@@ -25,6 +25,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
       3.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        """tested by elements/loadstep_elements.op2"""
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 

@@ -53,7 +53,7 @@ class OpenFoamIO(object):
             try:
                 del self.caseKeys
                 del self.iCase
-                del self.iSubcaseNameMap
+                del self.isubcase_name_map
             except:
                 print("cant delete geo")
             skip_reading = False
@@ -295,8 +295,8 @@ class OpenFoamIO(object):
             #note = ':  avg(Mach)=%g' % avgMach
         #else:
             #note = ''
-        #self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
-        self.iSubcaseNameMap = {0: ['OpenFoam BlockMeshDict', '']}
+        #self.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
+        self.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
         cases = {}
         ID = 1
 

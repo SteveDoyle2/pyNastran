@@ -457,6 +457,7 @@ class TABLED3(Table):
         x2 = data[2]
         xy = data[3:]
         xy = np.array(xy, dtype='float64')
+        xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
         return TABLED3(tid, x1, x2, x, y, comment=comment)

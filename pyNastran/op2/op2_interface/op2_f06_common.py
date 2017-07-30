@@ -20,7 +20,7 @@ class OP2_F06_Common(object):
     def __init__(self):
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcase_id
-        self.iSubcaseNameMap = {}
+        self.isubcase_name_map = {}
         self.generalized_tables = {}
         self.subtitles = defaultdict(list)
         self.case_control_deck = CaseControlDeck([], log=self.log)
@@ -931,7 +931,7 @@ class OP2_F06_Common(object):
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
                   and table not in [
-                      'card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
+                      'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
                       'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
                       'end_options', 'expected_times', 'generalized_tables']]
         for table in tables:

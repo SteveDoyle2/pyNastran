@@ -33,6 +33,7 @@ import scipy  # type: ignore
 from pyNastran.op2.tables.matrix import Matrix
 from pyNastran.op2.tables.design_response import WeightResponse, FlutterResponse, Convergence
 from pyNastran.op2.op2_interface.op2_common import OP2Common
+from pyNastran.op2.errors import FortranMarkerError
 
 
 class MinorTables(OP2Common):
@@ -511,30 +512,30 @@ class MinorTables(OP2Common):
         if self.read_mode == 1:
             assert data is not None, data
             assert len(data) > 12, len(data)
-            Type, = unpack(self._endian + 'i', data[8:12])
-            #assert Type in [1, 6, 10, 84], Type
-            if Type == 1:
+            response_type, = unpack(self._endian + 'i', data[8:12])
+            #assert response_type in [1, 6, 10, 84], response_type
+            if response_type == 1:
                 if self.weight_response is None:
                     self.weight_response = WeightResponse()
                 else:
                     self.weight_response.n += 1
-            elif Type == 4:
+            elif response_type == 4:
                 #TYPE =4 EIGN or FREQ
                 #8 MODE I Mode number
                 #9 APRX I Approximation code
                 pass
-            elif Type == 5:
+            elif response_type == 5:
                 #TYPE =5 DISP
                 #8 COMP I Displacement component
                 #9 UNDEF None
                 #10 GRID I Grid identification number
                 pass
-            elif Type == 15:
+            elif response_type == 15:
                 # CEIG
                 #8 MODE I Mode number
                 #9 ICODE I 1: Real component or 2: Imaginary component
                 pass
-            elif Type == 84:
+            elif response_type == 84:
                 if self.flutter_response is None:
                     self.flutter_response = FlutterResponse()
                 else:
@@ -561,43 +562,7 @@ class MinorTables(OP2Common):
             seid = out[13]
 
             if response_type == 1:
-                #                             -----  WEIGHT RESPONSE  -----
-                # ---------------------------------------------------------------------------------
-                #  INTERNAL  DRESP1  RESPONSE  ROW  COLUMN  LOWER     INPUT      OUTPUT     UPPER
-                #     ID       ID     LABEL     ID    ID    BOUND     VALUE       VALUE     BOUND
-                # ---------------------------------------------------------------------------------
-                #       1       1    WEIGHT     3     3       N/A   2.9861E+05  2.9852E+05   N/A
-                #(1, 1,    1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
-                #(1, 1000, 1, 'W       ', 0, 1,    3, 3, 0, 0, 0, 0, 0, 0)
-                #print(out)
-                #row_id = out[4]
-
-                # these should be blank?
-                row_id = out[6]
-                column_id = out[7]
-                seid_weight = out[8]
-
-                assert np.abs(out[8:-1]).sum() == 0.0, 'out=%s 8=%s' % (out, out[8:-1])
-                assert out[-1] in [0, 1, 2, 3, 4, 5], out
-                #dunno_8 = out[8]
-                #dunno_9 = out[9]
-                #dunno_10 = out[10]
-                #dunno_11 = out[11]
-                #dunno_12 = out[12]
-                #dunno_13 = out[13]
-                #msg = ('WEIGHT - response_type=%r response_label=%r row_id=%r column_id=%r '
-                       #'6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
-                           #response_type, response_label, row_id, column_id,
-                           #dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13))
-                #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
-                #print(out)
-                msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
-                    response_label, region, subcase, row_id, column_id)
-                self.weight_response.append(internal_id, dresp_id, response_label, region,
-                                            subcase, type_flag, seid,
-                                            row_id, column_id)
-                #print(msg)
-                #self.log.debug(msg)
+                self.weight_response.add_from_op2(out)
             elif response_type == 5:  # DISP
                 # out = (1, 101, 5, 'DISP1   ', 101, 1, 3, 0, 1, 0, 0, 0, 0, 0)
 
@@ -638,8 +603,7 @@ class MinorTables(OP2Common):
                 #9 UNDEF None
                 #10 ELID I Element identification number
                 #11 FREQ RS Frequency
-                #12 IFLAG I Integrated response flag. See Remark 20 of
-                #DRESP1.
+                #12 IFLAG I Integrated response flag. See Remark 20 of DRESP1.
                 #Value is -1 to -6, for SUM, AVG, SSQ,
                 pass
             elif response_type == 28:  # RMSACCL
@@ -648,7 +612,8 @@ class MinorTables(OP2Common):
                 #10 GRID I Grid identification number
                 #11 DMFREQ RS Dummy frequency for internal use
                 pass
-            elif response_type == 84:  # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
+            elif response_type == 84:
+                # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
                 out = unpack(self._endian + 'iii 8s iii fff i fff', data)
                 mode = out[6]
                 mach = out[7]

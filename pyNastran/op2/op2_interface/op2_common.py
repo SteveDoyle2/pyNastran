@@ -275,38 +275,113 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
         title, subtitle, label = unpack(b(self._endian + '128s128s128s'), data[200:])
-        self.title = title.strip().decode(self.encoding).strip()
-        self.subtitle = subtitle.strip().decode(self.encoding).strip()
-        self.label = label.strip().decode(self.encoding).strip()
-        #print('title = %r' % self.title)
+        self.title = title.decode(self.encoding).strip()
+        subtitle = subtitle.decode(self.encoding)
+        self.label = label.decode(self.encoding).strip()
+        nsubtitle_break = 67
+
+        adpativity_index = subtitle[nsubtitle_break:99].strip()
+        superelement = subtitle[99:].strip()
+
+        subtitle = subtitle[:nsubtitle_break].strip()
+        assert len(superelement) <= 26, 'len=%s superelement=%r' % (len(superelement), superelement)
+        superelement = superelement.strip()
+
+        assert len(subtitle) <= 67, 'len=%s subtitle=%r' % (len(subtitle), subtitle)
+
+        superelement_adaptivity_index = ''
+        if 'SUPERELEMENT' in superelement:
+            # 'SUPERELEMENT 0'
+
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\opt7.op2
+            # 'SUPERELEMENT 0       ,   1'
+            split_superelement = superelement.split()
+            if len(split_superelement) == 2:
+                word, value1 = split_superelement
+                assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
+                subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
+                value1 = int(value1)
+
+                if superelement_adaptivity_index:
+                    superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
+                        superelement_adaptivity_index, value1)
+                else:
+                    superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
+            elif len(split_superelement) == 4:
+                word, value1, comma, value2 = split_superelement
+                assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
+                value1 = int(value1)
+                value2 = int(value2)
+
+                if superelement_adaptivity_index:
+                    superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
+                        superelement_adaptivity_index, value1, value2)
+                else:
+                    superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
+            else:
+                raise RuntimeError(split_superelement)
+
+        if adpativity_index:
+            assert 'ADAPTIVITY INDEX=' in adpativity_index
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
+            #'ADAPTIVITY INDEX=      1'
+            split_adpativity_index = adpativity_index.split()
+            assert len(split_adpativity_index) == 3, split_adpativity_index
+            word1, word2, adpativity_index_value = split_adpativity_index
+            assert word1 == 'ADAPTIVITY', 'split_adpativity_index=%s' % split_adpativity_index
+            assert word2 == 'INDEX=', 'split_adpativity_index=%s' % split_adpativity_index
+
+            adpativity_index_value = int(adpativity_index_value)
+            subtitle = '%s; ADAPTIVITY_INDEX=%s' % (subtitle, adpativity_index_value)
+            if superelement_adaptivity_index:
+                superelement_adaptivity_index = '%s; ADAPTIVITY_INDEX=%s' % (
+                    superelement_adaptivity_index, adpativity_index_value)
+            else:
+                superelement_adaptivity_index = 'ADAPTIVITY_INDEX=%s' % adpativity_index_value
+
+        self.subtitle = subtitle
+        self.superelement_adaptivity_index = superelement_adaptivity_index
+        assert len(self.label) <= 124, 'len=%s label=%r' % (len(self.label), self.label)
 
         #: the subtitle of the subcase
         self.data_code['subtitle'] = self.subtitle
 
+        # the sub-key
+        self.data_code['superelement_adaptivity_index'] = self.superelement_adaptivity_index
+
         #: the label of the subcase
         self.data_code['label'] = self.label
-        self.data_code['title'] = self.title#.decode(self.encoding)
+        self.data_code['title'] = self.title
 
         if self.is_debug_file:
-            self.binary_debug.write('  %-14s = %r\n' % ('count', self._count))
-            self.binary_debug.write('  %-14s = %r\n' % ('title', self.title))
-            self.binary_debug.write('  %-14s = %r\n' % ('subtitle', self.subtitle))
-            self.binary_debug.write('  %-14s = %r\n' % ('label', self.label))
+            self.binary_debug.write(
+                '  %-14s = %r\n' * 5 % (
+                    'count', self._count,
+                    'title', self.title,
+                    'subtitle', self.subtitle,
+                    'label', self.label,
+                    'superelement_adaptivity_index', self.superelement_adaptivity_index))
 
     def _read_title(self, data):
         self._read_title_helper(data)
 
         if hasattr(self, 'isubcase'):
-            if self.isubcase not in self.iSubcaseNameMap:
-                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
+            if self.isubcase not in self.isubcase_name_map:
+                # 100 from label
+                # 20 from subtitle line
+                # 'SUBCASE 2'
+                #self.isubcase_name_map[isubcase] = [self.Subtitle, self.label]
+                self.isubcase_name_map[self.isubcase] = [
+                    self.subtitle, self.superelement_adaptivity_index, self.analysis_code, self.label]
         else:
             raise  RuntimeError('isubcase is not defined')
 
         if hasattr(self, 'subtitle') and hasattr(self, 'label'):
-            code = (self.isubcase, self.analysis_code, self.subtitle)
-            if code not in self.labels:
-                self.subtitles[self.isubcase].append(self.subtitle)
-                self.labels[code] = self.label
+            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index)
+            #print("code =", code)
+            #if code not in self.labels:
+                #self.subtitles[self.isubcase].append(self.subtitle)
+                #self.labels[code] = self.label
 
     def _write_debug_bits(self):
         """
@@ -349,7 +424,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 try:
                     is_complex = self.is_complex()
                 except AssertionError:
-                    self.binary_debug.write('\n  ERROR: cannot determine is_complex() properly; check_sort_bits!!!\n')
+                    self.binary_debug.write('\n  ERROR: cannot determine is_complex() properly; '
+                                            'check_sort_bits!!!\n')
                     is_complex = '???'
 
                 try:
@@ -1343,7 +1419,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
     def _get_code(self):
         code = self.isubcase
         #code = (self.isubcase, self.analysis_code, self._sort_method, self._count, self.subtitle)
-        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, self.subtitle)
+        code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+                self.superelement_adaptivity_index)
         #print('%r' % self.subtitle)
         self.code = code
         #self.log.debug('code = %s' % str(self.code))

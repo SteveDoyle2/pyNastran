@@ -324,7 +324,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             self.result_cases = {}
             self.ncases = 0
-        for i in ('case_keys', 'icase', 'iSubcaseNameMap'):
+        for i in ('case_keys', 'icase', 'isubcase_name_map'):
             if hasattr(self, i):  # TODO: is this correct???
                 del i
         return skip_reading
@@ -2076,7 +2076,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #-----------------------------------------------------------------
         # fill the results
         nid_to_pid_map = None
-        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        self.isubcase_name_map = {1: ['Nastran', '']}
         icase = 0
         cases = OrderedDict()
         form = ['Geometry', None, []]
@@ -2721,7 +2721,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cases = OrderedDict()
         #del pids_dict
 
-        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        self.isubcase_name_map = {1: ['Nastran', '']}
         icase = 0
         form = ['Geometry', None, []]
         form0 = form[2]
@@ -2830,7 +2830,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cases = OrderedDict()
 
 
-        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        self.isubcase_name_map = {1: ['Nastran', '']}
         icase = 0
         form = ['Geometry', None, []]
         form0 = form[2]
@@ -4718,7 +4718,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.model_results = model
 
         #print(model.print_results())
-        #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
+        #self.isubcase_name_map[self.isubcase] = [Subtitle, Label]
 
         # tansform displacements into global coordinates
         try:
@@ -4732,7 +4732,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #if 0:
             #cases = OrderedDict()
-            #self.iSubcaseNameMap = {}
+            #self.isubcase_name_map = {}
             #form = []
             #icase = 0
         #else:
@@ -4741,30 +4741,34 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         icase = len(cases)
         # form = self.res_widget.get_form()
 
-        subcase_ids = model.iSubcaseNameMap.keys()
-        #self.iSubcaseNameMap = model.iSubcaseNameMap
-        # self.iSubcaseNameMap = model.subcase_key
-        #print(self.iSubcaseNameMap)
-        for isubcase, values in iteritems(model.iSubcaseNameMap):
+        subcase_ids = model.isubcase_name_map.keys()
+        #self.isubcase_name_map = model.isubcase_name_map
+        # self.isubcase_name_map = model.subcase_key
+        #print(self.isubcase_name_map)
+        for isubcase, values in iteritems(model.isubcase_name_map):
             if not isinstance(isubcase, integer_types):
                 print('isubcase type =', type(isubcase))
                 continue
             if isinstance(values, str):
                 # eigenvalue???
                 label = values
-                print('label??? =', label)
+                self.log.debug('label_str = %r' % label)
             elif isinstance(values, list):
-                print(values)
-                subtitle, analysis_code, label = values
+                self.log.debug(values)
+                subtitle, superelement_adaptivity, analysis_code, label = values
             else:
-                print(values)
-                print(type(values))
+                self.log.debug(values)
+                self.log.debug(type(values))
                 raise RuntimeError(values)
 
-            self.iSubcaseNameMap[isubcase] = [subtitle, label]
+            if superelement_adaptivity:
+                subcase_name = '%s: %s' % (subtitle, superelement_adaptivity)
+            else:
+                subcase_name = subtitle
+            self.isubcase_name_map[isubcase] = [subcase_name, label]
             del subtitle, label
-        # self.iSubcaseNameMap = {subcase_id : label for
-                                # in iteritems(model.iSubcaseNameMap)}
+        # self.isubcase_name_map = {subcase_id : label for
+                                # in iteritems(model.isubcase_name_map)}
 
         form = self._fill_op2_output(op2_filename, cases, model, form, icase)
         self._finish_results_io2(form, cases)
@@ -4824,9 +4828,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         strain_energy_dict = defaultdict(list)
 
         header_dict = {}
+        keys_map = {}
         key_itime = []
 
-
+        print(keys)
         for key in keys:
             #print('key = %r' % str(key))
             header_dict[(key, 0)] = '; Static'
@@ -4837,7 +4842,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             ncases_old = icase
             icase = self._fill_op2_oug_oqg(cases, model, key, icase,
-                                           disp_dict, header_dict)
+                                           disp_dict, header_dict, keys_map)
             ncases = icase - ncases_old
             #print('ncases=%s icase=%s' % (ncases, icase))
             #assert ncases > 0, ncases
@@ -4854,22 +4859,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # stress
                 icase = self._fill_op2_stress(
                     cases, model, key, icase, itime,
-                    stress_dict, header_dict, is_static)
+                    stress_dict, header_dict, keys_map, is_static)
 
                 # strain
                 icase = self._fill_op2_strain(
                     cases, model, key, icase, itime,
-                    strain_dict, header_dict, is_static)
+                    strain_dict, header_dict, keys_map, is_static)
 
                 # force
                 icase = self._fill_op2_force(
                     cases, model, key, icase, itime,
-                    force_dict, header_dict, is_static)
+                    force_dict, header_dict, keys_map, is_static)
 
                 # strain energy
                 icase = self._fill_op2_time_centroidal_strain_energy(
                     cases, model, key, icase, itime,
-                    strain_energy_dict, header_dict, is_static)
+                    strain_energy_dict, header_dict, keys_map, is_static)
                 ncases = icase - ncases_old
                 new_key = (key, itime)
                 if ncases and new_key not in key_itime:
@@ -4897,15 +4902,28 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         subcase_id_old = key0[0]
         count_old = key0[3]
         subtitle_old = key0[4]
+        #print('key0 =', key0)
+        subtitle_old, label_old, superelement_adaptivity_index_old = keys_map[key0]
 
+        # now that we have the data built, we put it in the form
+        # in sorted order
         for key, itime in key_itime:
             #print('key =', key)
             subcase_id = key[0]
             count = key[3]
-            subtitle = key[4]
+            #subtitle = key[4]
+            try:
+                subtitle, label, superelement_adaptivity_index = keys_map[key]
+            except:
+                subcase_id = subcase_id_old
+                subtitle = subtitle_old + '?'
+                superelement_adaptivity_index = '?'
+                raise
+
             if subcase_id != subcase_id_old or subtitle != subtitle_old:
                 count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
-                subcase_str = 'Subcase %s; %s%s' % (subcase_id_old, subtitle_old, count_str)
+                subcase_str = 'Subcase %s; %s%s%s' % (
+                    subcase_id_old, subtitle_old, superelement_adaptivity_index, count_str)
                 res = (
                     subcase_str.rstrip('; '),
                     None,
@@ -4987,6 +5005,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #form.append(form0)
         #print(form)
         #aa
+        #print('form', form)
+        #print('form_results =', form_results)
         return form
 
     def clear_nastran(self):

@@ -516,7 +516,7 @@ class F06Writer(OP2_F06_Common):
 
         # then eigenvectors
         # has a special header
-        # isubcases = sorted(self.iSubcaseNameMap.keys())
+        # isubcases = sorted(self.isubcase_name_map.keys())
 
         # TODO: superelement version...need the nominal...
         res_keys_subcase = self.subcase_key

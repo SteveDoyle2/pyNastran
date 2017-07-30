@@ -58,7 +58,7 @@ class NastranGuiAttributes(object):
         self.nNodes = None
         self.nElements = None
         self.model_type = None
-        self.iSubcaseNameMap = None
+        self.isubcase_name_map = None
         self.has_caero = False
         self.dependents_nodes = set([])
         self.i_transform = {}
