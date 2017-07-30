@@ -128,7 +128,7 @@ class SU2_IO(object):
         self.scalarBar.Modified()
 
         cases = {}
-        self.iSubcaseNameMap = {}
+        self.isubcase_name_map = {}
         ID = 1
 
         form, cases = self._fill_su2_case(cases, ID, nelements, nnodes)
@@ -136,7 +136,7 @@ class SU2_IO(object):
 
     def _fill_su2_case(self, cases, ID, nelements, nnodes):
         """adds the sidebar results"""
-        self.iSubcaseNameMap[ID] = ('SU2', '')
+        self.isubcase_name_map[ID] = ('SU2', '')
 
         #nelements = elements.shape[0]
         #nnodes = nodes.shape[0]

@@ -102,7 +102,7 @@ class DegenGeomIO(object):
         #beta = model.betas[0]
         #note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
         note = 'name=%s' % name
-        self.iSubcaseNameMap = {1: ['OpenVSP%s' % note, '']}
+        self.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
         cases = {}
         ID = 1
 

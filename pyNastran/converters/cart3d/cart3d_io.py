@@ -57,7 +57,7 @@ class Cart3dIO(object):
             try:
                 del self.case_keys
                 del self.icase
-                del self.iSubcaseNameMap
+                del self.isubcase_name_map
             except:
                 # print("cant delete geo")
                 pass
@@ -142,7 +142,7 @@ class Cart3dIO(object):
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
+        self.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
         form, cases, icase = self._fill_cart3d_geometry_objects(

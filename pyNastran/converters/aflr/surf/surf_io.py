@@ -115,7 +115,7 @@ class SurfIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['AFLR Surface', '']}
+        self.isubcase_name_map = {1: ['AFLR Surface', '']}
         cases = {}
         ID = 1
 

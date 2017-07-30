@@ -263,7 +263,7 @@ class AbaqusIO(object):
         self.scalarBar.Modified()
 
         note = ''
-        self.iSubcaseNameMap = {1: ['Abaqus%s' % note, '']}
+        self.isubcase_name_map = {1: ['Abaqus%s' % note, '']}
         #form = []
         cases = {}
         ID = 1

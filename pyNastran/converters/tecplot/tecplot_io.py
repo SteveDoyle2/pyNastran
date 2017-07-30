@@ -58,7 +58,7 @@ class TecplotIO(object):
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.iSubcaseNameMap = {1: ['Tecplot%s' % note, '']}
+        self.isubcase_name_map = {1: ['Tecplot%s' % note, '']}
         cases = {}
         ID = 1
 

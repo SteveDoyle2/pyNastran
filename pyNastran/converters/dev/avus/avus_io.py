@@ -54,7 +54,7 @@ class AvusIO(object):
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.iSubcaseNameMap = {1: ['Avus%s' % note, '']}
+        self.isubcase_name_map = {1: ['Avus%s' % note, '']}
         cases = {}
         ID = 1
 

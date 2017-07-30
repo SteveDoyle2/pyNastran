@@ -120,7 +120,7 @@ class Plot3d_io(object):  # pragma: no cover
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['Plot3d', '']}
+        self.isubcase_name_map = {1: ['Plot3d', '']}
         cases = {}
         ID = 1
 

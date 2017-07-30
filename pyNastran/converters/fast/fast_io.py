@@ -125,7 +125,7 @@ class FastIO(object):
             else:
                 note = ''
 
-        self.iSubcaseNameMap = {
+        self.isubcase_name_map = {
             1: ['Fast%s' % note, ''],
             2: ['Fast%s' % note, ''],
         }

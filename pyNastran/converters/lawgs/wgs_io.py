@@ -94,7 +94,7 @@ class LaWGS_IO(object):
         #self.scalarBar.VisibilityOn()
         #self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['LaWGS', '']}
+        self.isubcase_name_map = {1: ['LaWGS', '']}
         cases = {}
         ID = 1
 

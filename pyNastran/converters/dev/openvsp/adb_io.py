@@ -40,7 +40,7 @@ class ADB_IO(object):  # pragma: no cover
             try:
                 del self.case_keys
                 del self.icase
-                del self.iSubcaseNameMap
+                del self.isubcase_name_map
             except:
                 # print('cant delete geo')
                 pass
@@ -154,7 +154,7 @@ class ADB_IO(object):  # pragma: no cover
         alpha = model.alphas[0]
         beta = model.betas[0]
         note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
-        self.iSubcaseNameMap = {1: ['OpenVSP%s' % note, '']}
+        self.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
         cases = {}
         ID = 1
 

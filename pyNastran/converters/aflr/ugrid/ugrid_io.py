@@ -126,7 +126,7 @@ class UGRID_IO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['AFLR UGRID Surface', '']}
+        self.isubcase_name_map = {1: ['AFLR UGRID Surface', '']}
         cases = {}
         ID = 1
 

@@ -576,7 +576,7 @@ class Solver(OP2):
                 (self.label, options) = case.get_parameter('LABEL')
             else:
                 self.label = ''
-            self.iSubcaseNameMap[isubcase] = [self.Subtitle, self.label]
+            self.isubcase_name_map[isubcase] = [self.Subtitle, self.label]
 
             # really should be is_f06_stress, is_op2_stress, etc.
             # also should have SET support

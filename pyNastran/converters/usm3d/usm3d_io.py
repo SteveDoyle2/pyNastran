@@ -225,7 +225,7 @@ class Usm3dIO(object):
         else:
             note = ''
 
-        self.iSubcaseNameMap = {
+        self.isubcase_name_map = {
             1: ['Usm3d%s' % note, ''],
             2: ['Usm3d%s' % note, ''],
         }

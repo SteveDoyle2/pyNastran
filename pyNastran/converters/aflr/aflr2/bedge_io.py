@@ -87,7 +87,7 @@ class BEdge_IO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['AFLR BEDGE', '']}
+        self.isubcase_name_map = {1: ['AFLR BEDGE', '']}
         cases = {}
         ID = 1
 

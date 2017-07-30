@@ -105,7 +105,7 @@ class PanairIO(object):
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['Panair', '']}
+        self.isubcase_name_map = {1: ['Panair', '']}
         cases = {}
         ID = 1
 
