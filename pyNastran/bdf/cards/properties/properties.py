@@ -515,6 +515,23 @@ class PRAC3D(CrackProperty):
 
 
 class PCONEAX(Property):
+    """
+    +---------+-------+--------+------+-------+-------+-------+-------+-------+
+    |    1    |   2   |   3    |  4   |   5   |   6   |   7   |   8   |   9   |
+    +=========+=======+========+======+=======+=======+=======+=======+=======+
+    | PCONEAX |  ID   |  MID1  |  T1  | MID2  |   I   | MID3  |   T2  |  NSM  |
+    +---------+-------+--------+------+-------+-------+-------+-------+-------+
+    |         |  Z1   |   Z2   | PHIl | PHI2  | PHI3  | PHI4  | PHI5  | PHI6  |
+    +---------+-------+--------+------+-------+-------+-------+-------+-------+
+    |         | PHI7  |  PHI8  | PHI9 | PHI10 | PHI11 | PHI12 | PHI13 | PHI14 |
+    +---------+-------+--------+------+-------+-------+-------+-------+-------+
+
+    +---------+-------+--------+------+-------+-------+-------+-------+-------+
+    | PCONEAX |   2   |   4    | 1.0  |   6   | 16.3  |   8   |  2.1  |  0.5  |
+    +---------+-------+--------+------+-------+-------+-------+-------+-------+
+    |         | 0.001 | -0.002 | 23.6 | 42.9  |       |       |       |       |
+    +---------+-------+--------+------+-------+-------+-------+-------+-------+
+    """
     type = 'PCONEAX'
     _field_map = {
         1: 'pid', 2:'mid1', 3:'t1', 4:'mid2', 5:'i', 6:'mid3', 7:'t2',
@@ -526,10 +543,39 @@ class PCONEAX(Property):
             raise KeyError(msg)
         self.phi[n - 10] = value
 
-    def __init__(self, pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi, comment=''):
+    def __init__(self, pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
+                 nsm=None, z1=None, z2=None, phi=None, comment=''):
+        """
+        Creates a PCONEAX
+
+        Parameters
+        ----------
+        pid : int
+            PCONEAX property id for a CCONEAX.
+        mid1 : int
+            Membrane material id
+        mid2 : int
+            bending material id
+        mid3 : int
+            transverse shear material id
+        t1 : float
+            Membrane thickness. (Real > 0.0 if MID1 = 0)
+        t2 : float
+            Transverse shear thickness. (Real > 0.0 if MID3 = 0)
+        I : float
+            Moment of inertia per unit width.
+        nsm : float
+            Nonstructural mass per unit area.
+        z1, z2 : float
+            Fiber distances from the middle surface for stress recovery.
+        phi : List[float]
+            Azimuthal coordinates (in degrees) for stress recovery.
+        """
         Property.__init__(self)
         if comment:
             self.comment = comment
+        if phi is None:
+            phi = []
         self.pid = pid
         self.mid1 = mid1
         self.t1 = t1
@@ -541,7 +587,9 @@ class PCONEAX(Property):
         self.z1 = z1
         self.z2 = z2
         self.phi = phi
-        self.mid_ref = None
+        self.mid1_ref = None
+        self.mid2_ref = None
+        self.mid3_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -568,7 +616,7 @@ class PCONEAX(Property):
         else:
             i = blank(card, 5, 'i')
 
-        mid3 = integer(card, 6, 0)
+        mid3 = integer_or_blank(card, 6, 'mid3', 0)
         if mid3 > 0:
             t2 = double(card, 7, 't3')
             assert t2 > 0.0
@@ -581,8 +629,8 @@ class PCONEAX(Property):
 
         j = 1
         phi = []
-        for i in range(11, len(card)):
-            phii = double(card, i, 'phi' % j)
+        for icard in range(11, len(card)):
+            phii = double(card, icard, 'phi%i' % icard)
             phi.append(phii)
             j += 1
         return PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
@@ -599,20 +647,19 @@ class PCONEAX(Property):
         """
         msg = ' which is required by PCONEAX=%s' %(self.pid)
         if self.mid1 > 0:
-            self.mid1 = model.Material(self.mid1, msg=msg)
-            self.mid1_ref = self.mid1
+            self.mid1_ref = model.Material(self.mid1, msg=msg)
         if self.mid2 > 0:
-            self.mid2 = model.Material(self.mid2, msg=msg)
-            self.mid2_ref = self.mid2
+            self.mid2_ref = model.Material(self.mid2, msg=msg)
         if self.mid3 > 0:
-            self.mid3 = model.Material(self.mid3, msg=msg)
-            self.mid3_ref = self.mid3
+            self.mid3_ref = model.Material(self.mid3, msg=msg)
 
     def uncross_reference(self):
         self.mid1 = self.Mid1()
         self.mid2 = self.Mid2()
         self.mid3 = self.Mid3()
-        del self.mid1_ref, self.mid2_ref, self.mid3_ref
+        self.mid1_ref = None
+        self.mid2_ref = None
+        self.mid3_ref = None
 
     def Mid1(self):
         if isinstance(self.mid1, Material):
@@ -633,22 +680,22 @@ class PCONEAX(Property):
         return [self.Mid1(), self.Mid2(), self.Mid3()]
 
     def raw_fields(self):
-        fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
+        list_fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
                   self.Mid2(), self.i, self.Mid3(), self.t2,
                   self.nsm, self.z1, self.z2] + self.phi
-        return fields
+        return list_fields
 
     def repr_fields(self):
-        nsm = set_blank_if_default(self.nsm, 0.0)
+        #nsm = set_blank_if_default(self.nsm, 0.0)
         mid1 = set_blank_if_default(self.Mid1(), 0)
         mid2 = set_blank_if_default(self.Mid2(), 0)
         mid3 = set_blank_if_default(self.Mid3(), 0)
         i = set_blank_if_default(self.i, 0.0)
         t1 = set_blank_if_default(self.t1, 0.0)
         t2 = set_blank_if_default(self.t2, 0.0)
-        fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
-                  nsm, self.z1, self.z2] + self.phi
-        return fields
+        list_fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
+                       self.nsm, self.z1, self.z2] + self.phi
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

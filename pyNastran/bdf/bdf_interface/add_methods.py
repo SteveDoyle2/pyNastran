@@ -658,6 +658,13 @@ class AddMethods(BDFAttributes):
         self.aeros = aeros
         #self._type_to_id_map[aeros.type].append(key)
 
+    def _add_axic_object(self, axic):
+        # type: (Any) -> None
+        """adds an AXIC object"""
+        # only one AEROS card allowed
+        assert self.axic is None, '\naxic=\n%s old=\n%s' % (axic, self.axic)
+        self.axic = axic
+
     def _add_aefact_object(self, aefact, allow_overwrites=False):
         # type: (Any, bool) -> None
         """adds an AEFACT object"""

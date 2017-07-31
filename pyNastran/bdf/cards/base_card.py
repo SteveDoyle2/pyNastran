@@ -397,10 +397,9 @@ class Element(BaseCard):
     """defines the Element class"""
     pid = 0  # CONM2, rigid
 
-    def __init__(self, card=None, data=None):
+    def __init__(self):
         """dummy init"""
         BaseCard.__init__(self)
-        assert card is None or data is None
         #: the list of node IDs for an element (default=None)
         #self.nodes = None
 

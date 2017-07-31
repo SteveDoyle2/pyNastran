@@ -771,7 +771,8 @@ class WriteMesh(BDFAttributes):
             for point_id, point in sorted(iteritems(self.points)):
                 msg.append(point.write_card(size, is_double))
             bdf_file.write(''.join(msg))
-
+        if self.axic:
+            bdf_file.write(self.axic.write_card(size, is_double))
 
         if self.nodes:
             msg = []

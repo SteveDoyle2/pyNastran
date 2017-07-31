@@ -52,7 +52,7 @@ from pyNastran.bdf.cards.elements.solid import (CIHEX1, CIHEX2,
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
-    CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
+    AXIC, CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
@@ -395,6 +395,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
             'PIHEX', 'PCOMPS',
             # PQUAD4
+
+            # axixsymmetric
+            'PCONEAX', # property
+            'AXIC', # axic
 
             ## pdampt
             'PDAMPT',
@@ -1935,6 +1939,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'PBUSHT' : (PBUSHT, self._add_pbusht_object),
 
             'PCONEAX' : (PCONEAX, self._add_property_object),
+            'AXIC' : (AXIC, self._add_axic_object),
 
             'RBAR' : (RBAR, self._add_rigid_element_object),
             'RBAR1' : (RBAR1, self._add_rigid_element_object),

@@ -6,6 +6,7 @@ from numpy import array, allclose, array_equal, cross
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.utils import TransformLoadWRT
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.coordinate_systems import define_coord_e123
 
 
 class TestCoords(unittest.TestCase):
@@ -729,6 +730,31 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
         for cid, coord in sorted(iteritems(model.coords)):
             assert coord.i is not None, coord
+
+    def test_define_coords_from_axes(self):
+        """define_coord_e123"""
+        model = BDF(debug=False)
+        cord2_type = 'CORD2R'
+        cid = 1
+        origin = [0., 0., 0.]
+        rid = 0
+        xaxis = [1., 0., 0.]
+        xzplane = [0., 0., 1.]
+        define_coord_e123(model, cord2_type, cid, origin, rid=0,
+                          xaxis=xaxis, yaxis=None, zaxis=None,
+                          xyplane=None, yzplane=None, xzplane=xzplane, add=True)
+
+        cid = 2
+        xaxis = [1., 0., 0.]
+        xyplane = [1., 0., 1.]
+        define_coord_e123(model, cord2_type, cid, origin, rid=0,
+                          xaxis=xaxis, yaxis=None, zaxis=None,
+                          xyplane=xyplane, yzplane=None, xzplane=None, add=True)
+        yaxis = [0., 1., 0.]
+        xyplane = [1., 1., 0.]
+        define_coord_e123(model, cord2_type, cid, origin, rid=0,
+                          xaxis=xaxis, yaxis=None, zaxis=None,
+                          xyplane=xyplane, yzplane=None, xzplane=None, add=True)
 
 
 def get_nodes(grids, grids_expected, coords):

@@ -896,7 +896,7 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
         model.add_card(card, card[0], is_list=True)
 
 
-def define_coord_e123(model, Type, cid, origin, rid=0,
+def define_coord_e123(model, cord2_type, cid, origin, rid=0,
                       xaxis=None, yaxis=None, zaxis=None,
                       xyplane=None, yzplane=None, xzplane=None, add=True):
     """
@@ -907,7 +907,7 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
     ----------
     model : BDF()
         a BDF object
-    Type : str
+    cord2_type : str
         'CORD2R', 'CORD2C', 'CORD2S'
     cid : int
         the new coordinate system id
@@ -936,7 +936,7 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
 
     TODO: hasn't been tested...
     """
-    assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
+    assert cord2_type in ['CORD2R', 'CORD2C', 'CORD2S'], cord2_type
     origin = _fix_xyz_shape(origin, 'origin')
     rcoord = model.Coord(rid)
 
@@ -1006,10 +1006,10 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
             jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
             j = jhat / norm(jhat)
             i = np.cross(j, k)
-    return define_coord_ijk(model, Type, cid, origin, rid, i, j, k, add=add)
+    return define_coord_ijk(model, cord2_type, cid, origin, rid, i, j, k, add=add)
 
 
-def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
+def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=None,
                      add=True):
     """
     Create a coordinate system based on 2 or 3 perpendicular unit vectors
@@ -1018,7 +1018,7 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
     ----------
     model : BDF()
         a BDF object
-    Type : str
+    cord2_type : str
         'CORD2R', 'CORD2C', 'CORD2S'
     cid : int
         the new coordinate system id
@@ -1040,7 +1040,7 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
     coord : CORD2R, CORD2C, CORD2S
         the coordinate system
     """
-    assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
+    assert cord2_type in ['CORD2R', 'CORD2C', 'CORD2S'], cord2_type
     origin = _fix_xyz_shape(origin, 'origin')
 
     # create cross vectors
@@ -1066,20 +1066,18 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
     e1 = rcoord.transform_node_to_local(origin)
     e2 = rcoord.transform_node_to_local(origin + k) # point on z axis
     e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis
-    card = [Type, cid, rid] + list(e1) + list(e2) + list(e3)
+    card = [cord2_type, cid, rid] + list(e1) + list(e2) + list(e3)
 
-    if Type == 'CORD2R':
+    if cord2_type == 'CORD2R':
         coord = CORD2R(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
-    elif Type == 'CORD2C':
+    elif cord2_type == 'CORD2C':
         coord = CORD2C(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
-    elif Type == 'CORD2S':
+    elif cord2_type == 'CORD2S':
         coord = CORD2S(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
     else:
         raise NotImplementedError(card)
     if add:
         model._add_coord_object(coord)
-        if model.xref:
-            coord.cross_reference(model)
     return coord
 
 

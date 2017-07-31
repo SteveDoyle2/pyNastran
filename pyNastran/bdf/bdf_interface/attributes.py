@@ -480,6 +480,9 @@ class BDFAttributes(object):
         #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
         self.splines = {}  # type: Dict[int, Any]
 
+        # axisymmetric
+        self.axic = None  # type: Optional[Any]
+
         # ------ SOL 144 ------
         #: stores AEROS
         self.aeros = None  # type: Optional[Any]

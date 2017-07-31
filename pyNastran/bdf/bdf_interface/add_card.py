@@ -30,7 +30,7 @@ from pyNastran.bdf.cards.elements.solid import (
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
-    CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
+    AXIC, CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
@@ -2290,8 +2290,13 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pconeax(self, pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
-                    comment=''):
+    def add_axic(self, nharmonics, comment=''):
+        axic = AXIC(nharmonics, comment=comment)
+        self._add_axic_object(axic)
+        return axic
+
+    def add_pconeax(self, pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
+                    nsm=None, z1=None, z2=None, phi=None, comment=''):
         prop = PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
                        comment=comment)
         self._add_property_object(prop)
