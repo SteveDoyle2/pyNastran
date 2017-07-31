@@ -438,6 +438,10 @@ class CBUSH2D(BushElement):
             msg = ("plane not in required list, plane=%r\n"
                    "expected planes = ['XY','YZ','ZX']" % self.plane)
             raise RuntimeError(msg)
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
+        self.cid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

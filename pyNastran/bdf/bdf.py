@@ -39,7 +39,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                                      integer_or_string, string)
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
-from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
+from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.msgmesh import CGEN
 
@@ -51,8 +51,10 @@ from pyNastran.bdf.cards.elements.solid import (CIHEX1, CIHEX2,
                                                 CTETRA10, CPYRAM13, CPENTA15, CHEXA20)
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 
+from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
+    AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
-    AXIC, CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
+    CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
@@ -348,7 +350,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
 
             # points
             'POINT',
-            #'POINT', 'POINTAX', 'RINGAX', 'GRIDG'
+            #'GRIDG'
+
+            ## ringaxs
+            'RINGAX', 'POINTAX',
 
             # mass
             'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
@@ -397,6 +402,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             # PQUAD4
 
             # axixsymmetric
+            'CCONEAX', # element
             'PCONEAX', # property
             'AXIC', # axic
 
@@ -451,6 +457,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE', 'RFORCE1',
             'GMLOAD', 'SPCD',
+
+            # axisymmetric
+            'PRESAX', 'TEMPAX',
+
             #thermal
             'QVOL',
 
@@ -485,7 +495,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'GMCORD',
 
             # temperature cards
-            'TEMP', 'TEMPD',
+            'TEMP', 'TEMPD', 'TEMPAX',
             'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'PCONV', 'PCONVM', 'PHBDY',
@@ -1829,6 +1839,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'GRID' : (GRID, self._add_node_object),
             'SPOINT' : (SPOINTs, self._add_spoint_object),
             'EPOINT' : (EPOINTs, self._add_epoint_object),
+            'RINGAX' : (RINGAX, self._add_ringax_object),
+            'POINTAX' : (POINTAX, self._add_ringax_object),
             'POINT' : (POINT, self._add_point_object),
             'SEQGP' : (SEQGP, self._add_seqgp_object),
 
@@ -1938,6 +1950,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'PDAMPT' : (PDAMPT, self._add_pdampt_object),
             'PBUSHT' : (PBUSHT, self._add_pbusht_object),
 
+            'CCONEAX' : (CCONEAX, self._add_element_object),
             'PCONEAX' : (PCONEAX, self._add_property_object),
             'AXIC' : (AXIC, self._add_axic_object),
 
@@ -2032,6 +2045,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'GMLOAD' : (GMLOAD, self._add_load_object),
             'SPCD' : (SPCD, self._add_load_object),  # enforced displacement
             'QVOL' : (QVOL, self._add_load_object),  # thermal
+            'PRESAX' : (PRESAX, self._add_load_object),  # axisymmetric
 
             'DLOAD' : (DLOAD, self._add_dload_object),
             'ACSRCE' : (ACSRCE, self._add_dload_entry),
@@ -2244,6 +2258,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'PELAS' : self._prepare_pelas,
             'PDAMP' : self._prepare_pdamp,
 
+            'TEMPAX' : self._prepare_tempax,
             'TEMPD' : self._prepare_tempd,
             'CONVM' : self._prepare_convm,
             'CONV' : self._prepare_conv,
@@ -2395,6 +2410,13 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                 self._add_tempd_object(TEMPD.add_card(card_obj, 2, comment=''))
                 if card_obj.field(7):
                     self._add_tempd_object(TEMPD.add_card(card_obj, 3, comment=''))
+
+    def _prepare_tempax(self, card, card_obj, comment=''):
+        """adds a TEMPAX"""
+        self._add_load_object(TEMPAX.add_card(card_obj, 0, comment=comment))
+        if card_obj.field(5):
+            self._add_load_object(TEMPAX.add_card(card_obj, 1, comment=''))
+        return card_obj
 
     def _prepare_dequatn(self, card, card_obj, comment=''):
         """adds a DEQATN"""
@@ -3126,6 +3148,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
         nepoints = 0
         spoints = None
         epoints = None
+        nrings = len(self.ringaxs)
         if self.spoints:
             spoints = list(self.spoints)
             nspoints = len(spoints)
@@ -3133,8 +3156,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             epoints = list(self.epoints)
             nepoints = len(epoints)
 
-        if nnodes + nspoints + nepoints == 0:
-            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+        if nnodes + nspoints + nepoints + nrings == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s nrings=%s' % (nnodes, nspoints, nepoints, nrings)
             raise ValueError(msg)
 
         i = 0

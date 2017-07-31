@@ -25,44 +25,14 @@ from pyNastran.bdf.field_writer_8 import (
     print_card_8, print_field_8)
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, integer_double_or_blank)
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank, double)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.elements.shell import TriShell, _triangle_area_centroid_normal, _normal
 from pyNastran.bdf.cards.base_card import BaseCard, Element
 
-__all__ = ['AXIC', 'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
+__all__ = ['CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
            'CQUADX', 'CQUADX4', 'CQUADX8']
 
-class AXIC(BaseCard):
-    def __init__(self, nharmonics, comment=''):
-        if comment:
-            self.comment = comment
-        self.nharmonics = nharmonics
-
-    @classmethod
-    def add_card(self, card, comment=''):
-        """
-        Adds a CTRAX6 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        nharmonics = integer(card, 1, 'nharmonics')
-        assert len(card) == 2, 'len(AXIC card) = %i\ncard=%s' % (len(card), card)
-        return CTRAX3(nharmonics, comment=comment)
-
-    def raw_fields(self):
-        list_fields = ['AXIC', self.nharmonics]
-        return list_fields
-
-    def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        msg = self.comment + print_card_8(card)
-        return msg
 
 class AxisymmetricTri(Element):
     def __init__(self):

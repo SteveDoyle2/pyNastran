@@ -14,7 +14,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
-from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
+from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.msgmesh import CGEN
 
@@ -29,8 +29,10 @@ from pyNastran.bdf.cards.elements.solid import (
 )
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 
+from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
+    AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
-    AXIC, CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
+    CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
@@ -1068,7 +1070,8 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbush(self, eid, pid, nids, x, g0, cid=None, s=0.5, ocid=-1, si=None, comment=''):
+    def add_cbush(self, eid, pid, nids, x, g0, cid=None,
+                  s=0.5, ocid=-1, si=None, comment=''):
         # type(int, int, List[int], Any, Optional[int], Optional[int], float, int, Optional[List[float]], str) -> CBUSH
         """
         Creates a CBUSH card
@@ -2295,12 +2298,35 @@ class AddCards(AddMethods):
         self._add_axic_object(axic)
         return axic
 
+    def add_pointax(self, nid, ringax, phi, comment=''):
+        node = POINTAX(nid, ringax, phi, comment=comment)
+        return node
+
+    def add_ringax(self, nid, R, z, ps=None, comment=''):
+        node = RINGAX(nid, R, z, ps=ps, comment=comment)
+        return node
+
+    def add_cconeax(self, eid, pid, rings, comment=''):
+        elem = CCONEAX(eid, pid, rings, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
     def add_pconeax(self, pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
                     nsm=None, z1=None, z2=None, phi=None, comment=''):
         prop = PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
                        comment=comment)
         self._add_property_object(prop)
         return prop
+
+    def add_tempax(self, sid, ring, phi, temperature, comment=''):
+        load = TEMPAX(sid, ring, phi, temperature, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_presax(sid, pressure, rid1, rid2, phi1=0., phi2=360., comment=''):
+        load = PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
+        self._add_load_object(load)
+        return load
 
     def add_ctrax3(self, eid, pid, nids, theta=0., comment=''):
         elem = CTRAX3(eid, pid, nids, theta=theta, comment=comment)

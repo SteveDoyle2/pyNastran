@@ -85,6 +85,21 @@ class AddMethods(BDFAttributes):
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
 
+    def _add_ringax_object(self, ringax, allow_overwrites=False):
+        # type: (Any, bool) -> None
+        """adds a RINGAX card"""
+        key = ringax.nid
+        if key in self.ringaxs and not allow_overwrites:
+            if not ringax == self.ringaxs[key]:
+                assert ringax.nid not in self.ringaxs, 'nid=%s\nold_ringax=\n%snew_ringax=\n%s' % (ringax.nid, self.ringaxs[key], ringax)
+            else:
+                #print('RINGAX was duplicated...nid=%s; ringax=\n%s' % (key, ringax))
+                pass
+        else:
+            assert key > 0, 'nid=%s ringax=%s' % (key, ringax)
+            self.ringaxs[key] = ringax
+            self._type_to_id_map[ringax.type].append(key)
+
     def _add_seqgp_object(self, seqgp):
         # type: (Any) -> None
         """adds an SEQGP card"""
@@ -487,15 +502,15 @@ class AddMethods(BDFAttributes):
             self.dloads[key] = [load]
             self._type_to_id_map[load.type].append(key)
 
-    def _add_dload_entry(self, load):
+    def _add_dload_entry(self, dload):
         # type: (Any) -> None
         """adds a sub-dload object to a load case"""
-        key = load.sid
+        key = dload.sid
         if key in self.dload_entries:
-            self.dload_entries[key].append(load)
+            self.dload_entries[key].append(dload)
         else:
-            self.dload_entries[key] = [load]
-            self._type_to_id_map[load.type].append(key)
+            self.dload_entries[key] = [dload]
+            self._type_to_id_map[dload.type].append(key)
 
     def _add_lseq_object(self, load):
         # type: (Any) -> None
@@ -661,7 +676,7 @@ class AddMethods(BDFAttributes):
     def _add_axic_object(self, axic):
         # type: (Any) -> None
         """adds an AXIC object"""
-        # only one AEROS card allowed
+        # only one AXIC card allowed
         assert self.axic is None, '\naxic=\n%s old=\n%s' % (axic, self.axic)
         self.axic = axic
 

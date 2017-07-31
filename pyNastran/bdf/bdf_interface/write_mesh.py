@@ -773,6 +773,8 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(''.join(msg))
         if self.axic:
             bdf_file.write(self.axic.write_card(size, is_double))
+            for nid, ringax_pointax in iteritems(self.ringaxs):
+                bdf_file.write(ringax_pointax.write_card(size, is_double))
 
         if self.nodes:
             msg = []

@@ -255,6 +255,7 @@ class BDFAttributes(object):
         self.nodes = {}  # type: Dict[int, Any]
         #: stores POINT cards
         self.points = {}  # type: Dict[int, Any]
+        self.ringaxs = {}  # type: Dict[int, Any]
         #self.grids = {}
 
         self.spoints = {}  # type: Dict[int, Any]
@@ -537,6 +538,8 @@ class BDFAttributes(object):
             'params' : ['PARAM'],
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points' : ['POINT'],
+            'ringaxs' : ['RINGAX', 'POINTAX'],
+            'axic' : ['AXIC'],
             'grdset' : ['GRDSET'],
             'seqgp' : ['SEQGP'],
             'ao_element_flags' : ['CBARAO'],
@@ -584,6 +587,7 @@ class BDFAttributes(object):
                 'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                 'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
                 'PIHEX', 'PCOMPS',
+                'PCONEAX',
             ],
             'pdampt' : ['PDAMPT',],
             'pelast' : ['PELAST',],
