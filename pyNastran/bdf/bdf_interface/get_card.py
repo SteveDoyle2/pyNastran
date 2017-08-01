@@ -180,13 +180,49 @@ class GetCard(GetMethods):
         return rslot_map
 
     @property
-    def nid_map(self):
-        out = self.get_displacement_index_xyz_cp_cd(
-            fdtype='float32', idtype='int32', sort_ids=True)
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-        del icd_transform, icp_transform, xyz_cp
+    def nid_map(self, sort_ids=True):
+        """
+        Maps the GRID/SPOINT/EPOINT ids to a sorted order.
+
+        Parameters
+        ----------
+        sort_ids : bool; default=True
+            sort the ids
+
+        Returns
+        -------
+        nid_map : Dict[nid] : i
+            nid : int
+                the GRID/SPOINT/EPOINT id
+            i : int
+                the index
+
+        ..note ::  GRIDs, SPOINTs, & EPOINTs are stored in separate slots,
+                   so they are unorganized.
+        """
+        nids = []
+        index_nids = []
+        i = 0
+        for nid in self.nodes:
+            nids.append(nid)
+            index_nids.append(i)
+            i += 1
+        for nid in self.spoints:
+            nids.append(nid)
+            index_nids.append(i)
+            i += 1
+        for nid in self.epoints:
+            nids.append(nid)
+            index_nids.append(i)
+            i += 1
+
+        if sort_ids:
+            inids = np.argsort(nids)
+            nids = np.sort(nids)
+            index_nids = np.array(index_nids)[inids]
+
         nid_map = {}
-        for i, nid in enumerate(nid_cp_cd[:, 0]):
+        for nid, i in zip(nids, index_nids):
             nid_map[nid] = i
         return nid_map
 
