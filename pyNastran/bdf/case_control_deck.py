@@ -776,18 +776,7 @@ class CaseControlDeck(object):
             param_type = 'BEGIN_BULK-type'
             assert key.upper() == key, key
         elif 'PARAM' in line_upper:  # param
-            if ',' in line_upper:
-                sline = line_upper.split(',')
-            elif '\t' in line_upper:
-                sline = line_upper.split('\t')
-            else:
-                raise SyntaxError("trying to parse %r..." % line)
-
-            if len(sline) != 3:
-                raise SyntaxError("trying to parse %r..." % line)
-            (key, value, options) = sline
-            param_type = 'CSV-type'
-            assert key.upper() == key, key
+            key, value, options, param_type = _split_param(line, line_upper)
         elif ' ' not in line:
             key = line.strip().upper()
             value = line.strip()
@@ -909,6 +898,24 @@ class CaseControlDeck(object):
         if self.write_begin_bulk:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
+
+def _split_param(line, line_upper):
+    """parses a PARAM card"""
+    if ',' in line_upper:
+        sline = line_upper.split(',')
+    elif '\t' in line_upper:
+        sline = line_upper.expandtabs().split()
+    elif ' ' in line_upper:
+        sline = line_upper.split()
+    else:
+        raise SyntaxError("trying to parse %r..." % line)
+
+    if len(sline) != 3:
+        raise SyntaxError("trying to parse %r..." % line)
+    (key, value, options) = sline
+    param_type = 'CSV-type'
+    assert key.upper() == key, key
+    return key, value, options, param_type
 
 def verify_card(key, value, options, line):
     # type: (int, Any, Any, str) -> None

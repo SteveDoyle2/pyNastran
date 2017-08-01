@@ -1830,8 +1830,14 @@ class GetCard(GetMethods):
                 if etype in etypes_none_nodes:
                     for ieid, eid in enumerate(eids):
                         element = self.elements[eid]
-                        node_ids[ieid, :] = [nid  if nid is not None else 0
-                                             for nid in element.node_ids]
+                        try:
+                            node_ids[ieid, :] = [nid  if nid is not None else 0
+                                                 for nid in element.node_ids]
+                        except:
+                            self.log.error('This error can occur when you have '
+                                           'linear and quadratic solid elements '
+                                           'within the same model\n%s' % element)
+                            raise
                         if etype in etypes_no_pids:
                             pid = 0
                         else:

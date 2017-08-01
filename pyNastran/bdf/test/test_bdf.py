@@ -1,4 +1,3 @@
-# pylint: disable=W0612
 """
 ``test_bdf`` runs multiple checks on a BDF in order to make sure that:
   - no data is lost on IO
@@ -687,6 +686,15 @@ def run_fem2(bdf_model, out_model, xref, punch,
     out_model_2 = bdf_model + '_out2'
 
     if xref and sum_load:
+        if 'POST' in fem2.params:
+            value = fem2.params['POST'].values[0]
+            if value >= 0:
+                msg = 'PARAM,POST,%i is not supported by the OP2 reader' % value
+                fem2.log.error(msg)
+        else:
+            msg = 'PARAM,POST,0 is not supported by the OP2 reader'
+            fem2.log.error(msg)
+
         p0 = np.array([0., 0., 0.])
 
         subcase_keys = fem2.case_control_deck.get_subcase_list()
@@ -712,12 +720,13 @@ def _assert_has_spc(subcase, fem):
     SPCs may be defined on SPC/SPC1 cards or may be defined on
     the GRID PS field
     """
-    has_ps = False
-    for nid, node in iteritems(fem.nodes):
-        if node.ps:
-            has_ps = True
-            break
-    assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
+    if 'SPC' not in subcase:
+        has_ps = False
+        for nid, node in iteritems(fem.nodes):
+            if node.ps:
+                has_ps = True
+                break
+        assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
 def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map):
     for isubcase in subcase_keys[1:]:  # drop isubcase = 0
@@ -756,47 +765,32 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
        SUPORT1 = 5 # implicit point to SUPORT1
        # implicit call to SUPORT
     """
-    if 'POST' in fem2.params:
-        value = fem2.params['POST'].values[0]
-        if value >= 0:
-            msg = 'PARAM,POST,%i is not supported by the OP2 reader' % value
-            fem2.log.error(msg)
-    else:
-        msg = 'PARAM,POST,0 is not supported by the OP2 reader'
-        fem2.log.error(msg)
-
     if sol == 24:
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
+        _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD'), subcase
     elif sol == 64:
         #assert 'NLPARM' in subcase, subcase
-        #if 'SPC' not in subcase:
-            #_assert_has_spc(subcase, fem2)
+        #_assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD'), subcase
     elif sol == 66:
         assert 'NLPARM' in subcase, subcase
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
-            assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
+        _assert_has_spc(subcase, fem2)
+        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
     elif sol == 99:
         assert 'DLOAD' in subcase, subcase
         assert 'LOADSET' in subcase, subcase
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
+        _assert_has_spc(subcase, fem2)
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), subcase
         assert True in subcase.has_parameter('TSTEP', 'TSTEPNL'), subcase
     elif sol == 101:
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
+        _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)', 'P2G'), subcase
     elif sol == 103:
         assert True in subcase.has_parameter('METHOD', 'RSMETHOD'), subcase
     elif sol == 105: # buckling
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
+        _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD', 'METHOD'), subcase
-        if 0:
+        if 0:  # pragma: no cover
             if 'METHOD' not in subcase:
                 subcases = fem2.subcases
                 subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
@@ -813,9 +807,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert 'NLPARM' in subcase, subcase
         assert 'LOAD' in subcase, subcase
     elif sol == 107: # ???
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
-            assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
+        _assert_has_spc(subcase, fem2)
+        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
@@ -833,8 +826,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
                 raise RuntimeError(msg)
 
     elif sol == 110:  # ???
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
+        _assert_has_spc(subcase, fem2)
         assert subcase.has_parameter('LOAD', 'STATSUB'), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 111:  # modal frequency
         assert subcase.has_parameter('FREQUENCY'), 'sol=%s\n%s' % (sol, subcase)
@@ -844,16 +836,14 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 114:
         assert 'LOAD' in subcase, subcase
         assert 'HARMONICS' in subcase, subcase
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
+        _assert_has_spc(subcase, fem2)
     elif sol == 118:
         assert 'LOAD' in subcase, subcase
         assert 'HARMONICS' in subcase, subcase
         assert 'SDAMPING' in subcase, subcase
         assert 'FREQUENCY' in subcase, subcase
         assert 'DLOAD' in subcase, subcase
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
+        _assert_has_spc(subcase, fem2)
 
     elif sol == 129:  # nonlinear transient
         assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
@@ -876,11 +866,10 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert any(subcase.has_parameter('GUST', 'LOAD', 'DLOAD')), subcase
         assert fem2.aero is not None, 'An AERO card is required for GUST - SOL %i' % sol
     elif sol == 153: # heat?
-        if 'SPC' not in subcase:
-            _assert_has_spc(subcase, fem2)
+        _assert_has_spc(subcase, fem2)
         assert 'NLPARM' in subcase, subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
-            assert 'TEMPERATURE(LOAD)' in subcase, subcase
+            assert any(subcase.has_parameter('TEMPERATURE(LOAD)', 'TEMPERATURE(INITIAL)')), 'sol=%s\n%s' % (sol, subcase)
         else:
             assert any(subcase.has_parameter('LOAD')), 'sol=%s\n%s' % (sol, subcase)
 
@@ -889,7 +878,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
         #assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
-            assert 'TEMPERATURE(LOAD)' in subcase, 'sol=%s\n%s' % (sol, subcase)
+            assert any(subcase.has_parameter('TEMPERATURE(LOAD)', 'TEMPERATURE(INITIAL)')), 'sol=%s\n%s' % (sol, subcase)
 
     elif sol == 200:
         # local level
@@ -971,7 +960,10 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         msg = 'SOL = %s\n' % (sol)
         msg += str(subcase)
         raise NotImplementedError(msg)
+    _check_case_parameters(subcase, fem2, p0, isubcase, sol)
 
+def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
+    """helper method for ``check_case``"""
     if any(subcase.has_parameter('TIME', 'TSTEP')):
         if 'TIME' in subcase:
             value, options = subcase.get_parameter('TIME')
@@ -1174,6 +1166,14 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
 
         # print(loads)
+
+#def check_for_str(options, subcase):
+    #"""helper method for test_bdf"""
+    #for option in options:
+        #if option in subcase:
+            #break
+    #else:
+        #raise ValueError('%s must be in subcase\n%s' % (options, subcase))
 
 def resolve_dloads(fem, dload_id):
     # type: (BDF, int) -> Tuple[List[float], List[int]]

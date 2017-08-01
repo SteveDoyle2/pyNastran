@@ -1734,7 +1734,22 @@ class PBRSECT(LineProperty):
         if lines_joined:
             fields = lines_joined.split(',')
             slines = [field.split('=') for field in fields]
-            options = {key : value for (key, value) in slines}
+            #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat
+            #slines = [
+                #[u'OUTP', u'201'],
+                #[u'T', u'1.0'],
+                #[u'BRP', u'202'],
+                #[u'T(11)', u'[1.2'],
+                #[u'PT', u'(202'], [u'224)]'],
+                #[u'T(12)', u'[1.2'],
+                #[u'PT', u'(224'],
+                #[u'205)]'],
+            #]
+            try:
+                options = {key : value for (key, value) in slines}
+            except:
+                print('PBRSECT slines=%s' % slines)
+                raise
         else:
             options = {}
 
