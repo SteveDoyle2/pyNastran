@@ -661,7 +661,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'ncoords', 'nelements', 'nproperties',
-            'nmaterials', 'ncaeros',
+            'nmaterials', 'ncaeros', 'nid_map',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
@@ -670,7 +670,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             if key.startswith('__') and key.endswith('__'):
                 continue
 
-            #print('key =', key)
             val = getattr(obj, key)
             #print(key)
             #if isinstance(val, types.FunctionType):
