@@ -6634,8 +6634,8 @@ class SPLINE5(Spline):
         13 : 'meth', 15 : 'ftype', 16 : 'rcore',
     }
 
-    def __init__(self, eid, caero, aelist, setg, dz, dtor, cid,
-                 thx, thy, usage, method, ftype, rcore, comment=''):
+    def __init__(self, eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0, cid=0,
+                 usage='BOTH', method='BEAM', ftype='WF2', rcore=None, comment=''):
         Spline.__init__(self)
         if comment:
             self.comment = comment
@@ -6650,15 +6650,18 @@ class SPLINE5(Spline):
         self.thx = thx
         self.thy = thy
         self.usage = usage
-        self.meth = method
+        self.method = method
         self.ftype = ftype
         self.rcore = rcore
-        assert method in ['BEAM', 'RIS'], method
-        assert ftype in ['WF0', 'WF2'], ftype
-        self.cid = None
+        self.cid_ref = None
         self.caero_ref = None
         self.setg_ref = None
         self.aelist_ref = None
+
+    def validate(self):
+        assert isinstance(self.cid, integer_types), self.cid
+        assert self.method in ['BEAM', 'RIS'], self.method
+        assert self.ftype in ['WF0', 'WF2'], self.ftype
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -6690,9 +6693,8 @@ class SPLINE5(Spline):
 
         usage = string_or_blank(card, 12, 'usage', 'BOTH')
         assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
-        return SPLINE5(eid, caero, aelist, setg, dz, dtor, cid, thx, thy,
-                       usage, method, ftype, rcore,
-                       comment=comment)
+        return SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
+                         usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
     @property
     def aero_element_ids(self):
         return self.aelist_ref.elements
@@ -6774,7 +6776,6 @@ class SPLINE5(Spline):
         self.caero = self.CAero()
         self.setg = self.Set()
         self.aelist = self.AEList()
-        self.cid = None
         self.caero_ref = None
         self.setg_ref = None
         self.aelist_ref = None
@@ -6789,16 +6790,17 @@ class SPLINE5(Spline):
             the fields that define the card
         """
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
-                       self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
-                       self.thy, None, self.usage, None, self.ftype, self.rcore]
+                       self.Set(), self.dz, self.dtor, self.Cid(), self.thx, self.thy,
+                       None, self.usage, self.method, None, self.ftype, self.rcore]
         return list_fields
 
     def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
+
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), dz, self.dtor, self.Cid(), self.thx, self.thy,
-                       None, usage, self.meth, None, self.ftype, self.rcore]
+                       None, usage, self.method, None, self.ftype, self.rcore]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

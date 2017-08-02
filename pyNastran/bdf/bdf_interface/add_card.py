@@ -3879,10 +3879,11 @@ class AddCards(AddMethods):
         self._add_spline_object(spline)
         return spline
 
-    def add_spline5(self, eid, caero, aelist, setg, dz, dtor, cid, thx, thy,
-                    usage, method, ftype, rcore, comment=''):
-        spline = SPLINE5(eid, caero, aelist, setg, dz, dtor, cid, thx, thy,
-                         usage, method, ftype, rcore, comment=comment)
+    def add_spline5(self, eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0, cid=0,
+                 usage='BOTH', method='BEAM', ftype='WF2', rcore=None, comment=''):
+        assert isinstance(cid, int), cid
+        spline = SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
+                         usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
         self._add_spline_object(spline)
         return spline
 

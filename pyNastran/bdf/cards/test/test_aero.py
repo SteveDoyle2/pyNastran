@@ -102,7 +102,7 @@ class TestAero(unittest.TestCase):
         #Di = [0., 15., 30., 45.]
         #aefact_delta = AEFACT(aefact_sid, Di)
 
-        model = BDF()
+        model = BDF(debug=False)
         data = ['AELIST', 75, 1001, 'THRU', 1075, 1101, 'THRU', 1109, 1201, 1202]
         model.add_card(data, data[0], COMMENT_BAD, is_list=True)
 
@@ -119,6 +119,9 @@ class TestAero(unittest.TestCase):
         aecomp1.write_card()
         aecomp1.uncross_reference()
         aecomp1.write_card()
+
+        model.validate()
+        save_load_deck(model)
 
         #-----------
         aecomp2 = AECOMP(name, list_type, aelist_ids, comment='cssch card')
@@ -264,12 +267,21 @@ class TestAero(unittest.TestCase):
         list2 = 6003
         card = ['AESURFS', aesid, label, None, list1, None, list2]
         bdf_card = BDFCard(card, has_none=True)
-        model = BDF()
+
+        model = BDF(debug=False)
         model.add_card(bdf_card, 'AESURFS', comment='aesurfs',
                        is_list=True, has_none=True)
         aesurfs = AESURFS(aesid, label, list1, list2, comment='aesurfs')
         str(aesurfs)
         aesurfs.write_card()
+
+        model.add_set1(6002, [1, 2, 3])
+        model.add_grid(1)
+        model.add_grid(2)
+        model.add_grid(3)
+
+        model.validate()
+        save_load_deck(model)
 
     def test_aero_1(self):
         """checks the AERO card"""
@@ -1114,8 +1126,97 @@ class TestAero(unittest.TestCase):
         spline3.raw_fields()
         save_load_deck(model)
 
-   # def test_spline4_1(self):
-   # def test_spline5_1(self):
+    def test_spline4(self):
+        model = BDF(debug=False)
+        eid = 1
+        caero = 10
+        aelist = 11
+        setg = 12
+        dz = 0.
+        method = 'TPS'
+        usage = 'FORCE'
+        nelements = 4
+        melements = 5
+        model.add_spline4(eid, caero, aelist, setg, dz, method, usage,
+                          nelements, melements, comment='spline4')
+
+        elements = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        model.add_aelist(aelist, elements)
+
+        paero = 20
+        igid = 42
+        p1 = [0., 0., 0.]
+        x12 = 10.
+        p4 = [0., 10., 0.]
+        x43 = 3.
+        model.add_caero1(caero, paero, igid, p1, x12, p4, x43, cp=0, nspan=5,
+                        lspan=0, nchord=10, lchord=0,
+                        comment='')
+        model.add_paero1(paero)
+
+        velocity = None
+        cref = 1.0
+        rho_ref = 1.0
+        model.add_aero(velocity, cref, rho_ref,
+                       comment='')
+
+        model.add_set1(setg, [1, 2, 3])
+        model.add_grid(1)
+        model.add_grid(2)
+        model.add_grid(3)
+
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        model.validate()
+        save_load_deck(model)
+
+    def test_spline5(self):
+        model = BDF(debug=False)
+        eid = 1
+        caero = 10
+        aelist = 11
+        setg = 12
+        thx = 7.
+        thy = 8.
+        #dz = 0.
+        #method = 'cat'
+        #usage = 'dog'
+        #nelements = 4
+        #melements = 5
+        #dtor = 47
+        model.add_spline5(eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0,
+                          cid=0, usage='BOTH', method='BEAM', ftype='WF2',
+                          rcore=None, comment='')
+
+        elements = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        model.add_aelist(aelist, elements)
+
+        paero = 20
+        igid = 42
+        p1 = [0., 0., 0.]
+        x12 = 10.
+        p4 = [0., 10., 0.]
+        x43 = 3.
+        model.add_caero1(caero, paero, igid, p1, x12, p4, x43, cp=0, nspan=5,
+                        lspan=0, nchord=10, lchord=0,
+                        comment='')
+        model.add_paero1(paero)
+
+        velocity = None
+        cref = 1.0
+        rho_ref = 1.0
+        model.add_aero(velocity, cref, rho_ref,
+                       comment='')
+
+        model.add_set1(setg, [1, 2, 3])
+        model.add_grid(1)
+        model.add_grid(2)
+        model.add_grid(3)
+
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        model.validate()
+        save_load_deck(model)
 
     def test_aesurf_1(self):
         """checks the AESURF/AELIST cards"""
@@ -1380,6 +1481,8 @@ class TestAero(unittest.TestCase):
         diverg.write_card()
 
         diverg = model.add_card(['DIVERG', sid, nroots] + machs, 'DIVERG', comment='divergence')
+        model.validate()
+        save_load_deck(model)
         #diverg.validate()
         #diverg.write_card()
 
@@ -1595,8 +1698,11 @@ class TestAero(unittest.TestCase):
         bdf_filename = StringIO()
         model.write_bdf(bdf_filename, close=False)
         model.safe_cross_reference()
-        bdf_filename.seek(0)
 
+        model.validate()
+        save_load_deck(model)
+
+        bdf_filename.seek(0)
         model2 = read_bdf(bdf_filename, punch=True, debug=False)
 
         bdf_filename2 = StringIO()

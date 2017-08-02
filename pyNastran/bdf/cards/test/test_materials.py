@@ -94,7 +94,7 @@ class TestMaterials(unittest.TestCase):
         model.pop_xref_errors()
         matt1.write_card(size=16, is_double=False)
 
-        read_write(model)
+        save_load_deck(model)
 
     def test_creep(self):
         """tests MAT1/CREEP"""
@@ -129,7 +129,7 @@ class TestMaterials(unittest.TestCase):
         creep.raw_fields()
         model.cross_reference()
         model.uncross_reference()
-        read_write(model)
+        save_load_deck(model)
 
     def test_mat2_01(self):
         """tests MAT2, MATT2"""
@@ -190,7 +190,7 @@ class TestMaterials(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         matt2.write_card(size=16, is_double=False)
-        read_write(model)
+        save_load_deck(model)
 
     def test_mat3_01(self):
         """tests MAT3"""
@@ -242,7 +242,7 @@ class TestMaterials(unittest.TestCase):
         model.pop_xref_errors()
         #matt3.write_card(size=16, is_double=False)
 
-        read_write(model)
+        save_load_deck(model)
 
     def test_mat4_01(self):
         """tests MAT4, MATT4"""
@@ -252,6 +252,7 @@ class TestMaterials(unittest.TestCase):
         mat4 = model.add_mat4(mid, k, cp=0.0, rho=1.0, H=None, mu=None,
                               hgen=1.0, ref_enthalpy=None, tch=None, tdelta=None, qlat=None,
                               comment='mat4')
+        mat4.raw_fields()
         mat4.write_card(size=16, is_double=False)
         mat4.validate()
 
@@ -291,7 +292,7 @@ class TestMaterials(unittest.TestCase):
         model.pop_xref_errors()
         matt4.write_card(size=16, is_double=False)
 
-        read_write(model)
+        save_load_deck(model)
 
     def test_mat5_01(self):
         """tests MAT5, MATT5"""
@@ -346,7 +347,7 @@ class TestMaterials(unittest.TestCase):
         model.pop_xref_errors()
         matt5.write_card(size=16, is_double=False)
 
-        read_write(model)
+        save_load_deck(model)
 
     def test_mat8_01(self):  # should fail...
         """tests MAT8"""
@@ -463,7 +464,7 @@ class TestMaterials(unittest.TestCase):
         model.pop_xref_errors()
         #matt8.write_card(size=16, is_double=False)
 
-        read_write(model)
+        save_load_deck(model)
 
     def test_mat11_01(self):
         """tests MAT11"""
@@ -504,21 +505,51 @@ class TestMaterials(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(1, E, G, nu)
+        mat1 = model.add_mat1(1, E, G, nu)
         e11 = e22 = 3.0e7
         nu12 = 0.3
         model.add_mat8(8, e11, e22, nu12)
 
         model.add_mat4(4, 10.0)
-        model.add_mat5(5)
+        mat5 = model.add_mat5(5)
+        mat9 = model.add_mat9(9, G11=0., G12=0., G13=0., G14=0., G15=0.,
+                              G16=0., G22=0.,
+                              G23=0., G24=0.,
+                              G25=0., G26=0.,
+                              G33=0., G34=0.,
+                              G35=0., G36=0.,
+                              G44=0., G45=0.,
+                              G46=0., G55=0.,
+                              G56=0., G66=0.,
+                              rho=0., A=None,
+                              tref=0., ge=0.,
+                              comment='mat9')
 
         bulk = 0.3
         rho = 0.2
         c = None
         model.add_mat10(10, bulk, rho, c)
 
+        e1 = 1.
+        e2 = 2.
+        e3 = 3.
+        nu13 = 0.3
+        nu23 = 0.3
+        g12 = 12.
+        g13 = 13.
+        g23 = 23.
+        mat11 = model.add_mat11(11, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+                                rho=0.0, a1=0.0, a2=0.0,
+                                a3=0.0, tref=0.0, ge=0.0,
+                                comment='mat11')
+
+        mat1.raw_fields()
+        mat5.raw_fields()
+        mat9.raw_fields()
+        mat11.raw_fields()
+
         structural_material_ids = model.get_structural_material_ids()
-        assert len(structural_material_ids) == 3, structural_material_ids
+        assert len(structural_material_ids) == 5, structural_material_ids
 
         thermal_material_ids = model.get_thermal_material_ids()
         assert len(thermal_material_ids) == 2, thermal_material_ids
@@ -534,17 +565,6 @@ class TestMaterials(unittest.TestCase):
             model.StructuralMaterial(-1)
         with self.assertRaises(KeyError):
             model.ThermalMaterial(-1)
-
-def read_write(model):
-    """reads/writes the model as a StringIO"""
-    bdf_file = StringIO()
-    model.write_bdf(out_filename=bdf_file, close=False)
-    model.clear_attributes()
-    bdf_file.seek(0)
-    model.read_bdf(bdf_file, punch=True)
-    model.uncross_reference()
-    bdf_file.seek(0)
-    model.write_bdf(out_filename=bdf_file, size=16, close=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
