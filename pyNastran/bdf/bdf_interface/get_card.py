@@ -1119,9 +1119,26 @@ class GetCard(GetMethods):
                 dependent = elem.Ga()
                 independent = elem.Gb()
                 lines_rigid.append([dependent, independent])
+            elif elem.type == 'RBE1':
+                # +------+-----+-----+-----+-------+-----+-----+-----+
+                # |   1  |  2  |  3  |  4  |   5   |  6  |  7  |  8  |
+                # +======+=====+=====+=====+=======+=====+=====+=====+
+                # | RBE1 | EID | GN1 | CN1 |  GN2  | CN2 | GN3 | CN3 |
+                # |      |     | GN4 | CN4 | GN5   | CN5 | GN6 | CN6 |
+                # |      | UM  | GM1 | CM1 |  GM2  | CM2 | GM3 | CM3 |
+                # |      | GM4 | CM4 | etc | ALPHA |     |     |     |
+                # +------+-----+-----+-----+-------+-----+-----+-----+
+                # | RBE1 | 59  | 59  | 123 |  60   | 456 |     |     |
+                # |      | UM  | 61  | 246 |       |     |     |     |
+                # +------+-----+-----+-----+-------+-----+-----+-----+
+                dependent = elem.dependent_nodes
+                independent = elem.independent_nodes
+                assert len(dependent) == 1, dependent
+                assert len(independent) == 1, independent
+                lines_rigid.append([dependent[0], independent[0]])
             else:
                 print(str(elem))
-                raise NotImplementedError(elem)
+                raise NotImplementedError(elem.type)
         return lines_rigid
 
     def get_reduced_loads(self, load_case_id, scale=1., skip_scale_factor0=False,
@@ -1374,6 +1391,26 @@ class GetCard(GetMethods):
                 components = [rigid_element.cma, rigid_element.cmb]
                 for nid, componentsi in zip(nodes, components):
                     dependent_nid_to_components[nid] = componentsi
+            elif rigid_element.type == 'RBE1':
+                # +------+-----+-----+-----+-------+-----+-----+-----+
+                # |   1  |  2  |  3  |  4  |   5   |  6  |  7  |  8  |
+                # +======+=====+=====+=====+=======+=====+=====+=====+
+                # | RBE1 | EID | GN1 | CN1 |  GN2  | CN2 | GN3 | CN3 |
+                # |      |     | GN4 | CN4 |  GN5  | CN5 | GN6 | CN6 |
+                # |      | UM  | GM1 | CM1 |  GM2  | CM2 | GM3 | CM3 |
+                # |      | GM4 | CM4 | etc | ALPHA |     |     |     |
+                # +------+-----+-----+-----+-------+-----+-----+-----+
+                # | RBE1 | 59  | 59  | 123 |  60   | 456 |     |     |
+                # |      | UM  | 61  | 246 |       |     |     |     |
+                # +------+-----+-----+-----+-------+-----+-----+-----+
+                # dependent=m (independent=n)
+                for nid, componentsi in zip(rigid_element.Gmi_node_ids, rigid_element.Cmi):
+                    dependent_nid_to_components[nid] = componentsi
+                #dependent = elem.dependent_nodes
+                #independent = elem.independent_nodes
+                #assert len(dependent) == 1, dependent
+                #assert len(independent) == 1, independent
+                #lines_rigid.append([dependent[0], independent[0]])
             else:
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components

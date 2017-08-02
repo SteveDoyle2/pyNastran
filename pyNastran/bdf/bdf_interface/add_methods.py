@@ -1099,7 +1099,7 @@ class AddMethods(BDFAttributes):
         key = table.tid
         assert key not in self.tables_d, '\ntabled=\n%s old_tabled=\n%s' % (
             table, self.tables_d[key])
-        assert key > 0
+        #assert key > 0; yes you can have negative tables...
         self.tables_d[key] = table
         self._type_to_id_map[table.type].append(key)
 
@@ -1108,7 +1108,7 @@ class AddMethods(BDFAttributes):
         key = table.tid
         assert key not in self.tables_m, '\ntablem=\n%s old_tablem=\n%s' % (
             table, self.tables_m[key])
-        assert key > 0
+        #assert key > 0; yes you can have negative tables...
         self.tables_m[key] = table
         self._type_to_id_map[table.type].append(key)
 
@@ -1117,7 +1117,7 @@ class AddMethods(BDFAttributes):
         key = table.tid
         assert key not in self.tables_sdamping, '\nTable=\n%s oldTable=\n%s' % (
             table, self.tables_sdamping[key])
-        assert key > 0
+        #assert key > 0; yes you can have negative tables...
         self.tables_sdamping[key] = table
         self._type_to_id_map[table.type].append(key)
 

@@ -320,7 +320,16 @@ class MATT1(MaterialDependence):
         """
         (mid, E_table, G_table, nu_table, rho_table, A_table, dunno_a, ge_table,
          st_table, sc_table, ss_table, dunno_b) = data
-
+        if E_table > 100000000:
+            E_table = -(E_table - 100000000)
+        if G_table > 100000000:
+            G_table = -(G_table - 100000000)
+        if nu_table > 100000000:
+            nu_table = -(nu_table - 100000000)
+        if rho_table > 100000000:
+            rho_table = -(rho_table - 100000000)
+        if A_table > 100000000:
+            A_table = -(A_table - 100000000)
         mat = MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
                     ge_table, st_table, sc_table, ss_table, comment=comment)
         assert dunno_a == 0, '%s; dunno_a=%s\n%s' % (data, dunno_a, str(mat))

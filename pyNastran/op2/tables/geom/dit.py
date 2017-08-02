@@ -117,11 +117,13 @@ class DIT(GeomCommon):
         while ndata - n >= 40:
             edata = data[n:n + 40]
             out = unpack('8iff', edata)
-            (sid, code_x, code_y, a, a, a, a, a, x, y) = out
+            (tid, code_x, code_y, a, a, a, a, a, x, y) = out
+            if tid > 100000000:
+                tid = -(tid - 100000000)
             if add_codes:
-                data_in = [sid, code_x, code_y, x, y]
+                data_in = [tid, code_x, code_y, x, y]
             else:
-                data_in = [sid, x, y]
+                data_in = [tid, x, y]
 
             n += 40
             while 1:
@@ -163,8 +165,8 @@ class DIT(GeomCommon):
         while n < ndata:
             edata = data[n:n + 40]
             out = unpack('ifiiiiiiff', edata)
-            (sid, x1, a, a, a, a, a, a, x, y) = out
-            data_in = [sid, x1, x, y]
+            (tid, x1, a, a, a, a, a, a, x, y) = out
+            data_in = [tid, x1, x, y]
             n += 40
             while 1:
                 (xint, yint) = unpack('ii', data[n:n + 8])
@@ -231,8 +233,8 @@ class DIT(GeomCommon):
         while ndata - n >= 40:
             edata = data[n:n + 40]
             out = unpack('iffiiiiiff', edata)
-            (sid, x1, x2, a, a, a, a, a, x, y) = out
-            data_in = [sid, x1, x2, x, y]
+            (tid, x1, x2, a, a, a, a, a, x, y) = out
+            data_in = [tid, x1, x2, x, y]
             n += 40
             while 1:
                 (xint, yint) = unpack('ii', data[n:n + 8])
@@ -265,8 +267,8 @@ class DIT(GeomCommon):
         while ndata - n >= 36:
             edata = data[n:n + 36]
             out = unpack('i 4f 3i f', edata)
-            (sid, x1, x2, x3, x4, a, b, c, x) = out
-            data_in = [sid, x1, x2, x3, x4, x]
+            (tid, x1, x2, x3, x4, a, b, c, x) = out
+            data_in = [tid, x1, x2, x3, x4, x]
             n += 40
             while 1:
                 xint, = unpack('i', data[n:n + 4])
