@@ -28,6 +28,8 @@ is_dev = (
     'APPVEYOR' in os.environ or
     'READTHEDOCS' in os.environ
 )
+is_rtd = 'READTHEDOCS' in os.environ
+
 if sys.version_info <= (3,) or not is_dev:
     try:
         import vtk
@@ -62,15 +64,18 @@ if sys.version_info <= (3,) or not is_dev:
 
 py_packages = []
 
-try:
-    #import numpy as np
-    #ver = np.lib.NumpyVersion(np.__version__)
-    #if ver < '1.11.0':
-        #print("np.__version__ = %r < '1.11.0'" % np.__version__)
-        #py_packages.append('numpy >= 1.11.0')
-    py_packages.append('numpy >= 1.11.0,<1.13.0')
-except ImportError:
-    py_packages.append('numpy >= 1.11.0,<1.13.0')
+if is_rtd:
+    py_packages.append('numpy')
+else:
+    try:
+        #import numpy as np
+        #ver = np.lib.NumpyVersion(np.__version__)
+        #if ver < '1.11.0':
+            #print("np.__version__ = %r < '1.11.0'" % np.__version__)
+            #py_packages.append('numpy >= 1.11.0')
+        py_packages.append('numpy >= 1.11.0,<1.13.0')
+    except ImportError:
+        py_packages.append('numpy >= 1.11.0,<1.13.0')
 
 try:
     import scipy
