@@ -143,7 +143,7 @@ except ImportError:
 
 is_windows = 'nt' in os.name
 if is_travis and not is_windows:
-    py_packages.append('python-coveralls')
+    #py_packages.append('python-coveralls')
     py_packages.append('codecov')
     #py_packages.append('coverage')
 
