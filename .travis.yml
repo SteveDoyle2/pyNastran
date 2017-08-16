@@ -105,5 +105,6 @@ script:
 # Calculate coverage
 after_success:
   - coveralls
+  - codecov
 #after_success:
 #  - coveralls --config_file .coveragerc

@@ -28,6 +28,7 @@ is_dev = (
     'APPVEYOR' in os.environ or
     'READTHEDOCS' in os.environ
 )
+is_travis = 'TRAVIS' in os.environ
 is_rtd = 'READTHEDOCS' in os.environ
 
 if sys.version_info <= (3,) or not is_dev:
@@ -141,8 +142,9 @@ except ImportError:
 #]
 
 is_windows = 'nt' in os.name
-if 'dev' in pyNastran.__version__ and not is_windows:
+if is_travis and not is_windows:
     py_packages.append('python-coveralls')
+    py_packages.append('codecov')
     #py_packages.append('coverage')
 
 install_requires = py_packages + [
@@ -223,7 +225,7 @@ setup(
 
             'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
             'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
-            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
+            #'nastranToCodeAster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
         ]
     },
     test_suite='pyNastran.all_tests',
