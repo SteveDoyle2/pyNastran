@@ -868,7 +868,7 @@ class Op2Codes(object):
         elif table_code in [701, 710, 711]:
             table_code -= 700
         elif table_code in [801, 810, 811]:
-            table_code -= 700
+            table_code -= 800
         elif table_code in [901, 910, 911]:
             table_code -= 900
 

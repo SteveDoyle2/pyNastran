@@ -900,32 +900,16 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            is_mask = False
             if obj.itime == 0:
                 ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
-                #ints = floats[:, :2].view('int32')
-                #from numpy import array_equal
-                #assert array_equal(ints, intsB)
-
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
-                #obj.Vn = ones(floats.shape, dtype=bool)
-                #obj.Vn[itotal:itotal2, :2] = False
-                #print(obj.Vn)
-                if obj.nonlinear_factor is not None and is_mask:
-                    raise NotImplementedError('masking1')
-                    float_mask = np.arange(nnodes * 8, dtype=np.int32).reshape(nnodes, 8)[:, 2:]
-                    obj.float_mask = float_mask
 
-            if obj.nonlinear_factor is not None and is_mask:
-                raise NotImplementedError('masking2')
-                results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
-            else:
-                floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
-                obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
-                assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+            obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
+            assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
@@ -1020,7 +1004,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
             obj.itotal = itotal2
         else:
-        #if 1:
             n = 0
             dt = None
             s = Struct(b(self._endian + '2i6f'))
@@ -1058,29 +1041,16 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            is_mask = False
             if obj.itime == 0:
                 ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
-                #ints = floats[:, :2].view('int32')
-                #from numpy import array_equal
-                #assert array_equal(ints, intsB)
 
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
-                #obj.Vn = ones(floats.shape, dtype=bool)
-                #obj.Vn[itotal:itotal2, :2] = False
-                #print(obj.Vn)
-                if obj.nonlinear_factor is not None and is_mask:
-                    float_mask = np.arange(nnodes * 8, dtype=np.int32).reshape(nnodes, 8)[:, 2:]
-                    obj.float_mask = float_mask
 
-            if obj.nonlinear_factor is not None and is_mask:
-                results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
-            else:
-                floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
-                obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
@@ -1865,7 +1835,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             auto_return = True
         return auto_return
 
-    def _create_oes_object3(self, nelements, result_name, slot, obj, obj_vector):
+    def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
         """
         Creates the self.obj parameter based on if this is vectorized or not.
 
@@ -1878,8 +1848,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         slot : dict[(int, int, str)=obj
             the self dictionary that will be filled with a
             non-vectorized result
-        obj : OES
-            a pointer to the non-vectorized class
         obj_vector : OESArray
             a pointer to the vectorized class
 
@@ -1891,9 +1859,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             True/False
 
         Since that's confusing, let's say we have real CTETRA stress data.
-        We're going to fill self.solidStress with the class
-        RealSolidStress.  If it were vectorized, we'd fill
-        self.ctetra_stress. with RealSolidStressArray.  So we call:
+        We're going to fill self.ctetra_stress with the class
+        RealSolidStressArray.  So we call:
 
         if self._is_vectorized(RealSolidStressArray, self.ctetra_stress):
             if self._results.is_not_saved(result_vector_name):
@@ -1902,56 +1869,12 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             if self._results.is_not_saved(result_name):
                 return ndata
 
-        auto_return, is_vectorized = self._create_oes_object3(self, nelements,
+        auto_return, is_vectorized = self._create_oes_object4(self, nelements,
                             'ctetra_stress', self.ctetra_stress,
-                            RealSolidStress, RealSolidStressArray)
+                            RealSolidStressArray)
         if auto_return:
             return nelements * ntotal
         """
-        auto_return = False
-        is_vectorized = self._is_vectorized(obj_vector, slot)
-        #print('is_vectorized=%s result_name=%r' % (is_vectorized, result_name))
-        if is_vectorized:
-            #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
-            if self.read_mode == 1:
-                self.create_transient_object(slot, obj_vector)
-                #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
-                self.result_names.add(result_name)
-                #print('self.obj =', self.obj)
-                self.obj.nelements += nelements
-                auto_return = True
-            elif self.read_mode == 2:
-                self.code = self._get_code()
-                #self.log.info("code = %s" % str(self.code))
-
-                # if this is failing, you probably set obj_vector to None...
-                try:
-                    self.obj = slot[self.code]
-                except KeyError:
-                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
-                    msg += "There's probably an extra check for read_mode=1..."
-                    self.log.error(msg)
-                    raise
-                #self.obj.update_data_code(self.data_code)
-                self.obj.build()
-
-        else:  # not vectorized
-            self.code = self._get_code()
-            self.result_names.add(result_name)
-            #print("not vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
-            #self.log.info("code = %s" % str(self.code))
-            if self.read_mode == 1:
-                self.result_names.add(result_name)
-                auto_return = True
-            # pass = 0/2
-            self.create_transient_object(slot, obj)
-
-        if auto_return and self.read_mode == 2:
-            raise RuntimeError('this should never happen...auto_return=True read_mode=2')
-        return auto_return, is_vectorized
-
-    def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
-        """same as _create_oes_object4 except it doesn't support unvectorized objects"""
         auto_return = False
         #is_vectorized = True
         is_vectorized = self._is_vectorized(obj_vector, slot)

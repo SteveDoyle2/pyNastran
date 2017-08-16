@@ -1,6 +1,9 @@
 """
 Defines various tables that don't fit in other sections:
   - MinorTables
+    - _read_omm2(self)
+    - _read_cmodeext(self)
+    - _read_cmodeext_helper(self)
     - _read_ibulk(self)
     - _read_fol(self)
     - _read_gpl(self)
@@ -40,6 +43,128 @@ class MinorTables(OP2Common):
     """reads various tables that don't fit into a larger category"""
     def __init__(self):
         OP2Common.__init__(self)
+
+    def _read_omm2(self):
+        """reads the OMM2 table"""
+        self.log.debug("table_name = %r" % self.table_name)
+        self.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        if len(data) == 28:
+            subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
+            if self.is_debug_file:
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
+                    subtable_name, month, day, year, zero, one))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+            self._print_month(month, day, year, zero, one)
+        else:
+            raise NotImplementedError(self.show_data(data))
+        self._read_subtables()
+
+    def _read_cmodext(self):
+        r"""
+        fails if a streaming block???:
+         - nx_spike\mnf16_0.op2
+        """
+        self.table_name = self._read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
+
+        marker = -2
+        markers = self.read_markers([marker, 1, 0])
+
+        data = self._read_record()
+        table_name, oneseventy_a, oneseventy_b = unpack('8sii', data)
+        assert oneseventy_a == 170, oneseventy_a
+        assert oneseventy_b == 170, oneseventy_b
+        print('170*4 =', 170*4)
+        #self.show_data(data)
+        marker -= 1
+        marker = self._read_cmodext_helper(marker) # -3
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        print('table8')
+        marker = self._read_cmodext_helper(marker, debug=True)
+        self.show_ndata(100)
+
+    def _read_cmodext_helper(self, marker_orig, debug=False):
+        marker = marker_orig
+        #markers = self.read_nmarkers([marker, 1, 1]) # -3
+
+        if debug:
+            self.show_ndata(100)
+        markers = self.get_nmarkers(3, rewind=False)
+        assert markers == [marker_orig, 1, 1], markers
+        print('markers =', markers)
+
+        #marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+        val_old = 0
+        if debug:
+            print('-----------------------------')
+        i = 0
+        #icheck = 7
+        while 1:
+            #print('i = %i' % i)
+            marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+            if marker != 6:
+                print('marker = %s' % marker)
+
+            assert marker == 6, marker
+            data = self.read_block()
+            val = unpack('i', data[:4])[0]
+            if debug:
+                print('val=%s delta=%s' % (val, val - val_old))
+                self.show_data(data, types='ifs')
+            assert len(data) > 4
+            #print('i=%s val=%s delta=%s' % (i, val, val - val_old))
+            val_old = val
+
+            marker2 = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
+            #print(marker2)
+            if marker2 == 696:
+                break
+            i += 1
+        if debug:
+            print('----------------------------------------')
+
+        marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+        if debug:
+            print('****marker = %s' % marker)
+        assert marker == 696, marker
+        data = self.read_block()
+        #self.show_data(data)
+
+        marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
+        assert marker == (marker_orig - 1), marker
+
+        if debug:
+            self.show_ndata(200)
+        return marker
+
+        #data = self._read_record()
+        #marker -= 1
+
+
+
+        #self.show_ndata(100)
+
+        ##marker -= 1
+        ##marker_end = self.get_marker1(rewind=False)
+        #asdf
 
     def _read_ibulk(self):
         self.table_name = self._read_table_name(rewind=False)
