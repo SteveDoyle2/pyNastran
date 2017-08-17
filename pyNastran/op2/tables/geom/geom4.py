@@ -293,46 +293,41 @@ class GEOM4(GeomCommon):
 
     def _read_mpc(self, data, n):
         """MPC(4901,49,17) - Record 16"""
-        self.log.info('skipping MPC in GEOM4\n')
-        return len(data)
-        #self.show_data(data)
+        ndata = len(data)
+        nfields = (ndata-n) // 4
+        datan = data[n:]
+        ints = unpack(b(self._endian + '%ii' % nfields), datan)
+        floats = unpack(b(self._endian + '%if' % nfields), datan)
 
-        #ndata = len(data)
-        #nfields = (ndata-n) // 4
-        ##print('nfields = %s' % nfields)
-        #datan = data[n:]
-        #ints = unpack(b(self._endian + '%ii' % nfields), datan)
-        #floats = unpack(b(self._endian + '%if' % nfields), datan)
-        #i = 0
-        #nentries = 0
-        #mpc_data = []
-        #j = 0
-        ##self.show_data(data, 'if')
-        #while i < nfields:
-            #if ints[i] == -1:
-                ## starting a new configuration
-                #assert ints[i+1] == -1, ints
-                #assert ints[i+2] == -1, ints
-                #mpci = MPC.add_op2_data(mpc_data)
-                #self._add_constraint_mpc_object(mpci) # extracts [sid, nid, c]
-                ##print(mpc_data)
-                #nentries += 1
-                #if self.is_debug_file:
-                    #self.binary_debug.write('  MPC=%s\n' % str(mpc_data))
-                #mpc = []
-                #j = 0
-                #i += 2
-                #continue
-            #if j == 0:
-                #mpc_data = [ints[i], ints[i+1], ints[i+2], floats[i+3]]
-                #i += 4
-            #i += 1
-            ##print(i, nfields)
-            #for val in mpc_data:
-                #if isinstance(val, integer_types):
-                    #assert val != -1, mpc_data
-        #mpc = MPC.add_op2_data(mpc_data)
-        #return len(data)
+        i = 0
+        nentries= 0
+        while i < nfields:
+            sid, grid, comp = ints[i:i+3]
+            coeff = floats[i+3]
+            mpc_data = [sid, grid, comp, coeff]
+            nodes = [grid]
+            components = [comp]
+            coefficients = [coeff]
+
+            intsi = ints[i+4:i+7]
+            assert len(intsi) == 3, intsi
+            while intsi != (-1, -1, -1):
+                gridi, compi, coeffi = ints[i+4], ints[i+5], floats[i+6]
+                mpc_data.extend([gridi, compi, coeffi])
+                nodes.append(gridi)
+                components.append(compi)
+                coefficients.append(coeffi)
+                i += 3
+                intsi = ints[i+4:i+7]
+            mpc_data.extend([-1, -1, -1])
+            i += 7 # 3 + 4 from (-1,-1,-1) and (sid,grid,comp,coeff)
+            if self.is_debug_file:
+                self.binary_debug.write('  MPC=%s\n' % str(mpc_data))
+            mpci = MPC.add_op2_data((sid, nodes, components, coefficients))
+            self._add_constraint_mpc_object(mpci)
+            nentries += 1
+        self._increase_card_count('MPC', nentries)
+        return len(data)
 
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
