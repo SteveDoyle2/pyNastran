@@ -825,7 +825,7 @@ class EPT(GeomCommon):
                 self.binary_debug.write('  PELAST=%s\n' % str(out))
             #(pid, tkid, tgeid, tknid) = out
             prop = PELAST.add_op2_data(out)
-            self._add_op2_property(prop)
+            self._add_pelast_object(prop)
             n += ntotal
         self.card_count['PELAST'] = nproperties
         return n

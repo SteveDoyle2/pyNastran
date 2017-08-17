@@ -2060,6 +2060,9 @@ class PLOAD(Load):
         sid = data[0]
         pressure = data[1]
         nodes = data[2:]
+        if nodes[-1] == 0:
+            nodes = list(nodes)
+            nodes.pop()
         return PLOAD(sid, pressure, nodes, comment=comment)
 
     def cross_reference(self, model):

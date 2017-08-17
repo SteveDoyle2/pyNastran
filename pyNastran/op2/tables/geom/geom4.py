@@ -49,8 +49,8 @@ class GEOM4(GeomCommon):
             #: ['', self._read_fake],
 
 
-            (4901, 49, 17) : ['MPC', self._read_mpc],             # record 17 - not done
-            (4891, 60, 83) : ['MPCADD', self._read_mpcadd],       # record 18 - not done
+            (4901, 49, 17) : ['MPC', self._read_mpc],             # record 17
+            (4891, 60, 83) : ['MPCADD', self._read_mpcadd],       # record 18
             (5001, 50, 15) : ['OMIT', self._read_omit],           # record 19 - not done
             (4951, 63, 92) : ['OMIT1', self._read_omit1],         # record 20 - not done
             (510, 5, 315) : ['QSET', self._read_qset],            # record 21
@@ -330,8 +330,12 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_mpcadd(self, data, n):
-        """MPCADD(4891,60,83) - Record 17"""
-        self.log.info('skipping MPCADD in GEOM4\n')
+        """
+        MPCADD(4891,60,83) - Record 17
+        """
+        nentries = (len(data) - n) // 4
+        datai = unpack('%s%si' % (self._endian, nentries), data[n:])
+        _read_spcadd_mpcadd(self, 'MPCADD', datai)
         return len(data)
 
     def _read_omit1(self, data, n):
@@ -727,17 +731,8 @@ class GEOM4(GeomCommon):
         """SPCADD(5491,59,13) - Record 46"""
         nentries = (len(data) - n) // 4
         datai = unpack('%s%si' % (self._endian, nentries), data[n:])
-        if self.is_debug_file:
-            self.binary_debug.write('  SPCADD - %s' % str(datai))
-        #spcadd_id = datai[0]
-        #values = list(datai[1:-1])
-        assert datai[-1] == -1, datai
-        #print('spcadd_id=%s values=%s' % (spcadd_id, values))
-
-        constraint = SPCADD.add_op2_data(datai)
-        self._add_constraint_spc_object(constraint)
-        self._increase_card_count('SPCADD', count_num=1)
-        return n
+        _read_spcadd_mpcadd(self, 'SPCADD', datai)
+        return len(data)
 
     def _read_spcd(self, data, n):
         """common method for reading SPCDs"""
@@ -1079,3 +1074,27 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
             self._add_rigid_element_object(rbe3)
             rbe3s.append(rbe3)
     return rbe3s
+
+def _read_spcadd_mpcadd(model, card_name, datai):
+    """
+    reads a SPCADD/MPCADD card
+
+    Word Name Type Description
+    1 SID I Set identification number
+    2 S   I Set identification number
+    Word 2 repeats until End of Record
+    """
+    if model.is_debug_file:
+        model.binary_debug.write('  %s - %s' % (card_name, str(datai)))
+    #spcadd_id = datai[0]
+    #values = list(datai[1:-1])
+    assert datai[-1] == -1, datai
+    #print('mpcadd_id=%s values=%s' % (spcadd_id, values))
+
+    if card_name == 'MPCADD':
+        constraint = MPCADD.add_op2_data(datai)
+        model._add_constraint_mpc_object(constraint)
+    else:
+        constraint = SPCADD.add_op2_data(datai)
+        model._add_constraint_spc_object(constraint)
+    model._increase_card_count(card_name, count_num=1)

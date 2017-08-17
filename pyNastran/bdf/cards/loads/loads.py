@@ -155,10 +155,10 @@ class LoadCombination(Load):  # LOAD, DLOAD
                 elif load.type == 'LOAD':
                     load_ids.append(load.sid)
                 elif load.type in ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
-                                   'PLOAD', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
+                                   'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
                                    'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2',
                                    'RFORCE', 'RFORCE1', #'RFORCE2'
-                                   'ACCEL', #'',
+                                   'ACCEL', #'ACCEL1', 'SLOAD',
                                    ]:
                     load_ids.append(load.sid)
                 else:
