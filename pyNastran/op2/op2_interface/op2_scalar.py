@@ -281,6 +281,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'RANCONS', b'RAGCONS', b'RADEFFM', b'RAPEATC', b'RAQEATC', b'RADEATC',
     b'RASEATC', b'RAFEATC', b'RAEEATC', b'RANEATC', b'RAGEATC',
 
+    # other
+    b'MKLIST',
+
     # stress
     b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
     b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
@@ -503,6 +506,7 @@ MSC_MATRIX_TABLES = [
     b'TOLB2', b'ADSPT', #b'MONITOR',
     b'PMRT', b'PFRT', b'PGRT', # b'AEMONPT',
     b'AFRT', b'AGRT',
+    b'QHHA',
 
     b'A', b'SOLVE,', b'UMERGE,', b'AA', b'AAP', b'ADELUF', b'ADELUS', b'ADELX',
     b'ADJG', b'ADJGT', b'ADRDUG', b'AEDBUXV', b'AEDW', b'AEFRC', b'AEIDW',

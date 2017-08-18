@@ -107,7 +107,7 @@ class GEOM1(GeomCommon):
             coord = CORD1C.add_op2_data(data_in)
             self._add_coord_object(coord)
             n += 24
-        self._increase_card_count('CORD1C', nentries)
+        self.increase_card_count('CORD1C', nentries)
         return n
 
     def _read_cord1r(self, data, n):
@@ -128,7 +128,7 @@ class GEOM1(GeomCommon):
             coord = CORD1R.add_op2_data(data_in)
             self._add_coord_object(coord)
             n += 24
-        self._increase_card_count('CORD1R', nentries)
+        self.increase_card_count('CORD1R', nentries)
         return n
 
     def _read_cord1s(self, data, n):
@@ -149,7 +149,7 @@ class GEOM1(GeomCommon):
             coord = CORD1S.add_op2_data(data_in)
             self._add_coord_object(coord, allow_overwrites=True)
             n += 24
-        self._increase_card_count('CORD1S', nentries)
+        self.increase_card_count('CORD1S', nentries)
         return n
 
     def _read_cord2c(self, data, n):
@@ -170,7 +170,7 @@ class GEOM1(GeomCommon):
                 self.binary_debug.write('  CORD2C=%s\n' % str(out))
             self._add_coord_object(coord, allow_overwrites=True)
             n += 52
-        self._increase_card_count('CORD2C', nentries)
+        self.increase_card_count('CORD2C', nentries)
         return n
 
     def _read_cord2r(self, data, n):
@@ -192,7 +192,7 @@ class GEOM1(GeomCommon):
             coord = CORD2R.add_op2_data(data_in)
             self._add_coord_object(coord, allow_overwrites=True)
             n += 52
-        self._increase_card_count('CORD2R', nentries)
+        self.increase_card_count('CORD2R', nentries)
         return n
 
     def _read_cord2s(self, data, n):
@@ -211,7 +211,7 @@ class GEOM1(GeomCommon):
             coord = CORD2S.add_op2_data(data_in)
             self._add_coord_object(coord, allow_overwrites=True)
             n += 52
-        self._increase_card_count('CORD2S', nentries)
+        self.increase_card_count('CORD2S', nentries)
         return n
 
     def _read_cord3g(self, data, n):
@@ -230,7 +230,7 @@ class GEOM1(GeomCommon):
                 self.binary_debug.write('  CORD3G=%s\n' % str(out))
             self._add_coord_object(coord, allow_overwrites=True)
             n += 16
-        self._increase_card_count('CORD3G', nentries)
+        self.increase_card_count('CORD3G', nentries)
         return n
 
     def _read_grid(self, data, n):  # 21.8 sec, 18.9
@@ -238,7 +238,7 @@ class GEOM1(GeomCommon):
         s = Struct(b(self._endian + 'ii3f3i'))
         ntotal = 32
         nentries = (len(data) - n) // ntotal
-        self._increase_card_count('GRID', nentries)
+        nfailed = 0
         for i in range(nentries):
             edata = data[n:n + 32]
             out = s.unpack(edata)
@@ -249,7 +249,7 @@ class GEOM1(GeomCommon):
                 # cd can be < 0
                 if ps == 0:
                     ps = ''
-                node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
+                node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
                 self.nodes[nid] = node
                 #if nid in self.nodes:
                     #self.reject_lines.append(str(node))
@@ -261,7 +261,9 @@ class GEOM1(GeomCommon):
                                'seid=%s' % (nid, cp, x1, x2, x3, cd, ps, seid))
                 node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
                 self.rejects.append(str(node))
+                nfailed += 1
             n += ntotal
+        self.increase_card_count('GRID', nentries - nfailed)
         return n
 
     def _read_seqgp(self, data, n):
@@ -277,7 +279,7 @@ class GEOM1(GeomCommon):
             seqgp = SEQGP.add_op2_data(out)
             self._add_seqgp_object(seqgp)
             n += 8
-        self._increase_card_count('SEQGP', nentries)
+        self.increase_card_count('SEQGP', nentries)
         return n
 
     def _read_point(self, data, n):
@@ -295,7 +297,7 @@ class GEOM1(GeomCommon):
             point = POINT.add_op2_data(out)
             self._add_point_object(point)
             n += 20
-        self._increase_card_count('POINT', nentries)
+        self.increase_card_count('POINT', nentries)
         return n
 
     def _read_cmass2(self, data, n):
@@ -310,7 +312,7 @@ class GEOM1(GeomCommon):
             element = CMASS2.add_op2_data(out)
             self.add_op2_element(element)
             n += 24
-        self._increase_card_count('CMASS2', nentries)
+        self.increase_card_count('CMASS2', nentries)
         return n
         #return len(data)
 
@@ -326,7 +328,7 @@ class GEOM1(GeomCommon):
             element = CVISC.add_op2_data(out)
             self.add_op2_element(element)
             n += 16
-        self._increase_card_count('CVISC', nentries)
+        self.increase_card_count('CVISC', nentries)
         return n
 
 

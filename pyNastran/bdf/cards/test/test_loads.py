@@ -27,8 +27,8 @@ class TestLoads(unittest.TestCase):
         A = 3.14
         model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0,
                          comment='')
-        model.add_grid(10, xyz=[10., 0., 0.])
-        model.add_grid(11, xyz=[11., 0., 0.])
+        model.add_grid(10, [10., 0., 0.])
+        model.add_grid(11, [11., 0., 0.])
         E = 3.0e7
         G = None
         nu = 0.3
@@ -55,8 +55,8 @@ class TestLoads(unittest.TestCase):
         A = 3.14
         model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0,
                          comment='')
-        model.add_grid(10, xyz=[10., 0., 0.])
-        model.add_grid(11, xyz=[11., 0., 0.])
+        model.add_grid(10, [10., 0., 0.])
+        model.add_grid(11, [11., 0., 0.])
         E = 3.0e7
         G = None
         nu = 0.3
@@ -87,8 +87,8 @@ class TestLoads(unittest.TestCase):
         accel1.write_card(size=16)
         accel1.write_card(size=16, is_double=True)
 
-        model.add_grid(10, xyz=[10., 0., 0.])
-        model.add_grid(11, xyz=[11., 0., 0.])
+        model.add_grid(10, [10., 0., 0.])
+        model.add_grid(11, [11., 0., 0.])
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
@@ -116,8 +116,8 @@ class TestLoads(unittest.TestCase):
         accel.write_card(size=16)
         accel.write_card(size=16, is_double=True)
 
-        model.add_grid(10, xyz=[10., 0., 0.])
-        model.add_grid(11, xyz=[11., 0., 0.])
+        model.add_grid(10, [10., 0., 0.])
+        model.add_grid(11, [11., 0., 0.])
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
@@ -628,9 +628,9 @@ class TestLoads(unittest.TestCase):
         gb = 2
         ploadx1 = model.add_ploadx1(sid, eid1, pa, [ga, gb], pb=None,
                                     theta=0., comment='ploadx1')
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
 
         pid = 20
         nids = [1, 2, 3, None, None, None]
@@ -709,20 +709,20 @@ class TestLoads(unittest.TestCase):
         1     2  9  10  11
         """
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
-        model.add_grid(5, xyz=[0., 0., 1.])
-        model.add_grid(6, xyz=[1., 0., 1.])
-        model.add_grid(7, xyz=[1., 1., 1.])
-        model.add_grid(8, xyz=[0., 1., 1.])
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [0., 1., 1.])
 
-        model.add_grid(9, xyz=[5., 0., 0.])
-        model.add_grid(10, xyz=[6., 0., 0.])
-        model.add_grid(12, xyz=[2., 1., 0.])
-        model.add_grid(13, xyz=[2., 0.5, 0.])
+        model.add_grid(9, [5., 0., 0.])
+        model.add_grid(10, [6., 0., 0.])
+        model.add_grid(12, [2., 1., 0.])
+        model.add_grid(13, [2., 0.5, 0.])
 
         eid = 1
         mid = 1

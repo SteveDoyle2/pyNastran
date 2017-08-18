@@ -73,8 +73,8 @@ class TestDynamic(unittest.TestCase):
         card_lines = ['DELAY', sid, node1, c1, t1, node2, c2, t2]
         model.add_card(card_lines, card_lines[0], comment='', is_list=True,
                        has_none=True)
-        model.add_grid(100)
-        model.add_grid(101)
+        model.add_grid(100, [0., 0., 0.])
+        model.add_grid(101, [0., 0., 0.])
         model.validate()
         model.cross_reference()
         #print(model.delays[42])
@@ -88,8 +88,8 @@ class TestDynamic(unittest.TestCase):
         card_lines = ['DPHASE', sid, node1, c1, t1, node2, c2, t2]
         model.add_card(card_lines, card_lines[0], comment='', is_list=True,
                        has_none=True)
-        model.add_grid(100)
-        model.add_grid(101)
+        model.add_grid(100, [0., 0., 0.])
+        model.add_grid(101, [0., 0., 0.])
         model.validate()
         model.cross_reference()
         #print(model.dphases[42])
@@ -304,7 +304,7 @@ class TestDynamic(unittest.TestCase):
         c = 1
         scale = 1.0
         model.add_darea(excite_id, nid, c, scale, comment='darea')
-        model.add_grid(nid)
+        model.add_grid(nid, [0., 0., 0.])
 
         excite_id = 30
         model.add_darea(excite_id, nid, c, scale, comment='darea')
@@ -422,7 +422,7 @@ class TestDynamic(unittest.TestCase):
         x = np.linspace(0., 1.) + 10.
         y = np.sin(x) + 2.
         model.add_tabled2(tid, x1, x, y, comment='tabled2')
-        model.add_grid(4)
+        model.add_grid(4, [0., 0., 0.])
 
         model.validate()
         model.pop_parse_errors()

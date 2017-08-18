@@ -14,11 +14,11 @@ class TestThermal(unittest.TestCase):
         lines = []
         model.case_control_deck = CaseControlDeck(lines, log=None)
 
-        model.add_grid(11, xyz=[0., 0., 0.])
-        model.add_grid(12, xyz=[1., 0., 0.])
-        model.add_grid(13, xyz=[1., 1., 0.])
-        model.add_grid(14, xyz=[0., 1., 0.])
-        model.add_grid(15, xyz=[0., 2., 0.])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(14, [0., 1., 0.])
+        model.add_grid(15, [0., 2., 0.])
 
         eid = 1
         pid = 1

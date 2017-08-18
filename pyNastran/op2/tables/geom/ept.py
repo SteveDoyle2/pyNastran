@@ -219,7 +219,7 @@ class EPT(GeomCommon):
             self._add_op2_property(prop)
             #print(self.show_data(data[n-8:-100]))
             break
-        self._increase_card_count('PBARL')
+        self.increase_card_count('PBARL')
         #assert len(data) == n
         return n
 

@@ -130,9 +130,9 @@ class TestOpt(unittest.TestCase):
         xlb = 0.01
         xub = 2.0
 
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
         model.add_ctria3(eid, pid, nids, comment='ctria3')
         model.add_pshell(pid, mid1=30, t=0.1, comment='pshell')
         model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
@@ -216,8 +216,8 @@ class TestOpt(unittest.TestCase):
         dscreen = model.add_dscreen('dunno', comment='dscreen')
 
         #print(dresp3)
-        grid = model.add_grid(100)
-        model.add_grid(101)
+        grid = model.add_grid(100, [0., 0., 0.])
+        model.add_grid(101, [0., 0., 0.])
         model.pop_parse_errors()
 
         desvar.write_card(size=8)
@@ -415,8 +415,8 @@ class TestOpt(unittest.TestCase):
         nid2 = 101
         conm2 = model.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
                                 comment='conm2')
-        model.add_grid(100, xyz=[1., 2., 3.])
-        model.add_grid(101, xyz=[2., 2., 4.])
+        model.add_grid(100, [1., 2., 3.])
+        model.add_grid(101, [2., 2., 4.])
 
         eid = 101
         pid = 102
@@ -506,8 +506,8 @@ class TestOpt(unittest.TestCase):
         model2.add_card(dvgrid_lines, 'DVGRID', is_list=False)
         #model2.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
                          #comment='conm2')
-        #model2.add_grid(100, xyz=[1., 2., 3.])
-        #model2.add_grid(101, xyz=[2., 2., 4.])
+        #model2.add_grid(100, [1., 2., 3.])
+        #model2.add_grid(101, [2., 2., 4.])
         #save_load_deck(model2)
 
     def test_break_words(self):

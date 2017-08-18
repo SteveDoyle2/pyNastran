@@ -54,8 +54,8 @@ class TestDampers(unittest.TestCase):
         cdamp2.raw_fields()
         cdamp2.write_card(size=8, is_double=False)
 
-        model.add_grid(3, xyz=[0., 0., 0.])
-        model.add_grid(4, xyz=[0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
         model.validate()
         model._verify_bdf(xref=False)
         model.cross_reference()

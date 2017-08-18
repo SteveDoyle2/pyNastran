@@ -90,7 +90,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        self._increase_card_count('DAREA', nentries)
+        self.increase_card_count('DAREA', nentries)
         struc = Struct('3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
@@ -112,7 +112,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        self._increase_card_count('DELAY', nentries)
+        self.increase_card_count('DELAY', nentries)
         struc = Struct('3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
@@ -163,7 +163,7 @@ class DYNAMICS(GeomCommon):
             dload = self.add_dload(sid, global_scale, scales, load_ids)
             istart = iend + 2
             nentries += 1
-        self._increase_card_count('DLOAD', nentries)
+        self.increase_card_count('DLOAD', nentries)
         return n
 
     def _read_dphase(self, data, n):
@@ -177,7 +177,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        self._increase_card_count('DPHASE', nentries)
+        self.increase_card_count('DPHASE', nentries)
         struc = Struct('3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
@@ -196,7 +196,7 @@ class DYNAMICS(GeomCommon):
         """EIGB(107,1,86) - Record 7"""
         ntotal = 60
         nentries = (len(data) - n) // ntotal
-        self._increase_card_count('EIGB', nentries)
+        self.increase_card_count('EIGB', nentries)
         struc = Struct('i8s ff 3i i 8s 4i')
         for i in range(nentries):
             edata = data[n:n+ntotal]
@@ -232,7 +232,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        self._increase_card_count('EIGP', nentries)
+        self.increase_card_count('EIGP', nentries)
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = unpack('i2fi', edata)
@@ -279,7 +279,7 @@ class DYNAMICS(GeomCommon):
                                  norm=norm, G=g, C=c, comment='')
             eigr.validate()
             n += ntotal
-        self._increase_card_count('EIGR', nentries)
+        self.increase_card_count('EIGR', nentries)
         return n
 
     def _read_eigrl(self, data, n):
@@ -328,7 +328,7 @@ class DYNAMICS(GeomCommon):
                                    #maxset=None, shfscl=None,
                                    #norm=None, options=None, values=None)
             #n += ntotal
-        #self._increase_card_count('EGIRL', nentries)
+        #self.increase_card_count('EGIRL', nentries)
         #return n
 
     def _read_epoint(self, data, n):
@@ -341,7 +341,7 @@ class DYNAMICS(GeomCommon):
         epoint = EPOINTs.add_op2_data(list(nids))
         self._add_epoint_object(epoint)
         self.card_count['EPOINT'] = npoints
-        self._increase_card_count('EPOINT', count_num=npoints)
+        self.increase_card_count('EPOINT', count_num=npoints)
         return n
 
     def _read_freq(self, data, n):
@@ -355,7 +355,7 @@ class DYNAMICS(GeomCommon):
             freqs = floats[istart + 1:iend]
             istart = iend + 1
             self.add_freq(sid, freqs)
-        self._increase_card_count('FREQ', count_num=len(iminus1))
+        self.increase_card_count('FREQ', count_num=len(iminus1))
         return n
 
     def _read_freq1(self, data, n):
@@ -380,7 +380,7 @@ class DYNAMICS(GeomCommon):
             freq = FREQ1(sid, f1, df, ndf=ndf)
             self._add_freq_object(freq)
             n += ntotal
-        self._increase_card_count('FREQ1', nentries)
+        self.increase_card_count('FREQ1', nentries)
         return n
 
     def _read_freq2(self, data, n):
@@ -404,7 +404,7 @@ class DYNAMICS(GeomCommon):
             #print('out = %s' % str(out))
             self.add_freq2(sid, f1, f2, nf)
             n += ntotal
-        self._increase_card_count('FREQ2', nentries)
+        self.increase_card_count('FREQ2', nentries)
         return n
 
     def _read_freq3(self, data, n):
@@ -431,7 +431,7 @@ class DYNAMICS(GeomCommon):
             freq_type = freq_type.strip().decode('latin1')
             self.add_freq3(sid, f1, f2=f2, Type=freq_type, nef=nef, cluster=bias)
             n += ntotal
-        self._increase_card_count('FREQ3', nentries)
+        self.increase_card_count('FREQ3', nentries)
         return n
 
     def _read_freq4(self, data, n):
@@ -455,7 +455,7 @@ class DYNAMICS(GeomCommon):
                 self.binary_debug.write('  FREQ4=%s\n' % str(out))
             self.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
             n += ntotal
-        self._increase_card_count('FREQ4', nentries)
+        self.increase_card_count('FREQ4', nentries)
         return n
 
     def _read_freq5(self, data, n):
@@ -484,7 +484,7 @@ class DYNAMICS(GeomCommon):
             self.add_freq5(sid, fractions, f1=f1, f2=f2)
             #print('freq =', freq)
             i0 = i_minus_1 + 1
-        self._increase_card_count('FREQ5', nentries)
+        self.increase_card_count('FREQ5', nentries)
         return len(data)
 
         #ntotal = 20 # 4*5
@@ -498,7 +498,7 @@ class DYNAMICS(GeomCommon):
                 #self.binary_debug.write('  FREQ5=%s\n' % str(out))
             #freq = self.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
             #n += ntotal
-        #self._increase_card_count('FREQ5', nentries)
+        #self.increase_card_count('FREQ5', nentries)
 
 
 #NLRSFD
@@ -541,7 +541,7 @@ class DYNAMICS(GeomCommon):
             #self.log.debug('  RANDPS=%s\n' % str(out))
             self.add_randps(sid, j, k, x=x, y=y, tid=tid)
             n += ntotal
-        self._increase_card_count('RANDPS', nentries)
+        self.increase_card_count('RANDPS', nentries)
         return n, []
 
     def _read_randps_msc(self, data, n):
@@ -578,7 +578,7 @@ class DYNAMICS(GeomCommon):
             #self.log.debug('  RANDPS=%s\n' % str(out))
             self.add_randps(sid, j, k, x=x, y=y, tid=tid)
             n += ntotal
-        self._increase_card_count('RANDPS', nentries)
+        self.increase_card_count('RANDPS', nentries)
         return n, []
 
 #RANDT1
@@ -805,7 +805,7 @@ class DYNAMICS(GeomCommon):
             #if self.is_debug_file:
                 #self.binary_debug.write('%s\n' % str(tf))
             self._add_tf_object(tf)
-            self._increase_card_count('TF')
+            self.increase_card_count('TF')
             n = n3
         return n
 
@@ -865,7 +865,7 @@ class DYNAMICS(GeomCommon):
                            us0=us0, vs0=vs0)
             self._add_dload_entry(dload)
             n += ntotal
-        self._increase_card_count('TLOAD1', nentries)
+        self.increase_card_count('TLOAD1', nentries)
         return n
 
     def _read_tload2(self, data, n):
@@ -909,7 +909,7 @@ class DYNAMICS(GeomCommon):
                            us0=us0, vs0=vs0)
             self._add_dload_entry(dload)
             n += ntotal
-        self._increase_card_count('TLOAD2', nentries)
+        self.increase_card_count('TLOAD2', nentries)
         return n
 
     def _read_tstep(self, data, n):

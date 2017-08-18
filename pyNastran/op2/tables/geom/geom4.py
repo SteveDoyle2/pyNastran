@@ -136,7 +136,7 @@ class GEOM4(GeomCommon):
             set_obj = cls.add_op2_data(out)
             add_method(set_obj)
             n += ntotal
-            self._increase_card_count(card_name, 1)
+            self.increase_card_count(card_name, 1)
         return n
 
     def _read_xset1(self, data, n, card_name, cls, add_method, debug=False):
@@ -155,7 +155,7 @@ class GEOM4(GeomCommon):
         if len(izero) == 0:
             card = cls.add_op2_data(out)
             add_method(card)
-            self._increase_card_count(card_name, 1)
+            self.increase_card_count(card_name, 1)
         else:
             i = np.hstack([[0], izero[:-1]+1])
             j = np.hstack([izero[:-1], -1])
@@ -168,7 +168,7 @@ class GEOM4(GeomCommon):
                     self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
                 card = cls.add_op2_data(outi)
                 add_method(card)
-            self._increase_card_count(card_name, len(i))
+            self.increase_card_count(card_name, len(i))
         return ndata
 
     def _add_superset_card(self, cls, card_name, add_method, out):
@@ -187,7 +187,7 @@ class GEOM4(GeomCommon):
         in_data = [seid, components, nids]
         card = cls.add_op2_data(in_data)
         add_method(card)
-        self._increase_card_count(card_name, 1)
+        self.increase_card_count(card_name, 1)
         if thru_check and len(out) > 5:
             card = out[5:]
             #print('out[5:] =', out[5:])
@@ -236,7 +236,7 @@ class GEOM4(GeomCommon):
 
                 #card = cls.add_op2_data(in_data)
                 #add_method(card)
-            #self._increase_card_count(card_name, len(i))
+            #self.increase_card_count(card_name, len(i))
         return ndata
 
     def _read_bndgrid(self, data, n):
@@ -326,7 +326,7 @@ class GEOM4(GeomCommon):
             mpci = MPC.add_op2_data((sid, nodes, components, coefficients))
             self._add_constraint_mpc_object(mpci)
             nentries += 1
-        self._increase_card_count('MPC', nentries)
+        self.increase_card_count('MPC', nentries)
         return len(data)
 
     def _read_mpcadd(self, data, n):
@@ -655,7 +655,7 @@ class GEOM4(GeomCommon):
         in_data = [components, nids]
         constraint = SPCOFF1.add_op2_data(in_data)
         self._add_constraint_spcoff_object(constraint)
-        self._increase_card_count('SPCOFF1', 1)
+        self.increase_card_count('SPCOFF1', 1)
         if thru_check and len(out) > 5:
             card = out[5:]
             self._add_spcoff1_card(out[5:])
@@ -722,7 +722,7 @@ class GEOM4(GeomCommon):
         in_data = [sid, components, nids]
         constraint = SPC1.add_op2_data(in_data)
         self._add_constraint_spc_object(constraint)
-        self._increase_card_count('SPC1', 1)
+        self.increase_card_count('SPC1', 1)
         if thru_check and len(out) > 5:
             card = out[5:]
             self._add_spc1_card(out[5:])
@@ -882,7 +882,7 @@ class GEOM4(GeomCommon):
             set_obj = USET.add_op2_data(out)
             self._add_uset_object(set_obj)
             n += ntotal
-        self._increase_card_count('USET', len(self.usets))
+        self.increase_card_count('USET', len(self.usets))
         return n
 
     def _read_uset1(self, data, n):
@@ -1097,4 +1097,4 @@ def _read_spcadd_mpcadd(model, card_name, datai):
     else:
         constraint = SPCADD.add_op2_data(datai)
         model._add_constraint_spc_object(constraint)
-    model._increase_card_count(card_name, count_num=1)
+    model.increase_card_count(card_name, count_num=1)

@@ -8,10 +8,10 @@ class TestMsgMesh(unittest.TestCase):
     def test_msgmesh_1(self):
         """tests CGEN"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         #feedge = model.add_feedge()
 
         Type = 10

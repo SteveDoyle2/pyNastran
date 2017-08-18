@@ -21,7 +21,7 @@ class TestAxi(unittest.TestCase):
     def test_pconeax(self):
         """PCONEAX"""
         model = BDF(debug=False)
-        model.add_grid(1)
+        model.add_grid(1, [0., 0., 0.])
         pid = 100
         mid1 = 1000
         nsm = 0.0

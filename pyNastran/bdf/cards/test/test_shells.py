@@ -550,10 +550,10 @@ class TestShells(unittest.TestCase):
     def test_cshear(self):
         """tests a PSHEAR/CSHEAR"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
         eid = 10
         pid = 20
@@ -592,17 +592,17 @@ class TestShells(unittest.TestCase):
     def test_shells(self):
         """tests a CTRIA3/CQUAD4/PSHELL and CTRIA6/CQUAD8/CQUAD/PCOMP"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(6, xyz=[1., 0.5, 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(6, [1., 0.5, 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
 
-        model.add_grid(9, xyz=[.5, .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
 
         E = 30.e7
         G = None
@@ -676,17 +676,17 @@ class TestShells(unittest.TestCase):
     def test_trax(self):
         """tests a CTRAX3/CTRAX6/???"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(6, xyz=[1., 0.5, 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(6, [1., 0.5, 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
 
-        model.add_grid(9, xyz=[.5, .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
 
         mid1 = 1
         E = 30.e7
@@ -753,10 +753,10 @@ class TestShells(unittest.TestCase):
     def test_ctriar_cquadr(self):
         """tests a CTRIAR/PSHELL/MAT8"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         eid = 6
         pid = 13
         nids = [1, 2, 3]
@@ -791,10 +791,10 @@ class TestShells(unittest.TestCase):
     def test_cplstn34(self):
         """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         pid = 4
         eid = 3
         nids = [1, 2, 3, 4]
@@ -832,14 +832,14 @@ class TestShells(unittest.TestCase):
     def test_cplstn68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(6, xyz=[1., .5, 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
         pid = 4
         eid = 3
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -877,14 +877,14 @@ class TestShells(unittest.TestCase):
     def test_ctrishell68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(6, xyz=[1., .5, 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
         pid = 4
         eid = 3
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -923,10 +923,10 @@ class TestShells(unittest.TestCase):
         pid = 10
         mid = 100
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         model.add_cquad4(10, pid, [1, 2, 3, 4])
 
         model.add_cshear(14, pid, [1, 2, 3, 4],
@@ -964,10 +964,10 @@ class TestShells(unittest.TestCase):
         eid = 1
         pid = 2
         mid = 3
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         cquadx4 = model.add_cquadx4(eid, pid, [1, 2, 3, 4], theta=0., comment='cquadx4')
         psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
                                  isop=None, fctn='SMECH', comment='psolid')
@@ -995,15 +995,15 @@ class TestShells(unittest.TestCase):
         eid = 1
         pid = 10
         mid = 100
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(6, xyz=[1., .5, 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
-        model.add_grid(9, xyz=[.5, .5, 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
         cquad8 = model.add_cquad8(eid, pid, nids, theta_mcid=0., comment='cquad8')
 
@@ -1036,15 +1036,15 @@ class TestShells(unittest.TestCase):
         eid = 1
         pid = 10
         mid = 100
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(6, xyz=[1., .5, 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
-        model.add_grid(9, xyz=[.5, .5, 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
         model.add_cquadx8(eid, pid, nids, theta=0., comment='cquadx8')
 

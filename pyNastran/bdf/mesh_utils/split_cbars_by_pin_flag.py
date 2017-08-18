@@ -70,7 +70,7 @@ def split_cbars_by_pin_flag(bdf_filename,
             xyz_a = model.nodes[ga].xyz
             xyz_b = model.nodes[gb].xyz
             xyz_mid = (xyz_a + xyz_b) / 2.
-            model.add_grid(nid_new, cp=0, xyz=xyz_mid, cd=0, ps='', seid=0,
+            model.add_grid(nid_new, xyz_mid, cp=0, cd=0, ps='', seid=0,
                            comment='')
 
             comment = elem.comment

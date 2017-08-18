@@ -511,10 +511,10 @@ class TestMeshUtils(unittest.TestCase):
                            punch=False, read_includes=True,
                            encoding=None)
 
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[2., 0., 0.])
-        model.add_grid(4, xyz=[3., 0., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [2., 0., 0.])
+        model.add_grid(4, [3., 0., 0.])
 
         pid = 1000
         mid = 1000
@@ -559,8 +559,8 @@ class TestMeshUtils(unittest.TestCase):
     def test_split_line_elements(self):
         """tests split_line_elements"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
 
         pid = 1000
         mid = 1000
@@ -612,10 +612,10 @@ class TestMeshUtils(unittest.TestCase):
         pid = 10
         mid1 = 100
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         model.add_cquad4(10, pid, [1, 2, 3, 4])
         model.add_ctria3(11, pid, [1, 2, 3])
 
@@ -705,31 +705,31 @@ class TestMeshUtils(unittest.TestCase):
         model = BDF(log=log)
 
         # intersects (min)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         model.add_cquad4(1, pid, [1, 2, 3, 4])
 
         # intersects (max)
-        model.add_grid(5, xyz=[0., 0., 1.])
-        model.add_grid(6, xyz=[1., 0., 1.])
-        model.add_grid(7, xyz=[1., 1., 1.])
-        model.add_grid(8, xyz=[0., 1., 1.])
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [0., 1., 1.])
         model.add_cquad4(2, pid, [5, 6, 7, 8])
 
         # intersects (mid)
-        model.add_grid(9, xyz=[0., 0., 0.5])
-        model.add_grid(10, xyz=[1., 0., 0.5])
-        model.add_grid(11, xyz=[1., 1., 0.5])
-        model.add_grid(12, xyz=[0., 1., 0.5])
+        model.add_grid(9, [0., 0., 0.5])
+        model.add_grid(10, [1., 0., 0.5])
+        model.add_grid(11, [1., 1., 0.5])
+        model.add_grid(12, [0., 1., 0.5])
         model.add_cquad4(3, pid, [9, 10, 11, 12])
 
         # doesn't intersect
-        model.add_grid(13, xyz=[10., 0., 0.])
-        model.add_grid(14, xyz=[11., 0., 0.])
-        model.add_grid(15, xyz=[11., 1., 0.])
-        model.add_grid(16, xyz=[10., 1., 0.])
+        model.add_grid(13, [10., 0., 0.])
+        model.add_grid(14, [11., 0., 0.])
+        model.add_grid(15, [11., 1., 0.])
+        model.add_grid(16, [10., 1., 0.])
         model.add_cquad4(4, pid, [13, 14, 15, 16])
 
         model.add_pshell(pid, mid1=mid1, t=2.)

@@ -401,8 +401,8 @@ class TestBeams(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[0., 0., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
         model.cross_reference()
 
         cbeam = model.Element(10)
@@ -429,9 +429,9 @@ class TestBeams(unittest.TestCase):
     def test_cbeam_02(self):
         """CBEAM/PBEAML"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
 
         mid = 1
         E = 3.0e7

@@ -302,9 +302,9 @@ class TestBars(unittest.TestCase):
     def test_bar_mass_2(self):
         """CBAR/PBARL"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
 
         mid = 1
         E = 3.0e7
@@ -363,6 +363,38 @@ class TestBars(unittest.TestCase):
         pbrsect.write_card()
         pbrsect.write_card(size=16)
 
+    def test_pbcomp(self):
+        """tests a PBRSECT"""
+        model = BDF(debug=False)
+        pid = 100
+        mid = 101
+        form = 'cat'
+        options = {}
+        y = ['dog']
+        z = ['frog']
+        c = ['pig']
+        mids = ['bird']
+        pbcomp = model.add_pbcomp(pid, mid, y, z, c, mids, area=0.0,
+                                  i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
+                                  k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
+                                  symopt=0, comment='pbcomp')
+        pbcomp.validate()
+        pbcomp.raw_fields()
+        pbcomp.write_card()
+        pbcomp.write_card(size=16)
+
+        eid = 10
+        nids = [1, 5]
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None, sa=0, sb=0,
+                                comment='')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [1., 0., 0.])
+
+
+
     def test_cbend(self):
         """tests a CBEND"""
         model = BDF(debug=False)
@@ -374,9 +406,9 @@ class TestBars(unittest.TestCase):
         x = None
         geom = 1
         cbend = model.add_cbend(eid, pid, nids, g0, x, geom, comment='cbend')
-        model.add_grid(2)
-        model.add_grid(3)
-        model.add_grid(5)
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(5, [0., 0., 0.])
         #pbend = model.add_pbend(pid, mid, beam_type, A, i1, i2, j,
                                 #c1, c2, d1, d2, e1, e2, f1, f2,
                                 #k1, k2, nsm, rc, zc, delta_n, fsi,

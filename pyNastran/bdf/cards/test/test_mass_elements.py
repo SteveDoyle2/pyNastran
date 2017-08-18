@@ -38,7 +38,7 @@ class TestMassElements(unittest.TestCase):
         conm1.write_card(size=16, is_double=True)
         conm1.raw_fields()
 
-        model.add_grid(nid)
+        model.add_grid(nid, [0., 0., 0.])
         model.validate()
         save_load_deck(model)
 
@@ -49,7 +49,7 @@ class TestMassElements(unittest.TestCase):
         eid = 20
         massi = 42.
         model.add_conm2(eid, nid, massi, cid=0, X=None, I=None, comment='conm2')
-        model.add_grid(nid)
+        model.add_grid(nid, [0., 0., 0.])
         model.validate()
         model.cross_reference()
         save_load_deck(model)
@@ -103,8 +103,8 @@ class TestMassElements(unittest.TestCase):
         cmass2.write_card(size=16, is_double=True)
         cmass2.raw_fields()
 
-        model.add_grid(g1)
-        model.add_grid(g2)
+        model.add_grid(g1, [0., 0., 0.])
+        model.add_grid(g2, [0., 0., 0.])
 
         oid = 3
         ddvals = 1. # promoted to a list
@@ -165,10 +165,10 @@ class TestMassElements(unittest.TestCase):
         pid = 10
         mid = 100
         model.add_nsm(sid, 'PSHELL', pid, nsmi, comment='nsm')
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         model.add_ctria3(1, pid, [1, 2, 3]) # A=0.5
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
@@ -184,10 +184,10 @@ class TestMassElements(unittest.TestCase):
         pid = 10
         mid = 100
         model.add_nsm1(sid, 'PSHELL', nsmi, [pid])
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         model.add_ctria3(1, pid, [1, 2, 3]) # A=0.5
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)

@@ -122,8 +122,8 @@ class AddCards(AddMethods):
     def __init__(self):
         AddMethods.__init__(self)
 
-    def add_grid(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0, comment=''):
-        # type: (int, int, Optional[Any], int, str, int, str) -> GRID
+    def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
+    # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
         """
         Creates the GRID card
 
@@ -146,7 +146,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        grid = GRID(nid, cp=cp, xyz=xyz, cd=cd, ps=ps, seid=seid, comment=comment)
+        grid = GRID(nid, xyz, cp=cp, cd=cd, ps=ps, seid=seid, comment=comment)
         self._add_node_object(grid)
         return grid
 

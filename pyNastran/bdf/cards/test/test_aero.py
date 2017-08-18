@@ -276,9 +276,9 @@ class TestAero(unittest.TestCase):
         aesurfs.write_card()
 
         model.add_set1(6002, [1, 2, 3])
-        model.add_grid(1)
-        model.add_grid(2)
-        model.add_grid(3)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
 
         model.validate()
         save_load_deck(model)
@@ -563,9 +563,9 @@ class TestAero(unittest.TestCase):
         setg = 42
         ids = [100, 101, 102]
         model.add_set1(setg, ids, is_skin=False, comment='')
-        model.add_grid(100)
-        model.add_grid(101)
-        model.add_grid(102)
+        model.add_grid(100, [0., 0., 0.])
+        model.add_grid(101, [0., 0., 0.])
+        model.add_grid(102, [0., 0., 0.])
 
         #------------------
         # CAERO2
@@ -1094,7 +1094,7 @@ class TestAero(unittest.TestCase):
                          nspan=5, lspan=0,
                          nchord=5, lchord=0, comment='')
         model.add_paero1(pid, Bi=None, comment='')
-        model.add_grid(5)
+        model.add_grid(5, [0., 0., 0.])
 
         spline_id = 101
         spline3 = model.add_spline3(
@@ -1161,9 +1161,9 @@ class TestAero(unittest.TestCase):
                        comment='')
 
         model.add_set1(setg, [1, 2, 3])
-        model.add_grid(1)
-        model.add_grid(2)
-        model.add_grid(3)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
 
         model.pop_parse_errors()
         model.pop_xref_errors()
@@ -1209,9 +1209,9 @@ class TestAero(unittest.TestCase):
                        comment='')
 
         model.add_set1(setg, [1, 2, 3])
-        model.add_grid(1)
-        model.add_grid(2)
-        model.add_grid(3)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
 
         model.pop_parse_errors()
         model.pop_xref_errors()
@@ -1584,8 +1584,8 @@ class TestAero(unittest.TestCase):
         suport = model.add_suport([55, 66], ['3', '3'])
         str(suport)
         model.add_aelist(alid1, [100, 101, 102], comment='')
-        model.add_grid(55, xyz=[0., 0., 0.])
-        model.add_grid(66, xyz=[0., 0., 0.])
+        model.add_grid(55, [0., 0., 0.])
+        model.add_grid(66, [0., 0., 0.])
         model.validate()
 
         # why doesn't this work?

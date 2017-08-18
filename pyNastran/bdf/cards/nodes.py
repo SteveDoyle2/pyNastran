@@ -909,8 +909,8 @@ class GRID(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0, comment=''):
-        # type: (int, int, Union[None, List[float], np.ndarray], int, str, int, str) -> None
+    def __init__(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
+        # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
         """
         Creates the GRID card
 
@@ -951,9 +951,9 @@ class GRID(BaseCard):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        # type: (List[Union[int, float]], str) -> GRID
+        #type: (List[Union[int, float]], str) -> GRID
         """
-        Adds a GRID card from the OP2
+        Adds a GRID card from the OP2.
 
         Parameters
         ----------
@@ -961,6 +961,8 @@ class GRID(BaseCard):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
+        .. todo:: Currently unused, but is tested by test_nodes.py
         """
         nid = data[0]
         cp = data[1]
@@ -970,7 +972,7 @@ class GRID(BaseCard):
         seid = data[7]
         if ps == 0:
             ps = ''
-        return GRID(nid, cp, xyz, cd, ps, seid, comment=comment)
+        return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1013,7 +1015,7 @@ class GRID(BaseCard):
             cd = 0
             ps = ''
             seid = 0
-        return GRID(nid, cp, xyz, cd, ps, seid, comment=comment)
+        return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
 
     def validate(self):
         # type: () -> None

@@ -35,7 +35,7 @@ class GeomCommon(object):
     def _read_fake(self, data, n):
         return len(data)
 
-    def _increase_card_count(self, name, count_num=1):
+    def increase_card_count(self, name, count_num=1):
         msg = 'this should be overwritten; name=%s count_num=%s' % (name, count_num)
         raise NotImplementedError(msg)
 

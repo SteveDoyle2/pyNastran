@@ -73,7 +73,7 @@ class DIT(GeomCommon):
             self._add_table_sdamping_object(table)
             istart = iend + 2
             nentries += 1
-        self._increase_card_count('TABDMP1', nentries)
+        self.increase_card_count('TABDMP1', nentries)
         return n
 
     def _read_tabrndg(self, data, n):
@@ -140,7 +140,7 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self._increase_card_count(table_name, nentries)
+        self.increase_card_count(table_name, nentries)
         return n
 
     def _read_tabled2(self, data, n):
@@ -180,7 +180,7 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self._increase_card_count(table_name, nentries)
+        self.increase_card_count(table_name, nentries)
         return n
 
     def _read_tabled3(self, data, n):
@@ -248,7 +248,7 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self._increase_card_count(table_name, nentries)
+        self.increase_card_count(table_name, nentries)
         return n
 
     def _read_table4(self, cls, add_method, data, n, table_name):
@@ -282,7 +282,7 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self._increase_card_count(table_name, nentries)
+        self.increase_card_count(table_name, nentries)
         return n
 
 #TABLEST
@@ -336,7 +336,7 @@ class DIT(GeomCommon):
             self._add_random_table_object(table)
             istart = iend + 2
             nentries += 1
-        self._increase_card_count('TABRND1', nentries)
+        self.increase_card_count('TABRND1', nentries)
         return n
 
 def get_iend_from_ints(ints):

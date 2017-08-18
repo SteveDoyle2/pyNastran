@@ -435,7 +435,7 @@ class GEOM2(GeomCommon):
 
             self.add_op2_element(elem)
             n += 52
-        self._increase_card_count('CBEND', nentries)
+        self.increase_card_count('CBEND', nentries)
         return n
 
     def _read_cbush(self, data, n):

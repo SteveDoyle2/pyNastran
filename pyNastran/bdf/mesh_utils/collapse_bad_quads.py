@@ -109,6 +109,6 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
         elem2 = CTRIA3(eid, elem.Pid(), nids, elem.zoffset,
                        theta_mcid=elem.theta_mcid, tflag=0, T1=None, T2=None, T3=None,
                        comment='$ was a CQUAD4\n')
-        model._increase_card_count('CTRIA3')
+        model.increase_card_count('CTRIA3')
         del model.elements[eid]
         model.elements[eid] = elem2

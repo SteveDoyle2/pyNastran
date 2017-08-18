@@ -1705,7 +1705,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             the card with empty fields removed
         """
         card_name = card_name.upper()
-        self._increase_card_count(card_name)
+        self.increase_card_count(card_name)
         if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
@@ -1752,7 +1752,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             the card with empty fields removed
         """
         card_name = card_name.upper()
-        self._increase_card_count(card_name)
+        self.increase_card_count(card_name)
         if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
@@ -1797,7 +1797,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             the card with empty fields removed
         """
         card_name = card_name.upper()
-        self._increase_card_count(card_name)
+        self.increase_card_count(card_name)
         if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
@@ -2308,7 +2308,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             if card_name in ['SUBCASE ', 'CEND']:
                 raise RuntimeError('No executive/case control deck was defined.')
             self.log.info('    rejecting card_name = %s' % card_name)
-        self._increase_card_count(card_name)
+        self.increase_card_count(card_name)
         self.rejects.append([_format_comment(comment)] + card_lines)
 
     def _write_reject_message(self, card_name, card_obj, comment=''):
@@ -3614,7 +3614,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             for line in lines[:i]:
                 crash_file.write(line)
 
-    def _increase_card_count(self, card_name, count_num=1):
+    def increase_card_count(self, card_name, count_num=1):
         # type: (str, int) -> None
         """
         Used for testing to check that the number of cards going in is the
@@ -3755,7 +3755,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
                 if self.is_reject(card_name):
                     self.log.info('    rejecting card_name = %s' % card_name)
                     for comment, card_lines in card:
-                        self._increase_card_count(card_name)
+                        self.increase_card_count(card_name)
                         self.rejects.append([_format_comment(comment)] + card_lines)
                 else:
                     for comment, card_lines in card:
