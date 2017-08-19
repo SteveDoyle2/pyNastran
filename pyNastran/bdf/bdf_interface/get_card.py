@@ -180,9 +180,32 @@ class GetCard(GetMethods):
         return rslot_map
 
     @property
-    def nid_map(self, sort_ids=True):
+    def nid_map(self):
         """
-        Maps the GRID/SPOINT/EPOINT ids to a sorted order.
+        Gets the GRID/SPOINT/EPOINT ids to a sorted order.
+
+        Parameters
+        ----------
+        sort_ids : bool; default=True
+            sort the ids
+
+        Returns
+        -------
+        nid_map : Dict[nid] : i
+            nid : int
+                the GRID/SPOINT/EPOINT id
+            i : int
+                the index
+
+        ..note ::  GRIDs, SPOINTs, & EPOINTs are stored in separate slots,
+                   so they are unorganized.
+        ..note :: see ``self.get_nid_map(sort_ids=False)`` for the unsorted version
+        """
+        return self.get_nid_map(sort_ids=True)
+
+    def get_nid_map(self, sort_ids=True):
+        """
+        Maps the GRID/SPOINT/EPOINT ids to a sorted/unsorted order.
 
         Parameters
         ----------
@@ -1957,23 +1980,23 @@ class GetCard(GetMethods):
         for pid in pids:
             pid_to_eids_map[pid] = []
 
+        elem_count = 0
+        elements_without_properties = ['CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4']
         for eid, element in iteritems(self.elements):
+            if element.type in elements_without_properties:
+                continue
             try:
                 pid = element.Pid()
-                #if element.type == 'CONROD':
-                    #raise RuntimeError('CONROD pid=%r' % pid)
-                if pid in pids:
-                    pid_to_eids_map[pid].append(eid)
             except AttributeError:
-                #eids2[0].append(eid)
-                pass
+                print(element)
+                raise
+            if pid in pids:
+                pid_to_eids_map[pid].append(eid)
+            elem_count += 1
 
-        if stop_if_no_eids:
-            for eids in itervalues(pid_to_eids_map):
-                if len(eids):
-                    return pid_to_eids_map
+        if elem_count == 0 and stop_if_no_eids:
             raise RuntimeError('no elements with properties found%s' % msg)
-        else:
+        elif elem_count == 0:
             self.log.warning('no elements with properties found%s' % msg)
         return pid_to_eids_map
 
