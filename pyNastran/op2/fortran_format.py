@@ -638,6 +638,7 @@ class FortranFormat(object):
         ]
         msg = ''
         if hasattr(self, 'words'):
+            assert len(self.words) in [0, 28], 'table_name=%r len(self.words)=%s words=%s' % (self.table_name, len(self.words), self.words)
             for word in self.words:
                 if word in ['???', 'Title']:
                     continue

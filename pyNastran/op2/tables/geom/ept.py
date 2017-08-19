@@ -94,6 +94,9 @@ class EPT(GeomCommon):
 
             # NX-specific
             (3601, 36, 55) : ['PFAST', self._read_pfast_nx],  # NX-specific
+            (3801, 38, 979) : ['PPLANE', self._read_fake],
+            (11801, 118, 560) : ['PWELD', self._read_fake],
+            (3401, 34, 993) : ['NSMADD', self._read_fake],
         }
 
     def _add_op2_property(self, prop):
@@ -235,7 +238,7 @@ class EPT(GeomCommon):
             nsections = data1[-1]
             if self.is_debug_file:
                 (pid, mid, a, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, nsections) = data1
-                self.log.info('PBCOMP pid=%s mid=%s nsections\n' % (pid, mid, nsections))
+                self.log.info('PBCOMP pid=%s mid=%s nsections=%s\n' % (pid, mid, nsections))
 
             data2 = []
             if nsections in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]:

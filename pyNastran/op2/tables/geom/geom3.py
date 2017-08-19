@@ -75,6 +75,12 @@ class GEOM3(GeomCommon):
             (11529, 115, 9604): ['', self._read_fake],  # record
             (7002, 70, 254) : ['BOLTFOR', self._read_boltfor],  # record
             (7601, 76, 608) : ['BOLTLD', self._read_boltld],  # record
+
+            # ???
+            (6701,67,978): ['PLOADE1', self._read_fake],  # record
+
+            # nx-specific
+            (3909, 39, 333): ['LOADCYT', self._read_fake],  # record
         }
 
     def _read_accel(self, data, n):
@@ -124,8 +130,8 @@ class GEOM3(GeomCommon):
             #sid, cid, scale, n1, n2, n3, nid = out
             #self.add_accel1(sid, scale, [n1, n2, n3], [nid], cid=cid)
             #n += ntotal
-        self.card_count['ACCEL1'] = nentries
-        return n
+        #self.card_count['ACCEL1'] = nentries
+        #return n
 
     def _read_force(self, data, n):
         """
@@ -139,8 +145,8 @@ class GEOM3(GeomCommon):
             (sid, g, cid, f, n1, n2, n3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  FORCE=%s\n' % str(out))
-            load = FORCE(sid, g, f, cid=cid, xyz=np.array([n1, n2, n3]))
-            self._add_load_object(load)
+            force = FORCE(sid, g, f, cid=cid, xyz=np.array([n1, n2, n3]))
+            self._add_load_object(force)
             n += 28
         self.card_count['FORCE'] = nentries
         return n
@@ -190,6 +196,13 @@ class GEOM3(GeomCommon):
     def _read_grav(self, data, n):
         """
         GRAV(4401,44,26) - the marker for Record 7
+
+        Word Name Type Description
+        1 SID I Load set identification number
+        2 CID I Coordinate system identification number
+        3 A RS Acceleration vector scale factor
+        4 N(3) RS Components of a vector coordinate system defined by CID
+        7 MB I Bulk Data Section with CID definition: -1=main, 0=partitioned
         """
         ntotal = 28  # 7*4
         s = Struct(b(self._endian + 'ii4fi'))
@@ -197,6 +210,8 @@ class GEOM3(GeomCommon):
         for i in range(nentries):
             edata = data[n:n + 28]
             out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  GRAV=%s\n' % str(out))
             (sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV.add_op2_data(out)
             self._add_load_object(grav)

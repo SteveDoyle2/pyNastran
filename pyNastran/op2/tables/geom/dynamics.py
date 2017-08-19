@@ -46,8 +46,9 @@ class DYNAMICS(GeomCommon):
 
             (3107, 31, 127): ['NONLIN1', self._read_fake], # 20
             (3207, 32, 128): ['NONLIN2', self._read_fake], # 21
-            (3207, 33, 129): ['NONLIN3', self._read_fake], # 22
-            (3207, 34, 130): ['NONLIN4', self._read_fake], # 23
+            #(3207, 33, 129): ['NONLIN3', self._read_fake], # 22
+            (3307, 33, 129) : ['NONLIN3', self._read_fake],
+            (3407, 34, 130): ['NONLIN4', self._read_fake], # 23
             (2107, 21, 195): ['RANDPS', self._read_randps], # 24
             (2207, 22, 196): ['RANDT1', self._read_fake], # 25
             (5107, 51, 131): ['RLOAD1', self._read_rload1],  # 26
@@ -68,8 +69,13 @@ class DYNAMICS(GeomCommon):
             (4807, 48, 306) : ['DYNRED', self._read_fake],
             (11001, 110, 310) : ['RSPINT', self._read_fake],
             (10901, 109, 260) : ['RSPINR', self._read_fake],
-            (3307, 33, 129) : ['NONLIN3', self._read_fake],
             (11101, 111, 368) : ['UNBALNC', self._read_fake],
+
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\nlttlhxb.op2
+            (7507, 75, 626) : ['TEMPD/TTEMP/TMPSET', self._read_fake],
+
+            #F:\work\pyNastran\examples\Dropbox\move_tpl\rcross01.op2
+            (3201, 24, 54) : ['RCROSS', self._read_fake],
         }
 
     def _read_acsrce(self, data, n):
@@ -151,7 +157,7 @@ class DYNAMICS(GeomCommon):
             #print('  sid=%s global_scale=%s' % (sid, global_scale))
             deltai = iend - istart - 2 # subtract 2 for sid, global scale
             assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
-
+            out = [sid, global_scale]
             scales = []
             load_ids = []
             for iscale in range(deltai // 2):
@@ -159,6 +165,10 @@ class DYNAMICS(GeomCommon):
                 load_id = ints[istart + 3 + 2*iscale]
                 scales.append(scale)
                 load_ids.append(load_id)
+                out.append(scale)
+                out.append(load_id)
+            if self.is_debug_file:
+                self.binary_debug.write('  DLOAD=%s\n' % str(out))
 
             dload = self.add_dload(sid, global_scale, scales, load_ids)
             istart = iend + 2
@@ -215,10 +225,172 @@ class DYNAMICS(GeomCommon):
         return n
 
     def _read_eigc(self, data, n):
-        """EIGC(207,2,87) - Record 8"""
-        self.log.info('skipping EIGC in DYNAMICS\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping EIGC in DYNAMICS\n')
+        """
+        EIGC(207,2,87) - Record 8
+
+        Word Name    Type Description
+        1 SID           I Load set identification number
+        2 METHOD(2) CHAR4 Method of eigenvalue extraction
+        4 NORM(2)   CHAR4 Method for normalizing eigenvectors
+        6 G             I Grid or scalar point identification number
+        7 C             I Component number
+        8 E            RS Convergence criterion
+        9 ND1           I Number of desired eigenvectors
+        10 CONTFLG      I Continuation flag
+        CONTFLG=0 With continuation
+        11 AAJ         RS Location of A on real axis
+        12 WAJ         RS Location of A on imaginary axis
+        13 ABJ         RS Location of B on real axis
+        14 WBJ         RS Location of B on imaginary axis
+        15 LJ          RS Width of search region
+        16 NEJ          I Number of estimated roots
+        17 NDJ          I Number of desired eigenvectors
+        Words 11 through 17 repeat until (-1,-1,-1,-1,-1,-1,-1) occ
+        CONTFLG =-1 Without continuation
+        End CONTFLG
+        """
+        if 0:
+            ntotal = 60
+            nentries = (len(data) - n) // ntotal
+            self.increase_card_count('EIGB', nentries)
+            struct1 = Struct('i 4s 4s 2i f 2i')
+            struct2 = Struct('5f2i')
+            for i in range(nentries):
+                edata = data[n:n+ntotal]
+                #self.show_data(edata[44:])
+                # int, 8s, 2f, 3i, i, 8s, 4i
+                out = struc.unpack(edata)
+                sid, method, L1, L2, nep, ndp, ndn, dunno, norm, g, c, dunno_a, dunno_b = out
+                if self.is_debug_file:
+                    self.binary_debug.write('EIGC=%s\n' % str(out))
+                #print('out = %s' % str(out))
+                method = method.strip().decode('latin1')
+                norm = norm.strip().decode('latin1')
+                eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
+                self._add_method_object(eigb)
+                n += ntotal
+            #return n
+
+        #-------------------------------------------------
+        ndata = len(data)
+        nfields = (ndata - n) // 4
+        datan = data[n:]
+        ints = unpack(b(self._endian + '%ii' % nfields), datan)
+        floats = unpack(b(self._endian + '%if' % nfields), datan)
+        strings = unpack(b(self._endian + '4s'* nfields), datan)
+        #print('ints = ', ints)
+        #print('floats = ', floats)
+        #print('strings = ', strings)
+
+        i = 0
+        nentries = 0
+        while i < nfields:
+            sid = ints[i+0]
+            method = (strings[i+1] + strings[i+2]).strip()
+            norm = (strings[i+3] + strings[i+4]).strip()
+            grid = ints[i+5]
+            component = ints[i+6]
+            epsilon = floats[i+7]
+            neigenvalues = ints[i+8]
+            control_flag = ints[i+9]
+
+            #print('sid=%s method=%r norm=%r grid=%s component=%s epsilon=%s, '
+            #      'neigenvalues=%s ctlflag=%s' % (
+            #          sid, method, norm, grid, component, epsilon, neigenvalues, control_flag))
+
+            alphaAjs = []
+            omegaAjs = []
+            alphaBjs = []
+            omegaBjs = []
+            LJs = []
+            NEJs = []
+            NDJs = []
+
+            # dummy
+            mblkszs = []
+            iblkszs = []
+            ksteps = []
+            NJIs = []
+            if control_flag == -1:
+                datai = [sid, method, norm, grid, component, epsilon, neigenvalues, -1]
+            elif control_flag == 0:
+                intsi = ints[i+10:i+17]
+                assert len(intsi) == 7, 'len=%s intsi=%s' % (len(intsi), intsi)
+                datai = [sid, method, norm, grid, component, epsilon, neigenvalues, 0]
+                while intsi != (-1, -1, -1, -1, -1, -1, -1):
+                    aaj, waj, abj, wbj, lj = floats[i+10:i+15]
+                    print('aaj=%s waj=%s abj=%s wbj=%s lj=%s'  % (
+                        aaj, waj, abj, wbj, lj))
+                    nej, ndj = ints[i+15:i+17]
+                    datai.extend([(aaj, waj, abj, wbj, lj, nej)])
+
+                    alphaAjs.append(aaj)
+                    omegaAjs.append(waj)
+                    alphaBjs.append(abj)
+                    omegaBjs.append(wbj)
+                    if norm == 'MAX':
+                        # faked
+                        mblkszs.append(0.)
+                        iblkszs.append(0)
+                        ksteps.append(0)
+                        NJIs.append(0)
+
+                    LJs.append(lj)
+                    NEJs.append(nej)
+                    NDJs.append(ndj)
+                    print('aaj=%s waj=%s abj=%s wbj=%s lj=%s nej=%s ndj=%s'  % (
+                        aaj, waj, abj, wbj, lj, nej, ndj
+                    ))
+                    i += 7
+                    intsi = ints[i+10:i+17]
+                    print('intsi = ', intsi)
+                    assert len(intsi) == 7, 'len=%s intsi=%s' % (len(intsi), intsi)
+                    #print("intsi = ", intsi)
+                    #print()
+                    #11 AAJ RS Location of A on real axis
+                    #12 WAJ RS Location of A on imaginary axis
+                    #13 ABJ RS Location of B on real axis
+                    #14 WBJ RS Location of B on imaginary axis
+                    #15 LJ RS Width of search region
+                    #16 NEJ I Number of estimated roots
+                    #17 NDJ I Number of desired eigenvectors
+                assert len(intsi) == 7, intsi
+                #print('intsi = ', intsi)
+                #raise NotImplementedError('EIGC control_flag=%s' % control_flag)
+            else:
+                raise NotImplementedError('EIGC control_flag=%s' % control_flag)
+            datai.extend([-1, -1, -1, -1, -1, -1, -1])  # creates a +7
+
+            if self.is_debug_file:
+                self.binary_debug.write('  EIGC=%s\n' % str(datai))
+
+            if grid == 0:
+                grid = None
+                assert component == 0, component
+                component = None
+
+            eigc = self.add_eigc(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
+                                 mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
+                                 alphaAjs=alphaAjs, omegaAjs=omegaAjs,
+                                 alphaBjs=alphaBjs, omegaBjs=omegaBjs,
+                                 LJs=LJs, NEJs=NEJs, NDJs=NDJs,
+                                 shift_r1=None, shift_i1=None, isrr_flag=None,
+                                 nd1=None, comment='')
+            eigc.validate()
+
+            #while intsi != (-1, -1, -1):
+                #gridi, compi, coeffi = ints[i+4], ints[i+5], floats[i+6]
+                #mpc_data.extend([gridi, compi, coeffi])
+                #nodes.append(gridi)
+                #components.append(compi)
+                #coefficients.append(coeffi)
+                #i += 3
+
+            # +10 is for the prefix; +7 is for the -1s
+            i += 10 + 7 # 3 + 4 from (-1,-1,-1) and (sid,grid,comp,coeff)
+            nentries += 1
+            print('--------------')
+        self.increase_card_count('EIGC', nentries)
         return len(data)
 
     def _read_eigp(self, data, n):
@@ -425,6 +597,9 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, f2, freq_type, nef, bias = out
+            if freq_type == 'LINE':
+                freq_type = 'LINEAR'
+
             if self.is_debug_file:
                 self.binary_debug.write('  FREQ3=%s\n' % str(out))
 

@@ -402,6 +402,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         """
         if self.is_debug_file:
             msg = ''
+            assert len(self.words) in [0, 28], 'table_name=%r len(self.words)=%s words=%s' % (self.table_name, len(self.words), self.words)
             for i, param in enumerate(self.words):
                 if param == 's_code':
                     try:
@@ -522,9 +523,10 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
         if self.debug:
             self.log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
-
+        self.card_name = name
         n = func(data, n)  # gets all the grid/mat cards
         assert n is not None, name
+        del self.card_name
 
         self.geom_keys = keys
         self.is_start_of_subtable = False

@@ -33,6 +33,9 @@ class GeomCommon(object):
         #self.log = SuppressLogging()
 
     def _read_fake(self, data, n):
+        self.log.info('skipping %s in %s' % (self.card_name, self.table_name))
+        if (self.card_name == '' or '?' in self.card_name) and data:
+            self.show_data(data)
         return len(data)
 
     def increase_card_count(self, name, count_num=1):

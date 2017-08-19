@@ -440,6 +440,10 @@ class PSOLID(SolidProperty):
 
         if fctn == 'SMEC':
             fctn = 'SMECH'
+        elif fctn == 'PFLU':
+            fctn = 'PFLUID'
+        else:
+            raise NotImplementedError('PSOLID; fctn=%r' % fctn)
         return PSOLID(pid, mid, cordm, integ, stress, isop,
                       fctn, comment=comment)
 

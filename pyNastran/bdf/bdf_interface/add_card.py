@@ -4062,21 +4062,23 @@ class AddCards(AddMethods):
         self._add_method_object(method)
         return method
 
-    def add_eigc(self, sid, method, norm, G, C, E, ndo, mblkszs=None,
-                 iblkszs=None, ksteps=None,
-                 NJIs=None, alphaAjs=None,
-                 omegaAjs=None, alphaBjs=None,
-                 omegaBjs=None, LJs=None, NEJs=None,
-                 NDJs=None, shift_r1=None,
-                 shift_i1=None, isrr_flag=None,
+    def add_eigc(self, sid, method, grid, component, epsilon, neigenvalues,
+                 norm='MAX', # common
+                 mblkszs=None, iblkszs=None, ksteps=None, NJIs=None,
+                 alphaAjs=None, omegaAjs=None,
+                 alphaBjs=None, omegaBjs=None,
+                 LJs=None, NEJs=None, NDJs=None,
+                 shift_r1=None, shift_i1=None, isrr_flag=None,
                  nd1=None, comment=''):
-        method = EIGC(sid, method, norm, G, C, E, ndo, mblkszs=mblkszs,
-                      iblkszs=iblkszs, ksteps=ksteps,
-                      NJIs=NJIs, alphaAjs=alphaAjs,
-                      omegaAjs=omegaAjs, alphaBjs=alphaBjs,
-                      omegaBjs=omegaBjs, LJs=LJs, NEJs=NEJs,
-                      NDJs=NDJs, shift_r1=shift_r1,
-                      shift_i1=shift_i1, isrr_flag=isrr_flag,
+        #print(sid, method, norm, grid, component, epsilon, neigenvalues)
+        method = EIGC(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
+                      mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
+
+                      alphaAjs=alphaAjs, omegaAjs=omegaAjs,
+                      alphaBjs=alphaBjs, omegaBjs=omegaBjs,
+
+                      LJs=LJs, NEJs=NEJs, NDJs=NDJs,
+                      shift_r1=shift_r1, shift_i1=shift_i1, isrr_flag=isrr_flag,
                       nd1=nd1, comment=comment)
         self._add_cmethod_object(method)
         return method

@@ -73,6 +73,7 @@ class GEOM2(GeomCommon):
             (10808, 108, 406): ['CHBDYG', self._read_chbdyg], # record 43
             (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 44 - not done
             (7308, 73, 253): ['CHEXA', self._read_chexa],     # record 45
+            (12001,120,9011): ['CHEXP', self._read_chexp],    # record 50
             (1001, 10, 65): ['CMASS1', self._read_cmass1],    # record 51
             (1101, 11, 66): ['CMASS2', self._read_cmass2],    # record 52
             (1201, 12, 67): ['CMASS3', self._read_cmass3],    # record 53
@@ -184,7 +185,7 @@ class GEOM2(GeomCommon):
             (16600, 166, 9985) : ['', self._read_fake],  # record
             (16200, 162, 9982) : ['', self._read_fake],  # record
             (16900, 169, 9977) : ['', self._read_fake],  # record
-            (1701, 17, 980) : ['', self._read_fake],  # record
+            (1701, 17, 980) : ['CPLSTN3', self._read_fake],  # record
             (1801, 18, 986) : ['', self._read_fake],  # record
             (23500, 235, 6662) : ['', self._read_fake],  # record
             (23800, 238, 6665) : ['', self._read_fake],  # record
@@ -221,6 +222,11 @@ class GEOM2(GeomCommon):
             (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram],
             (25800, 258, 9947) : ['CPYRA13F', self._read_cpyram],
             (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram],
+            (7201, 72, 983) : ['CPLSTN8', self._read_fake],
+            (11701, 117, 559) : ['CWELD', self._read_fake],
+            (13501,135,564) : ['CWELDC', self._read_fake],
+            (3601,36,987) : ['CPLSTS8', self._read_fake],
+            (13701, 137, 565) : ['CWELDP', self._read_fake],
         }
 
     def add_op2_element(self, elem):
@@ -831,7 +837,14 @@ class GEOM2(GeomCommon):
 # CHEXAFD
 # CHEXAL
 # CHEXP
-# CHEXPR
+    def _read_chexp(self, data, n):
+        """
+        CHEXP(12001,120,9011) - the marker for Record 50
+        """
+        self.log.info('skipping CHEXP in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CHEXP in GEOM2\n')
+        return len(data)
 
     def _read_cmass1(self, data, n):
         """

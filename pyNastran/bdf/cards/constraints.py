@@ -1450,11 +1450,21 @@ class MPCADD(ConstraintAdd):
         sets = card.fields(2)
         return MPCADD(conid, sets, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #msg = '%s has not implemented data parsing' % self.type
-        #raise NotImplementedError(msg)
-        #return MPCADD(conid, sets, comment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds an MPCADD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        conid = data[0]
+        sets = list(data[1:-1])
+        return MPCADD(conid, sets, comment=comment)
 
     @property
     def mpc_ids(self):

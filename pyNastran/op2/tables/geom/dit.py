@@ -38,6 +38,14 @@ class DIT(GeomCommon):
             (15, 21, 162): ['TABDMP1', self._read_tabdmp1],   # NX
             (56, 26, 303): ['TABRNDG', self._read_tabrndg],   # NX
             (3105, 31, 97): ['TABLES1', self._read_tables1],  # record 13 - TABLES1 (NX)
+            (4000, 40, 460) : ['TABLE3D', self._read_fake],
+
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\htab11.op2
+            (14705, 147, 618) : ['TABLEHT', self._read_fake],
+            (14605, 146, 617) : ['TABLEH1', self._read_fake],
+
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\n10640b.op2
+            (1905, 19, 178) : ['TABLEST', self._read_fake],
         }
 
     def _read_tabdmp1(self, data, n):

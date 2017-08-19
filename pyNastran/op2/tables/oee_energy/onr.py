@@ -19,11 +19,11 @@ class ONR(OP2Common):
         reads ONRGY1 subtable 3
         """
         self.words = [
-            'aCode',       'tCode',    'eTotal',        'isubcase',
+            'aCode',       'tCode',    'eTotal',       'isubcase',
             '???',         '???',      'element_name', 'load_set',
             'format_code', 'num_wide', 'cvalres',      'setID',
-            'setID',       'eigenReal', 'eigenImag',     '???',
-            'etotpos',     'etotneg',  '???',          '???',
+            'setID',       'eigenReal', 'eigenImag',   'rmssf',
+            'etotpos',     'etotneg',  'thresh',       '???',
             '???',         '???',      '???',      '???',
             '???', 'Title', 'subtitle', 'label']
 
@@ -77,13 +77,20 @@ class ONR(OP2Common):
         #: Natural eigenvalue - imaginary part
         self.eigen_imag = self.add_data_parameter(data, 'eigen_imag', 'i', 15, False)
 
-        self.add_data_parameter(data, 'freq', 'f', 16, False)  ## Natural frequency
+        #: Natural frequency
+        self.freq = self.add_data_parameter(data, 'freq', 'f', 16, False)
+
+        #: RMS and CRMS scale factor - NX
+        self.rmssf = self.add_data_parameter(data, 'rmssf', 'f', 17)
 
         #: Total positive energy
         self.etotpos = self.add_data_parameter(data, 'etotpos', 'f', 18)
 
         #: Total negative energy
         self.etotneg = self.add_data_parameter(data, 'etotneg', 'f', 19, False)
+
+        #: Energy Threshold - NX
+        self.thresh = self.add_data_parameter(data, 'thresh', 'f', 17)
 
         if not self.is_sort1():
             raise NotImplementedError('sort2...')
@@ -247,7 +254,7 @@ class ONR(OP2Common):
 
         if self.is_debug_file:
             self.binary_debug.write('cvalares = %s\n' % self.cvalres)
-        if self.format_code == 1 and self.num_wide == 4:
+        if self.format_code in [1, 2] and self.num_wide == 4:
             assert self.cvalres in [0, 1], self.cvalres
 
             ntotal = 16
@@ -447,7 +454,22 @@ class ONR(OP2Common):
                         self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
                     obj.add(dt, word, energy, percent, density)
                     n += ntotal
-        else:
+        elif self.format_code in [2, 3] and self.num_wide == 4:
+            """
+                  FREQUENCY =  1.000000E+01
+                                           E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )
+
+                            ELEMENT-TYPE = QUADR               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   3.662188E+06
+                            SUBCASE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET       9 =   1.853189E+05
+            0
+                                                ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
+                                                         9          8.723258E+03                 0.2382              5.815505E+00
+                                                        10          7.815898E+03                 0.2134              5.210599E+00
+                                                        11          8.512115E+04                 2.3243              5.674743E+01
+                                                        12          5.200864E+04                 1.4202              3.467243E+01
+
+                                    TYPE = QUADR    SUBTOTAL        1.536690E+05                 4.1961
+            """
             #device_code   = 1   Print
             #analysis_code = 5   Frequency
             #table_code    = 18  ONRGY1-OEE - Element strain energy
@@ -463,6 +485,7 @@ class ONR(OP2Common):
             #num_wide      = 4
             #isubcase      = 1
             #MSC Nastran
+        else:
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)
             #raise NotImplementedError(self.code_information())

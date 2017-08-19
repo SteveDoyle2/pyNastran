@@ -18,12 +18,13 @@ $ Subcase name : Default
    GPKE=ALL
    ESE(PLOT)=ALL
    FORCE(PLOT,PRINT)=ALL
-   METHOD = 42
+   CMETHOD = 99
 BEGIN BULK
 PARAM    POST    -1
 PARAM    AUTOSPC NO
 PARAM   PRTMAXIM YES
 EIGRL	42			3
+EIGC, 99, HESS, , , , , 4
 
 INCLUDE 'geom.inc'
 MAT1     1      2.9+7   1.1+7   .32     .283

@@ -320,16 +320,31 @@ class MATT1(MaterialDependence):
         """
         (mid, E_table, G_table, nu_table, rho_table, A_table, dunno_a, ge_table,
          st_table, sc_table, ss_table, dunno_b) = data
-        if E_table > 100000000:
+        if E_table == 0:
+            E_table = None
+        elif E_table > 100000000:
             E_table = -(E_table - 100000000)
-        if G_table > 100000000:
+
+        if G_table == 0:
+            G_table = None
+        elif G_table > 100000000:
             G_table = -(G_table - 100000000)
-        if nu_table > 100000000:
+
+        if nu_table == 0:
+            nu_table = None
+        elif nu_table > 100000000:
             nu_table = -(nu_table - 100000000)
-        if rho_table > 100000000:
+
+        if rho_table == 0:
+            rho_table = None
+        elif rho_table > 100000000:
             rho_table = -(rho_table - 100000000)
+
+        if E_table == 0:
+            E_table = None
         if A_table > 100000000:
             A_table = -(A_table - 100000000)
+
         mat = MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
                     ge_table, st_table, sc_table, ss_table, comment=comment)
         assert dunno_a == 0, '%s; dunno_a=%s\n%s' % (data, dunno_a, str(mat))
@@ -1061,6 +1076,23 @@ class MATT5(MaterialDependence):
         """
         (mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
          cp_table, null, hgen_table) = data
+
+        if kxx_table == 0:
+            kxx_table = None
+        if kxy_table == 0:
+            kxy_table = None
+        if kxz_table == 0:
+            kxz_table = None
+        if kyy_table == 0:
+            kyy_table = None
+        if kyz_table == 0:
+            kyz_table = None
+        if kzz_table == 0:
+            kzz_table = None
+        if cp_table == 0:
+            cp_table = None
+        if hgen_table == 0:
+            hgen_table = None
         assert null == 0, data
         return MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
                      kyz_table, kzz_table, cp_table, hgen_table,

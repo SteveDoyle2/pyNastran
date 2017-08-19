@@ -140,15 +140,113 @@ class EIGC(Method):
     """
     Defines data needed to perform complex eigenvalue analysis
     .. todo: not done
+
+    # inverse power
+    +------+---------+---------+---------+---------+---------+---------+-----+
+    |   1  |    2    |    3    |    4    |    5    |    6    |   7     |  8  |
+    +======+=========+=========+=========+=========+=========+=========+=====+
+    | EIGC |   SID   | METHOD  |         |         |         |   EPS   | ND0 |
+    +------+---------+---------+---------+---------+---------+---------+-----+
+    |      | ALPHAAj | OMEGAAj | ALPHABj | OMEGABj |   Lj    |   NEj   | NDj |
+    +------+---------+---------+---------+---------+---------+---------+-----+
+
+    # complex Lanczos
+    +------+---------+---------+---------+---------+---------+---------+-----+
+    |   1  |    2    |    3    |    4    |    5    |    6    |   7     |  8  |
+    +======+=========+=========+=========+=========+=========+=========+=====+
+    |      | SHIFTRj | SHIFTIj | MBLKSZj | IBLKSZj | KSTEPSj |   NDj   |     |
+    +------+---------+---------+---------+---------+---------+---------+-----+
+
+    # iterative Schur-Rayleigh-Ritz
+    +------+---------+---------+---------+---------+---------+---------+-----+
+    |   1  |    2    |    3    |    4    |    5    |    6    |   7     |  8  |
+    +======+=========+=========+=========+=========+=========+=========+=====+
+    |      | SHIFTR1 | SHIFTI1 |         |         |         | ISRRFLG | ND1 |
+    +------+---------+---------+---------+---------+---------+---------+-----+
     """
     type = 'EIGC'
 
-    def __init__(self, sid, method, norm, G, C, E, ndo, # common
+    def __init__(self, sid, method, grid, component, epsilon, neigenvalues,
+                 norm='MAX', # common
                  mblkszs=None, iblkszs=None, ksteps=None, NJIs=None, # CLAN
                  alphaAjs=None, omegaAjs=None, alphaBjs=None, omegaBjs=None, # HESS/INV
                  LJs=None, NEJs=None, NDJs=None, # HESS/INV
                  shift_r1=None, shift_i1=None, isrr_flag=None, nd1=None, # ISRR
                  comment=''):
+        """
+        Creates a EIGC card, which is required for a SOL 107 analysis
+
+        Parameters
+        ----------
+        sid : int
+            CMETHOD id in the case control deck
+        method : str
+           Method of complex eigenvalue extraction
+             MSC 2014 = [INV, HESS, CLAN, IRAM]
+             NX 8.5 = [INV, HESS, CLAN, ISRR]
+             Autodesk 2015 = [ARNO, HESS, CLAN]
+             INV  : Inverse Power
+             IRAM : Implicitly Restarted Arnoldi method
+             ISRR : Iterative Schur-Rayleigh-Ritz method
+             CLAN : Complex Lanczos.  For linear perturbation of ANALYSIS= DCEIG
+                    with large displacement, CLAN is recommended.
+             HESS : Upper Hessenberg. For linear perturbation of ANALYSIS= DCEIG
+                    with large displacement, please don't use HESS.
+             ARNO: ???
+        norm : str; default='MAX'
+            Method for normalizing eigenvectors
+            valid_norm = {MAX, POINT}
+        grid : int
+            GRID/SPOINT id
+            Required if norm='POINT'
+        component : int
+            Required if norm='POINT'
+        epsilon : float
+
+        neigenvalues : int
+            Number of Eigenvalues
+
+        CLAN Parameters
+        ---------------
+        mblkszs : ???; default=None
+            ???
+        iblkszs : ???; default=None
+            ???
+        ksteps : ???; default=None
+            ???
+        NJIs : ???; default=None
+            ???
+
+        HESS/INV Parameters
+        -------------------
+        alphaAjs : ???; default=None
+            ???
+        omegaAjs : ???; default=None
+            ???
+        alphaBjs : ???; default=None
+            ???
+        omegaBjs : ???; default=None
+            ???
+        LJs : ???; default=None
+            ???
+        NEJs : ???; default=None
+            ???
+        NDJs : ???; default=None
+            ???
+
+        ISSR Parameters
+        ---------------
+        shift_r1 : ???; default=None
+            ???
+        shift_i1 : ???; default=None
+            ???
+        isrr_flag : ???; default=None
+            ???
+        nd1 : ???; default=None
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         Method.__init__(self)
         if comment:
             self.comment = comment
@@ -166,12 +264,12 @@ class EIGC(Method):
         self.norm = norm
         #: Grid or scalar point identification number. Required only if
         #: NORM='POINT'. (Integer>0)
-        self.G = G
+        self.G = grid
 
 
         #: Component number. Required only if NORM='POINT' and G is a
         #: geometric grid point. (1<Integer<6)
-        self.C = C
+        self.C = component
 
         #: Convergence criterion. (Real > 0.0. Default values are:
         #: 10^-4 for METHOD = "INV",
@@ -179,22 +277,48 @@ class EIGC(Method):
         #: 10^-8 for METHOD = "ISRR",
         #: 10^-15 for METHOD = "HESS",
         #: E is machine dependent for METHOD = "CLAN".)
-        self.E = E
-        self.ndo = ndo
+        self.epsilon = epsilon
+
+        #Number of eigenvalues and/or eigenvectors desired. See Remark
+        #3. (Integer > 0 or blank; No default)
+        self.neigenvalues = neigenvalues
 
         # CLAN
+        if mblkszs is None:
+            mblkszs = []
+        if iblkszs is None:
+            iblkszs = []
+        if ksteps is None:
+            ksteps = []
+        if NJIs is None:
+            NJIs = []
         self.mblkszs = mblkszs
         self.iblkszs = iblkszs
         self.ksteps = ksteps
         self.NJIs = NJIs
 
         # HESS
+        if alphaBjs is None:
+            alphaBjs = []
+        if omegaBjs is None:
+            omegaBjs = []
         self.alphaBjs = alphaBjs
         self.omegaBjs = omegaBjs
+
+        if LJs is None:
+            LJs = []
         self.LJs = LJs
+        if NEJs is None:
+            NEJs = []
         self.NEJs = NEJs
+        if NDJs is None:
+            NDJs = []
         self.NDJs = NDJs
 
+        if alphaAjs is None:
+            alphaAjs = []
+        if omegaAjs is None:
+            omegaAjs = []
         self.alphaAjs = alphaAjs
         self.omegaAjs = omegaAjs
         #self.alphaBjs = []
@@ -209,6 +333,22 @@ class EIGC(Method):
         self.shift_i1 = shift_i1
         self.isrr_flag = isrr_flag
         self.nd1 = nd1
+
+    def validate(self):
+        assert self.norm in ['MAX', 'POINT'], 'norm=%r' % self.norm
+        assert len(self.alphaAjs) == len(self.omegaAjs), 'alphaAjs=%s omegaAj=%s' % (self.alphaAjs, self.omegaAjs)
+        if self.method in ['HESS', 'INV']:
+            assert len(self.alphaAjs) == len(self.alphaBjs), 'alphaAjs=%s alphaBj=%s' % (self.alphaAjs, self.alphaBjs)
+            #assert len(self.alphaAjs) == len(self.omegaBjs), 'alphaAjs=%s omegaBjs=%s' % (self.alphaAjs, self.omegaBjs)
+            assert len(self.alphaAjs) == len(self.LJs), 'alphaAjs=%s LJs=%s' % (self.alphaAjs, self.LJs)
+            assert len(self.alphaAjs) == len(self.NEJs), 'alphaAjs=%s NEJs=%s' % (self.alphaAjs, self.NEJs)
+            assert len(self.alphaAjs) == len(self.NDJs), 'alphaAjs=%s NDJs=%s' % (self.alphaAjs, self.NDJs)
+        elif self.method == 'CLAN':
+            assert len(self.alphaAjs) == len(self.omegaAjs)
+            assert len(self.alphaAjs) == len(self.mblkszs), 'alphaAjs=%s mblkszs=%s' % (self.alphaAjs, self.mblkszs)
+            assert len(self.alphaAjs) == len(self.iblkszs)
+            assert len(self.alphaAjs) == len(self.ksteps)
+            assert len(self.alphaAjs) == len(self.NJIs)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -227,16 +367,16 @@ class EIGC(Method):
         assert method in ['ARNO', 'INV', 'HESS', 'CLAN', 'ISRR', 'IRAM'], (
             'method=%s is not ARNO, INV, HESS, CLAN, ISRR, IRAM' % method)
 
-        norm = string_or_blank(card, 3, 'norm')
+        norm = string_or_blank(card, 3, 'norm', 'MAX')
         if norm == 'POINT':
-            G = integer(card, 4, 'G')
-            C = parse_components(card, 5, 'C')
+            grid = integer(card, 4, 'G')
+            component = parse_components(card, 5, 'C')
         else:
-            G = blank(card, 4, 'G')
-            C = blank(card, 5, 'C')
+            grid = blank(card, 4, 'G')
+            component = blank(card, 5, 'C')
 
-        E = double_or_blank(card, 6, 'E')
-        ndo = integer_double_string_or_blank(card, 7, 'ND0')
+        epsilon = double_or_blank(card, 6, 'epsilon')
+        neigenvalues = integer_double_string_or_blank(card, 7, 'ND0/neigenvalues')
 
         # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
         fields = [interpret_value(field) for field in card[9:]]
@@ -286,8 +426,9 @@ class EIGC(Method):
         else:
             msg = 'invalid EIGC method...method=%r' % method
             raise RuntimeError(msg)
-        #assert card.nFields() < 8, 'card = %s' % card
-        return EIGC(sid, method, norm, G, C, E, ndo,
+        #assert card.nfields() < 8, 'card = %s' % card
+        return EIGC(sid, method, grid, component, epsilon, neigenvalues,
+                    norm, # common
                     mblkszs, iblkszs, ksteps, NJIs, # CLAN
                     alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs, # HESS/INV
                     shift_r1, shift_i1, isrr_flag, nd1, # ISRR
@@ -295,6 +436,7 @@ class EIGC(Method):
 
     @staticmethod
     def _load_isrr(nrows, card):
+        """loads the iterative Schur-Rayleigh-Ritz"""
         shift_r1 = []
         shift_i1 = []
         isrr_flag = []
@@ -316,6 +458,7 @@ class EIGC(Method):
 
     @staticmethod
     def _load_clan(nrows, card):
+        """loads complex Lanczos"""
         alphaAjs = []
         omegaAjs = []
         mblkszs = []
@@ -342,10 +485,11 @@ class EIGC(Method):
 
     @staticmethod
     def _load_hess_inv(nrows, method, card):
-        alphaOmega_default = None
+        """loads inverse power"""
+        alpha_omega_default = None
         LJ_default = None
         if method == 'INV':
-            alphaOmega_default = 0.0
+            alpha_omega_default = 0.0
             LJ_default = 1.0
 
         alphaAjs = []
@@ -366,18 +510,17 @@ class EIGC(Method):
 
             i = 9 + 8 * irow
             alphaAjs.append(
-                double_or_blank(card, i, 'alphaA' + str(irow), alphaOmega_default))
+                double_or_blank(card, i, 'alphaA' + str(irow), alpha_omega_default))
             omegaAjs.append(
-                double_or_blank(card, i + 1, 'omegaA' + str(irow), alphaOmega_default))
+                double_or_blank(card, i + 1, 'omegaA' + str(irow), alpha_omega_default))
             alphaBjs.append(
-                double_or_blank(card, i + 2, 'alphaB' + str(irow), alphaOmega_default))
+                double_or_blank(card, i + 2, 'alphaB' + str(irow), alpha_omega_default))
             omegaBjs.append(
-                double_or_blank(card, i + 3, 'omegaB' + str(irow), alphaOmega_default))
+                double_or_blank(card, i + 3, 'omegaB' + str(irow), alpha_omega_default))
             LJs.append(
                 double_or_blank(card, i + 4, 'LJ' + str(irow), LJ_default))
             NEJs.append(NEj)
-            NDJs.append(
-                integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
+            NDJs.append(integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
         return alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs
 
     def cross_reference(self, model):
@@ -427,17 +570,17 @@ class EIGC(Method):
 
     def raw_fields(self):
         list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
-                       self.E, self.ndo, None]
+                       self.epsilon, self.neigenvalues, None]
         list_fields += self.raw_method()
         return list_fields
 
     def repr_fields(self):
-        if self.E is None:
-            E = None
+        if self.epsilon is None:
+            epsilon = None
         else:
-            E = str(self.E)
+            epsilon = self.epsilon
         list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
-                       E, self.ndo, None]
+                       epsilon, self.neigenvalues, None]
         list_fields += self.repr_method()
         return list_fields
 
@@ -758,7 +901,10 @@ class EIGRL(Method):
     def validate(self):
         assert self.norm in [None, 'MAX', 'MASS', 'AF'], 'norm=%r' % self.norm
         assert self.msglvl in [0, 1, 2, 3, 4], 'msglvl=%r' % self.msglvl
-        assert len(self.options) == len(self.values), 'options=%s values=%s' % (self.options, self.values)
+        if len(self.options) != len(self.values):
+            raise RuntimeError('len(options) != len(values); noptions=%s nvalues=%s\n'
+                               'options=%s values=%s' % (len(self.options), len(self.values),
+                                                         self.options, self.values))
         for option, value in zip(self.options, self.values):
             if option == 'NORM':
                 assert value in ['MAX'], 'option=%r value=%r' % (option, value)
