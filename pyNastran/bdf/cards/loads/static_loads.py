@@ -2632,7 +2632,7 @@ class PLOAD4(Load):
 
     def validate(self):
         if self.surf_or_line not in ['SURF', 'LINE']:
-            raise RuntimeError(self.surf_or_line)
+            raise RuntimeError('PLOAD4; sid=%s surf_or_line=%r' % (self.sid, self.surf_or_line))
         if self.line_load_dir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
             raise RuntimeError(self.line_load_dir)
         assert self.g1 != 0, str(self)
@@ -2712,14 +2712,20 @@ class PLOAD4(Load):
         nvector = data[6]
 
         surf_or_line = data[7]
-        #self.line_load_dir = data[8]
-        #assert len(data)==8
 
         eids = [eid]
-        surf_or_line = 'SURF'
-        line_load_dir = 'NORM'
-        return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
-                      surf_or_line, line_load_dir, comment=comment)
+        if data[7] is None:
+            surf_or_line = 'SURF'
+            assert data[8] is None, data
+            line_load_dir = 'NORM'
+        else:
+            surf_or_line = data[7]
+            line_load_dir = data[8]
+        pload4 = PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
+                        surf_or_line, line_load_dir, comment=comment)
+        assert sid < 10000000, pload4
+        assert cid < 10000000, pload4
+        return pload4
 
     def get_loads(self):
         return [self]

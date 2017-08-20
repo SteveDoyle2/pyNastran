@@ -364,8 +364,8 @@ class EIGC(Method):
         """
         sid = integer(card, 1, 'sid')
         method = string(card, 2, 'method')
-        assert method in ['ARNO', 'INV', 'HESS', 'CLAN', 'ISRR', 'IRAM'], (
-            'method=%s is not ARNO, INV, HESS, CLAN, ISRR, IRAM' % method)
+        assert method in ['ARNO', 'INV', 'HESS', 'CLAN', 'ISRR', 'IRAM', 'DET'], (
+            'method=%s is not ARNO, INV, HESS, CLAN, ISRR, IRAM, DET' % method)
 
         norm = string_or_blank(card, 3, 'norm', 'MAX')
         if norm == 'POINT':
@@ -418,7 +418,7 @@ class EIGC(Method):
 
         if method == 'CLAN':
             alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs = cls._load_clan(nrows, card)
-        elif method in ['HESS', 'INV']:  # HESS, INV
+        elif method in ['HESS', 'INV', 'DET']:  # HESS, INV
             alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs = cls._load_hess_inv(
                 nrows, method, card)
         elif method == 'ISRR':
@@ -528,7 +528,7 @@ class EIGC(Method):
 
     def raw_method(self):
         list_fields = []
-        if self.method in ['HESS', 'INV']:
+        if self.method in ['HESS', 'INV', 'DET']:
             for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in zip(
                     self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
                     self.LJs, self.NEJs, self.NDJs):

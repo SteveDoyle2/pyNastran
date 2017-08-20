@@ -319,8 +319,8 @@ class DYNAMICS(GeomCommon):
                 datai = [sid, method, norm, grid, component, epsilon, neigenvalues, 0]
                 while intsi != (-1, -1, -1, -1, -1, -1, -1):
                     aaj, waj, abj, wbj, lj = floats[i+10:i+15]
-                    print('aaj=%s waj=%s abj=%s wbj=%s lj=%s'  % (
-                        aaj, waj, abj, wbj, lj))
+                    #print('aaj=%s waj=%s abj=%s wbj=%s lj=%s'  % (
+                        #aaj, waj, abj, wbj, lj))
                     nej, ndj = ints[i+15:i+17]
                     datai.extend([(aaj, waj, abj, wbj, lj, nej)])
 
@@ -338,12 +338,12 @@ class DYNAMICS(GeomCommon):
                     LJs.append(lj)
                     NEJs.append(nej)
                     NDJs.append(ndj)
-                    print('aaj=%s waj=%s abj=%s wbj=%s lj=%s nej=%s ndj=%s'  % (
-                        aaj, waj, abj, wbj, lj, nej, ndj
-                    ))
+                    #print('aaj=%s waj=%s abj=%s wbj=%s lj=%s nej=%s ndj=%s'  % (
+                        #aaj, waj, abj, wbj, lj, nej, ndj
+                    #))
                     i += 7
                     intsi = ints[i+10:i+17]
-                    print('intsi = ', intsi)
+                    #print('intsi = ', intsi)
                     assert len(intsi) == 7, 'len=%s intsi=%s' % (len(intsi), intsi)
                     #print("intsi = ", intsi)
                     #print()
@@ -389,7 +389,7 @@ class DYNAMICS(GeomCommon):
             # +10 is for the prefix; +7 is for the -1s
             i += 10 + 7 # 3 + 4 from (-1,-1,-1) and (sid,grid,comp,coeff)
             nentries += 1
-            print('--------------')
+            #print('--------------')
         self.increase_card_count('EIGC', nentries)
         return len(data)
 

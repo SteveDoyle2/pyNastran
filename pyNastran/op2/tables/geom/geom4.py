@@ -360,7 +360,7 @@ class GEOM4(GeomCommon):
 
     def _read_rbar(self, data, n):
         """RBAR(6601,66,292) - Record 22"""
-        n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_nx,
+        n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_msc,
                                  'RBAR', self._add_rigid_element_object)
         return n
 
@@ -379,6 +379,7 @@ class GEOM4(GeomCommon):
         s = Struct(b(self._endian + '7i'))
         ntotal = 28
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         elems = []
         for i in range(nelements):
             edata = data[n:n + ntotal]  # 8*4
@@ -401,6 +402,7 @@ class GEOM4(GeomCommon):
         s = Struct(b(self._endian + '7if'))
         ntotal = 32
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         elems = []
         for i in range(nelements):
             edata = data[n:n + ntotal]  # 8*4
@@ -414,8 +416,62 @@ class GEOM4(GeomCommon):
         return n, elems
 
     def _read_rbe1(self, data, n):
-        """RBE1(6801,68,294) - Record 23"""
-        self.log.info('skipping RBE1 in GEOM4\n')
+        """
+        RBE1(6801,68,294) - Record 23
+
+        MSC/NX
+        Word Name Type Description
+        1 EID I Element identification number
+        2 GN  I Grid point identification number for independent degrees-of-freedom
+        3 CN  I Component numbers of independent degrees-of-freedom
+        Words 2 through 3 repeat until (-2,-2) occurs
+
+        4 GM  I Grid point identification number for dependent degrees-of-freedom
+        5 CM  I Component numbers of dependent degreesof-freedom
+        Words 4 through 5 repeat until (-1,-1) occurs
+
+        6 ALPHA RS Thermal expansion coefficient
+        7 UNDEF none Not used
+        """
+        idata = np.fromstring(data[n:], self.idtype)
+        #fdata = np.fromstring(data[n:], self.fdtype)
+
+        i = 0
+        nelements = 0
+        nfields = len(idata)
+        while i < nfields:
+            eid, gn, cn = idata[i:i+3]
+            gni, cni = idata[i+3:i+5]
+            Gni = [gn]
+            Cni = [cn]
+            while (gni, cni) != (-2, -2):
+                print(eid, gn, cn, (gni, cni))
+                Gni.append(gni)
+                Cni.append(cni)
+                i += 2
+                gni, cni = idata[i+3:i+5]
+                #print((gni, cni))
+                #print('----')
+            i += 2
+
+            gmi, cmi = idata[i+3:i+5]
+            #print("gmi,cmi=", gmi, cmi)
+            Gmi = []
+            Cmi = []
+            while (gmi, cmi) != (-1, -1):
+                Gmi.append(gmi)
+                Cmi.append(cmi)
+                i += 2
+                gmi, cmi = idata[i+3:i+5]
+            i += 5
+            #print(idata[i+3:])
+            #idata
+            #print(idata[i:])
+            rbe1 = self.add_rbe1(eid, Gni, Cni, Gmi, Cmi, alpha=0.)
+            #print(rbe1)
+
+            nelements += 1
+        self.card_count['RBE1'] = nelements
         return len(data)
 
     def _read_rbe2(self, data, n):
@@ -1056,11 +1112,12 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
     1 EID   I Element identification number
     2 REFG  I Reference grid point identification number
     3 REFC  I Component numbers at the reference grid point
+
     4 WT1  RS Weighting factor for components of motion at G
     5 C     I Component numbers
     6 G     I Grid point identification number
-
     Word 6 repeats until -1 occurs
+
     Words 4 through 6 repeat until -2 occurs
 
     7 GM    I Grid point identification number for dependent degrees-of-freedom
@@ -1076,6 +1133,7 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
             eid     refg    refc   wt  c      g     ...
     """
     rbe3s = []
+
     #iminus1 = np.where(idata == -1)[0]
     #iminus2 = np.where(idata == -2)[0]
     iminus3 = np.where(idata == -3)[0]
@@ -1088,78 +1146,63 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
     #print('idata =', idata)
     for ii, jj in zip(i, j):
 
-        eid, refg, refc, dummy, c, g = idata[ii:ii+6]
-        wt = fdata[ii+3]
-        weights = [wt]
-        comps = [c]
-        gijs = [g]
-        #print('eid=%s refg=%s refc=%s wt=%s c=%s g=%s' % (
-            #eid, refg, refc, wt, c, g))
-
         idatai = idata[ii:jj]
-        iminus2 = np.where(idatai == -2)[0]
-        if len(iminus2):
-            self.log.info('skipping RBE3 in GEOM4\n')
-            p = np.hstack([[6], iminus2[:-1]+1])
-            q = np.hstack([iminus2[:-1], len(idatai)-1])
-            #print('p=%s q=%s' % (p, q))
+        eid, refg, refc, dummy, comp, grid = idatai[:6]
+        weight = fdata[ii+3]
+        weights = [weight]
+        comps = [comp]
+        gijs = [grid]
+        #print('eid=%s refg=%s refc=%s weight=%s comp=%s grid=%s' % (
+            #eid, refg, refc, weight, comp, grid))
 
-            # -2 loop (gij repeats until -2)
-            for pi, qi in zip(p, q):
+        while 1:
+            weight = fdata[ii + 3]
+            comp = idata[ii + 4]
+            grid = idata[ii + 5]
+            #print('weight=%s comp=%s grid=%s' % (
+                #weight, comp, grid))
+            #if idata[ii + 6] in [-2, -3]:
+                #break
+            while idata[ii + 6] > 0:
+                grid = idata[ii+6]
+                #print('  gridi =', grid)
+                #print('  ii+6=%s gridi=%s extra=%s' % (ii+6, grid, idata[ii+6:jj+1].tolist()))
+                gijs.append(grid)
+                ii += 1
+            #print('ii = ', ii)
+            #print('idata[ii+6:] =', idata[ii+6:].tolist())
+            if idata[ii+6] == -3:
                 break
-                #print('p=%s q=%s' % (p, q))
-                #idataii = idatai[pi:qi]
-                #print(idataii)
-                #iminus1 = np.where(idataii == -1)[0]
-                #r = np.hstack([[6], iminus1[:-1]+1])
-                #s = np.hstack([iminus1[:-1], len(idatai)-1])
+            assert idata[ii+6] == -1, idata[ii+6:]
+            ii += 1 # -1
+            if idata[ii+6] == -2:
+                ii += 1 # -2
+                break
 
-                #ri = r[0]
-                #si = s[0]
-                #idataiii = idataii[ri:si]
-                #print('idatai ', idataiii)
+        gmi = []
+        cmi = []
+        if idata[ii+6] != -3:
+            # gm/cm
+            #print('idata[ii+6]*', idata[ii+6])
+            #print('idata[ii+7]*', idata[ii+7])
+            #print('end = ', idata[ii+6:jj+1].tolist())
 
-                # -1 loop ((wt, c, gij) repeats until -1)
-                #aaa
-                #print()
-            #gijs += endi
-            #Gijs = [gijs]
-        else:
-            assert len(iminus2) == 0, '\nii:jj=%s\nall=%s' % (idatai, idata)
-            iminus1 = np.where(idatai == -1)[0]
-            r = np.hstack([[6], iminus1[:-1]+1])
-            s = np.hstack([iminus1[:-1], len(idatai)])
-            ri = r[0]
-            si = s[0]
-            endi = idatai[ri:ri].tolist()
-            #print('endi1 =', endi)
-            for ri, si in zip(r[1:], s[1:]):
-                wt = fdata[ii+ri]
-                g = idata[ii+ri+1]
-                c = idata[ii+ri+2]
-                weights = [wt]
-                comps = [c]
-                gijs = [g]
-                endi = idatai[ri+2:si].tolist()
-                gijs += idatai[ri:si].tolist()
-                #print('wt=%s g=%s c=%s gijs=%s' % (
-                    #wt, g, c, str(gijs)))
+            while idata[ii+6] != -3:
+                gm = idata[ii+6]
+                cm = idata[ii+7]
+                #print('  gm=%s cm=%s' % (gm, cm))
+                gmi.append(gm)
+                cmi.append(cm)
+                ii += 2
 
-            if ii + s[-1] != jj:
-                msg = 'gm/cm is not supported; ii+q[0]+1=%s ii=%s jj=%s' % (ii+s[-1], ii, jj)
-                raise RuntimeError(msg)
-
-            #print('idatai =', idatai)
-            #print('iminus1 =', iminus1)
-            #print('----------')
-            gmi = []
-            cmi = []
-            alpha = 0.0
-            in_data = [eid, refg, refc, weights, comps, gijs,
-                       gmi, cmi, alpha]
-            rbe3 = RBE3.add_op2_data(in_data)
-            self._add_rigid_element_object(rbe3)
-            rbe3s.append(rbe3)
+        alpha = 0.0
+        in_data = [eid, refg, refc, weights, comps, gijs,
+                   gmi, cmi, alpha]
+        #print('rbe3 =', in_data)
+        rbe3 = RBE3.add_op2_data(in_data)
+        self._add_rigid_element_object(rbe3)
+        rbe3s.append(rbe3)
+        #print('--------------------------------------')
     return rbe3s
 
 def _read_spcadd_mpcadd(model, card_name, datai):

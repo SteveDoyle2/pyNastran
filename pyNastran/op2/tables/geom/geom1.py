@@ -94,6 +94,9 @@ class GEOM1(GeomCommon):
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
             (2101, 21, 2220008) : ['', self._read_fake],
+
+            # nx
+            #(707, 7, 124) :  ['EPOINT', self._read_epoint],  # record 12
         }
 
     def _read_cord1c(self, data, n):

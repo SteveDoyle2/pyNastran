@@ -1,7 +1,8 @@
 """
 defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 """
-# pylint: disable=W0612,C0103,C0302,W0613,C011,R0914,R0201
+# pylint: disable=W0612,C0103
+### pyldint: disable=W0612,C0103,C0302,W0613,R0914,R0201
 from struct import unpack, Struct
 from six import b
 from six.moves import range
@@ -66,85 +67,101 @@ class GEOM2(GeomCommon):
             (8515, 85, 209): ['CFLUID2', self._read_cfluid2],  # record 35 - not done
             (8615, 86, 210): ['CFLUID3', self._read_cfluid3],  # record 36 - not done
             (8715, 87, 211): ['CFLUID4', self._read_cfluid4],  # record 37 - not done
-            (1908, 19, 104): ['CGAP', self._read_cgap],        # record 39 - buggy
-            # record 40
-            # record 41
-            # record 42
-            (10808, 108, 406): ['CHBDYG', self._read_chbdyg], # record 43
-            (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 44 - not done
-            (7308, 73, 253): ['CHEXA', self._read_chexa],     # record 45
-            (12001,120,9011): ['CHEXP', self._read_chexp],    # record 50
-            (1001, 10, 65): ['CMASS1', self._read_cmass1],    # record 51
-            (1101, 11, 66): ['CMASS2', self._read_cmass2],    # record 52
-            (1201, 12, 67): ['CMASS3', self._read_cmass3],    # record 53
-            (1301, 13, 68): ['CMASS4', self._read_cmass4],    # record 54
-            (2508, 25, 0): ['CMFREE', self._read_cmfree],     # record 55 - not done
-            (1401, 14, 63): ['CONM1', self._read_conm1],      # record 56 - not done
-            (1501, 15, 64): ['CONM2', self._read_conm2],      # record 57
-            (1601, 16, 47): ['CONROD', self._read_conrod],    # record 58
-            (12701, 127, 408): ['CONV', self._read_conv],     # record 59 - not tested
-            (8908, 89, 422): ['CONVM', self._read_convm],     # record 60 - not tested
-            # record 61
-            (4108, 41, 280): ['CPENTA', self._read_cpenta],   # record 62
-            # record 63
-            # record 64
-            # record 65
-            # record 66
-            # record 67
-            (9108, 91, 507): ['CQUAD', self._read_cquad],       # record 68 - not tested
-            (2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 69 - maybe buggy on theta/Mcsid field
-            (13900, 139, 9989): ['CQUAD4', self._read_cquad4],  # record 70 - maybe buggy on theta/Mcsid field
-            (4701, 47, 326): ['CQUAD8', self._read_cquad8],     # record 71 - maybe buggy on theta/Mcsid field
-            # record 72
-            # record 73
-            (8009, 80, 367): ['CQUADR', self._read_cquadr],   # record 74 - not tested
-            (9008, 90, 508): ['CQUADX', self._read_cquadx],   # record 75 - not tested
-            # record 76
-            # record 77
-            # record 78
-            # record 79
-            (3001, 30, 48): ['CROD', self._read_crod],        # record 80
-            # record 81
-            # record 82
-            # record 83
-            # record 84
-            # record 85
-            (12201, 122, 9013): ['CTETP', self._read_ctetrap],  # record 86 - not done
-            (5508, 55, 217): ['CTETRA', self._read_ctetra],     # record 87
-            # record 88
-            # record 89
-            # record 90
-            # record 91
-            # record 92
-            (5959, 59, 282): ['CTRIA3', self._read_ctria3],   # record 93 - maybe buggy on theta/Mcsid field
-            # record 94
-            (4801, 48, 327): ['CTRIA6', self._read_ctria6],   # record 95 - buggy
-            # record 96
-            # record 97
-            (9200, 92, 385): ['CTRIAR', self._read_ctriar],   # record 98  - not done
-            # record 99
-            (6108, 61, 107): ['CTRIAX6', self._read_ctriax6], # record 100 - not done
-            # record 101
-            # record 102
-            (3701, 37, 49): ['CTUBE', self._read_ctube],      # record 103
-            (3901, 39, 50): ['CVISC', self._read_cvisc],      # record 104 - not done
-            # record 105
-            # record 106
-            # record 107
-            # record 108
-            # record 109
-            # record 110
-            # record 111
-            # record 112
-            # record 113
-            (5201, 52, 11):   ['PLOTEL', self._read_plotel],    # record 114 - not done
-            # record 115
-            # record 116
-            # record 117
-            (5551, 49, 105): ['SPOINT', self._read_spoint],     # record 118
-            (11601, 116, 9942): ['VUBEAM', self._read_vubeam],  # record 119 - not done
+
+            # MSC
+            (8515, 85, 0): ['CFLUID2', self._read_cfluid2],  # record 36 - not done
+            (8615, 86, 0): ['CFLUID3', self._read_cfluid3],  # record 37 - not done
+            (8715, 87, 0): ['CFLUID4', self._read_cfluid4],  # record 38 - not done
+            (7701, 77, 8881): ['CINT', self._read_fake],     # record 39 - not done
+            (1908, 19, 104): ['CGAP', self._read_cgap],       # record 40 - buggy
+            (8100, 81, 381): ['CHACAB', self._read_fake],     # record 41 - not done
+            (8200, 82, 383): ['CHACBR', self._read_fake],     # record 42 - not done
+            (8308, 83, 405): ['CHBDYE', self._read_fake],     # record 43 - not done
+            (10808, 108, 406): ['CHBDYG', self._read_chbdyg], # record 44
+            (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 45 - not done
+            (7308, 73, 253): ['CHEXA', self._read_chexa],     # record 46
+            # CHEXA20F record 47
+            # CHEXAFD record 48
+            # CHEXAL record 49
+            (12001, 120, 9011): ['CHEXP', self._read_chexp],    # record 50
+            # CHEXPR record 51
+            (1001, 10, 65): ['CMASS1', self._read_cmass1],    # record 52
+            (1101, 11, 66): ['CMASS2', self._read_cmass2],    # record 53
+            (1201, 12, 67): ['CMASS3', self._read_cmass3],    # record 54
+            (1301, 13, 68): ['CMASS4', self._read_cmass4],    # record 55
+            (2508, 25, 0): ['CMFREE', self._read_cmfree],     # record 56 - not done
+            (1401, 14, 63): ['CONM1', self._read_conm1],      # record 57 - not done
+            (1501, 15, 64): ['CONM2', self._read_conm2],      # record 58
+            (1601, 16, 47): ['CONROD', self._read_conrod],    # record 59
+            (12701, 127, 408): ['CONV', self._read_conv],     # record 60 - not tested
+            (8908, 89, 422): ['CONVM', self._read_convm],     # record 61 - not tested
+            (12101, 121, 9012) : ['CPENPR', self._read_fake],  # record 62
+            (4108, 41, 280): ['CPENTA', self._read_cpenta],   # record 63
+            (7509, 75, 9992) : ['CPENPR', self._read_fake],  # record 64
+            (16500, 165, 9999) : ['CPENT15F', self._read_fake],  # record 65
+            (16000, 160, 9999) : ['CPENT6FD', self._read_fake],  # record 66
+            (17000, 170, 9999) : ['CQDX4FD', self._read_fake],  # record 67
+            (17100, 171, 9999) : ['CQDX9FD', self._read_fake],  # record 68
+            (9108, 91, 507): ['CQUAD', self._read_cquad],       # record 69 - not tested
+            (2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 70 - maybe buggy on theta/Mcsid field
+            (13900, 139, 9989): ['CQUAD4', self._read_cquad4],  # record 71 - maybe buggy on theta/Mcsid field
+            (4701, 47, 326): ['CQUAD8', self._read_cquad8],     # record 72 - maybe buggy on theta/Mcsid field
+            (16400, 164, 9999) : ['CQUAD9FD', self._read_fake],  # record 73
+            (11101, 111, 9014) : ['CQUADP', self._read_fake],  # record 74
+            (8009, 80, 367): ['CQUADR', self._read_cquadr],   # record 75 - not tested
+            (9008, 90, 508): ['CQUADX', self._read_cquadx],   # record 76 - not tested
+            (14700, 147, 6662) : ['CRBAR', self._read_fake],  # record 77
+            (17300, 173, 6664) : ['CRBE1', self._read_fake],  # record 78
+            (17200, 172, 6663) : ['CRBE3', self._read_fake],  # record 79
+            (11000, 110, 6667) : ['CRJOINT', self._read_fake],  # record 80
+            (3001, 30, 48): ['CROD', self._read_crod],        # record 81
+            (12600, 126, 6661) : ['CRROD', self._read_fake],  #  record 82
+            (13801, 138, 570) : ['CSEAM', self._read_fake],  #  record 83
+            (3101, 31, 61): ['CSHEAR', self._read_cshear],        # record 84
+            (4408, 44, 227) : ['CSLOT3', self._read_fake],  # record 85
+            (4508, 45, 228) : ['CSLOT4', self._read_fake],  # record 86
+            (12201, 122, 9013): ['CTETP', self._read_ctetrap],  # record 87 - not done
+            (5508, 55, 217): ['CTETRA', self._read_ctetra],     # record 88
+            (7609, 76, 9993) : ['CTETPR', self._read_fake],  # record 89
+            (16600, 166, 9999) : ['CTETR10F', self._read_fake],  # record 90
+            (16100, 161, 9999) : ['CTETR4FD', self._read_fake],  # record 91
+            (14801, 148, 643) : ['CTQUAD', self._read_fake],  # record 92
+            (14901, 149, 644) : ['CTTRIA', self._read_fake],  # record 93
+            (5959, 59, 282): ['CTRIA3', self._read_ctria3],   # record 94 - maybe buggy on theta/Mcsid field
+            (16200, 162, 9999) : ['CTRIA3FD', self._read_fake],  # record 95
+            (4801, 48, 327): ['CTRIA6', self._read_ctria6],   # record 96 - buggy
+            # : ['RADBC', self._read_fake],  record 97
+            # : ['RADBC', self._read_fake],  record 98
+            (9200, 92, 385): ['CTRIAR', self._read_ctriar],   # record 99  - not done
+            # : ['RADBC', self._read_fake],  record 100
+            (6108, 61, 107): ['CTRIAX6', self._read_ctriax6], # record 101 - not done
+            (16700, 167, 9999) : ['CTRIA6FD', self._read_fake],  # record 102
+            (11301, 113, 9015) : ['CTRIAP', self._read_fake],  # record 103
+            (3701, 37, 49): ['CTUBE', self._read_ctube],      # record 104
+            (3901, 39, 50): ['CVISC', self._read_cvisc],      # record 105 - not done
+            (11701, 117, 559) : ['CWELD', self._read_fake],  # record 106
+            (13501, 135, 564) : ['CWELDC', self._read_fake],  # record 107
+            (13601, 136, 562) : ['CWELDG', self._read_fake],  # record 108
+            # : ['RADBC', self._read_fake],  record 109
+            # : ['RADBC', self._read_fake],  record 110
+            # : ['RADBC', self._read_fake],  record 111
+            # : ['RADBC', self._read_fake],  record 112
+            # : ['RADBC', self._read_fake],  record 113
+            # : ['RADBC', self._read_fake],  record 114
+            (5201, 52, 11) :   ['PLOTEL', self._read_plotel],    # record 115 - not done
+            (12801, 128, 417) : ['RADBC', self._read_fake],  # record 116
+            (15501, 155, 634) : ['RADINT', self._read_fake], # record 117
+            (7801, 78, 8883) : ['SINT', self._read_fake],    # record 118
+            (5551, 49, 105) : ['SPOINT', self._read_spoint],     # record 119
+            (11601, 116, 9942) : ['VUBEAM', self._read_vubeam],  # record 120 - not done
+            # record 121
+            # record 121
+            # record 121
+            # record 121
+            # record 121
+            # record 121
+            # record 121
             (2108, 21, 224): ['CAXIF2', self._read_fake],
-            (3101, 31, 61): ['CSHEAR', self._read_cshear],
             (4301, 43, 28): ['GENEL', self._read_fake],
             (5601, 56, 296): ['SESET', self._read_fake],
             (6808, 68, 114): ['CDUM8', self._read_fake],
@@ -171,7 +188,7 @@ class GEOM2(GeomCommon):
             (16400, 164, 9983) : ['CQUAD9FD', self._read_fake],
             (11000, 110, 6667): ['', self._read_fake],
             (12301, 123, 9921): ['', self._read_fake],
-            (12401, 124, 9922): ['', self._read_fake],
+            (12401, 124, 9922): ['FEFACE/PVAL?', self._read_fake],
             (12600, 126, 6661): ['', self._read_fake],
             (14700, 147, 6662): ['', self._read_fake],
             (7309, 73, 0): ['', self._read_fake],
@@ -224,8 +241,8 @@ class GEOM2(GeomCommon):
             (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram],
             (7201, 72, 983) : ['CPLSTN8', self._read_fake],
             (11701, 117, 559) : ['CWELD', self._read_fake],
-            (13501,135,564) : ['CWELDC', self._read_fake],
-            (3601,36,987) : ['CPLSTS8', self._read_fake],
+            (13501, 135, 564) : ['CWELDC', self._read_fake],
+            (3601, 36, 987) : ['CPLSTS8', self._read_fake],
             (13701, 137, 565) : ['CWELDP', self._read_fake],
         }
 
@@ -454,7 +471,7 @@ class GEOM2(GeomCommon):
         for i in range(nelements):
             edata = data[n:n + 56]  # 14*4
             out = struct_obj1.unpack(edata)
-            eid, pid, ga, gb, five, six, seven, f, cid, s, ocid, s1, s2, s3 = out
+            eid, pid, ga, gb, five, sixi, seven, f, cid, s, ocid, s1, s2, s3 = out
             si = [s1, s2, s3]
             if f == -1: # Use Element CID below for orientation
                 x = [None, None, None]

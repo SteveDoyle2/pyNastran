@@ -1,4 +1,5 @@
 SPOINT,100,THRU,102
+EPOINT,103,THRU,107
 GRID     13             .5      .5      3.
 $
 GRID     5              1.      1.      1.
@@ -52,6 +53,7 @@ CTRIA3   11      4       17      14      1
 $
 CBEAM    12      5       22      26      0.     1.       0.
 CBAR     13      1       23      27      0.     1.       0.
+PLOTEL,13,1,23
 
 $ rods
 CROD     14      3       24      28

@@ -424,35 +424,87 @@ class GEOM3(GeomCommon):
         self.card_count['PLOAD3'] = nentries
         return n
 
-    def _read_pload4(self, data, n):  ## inconsistent with DMAP
+    def _read_rbar(self, data, n):
+        """RBAR(6601,66,292) - Record 22"""
+        n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_msc,
+                                 'RBAR', self._add_rigid_element_object)
+        return n
+
+    def _read_pload4(self, data, n):
+        """PLOAD4(7209,72,299) - the marker for Record 20"""
+        n = self._read_dual_card(data, n, self._read_pload4_nx, self._read_pload4_msc,
+                                 'PLOAD4', self._add_load_object)
+        return n
+
+    def _read_pload4_msc(self, data, n):  ## inconsistent with DMAP
         """
         PLOAD4(7209,72,299) - the marker for Record 20
+
+        Word Name Type Description
+        1 SID          I Load set identification number
+        2 EID          I Element identification number
+        3 P(4)        RS Pressures
+        7 G1           I Grid point identification number at a corner of the face
+        8 G34          I Grid point identification number at a diagonal from G1 or CTETRA corner
+        9  CID         I Coordinate system identification number
+        10 N(3)       RS Components of a vector coordinate system defined by CID
+        13 SDRL(2) CHAR4 Load set on element SURF or LINE
+        15 LDIR(2) CHAR4 Load direction
         """
-        ntotal = 48  # 13*4
+        ntotal = 64  # 16*4
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        loads = []
+        for i in range(nentries):
+            edata = data[n:n + 64]
+            out = unpack('2i 4f 3i 3f 8s 8s', edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PLOAD4=%s\n' % str(out))
+            (sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3, surf_or_line, line_load_dir) = out
+
+            surf_or_line = surf_or_line.rstrip()
+            line_load_dir = line_load_dir.rstrip()
+            load = PLOAD4.add_op2_data(
+                [sid, eid, [p1, p2, p3, p4], g1, g34,
+                 cid, [n1, n2, n3], surf_or_line, line_load_dir])
+            loads.append(load)
+            n += ntotal
+        self.card_count['PLOAD4'] = nentries
+        return n, loads
+
+    def _read_pload4_nx(self, data, n):  ## inconsistent with DMAP
+        """
+        PLOAD4(7209,72,299) - the marker for Record 20
+
+        Word Name Type Description
+        1 SID          I Load set identification number
+        2 EID          I Element identification number
+        3 P(4)        RS Pressures
+        7 G1           I Grid point identification number at a corner of the face
+        8 G34          I Grid point identification number at a diagonal from G1 or CTETRA corner
+        9  CID         I Coordinate system identification number
+        10 N(3)       RS Components of a vector coordinate system defined by CID
+        """
+        ntotal = 48  # 12*4
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        loads = []
         for i in range(nentries):
             edata = data[n:n + 48]
-                         #iiffffiiifffi   ssssssssssssssss
             out = unpack('2i 4f 3i 3f', edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD4=%s\n' % str(out))
             (sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3) = out
-            #s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8
-            #sdrlA = s1+s2+s3+s4
-            #sdrlB = s5+s6+s7+s8
-            #line_load_dirA = L1+L2+L3+L4
-            #line_load_dirB = L5+L6+L7+L8
-            sdrlA = None
-            sdrlB = None
-            line_load_dirA = None
-            line_load_dirB = None
+
+            surf_or_line = None
+            line_load_dir = None
             load = PLOAD4.add_op2_data(
                 [sid, eid, [p1, p2, p3, p4], g1, g34,
-                 cid, [n1, n2, n3], sdrlA, sdrlB, line_load_dirA, line_load_dirB])
-            self._add_load_object(load)
+                 cid, [n1, n2, n3], surf_or_line, line_load_dir])
+            loads.append(load)
             n += 48
         self.card_count['PLOAD4'] = nentries
-        return n
+        return n, loads
 
     def _read_ploadx(self, data, n):
         self.log.info('skipping PLOADX in GEOM4\n')
