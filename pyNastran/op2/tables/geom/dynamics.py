@@ -286,8 +286,8 @@ class DYNAMICS(GeomCommon):
         nentries = 0
         while i < nfields:
             sid = ints[i+0]
-            method = (strings[i+1] + strings[i+2]).strip()
-            norm = (strings[i+3] + strings[i+4]).strip()
+            method = (strings[i+1] + strings[i+2]).strip().decode('latin1')
+            norm = (strings[i+3] + strings[i+4]).strip().decode('latin1')
             grid = ints[i+5]
             component = ints[i+6]
             epsilon = floats[i+7]

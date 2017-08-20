@@ -436,7 +436,7 @@ class PSOLID(SolidProperty):
         integ = data[3]
         stress = data[4]
         isop = data[5]
-        fctn = data[6]
+        fctn = data[6].decode('latin1')
 
         if fctn == 'SMEC':
             fctn = 'SMECH'
