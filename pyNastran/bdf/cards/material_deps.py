@@ -1388,11 +1388,6 @@ class MATT8(MaterialDependence):
             return self.G2z_table_ref.tid
         return self._G2z_table
 
-    def G1z_table(self):
-        if self.G1z_table_ref is not None:
-            return self.G1z_table_ref.tid
-        return self._G1z_table
-
     def rho_table(self):
         if self.rho_table_ref is not None:
             return self.rho_table_ref.tid
