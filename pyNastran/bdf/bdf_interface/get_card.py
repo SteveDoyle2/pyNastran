@@ -402,7 +402,6 @@ class GetCard(GetMethods):
 
         if warnings:
             self.log.warning("get_SPCx_node_ids_c1 doesn't consider:\n%s" % warnings.rstrip('\n'))
-
         return node_ids_c1
 
     def get_MPCx_node_ids(self, mpc_id, stop_on_failure=True):
@@ -800,11 +799,6 @@ class GetCard(GetMethods):
                             load_case_id, elem.type, load.type))
 
             elif load.type == 'PLOAD4':
-                # single element per PLOAD
-                #eid = elem.eid
-                #pressures[eids.index(eid)] = p
-                #pressure = load.pressures[0] * scale
-
                 # multiple elements
                 for elem in load.eids_ref:
                     ie = eid_map[elem.eid]
@@ -1120,6 +1114,7 @@ class GetCard(GetMethods):
         for eid, elem in iteritems(self.rigid_elements):
             if elem.type == 'RBE3':
                 if elem.Gmi != []:
+                    # UM are dependent
                     msg = 'UM is not supported; RBE3 eid=%s Gmi=%s' % (elem.eid, elem.Gmi)
                     raise RuntimeError(msg)
                 #list_fields = ['RBE3', elem.eid, None, elem.ref_grid_id, elem.refc]
@@ -2271,7 +2266,6 @@ class GetCard(GetMethods):
         """
         warnings = ''
         spcs = self.get_reduced_spcs(spc_id, stop_on_failure=stop_on_failure)
-        #self.spcs[key] = [constraint]
         nids = []
         comps = []
         for spc in spcs:

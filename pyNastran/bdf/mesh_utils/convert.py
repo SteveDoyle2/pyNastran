@@ -1,6 +1,6 @@
 """
 defines:
- -
+ - convert(model, units_to, units=None)
 """
 from __future__ import print_function
 from six import iteritems, itervalues

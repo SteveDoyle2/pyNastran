@@ -1,3 +1,8 @@
+"""
+defines:
+ - bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
+             is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False)
+"""
 from __future__ import print_function
 import os
 import numpy as np

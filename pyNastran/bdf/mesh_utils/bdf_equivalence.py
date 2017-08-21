@@ -1,3 +1,13 @@
+"""
+defines:
+    model = bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                                  renumber_nodes=False, neq_max=4, xref=True,
+                                  node_set=None,
+                                  size=8, is_double=False,
+                                  remove_collapsed_elements=False,
+                                  avoid_collapsed_elements=False,
+                                  crash_on_collapse=False, log=None, debug=True)
+"""
 from __future__ import print_function
 from six import iteritems, string_types, PY2
 

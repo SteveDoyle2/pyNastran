@@ -889,7 +889,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMeshes, UnXrefMesh):
             flutter.validate()
         for key, gust in sorted(iteritems(self.gusts)):
             gust.validate()
-        #self.mkaeros = []
 
         #------------------------------------------------
         for key, bcs in sorted(iteritems(self.bcs)):

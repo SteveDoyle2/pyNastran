@@ -1,3 +1,11 @@
+"""
+defines:
+ - model = delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.,
+                              max_taper_ratio=4.0)
+ - eids_to_delete = get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
+                                   max_aspect_ratio=100., max_taper_ratio=4.0)
+"""
+
 from __future__ import print_function
 import numpy as np
 from six import iteritems

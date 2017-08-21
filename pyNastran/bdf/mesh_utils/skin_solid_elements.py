@@ -20,6 +20,8 @@ def write_skin_solid_faces(model, skin_filename,
 
     Parameters
     ----------
+    model : BDF()
+        the BDF object
     skin_filename : str
         the file to write
     write_solids : bool; default=False
@@ -103,14 +105,23 @@ def get_solid_skin_faces(model):
     Gets the elements and faces that are skinned from solid elements.
     This doesn't include internal faces or existing shells.
 
+    Parameters
+    ----------
+    model : BDF()
+        the BDF object
+
     Returns
     -------
-    eid_set : Dict[tuple(int, int, ...)] = List[int]
-       key : sorted face
-       value : list of element ids with that face
-    face_map : Dict[tuple(int, int, ...)] = List[int]
-       key : sorted face
-       value : unsorted face
+    eid_set : Dict[sorted_face] = eids
+       sorted_face : tuple(int, int, ...)
+           the face nids in sorted order
+       eids : List[int]
+           list of element ids with that face
+    face_map : Dict[sorted_face] = face
+       sorted_face : tuple(int, int, ...)
+           the face nids in sorted order
+       face : List(int, int, ...)
+           the face nids
     """
     eid_faces = model.get_element_faces()
     face_set = defaultdict(int)
@@ -163,6 +174,8 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
 
     Parameters
     ----------
+    model : BDF()
+        the BDF object
     skin_filename : str
         the file to write
     face_map : dict[sorted_face] : face
@@ -175,7 +188,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
         list of element ids to write
     mids_to_write : List[int, int, ...]
         list of material ids to write
-    eid_set : ???
+    eid_set : dict[face] : eids
         ???
 
     eid_shell : int

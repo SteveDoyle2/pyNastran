@@ -1,3 +1,7 @@
+"""
+defines:
+ - convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge_length=0.0)
+"""
 from __future__ import print_function
 from six import iteritems
 import numpy as np
