@@ -1865,10 +1865,13 @@ class GetCard(GetMethods):
             for etype in etypes_:
                 if etype not in etypes_:
                     continue
+                eids = self._type_to_id_map[etype]
+                if len(eids) == 0:
+                    continue
                 if etype in skip_elements:
                     self.log.warning('skipping etype=%s because there are no properties%s' % (etype, msg))
                     continue
-                eids = self._type_to_id_map[etype]
+
                 try:
                     eid = eids[0]
                 except:
