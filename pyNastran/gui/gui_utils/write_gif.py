@@ -53,7 +53,7 @@ def write_gif(gif_filename, png_filenames, time=2.0, fps=30,
     if not IS_IMAGEIO:
         return False
 
-    assert fps >= 1, fps
+    #assert fps >= 1, fps
     nframes = len(png_filenames)
     duration = time / nframes
 

@@ -99,10 +99,9 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
                          max(model.masses.keys()) if model.masses else 0,
                          max(model.rigid_elements.keys()) if model.rigid_elements else 0,
                         ]) + 1,
-            'pid' : max([
-                max(model.properties.keys()),
-                0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
-            ]) + 1,
+            'pid' : max([max(model.properties.keys()),
+                         0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
+                         ]) + 1,
             'mid' : max(model.material_ids) + 1,
             'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
             'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
