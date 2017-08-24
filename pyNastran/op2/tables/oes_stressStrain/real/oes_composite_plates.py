@@ -6,7 +6,7 @@ import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
 
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -49,6 +49,7 @@ class RealCompositePlateArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
+        """sizes the vectorized attributes of the RealCompositePlateArray"""
         if self.is_built:
             return
 

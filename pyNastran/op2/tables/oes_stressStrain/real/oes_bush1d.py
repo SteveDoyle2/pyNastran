@@ -9,7 +9,7 @@ ints = (int, np.int32)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -54,6 +54,7 @@ class RealBush1DStressArray(OES_Object):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealBush1DStressArray"""
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)
@@ -219,7 +220,7 @@ class RealBush1DStressArray(OES_Object):
         if header is None:
             header = []
         msg = self._get_msgs()
-        (ntimes, ntotal) = self.data.shape[:2]
+        ntimes = self.data.shape[0]
         eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]

@@ -14,12 +14,12 @@ from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
 
 # this is still a requirement, but disabling it so readthedocs works
-#if sys.version_info < (2, 7, 7):
-    #imajor, minor1, minor2 = sys.version_info[:3]
-    ## makes sure we don't get the following bug:
-    ##   Issue #19099: The struct module now supports Unicode format strings.
-    #raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (
-        #imajor, minor1, minor2))
+if sys.version_info < (2, 7, 7):
+    imajor, minor1, minor2 = sys.version_info[:3]
+    # makes sure we don't get the following bug:
+    #   Issue #19099: The struct module now supports Unicode format strings.
+    raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (
+        imajor, minor1, minor2))
 
 class FortranFormat(object):
     """defines basic methods for reading Fortran formatted data files"""
@@ -110,34 +110,36 @@ class FortranFormat(object):
             endian = self._endian
             assert endian is not None, endian
 
+        f.write('\nndata = %s:\n' % n)
         for typei in types:
             assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
 
         if 's' in types:
             strings = unpack(b('%s%is' % (endian, n)), data)
-            f.write("strings = %s\n" % str(strings))
+            f.write("  strings = %s\n" % str(strings))
         if 'i' in types:
             ints = unpack(b('%s%ii' % (endian, nints)), data)
-            f.write("ints    = %s\n" % str(ints))
+            f.write("  ints    = %s\n" % str(ints))
         if 'f' in types:
             floats = unpack(b('%s%if' % (endian, nints)), data)
-            f.write("floats  = %s\n" % str(floats))
+            f.write("  floats  = %s\n" % str(floats))
         if 'd' in types:
             doubles = unpack(b('%s%id' % (endian, ndoubles)), data[:ndoubles*8])
-            f.write("doubles (float64) = %s\n" % str(doubles))
+            f.write("  doubles (float64) = %s\n" % str(doubles))
 
         if 'l' in types:
             longs = unpack(b('%s%il' % (endian, nints)), data)
-            f.write("long  = %s\n" % str(longs))
+            f.write("  long  = %s\n" % str(longs))
         if 'I' in types:
             ints2 = unpack(b('%s%iI' % (endian, nints)), data)
-            f.write("unsigned int = %s\n" % str(ints2))
+            f.write("  unsigned int = %s\n" % str(ints2))
         if 'L' in types:
             longs2 = unpack(b('%s%iL' % (endian, nints)), data)
-            f.write("unsigned long = %s\n" % str(longs2))
+            f.write("  unsigned long = %s\n" % str(longs2))
         if 'q' in types:
             longs = unpack(b('%s%iq' % (endian, ndoubles)), data[:ndoubles*8])
-            f.write("long long (int64) = %s\n" % str(longs))
+            f.write("  long long (int64) = %s\n" % str(longs))
+        f.write('\n')
         return strings, ints, floats
 
     def show_ndata(self, n, types='ifs'):
@@ -397,7 +399,7 @@ class FortranFormat(object):
 
         # we've finished reading all subtables, but have one last marker to read
         self.read_markers([0])
-        self.finish()
+        self._finish()
 
     def _finish(self):
         raise NotImplementedError('overwrite this')
@@ -581,7 +583,7 @@ class FortranFormat(object):
                 #n = record_len
                 #break
             else:
-                if self.table_name in [b'R1TABRG']:
+                if self.table_name in [b'R1TABRG', b'ONRGY1']:
                     data, ndata = self._read_record_ndata()
                 else:
                     data, ndata = self._skip_record_ndata()
@@ -636,6 +638,7 @@ class FortranFormat(object):
         ]
         msg = ''
         if hasattr(self, 'words'):
+            assert len(self.words) in [0, 28], 'table_name=%r len(self.words)=%s words=%s' % (self.table_name, len(self.words), self.words)
             for word in self.words:
                 if word in ['???', 'Title']:
                     continue

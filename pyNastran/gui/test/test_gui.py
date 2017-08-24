@@ -23,7 +23,7 @@ from pyNastran.converters.nastran.nastranIOv import NastranIO
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.panair.panair_io import PanairIO
 from pyNastran.converters.fast.fast_io import FastIO
-from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
+from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
 from pyNastran.converters.shabp.shabp_io import ShabpIO
 from pyNastran.converters.stl.stl_io import STL_IO
 from pyNastran.converters.su2.su2_io import SU2_IO
@@ -31,6 +31,7 @@ from pyNastran.converters.tecplot.tecplot_io import TecplotIO
 from pyNastran.converters.tetgen.tetgen_io import TetgenIO
 from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
 from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
+from pyNastran.converters.dev.avus.avus_io import AvusIO
 
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 from pyNastran.converters.aflr.ugrid.surf_io import SurfIO
@@ -48,7 +49,7 @@ FORMAT_TO_EXTENSION = {
     'cart3d' : ['.tri', '.triq'],
     'tecplot' : ['.plt', '.dat'],
     'ugrid' : ['.ugrid'],
-    'plot3d' : ['.p3d', '.p3da'],
+    #'plot3d' : ['.p3d', '.p3da'],
     'surf' : ['.surf'],
     'lawgs' : ['.wgs'],
     'shabp' : ['.mk5'],
@@ -57,6 +58,7 @@ FORMAT_TO_EXTENSION = {
     'bedge' : ['.bedge'],
     'su2' : ['.su2'],
     'tetgen' : ['.smesh', '.ele'],
+    'avus' : ['.grd'],
 
     # no duplicates are allowed
     #'panair' : ['.inp'],
@@ -75,8 +77,9 @@ EXTENSION_TO_OUPUT_FORMATS = {
 
 class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
               PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
-              #Plot3d_io, ADB_IO, DegenGeomIO,
-              # AbaqusIO, AvusIO,
+              #ADB_IO, DegenGeomIO, #Plot3d_io,
+              # AbaqusIO,
+              AvusIO,
               TecplotIO, FastIO, SurfIO, UGRID_IO, BEdge_IO, SU2_IO):
     """spoofs the gui for testing"""
 
@@ -117,8 +120,7 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
         load_geometry_name = 'load_%s_geometry' % self._formati
         if hasattr(self, load_geometry_name):
             # self.load_nastran_geometry(bdf_filename, None)
-            dirname = None
-            getattr(self, load_geometry_name)(input_filename, dirname)
+            getattr(self, load_geometry_name)(input_filename)
         else:
             msg = "load_geometry_name=%s doesn't exist" % load_geometry_name
             raise NotImplementedError(msg)
@@ -128,8 +130,7 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
         load_results_name = 'load_%s_results' % self._formati
         if hasattr(self, load_results_name):
             # self.load_nastran_ressults(op2_filename, None)
-            dirname = None
-            getattr(self, load_results_name)(output_filename, dirname)
+            getattr(self, load_results_name)(output_filename)
         else:
             msg = "load_results_name=%s doesn't exist" % load_results_name
             raise NotImplementedError(msg)

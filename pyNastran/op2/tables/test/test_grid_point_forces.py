@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import iteritems
+from six import iteritems, StringIO
 import numpy as np
 
 import pyNastran
@@ -59,7 +59,7 @@ class TestGridPointForces(unittest.TestCase):
         ])
         op2 = OP2()
         summation_point = [0., 0., 0.]
-        i_transform = None
+        icd_transform = None
         nid_cd = np.array([
             [1, 0],
             [2, 0],
@@ -73,7 +73,7 @@ class TestGridPointForces(unittest.TestCase):
         #nids = [1]
         #gpforce.extract_interface_loads(
             #nids, eids, coord_out, coords, nid_cd,
-            #i_transform,
+            #icd_transform,
             #xyz_cid0,
             #summation_point,
             #itime=0,
@@ -85,7 +85,7 @@ class TestGridPointForces(unittest.TestCase):
         #nids = [2]
         #gpforce.extract_interface_loads(
             #nids, eids, coord_out, coords, nid_cd,
-            #i_transform,
+            #icd_transform,
             #xyz_cid0,
             #summation_point,
             #itime=0,
@@ -97,7 +97,7 @@ class TestGridPointForces(unittest.TestCase):
         nids = [1, 2]
         gpforce.extract_interface_loads(
             nids, eids, coord_out, coords, nid_cd,
-            i_transform,
+            icd_transform,
             xyz_cid0,
             summation_point,
             itime=0,
@@ -111,8 +111,8 @@ class TestGridPointForces(unittest.TestCase):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, xref=False, debug=False)
 
-        i_transform, beta_transforms = op2.get_displacement_index_transforms()
-        op2.transform_displacements_to_global(i_transform, op2.coords)
+        nids_all, nids_transform, icd_transform = op2.get_displacement_index()
+        op2.transform_displacements_to_global(icd_transform, op2.coords)
 
         gpforce = op2.grid_point_forces[1]
 
@@ -144,7 +144,7 @@ class TestGridPointForces(unittest.TestCase):
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
-                nid_cd, i_transform,
+                nid_cd, icd_transform,
                 xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
@@ -171,9 +171,9 @@ class TestGridPointForces(unittest.TestCase):
         #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
         print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
 
-        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
-        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords)
-        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, i_transform_1, op2_1.coords)
+        nids_all, nids_transform_1, icd_transform_1 = op2_1.get_displacement_index()
+        op2_1.transform_displacements_to_global(icd_transform_1, op2_1.coords)
+        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, icd_transform_1, op2_1.coords)
         #print("disp_new =\n", op2_1.displacements[1].data[0, :2, :])
         #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
         print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
@@ -195,9 +195,9 @@ class TestGridPointForces(unittest.TestCase):
         #bdf_filename2 = os.path.join(folder, 'static_solid_shell_bar.bdf')
         op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
-        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
-        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, i_transform_2, op2_2.coords)
+        nids_all, nids_transform_2, icd_transform_2 = op2_2.get_displacement_index()
+        op2_2.transform_displacements_to_global(icd_transform_2, op2_2.coords)
+        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, icd_transform_2, op2_2.coords)
 
         #print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
         #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
@@ -236,7 +236,7 @@ class TestGridPointForces(unittest.TestCase):
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
-                nid_cd, i_transform_1,
+                nid_cd, icd_transform_1,
                 xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
@@ -257,7 +257,7 @@ class TestGridPointForces(unittest.TestCase):
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
     @unittest.expectedFailure
-    def test_op2_solid_shell_bar_01_gpforce_radial_global_cd(self):
+    def test_broken_op2_solid_shell_bar_01_gpforce_radial_global_cd(self):
         warning_log = SimpleLogger(level='warning')
         debug_log = SimpleLogger(level='debug')
         folder = os.path.join(model_path, 'sol_101_elements')
@@ -296,9 +296,9 @@ class TestGridPointForces(unittest.TestCase):
         #for line in list(disp.data[0, :, :3]):
             #print('%10.4e %10.4e %10.4e' % tuple(line))
 
-        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
-        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
-        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
+        nids_all, nids_transform_1, icd_transform_1 = op2_1.get_displacement_index()
+        op2_1.transform_displacements_to_global(icd_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
+        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, icd_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
         #print('stuff...')
         #disp = op2_1.displacements[1]
         #for line in list(disp.data[0, :, :3]):
@@ -312,9 +312,9 @@ class TestGridPointForces(unittest.TestCase):
         #-----------------------------------------------------------------------
         op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
-        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
-        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, i_transform_2, op2_2.coords, xyz_cid0=xyz_cid0)
+        nids_all, nids_transform_2, icd_transform_2 = op2_2.get_displacement_index()
+        op2_2.transform_displacements_to_global(icd_transform_2, op2_2.coords)
+        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, icd_transform_2, op2_2.coords, xyz_cid0=xyz_cid0)
 
         #print("disp_goal =\n", op2_2.displacements[1].data[0, :4, :])
         #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
@@ -330,7 +330,6 @@ class TestGridPointForces(unittest.TestCase):
             #op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
         #print(msg)
 
-        from six import StringIO
         csv_file = StringIO()
         op2_1.spc_forces[1].write_csv(csv_file)
         op2_1.grid_point_forces[1].write_csv(csv_file)
@@ -352,7 +351,7 @@ class TestGridPointForces(unittest.TestCase):
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, op2_1.coords,
-                nid_cd, i_transform_1,
+                nid_cd, icd_transform_1,
                 xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
@@ -412,10 +411,10 @@ class TestGridPointForces(unittest.TestCase):
         #for line in list(disp.data[0, :, :3]):
             #print('%10.4e %10.4e %10.4e' % tuple(line))
 
-        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
-        op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
+        nids_all, nids_transform_1, icd_transform_1 = op2_1.get_displacement_index()
+        op2_1.transform_displacements_to_global(icd_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
         op2_1.transform_gpforce_to_global(
-            nids_all, nids_transform_1, i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
+            nids_all, nids_transform_1, icd_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
         #print('stuff...')
         #disp = op2_1.displacements[1]
         #for line in list(disp.data[0, :, :3]):
@@ -429,10 +428,10 @@ class TestGridPointForces(unittest.TestCase):
         #-----------------------------------------------------------------------
         op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
-        op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
+        nids_all, nids_transform_2, icd_transform_2 = op2_2.get_displacement_index()
+        op2_2.transform_displacements_to_global(icd_transform_2, op2_2.coords)
         op2_2.transform_gpforce_to_global(
-            nids_all, nids_transform_2, i_transform_2, op2_2.coords)
+            nids_all, nids_transform_2, icd_transform_2, op2_2.coords)
 
         print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
         #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
@@ -462,7 +461,7 @@ class TestGridPointForces(unittest.TestCase):
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, op2_1.coords,
-                nid_cd, i_transform_1,
+                nid_cd, icd_transform_1,
                 xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 

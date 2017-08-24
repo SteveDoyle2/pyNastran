@@ -82,7 +82,8 @@ class CELAS1(SpringElement):
         self.c1 = c1
         self.c2 = c2
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        self._validate_input()
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -125,7 +126,7 @@ class CELAS1(SpringElement):
         c2 = data[5]
         return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
-    def _validate_input(self):
+    def validate(self):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
@@ -134,7 +135,7 @@ class CELAS1(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by CELAS1 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -160,13 +161,6 @@ class CELAS1(SpringElement):
             #for nodeID, node in zip(node_ids, self.nodes):
                 #assert node.node.nid
 
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid] + self.nodes + [self.pid, self.c1, self.c2]
-        fields2 = [elem.eid] + elem.nodes + [elem.pid, elem.c1, elem.c2]
-        return self._is_same_fields(fields1, fields2)
-
     def K(self):
         return self.pid_ref.k
 
@@ -180,15 +174,14 @@ class CELAS1(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS1 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -250,7 +243,8 @@ class CELAS2(SpringElement):
         #: stress coefficient
         self.s = s
         self.prepare_node_ids(nids, allow_empty_nodes=True)
-        self._validate_input()
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -296,7 +290,7 @@ class CELAS2(SpringElement):
         s = data[7]
         return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
-    def _validate_input(self):
+    def validate(self):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
@@ -305,7 +299,7 @@ class CELAS2(SpringElement):
     @property
     def node_ids(self):
         msg = ', which is required by CELAS2 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
@@ -320,12 +314,11 @@ class CELAS2(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS2 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def _verify(self, xref=True):
         eid = self.eid
@@ -346,13 +339,6 @@ class CELAS2(SpringElement):
             assert len(node_ids) == len(self.nodes)
             #for node_id, node in zip(node_id, self.nodes):
                 #assert node.node.nid
-
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid] + self.node_ids + [self.k, self.c1, self.c2]
-        fields2 = [elem.eid] + elem.node_ids + [elem.k, elem.c1, elem.c2]
-        return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.k
@@ -405,6 +391,8 @@ class CELAS3(SpringElement):
         self.pid = pid
         #: Scalar point identification numbers
         self.nodes = nodes
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -444,13 +432,6 @@ class CELAS3(SpringElement):
         s2 = data[3]
         return CELAS3(eid, pid, [s1, s2], comment=comment)
 
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid, self.pid] + self.node_ids
-        fields2 = [elem.eid, elem.pid] + self.node_ids
-        return self._is_same_fields(fields1, fields2)
-
     def K(self):
         return self.pid_ref.k
 
@@ -464,20 +445,19 @@ class CELAS3(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @property
     def node_ids(self):
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return []
@@ -485,8 +465,8 @@ class CELAS3(SpringElement):
     def _verify(self, xref=True):
         eid = self.eid
         node_ids = self.node_ids
-        s1 = self.s1
-        s2 = self.s2
+        s1 = self.nodes[0]
+        s2 = self.nodes[1]
         #ge = self.ge
         #s = self.s
 
@@ -500,7 +480,7 @@ class CELAS3(SpringElement):
             assert self.pid_ref.type in ['PELAS'], self.pid_ref
             assert isinstance(k, float), 'k=%r' % k
             assert len(node_ids) == len(self.nodes)
-            #for nodeID, node in zip(node_ids, self.nodes):
+            #for nid, node in zip(node_ids, self.nodes):
                 #assert node.node.nid
 
     def raw_fields(self):
@@ -546,7 +526,9 @@ class CELAS4(SpringElement):
         #: stiffness of the scalar spring
         self.k = k
         #: Scalar point identification numbers
-        self.nodes = nodes
+        #self.nodes = nodes
+        self.prepare_node_ids(nodes, allow_empty_nodes=True)
+        self.nodes_ref = None
 
     def validate(self):
         assert self.nodes[0] > 0 or self.nodes[1] > 0, 's1=%s s2=%s' % (self.nodes[0], self.nodes[1])
@@ -588,20 +570,15 @@ class CELAS4(SpringElement):
         s2 = data[3]
         return CELAS4(eid, k, [s1, s2], comment=comment)
 
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid, self.k] + self.nodes
-        fields2 = [elem.eid, elem.k] + self.nodes
-        return self._is_same_fields(fields1, fields2)
-
     def K(self):
         return self.k
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         msg = ', which is required by CELAS4 eid=%s' % (self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def get_edge_ids(self):
         return []
@@ -616,12 +593,11 @@ class CELAS4(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS4 eid=%s' % (self.eid)
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def raw_fields(self):
         list_fields = ['CELAS4', self.eid, self.k] + self.node_ids

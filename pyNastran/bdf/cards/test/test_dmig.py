@@ -5,9 +5,8 @@ import os
 from numpy import array, array_equal, sin, cos, radians
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf
-from pyNastran.bdf.bdf import DMI, DMIG
-
+from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf, DMI, DMIG
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -119,8 +118,8 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_5(self):
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'dmig.bdf')
-        model.read_bdf(bdf_name, xref=False, punch=True)
+        bdf_filename = os.path.join(test_path, 'dmig.bdf')
+        model.read_bdf(bdf_filename, xref=False, punch=True)
         out = model.dmigs['POLE'].get_matrix(is_sparse=False)
 
         pole_actual, rows_reversed, cols_reversed = out
@@ -144,6 +143,7 @@ class TestDMIG(unittest.TestCase):
         msg += '\n%s_delta\n%s\n----' % ('POLE', pole_actual-pole_expected)
         self.assertTrue(array_equal(pole_expected, pole_actual), msg)
         a_matrix.get_matrix()
+        save_load_deck(model)
 
     def test_dmig_06(self):
         lines = ['DMIG    ENFORCE 0       1       1       0']

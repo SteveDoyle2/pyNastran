@@ -58,7 +58,7 @@ class NastranGuiAttributes(object):
         self.nNodes = None
         self.nElements = None
         self.model_type = None
-        self.iSubcaseNameMap = None
+        self.isubcase_name_map = None
         self.has_caero = False
         self.dependents_nodes = set([])
         self.i_transform = {}
@@ -139,18 +139,21 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]
-            pid = elem.pid
-            assert not isinstance(pid, integer_types), elem
-            if pid.type in ['PBAR', 'PBEAM']:
+            pid_ref = elem.pid_ref
+            if pid_ref is None:
+                pid_ref = model.Property(elem.pid)
+            assert not isinstance(pid_ref, integer_types), elem
+            ptype = pid_ref.type
+            if ptype in ['PBAR', 'PBEAM']:
                 bar_type = 'bar'
-            elif pid.type in ['PBEAM']:
+            elif ptype in ['PBEAM']:
                 bar_type = 'beam'
-            elif pid.type in ['PBARL', 'PBEAML']:
-                bar_type = pid.Type
+            elif ptype in ['PBARL', 'PBEAML']:
+                bar_type = pid_ref.Type
             else:
                 if debug:
-                    print('NotImplementedError(pid)')
-                raise NotImplementedError(pid)
+                    print('NotImplementedError(pid_ref)')
+                raise NotImplementedError(pid_ref)
             #print('bar_type =', bar_type)
 
             if debug:
@@ -396,25 +399,32 @@ class NastranGeometryHelper(NastranGuiAttributes):
         # dict
         if suport_id in model.suport1:
             suport1 = model.suport1[suport_id]
-            node_ids += suport1.IDs
+            node_ids += suport1.nodes
         else:
             for suport in model.suport:  # TODO: shouldn't this be included?
-                if suport_id in suport.IDs:
+                if suport_id in suport.nodes:
                     node_ids.append(suport_id)
         return np.unique(node_ids)
 
     def _get_material_arrays(self, model, mids):
         """gets e11, e22, e33"""
-        e11 = np.zeros(mids.shape, dtype='float32')
-        e22 = np.zeros(mids.shape, dtype='float32')
-        e33 = np.zeros(mids.shape, dtype='float32')
-        rho = np.zeros(mids.shape, dtype='float32')
-        bulk = np.zeros(mids.shape, dtype='float32')
-        speed_of_sound = np.zeros(mids.shape, dtype='float32')
+        #e11 = np.zeros(mids.shape, dtype='float32')
+        #e22 = np.zeros(mids.shape, dtype='float32')
+        #e33 = np.zeros(mids.shape, dtype='float32')
+        #rho = np.zeros(mids.shape, dtype='float32')
+        #bulk = np.zeros(mids.shape, dtype='float32')
+        #speed_of_sound = np.zeros(mids.shape, dtype='float32')
+
+        e11 = np.full(mids.shape, np.nan, dtype='float32')
+        e22 = np.full(mids.shape, np.nan, dtype='float32')
+        e33 = np.full(mids.shape, np.nan, dtype='float32')
+        rho = np.full(mids.shape, np.nan, dtype='float32')
+        bulk = np.full(mids.shape, np.nan, dtype='float32')
+        speed_of_sound = np.full(mids.shape, np.nan, dtype='float32')
 
         has_mat8 = False
-        has_mat9 = False
         #has_mat10 = False
+        has_mat11 = False
         for umid in np.unique(mids):
             if umid == 0:
                 continue
@@ -425,8 +435,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             try:
                 mat = model.materials[umid]
             except KeyError:
-                print('mids = %s' % mids)
-                print('mids = %s' % model.materials.keys())
+                print("can't find mid=%s" % umid)
+                print('  mids = %s' % mids)
+                print('  mids = %s' % model.materials.keys())
                 continue
                 #raise
             if mat.type == 'MAT1':
@@ -437,11 +448,14 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 e22i = mat.e22
                 has_mat8 = True
                 rhoi = mat.rho
+            #elif mat.type == 'MAT9':
+                # Defines the material properties for linear, temperature-independent,
+                #anisotropic materials for solid isoparametric elements (PSOLID)
             elif mat.type in ['MAT11', 'MAT3D']:
                 e11i = mat.e1
                 e22i = mat.e2
                 e33i = mat.e3
-                has_mat9 = True
+                has_mat11 = True
                 rhoi = mat.rho
             elif mat.type == 'MAT10':
                 bulki = mat.bulk
@@ -462,7 +476,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             rho[i] = rhoi
             bulk[i] = bulki
             speed_of_sound[i] = speed_of_soundi
-        return has_mat8, has_mat9, e11, e22, e33
+        return has_mat8, has_mat11, e11, e22, e33
 
 def tri_quality(p1, p2, p3):
     """gets the quality metrics for a tri"""

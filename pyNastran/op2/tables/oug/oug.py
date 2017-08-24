@@ -311,7 +311,9 @@ class OUG(OP2Common):
             elif self.table_name == b'OUGV1PAT':
                 n = self._read_oug_displacement(data, ndata, is_cid=True)
             elif self.table_name == b'OAG1':
-                n = self._read_oug_acceleration(data, ndata, is_cid=False)
+                n = self._read_oug_acceleration(data, ndata)
+            elif self.table_name == b'OCRUG':
+                n = self._read_oug_displacement(data, ndata, is_cid=False)
             else:
                 raise NotImplementedError(self.code_information())
         elif self.table_code == 7:
@@ -384,6 +386,9 @@ class OUG(OP2Common):
         elif self.table_name in [b'TOUGV1', b'TOUGV2']:
             result_name = 'temperatures'
             assert self.thermal == 1, self.code_information()
+        elif self.table_name in [b'OCRUG']:
+            result_name = 'displacements'
+            assert self.thermal == 0, self.code_information()
         else:
             msg = 'displacements; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
@@ -395,7 +400,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1'], self.table_name
+            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1', 'OCRUG'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,

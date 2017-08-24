@@ -8,7 +8,7 @@ from pyNastran.f06.f06_formatting import get_key0, write_float_13e, write_floats
 from pyNastran.op2.result_objects.element_table_object import RealElementTableArray
 import numpy as np
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -46,6 +46,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the Real1DHeatFluxArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -226,6 +227,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealHeatFluxVU3DArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -493,6 +495,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealHeatFluxVUArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -772,6 +775,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealHeatFluxVUBeamArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1108,6 +1112,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealConvHeatFluxArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1285,6 +1290,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealChbdyHeatFluxArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return

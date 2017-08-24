@@ -50,6 +50,18 @@ class PDAMP(DamperProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a PDAMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            the index of the card that's being parsed
+        comment : str; default=''
+            a comment for the card
+        """
         noffset = icard * 2
         pid = integer(card, 1 + noffset, 'pid')
 
@@ -117,6 +129,7 @@ class PDAMP5(DamperProperty):
         #: B is the mass that multiplies the heat capacity CP on the MAT4
         #: or MAT5 entry.
         self.b = b
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -168,17 +181,16 @@ class PDAMP5(DamperProperty):
         model : BDF()
             the BDF object
         """
-        self.mid = model.Material(self.mid)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid)
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
-            return self.mid
-        return self.mid_ref.mid
+        if self.mid_ref is not None:
+            return self.mid_ref.mid
+        return self.mid
 
     def repr_fields(self):
         return self.raw_fields()
@@ -209,6 +221,7 @@ class PDAMPT(DamperProperty):
         #: Identification number of a TABLEDi entry that defines the
         #: damping force per-unit velocity versus frequency relationship
         self.tbid = tbid
+        self.tbid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -256,19 +269,18 @@ class PDAMPT(DamperProperty):
         model : BDF()
             the BDF object
         """
-        self.tbid = model.TableD(self.tbid)
-        self.tbid_ref = self.tbid
+        self.tbid_ref = model.TableD(self.tbid)
 
     def uncross_reference(self):
         self.tbid = self.Tbid()
-        del self.tbid_ref
+        self.tbid_ref = None
 
     def Tbid(self):
-        if self.tbid == 0:
+        if self.tbid_ref is not None:
+            return self.tbid_ref.tid
+        elif self.tbid == 0:
             return None
-        elif isinstance(self.tbid, integer_types):
-            return self.tbid
-        return self.tbid_ref.tid
+        return self.tbid
 
     def repr_fields(self):
         return self.raw_fields()
@@ -291,6 +303,20 @@ class PVISC(DamperProperty):
     }
 
     def __init__(self, pid, ce, cr, comment=''):
+        """
+        Creates a PVISC card
+
+        Parameters
+        ----------
+        pid : int
+            property id for a CVISC
+        ce : float
+            ???
+        cr : float
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         DamperProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -300,6 +326,18 @@ class PVISC(DamperProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a PMASS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        icard : int; default=0
+            the index of the card that's being parsed
+        comment : str; default=''
+            a comment for the card
+        """
         pid = integer(card, 1 + 4 * icard, 'pid')
         ce = double(card, 2 + 4 * icard, 'ce')
         cr = double_or_blank(card, 3 + 4 * icard, 'cr', 0.)

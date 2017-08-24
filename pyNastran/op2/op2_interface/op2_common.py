@@ -275,38 +275,113 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
         title, subtitle, label = unpack(b(self._endian + '128s128s128s'), data[200:])
-        self.title = title.strip().decode(self.encoding).strip()
-        self.subtitle = subtitle.strip().decode(self.encoding).strip()
-        self.label = label.strip().decode(self.encoding).strip()
-        #print('title = %r' % self.title)
+        self.title = title.decode(self.encoding).strip()
+        subtitle = subtitle.decode(self.encoding)
+        self.label = label.decode(self.encoding).strip()
+        nsubtitle_break = 67
+
+        adpativity_index = subtitle[nsubtitle_break:99].strip()
+        superelement = subtitle[99:].strip()
+
+        subtitle = subtitle[:nsubtitle_break].strip()
+        assert len(superelement) <= 26, 'len=%s superelement=%r' % (len(superelement), superelement)
+        superelement = superelement.strip()
+
+        assert len(subtitle) <= 67, 'len=%s subtitle=%r' % (len(subtitle), subtitle)
+
+        superelement_adaptivity_index = ''
+        if 'SUPERELEMENT' in superelement:
+            # 'SUPERELEMENT 0'
+
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\opt7.op2
+            # 'SUPERELEMENT 0       ,   1'
+            split_superelement = superelement.split()
+            if len(split_superelement) == 2:
+                word, value1 = split_superelement
+                assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
+                subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
+                value1 = int(value1)
+
+                if superelement_adaptivity_index:
+                    superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
+                        superelement_adaptivity_index, value1)
+                else:
+                    superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
+            elif len(split_superelement) == 4:
+                word, value1, comma, value2 = split_superelement
+                assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
+                value1 = int(value1)
+                value2 = int(value2)
+
+                if superelement_adaptivity_index:
+                    superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
+                        superelement_adaptivity_index, value1, value2)
+                else:
+                    superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
+            else:
+                raise RuntimeError(split_superelement)
+
+        if adpativity_index:
+            assert 'ADAPTIVITY INDEX=' in adpativity_index
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
+            #'ADAPTIVITY INDEX=      1'
+            split_adpativity_index = adpativity_index.split()
+            assert len(split_adpativity_index) == 3, split_adpativity_index
+            word1, word2, adpativity_index_value = split_adpativity_index
+            assert word1 == 'ADAPTIVITY', 'split_adpativity_index=%s' % split_adpativity_index
+            assert word2 == 'INDEX=', 'split_adpativity_index=%s' % split_adpativity_index
+
+            adpativity_index_value = int(adpativity_index_value)
+            subtitle = '%s; ADAPTIVITY_INDEX=%s' % (subtitle, adpativity_index_value)
+            if superelement_adaptivity_index:
+                superelement_adaptivity_index = '%s; ADAPTIVITY_INDEX=%s' % (
+                    superelement_adaptivity_index, adpativity_index_value)
+            else:
+                superelement_adaptivity_index = 'ADAPTIVITY_INDEX=%s' % adpativity_index_value
+
+        self.subtitle = subtitle
+        self.superelement_adaptivity_index = superelement_adaptivity_index
+        assert len(self.label) <= 124, 'len=%s label=%r' % (len(self.label), self.label)
 
         #: the subtitle of the subcase
         self.data_code['subtitle'] = self.subtitle
 
+        # the sub-key
+        self.data_code['superelement_adaptivity_index'] = self.superelement_adaptivity_index
+
         #: the label of the subcase
         self.data_code['label'] = self.label
-        self.data_code['title'] = self.title#.decode(self.encoding)
+        self.data_code['title'] = self.title
 
         if self.is_debug_file:
-            self.binary_debug.write('  %-14s = %r\n' % ('count', self._count))
-            self.binary_debug.write('  %-14s = %r\n' % ('title', self.title))
-            self.binary_debug.write('  %-14s = %r\n' % ('subtitle', self.subtitle))
-            self.binary_debug.write('  %-14s = %r\n' % ('label', self.label))
+            self.binary_debug.write(
+                '  %-14s = %r\n' * 5 % (
+                    'count', self._count,
+                    'title', self.title,
+                    'subtitle', self.subtitle,
+                    'label', self.label,
+                    'superelement_adaptivity_index', self.superelement_adaptivity_index))
 
     def _read_title(self, data):
         self._read_title_helper(data)
 
         if hasattr(self, 'isubcase'):
-            if self.isubcase not in self.iSubcaseNameMap:
-                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
+            if self.isubcase not in self.isubcase_name_map:
+                # 100 from label
+                # 20 from subtitle line
+                # 'SUBCASE 2'
+                #self.isubcase_name_map[isubcase] = [self.Subtitle, self.label]
+                self.isubcase_name_map[self.isubcase] = [
+                    self.subtitle, self.superelement_adaptivity_index, self.analysis_code, self.label]
         else:
             raise  RuntimeError('isubcase is not defined')
 
         if hasattr(self, 'subtitle') and hasattr(self, 'label'):
-            code = (self.isubcase, self.analysis_code, self.subtitle)
-            if code not in self.labels:
-                self.subtitles[self.isubcase].append(self.subtitle)
-                self.labels[code] = self.label
+            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index)
+            #print("code =", code)
+            #if code not in self.labels:
+                #self.subtitles[self.isubcase].append(self.subtitle)
+                #self.labels[code] = self.label
 
     def _write_debug_bits(self):
         """
@@ -327,6 +402,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         """
         if self.is_debug_file:
             msg = ''
+            assert len(self.words) in [0, 28], 'table_name=%r len(self.words)=%s words=%s' % (self.table_name, len(self.words), self.words)
             for i, param in enumerate(self.words):
                 if param == 's_code':
                     try:
@@ -349,7 +425,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 try:
                     is_complex = self.is_complex()
                 except AssertionError:
-                    self.binary_debug.write('\n  ERROR: cannot determine is_complex() properly; check_sort_bits!!!\n')
+                    self.binary_debug.write('\n  ERROR: cannot determine is_complex() properly; '
+                                            'check_sort_bits!!!\n')
                     is_complex = '???'
 
                 try:
@@ -422,32 +499,34 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #ni = self.f.tell() - len(data) + 12
         #self.binary_debug.write('**:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), ni, self.n))
 
-        if 0:
-            # we're only going to use the keys if istream=0 (so the beginning of the record)
-            if self.istream == 0 and keys in mapper:
-                pass
-            elif self.isubtable_old == self.isubtable:
-                # we didn't increment the record, so we fix the n+=12 statement we called before
-                # then we toss the keys and use the old geom_keys
-                n = 0
-                keys = self.geom_keys
-            else:
-                msg = 'keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s\n mapper=%s' % (
-                    str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old,
-                    mapper.keys())
-                raise NotImplementedError(msg)
+        #if 0:
+            ## we're only going to use the keys if istream=0 (so the beginning of the record)
+            #if self.istream == 0 and keys in mapper:
+                #pass
+            #elif self.isubtable_old == self.isubtable:
+                ## we didn't increment the record, so we fix the n+=12 statement we called before
+                ## then we toss the keys and use the old geom_keys
+                #n = 0
+                #keys = self.geom_keys
+            #else:
+                #msg = 'keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s\n mapper=%s' % (
+                    #str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old,
+                    #mapper.keys())
+                #raise NotImplementedError(msg)
 
         try:
             name, func = mapper[keys]
         except KeyError:
+            raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
             return n
         if self.is_debug_file:
             self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
         if self.debug:
             self.log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
-
+        self.card_name = name
         n = func(data, n)  # gets all the grid/mat cards
         assert n is not None, name
+        del self.card_name
 
         self.geom_keys = keys
         self.is_start_of_subtable = False
@@ -780,7 +859,15 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             obj.node_gridtype[obj.itotal:itotal2, 0] = nids
             obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
             obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
-            assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
+            if np.abs(floats[:, 1:]).max() != 0:
+                msg = '%s is not a scalar result...do you have p-elements?\n' % (
+                    obj.__class__.__name__)
+                for icol in range(1, 6):
+                    abs_max = np.abs(floats[:, icol]).max()
+                    if abs_max != 0:
+                        msg += 'itime=%s icol=%s max=%s min=%s\n' % (
+                            obj.itime, icol, floats[:, icol].max(), floats[:, icol].min())
+                raise ValueError(msg.rstrip())
             obj.itotal = itotal2
         else:
             dt = None
@@ -815,32 +902,16 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            is_mask = False
             if obj.itime == 0:
                 ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
-                #ints = floats[:, :2].view('int32')
-                #from numpy import array_equal
-                #assert array_equal(ints, intsB)
-
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
-                #obj.Vn = ones(floats.shape, dtype=bool)
-                #obj.Vn[itotal:itotal2, :2] = False
-                #print(obj.Vn)
-                if obj.nonlinear_factor is not None and is_mask:
-                    raise NotImplementedError('masking1')
-                    float_mask = np.arange(nnodes * 8, dtype=np.int32).reshape(nnodes, 8)[:, 2:]
-                    obj.float_mask = float_mask
 
-            if obj.nonlinear_factor is not None and is_mask:
-                raise NotImplementedError('masking2')
-                results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
-            else:
-                floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
-                obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
-                assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+            obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
+            assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
@@ -935,7 +1006,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
             obj.itotal = itotal2
         else:
-        #if 1:
             n = 0
             dt = None
             s = Struct(b(self._endian + '2i6f'))
@@ -973,29 +1043,16 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            is_mask = False
             if obj.itime == 0:
                 ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
-                #ints = floats[:, :2].view('int32')
-                #from numpy import array_equal
-                #assert array_equal(ints, intsB)
 
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
-                #obj.Vn = ones(floats.shape, dtype=bool)
-                #obj.Vn[itotal:itotal2, :2] = False
-                #print(obj.Vn)
-                if obj.nonlinear_factor is not None and is_mask:
-                    float_mask = np.arange(nnodes * 8, dtype=np.int32).reshape(nnodes, 8)[:, 2:]
-                    obj.float_mask = float_mask
 
-            if obj.nonlinear_factor is not None and is_mask:
-                results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
-            else:
-                floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
-                obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
@@ -1342,7 +1399,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
     def _get_code(self):
         code = self.isubcase
         #code = (self.isubcase, self.analysis_code, self._sort_method, self._count, self.subtitle)
-        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, self.subtitle)
+        code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+                self.superelement_adaptivity_index)
         #print('%r' % self.subtitle)
         self.code = code
         #self.log.debug('code = %s' % str(self.code))
@@ -1779,7 +1837,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             auto_return = True
         return auto_return
 
-    def _create_oes_object3(self, nelements, result_name, slot, obj, obj_vector):
+    def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
         """
         Creates the self.obj parameter based on if this is vectorized or not.
 
@@ -1792,8 +1850,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         slot : dict[(int, int, str)=obj
             the self dictionary that will be filled with a
             non-vectorized result
-        obj : OES
-            a pointer to the non-vectorized class
         obj_vector : OESArray
             a pointer to the vectorized class
 
@@ -1805,9 +1861,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             True/False
 
         Since that's confusing, let's say we have real CTETRA stress data.
-        We're going to fill self.solidStress with the class
-        RealSolidStress.  If it were vectorized, we'd fill
-        self.ctetra_stress. with RealSolidStressArray.  So we call:
+        We're going to fill self.ctetra_stress with the class
+        RealSolidStressArray.  So we call:
 
         if self._is_vectorized(RealSolidStressArray, self.ctetra_stress):
             if self._results.is_not_saved(result_vector_name):
@@ -1816,56 +1871,12 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             if self._results.is_not_saved(result_name):
                 return ndata
 
-        auto_return, is_vectorized = self._create_oes_object3(self, nelements,
+        auto_return, is_vectorized = self._create_oes_object4(self, nelements,
                             'ctetra_stress', self.ctetra_stress,
-                            RealSolidStress, RealSolidStressArray)
+                            RealSolidStressArray)
         if auto_return:
             return nelements * ntotal
         """
-        auto_return = False
-        is_vectorized = self._is_vectorized(obj_vector, slot)
-        #print('is_vectorized=%s result_name=%r' % (is_vectorized, result_name))
-        if is_vectorized:
-            #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
-            if self.read_mode == 1:
-                self.create_transient_object(slot, obj_vector)
-                #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
-                self.result_names.add(result_name)
-                #print('self.obj =', self.obj)
-                self.obj.nelements += nelements
-                auto_return = True
-            elif self.read_mode == 2:
-                self.code = self._get_code()
-                #self.log.info("code = %s" % str(self.code))
-
-                # if this is failing, you probably set obj_vector to None...
-                try:
-                    self.obj = slot[self.code]
-                except KeyError:
-                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
-                    msg += "There's probably an extra check for read_mode=1..."
-                    self.log.error(msg)
-                    raise
-                #self.obj.update_data_code(self.data_code)
-                self.obj.build()
-
-        else:  # not vectorized
-            self.code = self._get_code()
-            self.result_names.add(result_name)
-            #print("not vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
-            #self.log.info("code = %s" % str(self.code))
-            if self.read_mode == 1:
-                self.result_names.add(result_name)
-                auto_return = True
-            # pass = 0/2
-            self.create_transient_object(slot, obj)
-
-        if auto_return and self.read_mode == 2:
-            raise RuntimeError('this should never happen...auto_return=True read_mode=2')
-        return auto_return, is_vectorized
-
-    def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
-        """same as _create_oes_object4 except it doesn't support unvectorized objects"""
         auto_return = False
         #is_vectorized = True
         is_vectorized = self._is_vectorized(obj_vector, slot)

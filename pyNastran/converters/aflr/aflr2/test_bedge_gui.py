@@ -27,11 +27,10 @@ class TestBEdgeGUI(unittest.TestCase):
     def test_bedge_geometry(self):
         """tests the bedge gui"""
         bedge_filename = os.path.join(model_path, 'm3.bedge')
-        dirname = None
 
         test = BEdge_GUI()
         test.log = get_logger(log=None, level='warning', encoding='utf-8')
-        test.load_bedge_geometry(bedge_filename, dirname)
+        test.load_bedge_geometry(bedge_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

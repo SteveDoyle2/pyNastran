@@ -496,22 +496,22 @@ class BDFAttributes(object):
         # ------------------------- thermal defaults -------------------------
         # BCs
         #: stores thermal boundary conditions - CONV,RADBC
-        self.bcs = {}  # e.g. RADBC
+        self.bcs = {}    # type: Dict[key, Any]
 
         #: stores PHBDY
-        self.phbdys = {}
+        self.phbdys = {}  # type: Dict[key, Any]
         #: stores convection properties - PCONV, PCONVM ???
-        self.convection_properties = {}
+        self.convection_properties = {}  # type: Dict[key, Any]
         #: stores TEMPD
-        self.tempds = {}
+        self.tempds = {}  # type: Dict[key, Any]
 
         # -------------------------contact cards-------------------------------
-        self.bcrparas = {}
-        self.bctadds = {}
-        self.bctparas = {}
-        self.bctsets = {}
-        self.bsurf = {}
-        self.bsurfs = {}
+        self.bcrparas = {}  # type: Dict[key, Any]
+        self.bctadds = {}  # type: Dict[key, Any]
+        self.bctparas = {}  # type: Dict[key, Any]
+        self.bctsets = {}  # type: Dict[key, Any]
+        self.bsurf = {}  # type: Dict[key, Any]
+        self.bsurfs = {}  # type: Dict[key, Any]
 
         # ---------------------------------------------------------------------
 

@@ -21,6 +21,7 @@ class AppliedLoadsVectorArray(ScalarObject):
         self.itotal = 0
 
     def build(self):
+        """sizes the vectorized attributes of the AppliedLoadsVectorArray"""
         if self.is_built:
             return
         self.eids = zeros(self.itotal, dtype='int32')
@@ -73,7 +74,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -87,7 +88,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:
                     header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            f.write(''.join(header + words))
+            f06.write(''.join(header + words))
 
             f1 = self.data[itime, :, 0]
             f2 = self.data[itime, :, 1]
@@ -100,9 +101,9 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                f06.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (  # TODO: fix this...
                     node_id, eid, source, dx, dy, dz, rx, ry, rz))
-            f.write(page_stamp % page_num)
+            f06.write(page_stamp % page_num)
             page_num += 1
         return page_num-1
 

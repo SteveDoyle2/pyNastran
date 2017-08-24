@@ -5,8 +5,10 @@ from numpy import array, allclose, array_equal, cross
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.utils import TransformLoadWRT
+from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.coordinate_systems import define_coord_e123
 
-bdf = BDF(debug=False)  # don't load this up with stuff
+
 class TestCoords(unittest.TestCase):
     def test_same(self):
         grids = [
@@ -131,7 +133,8 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1r_01(self):
         lines = ['cord1r,2,1,4,3']
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
         card = BDFCard(card)
 
         size = 8
@@ -491,7 +494,8 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
@@ -510,7 +514,8 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1s_01(self):
         lines = ['cord1s,2,1,4,3']
-        card = bdf.process_card(lines)
+        model = BDF(debug=False)
+        card = model.process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
@@ -520,7 +525,7 @@ class TestCoords(unittest.TestCase):
         card.write_card(size, 'dummy')
         card.raw_fields()
 
-        model = BDF()
+        model = BDF(debug=False)
         cid = 2
         g1, g2, g3 = 1, 4, 3
         coord = model.add_cord1s(cid, g1, g2, g3, comment='cord1c')
@@ -566,7 +571,7 @@ class TestCoords(unittest.TestCase):
         #with self.assertRaises(NotImplementedError):
             #self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         cid = 7
         coord2 = model2.add_cord2r(cid, rid=0,
                                   origin=[1.135, .089237, -.0676],
@@ -726,6 +731,31 @@ class TestCoords(unittest.TestCase):
         for cid, coord in sorted(iteritems(model.coords)):
             assert coord.i is not None, coord
 
+    def test_define_coords_from_axes(self):
+        """define_coord_e123"""
+        model = BDF(debug=False)
+        cord2_type = 'CORD2R'
+        cid = 1
+        origin = [0., 0., 0.]
+        rid = 0
+        xaxis = [1., 0., 0.]
+        xzplane = [0., 0., 1.]
+        define_coord_e123(model, cord2_type, cid, origin, rid=0,
+                          xaxis=xaxis, yaxis=None, zaxis=None,
+                          xyplane=None, yzplane=None, xzplane=xzplane, add=True)
+
+        cid = 2
+        xaxis = [1., 0., 0.]
+        xyplane = [1., 0., 1.]
+        define_coord_e123(model, cord2_type, cid, origin, rid=0,
+                          xaxis=xaxis, yaxis=None, zaxis=None,
+                          xyplane=xyplane, yzplane=None, xzplane=None, add=True)
+        yaxis = [0., 1., 0.]
+        xyplane = [1., 1., 0.]
+        define_coord_e123(model, cord2_type, cid, origin, rid=0,
+                          xaxis=xaxis, yaxis=None, zaxis=None,
+                          xyplane=xyplane, yzplane=None, xzplane=None, add=True)
+
 
 def get_nodes(grids, grids_expected, coords):
     model = BDF(debug=False)
@@ -740,6 +770,7 @@ def get_nodes(grids, grids_expected, coords):
         #coord_obj = model.Coord(cid)
 
     model.cross_reference()
+    save_load_deck(model)
 
     for (i, grid) in enumerate(grids_expected):
         (nid, cid, x, y, z) = grid
@@ -749,12 +780,17 @@ def get_nodes(grids, grids_expected, coords):
 
         msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)
         msg += 'n=%s grid=\n%s' % (nid, node)
-        coord = node.cp
-        msg += 'n=%s coord=\n%s' % (node.nid, coord)
-        while coord.rid:
-            msg += 'n=%s rcoord=\n%s' % (node.nid, coord.rid)
-            coord = coord.rid
-        assert allclose(n, pos), msg
+        coord_ref = node.cp_ref
+        msg += 'n=%s coord=\n%s' % (node.nid, coord_ref)
+
+        if not allclose(n, pos):
+            # TODO: this used to work, but the changing xref broken it somehow
+            #       this block probably needs to be slightly updated
+            while coord_ref.rid:
+                msg += 'n=%s rcoord=\n%s' % (node.nid, coord_ref.rid)
+                coord_ref = coord_ref.rid
+                #print('coord_ref = %r' % coord_ref)
+            assert allclose(n, pos), msg
 
 
 if __name__ == '__main__':  # pragma: no cover

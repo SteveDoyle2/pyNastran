@@ -2,7 +2,7 @@ from __future__ import print_function
 from collections import defaultdict
 from codecs import open
 from numpy import cross, allclose
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.bdf.field_writer_8 import print_card_8
 

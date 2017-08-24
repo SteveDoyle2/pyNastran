@@ -1,7 +1,10 @@
 from __future__ import print_function
 import unittest
 from six import StringIO
+
 from pyNastran.bdf.bdf import read_bdf, BDF, CHBDYG, CaseControlDeck
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestThermal(unittest.TestCase):
     def test_thermal_1(self):
@@ -11,11 +14,11 @@ class TestThermal(unittest.TestCase):
         lines = []
         model.case_control_deck = CaseControlDeck(lines, log=None)
 
-        model.add_grid(11, xyz=[0., 0., 0.])
-        model.add_grid(12, xyz=[1., 0., 0.])
-        model.add_grid(13, xyz=[1., 1., 0.])
-        model.add_grid(14, xyz=[0., 1., 0.])
-        model.add_grid(15, xyz=[0., 2., 0.])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(14, [0., 1., 0.])
+        model.add_grid(15, [0., 2., 0.])
 
         eid = 1
         pid = 1
@@ -193,10 +196,8 @@ class TestThermal(unittest.TestCase):
         #print(bdf_filename.getvalue())
 
         bdf_filename2.seek(0)
-        model2 = read_bdf(bdf_filename2, xref=False)
-        print('---------------')
+        model2 = read_bdf(bdf_filename2, xref=False, debug=True)
         model2.safe_cross_reference()
-
 
 
 if __name__ == '__main__':

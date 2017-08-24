@@ -99,6 +99,17 @@ bdf_interface Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`include_file` Module
+-----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.include_file
+
+.. automodule:: pyNastran.bdf.bdf_interface.include_file
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`mirror_mesh` Module
 -------------------------
 

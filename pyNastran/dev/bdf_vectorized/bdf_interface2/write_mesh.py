@@ -4,6 +4,7 @@ This file defines:
 """
 from __future__ import print_function
 import io
+import sys
 from codecs import open
 
 from six import string_types, iteritems, StringIO, PY2
@@ -50,7 +51,6 @@ class WriteMesh(BDFAttributes):
             assert out_filename is not None, out_filename
 
         if PY2:
-            #if not is_file_obj(out_filename):
             if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, (file, StringIO)):
                 return out_filename
             elif not isinstance(out_filename, string_types):

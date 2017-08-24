@@ -9,8 +9,15 @@ from numpy import array, allclose
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestBeams(unittest.TestCase):
+    """
+    tests:
+      - CBEAM, PBEAM, PBEAML, PBCOMP, PBMSECT
+      - CBEAM3, PBEAM3
+    """
     def test_pbeam_01(self):
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
@@ -401,8 +408,8 @@ class TestBeams(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[0., 0., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
         model.cross_reference()
 
         cbeam = model.Element(10)
@@ -429,9 +436,9 @@ class TestBeams(unittest.TestCase):
     def test_cbeam_02(self):
         """CBEAM/PBEAML"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
 
         mid = 1
         E = 3.0e7
@@ -678,7 +685,7 @@ class TestBeams(unittest.TestCase):
         model2 = BDF(debug=False)
         model2.read_bdf('pbeam12.bdf')
 
-        if not os.path.exists('pbeam12.op2') and 0:
+        if not os.path.exists('pbeam12.op2') and 0:  # pragma: no cover
             os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
         os.remove('pbeam12.bdf')
 
@@ -695,6 +702,96 @@ class TestBeams(unittest.TestCase):
 
             cg = array([0.5, 0., 0.], dtype='float32')
             print('cg =', op2_cg)
+
+    def test_pbcomp(self):
+        """tests a PBCOMP"""
+        model = BDF(debug=False)
+        pid = 100
+        mid = 101
+        form = 'cat'
+        options = {}
+        y = [0., 1.]
+        z = [0., 1.]
+        c = [0., 1.]
+        mids = [mid, mid]
+        pbcomp = model.add_pbcomp(pid, mid, y, z, c, mids, area=0.0,
+                                  i1=0.0, i2=0.0, i12=0.0, j=0.0, nsm=0.0,
+                                  k1=1.0, k2=1.0, m1=0.0, m2=0.0, n1=0.0, n2=0.0,
+                                  symopt=0, comment='pbcomp')
+        pbcomp.validate()
+        pbcomp.raw_fields()
+        pbcomp.write_card()
+        pbcomp.write_card(size=16)
+
+        eid = 10
+        nids = [1, 5]
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None, sa=0, sb=0,
+                                comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [1., 0., 0.])
+        model.validate()
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+        save_load_deck(model)
+
+    def test_pbmsect(self):
+        """tests a PBMSECT"""
+        model = BDF(debug=False)
+        pid = 10
+        mid = 11
+        form = 'GS'
+        options = {'OUTP' : 2}
+        #pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
+        pbrsect = model.add_pbmsect(pid, mid, form, options, comment='pbmsect')
+
+        pbrsect.validate()
+        pbrsect.raw_fields()
+        pbrsect.write_card()
+        pbrsect.write_card(size=16)
+
+        #PBMSECT 32      10      OP
+            #OUTP=101,T=0.1,brp=102,brp=103,brp=104,nsm=0.015
+
+    def test_pbeam3(self):
+        """tests a PBEAM3"""
+        model = BDF(debug=False)
+        pid = 10
+        mid = 11
+        A = 1.0
+        iz = 2.0
+        iy = 3.0
+        iyz = 0.4
+        j = 5.0
+        #form = 'GS'
+        #options = {'OUTP' : 2}
+        #pbrsect = model.add_pbrsect(pid, mid, form, options, comment='pbrsect')
+        pbeam3 = model.add_pbeam3(pid, mid, A, iz, iy, iyz, j, nsm=0.,
+                                  cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
+                                  comment='pbeam3')
+        model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
+
+        pbeam3.validate()
+        #pbeam3.raw_fields()
+        pbeam3.write_card()
+        pbeam3.write_card(size=16)
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        pbeam3.write_card()
+        pbeam3.write_card(size=16)
+
+        model.uncross_reference()
+        pbeam3.write_card()
+        pbeam3.write_card(size=16)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class WeightResponse(object):
     def __init__(self):
         self.n = 1
@@ -8,6 +7,97 @@ class WeightResponse(object):
         self._itable = 0
         self.is_built = False
         self.internal_id = []
+
+    def add_from_op2(self, out):
+        """
+        Weight Response
+        ---------------
+        1 IRID         I Internal response identification number
+        2 RID          I External response identification number
+        3 TYPE(C)      I Response type
+        4 LABEL(2) CHAR4 Label
+        6 REGION       I Region identifier
+        7 SCID         I Subcase identification number
+        8 UNDEF(2)     I Not used
+        10 SEID        I Superelement identification number or ALL
+        11 UNDEF(2)    I Not used
+
+        13 UNDEF       I Not used
+        14 TYFLG       I Flag to indicate how response is referenced
+        15 SEID        I Superelement identificaiton number
+
+        ---> 3i 8s 7i 3i
+
+        #                             -----  WEIGHT RESPONSE  -----
+        # ---------------------------------------------------------------------------------
+        #  INTERNAL  DRESP1  RESPONSE  ROW  COLUMN  LOWER     INPUT      OUTPUT     UPPER
+        #     ID       ID     LABEL     ID    ID    BOUND     VALUE       VALUE     BOUND
+        # ---------------------------------------------------------------------------------
+        #       1       1    WEIGHT     3     3       N/A   2.9861E+05  2.9852E+05   N/A
+        #(1, 1,    1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
+        #(1, 1000, 1, 'W       ', 0, 1,    3, 3, 0, 0, 0, 0, 0, 0)
+        """
+        # F:\work\pyNastran\examples\Dropbox\move_tpl\mbcgen.op2
+        # (1,  15, 1, 'W       ', -1,    1, 3, 3, 0, 0, 0, 0, 0, 10)
+
+        # F:\work\pyNastran\examples\Dropbox\move_tpl\i2002.op2
+        # (20, 15, 1, 'W       ', -1,    1, 3, 3, 0, 0, 0, 0, 0, 20)
+
+        # F:\work\pyNastran\examples\Dropbox\move_tpl\edr2n.op2
+        # (1, 201, 1, 'WEIGHT  ', -1,    0, 3, 3, 0, 0, 0, 0, 0, 100)
+
+        # F:\work\pyNastran\examples\Dropbox\move_tpl\ss200m2.op2
+        # (1,   1, 1, 'W       ', 0, 30001, 3, 3, 0, 0, 0, 0, 0, 300)
+
+        # F:\work\pyNastran\examples\Dropbox\move_tpl\mcso43.op2
+        # (1,  10, 1, 'W       ', 0,     1, 3, 3, 0, 0, 0, 0, 1, 0)
+        #--------------------------
+        # common
+        #
+        # per the R1TAB DMAP page:
+        #   all indicies are downshift by 1
+        #   indices above out[3] are off by +2 because of the 2 field response_label
+        internal_id = out[0]
+        dresp_id = out[1]
+        response_type = out[2]
+        response_label = out[3].strip()
+        # -1 for 2 field wide response_label
+        region = out[4]
+        subcase = out[5]
+        type_flag = out[12]  # no meaning per MSC DMAP 2005
+        seid = out[13]
+
+        #--------------------------------------------------
+        #print(out)
+        #row_id = out[4]
+
+        # these should be blank?
+        row_id = out[6]
+        column_id = out[7]
+        seid_weight = out[8]
+
+        assert np.abs(out[8:-1]).sum() == 0.0, 'out=%s 8=%s' % (out, out[8:-1])
+        assert seid == out[-1]
+        #assert out[-1] in [0, 1, 2, 3, 4, 5, 10, 20, 100, 200, 300], out
+        #dunno_8 = out[8]
+        #dunno_9 = out[9]
+        #dunno_10 = out[10]
+        #dunno_11 = out[11]
+        #dunno_12 = out[12]
+        #msg = ('WEIGHT - response_type=%r response_label=%r row_id=%r column_id=%r '
+            #'6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r seid=%r' % (
+            #response_type, response_label, row_id, column_id,
+            #dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, seid))
+        #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
+        #print(out)
+        #msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
+            #response_label, region, subcase, row_id, column_id)
+        self.append(internal_id, dresp_id, response_label, region,
+                    subcase, type_flag, seid,
+                    row_id, column_id)
+        #print(msg)
+        #self.log.debug(msg)
+
     def append(self, internal_id, dresp_id, response_label, region,
                subcase, type_flag, seid,
                row_id, column_id):
@@ -23,6 +113,7 @@ class WeightResponse(object):
         self._n += 1
         #if self.n == self._n:
             #print(self)
+
     def __repr__(self):
         msg = 'WeightResponse()\n'
         msg += '  n=%s\n' % self.n

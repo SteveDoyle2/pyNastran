@@ -9,109 +9,6 @@ from six import iteritems, string_types, integer_types
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf
 
-def make_release_map(model, bar_beam_eids, debug=False):  # pragma: no cover
-    """may be used later"""
-    bar_types = {
-        # PBAR
-        'bar' : [],
-
-        # PBEAML/PBARL
-        "ROD": [],
-        "TUBE": [],
-        "TUBE2" : [],
-        "I": [],
-        "CHAN": [],
-        "T": [],
-        "BOX": [],
-        "BAR": [],
-        "CROSS": [],
-        "H": [],
-        "T1": [],
-        "I1": [],
-        "CHAN1": [],
-        "Z": [],
-        "CHAN2": [],
-        "T2": [],
-        "BOX1": [],
-        "HEXA": [],
-        "HAT": [],
-        "HAT1": [],
-        "DBOX": [],  # was 12
-
-        # PBEAM
-        'beam' : [],
-
-        # PBEAML specfic
-        "L" : [],
-    }  # for GROUP="MSCBML0"
-    #allowed_types = [
-        #'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
-        #'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
-        #'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z', 'bar', 'beam',
-    #]
-
-    # bar_types['bar'] = [ [...], [...], [...] ]
-    #bar_types = defaultdict(lambda : defaultdict(list))
-
-    found_bar_types = set([])
-    #neids = len(self.element_ids)
-    for bar_type, data in iteritems(bar_types):
-        eids = []
-        lines_bar_y = []
-        lines_bar_z = []
-        bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
-
-
-        nid_release_map = defaultdict(list)
-
-        #debug = True
-        bar_nids = set([])
-        #print('bar_beam_eids = %s' % bar_beam_eids)
-        for eid in bar_beam_eids:
-            if eid not in self.eid_map:
-                model.log.error('eid=%s is not a valid bar/beam element...' % eid)
-                if debug:
-                    print('eid=%s is not a valid bar/beam element...' % eid)
-                continue
-            ieid = self.eid_map[eid]
-            elem = model.elements[eid]
-            pid = elem.pid
-            assert not isinstance(pid, integer_types), elem
-            if pid.type in ['PBAR', 'PBEAM']:
-                bar_type = 'bar'
-            elif pid.type in ['PBEAM']:
-                bar_type = 'beam'
-            elif pid.type in ['PBARL', 'PBEAML']:
-                bar_type = pid.Type
-            else:
-                if debug:
-                    print('NotImplementedError(pid)')
-                raise NotImplementedError(pid)
-            #print('bar_type =', bar_type)
-
-            if debug:
-                print('%s' % elem)
-                print('  bar_type =', bar_type)
-            found_bar_types.add(bar_type)
-
-            (nid1, nid2) = elem.node_ids
-            bar_nids.update([nid1, nid2])
-            node1 = model.nodes[nid1]
-            node2 = model.nodes[nid2]
-            xyz1 = node1.get_position()
-            xyz2 = node2.get_position()
-            #centroid = (xyz1 + xyz2) / 2.
-            i = xyz2 - xyz1
-            lengthi = np.linalg.norm(i)
-            ihat = i / lengthi
-
-            if elem.pa != 0:
-                #assert elem.pa in [], elem.pa
-                nid_release_map[nid1].append((eid, elem.pa))
-            if elem.pb != 0:
-                nid_release_map[nid2].append((eid, elem.pb))
-        return nid_release_map
-
 
 def split_cbars_by_pin_flag(bdf_filename,
                             pin_flags_filename=None, bdf_filename_out=None,
@@ -156,7 +53,7 @@ def split_cbars_by_pin_flag(bdf_filename,
     bar_beam_eids = out['CBAR'] + out['CBEAM']
 
     pin_flag_map = {}
-    #with open('modes_old.bdf', 'w') as bdf_file:
+
     nid_new = max(model.nodes) + 1
     eid_new = max(model.elements) + 1
     for eid in sorted(list(model.elements.keys())):
@@ -173,7 +70,7 @@ def split_cbars_by_pin_flag(bdf_filename,
             xyz_a = model.nodes[ga].xyz
             xyz_b = model.nodes[gb].xyz
             xyz_mid = (xyz_a + xyz_b) / 2.
-            model.add_grid(nid_new, cp=0, xyz=xyz_mid, cd=0, ps='', seid=0,
+            model.add_grid(nid_new, xyz_mid, cp=0, cd=0, ps='', seid=0,
                            comment='')
 
             comment = elem.comment

@@ -15,11 +15,12 @@ All solid elements are SolidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import Any
 from six import integer_types
 from six.moves import range
 import numpy as np
 from numpy import dot, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area
@@ -67,6 +68,7 @@ _chexa_faces = (
 )
 
 def volume4(n1, n2, n3, n4):
+    # type: (Any, Any, Any, Any) -> float
     r"""
     Gets the volume, :math:`V`, of the tetrahedron.
 
@@ -106,6 +108,8 @@ class SolidElement(Element):
 
     def __init__(self):
         Element.__init__(self)
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def _update_field_helper(self, n, value):
         if n - 3 < len(self.nodes):
@@ -119,24 +123,30 @@ class SolidElement(Element):
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def E(self):
+        # type: () -> float
         return self.pid_ref.mid_ref.E()
 
     def G(self):
+        # type: () -> float
         return self.pid_ref.mid_ref.G()
 
     def Nu(self):
+        # type: () -> float
         return self.pid_ref.mid_ref.Nu()
 
     def Volume(self):
+        # type: () -> float
         """
         Base volume method that should be overwritten
         """
-        pass
+        return 0.
 
     def Mass(self):
+        # type: () -> float
         """
         Calculates the mass of the solid element
         Mass = Rho * Volume
@@ -145,12 +155,14 @@ class SolidElement(Element):
         return self.Rho() * self.Volume()
 
     def Mid(self):
+        # type: () -> int
         """
         Returns the material ID as an integer
         """
         return self.pid_ref.Mid()
 
     def Rho(self):
+        # type: () -> float
         """
         Returns the density
         """
@@ -163,15 +175,6 @@ class SolidElement(Element):
 
     def get_face_area_centroid_normal(self, nid_opposite, nid=None):
         return self.get_face_area_centroid_normal(nid_opposite, nid)
-
-    def _is_same_card(self, elem):
-        if self.type != elem.type:
-            return False
-        fields1 = [self.eid, self.Pid()] + self.nodes
-        fields2 = [elem.eid, elem.Pid()] + elem.nodes
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self._is_same_fields(fields1, fields2)
 
     def raw_fields(self):
         list_fields = [self.type, self.eid, self.Pid()] + self.node_ids
@@ -283,10 +286,8 @@ class CHEXA8(SolidElement):
             the BDF object
         """
         msg = ' which is required by CHEXA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -387,7 +388,8 @@ class CHEXA8(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
 
     def get_face(self, nid_opposite, nid):
         nids = self.node_ids[:8]
@@ -403,7 +405,7 @@ class CHEXA8(SolidElement):
             G3 - the grid point diagonally opposite of G1
         """
         nids = self.node_ids[:8]
-        return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:8])
+        return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:8])
 
     def get_edge_ids(self):
         """
@@ -561,10 +563,8 @@ class CHEXA20(SolidElement):
             the BDF object
         """
         msg = ' which is required by CHEXA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -638,7 +638,7 @@ class CHEXA20(SolidElement):
             G3 - the grid point diagonally opposite of G1
         """
         nids = self.node_ids[:8]
-        return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:8])
+        return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:8])
 
     def _verify(self, xref=False):
         eid = self.eid
@@ -679,7 +679,8 @@ class CHEXA20(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+        return nids
 
 
 class CIHEX1(CHEXA8):
@@ -839,10 +840,8 @@ class CPENTA6(SolidElement):
             the BDF object
         """
         msg = ' which is required by CPENTA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -903,9 +902,9 @@ class CPENTA6(SolidElement):
 
     def get_face_area_centroid_normal(self, nid, nid_opposite=None):
         nids = self.node_ids[:6]
-        return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:6])
+        return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:6])
 
-    def getFaceNodesAndArea(self, nid, nid_opposite):
+    def get_face_nodes_and_area(self, nid, nid_opposite):
         nids = self.node_ids[:6]
         indx1 = nids.index(nid)
         indx2 = nids.index(nid_opposite)
@@ -990,12 +989,13 @@ class CPENTA6(SolidElement):
         return abs(volume)
 
     def raw_fields(self):
-        list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allow_empty_nodes=False)
+        list_fields = ['CPENTA', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
 
 def cpenta_face(nid, nid_opposite, nids):
     assert len(nids) == 6, nids
@@ -1094,6 +1094,8 @@ def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):
         G1 - a grid point on the corner of a face
     nid_opposite : int
         G3 - the grid point diagonally opposite of G1
+    nodes_ref : List[GRID]
+        the GRID objects
 
     # top   (7-6-5-4)
     # btm   (0-1-2-3)
@@ -1239,10 +1241,8 @@ class CPENTA15(SolidElement):
             the BDF object
         """
         msg = ' which is required by CPENTA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -1281,7 +1281,7 @@ class CPENTA15(SolidElement):
 
     def get_face_area_centroid_normal(self, nid, nid_opposite=None):
         nids = self.node_ids[:6]
-        return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes[:6])
+        return cpenta_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:6])
 
     def get_edge_ids(self):
         """
@@ -1345,7 +1345,8 @@ class CPENTA15(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+        return nids
 
 
 class CPYRAM5(SolidElement):
@@ -1430,10 +1431,8 @@ class CPYRAM5(SolidElement):
             the BDF object
         """
         msg = ' which is required by CPYRAM eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -1520,7 +1519,8 @@ class CPYRAM5(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
 
 
 class CPYRAM13(SolidElement):
@@ -1625,10 +1625,8 @@ class CPYRAM13(SolidElement):
             the BDF object
         """
         msg = ' which is required by CPYRAM eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -1720,7 +1718,8 @@ class CPYRAM13(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+        return nids
 
 
 class CTETRA4(SolidElement):
@@ -1871,10 +1870,8 @@ class CTETRA4(SolidElement):
             the BDF object
         """
         msg = ' which is required by CTETRA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def _verify(self, xref=False):
         eid = self.eid
@@ -1916,7 +1913,7 @@ class CTETRA4(SolidElement):
         (n1, n2, n3, n4) = self.get_node_positions()
         return (n1 + n2 + n3 + n4) / 4.
 
-    def getFaceNodes(self, nid_opposite, nid=None):
+    def get_face_nodes(self, nid_opposite, nid=None):
         assert nid is None, nid
         nids = self.node_ids[:4]
         indx = nids.index(nid_opposite)
@@ -1929,11 +1926,13 @@ class CTETRA4(SolidElement):
 
     def get_face_area_centroid_normal(self, nid, nid_opposite):
         return ctetra_face_area_centroid_normal(nid, nid_opposite,
-                                                self.node_ids, self.nodes)
+                                                self.node_ids, self.nodes_ref)
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=False)
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+        return nids
+
 
 def ctetra_face(nid, nid_opposite, nids):
     assert len(nids) == 4, nids
@@ -2012,7 +2011,7 @@ class CTETRA10(SolidElement):
 
     def get_face_area_centroid_normal(self, nid_opposite, nid=None):
         return ctetra_face_area_centroid_normal(nid_opposite, nid,
-                                                self.node_ids[:4], self.nodes[:4])
+                                                self.node_ids[:4], self.nodes_ref[:4])
 
     def __init__(self, eid, pid, nids, comment=''):
         """
@@ -2095,10 +2094,8 @@ class CTETRA10(SolidElement):
             the BDF object
         """
         msg = ' which is required by CTETRA eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     @property
     def faces(self):
@@ -2193,7 +2190,7 @@ class CTETRA10(SolidElement):
         (n1, n2, n3, n4) = self.get_node_positions()[:4]
         return (n1 + n2 + n3 + n4) / 4.
 
-    def getFaceNodes(self, nid_opposite, nid=None):
+    def get_face_nodes(self, nid_opposite, nid=None):
         nids = self.node_ids[:4]
         indx = nids.index(nid_opposite)
         nids.pop(indx)
@@ -2201,5 +2198,5 @@ class CTETRA10(SolidElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allow_empty_nodes=True)
-
+        nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+        return nids

@@ -9,7 +9,7 @@ from numpy import zeros, array_equal
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_13e, _eigenvalue_header
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -38,6 +38,7 @@ class RealSpringArray(OES_Object):
         raise NotImplementedError()
 
     def build(self):
+        """sizes the vectorized attributes of the RealSpringArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -185,7 +186,6 @@ class RealSpringArray(OES_Object):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
         nwrite = len(eids)
         nrows = nwrite // 4
         nleftover = nwrite - nrows * 4
@@ -318,6 +318,7 @@ class RealNonlinearSpringStressArray(OES_Object):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealNonlinearSpringStressArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return

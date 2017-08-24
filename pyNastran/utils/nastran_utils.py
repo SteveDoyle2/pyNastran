@@ -1,7 +1,10 @@
 import subprocess
 from six import iteritems
+import typing
+
 
 def run_nastran(fname, keywords=None):
+    # type: (str, Dict[str, str], bool) -> float
     """
     Call a nastran subprocess with the given filename
 

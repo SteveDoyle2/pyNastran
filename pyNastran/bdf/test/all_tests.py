@@ -10,12 +10,13 @@ from pyNastran.bdf.mesh_utils.test.test_mesh_utils import TestMeshUtils
 from pyNastran.bdf.mesh_utils.test.test_convert import TestConvert
 from pyNastran.bdf.mesh_utils.test.test_renumber import TestRenumber
 from pyNastran.bdf.mesh_utils.test.test_remove_unused import TestRemoveUnused
+from pyNastran.bdf.mesh_utils.test.test_mass import TestMass
+from pyNastran.bdf.mesh_utils.test.test_sum_loads import TestLoadSum
+
 from pyNastran.bdf.patran_utils.test_patran import TestPatran
 
 # unit
-from pyNastran.bdf.test.unit.test_mass import TestMass
 from pyNastran.bdf.test.unit.test_read_write import TestReadWrite
-from pyNastran.bdf.test.unit.test_sum_loads import TestLoadSum
 from pyNastran.bdf.test.test_openmdao import TestOpenMDAO
 
 # bdf_interface

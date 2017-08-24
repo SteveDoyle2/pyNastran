@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import unittest
 from numpy import allclose, array
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
@@ -163,7 +163,7 @@ class TestBDF(Tester):
         assert len(diff_cards2) == 0, diff_cards2
 
         for fem in [fem1, fem2]:
-            assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
+            assert len(fem.params) == 5, 'len(params) = %i' % len(fem.params)
             assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
             assert len(fem.nodes) == 2, 'len(nodes) = %i' % len(fem.nodes)
             assert len(fem.materials) == 0, 'len(materials) = %i' % len(fem.materials)

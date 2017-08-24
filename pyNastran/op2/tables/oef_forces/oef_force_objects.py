@@ -8,7 +8,7 @@ import numpy as np
 from numpy import zeros, searchsorted, allclose
 
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -65,6 +65,7 @@ class FailureIndices(RealForceObject):
             raise NotImplementedError('SORT2')
 
     def build(self):
+        """sizes the vectorized attributes of the FailureIndices"""
         if self.is_built:
             return
 
@@ -177,6 +178,7 @@ class RealSpringDamperForceArray(RealForceObject):
             raise NotImplementedError('SORT2')
 
     def build(self):
+        """sizes the vectorized attributes of the RealSpringDamperForceArray"""
         if self.is_built:
             return
 
@@ -256,7 +258,7 @@ class RealSpringDamperForceArray(RealForceObject):
                         (force2, stress2) = t2
                         if not allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                            msg += '%s\n  (%s, %s)\n  (%s, %s)\n' % (
                                 eid,
                                 force1, stress1,
                                 force2, stress2)
@@ -401,11 +403,11 @@ class RealDamperForceArray(RealSpringDamperForceArray):
         if self.element_type == 20:  # CDAMP1
             msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 1 )\n']
         elif self.element_type == 21:  # CDAMP2
-            msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n']
-        #elif self.element_type == 13:  # CDAMP3
-            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )\n']
-        #elif self.element_type == 14:  # CDAMP4
-            #msg = ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
+            msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 2 )\n']
+        elif self.element_type == 22:  # CDAMP3
+            msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 2 )\n']
+        elif self.element_type == 23:  # CDAMP4
+            msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 2 )\n']
         else:
             msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
             raise NotImplementedError(msg)
@@ -453,6 +455,7 @@ class RealRodForceArray(RealForceObject):
         return crod_msg, conrod_msg, ctube_msg
 
     def build(self):
+        """sizes the vectorized attributes of the RealRodForceArray"""
         if self.is_built:
             return
 
@@ -663,6 +666,7 @@ class RealCBeamForceArray(ScalarObject):
         return False
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBeamForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
@@ -922,6 +926,7 @@ class RealCShearForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCShearForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1146,6 +1151,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealViscForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1346,6 +1352,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def build(self):
+        """sizes the vectorized attributes of the RealPlateForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1560,6 +1567,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def build(self):
+        """sizes the vectorized attributes of the RealPlateBilinearForceArray"""
         # print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1847,6 +1855,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBarForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2036,6 +2045,7 @@ class RealConeAxForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealConeAxForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2225,6 +2235,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBar100ForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2428,6 +2439,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCGapForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2593,6 +2605,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealBendForceArray"""
         if self.is_built:
             return
 
@@ -2822,6 +2835,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealSolidPressureForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -3063,6 +3077,7 @@ class RealCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBeamForceVUArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -3290,6 +3305,7 @@ class RealCBushForceArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealCBushForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -3468,8 +3484,247 @@ class RealCBushForceArray(ScalarObject):
         return page_num - 1
 
 
-class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
+class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
+    """
+                    F O R C E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+                 TIME =   2.500000E-03,  P-ELEMENT ID =      11,  OUTPUT COORD. ID =       0,  P OF EDGES =  3  3  3
+                       LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000
+
+     VUGRID                - MEMBRANE  FORCES -      - BENDING  MOMENTS -             - TRANSVERSE SHEAR FORCES -
+       ID.            FX            FY            FXY MX            MY            MXY             QX            QY
+    111001001     1.497761E+02  4.493284E+01  1.755556E+01    4.601057E+02  1.380317E+02  3.821717E+01  1.924838E+01  1.298280E-13
+    111001002    -1.284408E+01 -9.296992E-01 -6.540499E+00   -3.195809E+01  9.447659E+01  2.340929E+00 -4.620755E-01  1.074264E+01
+    111001003    -1.336704E+02 -4.010114E+01  1.236144E+01    4.553836E+02  1.366151E+02 -2.018654E+01  9.028288E+01 -1.651896E-13
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealForceObject.__init__(self, data_code, isubcase)
+
+        self.dt = dt
+        self.nelements = 0
+
+        #if is_sort1:
+            #if dt is not None:
+                #self.add = self.add_sort1
+        #else:
+            #assert dt is not None
+            #self.add = self.add_sort2
+
+    def get_headers(self):
+        return ['mfx', 'mfy', 'mfxy', 'bmx', 'bmy', 'bmxy', 'syz', 'szx']
+
+    def build(self):
+        """sizes the vectorized attributes of the RealForceVU2DArray"""
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        #self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, integer_types):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+
+        #[mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def build_dataframe(self):
+        return
+        #headers = self.get_headers()
+        #assert 0 not in self.element_node
+        #if self.nonlinear_factor is not None:
+            #column_names, column_values = self._build_dataframe_transient_header()
+            #self.data_frame = pd.Panel(self.data, items=column_values,
+                                       #major_axis=self.element, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = column_names
+        #else:
+            #self.data_frame = pd.Panel(self.data,
+                                       #major_axis=self.element, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = ['Static']
+        #self.data_frame.index.names = ['ElementID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+
+        self._eq_header(table)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(self.element_node):
+                    (eid, nid) = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx) = t1
+                    (mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx) = t2
+
+                    # vm stress can be NaN for some reason...
+                    if not np.array_equal(t1[:-1], t2[:-1]):
+                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid, nid,
+                            mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx,
+                            mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add_sort1(self, dt, eid, parent, coord, icord, theta,
+                  vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx):
+        """unvectorized method for adding SORT1 transient data"""
+        #print('adding %s, %s' % (eid, vugrid))
+        self._times[self.itime] = dt
+        self.element_node[self.itotal, :] = [eid, vugrid]
+        self.data[self.itime, self.itotal, :] = [mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
+        self.itotal += 1
+
+    #def add_sort2(self, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        #raise NotImplementedError('SORT2')
+        #if dt not in self.mx:
+            #self.add_new_transient(dt)
+        #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+
+    def get_stats(self, short=False):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = '1'
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        if 'VUTRIA' in self.element_name:
+            msg = [
+                '                    F O R C E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )'
+                '                 TIME =   2.500000E-03,  P-ELEMENT ID =      11,  OUTPUT COORD. ID =       0,  P OF EDGES =  3  3  3'
+                '                       LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000'
+                ''
+                '     VUGRID                - MEMBRANE  FORCES -      - BENDING  MOMENTS -             - TRANSVERSE SHEAR FORCES -                    '
+                '       ID.            FX            FY            FXY MX            MY            MXY             QX            QY                   '
+                #'    111001001     1.497761E+02  4.493284E+01  1.755556E+01    4.601057E+02  1.380317E+02  3.821717E+01  1.924838E+01  1.298280E-13'
+                #'    111001002    -1.284408E+01 -9.296992E-01 -6.540499E+00   -3.195809E+01  9.447659E+01  2.340929E+00 -4.620755E-01  1.074264E+01'
+                #'    111001003    -1.336704E+02 -4.010114E+01  1.236144E+01    4.553836E+02  1.366151E+02 -2.018654E+01  9.028288E+01 -1.651896E-13'
+            ]
+            nnodes = 3
+        #elif 'CQUAD4' in self.element_name:
+            #msg = [
+                #'                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
+                #' \n'
+                #'    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -\n'
+                #'      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
+            #]
+            #nnodes = 4
+        else:
+            raise NotImplementedError(self.element_name)
+        return self.element_name, nnodes, msg
+
+    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
+        """
+                        F O R C E S   I N   P - V E R S I O N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+                     TIME =   2.500000E-03,  P-ELEMENT ID =      11,  OUTPUT COORD. ID =       0,  P OF EDGES =  3  3  3
+                           LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000
+
+         VUGRID                - MEMBRANE  FORCES -      - BENDING  MOMENTS -             - TRANSVERSE SHEAR FORCES -
+           ID.            FX            FY            FXY MX            MY            MXY             QX            QY
+        111001001     1.497761E+02  4.493284E+01  1.755556E+01    4.601057E+02  1.380317E+02  3.821717E+01  1.924838E+01  1.298280E-13
+        111001002    -1.284408E+01 -9.296992E-01 -6.540499E+00   -3.195809E+01  9.447659E+01  2.340929E+00 -4.620755E-01  1.074264E+01
+        111001003    -1.336704E+02 -4.010114E+01  1.236144E+01    4.553836E+02  1.366151E+02 -2.018654E+01  9.028288E+01 -1.651896E-13
+        """
+        if header is None:
+            header = []
+        (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
+
+        # write the f06
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        cen_word = 'CEN/%i' % nnodes
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            ##print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            ##[mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
+            mfx = self.data[itime, :, 0]
+            mfy = self.data[itime, :, 1]
+            mfxy = self.data[itime, :, 2]
+            bmx = self.data[itime, :, 3]
+            bmy = self.data[itime, :, 4]
+            bmxy = self.data[itime, :, 5]
+            syz = self.data[itime, :, 6]
+            szx = self.data[itime, :, 7]
+
+            if self.element_type == 190: # VUTRIA
+                # TODO: format the data properly
+                for nid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi in zip(
+                    nids, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx):
+                    [mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi] = write_floats_13e(
+                        [mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi])
+                    f.write('   %8i  %13s %13s %13s   %13s %13s %13s  %13s %s\n' % (
+                        nid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi))
+
+            #elif self.element_type == 33:
+                #for nid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                    #[mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi] = write_floats_13e(
+                        #[mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi])
+                    ##Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+                    ##f.write(Fmt % (eid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi))
+                    ##
+                    #f.write('0 %8i %8s %13s %13s %13s %13s %13s %13s %13s %s\n' % (
+                        #eid, mfxi, mfyi, mfxyi, bmxi, bmyi, bmxyi, syzi, szxi))
+            else:
+                raise NotImplementedError(self.element_type)
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
+class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
+    """deprecated"""
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        """deprecated"""
         self.element_type = None
         self.element_name = None
         ScalarObject.__init__(self, data_code, isubcase)
@@ -3478,14 +3733,14 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self.icord = {}
         self.theta = {}
 
-        self.membraneX = {}
-        self.membraneY = {}
-        self.membraneXY = {}
-        self.bendingX = {}
-        self.bendingY = {}
-        self.bendingXY = {}
-        self.shearYZ = {}
-        self.shearXZ = {}
+        self.membrane_x = {}
+        self.membrane_y = {}
+        self.membrane_xy = {}
+        self.bending_x = {}
+        self.bending_y = {}
+        self.bending_xy = {}
+        self.shear_yz = {}
+        self.shear_xz = {}
 
         # handle SORT1 case
         self.dt = dt
@@ -3497,57 +3752,60 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             self.add = self.add_sort2
 
     def get_stats(self, short=False):
+        """deprecated"""
         msg = ['  '] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
-            ntimes = len(self.membraneX)
+            ntimes = len(self.membrane_x)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  parent, coord, icord, theta, membraneX, membraneY, '
-                   'membraneXY, bendingX, bendingY, bendingXY, '
-                   'shearYZ, shearXZ\n')
+        msg.append('  parent, coord, icord, theta, membrane_x, membrane_y, '
+                   'membrane_xy, bending_x, bending_y, bending_xy, '
+                   'shear_yz, shear_xz\n')
         return msg
 
     def add_new_transient(self, dt):
-        self.membraneX[dt] = {}
-        self.membraneY[dt] = {}
-        self.membraneXY[dt] = {}
-        self.bendingX[dt] = {}
-        self.bendingY[dt] = {}
-        self.bendingXY[dt] = {}
-        self.shearYZ[dt] = {}
-        self.shearXZ[dt] = {}
+        """deprecated"""
+        self.membrane_x[dt] = {}
+        self.membrane_y[dt] = {}
+        self.membrane_xy[dt] = {}
+        self.bending_x[dt] = {}
+        self.bending_y[dt] = {}
+        self.bending_xy[dt] = {}
+        self.shear_yz[dt] = {}
+        self.shear_xz[dt] = {}
 
     def add(self, nnodes, dt, data):
+        """deprecated"""
         [eid, parent, coord, icord, theta, forces] = data
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
 
-        self.membraneX[eid] = {}
-        self.membraneY[eid] = {}
-        self.membraneXY[eid] = {}
-        self.bendingX[eid] = {}
-        self.bendingY[eid] = {}
-        self.bendingXY[eid] = {}
-        self.shearYZ[eid] = {}
-        self.shearXZ[eid] = {}
+        self.membrane_x[eid] = {}
+        self.membrane_y[eid] = {}
+        self.membrane_xy[eid] = {}
+        self.bending_x[eid] = {}
+        self.bending_y[eid] = {}
+        self.bending_xy[eid] = {}
+        self.shear_yz[eid] = {}
+        self.shear_xz[eid] = {}
 
         for force in forces:
-            [nid, membraneX, membraneY, membraneXY, bendingX,
-             bendingY, bendingXY, shearYZ, shearXZ] = force
-            self.membraneX[eid][nid] = membraneX
-            self.membraneY[eid][nid] = membraneY
-            self.membraneXY[eid][nid] = membraneXY
-            self.bendingX[eid][nid] = bendingX
-            self.bendingY[eid][nid] = bendingY
-            self.bendingXY[eid][nid] = bendingXY
-            self.shearYZ[eid][nid] = shearYZ
-            self.shearXZ[eid][nid] = shearXZ
+            [nid, membrane_x, membrane_y, membrane_xy, bending_x,
+             bending_y, bending_xy, shear_yz, shear_xz] = force
+            self.membrane_x[eid][nid] = membrane_x
+            self.membrane_y[eid][nid] = membrane_y
+            self.membrane_xy[eid][nid] = membrane_xy
+            self.bending_x[eid][nid] = bending_x
+            self.bending_y[eid][nid] = bending_y
+            self.bending_xy[eid][nid] = bending_xy
+            self.shear_yz[eid][nid] = shear_yz
+            self.shear_xz[eid][nid] = shear_xz
 
     def add_sort1(self, nnodes, dt, data):
         """unvectorized method for adding SORT1 transient data"""
@@ -3555,34 +3813,37 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
     def add_sort2(self, nnodes, eid, data):
+        """deprecated"""
         [dt, parent, coord, icord, theta, forces] = data
         self._fill_object(dt, eid, parent, coord, icord, theta, forces)
 
     def _fill_object(self, dt, eid, parent, coord, icord, theta, forces):
-        if dt not in self.membraneX:
+        """deprecated"""
+        if dt not in self.membrane_x:
             self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
 
-        self.membraneX[dt][eid] = {}
-        self.membraneY[dt][eid] = {}
-        self.membraneXY[dt][eid] = {}
-        self.bendingX[dt][eid] = {}
-        self.bendingY[dt][eid] = {}
-        self.bendingXY[dt][eid] = {}
-        self.shearYZ[dt][eid] = {}
-        self.shearXZ[dt][eid] = {}
+        self.membrane_x[dt][eid] = {}
+        self.membrane_y[dt][eid] = {}
+        self.membrane_xy[dt][eid] = {}
+        self.bending_x[dt][eid] = {}
+        self.bending_y[dt][eid] = {}
+        self.bending_xy[dt][eid] = {}
+        self.shear_yz[dt][eid] = {}
+        self.shear_xz[dt][eid] = {}
 
         for force in forces:
-            [nid, membraneX, membraneY, membraneXY, bendingX,
-             bendingY, bendingXY, shearYZ, shearXZ] = force
-            self.membraneX[dt][eid][nid] = membraneX
-            self.membraneY[dt][eid][nid] = membraneY
-            self.membraneXY[dt][eid][nid] = membraneXY
-            self.bendingX[dt][eid][nid] = bendingX
-            self.bendingY[dt][eid][nid] = bendingY
-            self.bendingXY[dt][eid][nid] = bendingXY
-            self.shearYZ[dt][eid][nid] = shearYZ
-            self.shearXZ[dt][eid][nid] = shearXZ
+            [nid, membrane_x, membrane_y, membrane_xy, bending_x,
+             bending_y, bending_xy, shear_yz, shear_xz] = force
+            #print(eid, nid)
+            self.membrane_x[dt][eid][nid] = membrane_x
+            self.membrane_y[dt][eid][nid] = membrane_y
+            self.membrane_xy[dt][eid][nid] = membrane_xy
+            self.bending_x[dt][eid][nid] = bending_x
+            self.bending_y[dt][eid][nid] = bending_y
+            self.bending_xy[dt][eid][nid] = bending_xy
+            self.shear_yz[dt][eid][nid] = shear_yz
+            self.shear_xz[dt][eid][nid] = shear_xz

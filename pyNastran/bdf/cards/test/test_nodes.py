@@ -130,7 +130,7 @@ class TestNodes(unittest.TestCase):
 
     def test_time_type_check(self):
         """this tests what the best way to do type checking is"""
-        g = GRID(4)
+        g = GRID(4, [0., 0., 0.])
         s = SPOINT(4)
         import time
         import six

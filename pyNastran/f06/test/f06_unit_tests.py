@@ -236,12 +236,12 @@ class TestF06(unittest.TestCase):
         assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
         assert f06.Title == 'SIMPLE BEAM EXAMPLE', '%r' % f06.Title
 
-        subtitle_label = f06.iSubcaseNameMap[1]
+        subtitle_label = f06.isubcase_name_map[1]
         assert subtitle_label[0] == 'MODES', subtitle_label
         assert subtitle_label[1] == 2, subtitle_label  # 2=modal
         assert subtitle_label[2] == '', subtitle_label
 
-        subtitle_label = op2.iSubcaseNameMap[1]
+        subtitle_label = op2.isubcase_name_map[1]
         assert subtitle_label[0] == 'MODES', subtitle_label
         assert subtitle_label[1] == 2, subtitle_label  # 2=modal
         assert subtitle_label[2] == '', subtitle_label
@@ -279,7 +279,7 @@ class TestF06(unittest.TestCase):
             f06 = run_model(bdfname, op2name, f06name, f06_has_weight=True)
 
             assert f06.Title == title, 'i=%i title=%r expected=%r' % (i, f06.Title, title)
-            subtitle_label = f06.iSubcaseNameMap[1]
+            subtitle_label = f06.isubcase_name_map[1]
             analysis_code = 1 # static
             assert subtitle_label[0] == subtitle, 'f06_filename=%s i=%i subtitle=%r expected=%r' % (f06_filename, i, subtitle_label[0], subtitle)
             assert subtitle_label[1] == 1, 'f06_filename=%s i=%i label=%r expected=%r' % (f06_filename, i, subtitle_label[1], analysis_code)
@@ -383,11 +383,11 @@ class TestF06(unittest.TestCase):
         assert op2.Title == 'MSC.NASTRAN JOB', '%r' % op2.Title
         assert f06.Title == 'MSC.NASTRAN JOB', '%r' % f06.Title
 
-        subtitle_label = f06.iSubcaseNameMap[1]
+        subtitle_label = f06.isubcase_name_map[1]
         #assert subtitle_label[0] == 'DEFAULT', subtitle_label
         #assert subtitle_label[1] == 'SUBCASE 1', subtitle_label
 
-        subtitle_label = op2.iSubcaseNameMap[1]
+        subtitle_label = op2.isubcase_name_map[1]
         assert subtitle_label[0] == 'DEFAULT', subtitle_label
         assert subtitle_label[1] == 2, subtitle_label  # 2=modal
         assert subtitle_label[2] == 'SUBCASE 1', subtitle_label

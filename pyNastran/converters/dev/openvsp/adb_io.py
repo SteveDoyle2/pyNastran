@@ -40,7 +40,7 @@ class ADB_IO(object):  # pragma: no cover
             try:
                 del self.case_keys
                 del self.icase
-                del self.iSubcaseNameMap
+                del self.isubcase_name_map
             except:
                 # print('cant delete geo')
                 pass
@@ -51,7 +51,7 @@ class ADB_IO(object):  # pragma: no cover
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_vsp_aero_geometry(self, adb_filename, dirname,
+    def load_vsp_aero_geometry(self, adb_filename,
                                name='main', plot=True):  # pragma: no cover
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -154,7 +154,7 @@ class ADB_IO(object):  # pragma: no cover
         alpha = model.alphas[0]
         beta = model.betas[0]
         note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
-        self.iSubcaseNameMap = {1: ['OpenVSP%s' % note, '']}
+        self.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
         cases = {}
         ID = 1
 
@@ -164,7 +164,7 @@ class ADB_IO(object):  # pragma: no cover
     #def clear_adb(self):
         #pass
 
-    #def load_adb_results(self, cart3d_filename, dirname):
+    #def load_adb_results(self, cart3d_filename):
         #raise NotImplementedError()
 
 

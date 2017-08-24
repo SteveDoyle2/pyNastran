@@ -1,3 +1,13 @@
+"""
+defines:
+ - read_bedge(bedge_filename, beta_reverse=179.7, log=None, debug=False)
+ - AFLR2(log=None, debug=False)
+   - read_bedge(self, bedge_filename, beta_reverse=179.7)
+   - write_nastran(self, bdf_filename)
+   - write_fixed_points(self, fixed_points_filename)
+   - merge_bedge(self, bedge, bedge_filename)
+ - export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, log=None)
+"""
 from __future__ import print_function
 import os
 import sys
@@ -8,7 +18,7 @@ from six.moves import range
 import numpy as np
 from numpy import (zeros, array, vstack, hstack, where,
                    arctan2, arccos, sign, isnan, radians, unique)
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.log import get_logger2
 from pyNastran.utils import print_bad_path
@@ -397,7 +407,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
     axis : int; default=1
         the axis to remove (nodes in Nx3)
     """
-    self.log.debug('bedge_filename = %s' % bedge_filename)
+    log.debug('bedge_filename = %s' % bedge_filename)
     #if bedge_filename == 'farfield.bedge':
         #print(grid_bcs)
 
@@ -410,7 +420,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
         # write the curves/subcurves
         nodes_pack = []
 
-        self.log.debug('looping over ucurves=%s' % ucurves)
+        log.debug('looping over ucurves=%s' % ucurves)
         nsubcurves_list = []
 
         all_usubcurves = set([])
@@ -418,7 +428,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
             i = where(curves == ucurve)[0]
 
             subcurvesi = subcurves[i]
-            self.log.debug('ucurve=%s i=%s subcurves[i]=%s' % (ucurve, i, subcurvesi))
+            log.debug('ucurve=%s i=%s subcurves[i]=%s' % (ucurve, i, subcurvesi))
 
             usubcurves = unique(subcurvesi)
             nsubcurves = len(usubcurves)
@@ -427,13 +437,13 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
 
             for usubcurve in usubcurves:
                 if usubcurve not in all_usubcurves:
-                    self.log.debug(all_usubcurves)
+                    log.debug(all_usubcurves)
                     # stop???
 
                 all_usubcurves.add(usubcurve)
                 j = where(subcurvesi == usubcurve)[0]
                 nnodesi = len(j)
-                self.log.debug('usubcurve=%s j=%s subcurves[j]=%s nnodes=%s' % (
+                log.debug('usubcurve=%s j=%s subcurves[j]=%s nnodes=%s' % (
                     usubcurve, j, subcurvesi[j], nnodesi))
                 #f.write('%s ' % nnodesi)
                 nodes_pack.append(nnodesi)
@@ -444,7 +454,7 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
             bedge_file.write('  %s' % nsubcurvesi)
         bedge_file.write('\n')
         nsubcurves = len(grid_bcs)
-        self.log.debug('nsubcurves = %s?' % nsubcurves)
+        log.debug('nsubcurves = %s?' % nsubcurves)
         assert nsubcurves < 20
         #assert nsubcurves == len(nsubcurves_list) #  wrong check...
 
@@ -475,10 +485,3 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
         #initial_normal_spacing = '112*1.0e-3'
 
 
-def main(): # : pragma: no conver
-    bedge_filename = 'circle.bedge'
-    model = AFLR2()
-    model.read_bedge(bedge_filename)
-
-if __name__ == '__main__': # : pragma: no conver
-    main()

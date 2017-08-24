@@ -70,17 +70,17 @@ class TestElements(unittest.TestCase):
 
         eid1 = 10
         pid = 11
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         model.add_cquad4(eid1, pid, [1, 2, 3, 4])
 
         eid2 = 12
-        model.add_grid(11, xyz=[0., 0., 1.])
-        model.add_grid(12, xyz=[1., 0., 1.])
-        model.add_grid(13, xyz=[1., 1., 1.])
-        model.add_grid(14, xyz=[0., 1., 1.])
+        model.add_grid(11, [0., 0., 1.])
+        model.add_grid(12, [1., 0., 1.])
+        model.add_grid(13, [1., 1., 1.])
+        model.add_grid(14, [0., 1., 1.])
         model.add_cquad4(eid2, pid, [11, 12, 13, 14])
 
         mid = 13

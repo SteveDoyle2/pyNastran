@@ -338,7 +338,7 @@ class MPT(GeomCommon):
             mat = MATT1.add_op2_data(out)
             self._add_material_dependence_object(mat)
             n += ntotal
-        self._increase_card_count('MATT1', ncards)
+        self.increase_card_count('MATT1', ncards)
         return n
 
     def _read_matt2(self, data, n):
@@ -366,7 +366,7 @@ class MPT(GeomCommon):
             mat = MATT4.add_op2_data(out)
             self._add_material_dependence_object(mat)
             n += ntotal
-        self._increase_card_count('MATT4', ncards)
+        self.increase_card_count('MATT4', ncards)
         return n
 
     def _read_matt5(self, data, n):
@@ -386,7 +386,7 @@ class MPT(GeomCommon):
             mat = MATT5.add_op2_data(out)
             self._add_material_dependence_object(mat)
             n += ntotal
-        self._increase_card_count('MATT5', ncards)
+        self.increase_card_count('MATT5', ncards)
         return n
 
 # MATT8 - unused

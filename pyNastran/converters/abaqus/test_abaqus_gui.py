@@ -38,11 +38,10 @@ class TestAbaqusGui(unittest.TestCase):
         with open(abaqus_filename, 'w') as abaqus_file:
             abaqus_file.write('\n'.join(lines))
         log = get_logger(level='warning', encoding='utf-8')
-        dirname = None
 
         test = AbaqusGui()
         test.log = log
-        test.load_abaqus_geometry(abaqus_filename, dirname)
+        test.load_abaqus_geometry(abaqus_filename)
         os.remove(abaqus_filename)
 
 if __name__ == '__main__':  #  pragma: no cover

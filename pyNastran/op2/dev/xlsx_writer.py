@@ -5,15 +5,17 @@ import sys
 import copy
 from datetime import date
 from collections import defaultdict
+from typing import Any
 from six import iteritems
 
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
 
-def make_stamp(Title, today=None):
-    if 'Title' is None:
-        Title = ''
+def make_stamp(title, today=None):
+    # (str, Any) -> str
+    if title is None:
+        title = ''
 
     #lenghts = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
     months = [' January', 'February', 'March', 'April', 'May', 'June',
@@ -31,9 +33,9 @@ def make_stamp(Title, today=None):
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    if Title is None:
-        Title = ''
-    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (Title.strip(), str_today, build)
+    if title is None:
+        title = ''
+    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (title.strip(), str_today, build)
     return out
 
 
@@ -46,26 +48,35 @@ class XlsxWriter(OP2_F06_Common):
         """If this class is inherited, the F06 Header may be overwritten"""
         return make_f06_header()
 
-    def make_stamp(self, Title, today):
+    def make_stamp(self, title, today):
+        # (str, Any) -> str
         """If this class is inherited, the PAGE stamp may be overwritten"""
-        return make_stamp(Title, today)
+        return make_stamp(title, today)
 
     def write_xlsx(self, xlsx_filename, is_mag_phase=False,
                   delete_objects=True):
+        # type: (str, bool, bool) -> None
         """
-        Writes an OP2 file based on the data we have stored in the object
+        Writes an XLSX file based on the data we have stored in the object
 
-        :param xlsx_filename:  the name of the XLSX file to write
-        :param is_mag_phase: should complex data be written using Magnitude/Phase
-                         instead of Real/Imaginary (default=False; Real/Imag)
-                         Real objects don't use this parameter.
-        :param delete_objects: should objects be deleted after they're written
-                         to reduce memory (default=True)
+        Parameters
+        ----------
+        xlsx_filename:  str
+            the name of the XLSX file to write
+        is_mag_phase : bool;  default=False
+            True : write complex using Magnitude/Phase
+            False : write complex using Real/Imaginary
+            Real objects don't use this parameter.
+        delete_objects : bool; default=True
+            should objects be deleted after they're written to reduce
+            memory
         """
-        from xlwings import Workbook, Sheet#, Range, Chart
-        from pywintypes import com_error
         print('writing %s' % xlsx_filename)
+
         if isinstance(xlsx_filename, str):
+            from xlwings import Workbook, Sheet  # type: ignore
+            from pywintypes import com_error  # type: ignore
+
             workbook = Workbook()  # Creates a connection with a new workbook
             try:
                 workbook.save(xlsx_filename)
@@ -89,21 +100,21 @@ class XlsxWriter(OP2_F06_Common):
             #self.read_markers([-1, 0])
         #elif markers == [2,]:  # PARAM, POST, -2
         isheet = 1
-        if 0:
-        #_write_markers(op2, op2_ascii, [3, 0, 7])
-            #tape_code = b'NASTRAN FORT TAPE ID CODE - '
-            Sheet(isheet).name = sheet_name
-            sheet = Sheet(isheet)
-            sheet['A1'].value = 'NASTRAN FORT TAPE ID CODE'
-            sheet['B1'].value = tape_code
+        #if 0:
+        ##_write_markers(op2, op2_ascii, [3, 0, 7])
+            ##tape_code = b'NASTRAN FORT TAPE ID CODE - '
+            #Sheet(isheet).name = sheet_name
+            #sheet = Sheet(isheet)
+            #sheet['A1'].value = 'NASTRAN FORT TAPE ID CODE'
+            #sheet['B1'].value = tape_code
 
-            nastran_version = b'NX8.5   ' if self.is_nx else b'XXXXXXXX'
-            sheet['A2'].value = 'nastran_version'
-            sheet['B2'].value = nastran_version
-            isheet =+ 1
+            #nastran_version = b'NX8.5   ' if self.is_nx else b'XXXXXXXX'
+            #sheet['A2'].value = 'nastran_version'
+            #sheet['B2'].value = nastran_version
+            #isheet =+ 1
 
         if self.grid_point_weight.reference_point is not None and 0:
-            if has_attr(result, 'write_xlsx'):
+            if hasattr(result, 'write_xlsx'):
                 self.grid_point_weight.write_xlsx(workbook, page_stamp, self.page_num)
             else:
                 print("*op2 - grid_point_weight not written")
@@ -115,7 +126,7 @@ class XlsxWriter(OP2_F06_Common):
         for ikey, result in sorted(iteritems(self.eigenvalues)):
             # header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            if has_attr(result, 'write_xlsx'):
+            if hasattr(result, 'write_xlsx'):
                 result.write_xlsx(xlsx)
                 if delete_objects:
                     del result
@@ -126,7 +137,7 @@ class XlsxWriter(OP2_F06_Common):
         # then eigenvectors
         # has a special header
         for isubcase, result in sorted(iteritems(self.eigenvectors)):
-            (subtitle, label) = self.iSubcaseNameMap[isubcase]
+            (subtitle, label) = self.isubcase_name_map[isubcase]
 
             if hasattr(result, 'write_xlsx'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
@@ -263,7 +274,7 @@ class XlsxWriter(OP2_F06_Common):
 
         oug = [
             self.accelerations,
-            self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
+            self.displacements, self.displacements_PSD, self.displacements_ATO, self.displacements_RMS,
             #self.scaled_displacements,  # ???
             self.temperatures,
             self.velocities, self.eigenvectors,
@@ -277,7 +288,7 @@ class XlsxWriter(OP2_F06_Common):
             #self.loadVectors,
             self.thermal_load_vectors,
         ]
-        isubcases = sorted(self.iSubcaseNameMap.keys())
+        isubcases = sorted(self.isubcase_name_map.keys())
         #title = self.title
 
         res_categories = [
@@ -305,7 +316,7 @@ class XlsxWriter(OP2_F06_Common):
                 for res_key in res_keys:
                     isubcase = res_key
                     if isubcase in res_type:
-                        #(subtitle, label) = self.iSubcaseNameMap[isubcase]
+                        #(subtitle, label) = self.isubcase_name_map[isubcase]
                         result = res_type[isubcase]
                         element_name = ''
                         if hasattr(result, 'element_name'):

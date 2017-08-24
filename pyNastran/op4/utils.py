@@ -1,13 +1,13 @@
 from six.moves import zip, range
 from numpy import real, imag, ndarray, where, arange
 from numpy import matrix as Matrix
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_double import print_card_double
 
 
-def write_DMIG(f, name, matrix, form,
+def write_dmig(f, name, matrix, form,
                row_index_to_component_id, col_index_to_component_id,
                precision='default'):
     """

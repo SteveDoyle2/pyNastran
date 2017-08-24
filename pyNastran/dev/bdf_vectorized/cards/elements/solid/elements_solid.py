@@ -1,6 +1,6 @@
 #from six import iteritems
 import numpy as np
-from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique, array
+from numpy import  zeros, where, searchsorted, argsort, full, nan, unique, array
 
 
 class ElementsSolid(object):
@@ -163,9 +163,10 @@ class ElementsSolid(object):
             elems.write_card(bdf_file, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
-        types = [self.ctetra4, self.cpyram5, self.cpenta6, self.chexa8,
-                 self.ctetra10, self.cpyram13, self.cpenta15, self.chexa20,
-                 ]
+        types = [
+            self.ctetra4, self.cpyram5, self.cpenta6, self.chexa8,
+            self.ctetra10, self.cpyram13, self.cpenta15, self.chexa20,
+        ]
         if nlimit:
             types2 = []
             for etype in types:

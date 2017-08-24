@@ -189,8 +189,9 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'solid_shell_bar_xyz.op2')
         op2 = read_op2_geom(op2_filename)
 
-        i_transform, beta_transforms = op2.get_displacement_index_transforms()
-        op2.transform_displacements_to_global(i_transform, op2.coords)
+        #i_transform, beta_transforms = op2.get_displacement_index_transforms()
+        nids_all, nids_transform, icd_transform = op2.get_displacement_index()
+        op2.transform_displacements_to_global(icd_transform, op2.coords)
 
         gpforce = op2.grid_point_forces[1]
         op2.cross_reference(xref_elements=False,

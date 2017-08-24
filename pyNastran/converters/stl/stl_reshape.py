@@ -1,6 +1,7 @@
 from __future__ import print_function
-from docopt import docopt
 from copy import deepcopy
+from six import string_types
+from docopt import docopt
 
 import pyNastran
 from pyNastran.converters.stl.stl import STL
@@ -146,19 +147,19 @@ def stl_reshape(data):
         yshift = 1.
         zshift = 1.
         if data['<xshift>'] is not None:
-            if isinstance(xshift, basestring):
+            if isinstance(xshift, string_types):
                 xshift = float(data['<xshift>'].strip("'"))
             else:
                 xshift = float(data['<xshift>'])
 
         if data['<yshift>'] is not None:
-            if isinstance(xshift, basestring):
+            if isinstance(xshift, string_types):
                 yshift = float(data['<yshift>'].strip("'"))
             else:
                 yshift = float(data['<yshift>'])
 
         if data['<zshift>'] is not None:
-            if isinstance(xshift, basestring):
+            if isinstance(xshift, string_types):
                 zshift = float(data['<zshift>'].strip("'"))
             else:
                 zshift = float(data['<zshift>'])
@@ -167,10 +168,10 @@ def stl_reshape(data):
         stl.nodes[:, 0] += xshift
         stl.nodes[:, 1] += yshift
         stl.nodes[:, 2] += zshift
-    elif data['--scale'] :
+    elif data['--scale']:
         scale = float(data['--scale'])
         stl.nodes *= scale
-    elif data['--stats'] :
+    elif data['--stats']:
         xmax, ymax, zmax = stl.nodes.max(axis=0)
         xmin, ymin, zmin = stl.nodes.min(axis=0)
         print('xyz_max = (%g, %g, %g)' % (xmax, ymax, zmax))

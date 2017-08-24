@@ -40,7 +40,7 @@ class AddCard(BDFAttributes):
         """adds a PARAM object"""
         key = param.key
         if key in self.params and not allow_overwrites:
-            if not param._is_same_card(self.params[key]):
+            if not param == self.params[key]:
                 #if param.key in self.params:
                     #msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
                     #raise KeyError(msg)
@@ -57,12 +57,12 @@ class AddCard(BDFAttributes):
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         if not allow_overwrites:
             #if key in self.elements:
-                #if elem._is_same_card(self.elements[key]):
+                #if elem ==self.elements[key]:
                     #self._duplicate_elements.append(elem)
                     #if self._stop_on_duplicate_error:
                         #self.pop_parse_errors()
             if key in self.plotels:
-                if not elem._is_same_card(self.plotels[key]):
+                if not elem == self.plotels[key]:
                     assert elem.eid not in self.plotels, 'eid=%s\nold_element=\n%snew_element=\n%s' % (elem.eid, self.plotels[elem.eid], elem)
         self.plotels[key] = elem
         self._type_to_id_map[elem.type].append(key)
@@ -146,7 +146,7 @@ class AddCard(BDFAttributes):
         """adds an AEFACT object"""
         key = aefact.sid
         if key in self.aefacts and not allow_overwrites:
-            if not aefact._is_same_card(self.aefacts[key]):
+            if not aefact ==self.aefacts[key]:
                 assert key not in self.aefacts, 'AEFACT.sid=%s\nold=\n%snew=\n%s' % (key, self.aefacts[key], aefact)
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
@@ -414,7 +414,7 @@ class AddCard(BDFAttributes):
         """adds a TSTEP object"""
         key = tstep.sid
         if key in self.tsteps and not allow_overwrites:
-            if not tstep._is_same_card(self.tsteps[key]):
+            if not tstep == self.tsteps[key]:
                 assert key not in self.tsteps, 'TSTEP=%s\nold=\n%snew=\n%s' % (key, self.tsteps[key], tstep)
         else:
             assert key > 0, 'sid=%s tstep=\n%s' % (key, tstep)
@@ -425,7 +425,7 @@ class AddCard(BDFAttributes):
         """adds a TSTEPNL object"""
         key = tstepnl.sid
         if key in self.tstepnls and not allow_overwrites:
-            if not tstepnl._is_same_card(self.tstepnls[key]):
+            if not tstepnl == self.tstepnls[key]:
                 assert key not in self.tstepnls, 'TSTEPNL=%s\nold=\n%snew=\n%s' % (key, self.tstepnls[key], tstepnl)
         else:
             assert key > 0, 'sid=%s tstepnl=\n%s' % (key, tstepnl)
@@ -501,7 +501,7 @@ class AddCard(BDFAttributes):
         """adds a EIGR/EIGRL object"""
         key = method.sid
         if key in self.methods and not allow_overwrites:
-            if not method._is_same_card(self.methods[key]):
+            if not method == self.methods[key]:
                 assert key not in self.methods, 'sid=%s\nold_method=\n%snew_method=\n%s' % (key, self.methods[key], method)
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, method)
@@ -512,7 +512,7 @@ class AddCard(BDFAttributes):
         """adds a EIGB/EIGC object"""
         key = method.sid
         if key in self.cMethods and not allow_overwrites:
-            if not method._is_same_card(self.cMethods[key]):
+            if not method == self.cMethods[key]:
                 assert key not in self.cMethods, 'sid=%s\nold_cmethod=\n%snew_cmethod=\n%s' % (key, self.cMethods[key], method)
         else:
             assert key > 0, 'sid=%s cMethod=\n%s' % (key, method)

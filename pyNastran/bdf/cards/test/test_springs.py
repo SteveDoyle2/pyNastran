@@ -3,6 +3,8 @@ import os
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PELAS, read_bdf
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestSprings(unittest.TestCase):
     def test_pelas_01(self):
@@ -60,15 +62,13 @@ class TestSprings(unittest.TestCase):
         celas2.raw_fields()
         celas2.write_card(size=8, is_double=False)
 
-        model.add_grid(3, xyz=[0., 0., 0.])
-        model.add_grid(4, xyz=[0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
         model.validate()
         model._verify_bdf(xref=False)
         model.cross_reference()
         model._verify_bdf(xref=True)
-        model.write_bdf('spring.bdf')
-        model2 = read_bdf('spring.bdf', debug=False)
-        os.remove('spring.bdf')
+        save_load_deck(model)
 
     def test_springs_04(self):
         """tests SPOINT, CELAS3, PELAS, CELAS4"""
@@ -95,11 +95,7 @@ class TestSprings(unittest.TestCase):
         spoints.raw_fields()
         spoints.write_card()
 
-        #from pyNastran.bdf.cards.test.test_mass_elements import read_write
-        #read_write(model)
-        model.write_bdf('spring2.bdf')
-        model2 = read_bdf('spring2.bdf', debug=False)
-        os.remove('spring2.bdf')
+        save_load_deck(model)
 
 
 if __name__ == '__main__':  # pragma: no cover

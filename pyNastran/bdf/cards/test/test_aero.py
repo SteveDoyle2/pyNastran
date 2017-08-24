@@ -11,6 +11,7 @@ import numpy as np
 import pyNastran
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID, read_bdf
+from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero import (
     FLFACT, AEFACT, AEPARM, AERO, AEROS, AESTAT,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -19,8 +20,10 @@ from pyNastran.bdf.cards.aero import (
     AELINK, DIVERG, AECOMP,
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 ROOTPATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
 #test_path = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
 
 COMMENT_BAD = 'this is a bad comment'
@@ -99,7 +102,7 @@ class TestAero(unittest.TestCase):
         #Di = [0., 15., 30., 45.]
         #aefact_delta = AEFACT(aefact_sid, Di)
 
-        model = BDF()
+        model = BDF(debug=False)
         data = ['AELIST', 75, 1001, 'THRU', 1075, 1101, 'THRU', 1109, 1201, 1202]
         model.add_card(data, data[0], COMMENT_BAD, is_list=True)
 
@@ -116,6 +119,9 @@ class TestAero(unittest.TestCase):
         aecomp1.write_card()
         aecomp1.uncross_reference()
         aecomp1.write_card()
+
+        model.validate()
+        save_load_deck(model)
 
         #-----------
         aecomp2 = AECOMP(name, list_type, aelist_ids, comment='cssch card')
@@ -179,26 +185,37 @@ class TestAero(unittest.TestCase):
     def test_aelink_1(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        id = 10
+        idi = 10
         label = 'CS'
         independent_labels = ['A', 'B', 'C']
         Cis = [1.0, 2.0]
-        aelink = AELINK(id, label, independent_labels, Cis, comment='')
+        aelink = AELINK(idi, label, independent_labels, Cis, comment='')
         with self.assertRaises(RuntimeError):
             aelink.validate()
         str(aelink)
         aelink.write_card()
 
-        card = ['AELINK', id, label, independent_labels[0], Cis[0],
+        card = ['AELINK', idi, label, independent_labels[0], Cis[0],
                 independent_labels[1], Cis[1], independent_labels[2]]
         with self.assertRaises(AssertionError):
             model.add_card(card, 'AELINK')
 
-        card = ['AELINK', id, label, independent_labels[0], Cis[0],
+        card = ['AELINK', idi, label, independent_labels[0], Cis[0],
                 independent_labels[1], Cis[1]]
         model.add_card(card, 'AELINK', comment='cat')
+        #print(model.aelinks[idi])
+        assert model.aelinks[idi][0].comment == '$cat\n', 'comment=%r' % str(model.aelinks[idi][0].comment)
 
-
+        idi = 11
+        lable = 'LABEL'
+        independent_labels = ['pig', 'frog', 'dog']
+        Cis = []
+        aelink2 = model.add_aelink(idi, label, independent_labels, Cis)
+        with self.assertRaises(RuntimeError):
+            model.validate()
+        aelink2.Cis = [1.0, 2.0, 3.0]
+        model.validate()
+        model.cross_reference()
 
     def test_aelist_1(self):
         """checks the AELIST card"""
@@ -250,12 +267,21 @@ class TestAero(unittest.TestCase):
         list2 = 6003
         card = ['AESURFS', aesid, label, None, list1, None, list2]
         bdf_card = BDFCard(card, has_none=True)
-        model = BDF()
+
+        model = BDF(debug=False)
         model.add_card(bdf_card, 'AESURFS', comment='aesurfs',
                        is_list=True, has_none=True)
         aesurfs = AESURFS(aesid, label, list1, list2, comment='aesurfs')
         str(aesurfs)
         aesurfs.write_card()
+
+        model.add_set1(6002, [1, 2, 3])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+
+        model.validate()
+        save_load_deck(model)
 
     def test_aero_1(self):
         """checks the AERO card"""
@@ -500,23 +526,94 @@ class TestAero(unittest.TestCase):
     def test_spline1(self):
         """checks the SPLINE1 card"""
         eid = 1
-        caero_id = 1
+        caero_id = 99999999
         box1 = 1
         box2 = 10
-        setg = 1
+        setg = 42
         spline = SPLINE1(eid, caero_id, box1, box2, setg, dz=0., method='IPS',
                          usage='BOTH', nelements=10,
                          melements=10, comment='$ spline1')
         spline.validate()
         spline.write_card(size=8, is_double=False)
+        model = BDF(debug=False)
+        model.splines[eid] = spline
+
+        pid = 10
+        igid = 1
+        p1 = [0., 0., 0.]
+        p4 = [0., 10., 0.]
+        x12 = 4.
+        x43 = 3.
+        cid = 1
+        caero1 = model.add_caero1(caero_id, pid, igid, p1, x12, p4, x43,
+                                  cp=cid, nspan=5,
+                                  lspan=0, nchord=6, lchord=0,
+                                  comment='')
+        Bi = [3]
+        paero = model.add_paero1(pid, Bi=Bi, comment='')
+        model.add_cord2r(cid, rid=0,
+                         origin=None, zaxis=None, xzplane=None,
+                         comment='')
+        velocity = 0.0
+        cref = 1.0
+        rho_ref = 1.225
+        model.add_aero(velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0,
+                      comment='')
+
+        setg = 42
+        ids = [100, 101, 102]
+        model.add_set1(setg, ids, is_skin=False, comment='')
+        model.add_grid(100, [0., 0., 0.])
+        model.add_grid(101, [0., 0., 0.])
+        model.add_grid(102, [0., 0., 0.])
+
+        #------------------
+        # CAERO2
+        eid = 3
+        caero = 3
+        id1 = 21
+        id2 = 35
+        setg = 43
+        spline2 = model.add_spline2(eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=1,
+                                    dthx=None, dthy=None, usage='BOTH', comment='')
+        spline.validate()
+
+        pid = 3
+        caero2 = model.add_caero2(caero, pid, igid, p1, x12, cp=1, nsb=4,
+                                  nint=4, lsb=0, lint=0, comment='')
+        caero2.validate()
+
+        orient = 'ZY'
+        width = 1.0
+        AR = 2.0
+        thi = []
+        thn = []
+        paero2 = model.add_paero2(pid, orient, width, AR, thi, thn,
+                                  lrsb=10, lrib=None, lth1=None, lth2=None, comment='')
+        paero2.validate()
+
+        sid = 10
+        Di = [0., 1.0, 2.0, 3.0, 0.]
+        aefact = model.add_aefact(sid, Di, comment='')
+        aefact.validate()
+
+        model.add_set1(setg, ids, is_skin=False, comment='')
+
+        model.cross_reference(model)
+        caero1.panel_points_elements()
+        caero2.get_points_elements_3d()
+        save_load_deck(model)
+
 
     def test_spline2(self):
         """checks the SPLINE2 card"""
+        #+---------+------+-------+-------+-------+------+----+------+-----+
         #| SPLINE2 | EID  | CAERO |  ID1  |  ID2  | SETG | DZ | DTOR | CID |
         #|         | DTHX | DTHY  | None  | USAGE |      |    |      |     |
         #+---------+------+-------+-------+-------+------+----+------+-----+
         #| SPLINE2 |   5  |   8   |  12   | 24    | 60   | 0. | 1.0  |  3  |
         #|         |  1.  |       |       |       |      |    |      |     |
+        #+---------+------+-------+-------+-------+------+----+------+-----+
 
         cid = 3
         origin = [0., 0., 0.]
@@ -582,7 +679,6 @@ class TestAero(unittest.TestCase):
         #model.cross_reference()
         #model.uncross_reference()
         #model.safe_cross_reference()
-
 
     def test_caero2_1(self):
         """checks the CAERO2/PAERO2/AERO/AEFACT card"""
@@ -816,10 +912,7 @@ class TestAero(unittest.TestCase):
         caero3b.get_points()
         caero3b.panel_points_elements()
 
-        bdf_filename = StringIO()
-        model.write_bdf(bdf_filename, close=False)
-        bdf_filename.seek(0)
-        model2 = read_bdf(bdf_filename, punch=True, debug=False)
+        save_load_deck(model)
 
 
     def test_caero4_1(self):
@@ -967,6 +1060,7 @@ class TestAero(unittest.TestCase):
 
         read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
+        save_load_deck(model)
 
 
         #caero5.raw_fields()
@@ -980,9 +1074,149 @@ class TestAero(unittest.TestCase):
 
    # def test_spline1_1(self):
    # def test_spline2_1(self):
-   # def test_spline3_1(self):
-   # def test_spline4_1(self):
-   # def test_spline5_1(self):
+    def test_spline3(self):
+        """checks the SPLINE3 card"""
+        model = BDF(debug=False)
+        eid = 100
+        pid = 10
+        igid = 1
+        p1 = [0., 0., 0.]
+        x12 = x43 = 3.
+        p4 = [1., 11., 1.]
+        caero = eid
+        box_id = 42
+        components = 3
+        nids = 5
+        displacement_components = 3
+        coeffs = 1.0
+        model.add_caero1(eid, pid, igid, p1, x12, p4, x43,
+                         cp=0,
+                         nspan=5, lspan=0,
+                         nchord=5, lchord=0, comment='')
+        model.add_paero1(pid, Bi=None, comment='')
+        model.add_grid(5, [0., 0., 0.])
+
+        spline_id = 101
+        spline3 = model.add_spline3(
+            spline_id, caero, box_id, components, nids,
+            displacement_components, coeffs, usage='BOTH', comment='spline3')
+        spline3.validate()
+        spline3.write_card()
+        spline3.raw_fields()
+
+        spline_id = 102
+        nids = [5, 6, 7]
+        displacement_components = [3, 7]
+        coeffs = [1.0, 2.0]
+        spline3b = model.add_spline3(
+            spline_id, caero, box_id, components, nids,
+            displacement_components, coeffs, usage='failed', comment='spline3')
+
+        cref = bref = sref = 1.0
+        model.add_aeros(cref, bref, sref)
+
+        with self.assertRaises(RuntimeError):
+            spline3b.validate()
+        del model.splines[spline_id]
+        model.validate()
+
+        #spline3.cross_reference(model)
+        model.cross_reference()
+        spline3.write_card()
+        spline3.raw_fields()
+        save_load_deck(model)
+
+    def test_spline4(self):
+        model = BDF(debug=False)
+        eid = 1
+        caero = 10
+        aelist = 11
+        setg = 12
+        dz = 0.
+        method = 'TPS'
+        usage = 'FORCE'
+        nelements = 4
+        melements = 5
+        model.add_spline4(eid, caero, aelist, setg, dz, method, usage,
+                          nelements, melements, comment='spline4')
+
+        elements = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        model.add_aelist(aelist, elements)
+
+        paero = 20
+        igid = 42
+        p1 = [0., 0., 0.]
+        x12 = 10.
+        p4 = [0., 10., 0.]
+        x43 = 3.
+        model.add_caero1(caero, paero, igid, p1, x12, p4, x43, cp=0, nspan=5,
+                        lspan=0, nchord=10, lchord=0,
+                        comment='')
+        model.add_paero1(paero)
+
+        velocity = None
+        cref = 1.0
+        rho_ref = 1.0
+        model.add_aero(velocity, cref, rho_ref,
+                       comment='')
+
+        model.add_set1(setg, [1, 2, 3])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        model.validate()
+        save_load_deck(model)
+
+    def test_spline5(self):
+        model = BDF(debug=False)
+        eid = 1
+        caero = 10
+        aelist = 11
+        setg = 12
+        thx = 7.
+        thy = 8.
+        #dz = 0.
+        #method = 'cat'
+        #usage = 'dog'
+        #nelements = 4
+        #melements = 5
+        #dtor = 47
+        model.add_spline5(eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0,
+                          cid=0, usage='BOTH', method='BEAM', ftype='WF2',
+                          rcore=None, comment='')
+
+        elements = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        model.add_aelist(aelist, elements)
+
+        paero = 20
+        igid = 42
+        p1 = [0., 0., 0.]
+        x12 = 10.
+        p4 = [0., 10., 0.]
+        x43 = 3.
+        model.add_caero1(caero, paero, igid, p1, x12, p4, x43, cp=0, nspan=5,
+                        lspan=0, nchord=10, lchord=0,
+                        comment='')
+        model.add_paero1(paero)
+
+        velocity = None
+        cref = 1.0
+        rho_ref = 1.0
+        model.add_aero(velocity, cref, rho_ref,
+                       comment='')
+
+        model.add_set1(setg, [1, 2, 3])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        model.validate()
+        save_load_deck(model)
 
     def test_aesurf_1(self):
         """checks the AESURF/AELIST cards"""
@@ -1203,6 +1437,35 @@ class TestAero(unittest.TestCase):
         mkaero.validate()
         mkaero.write_card()
 
+        # at least one mach
+        machs = []
+        reduced_freqs = [42.]
+        mkaero = MKAERO2(machs, reduced_freqs)
+        with self.assertRaises(ValueError):
+            mkaero.validate()
+
+        # at least one rfreq
+        machs = [0.8]
+        reduced_freqs = []
+        mkaero = MKAERO2(machs, reduced_freqs)
+        with self.assertRaises(ValueError):
+            mkaero.validate()
+
+        # should be the same length
+        machs = [0.8]
+        reduced_freqs = [42., 43.]
+        mkaero = MKAERO2(machs, reduced_freqs)
+        with self.assertRaises(ValueError):
+            mkaero.validate()
+
+        # split the write card method
+        machs = [0.1, 0.2, 0.3, 0.4, 0.5]
+        reduced_freqs = [1., 2., 3., 4., 5.]
+        mkaero = MKAERO2(machs, reduced_freqs)
+        mkaero.validate()
+        mkaero.write_card()
+
+
     def test_diverg(self):
         """checks the DIVERG card"""
         log = SimpleLogger(level='warning')
@@ -1218,6 +1481,8 @@ class TestAero(unittest.TestCase):
         diverg.write_card()
 
         diverg = model.add_card(['DIVERG', sid, nroots] + machs, 'DIVERG', comment='divergence')
+        model.validate()
+        save_load_deck(model)
         #diverg.validate()
         #diverg.write_card()
 
@@ -1319,8 +1584,8 @@ class TestAero(unittest.TestCase):
         suport = model.add_suport([55, 66], ['3', '3'])
         str(suport)
         model.add_aelist(alid1, [100, 101, 102], comment='')
-        model.add_grid(55, xyz=[0., 0., 0.])
-        model.add_grid(66, xyz=[0., 0., 0.])
+        model.add_grid(55, [0., 0., 0.])
+        model.add_grid(66, [0., 0., 0.])
         model.validate()
 
         # why doesn't this work?
@@ -1348,7 +1613,7 @@ class TestAero(unittest.TestCase):
         wg = 50.
         x0 = 3.
         V = 42.
-        model = BDF()
+        model = BDF(debug=False)
         gust = model.add_gust(sid, dload, wg, x0, V=V, comment='gust load')
         gust.validate()
         gust.write_card()
@@ -1356,6 +1621,7 @@ class TestAero(unittest.TestCase):
         gust2 = GUST.add_card(BDFCard(['GUST', sid, dload, wg, x0, V]), comment='gust load')
         gust2.validate()
         gust2.write_card()
+        save_load_deck(model)
 
 
     def test_csschd(self):
@@ -1432,8 +1698,11 @@ class TestAero(unittest.TestCase):
         bdf_filename = StringIO()
         model.write_bdf(bdf_filename, close=False)
         model.safe_cross_reference()
-        bdf_filename.seek(0)
 
+        model.validate()
+        save_load_deck(model)
+
+        bdf_filename.seek(0)
         model2 = read_bdf(bdf_filename, punch=True, debug=False)
 
         bdf_filename2 = StringIO()
@@ -1479,10 +1748,21 @@ class TestAero(unittest.TestCase):
         model._verify_bdf(xref=True)
         model.uncross_reference()
 
-        bdf_filename = StringIO()
-        model.write_bdf(bdf_filename, close=False)
-        bdf_filename.seek(0)
-        model2 = read_bdf(bdf_filename, punch=True, debug=False)
+        save_load_deck(model)
+
+    def test_bah_plane_bdf(self):
+        """tests the bah_plane"""
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
+        folder = ''
+        run_bdf(folder, bdf_filename, debug=False, xref=True, check=True,
+               punch=False, cid=None, mesh_form='combined',
+               is_folder=False, print_stats=False,
+               encoding=None, sum_load=True, size=8,
+               is_double=False, stop=False, nastran='',
+               post=-1, dynamic_vars=None, quiet=True,
+               dumplines=False, dictsort=False,
+               run_extract_bodies=True, nerrors=0, dev=True,
+               crash_cards=None, pickle_obj=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -105,8 +105,7 @@ class DELAY(BaseCard):
             #the BDF object
         #"""
         #msg = ', which is required by DELAY sid=%s' % self.sid
-        #self.nodes = model.Node(self.node_ids, msg=msg)
-        #self.nodes_ref = self.nodes
+        #self.nodes_ref = model.Node(self.node_ids, msg=msg)
 
     #@property
     #def node_id1(self):
@@ -212,8 +211,7 @@ class DPHASE(BaseCard):
             #the BDF object
         #"""
         #msg = ', which is required by DPHASE sid=%s' % self.sid
-        #self.nodes = model.Nodes(self.node_ids, msg=msg)
-        #self.nodes_ref = self.nodes
+        #self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
     #@property
     #def node_id1(self):
@@ -434,19 +432,49 @@ class FREQ2(FREQ):
         #return FREQ(sid, freqs, comment=comment)
 
 
-#class FREQ3(FREQ):
-    #type = 'FREQ3'
+class FREQ3(FREQ):
+    """
+    +-------+-----+------+-------+--------+-----+---------+
+    |   1   |  2  |   3  |   4   |    5   |  6  |    7    |
+    +=======+=====+======+=======+========+=====+=========+
+    | FREQ3 | SID |  F1  |  F2   |  TYPE  | NEF | CLUSTER |
+    +-------+-----+------+-------+--------+-----+---------+
+    | FREQ3 |  6  | 20.0 | 200.0 | LINEAR | 10  |   2.0   |
+    +-------+-----+------+-------+--------+-----+---------+
+    """
+    type = 'FREQ3'
 
-    #def __init__(self, card=None, data=None, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError()
+    def __init__(self, f1, f2=None, Type='LINEAR', nef=10, cluster=1.0, comment=''):
+        if comment:
+            self.comment = comment
+        if f2 is None:
+            f2 = f1
+        self.sid = sid
+        self.f1 = f1
+        self.f2 = f2
+        self.Type = Type
+        self.nef = nef
+        self.cluster = cluster
 
-    #def write_card(self, size=8, is_double=False):
-        #card = self.repr_fields()
-        #if size == 8:
-            #return self.comment + print_card_8(card)
-        #return self.comment + print_card_16(card)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        f1 = double(card, 1, 'f1')
+        f2 = integer_or_blank(card, 1, 'f2', f1)
+        Type = string_or_blank(card, 1, 'Type', 'LINEAR')
+        nef = integer_or_blank(card, 1, 'nef', 10)
+        cluster = double_or_blank(card, 1, 'cluster', 1.0)
+
+        return FREQ3(sid, f1, f2, Type, nef, cluster, comment='')
+
+    def raw_fields(self):
+        return ['FREQ3', self.sid, self.f1, self.f2, self.Type, self.nef, self.cluster]
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class FREQ4(FREQ):

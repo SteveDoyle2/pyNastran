@@ -21,6 +21,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 class SolidProperty(Property):
     def __init__(self):
         Property.__init__(self)
+        self.mid_ref = None
 
     def Rho(self):
         return self.mid_ref.rho
@@ -78,14 +79,13 @@ class PLSOLID(SolidProperty):
         self.ge = ge
         assert isinstance(pid, integer_types), type(pid)
         assert isinstance(mid, integer_types), type(mid)
-        self._validate_input()
+        self.mid_ref = None
 
-    def _validate_input(self):
+    def validate(self):
         if self.stress_strain not in ['GRID', 'GAUSS']:
             raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
                                'output value set; valid=["GRID", "GAUSS"]\n'
                                % self.stress_strain)
-
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -133,12 +133,11 @@ class PLSOLID(SolidProperty):
             the BDF object
         """
         msg = ' which is required by PLSOLID pid=%s' % self.pid
-        self.mid = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
-        self.mid_ref = self.mid
+        self.mid_ref = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def Rho(self):
         """
@@ -256,6 +255,9 @@ class PCOMPS(SolidProperty):
             has this model been cross referenced
         """
         pass
+
+    def Mid(self):
+        return self.pid_ref.mid
 
     def Rho(self):
         """
@@ -391,6 +393,7 @@ class PSOLID(SolidProperty):
         # PFLUID
         # SMECH
         self.fctn = fctn
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -433,12 +436,27 @@ class PSOLID(SolidProperty):
         integ = data[3]
         stress = data[4]
         isop = data[5]
-        fctn = data[6]
+        fctn = data[6].decode('latin1')
 
         if fctn == 'SMEC':
             fctn = 'SMECH'
+        elif fctn == 'PFLU':
+            fctn = 'PFLUID'
+        else:
+            raise NotImplementedError('PSOLID; fctn=%r' % fctn)
         return PSOLID(pid, mid, cordm, integ, stress, isop,
                       fctn, comment=comment)
+
+    def cross_reference(self, model):
+        # type: (Any) -> None
+        """cross reference method for a PSOLID"""
+        msg = ' which is required by PSOLID pid=%s' % (self.pid)
+        self.mid_ref = model.Material(self.mid, msg)
+
+    def uncross_reference(self):
+        # type: () -> None
+        self.mid = self.Mid()
+        self.mid_ref = None
 
     def E(self):
         return self.mid_ref.E()
@@ -450,7 +468,7 @@ class PSOLID(SolidProperty):
         return self.mid_ref.Nu()
 
     def materials(self):
-        return [self.mid]
+        return [self.mid_ref]
 
     def Rho(self):
         """

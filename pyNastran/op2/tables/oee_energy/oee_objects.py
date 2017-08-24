@@ -9,7 +9,7 @@ import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import get_key0, _eigenvalue_header, write_float_13e
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -64,6 +64,7 @@ class RealStrainEnergyArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealStrainEnergyArray"""
         if self.is_built:
             return
         del self.dt_temp
@@ -399,6 +400,7 @@ class ComplexStrainEnergyArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexStrainEnergyArray"""
         if self.is_built:
             return
         del self.dt_temp

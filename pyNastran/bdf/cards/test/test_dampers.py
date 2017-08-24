@@ -3,6 +3,8 @@ import unittest
 from six.moves import StringIO
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, read_bdf#, get_logger2
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestDampers(unittest.TestCase):
     def test_damper_01(self):
@@ -52,8 +54,8 @@ class TestDampers(unittest.TestCase):
         cdamp2.raw_fields()
         cdamp2.write_card(size=8, is_double=False)
 
-        model.add_grid(3, xyz=[0., 0., 0.])
-        model.add_grid(4, xyz=[0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
         model.validate()
         model._verify_bdf(xref=False)
         model.cross_reference()
@@ -80,10 +82,7 @@ class TestDampers(unittest.TestCase):
         spoints.raw_fields()
         spoints.write_card()
 
-        bdf_file = StringIO()
-        model.write_bdf(bdf_file, close=False)
-        bdf_file.seek(0)
-        model2 = read_bdf(bdf_file, punch=True, debug=False)
+        save_load_deck(model)
 
 
 if __name__ == '__main__':  # pragma: no cover

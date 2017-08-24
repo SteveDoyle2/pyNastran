@@ -21,6 +21,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 import copy
+from typing import List, Dict, Any
 from six import iteritems, itervalues
 
 #from pyNastran.bdf import subcase
@@ -52,6 +53,7 @@ class CaseControlDeck(object):
         return state
 
     def __init__(self, lines, log=None):
+        # (List[str], Optional[object]) -> None
         """
         Parameters
         ----------
@@ -98,7 +100,7 @@ class CaseControlDeck(object):
         #self.debug = True
 
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
-        self.reject_lines = []
+        self.reject_lines = []  # type: List[str]
         self.begin_bulk = ['BEGIN', 'BULK']
 
         # allows BEGIN BULK to be turned off
@@ -106,7 +108,7 @@ class CaseControlDeck(object):
         self._begin_count = 0
 
         self.lines = lines
-        self.subcases = {0: Subcase(id=0)}
+        self.subcases = {0: Subcase(id=0)}  # type: Dict[int, Subcase]
         try:
             self._read(self.lines)
         except:
@@ -169,6 +171,7 @@ class CaseControlDeck(object):
         raise RuntimeError(msg)
 
     def has_subcase(self, isubcase):
+        # type: (int) -> bool
         """
         Checks to see if a subcase exists.
 
@@ -547,9 +550,9 @@ class CaseControlDeck(object):
                 #value = obj
                 #param_type = 'OBJ-type'
             #else:
-            key = value.key
-            options = obj.set_id
-            value = obj.value
+            key = value.key  # type: str
+            options = obj.set_id  # type: List[int]
+            value = obj.value  # type: int
             param_type = 'SET-type'
 
         #elif line_upper.startswith(CHECK_CARD_NAMES):
@@ -643,6 +646,55 @@ class CaseControlDeck(object):
             #param_type = 'OBJ-type'
             #key = obj.type
 
+        elif line_upper.startswith('TEMP'):
+            if '=' in line:
+                (key, value) = line_upper.strip().split('=')
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            assert equals_count == 1, line_upper
+            if '(' in line_upper:
+                options = None
+                param_type = 'STRESS-type'
+                key = key.strip().upper()
+                value = value.strip()
+                if self.debug:
+                    self.log.debug("key=%r value=%r" % (key, value))
+                param_type = 'STRESS-type'
+                assert key.upper() == key, key
+
+                #param_type = 'STRESS-type'
+                sline = key.strip(')').split('(')
+                key = sline[0]
+                options = sline[1].split(',')
+
+                assert len(options) == 1, line_upper
+                # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
+                key = 'TEMPERATURE(%s)' % options[0]
+                value = value.strip()
+                options = []
+            else:
+                key = 'TEMPERATURE(BOTH)'
+                options = []
+        elif line_upper.startswith('RIGID'):
+            if '=' in line:
+                (key, value) = line_upper.strip().split('=')
+                key = key.strip()
+                value = value.strip()
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            assert key == 'RIGID', 'key=%r value=%r line=%r'  % (key, value, line)
+            param_type = 'STRESS-type'
+            options = []
+            #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
+            if value == 'LAGR':
+                value = 'LAGRANGE'
+            elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR']:
+                pass
+            else:
+                raise NotImplementedError('key=%r value=%r line=%r'  % (key, value, line))
+
         elif equals_count == 1:  # STRESS
             if '=' in line:
                 (key, value) = line_upper.strip().split('=')
@@ -663,24 +715,13 @@ class CaseControlDeck(object):
                 key = sline[0]
                 options = sline[1].split(',')
 
-                # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
-                if key in ['TEMPERATURE', 'TEMP']:
-                    option = options[0]
-                    if option == '':
-                        option = 'BOTH'
-                    key = 'TEMPERATURE'
-                    options = [option]
-
             elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
                 #print('A ??? line = ',line)
                 #raise RuntimeError(line)
                 pass
             else:  # STRESS-type; TITLE = stuff
                 #print('B ??? line = ',line)
-                if key in ['TEMPERATURE', 'TEMP']:
-                    assert len(options) == 0, options
-                    key = 'TEMPERATURE'
-                    options = ['BOTH']
+                pass
 
             key = update_param_name(key)
             verify_card(key, value, options, line)
@@ -735,18 +776,7 @@ class CaseControlDeck(object):
             param_type = 'BEGIN_BULK-type'
             assert key.upper() == key, key
         elif 'PARAM' in line_upper:  # param
-            if ',' in line_upper:
-                sline = line_upper.split(',')
-            elif '\t' in line_upper:
-                sline = line_upper.split('\t')
-            else:
-                raise SyntaxError("trying to parse %r..." % line)
-
-            if len(sline) != 3:
-                raise SyntaxError("trying to parse %r..." % line)
-            (key, value, options) = sline
-            param_type = 'CSV-type'
-            assert key.upper() == key, key
+            key, value, options, param_type = _split_param(line, line_upper)
         elif ' ' not in line:
             key = line.strip().upper()
             value = line.strip()
@@ -774,6 +804,7 @@ class CaseControlDeck(object):
             subcase.finish_subcase()
 
     def convert_to_sol_200(self, model):
+        # type: (object) -> None
         """
         Takes a case control deck and changes it from a SOL xxx to a SOL 200
 
@@ -827,6 +858,7 @@ class CaseControlDeck(object):
         return isubcase
 
     def cross_reference(self, model):
+        # type: (object) -> None
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -839,6 +871,7 @@ class CaseControlDeck(object):
             subcase.cross_reference(model)
 
     def get_op2_data(self):
+        # type: () -> Dict[int, Any]
         """
         Gets the relevant op2 parameters required for a given subcase
 
@@ -847,10 +880,11 @@ class CaseControlDeck(object):
         cases = {}
         for isubcase, subcase in sorted(iteritems(self.subcases)):
             if isubcase:
-                cases[isubcase] = subcase.getOp2Data(self.sol, subcase.solmap_to_value)
+                cases[isubcase] = subcase.get_op2_data(self.sol, subcase.solmap_to_value)
         return cases
 
     def __repr__(self):
+        # type: () -> str
         msg = ''
         subcase0 = self.subcases[0]
         for subcase_id, subcase in sorted(iteritems(self.subcases)):
@@ -865,7 +899,26 @@ class CaseControlDeck(object):
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
+def _split_param(line, line_upper):
+    """parses a PARAM card"""
+    if ',' in line_upper:
+        sline = line_upper.split(',')
+    elif '\t' in line_upper:
+        sline = line_upper.expandtabs().split()
+    elif ' ' in line_upper:
+        sline = line_upper.split()
+    else:
+        raise SyntaxError("trying to parse %r..." % line)
+
+    if len(sline) != 3:
+        raise SyntaxError("trying to parse %r..." % line)
+    (key, value, options) = sline
+    param_type = 'CSV-type'
+    assert key.upper() == key, key
+    return key, value, options, param_type
+
 def verify_card(key, value, options, line):
+    # type: (int, Any, Any, str) -> None
     """Make sure there are no obvious errors"""
     if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD',
                'CMETHOD', 'CSSCHD', 'DEACTEL', 'DEFORM', 'DESGLB', 'DESSUB',
@@ -981,7 +1034,7 @@ def verify_card2(key, value, options, line):
         #assert value in ['NONE','BOTH','UNSORT','SORT', 'NOSORT', 'PUNCH',
                          #''], 'line=%r is invalid; value=%r.' % (line, value)
         pass
-    elif key in ['CSCALE', 'SUBSEQ', 'SYMSEQ', 'DEFORMATION SCALE', '', '']:
+    elif key in ['CSCALE', 'SUBSEQ', 'SYMSEQ', 'DEFORMATION SCALE', '']:
         # floats
         pass
     elif 'SET' in key:
@@ -1002,6 +1055,7 @@ def verify_card2(key, value, options, line):
 
 
 def _clean_lines(lines):
+    # type: (List[str]) -> List[str]
     """
     Removes comment characters defined by a *$*.
 
@@ -1010,7 +1064,7 @@ def _clean_lines(lines):
     lines : List[str, ...]
         the lines to clean.
     """
-    lines2 = []
+    lines2 = []  # type: List[str]
     for line in lines:
         line = line.strip(' \n\r').split('$')[0].rstrip()
         if line:
@@ -1043,7 +1097,7 @@ def _clean_lines(lines):
                 lines_pack = [line]
     return [''.join(pack) for pack in lines3]
 
-def main():
+def main():  # pragma: no cover
     """test case"""
     lines = [
         'SUBCASE 1',

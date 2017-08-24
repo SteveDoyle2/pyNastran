@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 from __future__ import print_function
-from math import sqrt
+from math import sqrt, ceil
 from six import string_types
 from six.moves import range
 
 from numpy import (float32, float64, complex64, complex128, array, cross,
                    allclose, zeros, matrix, insert, diag, eye, argmax, argmin, arange)
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
-from scipy.linalg import solve_banded
-from scipy.interpolate import splrep, splev
-from scipy.integrate import quad
+from scipy.linalg import solve_banded  # type: ignore
+from scipy.interpolate import splrep, splev  # type: ignore
+from scipy.integrate import quad  # type: ignore
 
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
@@ -447,3 +447,28 @@ def unique2d(a):
     print(b)
     idx = np.unique(b, return_index=True)[1]
     return a[idx]
+
+def roundup(value, round_increment=100):
+    """
+    Rounds up to the next N.
+
+    Parameters
+    ----------
+    value : int
+        the value to round up
+    round_increment : int
+        the increment to round by
+
+    .. python
+
+      >>> 100 = roundup(10)
+      >>> 200 = roundup(105)
+      >>> 300 = roundup(200)
+      >>> 1000 = roundup(200, 1000)
+      >>> 2000 = roundup(1000, 1000)
+      >>> 2000 = roundup(1001, 1000)
+
+    .. note :: this function is used to ensure that renumbering is more
+               obvious when testing
+    """
+    return int(ceil(value / float(round_increment))) * round_increment

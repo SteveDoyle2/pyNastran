@@ -21,7 +21,7 @@ from six.moves import zip
 
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, array
 from numpy import nan as NaN
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
@@ -57,7 +57,7 @@ class NastranIO(NastranIO_xref):
 
             self.result_cases = {}
             self.ncases = 0
-        for i in ('case_keys', 'icase', 'iSubcaseNameMap'):
+        for i in ('case_keys', 'icase', 'isubcase_name_map'):
             if hasattr(self, i):
                 del i
 
@@ -784,7 +784,7 @@ class NastranIO(NastranIO_xref):
             #nys.append(ny)
             #nzs.append(nz)
 
-        self.iSubcaseNameMap = {1: ['Nastran', '']}
+        self.isubcase_name_map = {1: ['Nastran', '']}
 
         nElements = len(self.eid_map)
         #print("nElements = ", nElements)
@@ -1006,11 +1006,11 @@ class NastranIO(NastranIO_xref):
         #print("case = %s" % case)
         #for nodeID,translation in sorted(iteritems(case.translations)):
             #print("nodeID=%s t=%s" % (nodeID, translation))
-        #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
+        #self.isubcase_name_map[self.isubcase] = [Subtitle, Label]
 
         cases = {}
-        subcase_ids = model.iSubcaseNameMap.keys()
-        self.iSubcaseNameMap = model.iSubcaseNameMap
+        subcase_ids = model.isubcase_name_map.keys()
+        self.isubcase_name_map = model.isubcase_name_map
 
         for subcase_id in subcase_ids:
             cases = self.fill_oug_oqg_case(cases, model, subcase_id)

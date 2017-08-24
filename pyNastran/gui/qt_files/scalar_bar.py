@@ -1,3 +1,4 @@
+"""interface to the ScalarBar"""
 import numpy as np
 from six import string_types
 import vtk
@@ -6,8 +7,9 @@ from pyNastran.gui.colormaps import colormap_dict
 
 
 class ScalarBar(object):
-
+    """defines the ScalarBar at the side of the vtk panel"""
     def set_visibility(self, is_visible):
+        """show/hide the scalar bar"""
         #print('is_visible=%s; is_shown=%s' % (is_visible, self.is_shown))
         if is_visible:
             self.VisibilityOn()
@@ -15,18 +17,21 @@ class ScalarBar(object):
             self.VisibilityOff()
 
     def VisibilityOn(self):
+        """shows the scalar bar"""
         if not self.is_shown:
             self.scalar_bar.VisibilityOn()
             self.scalar_bar.Modified()
             self.is_shown = True
 
     def VisibilityOff(self):
+        """hides the scalar bar"""
         if self.is_shown:
             self.scalar_bar.VisibilityOff()
             self.scalar_bar.Modified()
             self.is_shown = False
 
     def __init__(self, is_horizontal):
+        """creates the scalar bar"""
         self.scalar_bar = vtk.vtkScalarBarActor()
         self.color_function = vtk.vtkColorTransferFunction()
         self.color_function.SetNanColor(0., 0., 0.)
@@ -107,12 +112,40 @@ class ScalarBar(object):
 
     def update(self, title, min_value, max_value, norm_value,
                data_format,
-               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+               nlabels=None, labelsize=None, ncolors=None, colormap='jet', colormap_order=None,
                is_low_to_high=True, is_horizontal=True,
                is_shown=True):
+        """updates the scalar bar"""
         self.color_function.RemoveAllPoints()
 
-        if colormap in [None, 'jet']:
+        # jet - HSV :)
+        # jet with RGB is red to blue (not a bad colormap, but not jet)
+
+        # viridis and plasma look good as HSV
+        # (not sure on the exact difference, but it probably should be
+        #  RGB based on the others)
+        #
+        # viridis - RGB
+        # plasma  - RGB
+        # magma   - not HSV, RGB
+        # inferno - not HSV, RGB
+        if colormap_order is None:
+            if colormap in ['jet', 'jet2', 'blend', None]:
+                colormap_order = 'hsv'
+                colormap = 'jet'
+            elif colormap in ['plasma', 'viridis', 'magma', 'inferno']:  # #2
+                colormap_order = 'rgb'
+            else:
+                raise NotImplementedError(colormap)
+
+        if colormap_order == 'rgb':
+            self.color_function.SetColorSpaceToRGB()
+        elif colormap_order == 'hsv':
+            self.color_function.SetColorSpaceToHSV()
+        else:
+            raise NotImplementedError(colormap_order)
+
+        if colormap == 'jet':
             if is_low_to_high:
                 self.color_function.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
                 self.color_function.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
@@ -151,8 +184,8 @@ class ScalarBar(object):
         self.scalar_bar.SetWidth(width)
         self.scalar_bar.SetPosition(x, y)
 
-        if 0:
-            self.color_function.SetRange(min_value, max_value)
+        #if 0:
+            #self.color_function.SetRange(min_value, max_value)
             #self.color_function.Update()
 
             #scalar_range = self.grid.GetScalarRange()
@@ -186,21 +219,21 @@ class ScalarBar(object):
                     nvalues = 11
 
                 # new
-                if 0:
-                    text_prop = self.scalar_bar.GetLabelTextProperty()
-                    #font_size = text_prop.GetFontSize()
-                    nvalues_max = 11
-                    nvalues_min = 7
-                    if nvalues > nvalues_max:
-                        font_size = 4
-                        nvalues = nvalues_max
-                        font_size = text_prop.SetFontSize(font_size)
-                        text_prop.Modified()
-                    elif nvalues < nvalues_min:
-                        nvalues = nvalues_min
-                        font_size = 12
-                        font_size = text_prop.SetFontSize(font_size)
-                        text_prop.Modified()
+                #if 0:
+                    #text_prop = self.scalar_bar.GetLabelTextProperty()
+                    ##font_size = text_prop.GetFontSize()
+                    #nvalues_max = 11
+                    #nvalues_min = 7
+                    #if nvalues > nvalues_max:
+                        #font_size = 4
+                        #nvalues = nvalues_max
+                        #font_size = text_prop.SetFontSize(font_size)
+                        #text_prop.Modified()
+                    #elif nvalues < nvalues_min:
+                        #nvalues = nvalues_min
+                        #font_size = 12
+                        #font_size = text_prop.SetFontSize(font_size)
+                        #text_prop.Modified()
         else:
             if data_format == '%i':
                 data_format_display = '%.0f'

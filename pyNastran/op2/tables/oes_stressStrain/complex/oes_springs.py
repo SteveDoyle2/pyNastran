@@ -7,7 +7,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject,
 
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -41,6 +41,7 @@ class ComplexSpringDamperArray(OES_Object):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexSpringDamperArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -181,10 +182,10 @@ class ComplexSpringDamperArray(OES_Object):
 
         eids = self.element
         #is_odd = False
-        nwrite = len(eids)
-        if len(eids) % 2 == 1:
-            nwrite -= 1
-            is_odd = True
+        #nwrite = len(eids)
+        #if len(eids) % 2 == 1:
+            #nwrite -= 1
+            #is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):

@@ -199,6 +199,7 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal = 0
 
     def build(self):
+        """sizes the vectorized attributes of the TableArray"""
         #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1(),
                                                                           #self.ntotal, self._nnodes // self.ntimes))
         if self.is_built:
@@ -260,15 +261,36 @@ class TableArray(ScalarObject):  # displacement style table
 
     def build_dataframe(self):
         headers = self.get_headers()
+        #headers = [0, 1, 2, 3, 4, 5]
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
+        #node_gridtype = self.node_gridtype
         ugridtype_str = unique(self.gridtype_str)
 
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
+            #print('data.shape = %s' % str(self.data.shape))
+            #print('column_values = %s' % column_values)
+            #print('node_gridtype.shape = %s' % str(node_gridtype.shape))
             self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=node_gridtype, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+                                       major_axis=node_gridtype, minor_axis=headers).to_frame()  # to_xarray()
+            #print(self.data_frame)
+
+            if 0:  # pragma: no cover
+                coords = {}
+                for key, value in zip(column_names, column_values):
+                    coords[key] = value
+
+                import xarray
+                #a = xarray.DataArray(self.data, items=column_values,
+                                     #major_axis=node_gridtype, minor_axis=headers)
+                a = xarray.DataArray(self.data, coords=coords)
+                #print(a)
+            else:
+                self.data_frame.columns.names = column_names
+                self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+                #print(column_names)
+                #print(self.data_frame)
+                #print(self.data_frame.index.names)
 
             letter_dims = [
                 ('G', 6),
@@ -290,6 +312,7 @@ class TableArray(ScalarObject):  # displacement style table
                     eig = self.data_frame.xs(letter, level=1)
                 else:
                     raise RuntimeError(dim)
+                #log.info('eig = %s' % eig)
                 cat_keys.append(eig)
             self.data_frame = pd.concat(cat_keys)
         else:
@@ -304,6 +327,12 @@ class TableArray(ScalarObject):  # displacement style table
             df3 = pd.DataFrame(self.data[0])
             df3.columns = headers
             self.data_frame = df1.join([df2, df3])
+
+            #df1 = pd.DataFrame(self.node_gridtype)
+            #df1.columns = ['NodeID', 'Type']
+            #df2 = pd.DataFrame(self.data[0])
+            #df2.columns = headers
+            #self.data_frame = df1.join([df2])
         #print(self.data_frame)
 
     def finalize(self):

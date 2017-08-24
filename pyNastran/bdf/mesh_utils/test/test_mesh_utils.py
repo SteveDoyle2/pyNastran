@@ -1,3 +1,4 @@
+"""various mesh_utils tests"""
 from __future__ import print_function
 import os
 import unittest
@@ -19,10 +20,13 @@ from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
+from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
-from pyNastran.bdf.mesh_utils.utils import *
+from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
+from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
+from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells
 
 pkg_path = pyNastran.__path__[0]
 
@@ -396,7 +400,7 @@ class TestMeshUtils(unittest.TestCase):
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero3.out'))
         model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
                              is_double=False, starting_id_dict=None,
-                             round_ids=False, cards_to_skip=None)
+                             round_ids=False, cards_to_skip=None, debug=False)
 
         model = read_bdf(bdf_filename, log=log)
         bdf_renumber(model, bdf_filename_out2, size=16, is_double=False,
@@ -454,21 +458,21 @@ class TestMeshUtils(unittest.TestCase):
             pkg_path, '..', 'models', 'bwb', 'mcids.csv'))
         export_mcids(bdf_filename, csv_filename,
                      export_xaxis=True, export_yaxis=True,
-                     iply=9)
+                     iply=9, log=log, debug=False)
 
-        model = read_bdf(bdf_filename, xref=False)
+        model = read_bdf(bdf_filename, xref=False, debug=False)
         model.safe_cross_reference()
 
         eids = [1204, 1211]
         export_mcids(model, csv_filename=None, eids=eids,
                      export_xaxis=True, export_yaxis=True,
-                     iply=9)
+                     iply=9, log=log, debug=False)
         export_mcids(model, csv_filename=None, eids=eids,
                      export_xaxis=True, export_yaxis=False,
-                     iply=9)
+                     iply=9, log=log, debug=False)
         export_mcids(model, csv_filename=None, eids=eids,
                      export_xaxis=False, export_yaxis=True,
-                     iply=9)
+                     iply=9, log=log, debug=False)
         with self.assertRaises(AssertionError):
             export_mcids(model, csv_filename=None, eids=eids,
                          export_xaxis=False, export_yaxis=False,
@@ -504,13 +508,13 @@ class TestMeshUtils(unittest.TestCase):
         model = BDF(debug=False)
         with self.assertRaises(NotImplementedError):
             model.read_bdf(bdf_filename=lines, validate=True, xref=True,
-                          punch=False, read_includes=True,
-                          encoding=None)
+                           punch=False, read_includes=True,
+                           encoding=None)
 
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[2., 0., 0.])
-        model.add_grid(4, xyz=[3., 0., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [2., 0., 0.])
+        model.add_grid(4, [3., 0., 0.])
 
         pid = 1000
         mid = 1000
@@ -554,9 +558,9 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_split_line_elements(self):
         """tests split_line_elements"""
-        model = BDF()
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
 
         pid = 1000
         mid = 1000
@@ -582,8 +586,8 @@ class TestMeshUtils(unittest.TestCase):
         model.add_cbar(1, pid, nids, x, g0, offt='GGG', pa=456, pb=5,
                        wa=None, wb=None, comment='End A')
         model.add_cbeam(2, 2000, nids, x, g0, offt='GGG', bit=None, pa=456,
-                       pb=5, wa=None, wb=None, sa=0,
-                       sb=0, comment='')
+                        pb=5, wa=None, wb=None, sa=0,
+                        sb=0, comment='')
         A = 42.
         model.add_conrod(3, mid, nids, A)
         model.add_prod(4000, mid, A)
@@ -596,9 +600,168 @@ class TestMeshUtils(unittest.TestCase):
         eids = [1, 2, 3, 4]
         split_line_elements(model, eids, neids=10,
                             eid_start=101, nid_start=101)
-        f = StringIO()
-        model.write_bdf(f, close=False)
-        #print(f.getvalue())
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file, close=False)
+        #print(bdf_file.getvalue())
+
+    def test_shells_add(self):
+        """
+        tests differential mass and material coordinate systems
+        on CQUAD4/CTRIA3 elements
+        """
+        pid = 10
+        mid1 = 100
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(10, pid, [1, 2, 3, 4])
+        model.add_ctria3(11, pid, [1, 2, 3])
+
+        mids = [100, 100, 100]
+        thicknesses = [0.1, 0.1, 0.1]
+        model.add_pcomp(pid, mids, thicknesses, thetas=[0., 45., 90.], souts=None,
+                        nsm=0., sb=0., ft=None,
+                        tref=0., ge=0., lam=None,
+                        z0=None, comment='')
+
+        pid = 11
+        model.add_ctria3(12, pid, [1, 2, 3], theta_mcid=45., zoffset=0.,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         comment='')
+        model.add_ctria3(13, pid, [1, 2, 3], theta_mcid=1, zoffset=0.,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1,
+                         comment='')
+
+        model.add_cquad4(14, pid, [1, 2, 3, 4], theta_mcid=45., zoffset=0.,
+                         tflag=0, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         comment='')
+        model.add_cquad4(15, pid, [1, 2, 3, 4], theta_mcid=1, zoffset=0.,
+                         tflag=1, T1=0.1, T2=0.1, T3=0.1, T4=0.1,
+                         comment='')
+        model.add_cord2r(1, rid=0,
+                         origin=[0., 0., 0.],
+                         zaxis=[0., 0., 1.],
+                         xzplane=[1., 0., 0.])
+        model.add_pshell(pid, mid1=mid1, t=2.)
+
+        e11 = 1.0
+        e22 = 2.0
+        nu12 = 0.3
+        model.add_mat8(mid1, e11, e22, nu12, rho=1.0)
+        model.validate()
+
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        mass = model.mass_properties(element_ids=13)[0]
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file)
+        model.uncross_reference()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        assert np.allclose(mass, 1.0), mass  ## TODO: wrong
+
+        mass = model.mass_properties(element_ids=14)[0]
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file, close=False)
+        bdf_file.seek(0)
+        assert np.allclose(mass, 2.0), mass
+
+        csv_filename = 'mcids.csv'
+        export_mcids(model, csv_filename=csv_filename, eids=[12, 13],
+                     export_xaxis=True, export_yaxis=True,
+                     iply=0)
+        #with open(csv_filename, 'r') as csv_file:
+            #lines = csv_file.readlines()
+            #assert len(lines) > 0, 'lines=%s' % lines
+            #for line in lines:
+                #print(line.rstrip())
+        #print('-------------')
+        export_mcids(model, csv_filename=csv_filename, eids=[14, 15],
+                     export_xaxis=True, export_yaxis=True,
+                     iply=0)
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model.uncross_reference()
+        os.remove(csv_filename)
+        #bdf_file = model.write_bdf(bdf_file)
+
+        model2 = BDF(debug=False)
+        model2.read_bdf(bdf_file, punch=True)
+        #with open(csv_filename, 'r') as csv_file:
+            #lines = csv_file.readlines()
+            #assert len(lines) > 0, 'lines=%s' % lines
+            #for line in lines:
+                #print(line.rstrip())
+
+
+    def test_pierce_model(self):
+        """tests pierce_shell_model"""
+        pid = 10
+        mid1 = 100
+        model = BDF(log=log)
+
+        # intersects (min)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(1, pid, [1, 2, 3, 4])
+
+        # intersects (max)
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [0., 1., 1.])
+        model.add_cquad4(2, pid, [5, 6, 7, 8])
+
+        # intersects (mid)
+        model.add_grid(9, [0., 0., 0.5])
+        model.add_grid(10, [1., 0., 0.5])
+        model.add_grid(11, [1., 1., 0.5])
+        model.add_grid(12, [0., 1., 0.5])
+        model.add_cquad4(3, pid, [9, 10, 11, 12])
+
+        # doesn't intersect
+        model.add_grid(13, [10., 0., 0.])
+        model.add_grid(14, [11., 0., 0.])
+        model.add_grid(15, [11., 1., 0.])
+        model.add_grid(16, [10., 1., 0.])
+        model.add_cquad4(4, pid, [13, 14, 15, 16])
+
+        model.add_pshell(pid, mid1=mid1, t=2.)
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        model.add_mat1(mid1, E, G, nu, rho=1.0)
+        model.validate()
+
+        model.cross_reference()
+
+        xyz_points = [
+            [0.4, 0.6, 0.],
+            [-1., -1, 0.],
+        ]
+        pierce_shell_model(model, xyz_points)
+
+    #def test_intersect(self):
+        #p0 = np.array([0,0,0], 'd')
+        #p1 = np.array([1,0,0], 'd')
+        #p2 = np.array([0,1,0], 'd')
+        #p3 = np.array([1,1,0], 'd')
+
+        #v = np.array([0,0,-1], 'd')
+        #for i in range(10):
+            #for j in range(10):
+                #p = np.array([i*.2-.5, j*.2-.5, 1.], 'd')
+                #print(i, j, p,
+                      #triangle_intersection(p, v, p0, p1, p2),
+                      #quad_intersection(p, v, p0, p1, p3, p2))
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

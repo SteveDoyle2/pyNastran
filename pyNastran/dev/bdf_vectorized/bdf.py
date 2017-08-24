@@ -21,9 +21,9 @@ import numpy as np
 
 from pyNastran.utils import object_attributes, print_bad_path, _filename
 from pyNastran.utils.log import get_logger2
+from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.utils import (
-    _parse_pynastran_header, to_fields, get_include_filename,
-    parse_executive_control_deck, parse_patran_syntax)
+    _parse_pynastran_header, to_fields, parse_executive_control_deck, parse_patran_syntax)
 
 #from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -99,7 +99,7 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 #from pyNastran.bdf.cards.loads.loads import (
     #DAREA, #LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN
 #)
-
+from pyNastran.bdf.errors import DuplicateIDsError, CrossReferenceError
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -253,10 +253,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # 80.3 seconds -> 67.2 seconds for full_bay model
         # (multiple BDF passes among other things)
         self._fast_add = True
-
-        self._relpath = True
-        if sys.version_info < (2, 6):
-            self._relpath = False
 
         self.log = get_logger2(log, debug)
 
@@ -1430,7 +1426,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             the card with empty fields removed
         """
         card_name = card_name.upper()
-        self._increase_card_count(card_name)
+        self.increase_card_count(card_name)
         if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
@@ -1477,7 +1473,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             the card with empty fields removed
         """
         card_name = card_name.upper()
-        self._increase_card_count(card_name)
+        self.increase_card_count(card_name)
         if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
@@ -1522,7 +1518,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             the card with empty fields removed
         """
         card_name = card_name.upper()
-        self._increase_card_count(card_name)
+        self.increase_card_count(card_name)
         if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
@@ -1983,7 +1979,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             if card_name in ['SUBCASE ', 'CEND']:
                 raise RuntimeError('No executive/case control deck was defined.')
             self.log.info('    rejecting card_name = %s' % card_name)
-        self._increase_card_count(card_name)
+        self.increase_card_count(card_name)
         self.rejects.append([comment] + card_lines)
 
     def _prepare_bctset(self, card, card_obj, comment=''):
@@ -2925,8 +2921,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         [0., 1., 0.]
         [0., 0., 1.]
         """
-        self.deprecated('icd_transform, model.get_displacement_index_transforms()',
-                        'icd_transform, beta_transforms = model.get_displacement_index()', '1.1')
+        self.deprecated('icd_transform, beta_transforms= model.get_displacement_index_transforms()',
+                        'nids_all, nids_transform, icd_transform = model.get_displacement_index()', '1.0')
         nids_transform = defaultdict(list)
         icd_transform = {}
         beta_transforms = {}
@@ -3143,7 +3139,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             for line in lines[:i]:
                 crash_file.write(line)
 
-    def _increase_card_count(self, card_name, count_num=1):
+    def _increase_card_count(self, card_name, count_num=1):  # pragma: no cover
+        """deprecated"""
+        self.deprecated('model._increase_card_count(card_name, count_num=1)',
+                        'model.increase_card_count(card_name, count_num=1)', '1.1')
+        self._increase_card_count(card_name, count_num=count_num)
+
+    def increase_card_count(self, card_name, count_num=1):
         """
         Used for testing to check that the number of cards going in is the
         same as each time the model is read verifies proper writing of cards
@@ -3287,7 +3289,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #spc1 = self.spc1.setdefault(constraint_id, SPC1(self))
             #spc1.add_card(card_obj, comment=comment)
             spc1.add(constraint_id, dofs, node_ids, comment=comment)
-        self._increase_card_count(card_name, len(cards))
+        self.increase_card_count(card_name, len(cards))
 
     def _parse_mpc(self, card_name, cards):
         """adds MPCs"""
@@ -3305,7 +3307,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             mpc.add(constraint_id, constraint, comment=comment)
         for constraint_id, constraint in iteritems(self.mpc):
             constraint.build()
-        self._increase_card_count(card_name, len(cards))
+        self.increase_card_count(card_name, len(cards))
 
     def _parse_spcadd(self, card_name, cards):
         """adds SPCADDs"""
@@ -3320,7 +3322,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 self.spcadd[constraint_id] = spcadd
             #spcadd.add_card(card_obj, comment=comment)
             spcadd.add(constraint_id, node_ids, comment=comment)
-        self._increase_card_count(card_name, len(cards))
+        self.increase_card_count(card_name, len(cards))
 
     def _parse_mpcadd(self, card_name, cards):
         """adds MPCADDs"""
@@ -3335,7 +3337,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 self.mpcadd[constraint_id] = mpcadd
             #mpcadd.add_card(card_obj, comment=comment)
             mpcadd.add(constraint_id, node_ids, comment=comment)
-        self._increase_card_count(card_name, len(cards))
+        self.increase_card_count(card_name, len(cards))
 
     def _parse_spc(self, card_name, cards):
         """SPC"""
@@ -3452,7 +3454,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     datas.append(data)
 
         ncards = len(datas)
-        self._increase_card_count(card_name, ncards)
+        self.increase_card_count(card_name, ncards)
         self.log.debug('  allocating %r' % card_cls.type)
         card_cls.allocate(self.card_count)
         for datai, comment in datas:
@@ -3465,7 +3467,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             ##def add_darea(self, darea, allow_overwrites=False):
                 ##key = (darea.sid, darea.p, darea.c)
                 ##if key in self.dareas and not allow_overwrites:
-                    ##if not darea._is_same_card(self.dareas[key]):
+                    ##if not darea == self.dareas[key]:
                         ##assert key not in self.dareas, '\ndarea=\n%s oldDArea=\n%s' % (darea, self.dareas[key])
                 ##else:
                     ##assert darea.sid > 0
@@ -3516,7 +3518,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         if ncards1:
             name1, obj1 = pair1
-            self._increase_card_count(name1, ncards1)
+            self.increase_card_count(name1, ncards1)
             self.log.debug('  allocating %r' % obj1.type)
             obj1.allocate(self.card_count)
             for comment, card_obj in cards1:
@@ -3526,7 +3528,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         if ncards2:
             name2, obj2 = pair2
-            self._increase_card_count(name2, ncards2)
+            self.increase_card_count(name2, ncards2)
             self.log.debug('  allocating %r' % obj2.type)
             obj2.allocate(self.card_count)
             for comment, card_obj in cards2:
@@ -3585,7 +3587,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     #self.log.info('  rejecting card_name = %s' % card_name)
                     for comment, card_lines in card:
                         self.rejects.append([_format_comment(comment)] + card_lines)
-                    self._increase_card_count(card_name, count_num=ncards)
+                    self.increase_card_count(card_name, count_num=ncards)
                 elif card_name in cards_to_get_lengths_of:
                     #raise RuntimeError('this shouldnt happen because we deleted the cards above')
                     continue
@@ -3609,7 +3611,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                         del cards[card_name]
                         continue
 
-                    self._increase_card_count(card_name, ncards)
+                    self.increase_card_count(card_name, ncards)
                     obj.allocate(self.card_count)
                     self.log.debug('  allocating %r' % card_name)
                     for comment, card_lines in card:
@@ -3624,7 +3626,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 #if self.is_reject(card_name):
                     #self.log.info('    rejecting card_name = %s' % card_name)
                     #for cardi in card:
-                        #self._increase_card_count(card_name)
+                        #self.increase_card_count(card_name)
                         #self.rejects.append([cardi[0]] + cardi[1])
                 #else:
                     #for comment, card_lines in card:

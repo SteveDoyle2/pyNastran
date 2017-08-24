@@ -5,7 +5,7 @@ import numpy as np
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -34,6 +34,7 @@ class ComplexCBush1DArray(OES_Object):
         raise NotImplementedError()
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBush1DArray"""
         if self.is_built:
             return
 
@@ -50,11 +51,11 @@ class ComplexCBush1DArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element = np.zeros(self.nelements, dtype='int32')
 
         #[tx, ty, tz, rx, ry, rz]
-        self.data = zeros((self.ntimes, self.nelements, 6), dtype='complex64')
+        self.data = np.zeros((self.ntimes, self.nelements, 6), dtype='complex64')
 
     def build_dataframe(self):
         headers = self.get_headers()
@@ -138,11 +139,11 @@ class ComplexCBush1DArray(OES_Object):
         return msg
 
     def get_element_index(self, eids):
-        itot = searchsorted(eids, self.element)
+        itot = np.searchsorted(eids, self.element)
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = searchsorted(eids, self.element)
+        ind = np.searchsorted(eids, self.element)
         return ind
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
@@ -204,7 +205,7 @@ class ComplexCBush1DStressArray(ComplexCBush1DArray, StressObject):
 
         if self.element_type == 102:
             element_header = '                         C O M P L E X   S T R E S S E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
-            ''
+            #''
             #' '
             #
             #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'

@@ -4,7 +4,7 @@ Defines the GUI IO file for S/HABP.
 from six import iteritems
 import numpy as np
 from numpy import zeros, array, cross, amax, amin
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 import vtk
 from vtk import vtkQuad
@@ -25,7 +25,7 @@ class ShabpIO(object):
                 'Shabp (*.out)', self.load_shabp_results)
         return data
 
-    def load_shabp_geometry(self, shabp_filename, dirname, name='main', plot=True):
+    def load_shabp_geometry(self, shabp_filename, name='main', plot=True):
         self.eid_maps[name] = {}
         self.nid_maps[name] = {}
 
@@ -43,9 +43,9 @@ class ShabpIO(object):
         #for nid,node in enumerate(nodes):
             #print "node[%s] = %s" %(nid,str(node))
 
+        nnodes = len(nodes)
         self.nNodes = len(nodes)
         self.nElements = len(elements)
-
         #print("nNodes = ",self.nNodes)
         #print("nElements = ", self.nElements)
 
@@ -57,11 +57,11 @@ class ShabpIO(object):
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #elem.SetNumberOfPoints(nNodes)
-        if 0:
-            fraction = 1. / nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *node)
-                self.gridResult.InsertNextValue(nid * fraction)
+        #if 0:
+            #fraction = 1. / nnodes  # so you can color the nodes by ID
+            #for nid, node in sorted(iteritems(nodes)):
+                #points.InsertPoint(nid - 1, *node)
+                #self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)
 
                 #elem = vtk.vtkVertex()
@@ -100,7 +100,7 @@ class ShabpIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['S/HABP', '']}
+        self.isubcase_name_map = {1: ['S/HABP', '']}
         cases = {}
         ID = 1
 
@@ -239,7 +239,7 @@ class ShabpIO(object):
         cases[icase+13] = (nz_res, (itime, 'NormalZ'))
         return form, cases
 
-    def load_shabp_results(self, shabp_filename, dirname):
+    def load_shabp_results(self, shabp_filename):
         Cpd, deltad = self.model.read_shabp_out(shabp_filename)
 
         cases = self.result_cases

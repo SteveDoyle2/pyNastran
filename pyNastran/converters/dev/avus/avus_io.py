@@ -22,7 +22,7 @@ class AvusIO(object):
     #def removeOldGeometry(self, filename):
         #self._remove_old_cart3d_geometry(filename)
 
-    def load_avus_geometry(self, avus_filename, dirname, name='main', plot=True):
+    def load_avus_geometry(self, avus_filename, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -54,7 +54,7 @@ class AvusIO(object):
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.iSubcaseNameMap = {1: ['Avus%s' % note, '']}
+        self.isubcase_name_map = {1: ['Avus%s' % note, '']}
         cases = {}
         ID = 1
 
@@ -205,9 +205,9 @@ class AvusIO(object):
     def clear_avus(self):
         pass
 
-    #def load_tecplot_results(self, cart3d_filename, dirname):
+    #def load_tecplot_results(self, cart3d_filename):
         #model = Cart3D(log=self.log, debug=False)
-        #self.load_cart3d_geometry(cart3d_filename, dirname)
+        #self.load_cart3d_geometry(cart3d_filename)
 
     def _fill_avus_case(self, cases, ID, model, is_surface):
         #'x', 'y', 'z',

@@ -98,9 +98,6 @@ class VectorizedCard(object):
         self.write_card(string_io, i, size=size)
         return string_io.getvalue().rstrip()
 
-    def write_card(self, bdf_file, size=8, is_double=False):
-        raise NotImplementedError(self.type)
-
     def _verify(self, xref=True):
         raise NotImplementedError(self.type)
 

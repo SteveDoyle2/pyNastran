@@ -88,6 +88,7 @@ class DELAY(BaseCard):
         self.components = components
         #: Time delay (tau) for designated point Pi and component Ci. (Real)
         self.delays = delays
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -137,23 +138,23 @@ class DELAY(BaseCard):
             the BDF object
         """
         msg = ', which is required by DELAY sid=%s' % self.sid
-        self.nodes = model.Node(self.node_ids, msg=msg)
+        self.nodes_ref = model.Node(self.node_ids, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     @property
     def node_id1(self):
-        if isinstance(self.nodes[0], integer_types):
-            return self.nodes[0]
-        return self.nodes_ref[0].nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[0].nid
+        return self.nodes[0]
 
     @property
     def node_id2(self):
-        if isinstance(self.nodes[1], integer_types):
-            return self.nodes[1]
-        return self.nodes_ref[1].nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[1].nid
+        return self.nodes[1]
 
     @property
     def node_ids(self):
@@ -230,6 +231,7 @@ class DPHASE(BaseCard):
         self.nodes = nodes
         self.components = components
         self.phase_leads = phase_leads
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -276,33 +278,34 @@ class DPHASE(BaseCard):
             the BDF object
         """
         msg = ', which is required by DPHASE sid=%s' % self.sid
-        self.nodes = model.Nodes(self.node_ids, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def get_dphase_at_freq(self, freq):
         return self.nodes, self.components, self.phase_leads
 
     @property
     def node_id1(self):
-        if isinstance(self.nodes[0], integer_types):
-            return self.nodes[0]
-        return self.nodes_ref[0].nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[0].nid
+        return self.nodes[0]
 
     @property
     def node_id2(self):
-        if isinstance(self.nodes[1], integer_types):
-            return self.nodes[1]
-        return self.nodes_ref[1].nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[1].nid
+        return self.nodes[1]
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         node_ids = [self.node_id1]
         if len(self.components) == 2:
             node_ids.append(self.node_id2)
@@ -310,12 +313,8 @@ class DPHASE(BaseCard):
 
     def raw_fields(self):
         list_fields = ['DPHASE', self.sid]
-        for nid, comp, delay in zip(self.nodes, self.components, self.phase_leads):
-            if isinstance(nid, integer_types):
-                nidi = nid
-            else:
-                nidi = nid.nid
-            list_fields += [nidi, comp, delay]
+        for nid, comp, delay in zip(self.node_ids, self.components, self.phase_leads):
+            list_fields += [nid, comp, delay]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -359,6 +358,8 @@ class FREQ(BaseCard):
         if comment:
             self.comment = comment
         self.sid = sid
+        if isinstance(freqs, float):
+            freqs = [freqs]
         self.freqs = np.unique(freqs)
 
     @classmethod
@@ -414,7 +415,7 @@ class FREQ(BaseCard):
         return self.comment + print_card_16(card)
 
 
-class FREQ1(FREQ):
+class FREQ1(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency
     response problems by specification of a starting frequency, frequency
@@ -455,7 +456,7 @@ class FREQ1(FREQ):
         self.ndf = ndf
 
         freqs = []
-        for i in range(ndf):
+        for i in range(ndf + 1):
             freqs.append(f1 + i * df)
         self.freqs = unique(freqs)
 
@@ -478,6 +479,10 @@ class FREQ1(FREQ):
         assert len(card) <= 5, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
+    def raw_fields(self):
+        list_fields = ['FREQ1', self.sid, self.f1, self.df, self.ndf]
+        return list_fields
+
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
@@ -485,7 +490,7 @@ class FREQ1(FREQ):
         return self.comment + print_card_16(card)
 
 
-class FREQ2(FREQ):
+class FREQ2(BaseCard):
     """
     Defines a set of frequencies to be used in the solution of frequency
     response problems by specification of a starting frequency, final
@@ -511,7 +516,7 @@ class FREQ2(FREQ):
             set id referenced by case control FREQUENCY
         f1 : float
             first frequency
-        f1 : float
+        f2 : float
             last frequency
         nf : int; default=1
             number of logorithmic intervals
@@ -525,9 +530,11 @@ class FREQ2(FREQ):
         self.f2 = f2
         self.nf = nf
 
+        assert f1 > 0., 'FREQ2: f1=%s f2=%s nf=%s' % (f1, f2, nf)
+        assert nf > 0, 'FREQ2: f1=%s f2=%s nf=%s' % (f1, f2, nf)
         d = 1. / nf * log(f2 / f1)
-        freqs = []
-        for i in range(nf):
+        freqs = [f1]
+        for i in range(1, nf + 1):
             freqs.append(f1 * exp(i * d))  # 0 based index
         self.freqs = np.unique(freqs)
 
@@ -551,20 +558,94 @@ class FREQ2(FREQ):
         return FREQ2(sid, f1, f2, nf, comment=comment)
         #return FREQ(sid, freqs, comment=comment)
 
+    def raw_fields(self):
+        list_fields = ['FREQ2', self.sid, self.f1, self.f2, self.nf]
+        return list_fields
 
-#class FREQ3(FREQ):
-    #type = 'FREQ3'
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
-    #def __init__(self, card=None, data=None, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError()
+class FREQ3(FREQ):
+    """
+    +-------+-----+------+-------+--------+-----+---------+
+    |   1   |  2  |   3  |   4   |    5   |  6  |    7    |
+    +=======+=====+======+=======+========+=====+=========+
+    | FREQ3 | SID |  F1  |  F2   |  TYPE  | NEF | CLUSTER |
+    +-------+-----+------+-------+--------+-----+---------+
+    | FREQ3 |  6  | 20.0 | 200.0 | LINEAR | 10  |   2.0   |
+    +-------+-----+------+-------+--------+-----+---------+
+    """
+    type = 'FREQ3'
 
-    #def write_card(self, size=8, is_double=False):
-        #card = self.repr_fields()
-        #if size == 8:
-            #return self.comment + print_card_8(card)
-        #return self.comment + print_card_16(card)
+    def __init__(self, sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment=''):
+        """
+        Creates a FREQ4 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float; default=0.0???
+            Lower bound of frequency range in cycles per unit time.
+        f2 : float; default=1E20???
+            Upper bound of frequency range in cycles per unit time.
+        freq_type : str; default=LINEAR
+            valid_types={LINEAR, LOG}
+        nef : int; default=10
+            ???
+        cluster : float; default=1.0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment = comment
+        if f2 is None:
+            f2 = f1
+        self.sid = sid
+        self.f1 = f1
+        self.f2 = f2
+        self.freq_type = freq_type
+        self.nef = nef
+        self.cluster = cluster
+
+    #def get_freqs(self):
+        #raise NameError()
+    def validate(self):
+        assert self.freq_type in ['LINEAR', 'LOG'], 'freq_type=%r' % self.freq_type
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a FREQ3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+        f1 = double(card, 2, 'f1')
+        f2 = double_or_blank(card, 3, 'f2', f1)
+        freq_type = string_or_blank(card, 4, 'Type', 'LINEAR')
+        nef = integer_or_blank(card, 5, 'nef', 10)
+        cluster = double_or_blank(card, 6, 'cluster', 1.0)
+        return FREQ3(sid, f1, f2=f2, freq_type=freq_type, nef=nef, cluster=cluster,
+                     comment=comment)
+
+    def raw_fields(self):
+        return ['FREQ3', self.sid, self.f1, self.f2, self.freq_type, self.nef, self.cluster]
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class FREQ4(FREQ):
@@ -585,7 +666,23 @@ class FREQ4(FREQ):
     """
     type = 'FREQ4'
 
-    def __init__(self, sid, f1, f2, fspread=0.1, nfm=3, comment=''):
+    def __init__(self, sid, f1=0., f2=1e20, fspread=0.1, nfm=3, comment=''):
+        """
+        Creates a FREQ4 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float; default=0.0
+            Lower bound of frequency range in cycles per unit time.
+        f2 : float; default=1E20
+            Upper bound of frequency range in cycles per unit time.
+        nfm : int; default=3
+            Number of evenly spaced frequencies per 'spread' mode.
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         self.sid = sid
@@ -612,7 +709,7 @@ class FREQ4(FREQ):
         fspread = double_or_blank(card, 4, 'fspd', 0.1)
         nfm = integer_or_blank(card, 5, 'nfm', 3)
         assert len(card) <= 6, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
-        return FREQ4(sid, f1, f2, fspread, nfm, comment=comment)
+        return FREQ4(sid, f1=f1, f2=f2, fspread=fspread, nfm=nfm, comment=comment)
 
     def raw_fields(self):
         list_fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspread,
@@ -629,19 +726,84 @@ class FREQ4(FREQ):
         return self.comment + print_card_16(card)
 
 
-#class FREQ5(FREQ):
-    #type = 'FREQ5'
+class FREQ5(FREQ):
+    """
+    Defines a set of frequencies used in the solution of modal
+    frequency-response problems by specification of a frequency
+    range and fractions of the natural frequencies within that range.
 
-    #def __init__(self, card=None, data=None, comment=''):
-        #if comment:
-            # self.comment = comment
-        #raise NotImplementedError()
+    +-------+------+------+--------+------+-----+-----+-----+------+
+    |   1   |  2   |   3  |   4    |   5  |  6  |  7  |  8  |   9  |
+    +=======+======+======+========+======+=====+=====+=====+======+
+    | FREQ5 | SID  |  F1  |   F2   |  FR1 | FR2 | FR3 | FR4 | FR5  |
+    +-------+------+------+--------+------+-----+-----+-----+------+
 
-    #def write_card(self, size=8, is_double=False):
-        #card = self.repr_fields()
-        #if size == 8:
-            #return self.comment + print_card_8(card)
-        #return self.comment + print_card_16(card)
+    +-------+------+------+--------+------+-----+-----+-----+------+
+    | FREQ5 |  6   | 20.0 | 2000.0 | 1.0  | 0.6 | 0.8 | 0.9 | 0.95 |
+    +-------+------+------+--------+------+-----+-----+-----+------+
+    |       | 1.05 | 1.1  |  1.2   |      |     |     |     |      |
+    +-------+------+------+--------+------+-----+-----+-----+------+
+    """
+    type = 'FREQ5'
+
+    def __init__(self, sid, fractions, f1=0., f2=1e20, comment=''):
+        """
+        Creates a FREQ5 card
+
+        Parameters
+        ----------
+        sid : int
+            set id referenced by case control FREQUENCY
+        f1 : float; default=0.0
+            Lower bound of frequency range in cycles per unit time.
+        f2 : float; default=1e20
+            Upper bound of frequency range in cycles per unit time.
+        fractions : List[float]
+            Fractions of the natural frequencies in the range F1 to F2.
+        comment : str; default=''
+            a comment for the card
+
+        .. note:: FREQ5 is only valid in modal frequency-response
+                  solutions (SOLs 111, 146, and 200) and is ignored in
+                  direct frequency response solutions.
+        """
+        if comment:
+            self.comment = comment
+        if f2 is None:
+            f2 = f1
+        self.sid = sid
+        self.f1 = f1
+        self.f2 = f2
+        self.fractions = fractions
+
+    def validate(self):
+        assert len(self.fractions) > 0, 'FREQ5: fractions=%s' % self.fractions
+
+    #def get_freqs(self):
+        #raise NameError()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        f1 = double(card, 2, 'f1')
+        f2 = double_or_blank(card, 3, 'f2', f1)
+
+        i = 1
+        fractions = []
+        for ifield in range(4, len(card)):
+            fraction = double(card, ifield, 'FR%i' % (i))
+            fractions.append(fraction)
+            i += 1
+        return FREQ5(sid, fractions, f1=f2, f2=f2, comment=comment)
+
+    def raw_fields(self):
+        return ['FREQ5', self.sid, self.f1, self.f2] + list(self.fractions)
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 
 class NLPARM(BaseCard):
@@ -1039,6 +1201,15 @@ class ROTORD(BaseCard):
         self.rspeeds_ref = None
 
     def validate(self):
+        assert isinstance(self.rids, list), self.rids
+        assert isinstance(self.rsets, list), self.rsets
+        assert isinstance(self.rspeeds, list), self.rspeeds
+        assert isinstance(self.rcords, list), self.rcords
+        assert isinstance(self.w3s, list), self.w3s
+        assert isinstance(self.w4s, list), self.w4s
+        assert isinstance(self.rforces, list), self.rforces
+        assert isinstance(self.brgsets, list), self.brgsets
+
         nrsets = len(self.rsets)
         if nrsets == 0:
             raise RuntimeError('nrsets=0')
@@ -1434,6 +1605,14 @@ class TSTEP(BaseCard):
         """
         if comment:
             self.comment = comment
+
+        if isinstance(N, integer_types):
+            N = [N]
+        if isinstance(DT, float):
+            DT = [DT]
+        if isinstance(NO, integer_types):
+            NO = [NO]
+
         self.sid = sid
         #: Number of time steps of value DTi. (Integer > 1)
         self.N = N
@@ -1982,7 +2161,7 @@ class TIC(BaseCard):
         nid = data[1]
         comp = data[2]
         u0 = data[3]
-        u0 = data[4]
+        v0 = data[4]
         return TIC(sid, nid, comp, u0, v0, comment=comment)
 
     @property

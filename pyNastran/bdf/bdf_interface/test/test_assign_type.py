@@ -8,7 +8,6 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     _get_dtype, interpret_value)
 
 class ExtendedTestCase(unittest.TestCase):
-
     def assertRaisesWithMessage(self, msg, func, *args, **kwargs):
         try:
             func(*args, **kwargs)
@@ -17,39 +16,66 @@ class ExtendedTestCase(unittest.TestCase):
             self.assertEqual(inst.message, msg)
 
 class TestAssignType(ExtendedTestCase):
+    """tests various assign_types.py functions"""
 
     def run_function_default(self, f, card, exact, default):
+        """
+        Helper function
+
+        Parameters
+        ----------
+        f : function
+           integer_or_blank
+        card : List[varies]
+            a series of values to add
+        exacts : List[float]
+            list of results
+        default : List[float]
+            list of default values
+        """
         fieldname = 'f'
         assert len(card) == len(exact), 'len(card)=%s len(exact)=%s' % (len(card), len(exact))
         assert len(card) == len(default), 'len(card)=%s len(default)=%s' % (len(card), len(default))
         i = 0
-        card = BDFCard(card)
+        bdf_card = BDFCard(card)
         for i, exacti in enumerate(exact):
             defaulti = default[i]
             if exacti == SyntaxError:
                 with self.assertRaises(exacti):
-                    msg = 'field=%r exact=%r default=%r' % (card.field(i), exacti, defaulti)
-                    #print msg
-                    f(card, i, fieldname, defaulti)
+                    #msg = 'field=%r exact=%r default=%r' % (bdf_card.field(i), exacti, defaulti)
+                    #print(msg)
+                    f(bdf_card, i, fieldname, defaulti)
             else:
-                value = f(card, i, fieldname, defaulti)
+                value = f(bdf_card, i, fieldname, defaulti)
                 self.assertEqual(value, exacti)
             i += 1
 
     def run_function(self, f, card, exact):
+        """
+        Helper function
+
+        Parameters
+        ----------
+        f : function
+           integer_or_blank
+        card : List[varies]
+            a series of values to add
+        exacts : List[float]
+            list of results
+        """
         assert len(card) == len(exact), 'len(card)=%s len(exact)=%s' % (len(card), len(exact))
         i = 0
         fieldname = 'f'
-        card = BDFCard(card)
+        bdf_card = BDFCard(card)
         for i, exacti in enumerate(exact):
             if exacti == SyntaxError:
                 with self.assertRaises(SyntaxError):
-                    msg = 'field=%r exact=%r' % (card.field(i), exacti)
+                    msg = 'field=%r exact=%r' % (bdf_card.field(i), exacti)
                     #print msg
-                    f(card, i, fieldname)
+                    f(bdf_card, i, fieldname)
             else:
 
-                value = f(card, i, fieldname)
+                value = f(bdf_card, i, fieldname)
                 self.assertEqual(value, exacti)
             i += 1
 

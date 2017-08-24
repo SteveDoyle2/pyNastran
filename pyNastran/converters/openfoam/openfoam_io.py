@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 from numpy import zeros, arange, amax, amin, where, unique, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 import vtk
 #VTK_TRIANGLE = 5
@@ -53,23 +53,23 @@ class OpenFoamIO(object):
             try:
                 del self.caseKeys
                 del self.iCase
-                del self.iSubcaseNameMap
+                del self.isubcase_name_map
             except:
                 print("cant delete geo")
             skip_reading = False
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_openfoam_geometry_hex(self, openfoam_filename, dirname, plot=True):
-        self.load_openfoam_geometry(openfoam_filename, dirname, 'hex')
+    def load_openfoam_geometry_hex(self, openfoam_filename, plot=True):
+        self.load_openfoam_geometry(openfoam_filename, 'hex')
 
-    def load_openfoam_geometry_shell(self, openfoam_filename, dirname, plot=True):
-        self.load_openfoam_geometry(openfoam_filename, dirname, 'shell')
+    def load_openfoam_geometry_shell(self, openfoam_filename, plot=True):
+        self.load_openfoam_geometry(openfoam_filename, 'shell')
 
-    def load_openfoam_geometry_faces(self, openfoam_filename, dirname, plot=True):
-        self.load_openfoam_geometry(openfoam_filename, dirname, 'faces')
+    def load_openfoam_geometry_faces(self, openfoam_filename, plot=True):
+        self.load_openfoam_geometry(openfoam_filename, 'faces')
 
-    def load_openfoam_geometry(self, openfoam_filename, dirname, mesh_3d, plot=True):
+    def load_openfoam_geometry(self, openfoam_filename, mesh_3d, plot=True):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
@@ -114,6 +114,7 @@ class OpenFoamIO(object):
         elif mesh_3d == 'shell':
             self.nElements = len(quads)
         elif mesh_3d == 'faces':
+            dirname = os.path.dirname(openfoam_filename)
             point_filename = os.path.join(dirname, 'points')
             face_filename = os.path.join(dirname, 'faces')
             boundary_filename = os.path.join(dirname, 'boundary')
@@ -294,8 +295,8 @@ class OpenFoamIO(object):
             #note = ':  avg(Mach)=%g' % avgMach
         #else:
             #note = ''
-        #self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
-        self.iSubcaseNameMap = {0: ['OpenFoam BlockMeshDict', '']}
+        #self.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
+        self.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
         cases = {}
         ID = 1
 
@@ -320,7 +321,7 @@ class OpenFoamIO(object):
     def clear_openfoam(self):
         pass
 
-    def _load_openfoam_results(self, openfoam_filename, dirname):
+    def _load_openfoam_results(self, openfoam_filename):
         raise NotImplementedError()
 
     def _fill_openfoam_case(self, cases, ID, nodes, nelements, patches, names, normals,

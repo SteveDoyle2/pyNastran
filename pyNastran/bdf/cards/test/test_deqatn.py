@@ -3,10 +3,12 @@ import os
 import unittest
 from six.moves import StringIO
 
+import numpy as np
+
 import pyNastran
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
-import numpy as np
 
 #root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -420,6 +422,7 @@ class TestDEQATN(unittest.TestCase):
             #model.add_card(desvar, 'DESVAR', is_list=True)
         model.cross_reference()
         model._verify_bdf()
+        save_load_deck(model)
 
     def test_deqatn_12(self):
         """
@@ -450,6 +453,7 @@ class TestDEQATN(unittest.TestCase):
         model.cross_reference()
         #print(model.dequations[41].eqs)
         #print(model.dequations[41].func_str)
+        #save_load_deck(model)
 
     @unittest.expectedFailure
     def test_deqatn_13(self):

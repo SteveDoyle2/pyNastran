@@ -14,18 +14,15 @@ import inspect
 import warnings
 from copy import deepcopy
 from six import iteritems, StringIO, string_types
+from typing import List, Union, Dict, Tuple, Optional
 
-import numpy as np
-from numpy import unique, cross, dot, array
+import numpy as np  # type: ignore
+from numpy import unique, cross, dot, array  # type: ignore
 
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 
-
-is_windows = 'nt' in os.name
-#is_linux = 'posix' in os.name
-#is_mac = 'darwin' in os.name
 
 _REMOVED_LINES = [
     '$EXECUTIVE CONTROL DECK',
@@ -48,6 +45,7 @@ EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units']
 
 
 def _to_fields_mntpnt1(card_lines):
+    # type: (List[str]) -> List[str]
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
 
@@ -69,112 +67,114 @@ def _to_fields_mntpnt1(card_lines):
     ]
     return fields
 
-def to_fields_long(card_lines, card_name):
-    """
-    Converts a series of lines in a card into string versions of the field.
-    Handles large, small, and CSV formatted cards.
+#def to_fields_long(card_lines, card_name):
+    ## type: (List[str], str) -> List[str]
+    #"""
+    #Converts a series of lines in a card into string versions of the field.
+    #Handles large, small, and CSV formatted cards.
 
-    Doesn't consider Nastran's rule about 72 character width fields,
-    which is nice when you have poorly formatted BDFs.
+    #Doesn't consider Nastran's rule about 72 character width fields,
+    #which is nice when you have poorly formatted BDFs.
 
-    Parameters
-    ----------
-    lines : List[str]
-        the lines of the BDF card object
-    card_name : str
-        the card_name -> 'GRID'
+    #Parameters
+    #----------
+    #lines : List[str]
+        #the lines of the BDF card object
+    #card_name : str
+        #the card_name -> 'GRID'
 
-    Returns
-    -------
-    fields : List[str]
-        the string formatted fields of the card
+    #Returns
+    #-------
+    #fields : List[str]
+        #the string formatted fields of the card
 
-    .. warning:: this function is used by the reader and isn't intended
-                 to be called by a separate process
+    #.. warning:: this function is used by the reader and isn't intended
+                 #to be called by a separate process
 
-    .. code-block:: python
+    #.. code-block:: python
 
-      >>> card_lines = ['GRID,1,,1.0,2.0,3.0']
-      >>> card_name = 'GRID'
-      >>> fields = to_fields_long(lines, card_name)
-      >>> fields
-      ['GRID', '1', '', '1.0', '2.0', '3.0']
-    """
-    fields = []
+      #>>> card_lines = ['GRID,1,,1.0,2.0,3.0']
+      #>>> card_name = 'GRID'
+      #>>> fields = to_fields_long(lines, card_name)
+      #>>> fields
+      #['GRID', '1', '', '1.0', '2.0', '3.0']
+    #"""
+    #fields = []  # type: List[str]
 
-    if card_name == 'MONPNT1':
-        return _to_fields_mntpnt1(card_lines)
+    #if card_name == 'MONPNT1':
+        #return _to_fields_mntpnt1(card_lines)
 
-    # first line
-    line = card_lines.pop(0)
-    if '=' in line:
-        msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
-        raise CardParseSyntaxError(msg)
+    ## first line
+    #line = card_lines.pop(0)
+    #if '=' in line:
+        #msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
+        #raise CardParseSyntaxError(msg)
 
-    if '\t' in line:
-        line = line.expandtabs()
-        if ',' in line:
-            msg = 'tabs and commas in the same line are not supported...line=%r' % line
-            raise CardParseSyntaxError(msg)
+    #if '\t' in line:
+        #line = line.expandtabs()
+        #if ',' in line:
+            #msg = 'tabs and commas in the same line are not supported...line=%r' % line
+            #raise CardParseSyntaxError(msg)
 
-    if '*' in line:  # large field
-        if ',' in line:  # csv
-            new_fields = line.split(',')[:5]
-            for i in range(5 - len(new_fields)):
-                new_fields.append('')
-        else:  # standard
-            new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
-                          line[56:72]]
-        fields += new_fields
-        assert len(fields) == 5, fields
-    else:  # small field
-        if ',' in line:  # csv
-            new_fields = line.split(',')[:9]
-            for i in range(9 - len(new_fields)):
-                new_fields.append('')
-        else:  # standard
-            new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
-                          line[32:40], line[40:48], line[48:56], line[56:64],
-                          line[64:72]]
-        fields += new_fields
-        assert len(fields) == 9, fields
+    #if '*' in line:  # large field
+        #if ',' in line:  # csv
+            #new_fields = line.split(',')[:5]
+            #for i in range(5 - len(new_fields)):
+                #new_fields.append('')
+        #else:  # standard
+            #new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
+                          #line[56:72]]
+        #fields += new_fields
+        #assert len(fields) == 5, fields
+    #else:  # small field
+        #if ',' in line:  # csv
+            #new_fields = line.split(',')[:9]
+            #for i in range(9 - len(new_fields)):
+                #new_fields.append('')
+        #else:  # standard
+            #new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
+                          #line[32:40], line[40:48], line[48:56], line[56:64],
+                          #line[64:72]]
+        #fields += new_fields
+        #assert len(fields) == 9, fields
 
-    for j, line in enumerate(card_lines): # continuation lines
-        if '=' in line and card_name != 'EIGRL':
-            msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
-            raise CardParseSyntaxError(msg)
-        if '\t' in line:
-            line = line.expandtabs()
-            if ',' in line:
-                msg = 'tabs and commas in the same line are not supported...line=%r' % line
-                raise CardParseSyntaxError(msg)
+    #for j, line in enumerate(card_lines): # continuation lines
+        #if '=' in line and card_name != 'EIGRL':
+            #msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
+            #raise CardParseSyntaxError(msg)
+        #if '\t' in line:
+            #line = line.expandtabs()
+            #if ',' in line:
+                #msg = 'tabs and commas in the same line are not supported...line=%r' % line
+                #raise CardParseSyntaxError(msg)
 
-        if '*' in line:  # large field
-            if ',' in line:  # csv
-                new_fields = line.split(',')[1:5]
-                for i in range(4 - len(new_fields)):
-                    new_fields.append('')
-            else:  # standard
-                new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
-            assert len(new_fields) == 4, new_fields
-        else:  # small field
-            if ',' in line:  # csv
-                new_fields = line.split(',')[1:9]
-                for i in range(8 - len(new_fields)):
-                    new_fields.append('')
-            else:  # standard
-                new_fields = [line[8:16], line[16:24], line[24:32],
-                              line[32:40], line[40:48], line[48:56],
-                              line[56:64], line[64:72]]
-            if len(new_fields) != 8:
-                nfields = len(new_fields)
-                msg = 'nFields=%s new_fields=%s' % (nfields, new_fields)
-                raise RuntimeError(msg)
+        #if '*' in line:  # large field
+            #if ',' in line:  # csv
+                #new_fields = line.split(',')[1:5]
+                #for i in range(4 - len(new_fields)):
+                    #new_fields.append('')
+            #else:  # standard
+                #new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
+            #assert len(new_fields) == 4, new_fields
+        #else:  # small field
+            #if ',' in line:  # csv
+                #new_fields = line.split(',')[1:9]
+                #for i in range(8 - len(new_fields)):
+                    #new_fields.append('')
+            #else:  # standard
+                #new_fields = [line[8:16], line[16:24], line[24:32],
+                              #line[32:40], line[40:48], line[48:56],
+                              #line[56:64], line[64:72]]
+            #if len(new_fields) != 8:
+                #nfields = len(new_fields)
+                #msg = 'nFields=%s new_fields=%s' % (nfields, new_fields)
+                #raise RuntimeError(msg)
 
-        fields += new_fields
-    return fields #[field.strip() for field in fields]
+        #fields += new_fields
+    #return fields #[field.strip() for field in fields]
 
 def to_fields(card_lines, card_name):
+    # type: (List[str], str) -> List[str]
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
@@ -202,7 +202,7 @@ def to_fields(card_lines, card_name):
       >>> fields
       ['GRID', '1', '', '1.0', '2.0', '3.0']
     """
-    fields = []
+    fields = []  # type: List[str]
 
     if card_name == 'MONPNT1':
         return _to_fields_mntpnt1(card_lines)
@@ -275,41 +275,6 @@ def to_fields(card_lines, card_name):
 
         fields += new_fields
     return fields #[field.strip() for field in fields]
-
-
-def get_include_filename(card_lines, include_dir=''):
-    """
-    Parses an INCLUDE file split into multiple lines (as a list).
-
-    Parameters
-    ----------
-    card_lines : List[str]
-        the list of lines in the include card (all the lines!)
-    include_dir : str; default=''
-        the include directory
-
-    Returns
-    -------
-    filename : str
-        the INCLUDE filename
-    """
-    card_lines2 = []
-    for line in card_lines:
-        line = line.strip('\t\r\n ')
-        card_lines2.append(line)
-
-    card_lines2[0] = card_lines2[0][7:].strip()  # truncate the cardname
-    filename = ''.join(card_lines2)
-    filename = filename.strip('"').strip("'")
-    if ':' in filename:
-        ifilepaths = filename.split(':')
-        filename = os.path.join(*ifilepaths)
-    if is_windows:
-        filename = os.path.join(include_dir, filename).replace('/', '\\')
-    else:
-        filename = os.path.join(include_dir, filename).replace('\\', '/')
-    return filename
-
 
 def parse_executive_control_deck(executive_control_lines):
     """
@@ -340,7 +305,24 @@ def parse_executive_control_deck(executive_control_lines):
 
 
 def _parse_pynastran_header(line):
+    # type: (str) -> Tuple[Optional[str], Optional[str]]
     """
+    Parameters
+    ----------
+    line : str
+        the line to parse (e.g., '$ pyNastran: version=NX')
+
+    Returns
+    -------
+    key : str / None
+        the key for the parameters
+        str : valid (e.g., 'version')
+        None : invalid
+    value : str / None
+        the key for the parameters
+        str : valid (e.g., 'NX')
+        None : invalid
+
     Search for data of the form:
         ..code-block :: python
             $ pyNastran: version=NX
@@ -392,27 +374,29 @@ def _parse_pynastran_header(line):
     return key, value
 
 
-def clean_empty_lines(lines):
-    """
-    Removes leading and trailing empty lines
-    don't remove internally blank lines
-    """
-    found_lines = False
-    if len(lines) < 2:
-        return lines
+#def clean_empty_lines(lines):
+    ## type: (List[str]) -> List[str]
+    #"""
+    #Removes leading and trailing empty lines
+    #don't remove internally blank lines
+    #"""
+    #found_lines = False
+    #if len(lines) < 2:
+        #return lines
 
-    for i, line in enumerate(lines):
-        if not found_lines and line:
-            found_lines = True
-            n1 = i
-            n2 = i + 1
-        elif found_lines and line:
-            n2 = i + 1
-    lines2 = lines[n1:n2]
-    return lines2
+    #for i, line in enumerate(lines):
+        #if not found_lines and line:
+            #found_lines = True
+            #n1 = i
+            #n2 = i + 1
+        #elif found_lines and line:
+            #n2 = i + 1
+    #lines2 = lines[n1:n2]
+    #return lines2
 
 
-def print_filename(filename, relpath):
+def print_filename(filename, relpath=True):
+    # type: (str, str) -> str
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
     relative paths.  If it's on another drive, the path is not modified.
@@ -436,6 +420,7 @@ def print_filename(filename, relpath):
 
 
 def parse_patran_syntax(node_sets, pound=None):
+    # type: (str, Optional[int]) -> np.ndarray
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -494,7 +479,7 @@ def parse_patran_syntax(node_sets, pound=None):
         return array([], dtype='int32')
 
     snodes = node_sets.split()
-    nodes = []
+    nodes = []  # type: List[int]
     for snode in snodes:
         if ':' in snode:
             ssnode = snode.split(':')
@@ -519,6 +504,7 @@ def parse_patran_syntax(node_sets, pound=None):
     return unique(nodes)
 
 def write_patran_syntax_dict(dict_sets):
+    # type: (Dict[str, np.ndarray]) -> str
     """
     writes partran syntax
 
@@ -542,15 +528,17 @@ def write_patran_syntax_dict(dict_sets):
                        if len(double) == 3 else '%s:%s:%s' % (double[0], double[2], double[4])
                        for double in doubles]
         double_str = ' '.join(double_list)
-        msg += '%s %s %s ' % (key,
-                             ' '.join(str(single) for single in singles),
-                             double_str,
-                            )
+        msg += '%s %s %s ' % (
+            key,
+            ' '.join(str(single) for single in singles),
+            double_str,
+        )
     assert '%' not in msg, msg
     return msg.strip().replace('  ', ' ')
 
 
 def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
+    # type: (str, Dict[str, Optional[int]], str) -> Dict[str, np.ndarray]
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -602,7 +590,7 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
               Use parse_patran_syntax to skip the identifier.
     .. warning:: case sensitive
     """
-    data = {}
+    data = {}  # type: Dict[str, List[int]]
     try:
         snodes = node_sets.split()
     except AttributeError:
@@ -675,6 +663,7 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
 
 
 def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
+    # type: (str, Dict[str, str], str) -> Dict[str, np.ndarray]
     """
     Parses Patran's syntax for compressing nodes/elements
 
@@ -724,14 +713,14 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
     .. todo:: doesn't support msg
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
-    update_type_map = {}
+    update_type_map = {}  # type: Dict[str, str]
     for key, value in iteritems(type_map):
         if key in update_type_map:
             assert update_type_map[key] == value
         update_type_map[key.upper()] = value
 
     dict_in = parse_patran_syntax_dict(node_sets.upper(), pound_dict=None)
-    dict_temp = {}
+    dict_temp = {}  # type: Dict[str, np.ndarray]
     for key_in, value in sorted(iteritems(dict_in)):
         key_in2 = key_in.upper()
         if key_in2 in update_type_map:
@@ -744,7 +733,7 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
         else:
             print('skipping key=%r while parsing %s' % (key_in, msg))
 
-    dict_out = {}
+    dict_out = {}  # type: Dict[str, np.ndarray]
     for key, value_list in iteritems(dict_temp):
         if len(value_list) == 1:
             value = value_list[0]
@@ -903,14 +892,15 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         # converting the xyz point arbitrary->global
         xyz_global = cp_ref.transform_node_to_global(xyz)
 
-        # a matrix global->local matrix is found
-        matrix = coord_to_ref.beta()
-        xyz_local = coord_to_ref.transformToLocal(xyz_global, matrix)
+        # now converting it to the output coordinate system
+        xyz_local = coord_to_ref.transform_node_to_local(xyz_global)
+
     return xyz_local
 
 
 
 def deprecated(old_name, new_name, deprecated_version, levels=None):
+    # type: (str, str, str, Optional[List[int]]) -> None
     """
     Parameters
     ----------

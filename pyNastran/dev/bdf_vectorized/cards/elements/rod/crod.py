@@ -3,7 +3,7 @@ from six.moves import zip, range
 
 import numpy as np
 from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, int64
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.dev.bdf_vectorized.cards.elements.rod.conrod import _Lambda
 from pyNastran.utils.dev import list_print

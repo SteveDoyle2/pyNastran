@@ -46,12 +46,13 @@ class TestRenumber(unittest.TestCase):
         msg += 'RBE1        1001    33    123456\n'
         msg += '              UM    20       123    35       123    34       123\n'
         msg += '                    10       123\n'
-        msg += '$[RBE3, self.eid, None, self.refgrid, self.refc]\n'
+        msg += '$[RBE3, eid, None, refgrid, refc]\n'
         msg += 'RBE3       12225           33     123456      1.     123    34      36\n'
         msg += '            20      10\n'
-
         msg += 'ENDDATA\n'
-        with open('renumber_in.bdf', 'w') as bdf_file:
+
+        bdf_filename = 'renumber_in.bdf'
+        with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
         msg_expected = 'CEND\n'
@@ -66,7 +67,6 @@ class TestRenumber(unittest.TestCase):
         msg_expected += 'ENDDATA\n'
 
         # for now we're testing things don't crash
-        bdf_filename = 'renumber_in.bdf'
         bdf_filename_renumber = 'renumber_out.bdf'
         bdf_renumber(bdf_filename, bdf_filename_renumber)
 
@@ -76,12 +76,14 @@ class TestRenumber(unittest.TestCase):
         model = BDF(debug=False)
         model.read_bdf(bdf_filename_renumber)
 
+        os.remove(bdf_filename)
+        os.remove(bdf_filename_renumber)
+
     def test_renumber_02(self):
         bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm.dat')
         bdf_filename_renumber = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm_renumber.dat')
         bdf_filename_check = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm_check.dat')
         check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
-
 
     def test_renumber_03(self):
         bdf_filename = os.path.join(model_path, 'cbush', 'cbush.dat')
@@ -108,6 +110,7 @@ class TestRenumber(unittest.TestCase):
 
 
 def check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check):
+    """renumbers the file, then reloads both it and the renumbered deck"""
     bdf_renumber(bdf_filename, bdf_filename_renumber)
 
     model = BDF(debug=False)
@@ -116,6 +119,9 @@ def check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check):
 
     model = BDF(debug=False)
     model.read_bdf(bdf_filename_renumber)
+
+    os.remove(bdf_filename_renumber)
+    os.remove(bdf_filename_check)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

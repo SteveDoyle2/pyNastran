@@ -1,3 +1,4 @@
+from collections import defaultdict
 from six import iteritems
 import numpy as np
 

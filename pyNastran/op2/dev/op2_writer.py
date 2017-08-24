@@ -392,7 +392,7 @@ class OP2Writer(OP2_F06_Common):
         # then eigenvectors
         # has a special header
         for isubcase, result in sorted(iteritems(obj.eigenvectors)):
-            (subtitle, label) = obj.iSubcaseNameMap[isubcase]
+            (subtitle, label) = obj.isubcase_name_map[isubcase]
 
             if hasattr(result, 'write_op2'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
@@ -544,7 +544,7 @@ class OP2Writer(OP2_F06_Common):
             #obj.loadVectors,
             obj.thermal_load_vectors,
         ]
-        isubcases = sorted(obj.iSubcaseNameMap.keys())
+        isubcases = sorted(obj.isubcase_name_map.keys())
         #title = obj.title
 
         res_categories = [
@@ -573,7 +573,7 @@ class OP2Writer(OP2_F06_Common):
                     case_count = 0
                     if isubcase in res_type:
                         case_count += 1
-                        #(subtitle, label) = obj.iSubcaseNameMap[isubcase]
+                        #(subtitle, label) = obj.isubcase_name_map[isubcase]
                         result = res_type[isubcase]
                         element_name = ''
                         if hasattr(result, 'element_name'):

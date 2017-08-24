@@ -10,7 +10,7 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types, PY3
+from six import PY3
 from six.moves import zip, range
 import numpy as np
 
@@ -23,6 +23,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.utils import float_types, integer_types
 
 
 class Load(BaseCard):
@@ -36,12 +37,12 @@ class Load(BaseCard):
     @property
     def node_ids(self):
         try:
-            return self._nodeIDs()
+            return self._node_ids()
         except:
             #raise
             raise RuntimeError('error processing nodes for \n%s' % str(self))
 
-    def _nodeIDs(self, nodes=None):
+    def _node_ids(self, nodes=None):
         """returns nodeIDs for repr functions"""
         if not nodes:
             nodes = self.nodes
@@ -90,6 +91,21 @@ class LoadCombination(Load):  # LOAD, DLOAD
             load_ids = [load_ids]
         self.load_ids = load_ids
         assert 0 not in load_ids, self
+        self.load_ids_ref = None
+
+    def validate(self):
+        msg = ''
+        if not isinstance(self.scale, float_types):
+            msg += 'scale=%s must be a float; type=%s\n' % (self.scale, type(self.scale))
+        assert isinstance(self.scale_factors, list), self.scale_factors
+        assert isinstance(self.load_ids, list), self.load_ids
+        if len(self.scale_factors) != len(self.load_ids):
+            msg += 'scale_factors=%s load_ids=%s\n' % (self.scale_factors, self.load_ids)
+        if msg:
+            raise RuntimeError(msg)
+        for scalei, load_id in zip(self.scale_factors, self.get_load_ids()):
+            assert isinstance(scalei, float_types), scalei
+            assert isinstance(load_id, integer_types), load_id
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -117,41 +133,6 @@ class LoadCombination(Load):  # LOAD, DLOAD
         assert len(data) == 4, '%s data=%s' % (cls.type, data)
         return cls(sid, scale, scale_factors, load_ids, comment=comment)
 
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        load_ids2 = []
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for load_id in self.load_ids:
-            assert load_id != self.sid, 'Type=%s sid=%s load_id=%s creates a recursion error' % (self.type, self.sid, load_id)
-            load_id2 = model.Load(load_id, msg=msg)
-            assert isinstance(load_id2, list), load_id2
-            load_ids2.append(load_id2)
-        self.load_ids = load_ids2
-        self.load_ids_ref = self.load_ids
-
-    def safe_cross_reference(self, model, debug=True):
-        load_ids2 = []
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for load_id in self.load_ids:
-            try:
-                load_id2 = model.Load(load_id, msg=msg)
-            except KeyError:
-                if debug:
-                    msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (
-                        load_id, self.type, self.sid)
-                    print(msg)
-                continue
-            load_ids2.append(load_id2)
-        self.load_ids = load_ids2
-        self.load_ids_ref = self.load_ids
-
     def LoadID(self, lid):
         if isinstance(lid, integer_types):
             return lid
@@ -160,12 +141,38 @@ class LoadCombination(Load):  # LOAD, DLOAD
         else:
             raise NotImplementedError(lid)
 
+    def get_load_ids(self):
+        """
+        xref/non-xref way to get the load ids
+        """
+        if self.load_ids_ref is None:
+            return self.load_ids
+        load_ids = []
+        for loads in self.load_ids_ref:
+            for load in loads:
+                if isinstance(load, integer_types):
+                    load_ids.append(load)
+                elif load.type == 'LOAD':
+                    load_ids.append(load.sid)
+                elif load.type in ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
+                                   'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
+                                   'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2',
+                                   'RFORCE', 'RFORCE1', #'RFORCE2'
+                                   'ACCEL', #'ACCEL1', 'SLOAD',
+                                   ]:
+                    load_ids.append(load.sid)
+                else:
+                    msg = ('The get_load_ids method doesnt support %s cards.\n'
+                           '%s' % (load.__class__.__name__, str(load)))
+                    raise NotImplementedError(msg)
+        return load_ids
+
     def get_loads(self):
         """
         .. note:: requires a cross referenced load
         """
         loads = []
-        for all_loads in self.load_ids:
+        for all_loads in self.load_ids_ref:
             assert not isinstance(all_loads, int), 'all_loads=%s\n%s' % (str(all_loads), str(self))
             for load in all_loads:
                 try:
@@ -270,6 +277,8 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         self.excite_id = excite_id
         self.lid = lid
         self.tid = tid
+        self.lid_ref = None
+        self.tid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -318,13 +327,11 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             the BDF object
         """
         msg = ', which is required by LSEQ=%s' % (self.sid)
-        self.lid = model.Load(self.lid, msg=msg)
-        self.lid_ref = self.lid
+        self.lid_ref = model.Load(self.lid, msg=msg)
         #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
             # TODO: temperature set, not a table?
-            self.tid = model.Table(self.tid, msg=msg)
-            self.tid_ref = self.tid
+            self.tid_ref = model.Table(self.tid, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -332,27 +339,25 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def uncross_reference(self):
         self.lid = self.Lid()
         self.tid = self.Tid()
-
-        if self.tid is not None:
-            self.tid_ref
-        del self.lid_ref
+        self.lid_ref = None
+        self.tid_ref = None
 
     def LoadID(self, lid):
-        if isinstance(lid, integer_types):
-            return lid
-        elif isinstance(lid, list):
-            return self.LoadID(lid[0])
+        if isinstance(lid, list):
+            sid = self.LoadID(lid[0])
+        elif isinstance(lid, integer_types):
+            sid = lid
         else:
-            return lid.sid
+            sid = lid.sid
+        return sid
 
     def get_loads(self):
-        return self.lid
+        return self.lid_ref
 
     def Lid(self):
-        if isinstance(self.lid, integer_types):
-            return self.lid
-        else:
-            return self.LoadID(self.lid)
+        if self.lid_ref is not None:
+            return self.LoadID(self.lid_ref)
+        return self.lid
 
     #@property
     #def node_id(self):
@@ -362,11 +367,9 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         #return self.excite_id.nid
 
     def Tid(self):
-        if self.tid is None:
-            return None
-        elif isinstance(self.tid, integer_types):
-            return self.tid
-        return self.tid_ref.tid
+        if self.tid_ref is not None:
+            return self.tid_ref.tid
+        return self.tid
 
     def raw_fields(self):
         list_fields = ['LSEQ', self.sid, self.excite_id, self.Lid(), self.Tid()]
@@ -418,7 +421,7 @@ class LOADCYN(Load):
         scalei = double_or_blank(card, 7, 'sid2')
         if scalei is not None:
             loadi = double_or_blank(card, 8, 'load2')
-            scales.append(scaali)
+            scales.append(scalei)
             load_ids.append(loadi)
         return LOADCYN(sid, scale, segment_id, scales, load_ids,
                        segment_type=segment_type, comment=comment)
@@ -550,7 +553,7 @@ class DAREA(BaseCard):
             the BDF object
         """
         msg = ', which is required by DAREA=%s' % (self.sid)
-        self.nodes_ref = model.Nodes(self.node_ids, allow_empty_nodes=False, msg=msg)
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
@@ -589,15 +592,16 @@ class DAREA(BaseCard):
         return msg
 
 
-class TabularLoad(BaseCard):
+class DynamicLoad(BaseCard):
     def __init__(self):
         pass
 
 
 class SPCD(Load):
     """
-    Defines an enforced displacement value for static analysis and an enforced
-    motion value (displacement, velocity or acceleration) in dynamic analysis.
+    Defines an enforced displacement value for static analysis and an
+    enforced motion value (displacement, velocity or acceleration) in
+    dynamic analysis.
 
      +------+-----+-----+-----+------+----+----+----+
      |   1  |  2  |  3  |  4  |   5  |  6 | 7  |  8 |
@@ -609,13 +613,35 @@ class SPCD(Load):
     """
     type = 'SPCD'
 
-    def __init__(self, sid, gids, constraints, enforced, comment=''):
+    def __init__(self, sid, nodes, constraints, enforced, comment=''):
+        """
+        Creates an SPCD card, which defines the degree of freedoms to be
+        set during enforced motion
+
+        Parameters
+        ----------
+        conid : int
+            constraint id
+        nodes : List[int]
+            GRID/SPOINT ids
+        constraints : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        enforced : List[float]
+            the constrained value for the given node (typically 0.0)
+
+        .. note:: len(nodes) == len(constraints) == len(enforced)
+        .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
+                     Yes, you really want to constrain the deflection to 0.0
+                     with an SPC1 card and then reset the deflection using an
+                     SPCD card.
+        """
         if comment:
             self.comment = comment
         self.sid = sid
-        self.gids = gids
+        self.nodes = nodes
         self.constraints = constraints
         self.enforced = enforced
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -631,11 +657,11 @@ class SPCD(Load):
         """
         sid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
-            gids = [integer(card, 2, 'G1'),]
+            nodes = [integer(card, 2, 'G1'),]
             constraints = [components_or_blank(card, 3, 'C1', 0)]
             enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
-            gids = [
+            nodes = [
                 integer(card, 2, 'G1'),
                 integer(card, 5, 'G2'),
             ]
@@ -644,7 +670,7 @@ class SPCD(Load):
                            components_or_blank(card, 6, 'C2', 0)]
             enforced = [double_or_blank(card, 4, 'D1', 0.0),
                         double_or_blank(card, 7, 'D2', 0.0)]
-        return SPCD(sid, gids, constraints, enforced, comment=comment)
+        return SPCD(sid, nodes, constraints, enforced, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -659,15 +685,17 @@ class SPCD(Load):
             a comment for the card
         """
         sid = data[0]
-        gids = [data[1]]
+        nodes = [data[1]]
         constraints = [data[2]]
         enforced = [data[3]]
-        return SPCD(sid, gids, constraints, enforced, comment=comment)
+        return SPCD(sid, nodes, constraints, enforced, comment=comment)
 
     @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         msg = ', which is required by SPCD=%s' % (self.sid)
-        return _node_ids(self, nodes=self.gids, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
         """
@@ -679,26 +707,24 @@ class SPCD(Load):
             the BDF object
         """
         msg = ', which is required by SPCD=%s' % (self.sid)
-        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
-        self.gids_ref = self.gids
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by SPCD=%s' % (self.sid)
-        self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
-        self.gids_ref = self.gids
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
-        self.gids = self.node_ids
-        del self.gids_ref
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def get_loads(self):
         return [self]
 
     def raw_fields(self):
         fields = ['SPCD', self.sid]
-        for (gid, constraint, enforced) in zip(self.node_ids, self.constraints,
+        for (nid, constraint, enforced) in zip(self.node_ids, self.constraints,
                                                self.enforced):
-            fields += [gid, constraint, enforced]
+            fields += [nid, constraint, enforced]
         return fields
 
     def write_card(self, size=8, is_double=False):
@@ -719,7 +745,7 @@ class SLOAD(Load):
     """
     type = 'SLOAD'
 
-    def __init__(self, sid, nids, mags, comment=''):
+    def __init__(self, sid, nodes, mags, comment=''):
         """
         Creates an SLOAD (SPOINT load)
 
@@ -727,7 +753,7 @@ class SLOAD(Load):
         ----------
         sid : int
             load id
-        nids : int; List[int]
+        nodes : int; List[int]
             the SPOINT ids
         mags : float; List[float]
             the SPOINT loads
@@ -736,17 +762,18 @@ class SLOAD(Load):
         """
         if comment:
             self.comment = comment
-        if isinstance(nids, integer_types):
-            nids = [nids]
+        if isinstance(nodes, integer_types):
+            nodes = [nodes]
         if isinstance(mags, float):
             mags = [mags]
         #: load ID
         self.sid = sid
-        self.nids = nids
+        self.nodes = nodes
         self.mags = mags
+        self.nodes_ref = None
 
     def validate(self):
-        assert len(self.nids) == len(self.mags), 'len(nids)=%s len(mags)=%s' % (len(self.nids), len(self.mags))
+        assert len(self.nodes) == len(self.mags), 'len(nodes)=%s len(mags)=%s' % (len(self.nodes), len(self.mags))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -769,13 +796,13 @@ class SLOAD(Load):
             msg = 'Missing last magnitude on SLOAD card=%s' % card.fields()
             raise RuntimeError(msg)
 
-        nids = []
+        nodes = []
         mags = []
         for i in range(n):
             j = 2 * i + 2
-            nids.append(integer(card, j, 'nid' + str(i)))
+            nodes.append(integer(card, j, 'nid' + str(i)))
             mags.append(double(card, j + 1, 'mag' + str(i)))
-        return SLOAD(sid, nids, mags, comment=comment)
+        return SLOAD(sid, nodes, mags, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -802,16 +829,16 @@ class SLOAD(Load):
             the BDF object
         """
         msg = ' which is required by SLOAD=%s' % (self.sid)
-        for (i, nid) in enumerate(self.nids):
-            self.nids[i] = model.Node(nid, msg=msg)
-        self.nids_ref = self.nids
+        self.nodes_ref = []
+        for nid in self.nodes:
+            self.nodes_ref.append(model.Node(nid, msg=msg))
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 
     def uncross_reference(self):
-        self.nids = self.node_ids
-        del self.nids_ref
+        self.nodes = self.node_ids
+        self.nodes_ref = None
 
     def Nid(self, node):
         if isinstance(node, integer_types):
@@ -826,12 +853,14 @@ class SLOAD(Load):
 
     @property
     def node_ids(self):
-        return [self.Nid(nid) for nid in self.nids]
+        if self.nodes_ref is None:
+            return self.nodes
+        return [self.Nid(nid) for nid in self.nodes_ref]
 
     def raw_fields(self):
         list_fields = ['SLOAD', self.sid]
-        for (nid, mag) in zip(self.nids, self.mags):
-            list_fields += [self.Nid(nid), mag]
+        for nid, mag in zip(self.node_ids, self.mags):
+            list_fields += [nid, mag]
         return list_fields
 
     def repr_fields(self):
@@ -863,6 +892,8 @@ class RFORCE(Load):
         self.racc = racc
         self.mb = mb
         self.idrf = idrf
+        self.nid_ref = None
+        self.cid_ref = None
 
     def validate(self):
         assert self.method in [1, 2], self.method
@@ -922,10 +953,8 @@ class RFORCE(Load):
         """
         msg = ' which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
-            self.nid = model.Node(self.nid, msg=msg)
-            self.nid_ref = self.nid
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+            self.nid_ref = model.Node(self.nid, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -933,23 +962,22 @@ class RFORCE(Load):
     def uncross_reference(self):
         self.nid = self.Nid()
         self.cid = self.Cid()
-        if self.nid != 0:
-            del self.nid_ref
-        del self.cid_ref
+        self.nid_ref = None
+        self.cid_ref = None
 
     @property
     def node_id(self):
-        if isinstance(self.nid, integer_types):
-            return self.nid
-        return self.nid_ref.nid
+        if self.nid_ref is not None:
+            return self.nid_ref.nid
+        return self.nid
 
     def Nid(self):
         return self.node_id
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def get_loads(self):
         return [self]
@@ -1023,7 +1051,8 @@ class RFORCE1(Load):
             Coordinate system defining the components of the rotation vector.
         method : int; default=2
             Method used to compute centrifugal forces due to angular velocity.
-        comment : str
+        comment : str; default=''
+            a comment for the card
         """
         if comment:
             self.comment = comment
@@ -1039,6 +1068,8 @@ class RFORCE1(Load):
         self.racc = racc
         self.mb = mb
         self.group_id = group_id
+        self.nid_ref = None
+        self.cid_ref = None
 
     def validate(self):
         if not np.linalg.norm(self.r123) > 0.:
@@ -1087,11 +1118,9 @@ class RFORCE1(Load):
             the BDF object
         """
         msg = ' which is required by RFORCE1 sid=%s' % self.sid
-        if self.nid > 0:
-            self.nid = model.Node(self.nid, msg=msg)
-            self.nid_ref = self.nid
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.cid_ref = self.cid
+        #if self.nid > 0:  # TODO: why was this every here?
+        self.nid_ref = model.Node(self.nid, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -1099,23 +1128,22 @@ class RFORCE1(Load):
     def uncross_reference(self):
         self.nid = self.node_id
         self.cid = self.Cid()
-        if self.nid != 0:
-            del self.nid_ref
-        del self.cid_ref
+        self.nid_ref = None
+        self.cid_ref = None
 
     @property
     def node_id(self):
-        if isinstance(self.nid, integer_types):
-            return self.nid
-        return self.nid_ref.nid
+        if self.nid_ref is not None:
+            return self.nid_ref.nid
+        return self.nid
 
     def Nid(self):
         return self.node_id
 
     def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        return self.cid_ref.cid
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
 
     def raw_fields(self):
         list_fields = (['RFORCE1', self.sid, self.node_id, self.Cid(), self.scale]
@@ -1190,6 +1218,7 @@ class RANDPS(RandomLoad):
         #: Identification number of a TABRNDi entry that defines G(F).
         self.tid = tid
         assert self.sid > 0, 'sid=%s\n%s' % (self.sid, self)
+        self.tid_ref = None
 
     def validate(self):
         assert self.k >= self.j, 'k=%s j=%s\n%s' % (self.k, self.j, self)
@@ -1227,26 +1256,25 @@ class RANDPS(RandomLoad):
         if self.tid:
             msg = ' which is required by RANDPS sid=%s' % (self.sid)
             #self.tid = model.Table(self.tid, msg=msg)
-            self.tid = model.RandomTable(self.tid, msg=msg)
-            self.tid_ref = self.tid
+            self.tid_ref = model.RandomTable(self.tid, msg=msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
 
     def uncross_reference(self):
         self.tid = self.Tid()
-        if self.tid is not None:
-            del self.tid_ref
+        self.tid_ref = None
 
     def get_loads(self):
         return [self]
 
     def Tid(self):
-        if self.tid == 0:
+        if self.tid_ref is not None:
+            return self.tid_ref.tid
+        elif self.tid == 0:
             return None
-        elif isinstance(self.tid, integer_types):
+        else:
             return self.tid
-        return self.tid_ref.tid
 
     def raw_fields(self):
         list_fields = ['RANDPS', self.sid, self.j, self.k, self.x, self.y,

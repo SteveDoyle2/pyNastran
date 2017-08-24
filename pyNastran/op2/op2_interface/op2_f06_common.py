@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -20,7 +20,8 @@ class OP2_F06_Common(object):
     def __init__(self):
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcase_id
-        self.iSubcaseNameMap = {}
+        self.isubcase_name_map = {}
+        self.generalized_tables = {}
         self.subtitles = defaultdict(list)
         self.case_control_deck = CaseControlDeck([], log=self.log)
         self.labels = {}
@@ -365,7 +366,10 @@ class OP2_F06_Common(object):
         self.cvisc_force = {}
 
         self.force_VU = {}
-        self.force_VU_2D = {}
+
+        #self.force_VU_2D = {}
+        self.vuquad_force = {}
+        self.vutria_force = {}
 
         #OEF - Fluxes - tCode=4 thermal=1
         self.thermalLoad_CONV = {}
@@ -772,7 +776,9 @@ class OP2_F06_Common(object):
             'cvisc_force',
 
             'force_VU',
-            'force_VU_2D',
+            #'force_VU_2D',
+            'vuquad_force',
+            'vutria_force',
 
             #OEF - Fluxes - tCode=4 thermal=1
             'thermalLoad_CONV',
@@ -925,9 +931,9 @@ class OP2_F06_Common(object):
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
                   and table not in [
-                      'card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
+                      'card_count', 'data_code', 'element_mapper', 'isubcase_name_map',
                       'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
-                      'end_options', 'expected_times']]
+                      'end_options', 'expected_times', 'generalized_tables']]
         for table in tables:
             if self.make_geom:
                 break

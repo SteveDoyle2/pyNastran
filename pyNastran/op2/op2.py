@@ -1,111 +1,24 @@
 #pylint: disable=W0201,W0223,R0901,R0902,R0904
 """
-Main OP2 class
-ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
+Defines the main OP2 class.  Defines:
 
-Datablock	Type	Description
-EFMFSMS	Matrix	6 x 1 Total Effective mass matrix
-EFMASSS	Matrix	6 x 6 Effective mass matrix
-RBMASS	Matrix	6 x 6 Rigid body mass matrix
-EFMFACS	Matrix	6 X N Modal effective mass fraction matrix
-MPFACS	Matrix	6 x N Modal participation factor matrix
-MEFMASS	Matrix	6 x N Modal effective mass matrix
-MEFWTS	Matrix	6 x N Modal effective weight matrix
-RAFGEN	Matrix	N x M Generalized force matrix
-RADEFMP	Matrix	N X U2 Effective inertia loads
-BHH	Matrix	N x N Viscous damping matrix
-K4HH	Matrix	N x N Structural damping matrix
-RADAMPZ	Matrix	N x N equivalent viscous damping ratios
-RADAMPG	Matrix	N X N equivalent structural damping ratio
+ - read_op2(op2_filename=None, combine=True, subcases=None,
+            exclude_results=None, include_results=None,
+            log=None, debug=True, debug_file=None, build_dataframe=None,
+            skip_undefined_matrices=True, mode='msc', encoding=None)
 
-LAMA	LAMA	Eigenvalue summary table
-OGPWG	OGPWG	Mass properties output
-OQMG1	OQMG	Modal MPC forces
-RANCONS	ORGY1	Constraint mode element strain energy table
-RANEATC	ORGY1	Attachment mode element strain energy table
-RAGCONS	OGPFB	Constraint mode grid point force table
-RAGEATC	OGPFB	Attachment mode grid point force table
-RAPCONS	OES	Constraint mode ply stress table
-RAPEATC	OES	Attachment mode ply stress table
-RASCONS	OES	Constraint mode element stress table
-RAECONS	OES	Constraint mode element strain table
-RASEATC	OES	Attachment mode element stress table
-RAEEATC	OES	Attachment mode element strain table
-OES1C	OES	Modal Element Stress Table
-OES1X	OES	Modal Element Stress Table
-OSTR1C	OES	Modal Element Strain Table
-OSTR1X	OSTR	Modal Element Strain Table
-RAQCONS	OUG	Constraint mode MPC force table
-RADCONS	OUG	Constraint mode displacement table
-RADEFFM	OUG	Effective inertia displacement table
-RAQEATC	OUG	Attachment mode  MPC force table
-RADEATC	OUG	Attachment mode displacement table
-OUGV1	OUG	Eigenvector Table
-RAFCONS	OEF	Constraint mode element force table
-RAFEATC	OEF	Attachment mode element force table
-OEF1X	OEF	Modal Element Force Table
-OGPFB1	OGPFB	Modal Grid Point Force Table
-ONRGY1	ONRGY1	Modal Element Strain Energy Table
-ONRGY2	ONRGY1
-
-#--------------------
-
-RADCONS - Displacement Constraint Mode
-RADDATC - Displacement Distributed Attachment Mode
-RADNATC - Displacement Nodal Attachment Mode
-RADEATC - Displacement Equivalent Inertia Attachment Mode
-RADEFFM - Displacement Effective Inertia Mode
-
-RAECONS - Strain Constraint Mode
-RAEDATC - Strain Distributed Attachment Mode
-RAENATC - Strain Nodal Attachment Mode
-RAEEATC - Strain Equivalent Inertia Attachment Mode
-
-RAFCONS - Element Force Constraint Mode
-RAFDATC - Element Force Distributed Attachment Mode
-RAFNATC - Element Force Nodal Attachment Mode
-RAFEATC - Element Force Equivalent Inertia Attachment Mode
-
-RALDATC - Load Vector Used to Compute the Distributed Attachment M
-
-RANCONS - Strain Energy Constraint Mode
-RANDATC - Strain Energy Distributed Attachment Mode
-RANNATC - Strain Energy Nodal Attachment Mode
-RANEATC - Strain Energy Equivalent Inertia Attachment Mode
-
-RAQCONS - Ply Strains Constraint Mode
-RAQDATC - Ply Strains Distributed Attachment Mode
-RAQNATC - Ply Strains Nodal Attachment Mode
-RAQEATC - Ply Strains Equivalent Inertia Attachment Mode
-
-RARCONS - Reaction Force Constraint Mode
-RARDATC - Reaction Force Distributed Attachment Mode
-RARNATC - Reaction Force Nodal Attachment Mode
-RAREATC - Reaction Force Equivalent Inertia Attachment Mode
-
-RASCONS - Stress Constraint Mode
-RASDATC - Stress Distributed Attachment Mode
-RASNATC - Stress Nodal Attachment Mode
-RASEATC - Stress Equivalent Inertia Attachment Mode
-
-RAPCONS - Ply Stresses Constraint Mode
-RAPDATC - Ply Stresses Distributed Attachment Mode
-RAPNATC - Ply Stresses Nodal Attachment Mode
-RAPEATC - Ply Stresses Equivalent Inertia Attachment Mode
-
-RAGCONS - Grid Point Forces Constraint Mode
-RAGDATC - Grid Point Forces Distributed Attachment Mode
-RAGNATC - Grid Point Forces Nodal Attachment Mode
-RAGEATC - Grid Point Forces Equivalent Inertia Attachment Mode
-
-RADEFMP - Displacement PHA^T * Effective Inertia Mode
-
-RADAMPZ - Viscous Damping Ratio Matrix
-RADAMPG - Structural Damping Ratio Matrix
-
-RAFGEN  - Generalized Forces
-BHH     - Modal Viscous Damping Matrix
-K4HH    - Modal Structural Damping Matrix
+ - OP2(debug=True, log=None, debug_file=None, mode='msc')
+   - build_dataframe()
+   - combine_results(combine=True)
+   - create_objects_from_matrices()
+   - object_attributes(mode='public', keys_to_skip=None)
+   - object_methods(mode='public', keys_to_skip=None)
+   - print_subcase_key()
+   - read_op2(op2_filename=None, combine=True, build_dataframe=None,
+              skip_undefined_matrices=False, encoding=None)
+   - set_mode(mode)
+   - transform_displacements_to_global(i_transform, coords, xyz_cid0=None, debug=False)
+   - transform_gpforce_to_global(nids_all, nids_transform, i_transform, coords, xyz_cid0=None)
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -176,9 +89,11 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
     if exclude_results and include_results:
-        msg = 'exclude_results or include_results must be None\n'
-        msg += 'exclude_results=%r\n' % exclude_results
-        msg += 'include_results=%r\n' % include_results
+        msg = (
+            'exclude_results or include_results must be None\n'
+            'exclude_results=%r\n'
+            'include_results=%r\n' % (exclude_results, include_results)
+        )
         raise RuntimeError(msg)
     elif exclude_results:
         model.remove_results(exclude_results)
@@ -229,6 +144,28 @@ class OP2(OP2_Scalar):
         self.ask = False
 
     def object_attributes(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
+        """
+        List the names of attributes of a class as strings. Returns public
+        attributes as default.
+
+        Parameters
+        ----------
+        mode : str
+            defines what kind of attributes will be listed
+            * 'public' - names that do not begin with underscore
+            * 'private' - names that begin with single underscore
+            * 'both' - private and public
+            * 'all' - all attributes that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        attribute_names : List[str]
+            sorted list of the names of attributes of a given type or None
+            if the mode is wrong
+        """
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -238,6 +175,30 @@ class OP2(OP2_Scalar):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
+        """
+        List the names of methods of a class as strings. Returns public methods
+        as default.
+
+        Parameters
+        ----------
+        obj : instance
+            the object for checking
+        mode : str
+            defines what kind of methods will be listed
+            * "public" - names that do not begin with underscore
+            * "private" - names that begin with single underscore
+            * "both" - private and public
+            * "all" - all methods that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        method : List[str]
+            sorted list of the names of methods of a given type
+            or None if the mode is wrong
+        """
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
@@ -248,9 +209,19 @@ class OP2(OP2_Scalar):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model):
-        """diffs the current op2 model vs. another op2 model"""
+        """
+        Diffs the current op2 model vs. another op2 model.
+        Crashes if they're not equal.
+        """
+        return self.op2_equal(op2_model)
+
+    def op2_equal(self, op2_model):
+        """
+        Diffs the current op2 model vs. another op2 model.
+        Crashes if they're not equal.
+        """
         if not self.read_mode == op2_model.read_mode:
-            print('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
+            self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
                 self.read_mode, op2_model.read_mode))
             return True
         table_types = self.get_table_types()
@@ -258,7 +229,7 @@ class OP2(OP2_Scalar):
             adict = getattr(self, table_type)
             bdict = getattr(op2_model, table_type)
             if len(adict) != len(bdict):
-                print('len(self.%s)=%s len(op2_model.%s)=%s' % (
+                self.log.warning('len(self.%s)=%s len(op2_model.%s)=%s' % (
                     table_type, len(adict), table_type, len(bdict)))
                 return False
             for key, avalue in iteritems(adict):
@@ -266,15 +237,16 @@ class OP2(OP2_Scalar):
                 aname = avalue.__class__.__name__
                 bname = bvalue.__class__.__name__
                 if not aname == bname:
-                    print('type(a)=%s type(b)=%s' % (aname, bname))
+                    self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
                     return False
                 if not any(word in aname for word in ['Array', 'Eigenvalues']):
                     msg = '%s is not an Array ... assume equal' % aname
-                    print(msg)
+                    self.log.warning(msg)
                     raise NotImplementedError('%s __eq__' % aname)
                     #continue
                 if avalue != bvalue:
-                    print('key=%s table_type=%r is different; class_name=%r' % (key, table_type, aname))
+                    self.log.warning('key=%s table_type=%r are not equal; class_name=%r' % (
+                        key, table_type, aname))
                     return False
         return True
 
@@ -289,69 +261,69 @@ class OP2(OP2_Scalar):
         else:
             raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
 
-    def _set_ask_vectorized(self, ask=False):
-        """
-        Enables vectorization
+    #def _set_ask_vectorized(self, ask=False):
+        #"""
+        #Enables vectorization
 
-        The code will degenerate to dictionary based results when
-        a result does not support vectorization.
+        #The code will degenerate to dictionary based results when
+        #a result does not support vectorization.
 
-        Vectorization is always True here.
+        #Vectorization is always True here.
 
-        Parameters
-        ----------
-        ask: bool
-            Do you want to see a GUI of result types.
+        #Parameters
+        #----------
+        #ask: bool
+            #Do you want to see a GUI of result types.
 
-        +--------+---------------+---------+------------+
-        | Case # | Vectorization |  Ask    | Read Modes |
-        +========+===============+=========+============+
-        |    1   | True          |  True   |  1, 2      |
-        +--------+---------------+---------+------------+
-        |    2   | True          |  False  |  1, 2      |
-        +--------+---------------+---------+------------+
-        |    3   | False         |  True   |  1, 2      |
-        +--------+---------------+---------+------------+
-        |    4   | False         |  False  |  0         |
-        +--------+---------------+---------+------------+
+        #+--------+---------------+---------+------------+
+        #| Case # | Vectorization |  Ask    | Read Modes |
+        #+========+===============+=========+============+
+        #|    1   | True          |  True   |  1, 2      |
+        #+--------+---------------+---------+------------+
+        #|    2   | True          |  False  |  1, 2      |
+        #+--------+---------------+---------+------------+
+        #|    3   | False         |  True   |  1, 2      |
+        #+--------+---------------+---------+------------+
+        #|    4   | False         |  False  |  0         |
+        #+--------+---------------+---------+------------+
 
-        Definitions
-        ===========
-          Vectorization - A storage structure that allows for faster read/access
-                          speeds and better memory usage, but comes with a more
-                          difficult to use data structure.
+        #Definitions
+        #===========
+          #Vectorization - A storage structure that allows for faster read/access
+                          #speeds and better memory usage, but comes with a more
+                          #difficult to use data structure.
 
-                          It limits the node IDs to all be integers (e.g. element
-                          centroid).  Composite plate elements (even for just CTRIA3s)
-                          with an inconsistent number of layers will have a more
-                          difficult data structure.
-          Scanning   - a quick check used to figure out how many results to process
-                      that takes almost no time
-          Reading    - process the op2 data
-          Build      - call the __init__ on a results object (e.g. RealDisplacementArray)
-          Start Over - Go to the start of the op2 file
-          Ask        - launch a GUI dialog to let the user click which results to load
+                          #It limits the node IDs to all be integers (e.g. element
+                          #centroid).  Composite plate elements (even for just CTRIA3s)
+                          #with an inconsistent number of layers will have a more
+                          #difficult data structure.
+          #Scanning   - a quick check used to figure out how many results to process
+                      #that takes almost no time
+          #Reading    - process the op2 data
+          #Build      - call the __init__ on a results object (e.g. RealDisplacementArray)
+          #Start Over - Go to the start of the op2 file
+          #Ask        - launch a GUI dialog to let the user click which results to load
 
-        Read Mode Definitions
-        =====================
-          0.   The default OP2 dictionary based-approach with no asking GUI (removed)
-          1.   The first read of a result to get the shape of the data
-          2.   The second read of a result to get the results
+        #Read Mode Definitions
+        #=====================
+          #0.   The default OP2 dictionary based-approach with no asking GUI (removed)
+          #1.   The first read of a result to get the shape of the data
+          #2.   The second read of a result to get the results
 
-        Cases
-        ======
-          1.   Scan the block to get the size, build the object (read_mode=1),
-               ask the user, start over, fill the objects (read_mode=2).
-               Degenerate to read_mode=0 when read_mode=2 cannot be used based
-               upon the value of ask.
-          2.   Same as case #1, but don't ask the user.
-               Scan the block to get the size, build the object (read_mode=1),
-               start over, fill the objects (read_mode=2).
-          3.   Scan the block to get the object types (read_mode=1), ask the user,
-               build the object & fill it (read_mode=2)
-          4.   Read the block to get the size, build the object & fill it (read_mode=0; removed)
-        """
-        self.ask = ask
+        #Cases
+        #======
+          #1.   Scan the block to get the size, build the object (read_mode=1),
+               #ask the user, start over, fill the objects (read_mode=2).
+               #Degenerate to read_mode=0 when read_mode=2 cannot be used based
+               #upon the value of ask.
+          #2.   Same as case #1, but don't ask the user.
+               #Scan the block to get the size, build the object (read_mode=1),
+               #start over, fill the objects (read_mode=2).
+          #3.   Scan the block to get the object types (read_mode=1), ask the user,
+               #build the object & fill it (read_mode=2)
+          #4.   Read the block to get the size, build the object & fill it (read_mode=0; removed)
+        #"""
+        #self.ask = ask
 
     def read_op2(self, op2_filename=None, combine=True, build_dataframe=None,
                  skip_undefined_matrices=False, encoding=None):
@@ -401,7 +373,7 @@ class OP2(OP2_Scalar):
         self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
         OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
-        self.finalize()
+        self._finalize()
         if build_dataframe:
             self.build_dataframe()
         self.create_objects_from_matrices()
@@ -425,7 +397,8 @@ class OP2(OP2_Scalar):
             #                                                           :)       ?       :)      :)2     ?       ?
             self.monitor1 = MONPNT1(self._frequencies, self.matrices, ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
-    def finalize(self):
+    def _finalize(self):
+        """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
             result = getattr(self, result_type)
@@ -443,11 +416,11 @@ class OP2(OP2_Scalar):
          - RealPlateStressArray (???)
          - RealPlateStrainArray (???)
          - RealCompositePlateStrainArray (???)
-
-        C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
-            returning scalar but in the future this will be an error
-        sorter = uniques.argsort()
         """
+        # TODO: sorter = uniques.argsort()
+        #C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
+            #returning scalar but in the future this will be an error
+
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
         result_types = self.get_table_types()
         i = 0
@@ -671,12 +644,10 @@ class OP2(OP2_Scalar):
             Dictionary from coordinate id to index of the nodes in
             ``BDF.point_ids`` that their output (`CD`) in that
             coordinate system.
-
         coords : dict{int cid :Coord()}
             Dictionary of coordinate id to the coordinate object
             Use this if CD is only rectangular
             Use this if CD is not rectangular
-
         xyz_cid0 : (nnodes+nspoints, 3) float ndarray
             the nodes in the global frame
             Don't use this if CD is only rectangular
@@ -686,6 +657,16 @@ class OP2(OP2_Scalar):
 
         .. warning:: only works if all nodes are included...
                      ``test_pynastrangui isat_tran.dat isat_tran.op2 -f nastran``
+        .. note:: Nastran has this concept of a basic (cid=0) and global (cid=cd)
+                  coordinate system.  They occur at the same time.  Basic is for
+                  positions/properties, while global is for result outputs.
+
+                  pyNastran's OP2 interface uses:
+                    - cd=0 for global frames
+                    - cd>0 are local frames
+                  pyNastran's BDF interface uses:
+                    - cp=0 for global frames
+                    - cp>0 are local frames
         """
         #output = {}
         disp_like_dicts = [
@@ -731,11 +712,12 @@ class OP2(OP2_Scalar):
                     coord_type = coord.type
                     cid_transform = coord.beta()
 
+                    # a global coordinate system has 1s along the main diagonal
                     is_global_cid = False
-                    if np.diagonal(cid_transform).sum() == 3.:
+                    if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
                         is_global_cid = True
 
-                    if debug:
+                    if not is_global_cid and debug:
                         self.log.debug('coord\n%s' % coord)
                         self.log.debug(cid_transform)
                         self.log.debug('inode = %s' % [str(val).rstrip('L') for val in inode.tolist()])
@@ -744,9 +726,9 @@ class OP2(OP2_Scalar):
                         assert np.array_equal(inode, np.unique(inode))
                     if coord_type in ['CORD2R', 'CORD1R']:
                         if is_global_cid:
-                            self.log.debug('is_global_cid')
+                            #self.log.debug('is_global_cid')
                             continue
-                        self.log.debug('rectangular')
+                        #self.log.debug('rectangular')
 
 
                         # isat_tran.op2
@@ -833,7 +815,6 @@ class OP2(OP2_Scalar):
                             data[itime, inode, 3:] = rotation.dot(cid_transform)
                     else:
                         raise RuntimeError(coord)
-        return
 
     def transform_gpforce_to_global(self, nids_all, nids_transform, i_transform, coords, xyz_cid0=None):
         """
@@ -848,18 +829,20 @@ class OP2(OP2_Scalar):
 
         Parameters
         ----------
+        nids_all : ???
+            ???
         nids_transform : dict{int cid : int ndarray nds}
             Dictionary from coordinate id to corresponding node ids.
-
         i_transform : dict{int cid : int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``BDF.point_ids`` that their output (`CD`) in that
             coordinate system.
-
         coords : dict{int cid :Coord()}
             Dictionary of coordinate id to the coordinate object
             Use this if CD is only rectangular
             Use this if CD is not rectangular
+        xyz_cid0 : ???
+            ???
         """
         disp_like_dicts = [
             # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail
@@ -884,8 +867,9 @@ class OP2(OP2_Scalar):
                     coord_type = coord.type
                     cid_transform = coord.beta()
 
+                    # a global coordinate system has 1s along the main diagonal
                     is_global_cid = False
-                    if np.diagonal(cid_transform).sum() == 3.:
+                    if np.array_equal([1., 1., 1.], np.diagonal(cid_transform)):
                         is_global_cid = True
                     nids = np.array(nids_transform[cid])
 
@@ -1046,7 +1030,6 @@ def main():  # pragma: no cover
                                  'sol_101_elements', 'solid_shell_bar.op2')
 
     model = OP2()
-    model.set_as_vectorized(ask=False)
     model.read_op2(_op2_filename)
     isubcase = 1
 

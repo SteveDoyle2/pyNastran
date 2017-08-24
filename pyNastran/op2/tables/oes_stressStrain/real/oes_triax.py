@@ -9,7 +9,7 @@ ints = (int, np.int32)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -41,6 +41,7 @@ class RealTriaxArray(OES_Object):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealTriaxArray"""
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)

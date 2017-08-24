@@ -3,7 +3,7 @@ from __future__ import print_function
 from copy import deepcopy
 from numpy import zeros
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 class NastranTable(GuiResultCommon):
@@ -386,63 +386,8 @@ class DisplacementResults(NastranTable):
             labelsize=labelsize, ncolors=ncolors,
             colormap=colormap, set_max_min=set_max_min,
             uname=uname)
-        #self.subcase_id = subcase_id
         ##assert self.subcase_id > 0, self.subcase_id
-
         self.xyz = xyz
-        #self.dxyz = dxyz
-        #self.dim = len(self.dxyz.shape)
-
-        #self.uname = uname
-        ##self.dxyz_norm = norm(dxyz, axis=1)
-
-        #self.deflects = deflects
-        #self.titles = titles
-        #self.headers = headers
-        #self.scales = scales
-        #self.subcase_id = subcase_id
-        #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
-        #self.is_real = True if self.data_type in ['<f4', '<f8'] else False
-        ##print('self.data_type = %r' % self.data_type)
-        #self.is_complex = not self.is_real
-        #self.nlabels = nlabels
-        #self.labelsize = labelsize
-        #self.ncolors = ncolors
-        #self.colormap = colormap
-
-        #self.data_formats = data_formats
-        #self.titles_default = deepcopy(self.titles)
-        #self.headers_default = deepcopy(self.headers)
-        #self.scales_default = deepcopy(self.scales)
-        #self.data_formats_default = deepcopy(self.data_formats)
-        #if self.dim == 2:
-            #ntimes = 1
-            #self.default_mins = zeros(1, dtype=self.dxyz.dtype)
-            #self.default_maxs = zeros(1, dtype=self.dxyz.dtype)
-            #normi = norm(self.dxyz, axis=1)
-            #self.default_mins[0] = normi.min().real
-            #self.default_maxs[0] = normi.max().real
-        #elif self.dim == 3:
-            #ntimes = self.dxyz.shape[0]
-            #self.default_mins = zeros(ntimes)
-            #self.default_maxs = zeros(ntimes)
-            #for itime in range(ntimes):
-                #normi = norm(self.dxyz[itime, :, :], axis=1)
-                #self.default_mins[itime] = normi.min().real
-                #self.default_maxs[itime] = normi.max().real
-
-            #if not self.is_real:
-                ##: stored in degrees
-                #self.phases = np.zeros(ntimes)
-        #else:
-            #raise NotImplementedError('dim=%s' % self.dim)
-
-        #if set_max_min:
-            #self.min_values = deepcopy(self.default_mins)
-            #self.max_values = deepcopy(self.default_maxs)
-        #else:
-            #self.max_values = None
-            #self.min_values = None
 
     #-------------------------------------
     # unmodifyable getters

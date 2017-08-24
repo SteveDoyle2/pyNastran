@@ -1,16 +1,6 @@
 nastran Package
 ===============
 
-:mod:`bdf_to_p3d` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.converters.nastran.bdf_to_p3d
-
-.. automodule:: pyNastran.converters.nastran.bdf_to_p3d
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`displacements` Module
 ---------------------------
 
@@ -89,16 +79,6 @@ nastran Package
 .. inheritance-diagram:: pyNastran.converters.nastran.results_helper
 
 .. automodule:: pyNastran.converters.nastran.results_helper
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`sparib_update` Module
----------------------------
-
-.. inheritance-diagram:: pyNastran.converters.nastran.sparib_update
-
-.. automodule:: pyNastran.converters.nastran.sparib_update
     :members:
     :undoc-members:
     :show-inheritance:

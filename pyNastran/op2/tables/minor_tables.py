@@ -1,6 +1,9 @@
 """
 Defines various tables that don't fit in other sections:
   - MinorTables
+    - _read_omm2(self)
+    - _read_cmodeext(self)
+    - _read_cmodeext_helper(self)
     - _read_ibulk(self)
     - _read_fol(self)
     - _read_gpl(self)
@@ -29,16 +32,139 @@ from __future__ import print_function
 from struct import unpack
 from six import b
 import numpy as np
-import scipy
+import scipy  # type: ignore
 from pyNastran.op2.tables.matrix import Matrix
 from pyNastran.op2.tables.design_response import WeightResponse, FlutterResponse, Convergence
 from pyNastran.op2.op2_interface.op2_common import OP2Common
+from pyNastran.op2.errors import FortranMarkerError
 
 
 class MinorTables(OP2Common):
     """reads various tables that don't fit into a larger category"""
     def __init__(self):
         OP2Common.__init__(self)
+
+    def _read_omm2(self):
+        """reads the OMM2 table"""
+        self.log.debug("table_name = %r" % self.table_name)
+        self.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        if len(data) == 28:
+            subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
+            if self.is_debug_file:
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
+                    subtable_name, month, day, year, zero, one))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+            self._print_month(month, day, year, zero, one)
+        else:
+            raise NotImplementedError(self.show_data(data))
+        self._read_subtables()
+
+    def _read_cmodext(self):
+        r"""
+        fails if a streaming block???:
+         - nx_spike\mnf16_0.op2
+        """
+        self.table_name = self._read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        if self.is_debug_file:
+            self.binary_debug.write('---marker0 = %s---\n' % markers)
+
+        marker = -2
+        markers = self.read_markers([marker, 1, 0])
+
+        data = self._read_record()
+        table_name, oneseventy_a, oneseventy_b = unpack('8sii', data)
+        assert oneseventy_a == 170, oneseventy_a
+        assert oneseventy_b == 170, oneseventy_b
+        print('170*4 =', 170*4)
+        #self.show_data(data)
+        marker -= 1
+        marker = self._read_cmodext_helper(marker) # -3
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        marker = self._read_cmodext_helper(marker)
+        print('table8')
+        marker = self._read_cmodext_helper(marker, debug=True)
+        self.show_ndata(100)
+
+    def _read_cmodext_helper(self, marker_orig, debug=False):
+        marker = marker_orig
+        #markers = self.read_nmarkers([marker, 1, 1]) # -3
+
+        if debug:
+            self.show_ndata(100)
+        markers = self.get_nmarkers(3, rewind=False)
+        assert markers == [marker_orig, 1, 1], markers
+        print('markers =', markers)
+
+        #marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+        val_old = 0
+        if debug:
+            print('-----------------------------')
+        i = 0
+        #icheck = 7
+        while 1:
+            #print('i = %i' % i)
+            marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+            if marker != 6:
+                print('marker = %s' % marker)
+
+            assert marker == 6, marker
+            data = self.read_block()
+            val = unpack('i', data[:4])[0]
+            if debug:
+                print('val=%s delta=%s' % (val, val - val_old))
+                self.show_data(data, types='ifs')
+            assert len(data) > 4
+            #print('i=%s val=%s delta=%s' % (i, val, val - val_old))
+            val_old = val
+
+            marker2 = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
+            #print(marker2)
+            if marker2 == 696:
+                break
+            i += 1
+        if debug:
+            print('----------------------------------------')
+
+        marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
+        if debug:
+            print('****marker = %s' % marker)
+        assert marker == 696, marker
+        data = self.read_block()
+        #self.show_data(data)
+
+        marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
+        assert marker == (marker_orig - 1), marker
+
+        if debug:
+            self.show_ndata(200)
+        return marker
+
+        #data = self._read_record()
+        #marker -= 1
+
+
+
+        #self.show_ndata(100)
+
+        ##marker -= 1
+        ##marker_end = self.get_marker1(rewind=False)
+        #asdf
 
     def _read_ibulk(self):
         self.table_name = self._read_table_name(rewind=False)
@@ -511,30 +637,30 @@ class MinorTables(OP2Common):
         if self.read_mode == 1:
             assert data is not None, data
             assert len(data) > 12, len(data)
-            Type, = unpack(self._endian + 'i', data[8:12])
-            #assert Type in [1, 6, 10, 84], Type
-            if Type == 1:
+            response_type, = unpack(self._endian + 'i', data[8:12])
+            #assert response_type in [1, 6, 10, 84], response_type
+            if response_type == 1:
                 if self.weight_response is None:
                     self.weight_response = WeightResponse()
                 else:
                     self.weight_response.n += 1
-            elif Type == 4:
+            elif response_type == 4:
                 #TYPE =4 EIGN or FREQ
                 #8 MODE I Mode number
                 #9 APRX I Approximation code
                 pass
-            elif Type == 5:
+            elif response_type == 5:
                 #TYPE =5 DISP
                 #8 COMP I Displacement component
                 #9 UNDEF None
                 #10 GRID I Grid identification number
                 pass
-            elif Type == 15:
+            elif response_type == 15:
                 # CEIG
                 #8 MODE I Mode number
                 #9 ICODE I 1: Real component or 2: Imaginary component
                 pass
-            elif Type == 84:
+            elif response_type == 84:
                 if self.flutter_response is None:
                     self.flutter_response = FlutterResponse()
                 else:
@@ -561,43 +687,7 @@ class MinorTables(OP2Common):
             seid = out[13]
 
             if response_type == 1:
-                #                             -----  WEIGHT RESPONSE  -----
-                # ---------------------------------------------------------------------------------
-                #  INTERNAL  DRESP1  RESPONSE  ROW  COLUMN  LOWER     INPUT      OUTPUT     UPPER
-                #     ID       ID     LABEL     ID    ID    BOUND     VALUE       VALUE     BOUND
-                # ---------------------------------------------------------------------------------
-                #       1       1    WEIGHT     3     3       N/A   2.9861E+05  2.9852E+05   N/A
-                #(1, 1,    1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
-                #(1, 1000, 1, 'W       ', 0, 1,    3, 3, 0, 0, 0, 0, 0, 0)
-                #print(out)
-                #row_id = out[4]
-
-                # these should be blank?
-                row_id = out[6]
-                column_id = out[7]
-                seid_weight = out[8]
-
-                assert np.abs(out[8:-1]).sum() == 0.0, 'out=%s 8=%s' % (out, out[8:-1])
-                assert out[-1] in [0, 1, 2, 3, 4, 5], out
-                #dunno_8 = out[8]
-                #dunno_9 = out[9]
-                #dunno_10 = out[10]
-                #dunno_11 = out[11]
-                #dunno_12 = out[12]
-                #dunno_13 = out[13]
-                #msg = ('WEIGHT - response_type=%r response_label=%r row_id=%r column_id=%r '
-                       #'6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
-                           #response_type, response_label, row_id, column_id,
-                           #dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13))
-                #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
-                #print(out)
-                msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
-                    response_label, region, subcase, row_id, column_id)
-                self.weight_response.append(internal_id, dresp_id, response_label, region,
-                                            subcase, type_flag, seid,
-                                            row_id, column_id)
-                #print(msg)
-                #self.log.debug(msg)
+                self.weight_response.add_from_op2(out)
             elif response_type == 5:  # DISP
                 # out = (1, 101, 5, 'DISP1   ', 101, 1, 3, 0, 1, 0, 0, 0, 0, 0)
 
@@ -638,8 +728,7 @@ class MinorTables(OP2Common):
                 #9 UNDEF None
                 #10 ELID I Element identification number
                 #11 FREQ RS Frequency
-                #12 IFLAG I Integrated response flag. See Remark 20 of
-                #DRESP1.
+                #12 IFLAG I Integrated response flag. See Remark 20 of DRESP1.
                 #Value is -1 to -6, for SUM, AVG, SSQ,
                 pass
             elif response_type == 28:  # RMSACCL
@@ -648,7 +737,8 @@ class MinorTables(OP2Common):
                 #10 GRID I Grid identification number
                 #11 DMFREQ RS Dummy frequency for internal use
                 pass
-            elif response_type == 84:  # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
+            elif response_type == 84:
+                # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
                 out = unpack(self._endian + 'iii 8s iii fff i fff', data)
                 mode = out[6]
                 mach = out[7]

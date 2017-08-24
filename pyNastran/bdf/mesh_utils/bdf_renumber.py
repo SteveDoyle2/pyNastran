@@ -4,7 +4,6 @@ defines:
                  starting_id_dict=None, round_ids=False, cards_to_skip=None)
 """
 from __future__ import print_function
-from math import ceil
 from itertools import chain
 
 from six import iteritems, string_types
@@ -12,10 +11,12 @@ import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import integer_types, object_attributes
+from pyNastran.utils.mathematics import roundup
 
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_id_dict=None, round_ids=False, cards_to_skip=None):
+                 starting_id_dict=None, round_ids=False, cards_to_skip=None,
+                 log=None, debug=False):
     """
     Renumbers a BDF
 
@@ -191,7 +192,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'freq_id' : 1,
         'tstep_id' : 1,
         'tstepnl_id' : 1,
-        'spline_id' : 1,
         'suport_id' : 1,
         'suport1_id' : 1,
         'tf_id' : 1,
@@ -323,28 +323,18 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     freq_map = {}
     tstep_map = {}
     tstepnl_map = {}
-    suport_map = {}
+    #suport_map = {}
     suport1_map = {}
 
     if isinstance(bdf_filename, string_types):
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=debug)
         model.disable_cards(cards_to_skip)
         model.read_bdf(bdf_filename)
     else:
         model = bdf_filename
 
-    if model.new_spoints:
-        spoints = list(model.spoints.keys())
-        epoints = list(model.epoints.keys())
-    else:
-        if model.spoints is None:
-            spoints = []
-        else:
-            spoints = list(model.spoints.points)
-        if model.epoints is None:
-            epoints = []
-        else:
-            epoints = list(model.epoints.points)
+    spoints = list(model.spoints.keys())
+    epoints = list(model.epoints.keys())
 
     nids = model.nodes.keys()
 
@@ -381,7 +371,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #print(nid_map)
         #print(reverse_nid_map)
     else:
-        for nid in nid_spoints_epoints:
+        for nid in nids_spoints_epoints:
             nid_map[nid] = nid
             reverse_nid_map[nid] = nid
 
@@ -583,7 +573,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     param_id = 9999
     for (dict_obj, param_name, mmap) in data:
         if round_ids:
-            param_id = _roundup(param_id, 1000) + 1
+            param_id = roundup(param_id, 1000) + 1
         else:
             param_id = 1
         for idi, param in sorted(iteritems(dict_obj)):
@@ -658,8 +648,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'properties' : properties_map,
         'properties_mass' : properties_mass_map,
         'SPC' : spc_map,
-        'MPC' : mpc_map, #TODO: come up with unified system that uses the same key for bdf_merge and _update_case_control
-        'mpcs' : mpc_map,
+        'MPC' : mpc_map,   # TODO: come up with unified system that uses the same key
+        'mpcs' : mpc_map,  #       for bdf_merge and _update_case_control
         'METHOD' : method_map,
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,
@@ -883,28 +873,3 @@ def _update_case_control(model, mapper):
                 raise RuntimeError(key)
                     #if value ==
         #print()
-
-def _roundup(value, round_increment=100):
-    """
-    Rounds up to the next N.
-
-    Parameters
-    ----------
-    value : int
-        the value to round up
-    round_increment : int
-        the increment to round by
-
-    .. python
-
-      >>> 100 = _roundup(10)
-      >>> 200 = _roundup(105)
-      >>> 300 = _roundup(200)
-      >>> 1000 = _roundup(200, 1000)
-      >>> 2000 = _roundup(1000, 1000)
-      >>> 2000 = _roundup(1001, 1000)
-
-    .. note :: this function is used to ensure that renumbering is more
-               obvious when testing
-    """
-    return int(ceil(value / float(round_increment))) * round_increment

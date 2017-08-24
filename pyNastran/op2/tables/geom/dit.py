@@ -38,6 +38,14 @@ class DIT(GeomCommon):
             (15, 21, 162): ['TABDMP1', self._read_tabdmp1],   # NX
             (56, 26, 303): ['TABRNDG', self._read_tabrndg],   # NX
             (3105, 31, 97): ['TABLES1', self._read_tables1],  # record 13 - TABLES1 (NX)
+            (4000, 40, 460) : ['TABLE3D', self._read_fake],
+
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\htab11.op2
+            (14705, 147, 618) : ['TABLEHT', self._read_fake],
+            (14605, 146, 617) : ['TABLEH1', self._read_fake],
+
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\n10640b.op2
+            (1905, 19, 178) : ['TABLEST', self._read_fake],
         }
 
     def _read_tabdmp1(self, data, n):
@@ -73,7 +81,7 @@ class DIT(GeomCommon):
             self._add_table_sdamping_object(table)
             istart = iend + 2
             nentries += 1
-        self._increase_card_count('TABDMP1', nentries)
+        self.increase_card_count('TABDMP1', nentries)
         return n
 
     def _read_tabrndg(self, data, n):
@@ -117,11 +125,13 @@ class DIT(GeomCommon):
         while ndata - n >= 40:
             edata = data[n:n + 40]
             out = unpack('8iff', edata)
-            (sid, code_x, code_y, a, a, a, a, a, x, y) = out
+            (tid, code_x, code_y, a, a, a, a, a, x, y) = out
+            if tid > 100000000:
+                tid = -(tid - 100000000)
             if add_codes:
-                data_in = [sid, code_x, code_y, x, y]
+                data_in = [tid, code_x, code_y, x, y]
             else:
-                data_in = [sid, x, y]
+                data_in = [tid, x, y]
 
             n += 40
             while 1:
@@ -138,7 +148,7 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self._increase_card_count(table_name, nentries)
+        self.increase_card_count(table_name, nentries)
         return n
 
     def _read_tabled2(self, data, n):
@@ -163,8 +173,8 @@ class DIT(GeomCommon):
         while n < ndata:
             edata = data[n:n + 40]
             out = unpack('ifiiiiiiff', edata)
-            (sid, x1, a, a, a, a, a, a, x, y) = out
-            data_in = [sid, x1, x, y]
+            (tid, x1, a, a, a, a, a, a, x, y) = out
+            data_in = [tid, x1, x, y]
             n += 40
             while 1:
                 (xint, yint) = unpack('ii', data[n:n + 8])
@@ -178,7 +188,7 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self._increase_card_count(table_name, nentries)
+        self.increase_card_count(table_name, nentries)
         return n
 
     def _read_tabled3(self, data, n):
@@ -231,8 +241,8 @@ class DIT(GeomCommon):
         while ndata - n >= 40:
             edata = data[n:n + 40]
             out = unpack('iffiiiiiff', edata)
-            (sid, x1, x2, a, a, a, a, a, x, y) = out
-            data_in = [sid, x1, x2, x, y]
+            (tid, x1, x2, a, a, a, a, a, x, y) = out
+            data_in = [tid, x1, x2, x, y]
             n += 40
             while 1:
                 (xint, yint) = unpack('ii', data[n:n + 8])
@@ -246,7 +256,7 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self._increase_card_count(table_name, nentries)
+        self.increase_card_count(table_name, nentries)
         return n
 
     def _read_table4(self, cls, add_method, data, n, table_name):
@@ -265,8 +275,8 @@ class DIT(GeomCommon):
         while ndata - n >= 36:
             edata = data[n:n + 36]
             out = unpack('i 4f 3i f', edata)
-            (sid, x1, x2, x3, x4, a, b, c, x) = out
-            data_in = [sid, x1, x2, x3, x4, x]
+            (tid, x1, x2, x3, x4, a, b, c, x) = out
+            data_in = [tid, x1, x2, x3, x4, x]
             n += 40
             while 1:
                 xint, = unpack('i', data[n:n + 4])
@@ -280,7 +290,7 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self._increase_card_count(table_name, nentries)
+        self.increase_card_count(table_name, nentries)
         return n
 
 #TABLEST
@@ -334,7 +344,7 @@ class DIT(GeomCommon):
             self._add_random_table_object(table)
             istart = iend + 2
             nentries += 1
-        self._increase_card_count('TABRND1', nentries)
+        self.increase_card_count('TABRND1', nentries)
         return n
 
 def get_iend_from_ints(ints):

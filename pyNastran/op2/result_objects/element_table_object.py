@@ -1,7 +1,7 @@
 from __future__ import print_function
+from struct import Struct, pack
 from six import iteritems
 from six.moves import zip, range
-from struct import Struct, pack
 
 import numpy as np
 from numpy import array, zeros, angle, float32, searchsorted, empty
@@ -59,7 +59,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
                         if not allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
-                                nid,
+                                eid,
                                 tx1, ty1, tz1, rx1, ry1, rz1,
                                 tx2, ty2, tz2, rx2, ry2, rz2)
                             i += 1
@@ -95,10 +95,11 @@ class ElementTableArray(ScalarObject):  # displacement style table
 
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
         #ngrids = len(self.gridTypes)
         msg = []
 
@@ -143,8 +144,10 @@ class ElementTableArray(ScalarObject):  # displacement style table
         self.ielement = 0
 
     def build(self):
-        #print('_nelements=%s ntimes=%s sort1?=%s ntotal=%s -> _nelements=%s' % (self._nelements, self.ntimes, self.is_sort1(),
-                                                                          #self.ntotal, self._nelements // self.ntimes))
+        """sizes the vectorized attributes of the ElementTableArray"""
+        #print('_nelements=%s ntimes=%s sort1?=%s ntotal=%s -> _nelements=%s' % (
+            #self._nelements, self.ntimes, self.is_sort1(),
+            #self.ntotal, self._nelements // self.ntimes))
         if self.is_built:
             #print("resetting...")
             #self.itotal = 0
@@ -387,12 +390,12 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         element_type = self.element_data_type
         times = self._times
         for ieid, (element_id, etypei) in enumerate(zip(element, element_type)):
-            t1 = self.data[inode, :, 0]
-            t2 = self.data[inode, :, 1]
-            t3 = self.data[inode, :, 2]
-            r1 = self.data[inode, :, 3]
-            r2 = self.data[inode, :, 4]
-            r3 = self.data[inode, :, 5]
+            t1 = self.data[ieid, :, 0]
+            t2 = self.data[ieid, :, 1]
+            t3 = self.data[ieid, :, 2]
+            r1 = self.data[ieid, :, 3]
+            r2 = self.data[ieid, :, 4]
+            r3 = self.data[ieid, :, 5]
 
             header[1] = ' POINT-ID = %10i\n' % node_id
             f.write(''.join(header + words))
@@ -406,7 +409,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             page_num += 1
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f,
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06,
                                    is_mag_phase=False, is_sort1=True):
         #words += self.getTableMarker()
 
@@ -416,11 +419,11 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         is_sort2 = not is_sort1
         if self.is_sort1() or self.nonlinear_factor is None:
             if is_sort2 and self.nonlinear_factor is not None:
-                page_num = self._write_sort1_as_sort2(f, page_num, page_stamp, header, words)
+                page_num = self._write_sort1_as_sort2(f06, page_num, page_stamp, header, words)
             else:
-                page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, words)
+                page_num = self._write_sort1_as_sort1(f06, page_num, page_stamp, header, words)
         else:
-            page_num = self._write_sort2_as_sort2(f, page_num, page_stamp, header, words)
+            page_num = self._write_sort2_as_sort2(f06, page_num, page_stamp, header, words)
         return page_num - 1
 
     def extract_xyplot(self, element_ids, index):
@@ -433,196 +436,196 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         return self.data[:, ieids, i]
 
 
-class ComplexElementTableArray(ElementTableArray):  # displacement style table
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+#class ComplexElementTableArray(ElementTableArray):  # displacement style table
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def extract_xyplot(self, node_ids, index, index_str):
-        index_str = index_str.lower().strip()
-        if index_str in ['real', 'r']:
-            j = 1
-        elif index_str in ['imag', 'i']:
-            j = 2
-        elif index_str in ['mag', 'magnitude', 'm']:
-            j = 3
-        elif index_str in ['phase', 'p']:
-            j = 4
-        else:
-            raise ValueError('index_str=%r' % index_str)
+    #def extract_xyplot(self, node_ids, index, index_str):
+        #index_str = index_str.lower().strip()
+        #if index_str in ['real', 'r']:
+            #j = 1
+        #elif index_str in ['imag', 'i']:
+            #j = 2
+        #elif index_str in ['mag', 'magnitude', 'm']:
+            #j = 3
+        #elif index_str in ['phase', 'p']:
+            #j = 4
+        #else:
+            #raise ValueError('index_str=%r' % index_str)
 
-        node_ids = asarray(node_ids, dtype='int32')
-        i = index - 1
-        assert index in [1, 2, 3, 4, 5, 6,
-                         7, 8, 9, 10, 11, 12], index
-        nids = self.node_gridtype[:, 0]
-        inids = searchsorted(nids, node_ids)
-        assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)
-        if j == 1:
-            # real
-            return self.data[:, inids, i].real
-        elif j == 2:
-            # imag
-            return self.data[:, inids, i].imag
-        elif j == 3:
-            # mag
-            return np.abs(self.data[:, inids, i])
-        elif j == 4:
-            # phase
-            return angle(self.data[:, inids, i])
-        else:
-            raise RuntimeError()
+        #node_ids = asarray(node_ids, dtype='int32')
+        #i = index - 1
+        #assert index in [1, 2, 3, 4, 5, 6,
+                         #7, 8, 9, 10, 11, 12], index
+        #nids = self.node_gridtype[:, 0]
+        #inids = searchsorted(nids, node_ids)
+        #assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)
+        #if j == 1:
+            ## real
+            #return self.data[:, inids, i].real
+        #elif j == 2:
+            ## imag
+            #return self.data[:, inids, i].imag
+        #elif j == 3:
+            ## mag
+            #return np.abs(self.data[:, inids, i])
+        #elif j == 4:
+            ## phase
+            #return angle(self.data[:, inids, i])
+        #else:
+            #raise RuntimeError()
 
-    def is_real(self):
-        return False
+    #def is_real(self):
+        #return False
 
-    def is_complex(self):
-        return True
+    #def is_complex(self):
+        #return True
 
-    def data_type(self):
-        return 'complex64'
+    #def data_type(self):
+        #return 'complex64'
 
-    #def _write_f06_block(self, words, header, page_stamp, page_num, f, is_mag_phase):
-        #self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+    ##def _write_f06_block(self, words, header, page_stamp, page_num, f, is_mag_phase):
+        ##self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f,
-                                   is_mag_phase, is_sort1):
-        if is_mag_phase:
-            words += ['                                                         (MAGNITUDE/PHASE)\n', ]
-        else:
-            words += ['                                                          (REAL/IMAGINARY)\n', ]
+    #def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06,
+                                   #is_mag_phase, is_sort1):
+        #if is_mag_phase:
+            #words += ['                                                         (MAGNITUDE/PHASE)\n', ]
+        #else:
+            #words += ['                                                          (REAL/IMAGINARY)\n', ]
 
-        if not len(header) >= 3:
-            header.append('')
+        #if not len(header) >= 3:
+            #header.append('')
 
-        if self.is_sort1():
-            if is_sort1:
-                words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-                page_num = self.write_sort1_as_sort1(f, page_num, page_stamp, header, words, is_mag_phase)
-            else:
-                words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
-                page_num = self.write_sort1_as_sort2(f, page_num, page_stamp, header, words, is_mag_phase)
-        else:
-            words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
-            page_num = self.write_sort2_as_sort2(f, page_num, page_stamp, header, words, is_mag_phase)
-        return page_num - 1
+        #if self.is_sort1():
+            #if is_sort1:
+                #words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+                #page_num = self.write_sort1_as_sort1(f06, page_num, page_stamp, header, words, is_mag_phase)
+            #else:
+                #words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
+                #page_num = self.write_sort1_as_sort2(f06, page_num, page_stamp, header, words, is_mag_phase)
+        #else:
+            #words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
+            #page_num = self.write_sort2_as_sort2(f06, page_num, page_stamp, header, words, is_mag_phase)
+        #return page_num - 1
 
-    def write_sort1_as_sort1(self, f, page_num, page_stamp, header, words, is_mag_phase):
-        assert self.ntimes == len(self._times), 'ntimes=%s len(self._times)=%s' % (self.ntimes, self._times)
-        for itime, dt in enumerate(self._times):
-            node = self.node_gridtype[:, 0]
-            gridtype = self.node_gridtype[:, 1]
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
+    #def write_sort1_as_sort1(self, f06, page_num, page_stamp, header, words, is_mag_phase):
+        #assert self.ntimes == len(self._times), 'ntimes=%s len(self._times)=%s' % (self.ntimes, self._times)
+        #for itime, dt in enumerate(self._times):
+            #node = self.node_gridtype[:, 0]
+            #gridtype = self.node_gridtype[:, 1]
+            #t1 = self.data[itime, :, 0]
+            #t2 = self.data[itime, :, 1]
+            #t3 = self.data[itime, :, 2]
+            #r1 = self.data[itime, :, 3]
+            #r2 = self.data[itime, :, 4]
+            #r3 = self.data[itime, :, 5]
 
-            header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            f.write(''.join(header + words))
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
-                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                vals2 = write_imag_floats_13e(vals, is_mag_phase)
-                [dxr, dyr, dzr, rxr, ryr, rzr,
-                 dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                if sgridtype == 'G':
-                    f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                            '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-                elif sgridtype == 'S':
-                    f.write('0 %12i %6s     %-13s\n'
-                            '  %12s %6s     %-13s\n' % (node_id, sgridtype, dxr, '', '', dxi))
-                else:
-                    raise NotImplementedError(sgridtype)
-            f.write(page_stamp % page_num)
-            page_num += 1
-        return page_num
+            #header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            #f.write(''.join(header + words))
+            #for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
+                #sgridtype = self.recast_gridtype_as_string(gridtypei)
+                #vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                #vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                #[dxr, dyr, dzr, rxr, ryr, rzr,
+                 #dxi, dyi, dzi, rxi, ryi, rzi] = vals2
+                #if sgridtype == 'G':
+                    #f06.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                              #'  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                  #node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                  #'', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                #elif sgridtype == 'S':
+                    #f06.write('0 %12i %6s     %-13s\n'
+                              #'  %12s %6s     %-13s\n' % (node_id, sgridtype, dxr, '', '', dxi))
+                #else:
+                    #raise NotImplementedError(sgridtype)
+            #f.write(page_stamp % page_num)
+            #page_num += 1
+        #return page_num
 
-    def write_sort1_as_sort2(self, f, page_num, page_stamp, header, words, is_mag_phase):
-        node = self.node_gridtype[:, 0]
-        gridtype = self.node_gridtype[:, 1]
+    #def write_sort1_as_sort2(self, f06, page_num, page_stamp, header, words, is_mag_phase):
+        #node = self.node_gridtype[:, 0]
+        #gridtype = self.node_gridtype[:, 1]
 
-        times = self._times
-        # print(self.data.shape)
-        for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
-            # SORT1 is pretending to be SORT2
-            t1 = self.data[:, inode, 0].ravel()
-            t2 = self.data[:, inode, 1].ravel()
-            t3 = self.data[:, inode, 2].ravel()
-            r1 = self.data[:, inode, 3].ravel()
-            r2 = self.data[:, inode, 4].ravel()
-            r3 = self.data[:, inode, 5].ravel()
-            if len(r3) != len(times):
-                raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
-
-            header[2] = ' POINT-ID = %10i\n' % node_id
-            f.write(''.join(header + words))
-            for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
-                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                vals2 = write_imag_floats_13e(vals, is_mag_phase)
-                [dxr, dyr, dzr, rxr, ryr, rzr,
-                 dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                sdt = write_float_12e(dt)
-                #if not is_all_zeros:
-                if sgridtype == 'G':
-                    f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                            '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-                elif sgridtype == 'S':
-                    f.write('0 %12s %6s     %-13s\n'
-                            '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
-                else:
-                    msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
-                    node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
-                    raise NotImplementedError(msg)
-            f.write(page_stamp % page_num)
-            page_num += 1
-        return page_num
-
-    def write_sort2_as_sort2(self, f, page_num, page_stamp, header, words, is_mag_phase):
-        node = self.node_gridtype[:, 0]
-        gridtype = self.node_gridtype[:, 1]
-
-        times = self._times
-        for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
-            # TODO: for SORT1 pretending to be SORT2
+        #times = self._times
+        ## print(self.data.shape)
+        #for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
+            ## SORT1 is pretending to be SORT2
             #t1 = self.data[:, inode, 0].ravel()
-            t1 = self.data[inode, :, 0]
-            t2 = self.data[inode, :, 1]
-            t3 = self.data[inode, :, 2]
-            r1 = self.data[inode, :, 3]
-            r2 = self.data[inode, :, 4]
-            r3 = self.data[inode, :, 5]
-            if len(r3) != len(times):
-                raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
+            #t2 = self.data[:, inode, 1].ravel()
+            #t3 = self.data[:, inode, 2].ravel()
+            #r1 = self.data[:, inode, 3].ravel()
+            #r2 = self.data[:, inode, 4].ravel()
+            #r3 = self.data[:, inode, 5].ravel()
+            #if len(r3) != len(times):
+                #raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
 
-            header[2] = ' POINT-ID = %10i\n' % node_id
-            f.write(''.join(header + words))
-            for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
-                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                vals2 = write_imag_floats_13e(vals, is_mag_phase)
-                [dxr, dyr, dzr, rxr, ryr, rzr,
-                 dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                sdt = write_float_12e(dt)
-                #if not is_all_zeros:
-                if sgridtype == 'G':
-                    f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                            '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-                elif sgridtype == 'S':
-                    f.write('0 %12s %6s     %-13s\n'
-                            '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
-                else:
-                    msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
-                    node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
-                    raise NotImplementedError(msg)
-            f.write(page_stamp % page_num)
-            page_num += 1
-        return page_num
+            #header[2] = ' POINT-ID = %10i\n' % node_id
+            #f.write(''.join(header + words))
+            #for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
+                #sgridtype = self.recast_gridtype_as_string(gridtypei)
+                #vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                #vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                #[dxr, dyr, dzr, rxr, ryr, rzr,
+                 #dxi, dyi, dzi, rxi, ryi, rzi] = vals2
+                #sdt = write_float_12e(dt)
+                ##if not is_all_zeros:
+                #if sgridtype == 'G':
+                    #f06.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                              #'  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                  #sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                  #'', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                #elif sgridtype == 'S':
+                    #f06.write('0 %12s %6s     %-13s\n'
+                              #'  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
+                #else:
+                    #msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
+                        #node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
+                    #raise NotImplementedError(msg)
+            #f06.write(page_stamp % page_num)
+            #page_num += 1
+        #return page_num
+
+    #def write_sort2_as_sort2(self, f06, page_num, page_stamp, header, words, is_mag_phase):
+        #node = self.node_gridtype[:, 0]
+        #gridtype = self.node_gridtype[:, 1]
+
+        #times = self._times
+        #for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
+            ## TODO: for SORT1 pretending to be SORT2
+            ##t1 = self.data[:, inode, 0].ravel()
+            #t1 = self.data[inode, :, 0]
+            #t2 = self.data[inode, :, 1]
+            #t3 = self.data[inode, :, 2]
+            #r1 = self.data[inode, :, 3]
+            #r2 = self.data[inode, :, 4]
+            #r3 = self.data[inode, :, 5]
+            #if len(r3) != len(times):
+                #raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
+
+            #header[2] = ' POINT-ID = %10i\n' % node_id
+            #f.write(''.join(header + words))
+            #for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
+                #sgridtype = self.recast_gridtype_as_string(gridtypei)
+                #vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                #vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                #[dxr, dyr, dzr, rxr, ryr, rzr,
+                 #dxi, dyi, dzi, rxi, ryi, rzi] = vals2
+                #sdt = write_float_12e(dt)
+                ##if not is_all_zeros:
+                #if sgridtype == 'G':
+                    #f06.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                              #'  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                  #sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                  #'', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                #elif sgridtype == 'S':
+                    #f06.write('0 %12s %6s     %-13s\n'
+                              #'  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
+                #else:
+                    #msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
+                        #node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
+                    #raise NotImplementedError(msg)
+            #f06.write(page_stamp % page_num)
+            #page_num += 1
+        #return page_num
 

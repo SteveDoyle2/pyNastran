@@ -257,10 +257,10 @@ class TestSolids(unittest.TestCase):
         G = None
         nu = 0.3
         model = BDF(debug=False)
-        model.add_grid(11, xyz=[0., 0., 0.])
-        model.add_grid(12, xyz=[1., 0., 0.])
-        model.add_grid(13, xyz=[1., 1., 0.])
-        model.add_grid(15, xyz=[0., 0., 2.])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(15, [0., 0., 2.])
         model.add_psolid(pid, mid)
         model.add_mat1(mid, E, G, nu, rho=0.1)
         nids = [11, 12, 13, 15]
@@ -276,10 +276,10 @@ class TestSolids(unittest.TestCase):
         #G = None
         #nu = 0.3
         model = BDF(debug=False)
-        model.add_grid(11, xyz=[0., 0., 0.])
-        model.add_grid(12, xyz=[1., 0., 0.])
-        model.add_grid(13, xyz=[1., 1., 0.])
-        model.add_grid(15, xyz=[0., 0., 2.])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(15, [0., 0., 2.])
         model.add_psolid(pid, mid)
         mat9 = model.add_mat9(mid, G11=1000., rho=0.2)
         mat9.raw_fields()
@@ -297,18 +297,18 @@ class TestSolids(unittest.TestCase):
         G = None
         nu = 0.3
         model = BDF(debug=False)
-        g110 = model.add_grid(110, xyz=[0., 0., 0.])
-        g120 = model.add_grid(120, xyz=[1., 0., 0.])
-        g130 = model.add_grid(130, xyz=[1., 1., 0.])
-        g140 = model.add_grid(140, xyz=[0., 0., 2.])
+        g110 = model.add_grid(110, [0., 0., 0.])
+        g120 = model.add_grid(120, [1., 0., 0.])
+        g130 = model.add_grid(130, [1., 1., 0.])
+        g140 = model.add_grid(140, [0., 0., 2.])
 
-        model.add_grid(111, xyz=g110.xyz+g120.xyz)
-        model.add_grid(112, xyz=g120.xyz+g130.xyz)
-        model.add_grid(113, xyz=g130.xyz+g110.xyz)
+        model.add_grid(111, g110.xyz+g120.xyz)
+        model.add_grid(112, g120.xyz+g130.xyz)
+        model.add_grid(113, g130.xyz+g110.xyz)
 
-        model.add_grid(121, xyz=g110.xyz+g140.xyz)
-        model.add_grid(122, xyz=g120.xyz+g140.xyz)
-        model.add_grid(123, xyz=g130.xyz+g140.xyz)
+        model.add_grid(121, g110.xyz+g140.xyz)
+        model.add_grid(122, g120.xyz+g140.xyz)
+        model.add_grid(123, g130.xyz+g140.xyz)
 
         model.add_psolid(pid, mid)
         model.add_mat1(mid, E, G, nu, rho=1.0)
@@ -329,11 +329,11 @@ class TestSolids(unittest.TestCase):
         E = 3.e7
         G = None
         nu = 0.3
-        model.add_grid(10, xyz=[0., 0., 0.])
-        model.add_grid(20, xyz=[1., 0., 0.])
-        model.add_grid(30, xyz=[1., 1., 0.])
-        model.add_grid(40, xyz=[0., 0., 2.])
-        model.add_grid(50, xyz=[1., 1., 2.])
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [1., 0., 0.])
+        model.add_grid(30, [1., 1., 0.])
+        model.add_grid(40, [0., 0., 2.])
+        model.add_grid(50, [1., 1., 2.])
         model.add_psolid(pid, mid)
         model.add_mat1(mid, E, G, nu, rho=1.0)
         nids = [10, 20, 30, 40, 50]
@@ -358,12 +358,12 @@ class TestSolids(unittest.TestCase):
         E = 3.e7
         G = None
         nu = 0.3
-        model.add_grid(21, xyz=[0., 0., 0.])
-        model.add_grid(22, xyz=[1., 0., 0.])
-        model.add_grid(23, xyz=[1., 1., 0.])
-        model.add_grid(24, xyz=[0., 0., 2.])
-        model.add_grid(25, xyz=[1., 0., 2.])
-        model.add_grid(26, xyz=[1., 1., 2.])
+        model.add_grid(21, [0., 0., 0.])
+        model.add_grid(22, [1., 0., 0.])
+        model.add_grid(23, [1., 1., 0.])
+        model.add_grid(24, [0., 0., 2.])
+        model.add_grid(25, [1., 0., 2.])
+        model.add_grid(26, [1., 1., 2.])
         model.add_psolid(pid, mid)
         model.add_mat1(mid, E, G, nu, rho=1.0)
         nids = [21, 22, 23, 24, 25, 26]
@@ -387,15 +387,15 @@ class TestSolids(unittest.TestCase):
         E = 3.e7
         G = None
         nu = 0.3
-        model.add_grid(11, xyz=[0., 0., 0.])
-        model.add_grid(12, xyz=[1., 0., 0.])
-        model.add_grid(13, xyz=[1., 1., 0.])
-        model.add_grid(14, xyz=[0., 1., 0.])
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [1., 1., 0.])
+        model.add_grid(14, [0., 1., 0.])
 
-        model.add_grid(15, xyz=[0., 0., 2.])
-        model.add_grid(16, xyz=[1., 0., 2.])
-        model.add_grid(17, xyz=[1., 1., 2.])
-        model.add_grid(18, xyz=[0., 1., 2.])
+        model.add_grid(15, [0., 0., 2.])
+        model.add_grid(16, [1., 0., 2.])
+        model.add_grid(17, [1., 1., 2.])
+        model.add_grid(18, [0., 1., 2.])
         model.add_psolid(pid, mid)
         model.add_mat1(mid, E, G, nu, rho=1.0)
         nids = [11, 12, 13, 14, 15, 16, 17, 18]
@@ -424,9 +424,9 @@ class TestSolids(unittest.TestCase):
         assert pid in model.properties, 'pid is missing for\n%s' % str(element)
         self.assertEqual(element.type, etype)
         self.assertEqual(element.eid, eid)
-        self.assertEqual(element.pid.type, ptype)
+        self.assertEqual(element.pid_ref.type, ptype)
         self.assertEqual(element.Pid(), pid)
-        self.assertEqual(element.pid.mid.type, mtype)
+        self.assertEqual(element.pid_ref.mid_ref.type, mtype)
         self.assertEqual(element.Mid(), mid)
         self.assertEqual(element.Volume(), V)
         self.assertEqual(element.Mass(), mass)

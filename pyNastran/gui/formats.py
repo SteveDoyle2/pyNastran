@@ -27,7 +27,7 @@ is_nastran = True
 
 
 #try:
-from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
+from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
 is_lawgs = True
 #except ImportError:
     #raise
@@ -53,18 +53,18 @@ is_panair = True
     #        pass
     #is_panair = False
 
-try:
-    from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
-    is_plot3d = True
-#except ImportError:
-except:
-    class Plot3d_io(object):
-        """dummy plot3d gui class"""
-        def __init__(self):
-            """dummy gui init"""
-            pass
-    is_plot3d = False
-    #raise
+#try:
+    #from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
+    #is_plot3d = True
+##except ImportError:
+#except:
+    #class Plot3d_io(object):
+        #"""dummy plot3d gui class"""
+        #def __init__(self):
+            #"""dummy gui init"""
+            #pass
+    #is_plot3d = False
+    ##raise
 
 #try:
 from pyNastran.converters.shabp.shabp_io import ShabpIO

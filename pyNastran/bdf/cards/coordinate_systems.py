@@ -16,7 +16,7 @@ from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from six.moves import zip, range
 
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -555,7 +555,7 @@ class Coord(BaseCard):
             return p
 
         if not self.is_resolved:
-            if isinstance(self.rid, integer_types) and self.rid != 0:
+            if self.rid_ref is None and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 self.rid_ref.setup()
@@ -896,7 +896,7 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
         model.add_card(card, card[0], is_list=True)
 
 
-def define_coord_e123(model, Type, cid, origin, rid=0,
+def define_coord_e123(model, cord2_type, cid, origin, rid=0,
                       xaxis=None, yaxis=None, zaxis=None,
                       xyplane=None, yzplane=None, xzplane=None, add=True):
     """
@@ -907,7 +907,7 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
     ----------
     model : BDF()
         a BDF object
-    Type : str
+    cord2_type : str
         'CORD2R', 'CORD2C', 'CORD2S'
     cid : int
         the new coordinate system id
@@ -936,7 +936,7 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
 
     TODO: hasn't been tested...
     """
-    assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
+    assert cord2_type in ['CORD2R', 'CORD2C', 'CORD2S'], cord2_type
     origin = _fix_xyz_shape(origin, 'origin')
     rcoord = model.Coord(rid)
 
@@ -1006,10 +1006,10 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
             jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
             j = jhat / norm(jhat)
             i = np.cross(j, k)
-    return define_coord_ijk(model, Type, cid, origin, rid, i, j, k, add=add)
+    return define_coord_ijk(model, cord2_type, cid, origin, rid, i, j, k, add=add)
 
 
-def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
+def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=None,
                      add=True):
     """
     Create a coordinate system based on 2 or 3 perpendicular unit vectors
@@ -1018,7 +1018,7 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
     ----------
     model : BDF()
         a BDF object
-    Type : str
+    cord2_type : str
         'CORD2R', 'CORD2C', 'CORD2S'
     cid : int
         the new coordinate system id
@@ -1040,7 +1040,7 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
     coord : CORD2R, CORD2C, CORD2S
         the coordinate system
     """
-    assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
+    assert cord2_type in ['CORD2R', 'CORD2C', 'CORD2S'], cord2_type
     origin = _fix_xyz_shape(origin, 'origin')
 
     # create cross vectors
@@ -1066,20 +1066,18 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None,
     e1 = rcoord.transform_node_to_local(origin)
     e2 = rcoord.transform_node_to_local(origin + k) # point on z axis
     e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis
-    card = [Type, cid, rid] + list(e1) + list(e2) + list(e3)
+    card = [cord2_type, cid, rid] + list(e1) + list(e2) + list(e3)
 
-    if Type == 'CORD2R':
+    if cord2_type == 'CORD2R':
         coord = CORD2R(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
-    elif Type == 'CORD2C':
+    elif cord2_type == 'CORD2C':
         coord = CORD2C(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
-    elif Type == 'CORD2S':
+    elif cord2_type == 'CORD2S':
         coord = CORD2S(cid, rid, origin=e1, zaxis=e2, xzplane=e3, comment='')
     else:
         raise NotImplementedError(card)
     if add:
         model._add_coord_object(coord)
-        if model.xref:
-            coord.cross_reference(model)
     return coord
 
 
@@ -1297,14 +1295,15 @@ class SphericalCoord(object):
         x = p[:, 0]
         y = p[:, 1]
         z = p[:, 2]
-        R = np.sqrt(x * x + y * y + z * z)
+        radius = np.sqrt(x * x + y * y + z * z)
         phi = np.degrees(np.arctan2(y, x))
-        theta = np.degrees(np.arccos(z / R))
 
-        i = np.where(R == 0.0)
+        i = np.where(radius == 0.0)
         if len(i):
-            theta[i] = 0.0
-        return np.array([R, theta, phi], dtype='float64').T
+            theta = np.zeros(len(z), dtype=z.dtype)
+            ir = np.where(radius != 0.0)
+            theta[ir] = np.degrees(np.arccos(z[ir] / radius[ir]))
+        return np.array([radius, theta, phi], dtype='float64').T
 
     @staticmethod
     def coord_to_xyz(p):
@@ -1314,12 +1313,12 @@ class SphericalCoord(object):
         xyz : (3,) float ndarray
             the R, \theta, \phi in the local coordinate system
         """
-        R = p[0]
+        radius = p[0]
         theta = radians(p[1])
         phi = radians(p[2])
-        x = R * sin(theta) * cos(phi)
-        y = R * sin(theta) * sin(phi)
-        z = R * cos(theta)
+        x = radius * sin(theta) * cos(phi)
+        y = radius * sin(theta) * sin(phi)
+        z = radius * cos(theta)
         return np.array([x, y, z], dtype='float64')
 
     @staticmethod
@@ -1356,8 +1355,14 @@ class SphericalCoord(object):
         t = phi
         return np.array([r, t, z], dtype='float64')
 
-class Cord2x(Coord):
 
+class Cord2x(Coord):
+    """
+    Parent class for:
+     - CORD2R
+     - CORD2C
+     - CORD2S
+    """
     def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
         This method emulates the CORD2x card.
@@ -1396,6 +1401,8 @@ class Cord2x(Coord):
             self.e3 = np.array([1., 0., 0.], dtype='float64')
         else:
             self.e3 = np.asarray(xzplane)
+
+        self.rid_ref = None
         self._finish_setup()
 
     @classmethod
@@ -1664,14 +1671,15 @@ class Cord2x(Coord):
             set the rid to cid=0 if False
         """
         if maintain_rid:
-            e1 = self.rid_ref.transform_node_to_global(self.e1)
-            e2 = self.rid_ref.transform_node_to_global(self.e2)
-            e3 = self.rid_ref.transform_node_to_global(self.e3)
-            e12 = e2 - e1
-            e13 = e3 - e1
-            self.e1 = self.rid_ref.transform_node_to_local(xyz)
-            self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
-            self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
+            #e1 = self.rid_ref.transform_node_to_global(self.e1)
+            #e2 = self.rid_ref.transform_node_to_global(self.e2)
+            #e3 = self.rid_ref.transform_node_to_global(self.e3)
+            #e12 = e2 - e1
+            #e13 = e3 - e1
+            #self.e1 = self.rid_ref.transform_node_to_local(xyz)
+            #self.e2 = self.rid_ref.transform_node_to_local(xyz + e12)
+            #self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
+            raise RuntimeError('this method is very confusing...xyz is not defined...is that origin?')
         else:
             self.rid = 0
             if hasattr(self, 'rid_ref'):
@@ -1708,23 +1716,28 @@ class Cord2x(Coord):
         """
         if self.Rid() != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
-            self.rid = model.Coord(self.rid, msg=msg)
-            self.rid_ref = self.rid
+            self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self):
         if self.rid == 0:
             return
         self.rid = self.Rid()
-        del self.rid_ref
+        self.rid_ref = None
 
     def Rid(self):
         """Gets the reference coordinate system self.rid"""
-        if isinstance(self.rid, integer_types):
-            return self.rid
-        return self.rid_ref.cid
+        if self.rid_ref is not None:
+            return self.rid_ref.cid
+        return self.rid
 
 
 class Cord1x(Coord):
+    """
+    Parent class for:
+     - CORD1R
+     - CORD1C
+     - CORD1S
+    """
     rid = 0  # used only for transform to global
 
     def Rid(self):
@@ -1760,6 +1773,9 @@ class Cord1x(Coord):
         self.g2 = g2
         #: a Node on the xz-plane
         self.g3 = g3
+        self.g1_ref = None
+        self.g2_ref = None
+        self.g3_ref = None
 
     def validate(self):
         assert self.g1 != self.g2, str(self)
@@ -1805,7 +1821,7 @@ class Cord1x(Coord):
         assert len(data) == 4, 'data = %s' % (data)
         return cls(cid, g1, g2, g3, comment=comment)
 
-    def to_CORD2x(self, model, rid=0):
+    def to_cord2x(self, model, rid=0):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
 
@@ -1869,20 +1885,19 @@ class Cord1x(Coord):
         """
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         #: grid point 1
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g1_ref = self.g1
+        self.g1_ref = model.Node(self.g1, msg=msg)
         #: grid point 2
-        self.g2 = model.Node(self.g2, msg=msg)
-        self.g2_ref = self.g2
+        self.g2_ref = model.Node(self.g2, msg=msg)
         #: grid point 3
-        self.g3 = model.Node(self.g3, msg=msg)
-        self.g3_ref = self.g3
+        self.g3_ref = model.Node(self.g3, msg=msg)
 
     def uncross_reference(self):
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.g3 = self.G3()
-        del self.g1_ref, self.g2_ref, self.g3_ref
+        self.g1_ref = None
+        self.g2_ref = None
+        self.g3_ref = None
 
     def setup(self):
         """
@@ -2024,6 +2039,7 @@ class CORD3G(Coord):  # not done
         self.form = form
         self.thetas = thetas
         self.rid = rid
+        self.rid_ref = None
 
         assert 0 < self.method_int < 1000
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
@@ -2073,17 +2089,16 @@ class CORD3G(Coord):  # not done
             the BDF object
         """
         msg = ' which is required by CORD3G cid=%s' % (self.cid)
-        self.rid = model.Coord(self.rid, msg=msg)
-        self.rid_ref = self.rid
+        self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self):
         self.rid = self.Rid()
-        del self.rid_ref
+        self.rid_ref = None
 
     def Rid(self):
-        if isinstance(self.rid, integer_types):
-            return self.rid
-        return self.rid_ref.cid
+        if self.rid_ref is not None:
+            return self.rid_ref.cid
+        return self.rid
 
     def coord3g_transform_to_global(self, p):
         """

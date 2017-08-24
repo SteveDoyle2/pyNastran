@@ -3,15 +3,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 from six.moves import zip, range
 
-from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
 from pyNastran.bdf.field_writer_16 import print_field_16
 
 def assert_fields(card1, card2):
     try:
-        fields1 = wipe_empty_fields_typed(card1.repr_fields())
-        fields2 = wipe_empty_fields_typed(card2.repr_fields())
+        fields1 = wipe_empty_fields(card1.repr_fields())
+        fields2 = wipe_empty_fields(card2.repr_fields())
     except:
         print("card1 = \n%s" % (card1))
         print("card2 = \n%s" % (card2))
@@ -53,11 +53,13 @@ def check_length(fem1, fem2, name):
     obj1 = getattr(fem1, name)
     obj2 = getattr(fem2, name)
     if not len(obj2) == len(obj2):
-        assert len(obj2) == len(obj2), 'len(fem1.%s)=%i len(fem2.%s)=%i' % (name, len(obj2), name, len(obj2))
+        msg = 'len(fem1.%s)=%i len(fem2.%s)=%i' % (name, len(obj2), name, len(obj2))
+        raise AssertionError(msg)
 
 def compare_card_content(fem1, fem2):
     check_obj_names = [
-        'params', 'nodes', 'elements', 'rigid_elements', 'nsms',
+        'params', 'nodes', 'spoints', 'epoints', 'points',
+        'elements', 'rigid_elements', 'nsms',
         'properties', 'materials', 'creep_materials',
         'loads', 'coords',
         'spcs', 'spcoffs', 'mpcs', 'dareas', 'dphases',
@@ -103,9 +105,11 @@ def compare_card_content(fem1, fem2):
         card2 = fem2.creep_materials[key]
         assert_fields(card1, card2)
 
+    nid_map = fem2.nid_map
     for key in fem1.loads:
         loads1 = fem1.loads[key]
         loads2 = fem2.loads[key]
+        fem1._get_temperatures_array(key, nid_map)
         for (card1, card2) in zip(loads1, loads2):
             assert_fields(card1, card2)
 
@@ -123,14 +127,19 @@ def compare_card_content(fem1, fem2):
         assert_fields(card1, card2)
 
     for spc_id in fem1.spcs:
-        fem1.get_SPCx_node_ids(spc_id, exclude_spcadd=False)
-        fem1.get_SPCx_node_ids_c1(spc_id, exclude_spcadd=False)
+        fem1.get_SPCx_node_ids(spc_id)
+        fem1.get_SPCx_node_ids_c1(spc_id)
+        fem1.get_reduced_spcs(spc_id)
+        fem1.get_spcs(spc_id)
         #card1 = fem1.spcs[key]
         #card2 = fem2.spcs[key]
         #assert_fields(card1, card2)
 
     for mpc_id in fem1.mpcs:
-        fem1.get_MPCx_node_ids_c1(mpc_id, exclude_mpcadd=False)
+        fem1.get_MPCx_node_ids(mpc_id)
+        fem1.get_MPCx_node_ids_c1(mpc_id)
+        fem1.get_reduced_mpcs(mpc_id)
+        fem1.get_mpcs(mpc_id)
         #card1 = fem1.mpcs[key]
         #card2 = fem2.mpcs[key]
         #assert_fields(card1, card2)
@@ -245,6 +254,7 @@ def compare_card_content(fem1, fem2):
 
 
 def compare_matrices(fem1, fem2):
+    """verifies that the DMIG, DMIJ, DMIJI, and DMIK matrices are the same"""
     for key in fem1.dmigs:
         card1 = fem1.dmigs[key]
         card2 = fem2.dmigs[key]
@@ -273,15 +283,16 @@ def compare_matrices(fem1, fem2):
 
 
 def compare_thermal_content(fem1, fem2):
+    """compares thermal cards"""
     assert len(fem1.bcs) == len(fem2.bcs)
     assert len(fem1.thermal_materials) == len(fem2.thermal_materials)
     assert len(fem1.phbdys) == len(fem2.phbdys)
     assert len(fem1.convection_properties) == len(fem2.convection_properties)
 
     for key in fem1.bcs:
-        BCs1 = fem1.bcs[key]
-        BCs2 = fem2.bcs[key]
-        for (card1, card2) in zip(BCs1, BCs2):
+        bcs1 = fem1.bcs[key]
+        bcs2 = fem2.bcs[key]
+        for (card1, card2) in zip(bcs1, bcs2):
             assert_fields(card1, card2)
 
     for key in fem1.thermal_materials:
@@ -300,6 +311,7 @@ def compare_thermal_content(fem1, fem2):
 
 
 def compare_optimization_content(fem1, fem2):
+    """compares optimization cards"""
     assert len(fem1.dconstrs) == len(fem2.dconstrs)
     assert len(fem1.desvars) == len(fem2.desvars)
     assert len(fem1.ddvals) == len(fem2.ddvals)
@@ -346,6 +358,7 @@ def compare_optimization_content(fem1, fem2):
 
 
 def compare_aero_content(fem1, fem2):
+    """compares aero cards"""
     assert len(fem1.caeros) == len(fem2.caeros)
     assert len(fem1.paeros) == len(fem2.paeros)
     assert (fem1.aero is None) == (fem2.aero is None), 'fem1.aero_is_None=%s fem2.aero_is_None=%s' % (fem1.aero is None, fem2.aero is None)

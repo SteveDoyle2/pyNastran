@@ -7,8 +7,9 @@ This file defines:
 """
 from __future__ import print_function
 from six.moves import zip, range
+import numpy as np
 from numpy import arange, cross, abs, searchsorted, array, ones, eye
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import integer
@@ -133,16 +134,17 @@ class CHEXA8(SolidElement):
         rho = self.model.elements.properties_solid.psolid.get_density_by_property_id(pid)[0]
 
         n0, n1, n2, n3, n4, n5, n6, n7 = self.node_ids[i, :]
-        V = volume8(positions[self.node_ids[i, 0]],
-                    positions[self.node_ids[i, 1]],
-                    positions[self.node_ids[i, 2]],
-                    positions[self.node_ids[i, 3]],
+        V = volume8(
+            positions[self.node_ids[i, 0]],
+            positions[self.node_ids[i, 1]],
+            positions[self.node_ids[i, 2]],
+            positions[self.node_ids[i, 3]],
 
-                    positions[self.node_ids[i, 4]],
-                    positions[self.node_ids[i, 5]],
-                    positions[self.node_ids[i, 6]],
-                    positions[self.node_ids[i, 7]],
-                    )
+            positions[self.node_ids[i, 4]],
+            positions[self.node_ids[i, 5]],
+            positions[self.node_ids[i, 6]],
+            positions[self.node_ids[i, 7]],
+        )
 
         mass = rho * V
         if is_lumped:
@@ -223,7 +225,7 @@ class CHEXA8(SolidElement):
             [1, 1, -1],
             [-1, 1, -1],
 
-            [-1, -1,1,],
+            [-1, -1, 1,],
             [1, -1, 1,],
             [1, 1, 1],
             [-1, 1, 1],
@@ -240,37 +242,37 @@ class CHEXA8(SolidElement):
         #n7 = 0.125 * (1 + u) * (1 + v) * (1 + w)
         #n8 = 0.125 * (1 - u) * (1 + v) * (1 + w)
 
-        n1u = 0.125 * (1 - v) * (1 - w) * -1
-        n2u = 0.125 * (1 - v) * (1 - w) * 1
-        n3u = 0.125 * (1 + v) * (1 - w) * 1
-        n4u = 0.125 * (1 + v) * (1 - w) * -1
+        #n1u = 0.125 * (1 - v) * (1 - w) * -1
+        #n2u = 0.125 * (1 - v) * (1 - w) * 1
+        #n3u = 0.125 * (1 + v) * (1 - w) * 1
+        #n4u = 0.125 * (1 + v) * (1 - w) * -1
 
-        n5u = 0.125 * (1 - v) * (1 + w) * -1
-        n6u = 0.125 * (1 - v) * (1 + w) * 1
-        n7u = 0.125 * (1 + v) * (1 + w) * 1
-        n8u = 0.125 * (1 + v) * (1 + w) * -1
-
-
-        n1v = 0.125 * (1 - u) * (1 - v) * -1
-        n2v = 0.125 * (1 + u) * (1 - v) * -1
-        n3v = 0.125 * (1 + u) * (1 + v) * 1
-        n4v = 0.125 * (1 - u) * (1 + v) * 1
-
-        n5v = 0.125 * (1 - u) * (1 - v) * -1
-        n6v = 0.125 * (1 + u) * (1 - v) * -1
-        n7v = 0.125 * (1 + u) * (1 + v) * 1
-        n8v = 0.125 * (1 - u) * (1 + v) * 1
+        #n5u = 0.125 * (1 - v) * (1 + w) * -1
+        #n6u = 0.125 * (1 - v) * (1 + w) * 1
+        #n7u = 0.125 * (1 + v) * (1 + w) * 1
+        #n8u = 0.125 * (1 + v) * (1 + w) * -1
 
 
-        n1w = 0.125 * (1 - u) * (1 - v) * -1
-        n2w = 0.125 * (1 + u) * (1 - v) * -1
-        n3w = 0.125 * (1 + u) * (1 + v) * -1
-        n4w = 0.125 * (1 - u) * (1 + v) * -1
+        #n1v = 0.125 * (1 - u) * (1 - v) * -1
+        #n2v = 0.125 * (1 + u) * (1 - v) * -1
+        #n3v = 0.125 * (1 + u) * (1 + v) * 1
+        #n4v = 0.125 * (1 - u) * (1 + v) * 1
 
-        n5w = 0.125 * (1 - u) * (1 - v) * 1
-        n6w = 0.125 * (1 + u) * (1 - v) * 1
-        n7w = 0.125 * (1 + u) * (1 + v) * 1
-        n8w = 0.125 * (1 - u) * (1 + v) * 1
+        #n5v = 0.125 * (1 - u) * (1 - v) * -1
+        #n6v = 0.125 * (1 + u) * (1 - v) * -1
+        #n7v = 0.125 * (1 + u) * (1 + v) * 1
+        #n8v = 0.125 * (1 - u) * (1 + v) * 1
+
+
+        #n1w = 0.125 * (1 - u) * (1 - v) * -1
+        #n2w = 0.125 * (1 + u) * (1 - v) * -1
+        #n3w = 0.125 * (1 + u) * (1 + v) * -1
+        #n4w = 0.125 * (1 - u) * (1 + v) * -1
+
+        #n5w = 0.125 * (1 - u) * (1 - v) * 1
+        #n6w = 0.125 * (1 + u) * (1 - v) * 1
+        #n7w = 0.125 * (1 + u) * (1 + v) * 1
+        #n8w = 0.125 * (1 - u) * (1 + v) * 1
 
         Dcoeff = E / ((1. + nu) * (1. - 2. *nu))
         D = Dcoeff * np.array([
@@ -288,12 +290,12 @@ class CHEXA8(SolidElement):
             locations = np.array([
                 [-0.577350269189626, -0.577350269189626, -0.577350269189626],
                 [0.577350269189626, -0.577350269189626, -0.577350269189626],
-                [0.577350269189626,  0.577350269189626, -0.577350269189626],
-                [-0.577350269189626,  0.577350269189626, -0.577350269189626],
-                [-0.577350269189626, -0.577350269189626,  0.577350269189626],
-                [0.577350269189626, -0.577350269189626,  0.577350269189626],
-                [0.577350269189626,  0.577350269189626,  0.577350269189626],
-                [-0.577350269189626,  0.577350269189626,  0.577350269189626],
+                [0.577350269189626, 0.577350269189626, -0.577350269189626],
+                [-0.577350269189626, 0.577350269189626, -0.577350269189626],
+                [-0.577350269189626, -0.577350269189626, 0.577350269189626],
+                [0.577350269189626, -0.577350269189626, 0.577350269189626],
+                [0.577350269189626, 0.577350269189626, 0.577350269189626],
+                [-0.577350269189626, 0.577350269189626, 0.577350269189626],
             ], dtype='float32')
             weights = np.array([1, 1, 1, 1, 1, 1, 1, 1], dtype='float32')
 
@@ -364,7 +366,7 @@ class CHEXA8(SolidElement):
         get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
         node_ids = self.node_ids
 
-        msg = ', which is required by %s' % self.type
+        #msg = ', which is required by %s' % self.type
         i1, i2, i3, i4, i5, i6, i7, i8 = self.get_node_indicies(i)
         n1 = xyz_cid0[i1, :]
         n2 = xyz_cid0[i2, :]
@@ -445,7 +447,8 @@ class CHEXA8(SolidElement):
         total : bool; default=False
             should the volume be summed; centroid be averaged
 
-        ..see:: CHEXA8.get_volume_by_element_id() and CHEXA8.get_centroid_by_element_id() for more information.
+        ..see:: CHEXA8.get_volume_by_element_id() and
+                CHEXA8.get_centroid_by_element_id() for more information.
         """
         n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
@@ -473,7 +476,8 @@ class CHEXA8(SolidElement):
         total : bool; default=False
             should the centroid be averaged
         """
-        n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(
+            element_id, xyz_cid0)
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
         (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
@@ -507,4 +511,3 @@ def volume8(n1, n2, n3, n4, n5, n6, n7, n8):
     (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
     volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
     return volume
-

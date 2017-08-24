@@ -1,6 +1,55 @@
-#pylint: disable=W0613,W0612,R0913
+#pylint: disable=R0913
 """
-Defines the OP2 class.
+Defines the sub-OP2 class.  This should never be called outisde of the OP2 class.
+
+ - OP2_Scalar(debug=False, log=None, debug_file=None)
+
+   Methods
+   -------
+   - set_subcases(subcases=None)
+   - set_transient_times(times)
+   - read_op2(op2_filename=None, combine=False)
+   - set_additional_generalized_tables_to_read(tables)
+   - set_additional_result_tables_to_read(tables)
+   - set_additional_matrices_to_read(matrices)
+
+   Attributes
+   ----------
+   - total_effective_mass_matrix
+   - effective_mass_matrix
+   - rigid_body_mass_matrix
+   - modal_effective_mass_fraction
+   - modal_participation_factors
+   - modal_effective_mass
+   - modal_effective_weight
+   - set_as_msc()
+   - set_as_optistruct()
+   - set_as_radioss()
+
+   Private Methods
+   ---------------
+   - _get_table_mapper()
+   - _not_available(data, ndata)
+   - _table_crasher(data, ndata)
+   - _table_passer(data, ndata)
+   - _validate_op2_filename(op2_filename)
+   - _create_binary_debug()
+   - _make_tables()
+   - _read_tables(table_name)
+   - _read_tol()
+   - _skip_table(table_name)
+   - _read_dit()
+   - _read_table_name(rewind=False, stop_on_failure=True)
+   - _update_generalized_tables(tables)
+   - _skip_table_helper()
+   - _read_omm2()
+   - _read_cmodext()
+   - _read_cmodext_helper(marker_orig, debug=False)
+   - _get_marker_n(nmarkers)
+   - _read_geom_table()
+   - _read_results_table()
+   - _print_month(month, day, year, zero, one)
+   - _finish()
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -8,7 +57,7 @@ import os
 #import sys
 from struct import unpack, Struct
 from collections import Counter
-
+from typing import List
 from six import string_types, iteritems, PY2, PY3, b
 from six.moves import range
 
@@ -41,6 +90,113 @@ from pyNastran.op2.fortran_format import FortranFormat
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
+"""
+ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
+
+Datablock	Type	Description
+EFMFSMS	Matrix	6 x 1 Total Effective mass matrix
+EFMASSS	Matrix	6 x 6 Effective mass matrix
+RBMASS	Matrix	6 x 6 Rigid body mass matrix
+EFMFACS	Matrix	6 X N Modal effective mass fraction matrix
+MPFACS	Matrix	6 x N Modal participation factor matrix
+MEFMASS	Matrix	6 x N Modal effective mass matrix
+MEFWTS	Matrix	6 x N Modal effective weight matrix
+RAFGEN	Matrix	N x M Generalized force matrix
+RADEFMP	Matrix	N X U2 Effective inertia loads
+BHH	Matrix	N x N Viscous damping matrix
+K4HH	Matrix	N x N Structural damping matrix
+RADAMPZ	Matrix	N x N equivalent viscous damping ratios
+RADAMPG	Matrix	N X N equivalent structural damping ratio
+
+LAMA	LAMA	Eigenvalue summary table
+OGPWG	OGPWG	Mass properties output
+OQMG1	OQMG	Modal MPC forces
+RANCONS	ORGY1	Constraint mode element strain energy table
+RANEATC	ORGY1	Attachment mode element strain energy table
+RAGCONS	OGPFB	Constraint mode grid point force table
+RAGEATC	OGPFB	Attachment mode grid point force table
+RAPCONS	OES	Constraint mode ply stress table
+RAPEATC	OES	Attachment mode ply stress table
+RASCONS	OES	Constraint mode element stress table
+RAECONS	OES	Constraint mode element strain table
+RASEATC	OES	Attachment mode element stress table
+RAEEATC	OES	Attachment mode element strain table
+OES1C	OES	Modal Element Stress Table
+OES1X	OES	Modal Element Stress Table
+OSTR1C	OES	Modal Element Strain Table
+OSTR1X	OSTR	Modal Element Strain Table
+RAQCONS	OUG	Constraint mode MPC force table
+RADCONS	OUG	Constraint mode displacement table
+RADEFFM	OUG	Effective inertia displacement table
+RAQEATC	OUG	Attachment mode  MPC force table
+RADEATC	OUG	Attachment mode displacement table
+OUGV1	OUG	Eigenvector Table
+RAFCONS	OEF	Constraint mode element force table
+RAFEATC	OEF	Attachment mode element force table
+OEF1X	OEF	Modal Element Force Table
+OGPFB1	OGPFB	Modal Grid Point Force Table
+ONRGY1	ONRGY1	Modal Element Strain Energy Table
+ONRGY2	ONRGY1
+
+#--------------------
+
+RADCONS - Displacement Constraint Mode
+RADDATC - Displacement Distributed Attachment Mode
+RADNATC - Displacement Nodal Attachment Mode
+RADEATC - Displacement Equivalent Inertia Attachment Mode
+RADEFFM - Displacement Effective Inertia Mode
+
+RAECONS - Strain Constraint Mode
+RAEDATC - Strain Distributed Attachment Mode
+RAENATC - Strain Nodal Attachment Mode
+RAEEATC - Strain Equivalent Inertia Attachment Mode
+
+RAFCONS - Element Force Constraint Mode
+RAFDATC - Element Force Distributed Attachment Mode
+RAFNATC - Element Force Nodal Attachment Mode
+RAFEATC - Element Force Equivalent Inertia Attachment Mode
+
+RALDATC - Load Vector Used to Compute the Distributed Attachment M
+
+RANCONS - Strain Energy Constraint Mode
+RANDATC - Strain Energy Distributed Attachment Mode
+RANNATC - Strain Energy Nodal Attachment Mode
+RANEATC - Strain Energy Equivalent Inertia Attachment Mode
+
+RAQCONS - Ply Strains Constraint Mode
+RAQDATC - Ply Strains Distributed Attachment Mode
+RAQNATC - Ply Strains Nodal Attachment Mode
+RAQEATC - Ply Strains Equivalent Inertia Attachment Mode
+
+RARCONS - Reaction Force Constraint Mode
+RARDATC - Reaction Force Distributed Attachment Mode
+RARNATC - Reaction Force Nodal Attachment Mode
+RAREATC - Reaction Force Equivalent Inertia Attachment Mode
+
+RASCONS - Stress Constraint Mode
+RASDATC - Stress Distributed Attachment Mode
+RASNATC - Stress Nodal Attachment Mode
+RASEATC - Stress Equivalent Inertia Attachment Mode
+
+RAPCONS - Ply Stresses Constraint Mode
+RAPDATC - Ply Stresses Distributed Attachment Mode
+RAPNATC - Ply Stresses Nodal Attachment Mode
+RAPEATC - Ply Stresses Equivalent Inertia Attachment Mode
+
+RAGCONS - Grid Point Forces Constraint Mode
+RAGDATC - Grid Point Forces Distributed Attachment Mode
+RAGNATC - Grid Point Forces Nodal Attachment Mode
+RAGEATC - Grid Point Forces Equivalent Inertia Attachment Mode
+
+RADEFMP - Displacement PHA^T * Effective Inertia Mode
+
+RADAMPZ - Viscous Damping Ratio Matrix
+RADAMPG - Structural Damping Ratio Matrix
+
+RAFGEN  - Generalized Forces
+BHH     - Modal Viscous Damping Matrix
+K4HH    - Modal Structural Damping Matrix
+"""
 GEOM_TABLES = [
     # GEOM2 - Table of Bulk Data entry images related to element connectivity andscalar points
     # GEOM4 - Table of Bulk Data entry images related to constraints, degree-of-freedom membership and rigid element connectivity.
@@ -69,8 +225,7 @@ GEOM_TABLES = [
 
     # eigenvalues
     b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
-    # strain energy
-    b'ONRGY1',
+
     # grid point weight
     b'OGPWG', b'OGPWGM',
 
@@ -126,6 +281,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'RANCONS', b'RAGCONS', b'RADEFFM', b'RAPEATC', b'RAQEATC', b'RADEATC',
     b'RASEATC', b'RAFEATC', b'RAEEATC', b'RANEATC', b'RAGEATC',
 
+    # other
+    b'MKLIST',
+
     # stress
     b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
     b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
@@ -160,10 +318,11 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # displacement/velocity/acceleration/eigenvector/temperature
     # OUPV1 - Scaled Response Spectra - displacements
     b'OUG1', b'OAG1',
-    b'OUGV1', b'BOUGV1', b'OUPV1', b'OUGV1PAT',
+    b'OUGV1', b'BOUGV1', b'OUGV1PAT',
+    b'OUPV1',
 
     # OUGV1PAT - Displacements in the basic coordinate system
-    # OUGV1  - Displacements in the global coordinate system
+    # OUGV1  - Output (O) Displacements (U) in the global/g-set (G) coordinate system in vector (V) format and SORT1
     # BOUGV1 - Displacements in the basic coordinate system
     # BOPHIG - Eigenvectors in the basic coordinate system
     # ROUGV1 - Relative OUGV1
@@ -174,7 +333,8 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # applied loads
     # OPG1 - Applied static loads
     b'OPNL1', # nonlinear applied loads - sort 1
-    b'OPG1', b'OPGV1', # applied loads - gset? - sort 1
+    b'OPG1', # applied loads - gset? - sort 1
+    b'OPGV1',
     b'OPG2', # applied loads - sort 2 - v0.8
 
     # grid point stresses
@@ -250,6 +410,10 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'AXIC',
     b'BOPHIG',
     b'HOEF1',
+
+    #------------------------------------------
+    # strain energy
+    b'ONRGY1',
     b'ONRGY2',
 
     #------------------------------------------
@@ -302,6 +466,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 
     b'OUG2T',
     b'AEMONPT',
+    #b'KDICT',
 ]
 
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
@@ -330,6 +495,8 @@ NX_MATRIX_TABLES = [
     # MATRIX/MATPOOL - testing-remove this
     b'PATRN', b'IDENT', b'RANDM', b'CMPLX',
     b'MPATRN', b'MIDENT', b'MRANDM', b'MCMPLX',
+    b'MATPOOL',
+    #b'KELM',
 ]
 
 
@@ -339,6 +506,7 @@ MSC_MATRIX_TABLES = [
     b'TOLB2', b'ADSPT', #b'MONITOR',
     b'PMRT', b'PFRT', b'PGRT', # b'AEMONPT',
     b'AFRT', b'AGRT',
+    b'QHHA',
 
     b'A', b'SOLVE,', b'UMERGE,', b'AA', b'AAP', b'ADELUF', b'ADELUS', b'ADELX',
     b'ADJG', b'ADJGT', b'ADRDUG', b'AEDBUXV', b'AEDW', b'AEFRC', b'AEIDW',
@@ -407,12 +575,12 @@ MSC_MATRIX_TABLES = [
 
     # not sure - per BAH_Plane_cont_gust.f06 (MONITOR point deck)
     b'PMRF', b'PERF', b'PFRF', b'PGRF', b'AFRF', b'AGRF', b'MP3F',
-]
+] # type: List[bytes]
 AUTODESK_MATRIX_TABLES = [
     #b'BELM',
-    #b'KELM',
+    b'KELM',
     #b'MELM',
-]
+] # type: List[bytes]
 # this will be split later
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
 MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + [b'MEFF',]
@@ -543,16 +711,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             assert isinstance(debug_file, string_types), debug_file
             self.debug_file = debug_file
 
-    def set_as_vectorized(self, vectorized=False, ask=False):
-        """don't call this...testing"""
-        if vectorized is True:
-            msg = 'OP2_Scalar class doesnt support vectorization.  Use OP2 '
-            msg += 'from pyNastran.op2.op2 instead.'
-            raise RuntimeError(msg)
-        if ask is True:
-            msg = 'OP2_Scalar class doesnt support ask.'
-            raise RuntimeError(msg)
-
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
@@ -616,7 +774,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # common tables
 
             # unorganized
-            b'RADCONS': [self._read_oug1_3, self._read_oug_4],     # Displacement Constraint Mode (OUG)
+            b'RADCONS': [self._read_oug1_3, self._read_oug_4], # Displacement Constraint Mode (OUG)
             b'RADEFFM': [self._read_oug1_3, self._read_oug_4], # Displacement Effective Inertia Mode (OUG)
             b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
 
@@ -657,9 +815,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
+
+            #F:\work\pyNastran\examples\Dropbox\pyNastran\bdf\cards\test\test_mass_01.op2
+            #F:\work\pyNastran\examples\matpool\gpsc1.op2
+            #b'CSTM':    [self._table_crasher, self._table_crasher],
             b'CSTM':    [self._table_passer, self._table_passer],
             b'AXIC':    [self._table_passer, self._table_passer],
-            b'ONRGY2':  [self._table_passer, self._table_passer],
 
             b'RSOUGV1': [self._table_passer, self._table_passer],
             b'RESOES1': [self._table_passer, self._table_passer],
@@ -730,9 +891,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # applied loads
             b'OPG1'  : [self._read_opg1_3, self._read_opg1_4],  # applied loads in the nodal frame
             b'OPG2' : [self._table_passer, self._table_passer],
-
             b'OPGV1' : [self._read_opg1_3, self._read_opg1_4],  # solution set applied loads?
             b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],  # nonlinear loads
+            b'OCRPG' : [self._read_opg1_3, self._read_opg1_4],  # post-buckling loads
 
             b'OPGATO1' : [self._table_passer, self._table_passer],
             b'OPGCRM1' : [self._table_passer, self._table_passer],
@@ -755,6 +916,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # strain energy density
             b'ONRGY'  : [self._read_onr1_3, self._read_onr1_4],
             b'ONRGY1' : [self._read_onr1_3, self._read_onr1_4],  # strain energy density
+            b'ONRGY2':  [self._table_passer, self._table_passer],
             #=======================
             # OES
             # stress
@@ -825,6 +987,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # OUG
             # displacement/velocity/acceleration/eigenvector/temperature
             b'OUG1'    : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
+            # OVG1?
             b'OAG1'    : [self._read_oug1_3, self._read_oug_4],  # accelerations in nodal frame
 
             b'OUGV1'   : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
@@ -833,6 +996,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUPV1'   : [self._read_oug1_3, self._read_oug_4],  # scaled response spectra - displacement
             b'TOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # grid point temperature
             b'ROUGV1'  : [self._read_oug1_3, self._read_oug_4], # relative OUG
+
+            #F:\work\pyNastran\examples\Dropbox\move_tpl\sbuckl2a.op2
+            b'OCRUG' : [self._read_oug1_3, self._read_oug_4],  # post-buckling displacement
 
             b'OPHIG' :  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
             b'BOPHIG':  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
@@ -892,7 +1058,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'CLAMA' : [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],   # complex eigenvalues
             b'LAMA'  : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues
 
-            # ===geom passers===
+            # ===========================geom passers===========================
             # geometry
             b'GEOM1' : [self._table_passer, self._table_passer], # GEOM1-Geometry-related bulk data
             b'GEOM2' : [self._table_passer, self._table_passer], # GEOM2-element connectivity and SPOINT-related data
@@ -930,39 +1096,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'DYNAMICS' : [self._table_passer, self._table_passer],
             b'DIT' : [self._table_passer, self._table_passer],
             b'DITS' : [self._table_passer, self._table_passer],
-
-            # geometry
-            #b'GEOM1': [self._read_geom1_4, self._read_geom1_4],
-            #b'GEOM2': [self._read_geom2_4, self._read_geom2_4],
-            #b'GEOM3': [self._read_geom3_4, self._read_geom3_4],
-            #b'GEOM4': [self._read_geom4_4, self._read_geom4_4],
-
-            # superelements
-            #b'GEOM1S': [self._read_geom1_4, self._read_geom1_4],
-            #b'GEOM2S': [self._read_geom2_4, self._read_geom2_4],
-            #b'GEOM3S': [self._read_geom3_4, self._read_geom3_4],
-            #b'GEOM4S': [self._read_geom4_4, self._read_geom4_4],
-
-            #b'GEOM1N': [self._read_geom1_4, self._read_geom1_4],
-            #b'GEOM2N': [self._read_geom2_4, self._read_geom2_4],
-            #b'GEOM3N': [self._read_geom3_4, self._read_geom3_4],
-            #b'GEOM4N': [self._read_geom4_4, self._read_geom4_4],
-
-            #b'GEOM1OLD': [self._read_geom1_4, self._read_geom1_4],
-            #b'GEOM2OLD': [self._read_geom2_4, self._read_geom2_4],
-            #b'GEOM3OLD': [self._read_geom3_4, self._read_geom3_4],
-            #b'GEOM4OLD': [self._read_geom4_4, self._read_geom4_4],
-
-            #b'EPT' : [self._read_ept_4, self._read_ept_4],
-            #b'EPTS': [self._read_ept_4, self._read_ept_4],
-            #b'EPTOLD' : [self._read_ept_4, self._read_ept_4],
-
-            #b'MPT' : [self._read_mpt_4, self._read_mpt_4],
-            #b'MPTS': [self._read_mpt_4, self._read_mpt_4],
-
-            #b'DYNAMIC': [self._read_dynamics_4, self._read_dynamics_4],
-            #b'DYNAMICS': [self._read_dynamics_4, self._read_dynamics_4],
-            #b'DIT': [self._read_dit_4, self._read_dit_4],   # table objects (e.g. TABLED1)
+            # =========================end geom passers=========================
 
             # ===passers===
             b'EQEXIN': [self._table_passer, self._table_passer],
@@ -989,7 +1123,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'EDTS' : [self._table_passer, self._table_passer],
 
             b'FOL' : [self._table_passer, self._table_passer],
-            #b'MONITOR' : [self._read_monitor_3, self._read_monitor_4],  # monitor points
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
@@ -1029,9 +1162,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OMM2' : [self._table_passer, self._table_passer],
             b'ERRORN' : [self._table_passer, self._table_passer],  # p-element error summary table
             #==================================
-
-            b'OCRPG' : [self._table_passer, self._table_passer],
-            b'OCRUG' : [self._table_passer, self._table_passer],
 
             b'EDOM' : [self._table_passer, self._table_passer],
             b'OUG2T' : [self._table_passer, self._table_passer],
@@ -1178,7 +1308,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         bdf_extension = '.bdf'
         f06_extension = '.f06'
-        (fname, extension) = os.path.splitext(op2_filename)
+        fname = os.path.splitext(op2_filename)[0]
 
         self.op2_filename = op2_filename
         self.bdf_filename = fname + bdf_extension
@@ -1219,6 +1349,28 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.read_mode == 1:
             self._set_structs()
 
+        self._read_version()
+
+        #=================
+        table_name = self._read_table_name(rewind=True, stop_on_failure=False)
+        if table_name is None:
+            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nNo tables exist...')
+
+        self._make_tables()
+        table_names = self._read_tables(table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('-' * 80 + '\n')
+            self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
+            self.binary_debug.close()
+        if self._close_op2:
+            self.f.close()
+            del self.binary_debug
+            del self.f
+        #self.remove_unpickable_data()
+        return table_names
+
+    def _read_version(self):
+        """reads the version header"""
         #try:
         markers = self.get_nmarkers(1, rewind=True)
         #except:
@@ -1239,48 +1391,75 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.binary_debug.write('marker = 3 -> PARAM,POST,-1?\n')
             self.post = -1
             self.read_markers([3])
-            data = self.read_block()
+            data = self.read_block()   # TODO: is this the date?
             #assert len(data) == 12, len(data)
 
             self.read_markers([7])
             data = self.read_block()
-            assert data == b'NASTRAN FORT TAPE ID CODE - ', '%r' % data
+
+            if data == b'NASTRAN FORT TAPE ID CODE - ':
+                macro_version = 'nastran'
+            elif b'IMAT v' in data:
+                imat_version = data[6:11].encode('utf8')
+                macro_version = 'IMAT %s' % imat_version
+            else:
+                version_ints = Struct(b(self._endian + '7i')).unpack(data)
+                if version_ints == (1, 2, 3, 4, 5, 6 , 7):
+                    macro_version = 'MSFC'
+                else:
+                    self.show_data(data)
+                    raise NotImplementedError(data)
+                #self.show_data(data)
             if self.is_debug_file:
                 self.binary_debug.write('%r\n' % data)
+            #print('macro_version = %r' % macro_version)
+
 
             data = self._read_record()
             if self.is_debug_file:
                 self.binary_debug.write('%r\n' % data)
             version = data.strip()
-            if version.startswith(b'NX'):
-                self.set_as_nx()
-                self.set_table_type()
-            elif version.startswith(b'MODEP'):
-                # TODO: why is this separate?
-                # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
-                self.set_as_nx()
-                self.set_table_type()
-            elif version.startswith(b'AEROFREQ'):
-                # TODO: why is this separate?
-                # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                self.set_as_msc()
-                self.set_table_type()
-            elif version.startswith(b'AEROTRAN'):
-                # TODO: why is this separate?
-                # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                self.set_as_msc()
-                self.set_table_type()
-            elif version in [b'XXXXXXXX', b'V2005R3B']:
-                self.set_as_msc()
-                self.set_table_type()
-            elif version == b'OS12.210':
-                self.set_as_optistruct()
-                self.set_table_type()
-            elif version == b'OS11XXXX':
-                self.set_as_radioss()
-                self.set_table_type()
-            else:
-                raise RuntimeError('unknown version=%r' % version)
+
+            if macro_version == 'nastran':
+                if version.startswith(b'NX'):
+                    self.set_as_nx()
+                    self.set_table_type()
+                elif version.startswith(b'MODEP'):
+                    # TODO: why is this separate?
+                    # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
+                    self.set_as_nx()
+                    self.set_table_type()
+                elif version.startswith(b'AEROFREQ'):
+                    # TODO: why is this separate?
+                    # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+                    self.set_as_msc()
+                    self.set_table_type()
+                elif version.startswith(b'AEROTRAN'):
+                    # TODO: why is this separate?
+                    # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+                    self.set_as_msc()
+                    self.set_table_type()
+                elif version in [b'XXXXXXXX', b'V2005R3B']:
+                    self.set_as_msc()
+                    self.set_table_type()
+                elif version == b'OS12.210':
+                    self.set_as_optistruct()
+                    self.set_table_type()
+                elif version == b'OS11XXXX':
+                    self.set_as_radioss()
+                    self.set_table_type()
+                #elif data[:20] == b'XXXXXXXX20141   0   ':
+                    #self.set_as_msc()
+                    #self.set_table_type()
+                else:
+                    raise RuntimeError('unknown version=%r' % version)
+            elif macro_version.startswith('IMAT'):
+                assert version.startswith(b'ATA'), version
+                self._nastran_format = macro_version
+            elif macro_version == 'MSFC':
+                self._nastran_format = macro_version
+                #self.show_data(version)
+                #assert version.startswith(b'ATA'), version
 
             if self.is_debug_file:
                 self.binary_debug.write(data.decode(self._encoding) + '\n')
@@ -1291,24 +1470,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.post = -2
         else:
             raise NotImplementedError(markers)
-
-        #=================
-        table_name = self._read_table_name(rewind=True, stop_on_failure=False)
-        if table_name is None:
-            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nNo tables exist...')
-
-        self._make_tables()
-        table_names = self._read_tables(table_name)
-        if self.is_debug_file:
-            self.binary_debug.write('-' * 80 + '\n')
-            self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
-            self.binary_debug.close()
-        if self._close_op2:
-            self.f.close()
-            del self.binary_debug
-            del self.f
-        #self.remove_unpickable_data()
-        return table_names
 
     #def create_unpickable_data(self):
         #raise NotImplementedError()
@@ -1403,7 +1564,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_ibulk()
             elif table_name == b'CMODEXT':
                 self._read_cmodext()
-
+            elif table_name in self.generalized_tables:
+                self.generalized_tables[table_name](self)
             elif table_name in MATRIX_TABLES:
                 self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:
@@ -1413,19 +1575,30 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif table_name.strip() in self.additional_matrices:
                 self._read_matrix(table_name)
             else:
-                msg = 'geom/results split: %r\n\n' % table_name
-                msg += 'If you the table is a result table, see:\n'
-                msg += '  model.set_additional_result_tables_to_read(methods_dict)\n'
-                msg += "  methods_dict = {\n"
-                msg += "      b'OUGV1' : [method3, method4],\n"
-                msg += "      b'OES1X1' : False,\n"
-                msg += '  }\n'
-                msg += 'If you have matrices that you want to read, see:\n'
-                msg += '  model.set_additional_matrices_to_read(matrices)'
-                msg += '  matrices = {\n'
-                msg += "      b'BHH' : True,\n"
-                msg += "      b'KHH' : False,\n"
-                msg += '  }\n'
+                msg = (
+                    'Invalid Table = %r\n\n'
+                    'If you have matrices that you want to read, see:\n'
+                    '  model.set_additional_matrices_to_read(matrices)'
+                    '  matrices = {\n'
+                    "      b'BHH' : True,\n"
+                    "      b'KHH' : False,\n"
+                    '  }  # you want to read some matrices, but not others\n'
+                    "  matrices = [b'BHH', b'KHH']  # assumes True\n\n"
+
+                    'If you the table is a geom/result table, see:\n'
+                    '  model.set_additional_result_tables_to_read(methods_dict)\n'
+                    "  methods_dict = {\n"
+                    "      b'OUGV1' : [method3, method4],\n"
+                    "      b'GEOM4SX' : [method3, method4],\n"
+                    "      b'OES1X1' : False,\n"
+                    '  }\n\n'
+
+                    'If you want to take control of the OP2 reader (mainly useful for obscure tables), see:\n'
+                    "  methods_dict = {\n"
+                    "      b'OUGV1' : [method],\n"
+                    '  }\n'
+                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n' % table_name
+                )
                 raise NotImplementedError(msg)
 
             table_name = self._read_table_name(rewind=True, stop_on_failure=False)
@@ -1511,10 +1684,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if self.is_debug_file:
             self.binary_debug.write('_read_table_name - rewind=%s\n' % rewind)
         ni = self.n
-        s = self.struct_8s
+        structi = self.struct_8s
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
-            table_name, = s.unpack(data)
+            table_name, = structi.unpack(data)
             if self.is_debug_file and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
@@ -1522,7 +1695,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             try:
                 data = self._read_record(macro_rewind=rewind)
-                table_name, = s.unpack(data)
+                table_name, = structi.unpack(data)
                 table_name = table_name.strip()
             except:
                 # we're done reading
@@ -1534,8 +1707,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self.read_markers([0], macro_rewind=rewind)
                 except:
                     # if we hit this block, we have a FATAL error
-                    raise FatalError('There was a Nastran FATAL Error.  '
-                                     'Check the F06.\nlast table=%r' % self.table_name)
+                    if not self._nastran_format.lower().startswith('imat'):
+                        raise FatalError('There was a Nastran FATAL Error.  '
+                                         'Check the F06.\nlast table=%r' % self.table_name)
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind
@@ -1546,7 +1720,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.f.seek(self.n)
         return table_name
 
-    def set_additional_result_tables_to_read(self, matrices):
+    def set_additional_generalized_tables_to_read(self, tables):
+        """
+        Adds methods to call a generalized table.
+        Everything is left to the user.
+        """
+        self._update_generalized_tables(tables)
+        self.generalized_tables = tables
+
+    def set_additional_result_tables_to_read(self, tables):
         """
         Adds methods to read additional result tables.
         This is expected to really only be used for skipping
@@ -1555,7 +1737,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         Parameters
         ----------
-        matrices : Dict[bytes] = varies
+        tables : Dict[bytes] = varies
             a dictionary of key=name, value=list[method3, method4]/False,
             False : skips a table
                 applies self._table_passer to method3 and method4
@@ -1564,11 +1746,34 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             method4 : function
                 function to read table 4 results (e.g., the actual results)
         """
+        self._update_generalized_tables(tables)
+        table_mapper = self._get_table_mapper()
+        #is_added = False
+        def func():
+            """overloaded version of _get_table_mapper"""
+            #if is_added:
+                #return table_mapper
+            for _key, methods in iteritems(tables):
+                if methods is False:
+                    table_mapper[_key] = [self._table_passer, self._table_passer]
+                else:
+                    assert len(methods) == 2, methods
+                    table_mapper[_key] = methods
+            #is_added = True
+            return table_mapper
+        self._get_table_mapper = func
+
+    def _update_generalized_tables(self, tables):
+        """
+        helper function for:
+         - set_additional_generalized_tables_to_read
+         - set_additional_result_tables_to_read
+        """
         global NX_RESULT_TABLES
         global MSC_RESULT_TABLES
         global RESULT_TABLES
         failed_keys = []
-        keys = list(matrices.keys())
+        keys = list(tables.keys())
         for _key in keys:
             if PY3:
                 if not isinstance(_key, bytes):
@@ -1585,31 +1790,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #RESULT_TABLES.sort()
         #assert 'OESXRMS1' in RESULT_TABLES, RESULT_TABLES
 
-        table_mapper = self._get_table_mapper()
-        #is_added = False
-        def func():
-            """overloaded version of _get_table_mapper"""
-            #if is_added:
-                #return table_mapper
-            for _key, methods in iteritems(matrices):
-                if methods is False:
-                    table_mapper[_key] = [self._table_passer, self._table_passer]
-                else:
-                    assert len(methods) == 2, methods
-                    table_mapper[_key] = methods
-            #is_added = True
-            return table_mapper
-        self._get_table_mapper = func
-
     def set_additional_matrices_to_read(self, matrices):
         """
         Matrices (e.g., KHH) can be sparse or dense.
 
         Parameters
         ----------
-        matrices : Dict[bytes] = bool
-            a dictionary of key=name, value=True/False,
-            where True/False indicates the matrix should be read
+        matrices : List[bytes]; Dict[bytes] = bool
+            List[bytes] :
+                simplified method to add matrices; value will be True
+            Dict[bytes] = bool:
+                a dictionary of key=name, value=True/False,
+                where True/False indicates the matrix should be read
 
         .. note:: If you use an already defined table (e.g. KHH), it
                   will be ignored.  If the table you requested doesn't
@@ -1618,6 +1810,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                   store results like displacement.  Those are not matrices.
                   Matrices are things like DMIGs.
         """
+        if isinstance(matrices, list):
+            matrices2 = {}
+            for matrix in matrices:
+                assert isinstance(matrix, string_types), 'matrix=%r' % str(matrix)
+                matrices2[matrix] = True
+            matrices = matrices2
+
         self.additional_matrices = matrices
         if PY2:
             self.additional_matrices = matrices
@@ -1639,128 +1838,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._skip_record()
         self._skip_subtables()
-
-    def _read_omm2(self):
-        """reads the OMM2 table"""
-        self.log.debug("table_name = %r" % self.table_name)
-        self.table_name = self._read_table_name(rewind=False)
-        self.read_markers([-1])
-        data = self._read_record()
-
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        if len(data) == 28:
-            subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
-            if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
-                    subtable_name, month, day, year, zero, one))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-            self._print_month(month, day, year, zero, one)
-        else:
-            raise NotImplementedError(self.show_data(data))
-        self._read_subtables()
-
-    def _read_cmodext(self):
-        r"""
-        fails if a streaming block???:
-         - nx_spike\mnf16_0.op2
-        """
-        self.table_name = self._read_table_name(rewind=False)
-        self.log.debug('table_name = %r' % self.table_name)
-        if self.is_debug_file:
-            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
-        self.read_markers([-1])
-        if self.is_debug_file:
-            self.binary_debug.write('---markers = [-1]---\n')
-        data = self._read_record()
-
-        markers = self.get_nmarkers(1, rewind=True)
-        if self.is_debug_file:
-            self.binary_debug.write('---marker0 = %s---\n' % markers)
-
-        marker = -2
-        markers = self.read_markers([marker, 1, 0])
-
-        data = self._read_record()
-        table_name, oneseventy_a, oneseventy_b = unpack('8sii', data)
-        assert oneseventy_a == 170, oneseventy_a
-        assert oneseventy_b == 170, oneseventy_b
-        print('170*4 =', 170*4)
-        #self.show_data(data)
-        marker -= 1
-        marker = self._read_cmodext_helper(marker) # -3
-        marker = self._read_cmodext_helper(marker)
-        marker = self._read_cmodext_helper(marker)
-        marker = self._read_cmodext_helper(marker)
-        marker = self._read_cmodext_helper(marker)
-        print('table8')
-        marker = self._read_cmodext_helper(marker, debug=True)
-        self.show_ndata(100)
-
-    def _read_cmodext_helper(self, marker_orig, debug=False):
-        marker = marker_orig
-        #markers = self.read_nmarkers([marker, 1, 1]) # -3
-
-        if debug:
-            self.show_ndata(100)
-        markers = self.get_nmarkers(3, rewind=False)
-        assert markers == [marker_orig, 1, 1], markers
-        print('markers =', markers)
-
-        #marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
-        val_old = 0
-        if debug:
-            print('-----------------------------')
-        i = 0
-        #icheck = 7
-        while 1:
-            #print('i = %i' % i)
-            marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
-            if marker != 6:
-                print('marker = %s' % marker)
-
-            assert marker == 6, marker
-            data = self.read_block()
-            val = unpack('i', data[:4])[0]
-            if debug:
-                print('val=%s delta=%s' % (val, val - val_old))
-                self.show_data(data, types='ifs')
-            assert len(data) > 4
-            #print('i=%s val=%s delta=%s' % (i, val, val - val_old))
-            val_old = val
-
-            marker2 = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
-            #print(marker2)
-            if marker2 == 696:
-                break
-            i += 1
-        if debug:
-            print('----------------------------------------')
-
-        marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
-        if debug:
-            print('****marker = %s' % marker)
-        assert marker == 696, marker
-        data = self.read_block()
-        #self.show_data(data)
-
-        marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
-        assert marker == (marker_orig - 1), marker
-
-        if debug:
-            self.show_ndata(200)
-        return marker
-
-        #data = self._read_record()
-        #marker -= 1
-
-
-
-        #self.show_ndata(100)
-
-        ##marker -= 1
-        ##marker_end = self.get_marker1(rewind=False)
-        #asdf
 
     def _get_marker_n(self, nmarkers):
         """
@@ -1892,7 +1969,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 
-    def finish(self):
+    def _finish(self):
         """
         Clears out the data members contained within the self.words variable.
         This prevents mixups when working on the next table, but otherwise

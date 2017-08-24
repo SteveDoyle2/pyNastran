@@ -8,28 +8,31 @@ http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-wo
 from __future__ import print_function
 from six import iteritems
 
+
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.gui_interface.common import PyDialog
 if qt_version == 4:
+    from PyQt4.QtCore import Qt
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
         QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup,
+        QButtonGroup, QColorDialog, QAbstractItemView,
     )
 elif qt_version == 5:
+    from PyQt5.QtCore import Qt
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
         QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup,
+        QButtonGroup, QColorDialog, QAbstractItemView,
     )
 elif qt_version == 'pyside':
     from PySide import QtCore, QtGui
     from PySide.QtGui import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
         QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup,
+        QButtonGroup, QColorDialog, QAbstractItemView,
     )
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
@@ -39,17 +42,19 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.testing_methods import CoordProperties
 
 
-class CustomQTableView(QTableView):
+class SingleChoiceQTableView(QTableView):
     def __init__(self, *args, **kwargs):
         self.parent2 = args[0]
-        #super(CustomQTableView, self).__init__()
+        #super(SingleChoiceQTableView, self).__init__()
         QTableView.__init__(self, *args, **kwargs) #Use QTableView constructor
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-    def update_data(self, data):
+    def update_data(self, data):  # not needed?
         #items = self.getModel()
         self.model().change_data(data)
 
-    def getModel(self):
+    def getModel(self):  # not needed?
         model = self.model() #tableView.model()
         return model.items
         #data = []
@@ -63,12 +68,21 @@ class CustomQTableView(QTableView):
                 #data[row].append(str(model.data(index, role).toString()))
         #return data
 
-    def mouseDoubleClickEvent(self, event):
+    #def mouseDoubleClickEvent(self, event):
         #self.last = "Double Click"
-        index = self.currentIndex()
-        self.parent2.update_active_key(index)
+        #index = self.currentIndex()
+        #self.parent2.update_active_key(index)
 
     #def mousePressEvent(self, event):
+    def mouseReleaseEvent(self, event):
+        index = self.currentIndex()
+        #print('index.row() =', index.row())
+        irow = index.row()
+        self.selectRow(irow)
+        if irow == -1:  # null case
+            return
+        self.parent2.update_active_key(index)
+
         #index = self.currentIndex()
         #self.parent2.update_active_key(index)
 
@@ -85,10 +99,29 @@ class CustomQTableView(QTableView):
             #self.message = "Click"
             #self.update()
 
-    #def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
+    def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
         #if event.key() == QtCore.Qt.Key_Escape:
             #self.close()
         #return
+        key = event.key()
+        if key == Qt.Key_Delete:
+            index = self.currentIndex()
+            self.parent().on_delete(index.row())
+            #print('pressed delete')
+        elif key in [Qt.Key_Up, Qt.Key_Left]:
+            index = self.currentIndex()
+            nrows = len(self.getModel())
+            irow = max(0, index.row() - 1)
+            irow = self.selectRow(irow)
+            #print('pressed up; nrows=%s' % nrows)
+        elif key in [Qt.Key_Down, Qt.Key_Right]:
+            index = self.currentIndex()
+            nrows = len(self.getModel())
+            irow = min(nrows - 1, index.row() + 1)
+            irow = self.selectRow(irow)
+            #print('pressed down; nrows=%s' % nrows)
+        else:
+            print('pressed %r' % key)
 
 class Model(QtCore.QAbstractTableModel):
 
@@ -109,6 +142,7 @@ class Model(QtCore.QAbstractTableModel):
         return 1
 
     def change_data(self, items):
+        raise RuntimeError('is this used?')
         #self.emit(SIGNAL("LayoutAboutToBeChanged()"))
         self.items = items
         #self.emit(SIGNAL("LayoutChanged()"))
@@ -160,7 +194,6 @@ class Model(QtCore.QAbstractTableModel):
 
 class EditGeometryProperties(PyDialog):
     force = True
-    allow_update = True
     def __init__(self, data, win_parent=None):
         """
         +------------------+
@@ -186,6 +219,7 @@ class EditGeometryProperties(PyDialog):
         self.set_font_size(data['font_size'])
         del self.out_data['font_size']
         self.setWindowTitle('Edit Geometry Properties')
+        self.allow_update = True
 
         #default
         #self.win_parent = win_parent
@@ -201,12 +235,15 @@ class EditGeometryProperties(PyDialog):
 
         header_labels = ['Groups']
         table_model = Model(items, header_labels, self)
-        view = CustomQTableView(self) #Call your custom QTableView here
+        view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
         if qt_version == 4:
             view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
         self.table = view
+        #self.opacity_edit.valueChanged.connect(self.on_opacity)
+        #mListWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(itemClicked(QListWidgetItem*)));
+        #self.table.itemClicked.connect(self.table.mouseDoubleClickEvent)
 
         actor_obj = data[self.active_key]
         name = actor_obj.name
@@ -348,17 +385,56 @@ class EditGeometryProperties(PyDialog):
             if self.use_slider:
                 self.point_size_slider_edit.setEnabled(False)
 
-
-        # closing
-        # self.apply_button = QPushButton("Apply")
-        #if self._default_is_apply:
-            #self.apply_button.setDisabled(True)
-
-        # self.ok_button = QPushButton("OK")
         self.cancel_button = QPushButton("Close")
 
         self.create_layout()
         self.set_connections()
+
+    def on_delete(self, irow):
+        """deletes an actor based on the row number"""
+        if irow == 0:  # main
+            return
+        nkeys = len(self.keys)
+        if nkeys in [0, 1]:
+            return
+        name = self.keys[irow]
+        nrows = nkeys - 1
+        self.keys.pop(irow)
+
+        header_labels = ['Groups']
+        table_model = Model(self.keys, header_labels, self)
+        self.table.setModel(table_model)
+
+        if len(self.keys) == 0:
+            self.update()
+            self.set_as_null()
+            return
+        if irow == nrows:
+            irow -= 1
+        new_name = self.keys[irow]
+        self.update_active_name(new_name)
+        if self.is_gui:
+            self.win_parent.delete_actor(name)
+
+    def set_as_null(self):
+        """sets the null case"""
+        self.name.setVisible(False)
+        self.name_edit.setVisible(False)
+        self.color.setVisible(False)
+        self.color_edit.setVisible(False)
+        self.line_width.setVisible(False)
+        self.line_width_edit.setVisible(False)
+        self.point_size.setVisible(False)
+        self.point_size_edit.setVisible(False)
+        self.bar_scale.setVisible(False)
+        self.bar_scale_edit.setVisible(False)
+        self.opacity.setVisible(False)
+        self.opacity_edit.setVisible(False)
+        self.opacity_slider_edit.setVisible(False)
+        self.point_size_slider_edit.setVisible(False)
+        self.line_width_slider_edit.setVisible(False)
+        self.checkbox_show.setVisible(False)
+        self.checkbox_hide.setVisible(False)
 
     def on_update_geometry_properties_window(self, data):
         """Not Implemented"""
@@ -386,20 +462,15 @@ class EditGeometryProperties(PyDialog):
         obj : CoordProperties, AltGeometry
             the storage object for things like line_width, point_size, etc.
         """
-        #old_obj = self.out_data[self.active_key]
-        #old_obj.line_width = self.line_width_edit.value()
-        #old_obj.point_size = self.point_size_edit.value()
-        #old_obj.bar_scale = self.bar_scale_edit.value()
-        #old_obj.opacity = self.opacity_edit.value()
-        #old_obj.is_visible = self.checkbox_show.isChecked()
-
         if qt_version == 4:
             name = str(index.data().toString())
         else:
             name = str(index.data())
-            print('name = %r' % name)
+            #print('name = %r' % name)
         #i = self.keys.index(self.active_key)
+        self.update_active_name(name)
 
+    def update_active_name(self, name):
         self.active_key = name
         self.name_edit.setText(name)
         obj = self.out_data[name]
@@ -543,8 +614,6 @@ class EditGeometryProperties(PyDialog):
 
     def create_layout(self):
         ok_cancel_box = QHBoxLayout()
-        # ok_cancel_box.addWidget(self.apply_button)
-        # ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
         grid = QGridLayout()
@@ -613,16 +682,6 @@ class EditGeometryProperties(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        # self.opacity_edit.connect(arg0, QObject, arg1)
-        #if qt_version == 4:
-            #self.connect(self.opacity_slider_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
-            #grid.addWidget(self.opacity_slider_edit, irow, 1)
-
-            # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
-            # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
-
-            # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_line_width)
-            # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_point_size)
         self.opacity_edit.valueChanged.connect(self.on_opacity)
         self.line_width_edit.valueChanged.connect(self.on_line_width)
         self.point_size_edit.valueChanged.connect(self.on_point_size)
@@ -634,16 +693,11 @@ class EditGeometryProperties(PyDialog):
             self.point_size_slider_edit.valueChanged.connect(self.on_point_size_slider)
             #self.bar_scale_slider_edit.valueChanged.connect(self.on_bar_scale_slider)
 
-
-
         # self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
         # self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
         # self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
 
         if qt_version == 4:
-            #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
-            #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-            #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
         self.color_edit.clicked.connect(self.on_color)
         self.checkbox_show.clicked.connect(self.on_show)
@@ -659,35 +713,40 @@ class EditGeometryProperties(PyDialog):
         self.on_cancel()
 
     def on_color(self):
+        """called when the user clicks on the color box"""
         name = self.active_key
         obj = self.out_data[name]
         rgb_color_ints = obj.color
 
         msg = name
-        col = QtGui.QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self, "Choose a %s color" % msg)
+        col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self, "Choose a %s color" % msg)
         if col.isValid():
-            color = col.getRgbF()[:3]
-            obj.color = color
-            #print('new_color =', color)
+            color_float = col.getRgbF()[:3]
+            obj.color = color_float
+            color_int = [int(colori * 255) for colori in color_float]
             self.color_edit.setStyleSheet("QPushButton {"
-                                          "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
+                                          "background-color: rgb(%s, %s, %s);" % tuple(color_int) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
         self.on_apply(force=self.force)
+        #print(self.allow_update)
 
     def on_show(self):
+        """shows the actor"""
         name = self.active_key
         is_checked = self.checkbox_show.isChecked()
         self.out_data[name].is_visible = is_checked
         self.on_apply(force=self.force)
 
     def on_hide(self):
+        """hides the actor"""
         name = self.active_key
         is_checked = self.checkbox_hide.isChecked()
         self.out_data[name].is_visible = not is_checked
         self.on_apply(force=self.force)
 
     def on_line_width(self):
+        """increases/decreases the wireframe (for solid bodies) or the bar thickness"""
         self.is_line_width_edit_active = True
         name = self.active_key
         line_width = self.line_width_edit.value()
@@ -700,6 +759,7 @@ class EditGeometryProperties(PyDialog):
         self.is_line_width_edit_active = False
 
     def on_line_width_slider(self):
+        """increases/decreases the wireframe (for solid bodies) or the bar thickness"""
         self.is_line_width_edit_slider_active = True
         #name = self.active_key
         line_width = self.line_width_slider_edit.value()
@@ -708,6 +768,7 @@ class EditGeometryProperties(PyDialog):
         self.is_line_width_edit_slider_active = False
 
     def on_point_size(self):
+        """increases/decreases the point size"""
         self.is_point_size_edit_active = True
         name = self.active_key
         point_size = self.point_size_edit.value()
@@ -720,6 +781,7 @@ class EditGeometryProperties(PyDialog):
         self.is_point_size_edit_active = False
 
     def on_point_size_slider(self):
+        """increases/decreases the point size"""
         self.is_point_size_edit_slider_active = True
         name = self.active_key
         point_size = self.point_size_slider_edit.value()
@@ -728,6 +790,10 @@ class EditGeometryProperties(PyDialog):
         self.is_point_size_edit_slider_active = False
 
     def on_bar_scale(self):
+        """
+        Vectors start at some xyz coordinate and can increase in length.
+        Increases/decreases the length scale factor.
+        """
         self.is_bar_scale_edit_active = True
         name = self.active_key
         float_bar_scale = self.bar_scale_edit.value()
@@ -741,6 +807,10 @@ class EditGeometryProperties(PyDialog):
         self.is_bar_scale_edit_active = False
 
     def on_bar_scale_slider(self):
+        """
+        Vectors start at some xyz coordinate and can increase in length.
+        Increases/decreases the length scale factor.
+        """
         self.is_bar_scale_edit_slider_active = True
         name = self.active_key
         int_bar_scale = self.bar_scale_slider_edit.value()
@@ -750,6 +820,10 @@ class EditGeometryProperties(PyDialog):
         self.is_bar_scale_edit_slider_active = False
 
     def on_opacity(self):
+        """
+        opacity = 1.0 (solid/opaque)
+        opacity = 0.0 (invisible)
+        """
         self.is_opacity_edit_active = True
         name = self.active_key
         float_opacity = self.opacity_edit.value()
@@ -763,6 +837,10 @@ class EditGeometryProperties(PyDialog):
         self.is_opacity_edit_active = False
 
     def on_opacity_slider(self):
+        """
+            opacity = 1.0 (solid/opaque)
+            opacity = 0.0 (invisible)
+            """
         self.is_opacity_edit_slider_active = True
         name = self.active_key
         int_opacity = self.opacity_slider_edit.value()
@@ -781,10 +859,6 @@ class EditGeometryProperties(PyDialog):
     #def on_plane(self, text):
         #self._plane = str(text)
         #self.point_b.setText('Point on %s%s Plane:' % (self._axis, self._plane))
-
-    def on_check_apply(self):
-        is_checked = self.check_apply.isChecked()
-        self.apply_button.setDisabled(is_checked)
 
     #def _on_float(self, field):
         #try:
@@ -825,6 +899,7 @@ class EditGeometryProperties(PyDialog):
         old_obj.point_size = self.point_size_edit.value()
         old_obj.bar_scale = self.bar_scale_edit.value()
         old_obj.opacity = self.opacity_edit.value()
+        #old_obj.color = self.color_edit
         old_obj.is_visible = self.checkbox_show.isChecked()
         return True
         #name_value, flag0 = self.check_name(self.name_edit)
@@ -834,10 +909,16 @@ class EditGeometryProperties(PyDialog):
             #return True
         #return False
 
+    @property
+    def is_gui(self):
+        return hasattr(self.win_parent, 'on_update_geometry_properties')
+
     def on_apply(self, force=False):
         passed = self.on_validate()
-        if (passed or force) and self.allow_update:
-            self.win_parent.on_update_geometry_properties(self.out_data)
+        #print("passed=%s force=%s allow=%s" % (passed, force, self.allow_update))
+        if (passed or force) and self.allow_update and self.is_gui:
+            #print('obj = %s' % self.out_data[self.active_key])
+            self.win_parent.on_update_geometry_properties(self.out_data, name=self.active_key)
         return passed
 
     def on_cancel(self):
@@ -852,7 +933,8 @@ class EditGeometryProperties(PyDialog):
         # self.close()
 
 
-def main():
+def main():  # pragma: no cover
+    """gui independent way to test the program"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -863,13 +945,6 @@ def main():
     # Someone is launching this directly
     # Create the QApplication
     app = QApplication(sys.argv)
-    #The Main window
-    #g = GeometryHandle()
-    #g.add('main', color=(0, 0, 0), line_thickness=0.0)
-    #g.get_grid('name')
-    #g.set_color('name')
-    #g.set_grid('name')
-    #g.set_grid('name')
     parent = app
     red = (255, 0, 0)
     blue = (0, 0, 255)
@@ -887,5 +962,5 @@ def main():
     # Enter the main loop
     app.exec_()
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

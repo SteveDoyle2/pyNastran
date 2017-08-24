@@ -23,7 +23,7 @@ class SU2_IO(object):
                 None, None)
         return data
 
-    def load_su2_geometry(self, su2_filename, dirname, name='main', plot=True):
+    def load_su2_geometry(self, su2_filename, name='main', plot=True):
         #print("load_su2_geometry...")
         skip_reading = self._remove_old_geometry(su2_filename)
         if skip_reading:
@@ -128,7 +128,7 @@ class SU2_IO(object):
         self.scalarBar.Modified()
 
         cases = {}
-        self.iSubcaseNameMap = {}
+        self.isubcase_name_map = {}
         ID = 1
 
         form, cases = self._fill_su2_case(cases, ID, nelements, nnodes)
@@ -136,7 +136,7 @@ class SU2_IO(object):
 
     def _fill_su2_case(self, cases, ID, nelements, nnodes):
         """adds the sidebar results"""
-        self.iSubcaseNameMap[ID] = ('SU2', '')
+        self.isubcase_name_map[ID] = ('SU2', '')
 
         #nelements = elements.shape[0]
         #nnodes = nodes.shape[0]

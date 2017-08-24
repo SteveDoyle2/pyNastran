@@ -13,7 +13,7 @@ from scipy.spatial import cKDTree
 import scipy.interpolate
 
 def projected_barycentric_coord(p, q, u, v):
-    """
+    r"""
     points p, q
     vector u, v
         3
@@ -25,10 +25,10 @@ def projected_barycentric_coord(p, q, u, v):
     v = p3 - p1
     """
     n = cross(u, v)
-    one_over_4_area_squared = 1.0 / dot(n, n)
+    one_over_4_area_squared = 1.0 / np.dot(n, n)
     w = p - q
-    b[2] = dot(cross(u, w), n) * one_over_4_area_squared
-    b[1] = dot(cross(w, v), n) * one_over_4_area_squared
+    b[2] = np.dot(crnp.oss(u, w), n) * one_over_4_area_squared
+    b[1] = np.dot(np.cross(w, v), n) * one_over_4_area_squared
     b[0] = 1.0 - b[1] - b[2]
     return b
 
@@ -74,9 +74,10 @@ def project_points_onto_stl(stl, points):
         #If `x` has shape tuple+(self.m,), then `i` has shape tuple+(k,).
         #Missing neighbors are indicated with self.n.
     dist, i = tree.query(points, k=1, eps=0, p=2,
-                          distance_upper_bound=np.inf, n_jobs=1)
+                         distance_upper_bound=np.inf, n_jobs=1)
 
     # distance from centroid to point, such that we get the element id directly
+    print('dist =', dist)
     print('i =', i)
     n1 = elements[i, 0]
     n2 = elements[i, 1]
@@ -125,7 +126,7 @@ def project_points_onto_stl(stl, points):
     return p_prime
 
 def project_line_onto_stl(stl, pa, pb, npoints=11):
-    # top down projection
+    """top down projection"""
     normal = np.array([0., 0., -1.], dtype='float32')
 
     #max_z = nodes[:, 2].max()
@@ -149,7 +150,7 @@ def project_line_onto_stl(stl, pa, pb, npoints=11):
     return out_points
 
 def project_curve_onto_stl(stl, points, npoints=11):
-    # top down projection
+    """top down projection"""
     normal = np.array([0., 0., -1.], dtype='float32')
 
     #max_z = nodes[:, 2].max()
@@ -222,19 +223,19 @@ def main():
     #out_points3 = project_curve_onto_stl(stl, points, npoints=11)
 
 def build():
-    from pyNastran.bdf.bdf import BDF, GRID, CQUAD4, PSHELL, PROD, MAT1
+    from pyNastran.bdf.bdf import BDF
     model = BDF(debug=False)
     xyz1 = [0., 0., 0.]
     xyz2 = [0., 1., 0.]
     xyz3 = [1., 1., 0.]
     xyz4 = [1., 0., 0.]
-    model.nodes[1] = GRID(nid=1, cp=0, xyz=xyz1)
-    model.nodes[2] = GRID(nid=2, cp=0, xyz=xyz2)
-    model.nodes[3] = GRID(nid=3, cp=0, xyz=xyz3)
-    model.nodes[4] = GRID(nid=4, cp=0, xyz=xyz4)
-    model.elements[1] = CQUAD4(eid=1, pid=100, nids=[1,2,3,4])
-    model.properties[100] = PSHELL(pid=100, mid1=1000, t=0.1)
-    model.materials[1000] = MAT1(mid=1000, E=1e7, G=None, nu=0.3)
+    model.add_grid(1, xyz=xyz1)
+    model.add_grid(2, xyz=xyz2)
+    model.add_grid(3, xyz=xyz3)
+    model.add_grid(4, xyz=xyz4)
+    model.add_cquad4(eid=1, pid=1000, nids=[1, 2, 3, 4])
+    model.add_pshell(pid=100, mid1=1000, t=0.1)
+    model.add_mat1(mid=1000, E=1e7, G=None, nu=0.3)
 
 if __name__ == '__main__':
     build()

@@ -31,9 +31,9 @@ try:
     ver = np.lib.NumpyVersion(np.__version__)
     if ver < '1.11.0':
         print("np.__version__ = %r < '1.11.0'" % np.__version__)
-        py_packages.append('numpy >= 1.11.0')
+    py_packages.append('numpy >= 1.11.0,<1.13.0')
 except ImportError:
-    py_packages.append('numpy >= 1.11.0')
+    py_packages.append('numpy >= 1.11.0,<1.13.0')
 
 try:
     import scipy
@@ -73,6 +73,18 @@ except ImportError:
     py_packages.append('docopt == 0.6.2')
 
 
+try:
+    import typing
+except ImportError:
+    py_packages.append('typing >= 3.6.1')
+
+
+if PY2:
+    try:
+        import pathlib2
+    except ImportError:
+        py_packages.append('pathlib2 >= 2.2.0')
+
 #py_packages = [
 #    'numpy >= 1.9.2',
 #    'scipy >= 0.16.0, scipy < 0.18.0',
@@ -96,7 +108,7 @@ for icon_file in icon_files:
         icon_files2.append(os.path.join(icon_path, icon_file))
 
 exclude_words = [
-    'pyNastran.bdf.dev_vectorized', 'pyNastran.bdf.dev_vectorized.cards',
+    'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
     'pyNastran.f06.dev',
     'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
     'pyNastran.converters.dev', 'pyNastran.xdb',]
@@ -155,8 +167,8 @@ setup(
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 
-            'pyNastranv = pyNastran.bdf.dev_vectorized.solver.solver:main',
-            'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
+            'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
+            'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
         ]# + py2_gui_scripts
     },

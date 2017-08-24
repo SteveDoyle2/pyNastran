@@ -7,7 +7,7 @@ from numpy import zeros, searchsorted, ravel
 ints = (int, np.int32)
 
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
@@ -42,6 +42,7 @@ class NonlinearGapStressArray(OES_Object):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the NonlinearGapStressArray"""
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)

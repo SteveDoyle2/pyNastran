@@ -8,12 +8,14 @@ set_printoptions(suppress=True, precision=3)
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, RROD
-from pyNastran.bdf.errors import DuplicateIDsError
+#from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2
+from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.utils.log import get_logger
 
 bdf = BDF(debug=False)
 test_path = pyNastran.__path__[0]
-
+log = get_logger(level='warning')
 
 class TestLoads(unittest.TestCase):
     def test_force(self):
@@ -25,8 +27,8 @@ class TestLoads(unittest.TestCase):
         A = 3.14
         model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0,
                          comment='')
-        model.add_grid(10, xyz=[10., 0., 0.])
-        model.add_grid(11, xyz=[11., 0., 0.])
+        model.add_grid(10, [10., 0., 0.])
+        model.add_grid(11, [11., 0., 0.])
         E = 3.0e7
         G = None
         nu = 0.3
@@ -53,8 +55,8 @@ class TestLoads(unittest.TestCase):
         A = 3.14
         model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0,
                          comment='')
-        model.add_grid(10, xyz=[10., 0., 0.])
-        model.add_grid(11, xyz=[11., 0., 0.])
+        model.add_grid(10, [10., 0., 0.])
+        model.add_grid(11, [11., 0., 0.])
         E = 3.0e7
         G = None
         nu = 0.3
@@ -85,8 +87,8 @@ class TestLoads(unittest.TestCase):
         accel1.write_card(size=16)
         accel1.write_card(size=16, is_double=True)
 
-        model.add_grid(10, xyz=[10., 0., 0.])
-        model.add_grid(11, xyz=[11., 0., 0.])
+        model.add_grid(10, [10., 0., 0.])
+        model.add_grid(11, [11., 0., 0.])
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
@@ -114,8 +116,8 @@ class TestLoads(unittest.TestCase):
         accel.write_card(size=16)
         accel.write_card(size=16, is_double=True)
 
-        model.add_grid(10, xyz=[10., 0., 0.])
-        model.add_grid(11, xyz=[11., 0., 0.])
+        model.add_grid(10, [10., 0., 0.])
+        model.add_grid(11, [11., 0., 0.])
         model.validate()
         model.pop_parse_errors()
         model.cross_reference()
@@ -165,7 +167,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CPENTA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cpenta.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -189,9 +191,9 @@ class TestLoads(unittest.TestCase):
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
-            elem = load.eids[0]
-            g1 = load.g1.nid
-            if load.g34 is None:
+            elem = load.eids_ref[0]
+            g1 = load.g1_ref.nid
+            if load.g34_ref is None:
                 g34 = None
                 #print(load)
                 face, area, centroid, normal = elem.get_face_area_centroid_normal(g1)
@@ -205,7 +207,7 @@ class TestLoads(unittest.TestCase):
                     assert array_equal(centroid, array([2/3., 1/3., 2.])), 'aft g1=%s g34=%s face=%s centroid=%s\n%s' % (g1, g34, face, centroid, msg)
                     assert array_equal(normal, array([0., 0., -1.])), 'aft g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
             else:
-                g34 = load.g34.nid
+                g34 = load.g34_ref.nid
                 face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
                 if (g1, g34) in angles:
                     self.assertAlmostEqual(area, 2 * 2**0.5, msg='g1=%s g34=%s face=%s area=%s' % (g1, g34, face, area))
@@ -257,7 +259,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CTRIA3"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctria3.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -272,7 +274,7 @@ class TestLoads(unittest.TestCase):
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
-            elem = load.eids[0]
+            elem = load.eids_ref[0]
             area = 0.5
             centroid = elem.Centroid()
             normal = elem.Normal()
@@ -305,7 +307,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CQUAD4"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'cquad4.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -324,7 +326,7 @@ class TestLoads(unittest.TestCase):
             load = model_b.loads[loadcase_id]
             loadi = load[0]
             if loadi.type == 'PLOAD4':
-                elem = loadi.eids[0]
+                elem = loadi.eids_ref[0]
                 area = 1.0
                 centroid = elem.Centroid()
                 normal = elem.Normal()
@@ -352,7 +354,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CTETRA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -377,8 +379,8 @@ class TestLoads(unittest.TestCase):
                 continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
-            elem = load.eids[0]
-            g1 = load.g1.nid
+            elem = load.eids_ref[0]
+            g1 = load.g1_ref.nid
 
             # f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
             # case = op2.spc_forces[isubcase]
@@ -386,7 +388,7 @@ class TestLoads(unittest.TestCase):
             # if f[0] != fm[0]:
                 # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
-            g34 = load.g34.nid
+            g34 = load.g34_ref.nid
             face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
             msg = '%s%s%s\n' % (
                 elem.nodes[face[0]], elem.nodes[face[1]],
@@ -444,7 +446,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CHEXA"""
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.bdf')
         op2_filename = os.path.join(test_path, '..', 'models', 'pload4', 'chexa.op2')
-        op2 = OP2(debug=False)
+        op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
         model_b = BDF(debug=False)
@@ -484,8 +486,8 @@ class TestLoads(unittest.TestCase):
                 continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
-            elem = load.eids[0]
-            g1 = load.g1.nid
+            elem = load.eids_ref[0]
+            g1 = load.g1_ref.nid
 
             # f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
             # case = op2.spc_forces[isubcase]
@@ -493,7 +495,7 @@ class TestLoads(unittest.TestCase):
             # if f[0] != fm[0]:
                 # print('%i f=%s fexpected=%s' % (isubcase, f, fm))
 
-            g34 = load.g34.nid
+            g34 = load.g34_ref.nid
             face, area, centroid, normal = elem.get_face_area_centroid_normal(g1, g34)
             msg = '%s%s%s%s\n' % (
                 elem.nodes[face[0]], elem.nodes[face[1]],
@@ -626,9 +628,9 @@ class TestLoads(unittest.TestCase):
         gb = 2
         ploadx1 = model.add_ploadx1(sid, eid1, pa, [ga, gb], pb=None,
                                     theta=0., comment='ploadx1')
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
 
         pid = 20
         nids = [1, 2, 3, None, None, None]
@@ -687,6 +689,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
+        save_load_deck(model2)
 
     def test_loads_combo(self):
         r"""
@@ -706,20 +709,20 @@ class TestLoads(unittest.TestCase):
         1     2  9  10  11
         """
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
-        model.add_grid(5, xyz=[0., 0., 1.])
-        model.add_grid(6, xyz=[1., 0., 1.])
-        model.add_grid(7, xyz=[1., 1., 1.])
-        model.add_grid(8, xyz=[0., 1., 1.])
+        model.add_grid(5, [0., 0., 1.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [1., 1., 1.])
+        model.add_grid(8, [0., 1., 1.])
 
-        model.add_grid(9, xyz=[5., 0., 0.])
-        model.add_grid(10, xyz=[6., 0., 0.])
-        model.add_grid(12, xyz=[2., 1., 0.])
-        model.add_grid(13, xyz=[2., 0.5, 0.])
+        model.add_grid(9, [5., 0., 0.])
+        model.add_grid(10, [6., 0., 0.])
+        model.add_grid(12, [2., 1., 0.])
+        model.add_grid(13, [2., 0.5, 0.])
 
         eid = 1
         mid = 1
@@ -969,7 +972,26 @@ class TestLoads(unittest.TestCase):
         model2.write_skin_solid_faces('skin.bdf', write_solids=False,
                                       write_shells=True)
         os.remove('skin.bdf')
+        save_load_deck(model2)
 
+    def test_load(self):
+        """makes sure LOAD cards don't get sorted"""
+        model = BDF(debug=False)
+
+        load = model.add_load(sid=13, scale=1., scale_factors=[0.5, 0.1], load_ids=[11, 10])
+        msg8 = load.write_card(size=8, is_double=False)
+        load_expected = 'LOAD          13      1.      .5      11      .1      10'
+        assert msg8.rstrip() == load_expected, '%r' % msg8
+
+        load2_expected = 'LOAD          14      1.      .5      11      .1      10      .4      11'
+        load2 = model.add_load(sid=14, scale=1., scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10, 11])
+        msg8 = load2.write_card(size=8, is_double=False)
+        assert msg8.rstrip() == load2_expected, '%r' % msg8
+        model.validate()
+
+        load2 = model.add_load(sid=14, scale=1., scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
+        with self.assertRaises(RuntimeError):
+            model.validate()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

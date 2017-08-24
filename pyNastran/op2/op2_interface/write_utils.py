@@ -1,3 +1,6 @@
+"""
+Defines methods for the op2 writer
+"""
 from __future__ import unicode_literals
 from struct import Struct, pack
 

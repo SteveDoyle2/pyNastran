@@ -67,7 +67,7 @@ def split_line_elements(bdf_model, eids, neids=2,
             if dxi < 1.:
                 new_node = nid_start
                 nid_start += 1
-                bdf_model.add_grid(new_node, cp=cp, xyz=new_xyz)
+                bdf_model.add_grid(new_node, new_xyz, cp=cp)
             else:
                 new_node = n2
                 if etype in ['CBAR', 'CBEAM']:

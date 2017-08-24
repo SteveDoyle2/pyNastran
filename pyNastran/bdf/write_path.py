@@ -4,9 +4,10 @@ Defines following useful methods:
 """
 from __future__ import print_function
 import os
-
+import typing
 
 def write_include(filename, is_windows=True):
+    # type: (str, bool) -> str
     """
     Writes a bdf INCLUDE file line given an imported filename.
 

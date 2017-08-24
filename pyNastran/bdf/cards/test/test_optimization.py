@@ -6,11 +6,15 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import StringIO
+from six import StringIO, iteritems, integer_types
+import numpy as np
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import read_op2
+from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.utils.log import get_logger
+from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 #from pyNastran.f06.test.f06_unit_tests import run_model
 
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
@@ -23,18 +27,20 @@ class TestOpt(unittest.TestCase):
     """
     def test_opt_1(self):
         """tests SOL 200"""
-        #bdf_filename = os.path.join(model_path, 'sol200', 'model_200.bdf')
-        #model = read_bdf(bdf_filename, xref=True)
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(model_path, 'sol200', 'model_200.bdf')
+        model = read_bdf(bdf_filename, xref=True, debug=False)
         op2_filename = os.path.join(model_path, 'sol200', 'model_200.op2')
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
-        op2 = read_op2(op2_filename, debug=False)
+        op2 = read_op2(op2_filename, log=log, debug=False)
 
-        #subcase_ids = op2.subcase_key.keys()
+        subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
-            #assert isinstance(subcase_id, int), subcase_id
+            #assert isinstance(subcase_id, integer_types), subcase_id
             #for key, dresp in sorted(iteritems(model.dresps)):
+                #print(dresp)
                 #dresp.calculate(op2, subcase_id)
 
     def test_ddval(self):
@@ -49,6 +55,7 @@ class TestOpt(unittest.TestCase):
         ddval.raw_fields()
         model.validate()
         model.cross_reference()
+        save_load_deck(model)
 
     def test_doptprm(self):
         """tests a doptprm"""
@@ -74,6 +81,7 @@ class TestOpt(unittest.TestCase):
         doptprm.write_card(size=8)
         doptprm.write_card(size=16)
         doptprm.write_card(size=16, is_double=True)
+        save_load_deck(model)
 
 
     def test_dlink(self):
@@ -97,11 +105,12 @@ class TestOpt(unittest.TestCase):
         model2.add_card(lines, 'DLINK', is_list=False)
         dlink = model.dlinks[10]
         dlink.write_card()
+        save_load_deck(model)
 
     def test_dvprel1(self):
-        """tests a DESVAR, DVPREL1, DRESP1, DCONSTR"""
+        """tests a DESVAR, DVPREL1, DVPREL2, DRESP1, DRESP2, DRESP3, DCONSTR, DSCREEN, DCONADD"""
         model = BDF(debug=False)
-        oid = 10
+        dvprel1_id = 10
         desvar_id = 12
         desvar_ids = 12
         Type = 'PSHELL'
@@ -121,21 +130,22 @@ class TestOpt(unittest.TestCase):
         xlb = 0.01
         xub = 2.0
 
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
         model.add_ctria3(eid, pid, nids, comment='ctria3')
         model.add_pshell(pid, mid1=30, t=0.1, comment='pshell')
         model.add_mat1(mid, E, G, nu, rho=0.1, comment='mat1')
         desvar = model.add_desvar(desvar_id, label, xinit, xlb, xub, comment='desvar')
-        dvprel1 = model.add_dvprel1(oid, Type, pid, pname_fid,
+        dvprel1 = model.add_dvprel1(dvprel1_id, Type, pid, pname_fid,
                                     desvar_ids, coeffs, p_min=None, p_max=1e20, c0=0.0,
                                     validate=True, comment='dvprel')
 
+        dvprel2_id = dvprel1_id + 1
         deqation = 100
         dvids = desvar_id
         labels = None
-        dvprel2 = model.add_dvprel2(oid+1, Type, pid, pname_fid, deqation,
+        dvprel2 = model.add_dvprel2(dvprel2_id, Type, pid, pname_fid, deqation,
                                     dvids, labels, p_min=None, p_max=1e20,
                                     validate=True, comment='')
         equation_id = 100
@@ -156,12 +166,13 @@ class TestOpt(unittest.TestCase):
         dresp1 = model.add_dresp1(dresp1_id, label, response_type,
                                   property_type, region,
                                   atta, attb, atti, validate=True, comment='dresp1')
-        dconstr = model.add_dconstr(oid, dresp1_id, lid=-1.e20, uid=1.e20,
+        dconstr = model.add_dconstr(dresp1_id, dresp1_id, lid=-1.e20, uid=1.e20,
                                     lowfq=0., highfq=1.e20, comment='dconstr')
 
         params = {
             (0, 'DRESP1') : [42],
             (1, 'DESVAR') : [12],
+            (3, 'DNODE') : [[100, 101], [1, 2]],
         }
         dresp2_id = 43
         dequation = equation_id
@@ -170,6 +181,44 @@ class TestOpt(unittest.TestCase):
         dresp2 = model.add_dresp2(dresp2_id, label, dequation, region, params,
                                   method='MIN', c1=100., c2=0.005, c3=None,
                                   comment='dresp2')
+
+        dresp3_id = 44
+        label = 'dresp3'
+        group = 'cat'
+        Type = 'dog'
+        region = None
+        params = {
+            (0, 'DRESP1') : [42],
+            (1, 'DESVAR') : [12],
+            (2, 'DRESP2') : [dresp2_id],
+            (2, 'DVPREL1') : [dvprel1_id],
+            (3, 'DVPREL2') : [dvprel2_id],
+            (3, 'DNODE') : [[100, 101], [1, 2]],
+        }
+        dresp3 = model.add_dresp3(dresp3_id, label, group, Type, region,
+                                  params, comment='dresp3')
+        dresp3.raw_fields()
+
+        oid = 1001
+        dconstr = model.add_dconstr(oid, dresp1_id, lid=-1.e20, uid=1.e20,
+                                   lowfq=0., highfq=1.e20, comment='dconstr1')
+        oid = 1002
+        dconstr = model.add_dconstr(oid, dresp2_id, lid=-1.e20, uid=1.e20,
+                                    lowfq=0., highfq=1.e20)
+        oid = 1003
+        dconstr = model.add_dconstr(oid, dresp3_id, lid=-1.e20, uid=1.e20,
+                                    lowfq=0., highfq=1.e20)
+
+        oid = 45
+        dconstrs = [1001, 1002, 1003]
+        dconadd = model.add_dconadd(oid, dconstrs, comment='dconadd')
+
+        dscreen = model.add_dscreen('dunno', comment='dscreen')
+
+        #print(dresp3)
+        grid = model.add_grid(100, [0., 0., 0.])
+        model.add_grid(101, [0., 0., 0.])
+        model.pop_parse_errors()
 
         desvar.write_card(size=8)
         desvar.write_card(size=16)
@@ -183,14 +232,23 @@ class TestOpt(unittest.TestCase):
         dresp2.write_card(size=8)
         dresp2.write_card(size=16)
         dresp2.write_card(size=16, is_double=True)
-
+        dresp3.write_card(size=8)
+        dresp3.write_card(size=16)
+        dresp3.write_card(size=16, is_double=True)
         dvprel2.write_card(size=8)
         dvprel2.write_card(size=16)
         dvprel2.write_card(size=16, is_double=True)
+        dconadd.write_card(size=8)
+        dconadd.write_card(size=16)
+        dconadd.write_card(size=16, is_double=True)
+        dscreen.write_card(size=8)
+        dscreen.write_card(size=16)
+        dscreen.write_card(size=16, is_double=True)
 
         model.validate()
-        #model._verify_bdf(xref=False)
+        model._verify_bdf(xref=False)
         model.cross_reference()
+        model.pop_xref_errors()
 
         desvar.write_card(size=8)
         desvar.write_card(size=16)
@@ -207,16 +265,42 @@ class TestOpt(unittest.TestCase):
         dresp2.write_card(size=8)
         dresp2.write_card(size=16)
         dresp2.write_card(size=16, is_double=True)
+        dresp3.write_card(size=8)
+        dresp3.write_card(size=16)
+        dresp3.write_card(size=16, is_double=True)
         dvprel2.write_card(size=8)
         dvprel2.write_card(size=16)
         dvprel2.write_card(size=16, is_double=True)
+        dconadd.write_card(size=8)
+        dconadd.write_card(size=16)
+        dconadd.write_card(size=16, is_double=True)
 
-        stringio = StringIO()
-        model.write_bdf(stringio, close=False)
-        stringio.getvalue()
-        #model.uncross_reference()
-        #model.cross_reference()
-        #model._verify_bdf(xref=True)
+        grid.nid = 200
+        assert '200' in str(dresp3), dresp3
+
+        save_load_deck(model)
+
+    def test_dvprel1_02(self):
+        model = BDF()
+        oid = 1
+        pid = 2
+        prop_type = 'PCOMP'
+        pname_fid = 'THETA11'
+        dvids = [1, 2]
+        coeffs = [1., 2.]
+        dvprel1a = model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                                     p_min=None, p_max=1e20,
+                                     c0=0.0, validate=True,
+                                     comment='')
+
+        oid = 2
+        pname_fid = 'T42'
+        dvprel1b = model.add_dvprel1(oid, prop_type, pid, pname_fid, dvids, coeffs,
+                                     p_min=None, p_max=1e20,
+                                     c0=0.0, validate=True,
+                                     comment='')
+        assert 'THETA11' in dvprel1a.raw_fields(), dvprel1a
+        assert 'T42' in dvprel1b.raw_fields(), dvprel1b
 
     def test_dvmrel1(self):
         """tests a DVMREL1"""
@@ -250,7 +334,7 @@ class TestOpt(unittest.TestCase):
         dvmrel2_1 = model.add_dvmrel2(oid, mat_type, mid1, mp_name, deqation,
                                       dvids, labels, mp_min=None, mp_max=1e20,
                                       validate=True,
-                                      comment='')
+                                      comment='dvmrel')
         E = 30.e7
         G = None
         nu = 0.3
@@ -305,19 +389,20 @@ class TestOpt(unittest.TestCase):
         dvmrel2_1.raw_fields()
         mat8.raw_fields()
         mat10.raw_fields()
+        save_load_deck(model)
 
     def test_dvcrel1(self):
-        """tests a DVCREL"""
+        """tests a DVCREL1, DVCREL2, DVGRID"""
         model = BDF(debug=False)
         oid = 10
-        eid = 100
+        conm2_eid = 100
         cp_min = 0.01
         cp_max = 1.
         desvar_id = 11
         desvar_ids = 11
         coeffs = 1.0
-        dvcrel1 = model.add_dvcrel1(oid, 'CONM2', eid, 'X2', desvar_ids, coeffs,
-                                    cp_min, cp_max, c0=0., validate=True, comment='')
+        dvcrel1 = model.add_dvcrel1(oid, 'CONM2', conm2_eid, 'X2', desvar_ids, coeffs,
+                                    cp_min, cp_max, c0=0., validate=True, comment='dvcrel')
 
         label = 'X2_MASS'
         xinit = 0.1
@@ -328,10 +413,10 @@ class TestOpt(unittest.TestCase):
         mass = 1.
         nid1 = 100
         nid2 = 101
-        model.add_conm2(eid, nid1, mass, cid=0, X=None, I=None,
-                        comment='conm2')
-        model.add_grid(100, xyz=[1., 2., 3.])
-        model.add_grid(101, xyz=[2., 2., 4.])
+        conm2 = model.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
+                                comment='conm2')
+        model.add_grid(100, [1., 2., 3.])
+        model.add_grid(101, [2., 2., 4.])
 
         eid = 101
         pid = 102
@@ -358,21 +443,40 @@ class TestOpt(unittest.TestCase):
         eqs = ['fx2(x) = x + 10.']
         deqatn = model.add_deqatn(equation_id, eqs, comment='deqatn')
 
+        nid = 100
+        dvid = 10000
+        dxyz = [1., 2., 3.]
+        dvgrid1 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+                                   comment='dvgrid')
+
+        nid = 101
+        dvid = 10001
+        dxyz = np.array([1., 2., 3.])
+        dvgrid2 = model.add_dvgrid(dvid, nid, dxyz, cid=0, coeff=1.0,
+                                   comment='dvgrid')
+
+        model.pop_parse_errors()
+
         dvcrel1.raw_fields()
-        dvcrel2.raw_fields()
         dvcrel1.write_card(size=16)
+        dvcrel2.raw_fields()
         dvcrel2.write_card(size=16)
+        dvgrid1.raw_fields()
+        dvgrid1.write_card(size=16)
 
         dvcrel1.comment = ''
         dvcrel2.comment = ''
         desvar.comment = ''
+        dvgrid1.comment = ''
         dvcrel1_msg = dvcrel1.write_card(size=8)
         dvcrel2_msg = dvcrel2.write_card(size=8)
         desvar_msg = desvar.write_card(size=8)
-
+        dvgrid_msg = dvgrid1.write_card(size=8)
 
         model.validate()
         model.cross_reference()
+        model.pop_xref_errors()
+
         dvcrel1.raw_fields()
         dvcrel1.write_card(size=16)
         dvcrel1.write_card(size=8)
@@ -381,17 +485,38 @@ class TestOpt(unittest.TestCase):
         dvcrel2.write_card(size=16)
         dvcrel2.write_card(size=8)
 
+        dvgrid1.raw_fields()
+        dvgrid1.write_card(size=16)
+        dvgrid1.write_card(size=8)
+
         deqatn.write_card()
         assert cbar.Mass() > 0, cbar.Mass()
+        model.uncross_reference()
 
         #-------------------------------------------
         dvcrel1_lines = dvcrel1_msg.split('\n')
         dvcrel2_lines = dvcrel2_msg.split('\n')
         desvar_lines = desvar_msg.split('\n')
-        model2 = BDF(debug=False)
+        dvgrid_lines = dvgrid_msg.split('\n')
+        model2 = BDF(debug=True)
+
         model2.add_card(dvcrel1_lines, 'DVCREL1', is_list=False)
         model2.add_card(dvcrel2_lines, 'DVCREL2', is_list=False)
         model2.add_card(desvar_lines, 'DESVAR', is_list=False)
+        model2.add_card(dvgrid_lines, 'DVGRID', is_list=False)
+        #model2.add_conm2(conm2_eid, nid1, mass, cid=0, X=None, I=None,
+                         #comment='conm2')
+        #model2.add_grid(100, [1., 2., 3.])
+        #model2.add_grid(101, [2., 2., 4.])
+        #save_load_deck(model2)
+
+    def test_break_words(self):
+        """tests break_word_by_trailing_integer"""
+        assert break_word_by_trailing_integer('T11') == ('T', '11'), break_word_by_trailing_integer('T11')
+        assert break_word_by_trailing_integer('THETA42') == ('THETA', '42'), break_word_by_trailing_integer('THETA42')
+        assert break_word_by_trailing_integer('T3') == ('T', '3'), break_word_by_trailing_integer('T3')
+        with self.assertRaises(SyntaxError):
+            assert break_word_by_trailing_integer('THETA32X')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from typing import List, Dict, Tuple, Union, Any
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
 class CaseControlCard(object):
@@ -71,7 +72,7 @@ class IntStrCard(IntCard):
        NAME = ALL
     """
     type = 'IntStrCard'
-    allowed_strings = []
+    allowed_strings = [] # type: List[str]
     def __init__(self, value):
         """
         Creates an IntStrCard
@@ -390,7 +391,7 @@ INT_CARD_NAMES = tuple([card.type for card in INT_CARDS])
 
 class StringCard(CaseControlCard):
     type = 'StringCard'
-    allowed_values = []
+    allowed_values = [] # type: List[str]
     def __init__(self, value):
         super(StringCard, self).__init__()
         self.value = value.strip()
@@ -550,9 +551,11 @@ class CheckCard(CaseControlCard):
     """
     type = 'CheckCard'
     allowed_keys = []
-    allowed_values = {}  # key:(type, allowed_values)
-    allowed_strings = []
-    duplicate_names = {}
+
+    # key:(type, allowed_values)
+    allowed_values = {}  # type: Dict[str, Union[float, str]]
+    allowed_strings = [] # type: List[str]
+    duplicate_names = {} # type: Dict[Any, Any]
     allow_ints = False
     def __init__(self, key, value, options):
         """
@@ -737,6 +740,7 @@ class CheckCard(CaseControlCard):
         return msg + '\n'
 
 def split_by_mixed_commas_parentheses(str_options):
+    # type: (str) -> List[str]
     """
     Excessively complicated function to split something excessively
     complicated.  Thankfully, it only has one set of parentheses
@@ -975,7 +979,7 @@ class DISPLACEMENT(CheckCard):
         'NOPRINT', 'RPUNCH',
     ]
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -996,7 +1000,7 @@ class VELOCITY(CheckCard):
         'NOPRINT', 'RPUNCH',
     ]
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1016,7 +1020,7 @@ class ACCELERATION(CheckCard):
         'NOPRINT', 'RPUNCH',
     ]
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1036,7 +1040,7 @@ class SPCFORCES(CheckCard):
         'NOPRINT', 'RPUNCH',
     ]
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1056,7 +1060,7 @@ class MPCFORCES(CheckCard):
         'NOPRINT', 'RPUNCH',
     ]
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1072,7 +1076,7 @@ class NLLOAD(CheckCard):
     short_name = type
     allowed_keys = ['PRINT', 'PUNCH']
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1088,7 +1092,7 @@ class NLSTRESS(CheckCard):
     short_name = type
     allowed_keys = ['SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT']
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1119,7 +1123,7 @@ class OLOAD(CheckCard):
                     'REAL', 'IMAG', 'PHASE', 'PSDF', 'ATOC', 'CRMS',
                     'RMS', 'RALL', 'RPRINT', 'NORPRINT', 'RPUNCH']
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1135,7 +1139,7 @@ class OPRESS(CheckCard):
     short_name = type
     allowed_keys = ['PRINT', 'PUNCH']
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1150,7 +1154,7 @@ class OTEMP(CheckCard):
     short_name = type
     allowed_keys = ['PRINT', 'PUNCH']
     allowed_strings = ['ALL', 'NONE']
-    allowed_values = {}
+    allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
     def __init__(self, key, value, options):
@@ -1159,8 +1163,8 @@ class OTEMP(CheckCard):
 CHECK_CARDS = [
     DISPLACEMENT, VELOCITY, ACCELERATION, NLLOAD, NLSTRESS, OLOAD, OPRESS,
     OTEMP, SPCFORCES, MPCFORCES,
-]
-CHECK_CARD_DICT = {card.type : card for card in CHECK_CARDS}
-CHECK_CARD_NAMES = tuple([card.short_name for card in CHECK_CARDS])
+]  # type: List[Any]
+CHECK_CARD_DICT = {card.type : card for card in CHECK_CARDS} # type: Dict[str, str]
+CHECK_CARD_NAMES = tuple([card.short_name for card in CHECK_CARDS])  # type: Tuple[str]
 
 #-------------------------------------------------------------------------------

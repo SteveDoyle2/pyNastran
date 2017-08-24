@@ -63,6 +63,7 @@ around the idea of cross-referencing, so it's recommended that you use it.
 # pylint: disable=R0902,R0904,R0914
 
 from __future__ import print_function
+from typing import List, Dict, Any
 from six import iteritems, itervalues
 from collections import defaultdict
 import traceback
@@ -104,6 +105,7 @@ class XrefMesh(BDFAttributes):
                         xref_aero=True,
                         xref_sets=True,
                         xref_optimization=True):
+        # type: (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool) -> None
         """
         Links up all the cards to the cards they reference
 
@@ -174,6 +176,7 @@ class XrefMesh(BDFAttributes):
         #self.case_control_deck.cross_reference(self)
 
     def _cross_reference_constraints(self):
+        # type: () -> None
         """
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
@@ -197,6 +200,7 @@ class XrefMesh(BDFAttributes):
             se_suport.cross_reference(self)
 
     def _cross_reference_coordinates(self):
+        # type: () -> None
         """
         Links up all the coordinate cards to other coordinate cards and nodes
          - CORD1R, CORD1C, CORD1S
@@ -211,6 +215,7 @@ class XrefMesh(BDFAttributes):
             coord.setup()
 
     def _cross_reference_aero(self):
+        # type: () -> None
         """
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
@@ -277,6 +282,7 @@ class XrefMesh(BDFAttributes):
             #'AESURF',  ## aesurfs
 
     def _cross_reference_nodes(self):
+        # type: () -> None
         """
         Links the nodes to coordinate systems
         """
@@ -287,25 +293,7 @@ class XrefMesh(BDFAttributes):
             except:
                 self.log.error("Couldn't cross reference GRID.\n%s" % (str(node)))
                 raise
-
-        if self.new_spoints:
-            pass
-            #for spoint in itervalues(self.spoints):
-                #pas
-                #try:
-                    #spoint.cross_reference(self)
-                #except:
-                    #self.log.error("Couldn't cross reference SPOINT.\n%s" % (str(spoint)))
-                    #raise
-            #for epoint in itervalues(self.epoints):
-                #try:
-                    #epoint.cross_reference(self, grdset)
-                #except:
-                    #self.log.error("Couldn't cross reference EPOINT.\n%s" % (str(epoint)))
-                    #raise
-        else:
-            if self.spoints:
-                self.spointi = self.spoints.create_spointi()
+        # SPOINTs, EPOINTs don't need xref
 
         # GRDPNT for mass calculations
         #if model.has_key()
@@ -313,6 +301,7 @@ class XrefMesh(BDFAttributes):
             #if
 
     def _cross_reference_elements(self):
+        # type: () -> None
         """
         Links the elements to nodes, properties (and materials depending on
         the card).
@@ -348,10 +337,11 @@ class XrefMesh(BDFAttributes):
                     self.pop_xref_errors()
 
     def _cross_reference_nodes_with_elements(self):
+        # type: () -> None
         """
         Links the nodes to all connected elements
         """
-        nodes = defaultdict(list)
+        nodes = defaultdict(list)  # type: Dict[int, List[Any]]
         for element in itervalues(self.elements):
             #if element.type in ['CONM2']:
             #    pass
@@ -366,9 +356,10 @@ class XrefMesh(BDFAttributes):
                             #print('node = %s' % str(node))
                             #raise
         for node in itervalues(self.nodes):
-            node.elements = nodes[node.nid]
+            node.elements_ref = nodes[node.nid]
 
     def _cross_reference_masses(self):
+        # type: () -> None
         """
         Links the mass to nodes, properties (and materials depending on
         the card).
@@ -394,6 +385,7 @@ class XrefMesh(BDFAttributes):
                     self.pop_xref_errors()
 
     def _cross_reference_properties(self):
+        # type: () -> None
         """
         Links the properties to materials
         """
@@ -408,6 +400,7 @@ class XrefMesh(BDFAttributes):
                     self.pop_xref_errors()
 
     def _cross_reference_materials(self):
+        # type: () -> None
         """
         Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
@@ -438,6 +431,7 @@ class XrefMesh(BDFAttributes):
                         self.pop_xref_errors()
 
     def _cross_reference_loads(self):
+        # type: () -> None
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
@@ -509,11 +503,12 @@ class XrefMesh(BDFAttributes):
                 #raise
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
-                self._stored_xref_errors.append((load, var))
+                self._stored_xref_errors.append((dphase, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
     def _cross_reference_sets(self):
+        # type: () -> None
         """cross references the SET objects"""
         for set_obj in self.asets:
             set_obj.cross_reference(self)
@@ -540,6 +535,7 @@ class XrefMesh(BDFAttributes):
             set_obj.cross_reference(self)
 
     def _cross_reference_optimization(self):
+        # type: () -> None
         """cross references the optimization objects"""
         for key, deqatn in iteritems(self.dequations):
             deqatn.cross_reference(self)
@@ -557,6 +553,7 @@ class XrefMesh(BDFAttributes):
             dvprel.cross_reference(self)
 
     def geom_check(self, geom_check, xref):
+        # type: (bool, bool) -> None
         """
         what about xref?
         """

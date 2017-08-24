@@ -53,7 +53,7 @@ class Usm3dIO(object):
             msg = 'The current file is must have the format of xxx_%%i.flo, not %r' % self.out_filename
             raise RuntimeError(msg)
         #print("loading %r" % flo_filename)
-        self.load_usm3d_results(flo_filename, dirname)
+        self.load_usm3d_results(flo_filename)
         self.out_filename = os.path.join(dirname, flo_filename)
 
         print("done stepping...")
@@ -74,7 +74,7 @@ class Usm3dIO(object):
                     #raise NotImplementedError()
         #return None
 
-    def load_usm3d_results(self, flo_filename, dirname):
+    def load_usm3d_results(self, flo_filename):
         model = Usm3d(log=self.log, debug=False)
         #self.result_cases = {}
         npoints = self.nNodes
@@ -90,7 +90,7 @@ class Usm3dIO(object):
                                  bcs, mapbc, bcmap_to_bc_name, loads,
                                  is_geometry=False)
 
-    def load_usm3d_geometry(self, cogsg_filename, dirname, name='main', plot=True):
+    def load_usm3d_geometry(self, cogsg_filename, name='main', plot=True):
         skip_reading = self._remove_old_geometry(cogsg_filename)
         if skip_reading:
             return
@@ -225,7 +225,7 @@ class Usm3dIO(object):
         else:
             note = ''
 
-        self.iSubcaseNameMap = {
+        self.isubcase_name_map = {
             1: ['Usm3d%s' % note, ''],
             2: ['Usm3d%s' % note, ''],
         }

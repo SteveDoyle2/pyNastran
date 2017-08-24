@@ -1,3 +1,8 @@
+"""
+defines:
+ - bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
+             is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False)
+"""
 from __future__ import print_function
 import os
 import numpy as np
@@ -208,7 +213,7 @@ def _get_mapper_0(model):
     """
     isinstance(model, BDF)
     # build the maps
-    eids_all = model.elements.keys() + model.masses.keys() + model.rigid_elements.keys()
+    eids_all = list(model.elements.keys()) + list(model.masses.keys()) + list(model.rigid_elements.keys())
     eid_map = {eid : eid for eid in eids_all}
     nid_map = {nid : nid for nid in model.point_ids}
     cid_map = {cid : cid for cid in model.coord_ids}

@@ -6,10 +6,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 
 import sys
+from typing import List, Union
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 def print_scientific_double(value):
+    # type: (float) -> str
     """
     Prints a value in 16-character scientific double precision.
 
@@ -32,6 +34,7 @@ def print_scientific_double(value):
 
 
 def print_field_double(value):
+    # type: (Union[int, float, str, None]) -> str
     """
     Prints a 16-character width field
 
@@ -53,12 +56,23 @@ def print_field_double(value):
 
 
 def print_card_double(fields, wipe_fields=True):
+    # type: (List[Union[int, float, str, None]], bool) -> str
     """
     Prints a nastran-style card with 16-character width fields.
 
-    :param fields: all the fields in the BDF card (no trailing Nones)
-    :param wipe_fields:  some cards (e.g. PBEAM) have ending fields
-                         that need to be there, others cannot have them.
+    Parameters
+    ----------
+    fields : List[varies]
+        all the fields in the BDF card (no trailing Nones)
+    wipe_fields : bool; default=True
+        some cards (e.g. PBEAM) have ending fields
+        that need to be there, others cannot have them.
+
+    Returns
+    -------
+    card : str
+        string representation of the card in small field format
+
     .. note:: An internal field value of None or '' will be treated as
               a blank field
     .. note:: A large field format follows the  8-16-16-16-16-8 = 80
@@ -77,7 +91,7 @@ def print_card_double(fields, wipe_fields=True):
       *
     """
     if wipe_fields:
-        fields = wipe_empty_fields_typed(fields)
+        fields = wipe_empty_fields(fields)
     nfields_main = len(fields) - 1  # chop off the card name
     nbdf_lines = nfields_main // 8
     if nfields_main % 8 != 0:

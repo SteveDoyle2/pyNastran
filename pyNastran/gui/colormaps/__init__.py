@@ -1,3 +1,4 @@
+import numpy as np
 #from inferno import cm_data as inferno_cm
 #from magma import cm_data as magma_cm
 #from plasma import cm_data as plasma_cm
@@ -17,7 +18,36 @@
 # You should have received a copy of the CC0 legalcode along with this
 # work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-__all__ = ['magma', 'inferno', 'plasma', 'viridis']
+__all__ = ['jet2', 'blend', 'magma', 'inferno', 'plasma', 'viridis']
+
+_jet2_data = np.array([
+    (255, 0, 0),
+    (255, 120, 0),
+    (255, 204, 0),
+    (255, 255, 0),
+    (0, 255, 0),
+    (0, 191, 0),
+    (0, 127, 0),
+    (0, 255, 255),
+    (0, 153, 255),
+    (0, 0, 159),
+    (0, 0, 171)], dtype='float32') / 255.
+
+_blend_data = np.array([
+    (255, 0, 0,),
+    (255, 120, 0),
+    (255, 204, 0),
+    (255, 255, 0),
+    (255, 0, 255),
+    (255, 102, 255),
+    (255, 191, 255),
+    (0, 171, 0),
+    (0, 191, 0),
+    (0, 255, 0),
+    (0, 0, 171),
+    (0, 0, 255),
+    (0, 153, 255),
+    (0, 255, 255),], dtype='float32') / 255.
 
 _magma_data = [[0.001462, 0.000466, 0.013866],
                [0.002258, 0.001295, 0.018331],
@@ -1047,25 +1077,31 @@ _viridis_data = [[0.267004, 0.004874, 0.329415],
                  [0.983868, 0.904867, 0.136897],
                  [0.993248, 0.906157, 0.143936]]
 
+
 colormap_dict = {
+    'jet2' : _jet2_data,
+    'blend' : _blend_data,
     'magma' : _magma_data,
     'inferno' : _inferno_data,
     'plasma' : _plasma_data,
     'viridis' : _viridis_data,
 }
-colormap_keys = ['jet', 'magma', 'inferno', 'plasma', 'viridis']
+colormap_keys = ['jet', #'jet2', 'blend',
+                 'magma', 'inferno', 'plasma', 'viridis']
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     from matplotlib.colors import ListedColormap
 
     cmaps = {}
-    for (name, data) in (('magma', _magma_data),
+    for (name, data) in (('jet2', _jet2_data),
+                         ('magma', _magma_data),
                          ('inferno', _inferno_data),
                          ('plasma', _plasma_data),
                          ('viridis', _viridis_data)):
 
         cmaps[name] = ListedColormap(data, name=name)
 
+    jet2 = cmaps['jet2']
     magma = cmaps['magma']
     inferno = cmaps['inferno']
     plasma = cmaps['plasma']

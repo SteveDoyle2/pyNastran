@@ -1,5 +1,5 @@
 from __future__ import print_function
-import pandas as pd
+import pandas as pd  # type: ignore
 #import xlwings as xl
 
 def debug_output(objects, to_excel=True):

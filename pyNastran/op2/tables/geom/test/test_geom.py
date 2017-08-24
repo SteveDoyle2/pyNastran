@@ -31,7 +31,7 @@ class TestOP2GeomUnit(unittest.TestCase):
                 25, 50, 123456, 1.0, 456, 125, 103, -1, -2, -3]
         rbes = read_rbe3s_from_idata_fdata(
             model, np.array(data, dtype='int32'), np.array(data, dtype='float32'))
-        assert len(rbes) == 0, rbes  ## TODO: not supported b/c the -2; should be 2
+        assert len(rbes) == 2, rbes  ## TODO: not supported b/c the -2; should be 2
 
 
 if __name__ == '__main__':  # pragma: no cover

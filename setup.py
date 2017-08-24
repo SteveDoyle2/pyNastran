@@ -17,20 +17,21 @@ packages = find_packages()+['gui/icons/*.*']
 #print "packages = ",packages
 #sys.exit()
 
-#extra = {}
-#if sys.version_info >= (3,):
-    #extra['use_2to3'] = True
-    #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
-    #extra['use_2to3_fixers'] = ['your.fixers']
-
 py2_gui_scripts = []
 py2_packages = []
 py3_gui_scripts = []
 py3_packages = []
 
 
+is_dev = (
+    'TRAVIS' in os.environ or
+    'APPVEYOR' in os.environ or
+    'READTHEDOCS' in os.environ
+)
 is_travis = 'TRAVIS' in os.environ
-if sys.version_info <= (3,) or not is_travis:
+is_rtd = 'READTHEDOCS' in os.environ
+
+if sys.version_info <= (3,) or not is_dev:
     try:
         import vtk
         vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
@@ -40,17 +41,8 @@ if sys.version_info <= (3,) or not is_travis:
     except ImportError:
         py2_packages.append('vtk >= 5.10.1')
 
-    #try:
-        #import PIL
-        #if PIL.VERSION < '2.7.0':
-            ##print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
-            #py2_packages.append('pillow >= 2.7.0')
-    #except ImportError:
-        #py2_packages.append('pillow >= 2.7.0')
-
     py2_packages += [
         #'vtk >= 5.10.1',
-        #'pillow >= 2.7.0',
         ##'dill'
         ##'wx >= 2.8.12.0',
     ]
@@ -64,14 +56,6 @@ if sys.version_info <= (3,) or not is_travis:
 #    except ImportError:
 #        py3_packages.append('vtk >= 7.0.0')
 
-    #try:  # is this still required?
-        #import PIL
-        #if PIL.VERSION < '2.7.0':
-            #print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
-            #py3_packages.append('pillow >= 2.7.0')
-    #except ImportError:
-        #py3_packages.append('pillow >= 2.7.0')
-
     py3_packages += [
         #'vtk >= 5.10.0',
         #'pillow >= 2.7.0',
@@ -81,15 +65,18 @@ if sys.version_info <= (3,) or not is_travis:
 
 py_packages = []
 
-try:
-    #import numpy as np
-    #ver = np.lib.NumpyVersion(np.__version__)
-    #if ver < '1.11.0':
-        #print("np.__version__ = %r < '1.11.0'" % np.__version__)
-        #py_packages.append('numpy >= 1.11.0')
-    py_packages.append('numpy >= 1.11.0,<1.13.0')
-except ImportError:
-    py_packages.append('numpy >= 1.11.0,<1.13.0')
+if is_rtd:
+    py_packages.append('numpy')
+else:
+    try:
+        #import numpy as np
+        #ver = np.lib.NumpyVersion(np.__version__)
+        #if ver < '1.11.0':
+            #print("np.__version__ = %r < '1.11.0'" % np.__version__)
+            #py_packages.append('numpy >= 1.11.0')
+        py_packages.append('numpy >= 1.11.0,<1.13.0')
+    except ImportError:
+        py_packages.append('numpy >= 1.11.0,<1.13.0')
 
 try:
     import scipy
@@ -113,7 +100,7 @@ try:
     import matplotlib
     sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
     if sver < [1, 5, 1]:
-        print("matplotlib.__version__ = %r < '1.5.1'" % six.__version__)
+        print("matplotlib.__version__ = %r < '1.5.1'" % matplotlib.__version__)
         py_packages.append('matplotlib >= 1.5.1, <2')
 except ImportError:
     py_packages.append('matplotlib >= 1.5.1')
@@ -128,13 +115,26 @@ try:
 except ImportError:
     py_packages.append('docopt == 0.6.2')
 
+
+try:
+    import typing
+except ImportError:
+    py_packages.append('typing >= 3.6.1')
+
+
+if PY2:
+    try:
+        import pathlib2
+    except ImportError:
+        py_packages.append('pathlib2 >= 2.2.0')
+
 try:
     import imageio
-    if imageio.__version__ < '2.1.2':
-        #print("imageio.version = %r < '2.1.2'" % imageio.__version__)
-        py_packages.append('imageio >= 2.1.2')
+    if imageio.__version__ < '2.2.0':
+        #print("imageio.version = %r < '2.2.0'" % imageio.__version__)
+        py_packages.append('imageio >= 2.2.0')
 except ImportError:
-    py_packages.append('imageio >= 2.1.2')
+    py_packages.append('imageio >= 2.2.0')
 
 #py_packages = [
 #    'numpy >= 1.9.2',
@@ -142,8 +142,9 @@ except ImportError:
 #]
 
 is_windows = 'nt' in os.name
-if 'dev' in pyNastran.__version__ and not is_windows:
-    py_packages.append('python-coveralls')
+if is_travis and not is_windows:
+    #py_packages.append('python-coveralls')
+    py_packages.append('codecov')
     #py_packages.append('coverage')
 
 install_requires = py_packages + [
@@ -163,7 +164,8 @@ for icon_file in icon_files:
         icon_files2.append(os.path.join(icon_path, icon_file))
 
 exclude_words = [
-    'pyNastran.bdf.dev_vectorized', 'pyNastran.f06.dev',
+    'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
+    'pyNastran.f06.dev',
     'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
     'pyNastran.converters.dev', 'pyNastran.xdb',]
 packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
@@ -221,9 +223,9 @@ setup(
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 
-            'pyNastranv = pyNastran.bdf.dev_vectorized.solver.solver:main',
-            'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
-            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
+            'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
+            'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
+            #'nastranToCodeAster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
         ]
     },
     test_suite='pyNastran.all_tests',

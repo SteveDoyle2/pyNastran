@@ -1,3 +1,23 @@
+"""
+Defines:
+ - ResultSet(allowed_results)
+
+   Attributes
+   ----------
+    - allowed
+    - found
+    - saved
+
+   Methods
+   -------
+   - is_saved(result)
+   - is_not_saved(result)
+   - clear()
+   - add(result)
+   - remove(results)
+   - _found_result(result)
+   - update(self, results)
+"""
 from copy import deepcopy
 
 class ResultSet(object):

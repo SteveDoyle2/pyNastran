@@ -296,7 +296,7 @@ class BCMap(QtGui.QDialog):
 
     def check_name(self, cell):
         text = str(cell.text()).strip()
-        if len(text):
+        if text:
             cell.setStyleSheet("QLineEdit{background: white;}")
             return text, True
         else:

@@ -56,8 +56,6 @@ class RROD(RigidElement):
             element id
         nids : List[int, int]
             node ids; connected grid points at ends A and B
-        #cna / cnb : str
-            #independent DOFs
         cma / cmb : str; default=None
             dependent DOF
             must be in [None, '1', '2', '3']
@@ -81,6 +79,8 @@ class RROD(RigidElement):
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
+        self.ga_ref = None
+        self.gb_ref = None
 
     def validate(self):
         msg = ''
@@ -142,12 +142,12 @@ class RROD(RigidElement):
         return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
+        if self.ga_ref is None:
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, integer_types) or self.gb is None:
+        if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
 
@@ -161,15 +161,14 @@ class RROD(RigidElement):
             the BDF object
         """
         msg = ' which is required by RROD eid=%s' % (self.eid)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.ga_ref = self.ga
-        self.gb = model.Node(self.gb, msg=msg)
-        self.gb_ref = self.gb
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.ga_ref, self.gb_ref
+        self.ga_ref = None
+        self.gb_ref = None
 
     @property
     def independent_nodes(self):
@@ -255,6 +254,8 @@ class RBAR(RigidElement):
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
+        self.ga_ref = None
+        self.gb_ref = None
 
     def validate(self):
         ncna = len(self.cna)
@@ -347,14 +348,14 @@ class RBAR(RigidElement):
         #return msg
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
-            return self.ga
-        return self.ga_ref.nid
+        if self.ga_ref is not None:
+            return self.ga_ref.nid
+        return self.ga
 
     def Gb(self):
-        if isinstance(self.gb, integer_types) or self.gb is None:
-            return self.gb
-        return self.gb_ref.nid
+        if self.gb_ref is not None:
+            return self.gb_ref.nid
+        return self.gb
 
     def cross_reference(self, model):
         """
@@ -366,15 +367,14 @@ class RBAR(RigidElement):
             the BDF object
         """
         msg = ' which is required by RBAR eid=%s' % (self.eid)
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
-        self.ga_ref = self.ga
-        self.gb_ref = self.gb
+        self.ga_ref = model.Node(self.Ga(), msg=msg)
+        self.gb_ref = model.Node(self.Gb(), msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.ga_ref, self.gb_ref
+        self.ga_ref = None
+        self.gb_ref = None
 
     @property
     def independent_nodes(self):
@@ -425,6 +425,8 @@ class RBAR1(RigidElement):
         self.gb = nids[1]
         self.cb = cb
         self.alpha = alpha
+        self.ga_ref = None
+        self.gb_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -466,14 +468,14 @@ class RBAR1(RigidElement):
         return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
-            return self.ga
-        return self.ga_ref.nid
+        if self.ga_ref is not None:
+            return self.ga_ref.nid
+        return self.ga
 
     def Gb(self):
-        if isinstance(self.gb, integer_types) or self.gb is None:
-            return self.gb
-        return self.gb_ref.nid
+        if self.gb_ref is not None:
+            return self.gb_ref.nid
+        return self.gb
 
     @property
     def independent_nodes(self):
@@ -495,15 +497,14 @@ class RBAR1(RigidElement):
             the BDF object
         """
         msg = ' which is required by RBAR1 eid=%s' % (self.eid)
-        self.ga = model.Node(self.Ga(), msg=msg)
-        self.gb = model.Node(self.Gb(), msg=msg)
-        self.ga_ref = self.ga
-        self.gb_ref = self.gb
+        self.ga_ref = model.Node(self.Ga(), msg=msg)
+        self.gb_ref = model.Node(self.Gb(), msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.ga_ref, self.gb_ref
+        self.ga_ref = None
+        self.gb_ref = None
 
     def raw_fields(self):
         list_fields = ['RBAR1', self.eid, self.Ga(), self.Gb(), self.cb, self.alpha]
@@ -528,7 +529,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     +======+=====+=====+=====+=======+=====+=====+=====+
     | RBE1 | EID | GN1 | CN1 |  GN2  | CN2 | GN3 | CN3 |
     +------+-----+-----+-----+-------+-----+-----+-----+
-    |      |     | GN4 | CN4 | GN5 |  CN5  | GN6 | CN6 |
+    |      |     | GN4 | CN4 |  GN5  | CN5 | GN6 | CN6 |
     +------+-----+-----+-----+-------+-----+-----+-----+
     |      | UM  | GM1 | CM1 |  GM2  | CM2 | GM3 | CM3 |
     +------+-----+-----+-----+-------+-----+-----+-----+
@@ -573,6 +574,10 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gmi = Gmi
         self.Cmi = Cmi
         self.alpha = alpha
+        assert len(Gmi) == len(Cmi), 'len(Gmi)=%s len(Cmi)=%s' % (len(Gmi), len(Cmi))
+        assert len(Gmi) > 0, 'len(Gmi)=%s must be greater than 0' % (len(Gmi))
+        self.Gni_ref = None
+        self.Gmi_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -589,7 +594,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         eid = integer(card, 1, 'eid')
         ium = card.index('UM')
         if ium > 0:
-            assert string(card, ium, 'UM') == 'UM'
+            assert string(card, ium, 'UM') == 'UM', 'RBE1=%s must contain UM' % str(card)
 
         #assert isinstance(card[-1], string_types), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
         alpha_last = integer_double_or_string(card, -1, 'alpha_last')
@@ -649,27 +654,30 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             the BDF object
         """
         msg = ' which is required by RBE1 eid=%s' % (self.eid)
-        self.Gni = model.Nodes(self.Gni, allow_empty_nodes=True, msg=msg)
-        self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
-        self.Gni_ref = self.Gni
-        self.Gmi_ref = self.Gmi
+        self.Gni_ref = model.EmptyNodes(self.Gni, msg=msg)
+        self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
 
     def uncross_reference(self):
         self.Gni = self.Gni_node_ids
         self.Gmi = self.Gmi_node_ids
-        del self.Gni_ref, self.Gmi_ref
+        self.Gni_ref = None
+        self.Gmi_ref = None
 
     @property
     def Gni_node_ids(self):
-        if len(self.Gni) == 0:
+        if self.Gni_ref is None:
+            return self.Gni
+        if len(self.Gni_ref) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gni, allow_empty_nodes=True)
+        return self._node_ids(nodes=self.Gni_ref, allow_empty_nodes=True)
 
     @property
     def Gmi_node_ids(self):
-        if len(self.Gmi) == 0:
+        if self.Gmi_ref is None:
+            return self.Gmi
+        if len(self.Gmi_ref) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+        return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
     def independent_nodes(self):
@@ -777,7 +785,9 @@ class RBE2(RigidElement):
         if isinstance(Gmi, integer_types):
             Gmi = [Gmi]
         self.Gmi = Gmi
-        self._validate_input()
+        #self.nodes_ref = None
+        self.Gmi_ref = None
+        self.gn_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -847,7 +857,7 @@ class RBE2(RigidElement):
         self.gn = gn2
         self.Gmi = gm2
 
-    def _validate_input(self):
+    def validate(self):
         assert self.gn is not None, 'gn=%s' % self.gn
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
@@ -932,26 +942,26 @@ class RBE2(RigidElement):
             the BDF object
         """
         msg = ' which is required by RBE2 eid=%s' % (self.eid)
-        self.Gmi = model.Nodes(self.Gmi_node_ids, allow_empty_nodes=True, msg=msg)
-        self.gn = model.Node(self.Gn(), msg=msg)
-        self.Gmi_ref = self.Gmi
-        self.gn_ref = self.gn
+        self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
+        self.gn_ref = model.Node(self.Gn(), msg=msg)
 
     def uncross_reference(self):
         self.Gmi = self.Gmi_node_ids
         self.gn = self.Gn()
-        del self.Gmi_ref, self.gn_ref
+        self.Gmi_ref = None
+        self.gn_ref = None
 
     def Gn(self):
-        if isinstance(self.gn, integer_types) or self.gn is None:
-            return self.gn
-        return self.gn_ref.nid
+        if self.gn_ref is not None:
+            return self.gn_ref.nid
+        return self.gn
 
     @property
     def Gmi_node_ids(self):
-        if len(self.Gmi) == 0:
-            return []
-        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+        if self.Gmi_ref is None or len(self.Gmi) == 0:
+            return self.Gmi
+        assert self.Gmi_ref is not None, self.Gmi
+        return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
     def independent_nodes(self):
@@ -1050,6 +1060,9 @@ class RBE3(RigidElement):
         self.eid = eid
         self.refgrid = refgrid
         self.refc = refc
+        self.refgrid_ref = None
+        self.Gmi_ref = None
+        self.Gijs_ref = None
 
         if not len(weights) == len(comps) and len(weights) == len(Gijs):
             msg = 'len(weights)=%s len(comps)=%s len(Gijs)=%s' % (
@@ -1076,6 +1089,8 @@ class RBE3(RigidElement):
         self.Cmi = Cmi
 
         self.alpha = alpha
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1192,7 +1207,7 @@ class RBE3(RigidElement):
                     Gmi=gmi, Cmi=cmi, alpha=alpha, comment=comment)
 
     @property
-    def WtCG_groups(self):
+    def wt_cg_groups(self):
         wt_cg_groups = []
         for weight, comp, gijs in zip(self.weights, self.comps, self.Gijs):
             wt_cg_groups.append((weight, comp, gijs))
@@ -1221,15 +1236,27 @@ class RBE3(RigidElement):
 
     @property
     def ref_grid_id(self):
-        if isinstance(self.refgrid, integer_types) or self.refgrid is None:
-            return self.refgrid
-        return self.refgrid.nid
+        if self.refgrid_ref is not None:
+            return self.refgrid_ref.nid
+        return self.refgrid
 
     @property
     def Gmi_node_ids(self):
-        if len(self.Gmi) == 0:
+        if self.Gmi_ref is None:
+            return self.Gmi
+        if len(self.Gmi_ref) == 0:
             return []
-        return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+        return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
+
+    @property
+    def Gijs_node_ids(self):
+        if self.Gijs_ref is None:
+            return self.Gijs
+        Gijs = []
+        for gij in self.Gijs_ref:
+            gijs = self._node_ids(nodes=gij, allow_empty_nodes=True)
+            Gijs.append(gijs)
+        return Gijs
 
     def cross_reference(self, model):
         """
@@ -1242,41 +1269,40 @@ class RBE3(RigidElement):
         """
         msg = ' which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
-        self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
-        self.Gmi_ref = self.Gmi
+        self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
 
         assert self.Gmi is not None
-        self.refgrid = model.Node(self.ref_grid_id, msg=msg)
-        self.refgrid_ref = self.refgrid
+        self.refgrid_ref = model.Node(self.ref_grid_id, msg=msg)
 
+        self.Gijs_ref = []
         for i, Gij in enumerate(self.Gijs):
-            self.Gijs[i] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
-        self.Gijs_ref = self.Gijs
+            self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
     def uncross_reference(self):
+        self.Gijs = self.Gijs_node_ids
         self.Gmi = self.Gmi_node_ids
         self.refgrid = self.ref_grid_id
+        self.Gijs_ref = None
+        self.refgrid_ref = None
+        self.Gmi_ref = None
 
         Gij = []
         for gij in self.Gijs:
-            gij = self._nodeIDs(nodes=gij, allow_empty_nodes=True)
+            gij = self._node_ids(nodes=gij, allow_empty_nodes=True)
             Gij.append(gij)
         self.Gijs = Gij
-        del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
-        self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
-        self.Gmi_ref = self.Gmi
+        self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
 
-        assert self.Gmi is not None
-        self.refgrid = model.Node(self.ref_grid_id, msg=msg)
-        self.refgrid_ref = self.refgrid
+        assert self.Gmi_ref is not None
+        self.refgrid_ref = model.Node(self.ref_grid_id, msg=msg)
 
+        self.Gijs_ref = []
         for i, Gij in enumerate(self.Gijs):
-            self.Gijs[i] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
-        self.Gijs_ref = self.Gijs
+            self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
     @property
     def independent_nodes(self):
@@ -1285,9 +1311,9 @@ class RBE3(RigidElement):
         TODO: not checked
         """
         nodes = []
-        for Gij in self.Gijs:
-            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
-            nodes += Giji
+        for gij in self.Gijs:
+            giji = self._node_ids(nodes=gij, allow_empty_nodes=True)
+            nodes += giji
         return nodes
 
     @property
@@ -1302,9 +1328,8 @@ class RBE3(RigidElement):
 
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]
-        for (wt, ci, Gij) in zip(self.weights, self.comps, self.Gijs):
-            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
-            list_fields += [wt, ci] + Giji
+        for (wt, ci, Gij) in zip(self.weights, self.comps, self.Gijs_node_ids):
+            list_fields += [wt, ci] + Gij
         nspaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
 
         if nspaces < 8:
@@ -1420,8 +1445,8 @@ class RSPLINE(RigidElement):
         """
         return
         #msg = ' which is required by RSPLINE eid=%s' % (self.eid)
-        #self.Gni = model.Nodes(self.Gni, allow_empty_nodes=True, msg=msg)
-        #self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
+        #self.Gni = model.EmptyNodes(self.Gni, msg=msg)
+        #self.Gmi = model.EmptyNodes(self.Gmi, msg=msg)
         #self.Gni_ref = self.Gni
         #self.Gmi_ref = self.Gmi
 
@@ -1435,13 +1460,13 @@ class RSPLINE(RigidElement):
     #def Gni_node_ids(self):
         #if len(self.Gni) == 0:
             #return []
-        #return self._nodeIDs(nodes=self.Gni, allow_empty_nodes=True)
+        #return self._node_ids(nodes=self.Gni, allow_empty_nodes=True)
 
     #@property
     #def Gmi_node_ids(self):
         #if len(self.Gmi) == 0:
             #return []
-        #return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+        #return self._node_ids(nodes=self.Gmi, allow_empty_nodes=True)
 
     @property
     def independent_nodes(self):

@@ -6,12 +6,12 @@ import sys
 import os
 import io
 from struct import pack, unpack, Struct
-from six import string_types, iteritems, PY2
+from six import string_types, iteritems, PY2, PY3
 from six.moves import range
 
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix  # type: ignore
 
 from pyNastran.utils import is_binary_file as file_is_binary
 from pyNastran.utils.mathematics import print_matrix #, print_annotated_matrix
@@ -1381,9 +1381,12 @@ class OP4(object):
             The filename to write
             String -> opens a file (closed at the end)
             file   -> no file is opened and it's not closed
-        name_order: List[str]
+        matrices : Dict[str] = (form, np.ndarray)
+            the matrices to write
+
+        name_order: str / List[str]; default=None -> sorted based on name
             List of the names of the matrices that should be
-            written or string (default=None -> sorted based on matrices)
+            written or string
         is_binary : bool; default=True
             Should a binary file be written
         precision : str; default='default'
@@ -1428,10 +1431,16 @@ class OP4(object):
             name_order = sorted(matrices.keys())
         elif isinstance(name_order, string_types):
             name_order = [name_order]
+        elif PY3 and isinstance(name_order, bytes):
+            name_order = [name_order]
 
         is_big_mat = False  ## .. todo:: hardcoded
         for name in name_order:
-            (form, matrix) = matrices[name]
+            try:
+                (form, matrix) = matrices[name]
+            except KeyError:
+                raise KeyError('key=%r is an invalid matrix; keys=%s' % (
+                    str(name), matrices.keys()))
             if not form in (1, 2, 3, 6, 8, 9):
                 raise ValueError('form=%r and must be in [1, 2, 3, 6, 8, 9]' % form)
 
@@ -1691,6 +1700,8 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
     .. todo:: Does this work for complex matrices?
     """
     msg = ''
+    if isinstance(name, bytes):
+        name = name.decode('ascii')
     assert isinstance(name, string_types), 'name=%s' % name
     #A = A.tolil() # list-of-lists sparse matrix
     #print dir(A)
@@ -1918,42 +1929,6 @@ def _get_type_nwv(A, precision='default'):
     return matrix_type, nwords_per_value
 
 
-def get_matrices():
-    """creates dummy matrices"""
-    strings = array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='float32') # f?
-    return strings
-
-
 def compress_column(col):
     """takes a dense matrix column and puts it into OP4 format"""
     packs = []
@@ -1980,58 +1955,3 @@ def compress_column(col):
         packs.append(packi)
     #print("packs = ", packs)
     return packs
-
-
-def main():
-    """tests various matrices"""
-    from pyNastran.op4.utils import write_DMIG
-
-    #compress_column([14, 15, 16, 20, 21, 22, 26, 27, 28])
-    filenames = [
-        'test/mat_t_dn.op4',
-        'test/mat_t_s1.op4',
-        'test/mat_t_s2.op4',
-        'test/mat_b_dn.op4',
-        'test/mat_b_s1.op4',
-        'test/mat_b_s2.op4',
-        #'test/b_sample.op4',
-        #'binary.op4',
-    ]
-
-    #matrix_names = 'EYE10' # identity
-    #matrix_names = 'LOW'
-    #matrix_names = 'RND1RS' # real,single
-    #matrix_names = 'RND1RD' # real,double
-    #matrix_names = 'RND1CS' # complex,single
-    #matrix_names = 'RND1CD' # complex,double
-    #matrix_names = 'STRINGS'
-    #matrix_names = 'EYE5CD' # complex identity
-    matrix_names = None
-    strings = get_matrices()
-
-    is_big_mat = True
-    if PY2:
-        wb = 'wb'
-    else:
-        wb = 'w'
-    with open('ascii.op4', wb) as op4_file:
-        for fname in filenames:
-            op4 = OP4()
-            op4.endian = '>'
-            #if 't' in fname:
-            #else:
-                #f = open('binary.op4','wb')
-
-            matrices = op4.read_op4(fname, matrix_names=matrix_names,
-                                    precision='default')
-            print("keys = %s" % matrices.keys())
-            print("fname=%s" % fname)
-            for name, (form, matrix) in sorted(iteritems(matrices)):
-                op4.write_op4(op4_file, matrices, name_order=name)
-
-    print("-----------------------------")
-    print("done")
-    print("-----------------------------")
-
-#if __name__ == '__main__':  # pragma: no cover
-    #main()

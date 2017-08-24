@@ -19,9 +19,9 @@ import numpy as np
 from numpy import (array, zeros, ones, dot, arange,
                    eye, searchsorted, array_equal, diag, fill_diagonal,
                    nan, nan_to_num)
-from numpy.linalg import solve, norm, eigh, eig
+from numpy.linalg import solve, eigh, eig  # type: ignore
 
-from scipy.sparse import dok_matrix #, coo_matrix
+from scipy.sparse import dok_matrix  # type: ignore
 
 # pyNastran
 from pyNastran.bdf.bdf_interface.dev.matrices import make_gpwg
@@ -576,7 +576,7 @@ class Solver(OP2):
                 (self.label, options) = case.get_parameter('LABEL')
             else:
                 self.label = ''
-            self.iSubcaseNameMap[isubcase] = [self.Subtitle, self.label]
+            self.isubcase_name_map[isubcase] = [self.Subtitle, self.label]
 
             # really should be is_f06_stress, is_op2_stress, etc.
             # also should have SET support

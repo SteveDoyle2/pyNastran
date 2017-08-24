@@ -1,29 +1,30 @@
 import os
+import typing
 
 try:
-    import wx
-    _gui_mode = 0
+    import wx  # type: ignore
+    _gui_mode = 'wx'
 except ImportError:
     try:
-        from PySide import QtCore, QtGui
-        from PySide.QtGui import QWidget, QApplication, QFileDialog
-        _gui_mode = 1
+        from PySide import QtCore, QtGui  # type: ignore
+        from PySide.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+        _gui_mode = 'pyside'
     except ImportError:
         try:
-            from PyQt4 import QtCore, QtGui
-            from PyQt4.QtGui import QWidget, QApplication, QFileDialog
-            _gui_mode = 2
+            from PyQt4 import QtCore, QtGui  # type: ignore
+            from PyQt4.QtGui import QWidget, QApplication, QFileDialog  # type: ignore
+            _gui_mode = 'pyqt'
         except ImportError:
             try:
-                from PyQt5 import QtCore, QtGui
-                from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog
-                _gui_mode = 2
+                from PyQt5 import QtCore, QtGui  # type: ignore
+                from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog  # type: ignore
+                _gui_mode = 'pyqt'
             except ImportError:
                 _gui_mode = None
 
-if _gui_mode == 0:
+if _gui_mode == 'wx':
     pass
-elif _gui_mode in [1, 2]:
+elif _gui_mode in ['pyqt', 'pyside']:
     class QtDialog(QWidget):
         """Dummy GUI Object"""
         def __init__(self):
@@ -53,7 +54,8 @@ def radio_pullown_dialog(Title, button_dict, nwide=3):  # pragma: no cover
     """
     pass
 
-def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
+def save_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
+    # type: (str, str, str, str) -> str
     """
     creates a save file dialog in wx or PyQt4/PySide
     """
@@ -64,7 +66,7 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     if _gui_mode == 0: # wx
         app = wx.App(redirect=False)
         app.MainLoop()
-        dlg = wx.FileDialog(None, Title, dirname, "",
+        dlg = wx.FileDialog(None, title, dirname, "",
                             wx_wildcard, wx.SAVE)
         app.MainLoop()
 
@@ -81,7 +83,7 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         form = QtDialog()
         form.show()
 
-        fname = QFileDialog.getSaveFileName(form, Title,
+        fname = QFileDialog.getSaveFileName(form, title,
                                             dirname, qt_wildcard)
         app.exit()
         #print("fname =", fname)
@@ -92,7 +94,8 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     return fname
 
 
-def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
+def load_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
+    # type: (str, str, str, str) -> (str, str)
     """
     creates a load file dialog in wx or PyQt4/PySide
     """
@@ -104,7 +107,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     if _gui_mode == 0: # wx
         app = wx.App(redirect=False)
         app.MainLoop()
-        dlg = wx.FileDialog(None, Title, dirname, "",
+        dlg = wx.FileDialog(None, title, dirname, "",
                             wx_wildcard, wx.OPEN)
         app.MainLoop()
 
@@ -121,7 +124,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         form = QtDialog()
         form.show()
 
-        output = QFileDialog.getOpenFileName(form, Title,
+        output = QFileDialog.getOpenFileName(form, title,
             dirname, qt_wildcard)
         if len(output) == 1:
             fname, wildcard_level = output

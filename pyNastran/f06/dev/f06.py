@@ -800,7 +800,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MaxMin, F06Writer):
 
         #subtitle = 'SUBCASE %s' % isubcase
         #label = 'SUBCASE %s' % isubcase
-        #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
+        #self.isubcase_name_map[self.isubcase] = [self.subtitle, self.label]
 
 #title      date_stamp  page_stamp
 #subtitle
@@ -859,7 +859,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MaxMin, F06Writer):
         if key not in self.labels:
             self.subtitles[isubcase].append(subtitle)
             self.labels[key] = label
-        self.iSubcaseNameMap[isubcase] = [subtitle, analysis_code, label]
+        self.isubcase_name_map[isubcase] = [subtitle, analysis_code, label]
 
         dt = None
         if transient is not None:

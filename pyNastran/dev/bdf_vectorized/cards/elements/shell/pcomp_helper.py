@@ -106,13 +106,10 @@ class DeprecatedCompositeShellProperty(object):
         return self.get_thickness(iply)
 
     def nPlies(self):
-        return self.get_nplies()
+        return self.nplies
 
     def Nsm(self):
         return self.get_nonstructural_mass()
-
-    def isSymmetrical(self):
-        return self.is_symmetrical()
 
     def Rho(self, iply):
         return self.get_density(iply)
@@ -215,7 +212,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             for iply in range(nplies):
                 t += self.get_thickness(iply)
 
-            if self.isSymmetrical():
+            if self.is_symmetrical():
                 return t * 2.
             return t
         else:

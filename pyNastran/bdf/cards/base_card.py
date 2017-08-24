@@ -1,9 +1,11 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import List, Dict, Union, Optional, Any
 from six import string_types, PY2
 from six.moves import zip, range
 
-from numpy import nan, empty, unique
+import numpy as np
+#from numpy import nan, empty, unique
 
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils import object_attributes, object_methods, integer_types
@@ -37,6 +39,20 @@ else:
 
 
 class BaseCard(object):
+    """
+    Defines a series of base methods for every card class
+    (e.g., GRID, CTRIA3) including:
+
+     - deepcopy()
+     - get_stats()
+     - validate()
+     - object_attributes(mode='public', keys_to_skip=None)
+     - object_methods(self, mode='public', keys_to_skip=None)
+     - comment
+     - update_field(self, n, value)
+
+
+    """
     def __init__(self):
         pass
 
@@ -47,6 +63,7 @@ class BaseCard(object):
         return self.add_card(card)
 
     def get_stats(self):
+        # type: () -> str
         """Prints out an easy to read summary of the card"""
         msg = '---%s---\n' % self.type
         for name in sorted(self.object_attributes()):
@@ -55,6 +72,7 @@ class BaseCard(object):
         return msg
 
     def deprecated(self, old_name, new_name, deprecated_version):
+        # type: (str, str, str) -> None
         """deprecates methods"""
         deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
@@ -83,6 +101,7 @@ class BaseCard(object):
 
     @property
     def comment(self):
+        # type: () -> str
         """accesses the comment"""
         # just for testing
         #self.deprecated('comment()', 'comment2()', '0.7')
@@ -92,6 +111,7 @@ class BaseCard(object):
 
     @comment.setter
     def comment(self, new_comment):
+    # type: (str) -> None
         """sets a comment"""
         #comment = new_comment.rstrip()
         #self._comment = comment + '\n' if comment else ''
@@ -108,6 +128,7 @@ class BaseCard(object):
                 return
 
     def update_field(self, n, value):
+        # type: (int, Optional[Union[int, float, str]]) -> None
         """
         Updates a field based on it's field number.
 
@@ -135,7 +156,10 @@ class BaseCard(object):
             self._update_field_helper(n, value)
 
     def _update_field_helper(self, n, value):
-        """dynamic method for non-standard attributes (e.g., node.update_field(3, 0.1) to update z)"""
+        """
+        dynamic method for non-standard attributes
+        (e.g., node.update_field(3, 0.1) to update z)
+        """
         msg = '%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__
         raise IndexError(msg)
 
@@ -145,6 +169,7 @@ class BaseCard(object):
         raise IndexError(msg)
 
     def get_field(self, n):
+        # type: (int) -> Optional[Union[int, float, str]]
         """
         Gets a field based on it's field number
 
@@ -174,6 +199,7 @@ class BaseCard(object):
         return value
 
     def _verify(self, xref):
+        # type: (bool) -> None
         """
         Verifies all methods for this object work
 
@@ -185,13 +211,8 @@ class BaseCard(object):
         print('# skipping _verify (type=%s) because _verify is '
               'not implemented' % self.type)
 
-    def _is_same_fields(self, fields1, fields2):
-        for (field1, field2) in zip(fields1, fields2):
-            if not is_same(field1, field2):
-                return False
-        return True
-
     def __eq__(self, card):
+        # type: (Any) -> bool
         """
         Enables functions like:
 
@@ -204,9 +225,6 @@ class BaseCard(object):
           >>> GRID(nid=1, ...) === CQUAD4(eid=1, ...)
           False
         """
-        return self._is_same_card(card)
-
-    def _is_same_card(self, card):
         if not isinstance(card, self.__class__):
             return False
         if self.type != card.type:
@@ -215,12 +233,21 @@ class BaseCard(object):
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
+    def _is_same_fields(self, fields1, fields2):
+        # type: (List[Optional[Union[int, float, str]]], List[Optional[Union[int, float, str]]]) -> bool
+        for (field1, field2) in zip(fields1, fields2):
+            if not is_same(field1, field2):
+                return False
+        return True
+
     def print_raw_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def repr_fields(self):
+    # type: () -> List[Optional[Union[int, float, str]]]
         """
         Gets the fields in their simplified form
 
@@ -232,16 +259,19 @@ class BaseCard(object):
         return self.raw_fields()
 
     def print_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def print_repr_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def __repr__(self):
+        # type: () -> str
         """
         Prints a card in the simplest way possible
         (default values are left blank).
@@ -259,9 +289,11 @@ class BaseCard(object):
                 raise
 
     def rstrip(self):
+        # type: () -> str
         return str(self).rstrip()
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """
         Writes the card with the specified width and precision
 
@@ -283,10 +315,12 @@ class BaseCard(object):
 class Property(BaseCard):
     """Base Property Class"""
     def __init__(self):
+        # type: () -> None
         """dummy init"""
         pass
 
     def Pid(self):
+        # type: () -> int
         """
         returns the property ID of an property
 
@@ -298,6 +332,7 @@ class Property(BaseCard):
         return self.pid
 
     def Mid(self):
+        # type: () -> int
         """
         returns the material ID of an element
 
@@ -306,49 +341,47 @@ class Property(BaseCard):
         mid : int
             the Material ID
         """
-        if isinstance(self.mid, integer_types):
+        if self.mid_ref is None:
             return self.mid
         return self.mid_ref.mid
 
-    def cross_reference(self, model):
-        """dummy cross reference method for a Property"""
-        msg = ' which is required by %s pid=%s' % (self.type, self.pid)
-        self.mid = model.Material(self.mid, msg)
-        self.mid_ref = self.mid
-
-    def uncross_reference(self):
-        self.mid = self.Mid()
-        try:
-            del self.mid_ref
-        except AttributeError:
-            print('mid =', self.mid)
-            raise
-
     def write_card_8(self):
+        # type: () -> str
         return self.write_card()
 
     def write_card_16(self, is_double=False):
+        # type: (bool) -> str
         return self.write_card()
 
 
 class Material(BaseCard):
     """Base Material Class"""
     def __init__(self):
+        # type: () -> None
         """dummy init"""
         BaseCard.__init__(self)
 
     @property
     def TRef(self):
+        # type: () -> float
+        if not hasattr(self, 'tref'):
+            raise AttributeError('%r object has no attribute tref' % self.type)
         return self.tref
     @TRef.setter
     def TRef(self, tref):
+        # type: (float) -> None
+        """sets the self.Tref attributes"""
+        if not hasattr(self, 'tref'):
+            raise AttributeError('%r object has no attribute tref' % self.type)
         self.tref = tref
 
     def cross_reference(self, model):
+        # type: (Any) -> None
         """dummy cross reference method for a Material"""
         pass
 
     def Mid(self):
+        # type: () -> Any
         """
         returns the material ID of an element
 
@@ -364,10 +397,9 @@ class Element(BaseCard):
     """defines the Element class"""
     pid = 0  # CONM2, rigid
 
-    def __init__(self, card=None, data=None):
+    def __init__(self):
         """dummy init"""
         BaseCard.__init__(self)
-        assert card is None or data is None
         #: the list of node IDs for an element (default=None)
         #self.nodes = None
 
@@ -380,7 +412,7 @@ class Element(BaseCard):
             if non_required_node_ids:
                 raise NotImplementedError('only required nodes implemented')
             else:
-                urnids = unique(required_node_ids)
+                urnids = np.unique(required_node_ids)
                 n_unique_node_ids = len(urnids)
                 n_node_ids = len(required_node_ids)
                 if n_unique_node_ids != n_node_ids:
@@ -390,6 +422,7 @@ class Element(BaseCard):
             raise NotImplementedError('only required nodes implemented')
 
     def Pid(self):
+        # type: () -> int
         """
         Gets the Property ID of an element
 
@@ -398,51 +431,56 @@ class Element(BaseCard):
         pid : int
             the Property ID
         """
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             return self.pid
-        else:
-            return self.pid_ref.pid
+        return self.pid_ref.pid
 
     def get_node_positions(self, nodes=None):
+        # type: (Any) -> np.ndarray
         """returns the positions of multiple node objects"""
         if nodes is None:
             nodes = self.nodes_ref
 
         nnodes = len(nodes)
-        positions = empty((nnodes, 3), dtype='float64')
-        positions.fill(nan)
+        positions = np.empty((nnodes, 3), dtype='float64')
+        positions.fill(np.nan)
         for i, node in enumerate(nodes):
+            assert not isinstance(node, int), self.type
             if node is not None:
                 positions[i, :] = node.get_position()
         return positions
 
     def get_node_positions_no_xref(self, model, nodes=None):
+        # type: (Any, Any) -> np.ndarray
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
 
         nnodes = len(nodes)
-        positions = empty((nnodes, 3), dtype='float64')
-        positions.fill(nan)
+        positions = np.empty((nnodes, 3), dtype='float64')
+        positions.fill(np.nan)
         for i, nid in enumerate(nodes):
             if nid is not None:
                 node = model.Node(nid)
                 positions[i, :] = node.get_position_no_xref(model)
         return positions
 
-    def _nodeIDs(self, nodes=None, allow_empty_nodes=False, msg=''):
+    def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
+        # type: (Optional[List[Any]], bool, str) -> List[int]
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes, allow_empty_nodes, msg)
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
+        # type: (List[int], bool) -> None
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = nids
         self.validate_node_ids(allow_empty_nodes)
 
     def validate_node_ids(self, allow_empty_nodes=False):
-        nodes = []
+        # type: (bool) -> None
         if allow_empty_nodes:
-            nids2 = [nid for nid in self.nodes if nid not in [None, 0]]
+            # only put valid nodes in here
+            nids2 = [nid for nid in self.nodes ]
             if len(nids2) == 0:
                 msg = '%s requires at least one node id be specified; node_ids=%s' % (
                     self.type, nids2)
@@ -452,27 +490,35 @@ class Element(BaseCard):
             #if len(nids2) != len(unique_nodes):
                 #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids2)
                 #raise IndexError(msg)
+
+            # remove 0 nodes
+            nodes = [nid if nid is not 0 else None
+                     for nid in self.nodes]
         else:
-            pass
+            nodes = self.nodes
             #unique_nodes = unique(self.nodes)
             #if len(self.nodes) != len(unique_nodes):
-                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, self.nodes)
+                #msg = '%s requires that all node ids be unique; node_ids=%s' % (
+                    #self.type, self.nodes)
                 #raise IndexError(msg)
 
-        for nid in self.nodes:
+
+        nodes2 = []
+        for nid in nodes:
             if isinstance(nid, integer_types):
-                nodes.append(nid)
+                nodes2.append(nid)
             elif nid is None and allow_empty_nodes:
-                nodes.append(None)
+                nodes2.append(None)
             else:  # string???
                 #nodes.append(int(nid))
                 msg = 'this element may have missing nodes...\n'
                 msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (self.nodes, type(nid))
                 raise RuntimeError(msg)
-        self.nodes = nodes
+        self.nodes = nodes2
 
     @property
     def faces(self):
+        # () -> Dict[int, List[int]]
         """
         Gets the faces of the element
 
@@ -534,6 +580,7 @@ class Element(BaseCard):
         return face
 
 def _format_comment(comment):
+    # type: (str) -> str
     r"""Format a card comment to precede the card using
     nastran-compatible comment character $. The comment
     string can have multiple lines specified as linebreaks.
@@ -601,6 +648,7 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
         raise
 
 def expand_thru(fields, set_fields=True, sort_fields=False):
+    # type: (List[str], bool, bool) -> List[int]
     """
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
@@ -647,6 +695,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
 
 
 def expand_thru_by(fields, set_fields=True, sort_fields=False):
+    # type: (List[str], bool, bool) -> List[int]
     """
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
@@ -707,6 +756,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
 
 
 def expand_thru_exclude(fields):
+    # type: (List[str]) -> List[int]
     """
     Expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
@@ -717,7 +767,7 @@ def expand_thru_exclude(fields):
     fields = [interpret_value(field.upper())
               if isinstance(field, string_types) else field for field in fields]
 
-    fields_out = []
+    fields_out = []  # type: List[int]
     nfields = len(fields)
     for i in range(nfields):
         if fields[i] == 'THRU':

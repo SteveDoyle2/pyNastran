@@ -1,8 +1,7 @@
 from __future__ import print_function
-from numpy import zeros
 from struct import unpack
-#from pyNastran.op2.fortranFile import FortranFile
-from pyNastran.converters.usm3d.usm3d_reader import Usm3d
+from numpy import zeros
+#from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 
 def factors(nraw):
     """
@@ -33,7 +32,7 @@ class IFace(object):
         self.debug = debug
 
     def read_poin1(self, poin1_filename):
-        with openopen(poin1_filename, 'r') as poin1_file:
+        with open(poin1_filename, 'r') as poin1_file:
             ipoin1, ilines = poin1_file.readline().strip().split()
             ipoin1 = int(ipoin1)
             ilines = int(ilines)
@@ -47,11 +46,8 @@ class IFace(object):
             assert poin1.max() == ipoin1
         return poin1
 
-    def read_m2(self, m2_filename):
-        pass
+    #def read_m2(self, m2_filename):
         #m2 = open(m2_filename)
-        #self.op2 = m2
-
         #self.print_section2(5000, '>')
 
     def read_iface(self, iface_filename):
@@ -125,18 +121,14 @@ class IFace(object):
         """
         with open(iface_filename, 'rb') as iface_file:
 
-            # makes it so FortranFile works...
-            #self.op2 = iface_file
-            #n = 0
-
             data = iface_file.read(4 * 3)  # A, B, C
             A, B, C = unpack('>3i', data)
 
-            print("A=%s B=%s C=%s" % (A, B, C))
+            self.log.debug("A=%s B=%s C=%s" % (A, B, C))
             nints = C
-            Format = '>%ii' % nints
+            sformat = '>%ii' % nints
             data = iface_file.read(4 * nints)  # read nints ints
-            ints = unpack(Format, data)
+            ints = unpack(sformat, data)
             self.n += 4 * nints
 
             assert max(ints) == ints[-1], 'max(ints)=%i ints[-1]=%i'  % (max(ints), ints[-1])

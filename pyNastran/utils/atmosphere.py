@@ -17,9 +17,11 @@ are in English units.
 from __future__ import print_function
 import sys
 from math import log, exp
+import typing
 import numpy as np
 
 def _update_alt(alt, SI=False, debug=False):
+    # type: (float, bool, bool) -> float
     """
     converts altitude in meters to feet if SI=True
 
@@ -46,6 +48,7 @@ def _update_alt(alt, SI=False, debug=False):
     return alt2
 
 def get_alt_for_density(density, nmax=20):
+    # type: (float, int) -> float
     """
     Gets the altitude associated with a given air density.
 
@@ -82,6 +85,7 @@ def get_alt_for_density(density, nmax=20):
 
 
 def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach, SI=False, nmax=20):
+    # type: (float, float, bool, int) -> float
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -139,6 +143,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach, SI=False, nmax
     return alt_final
 
 def get_alt_for_q_with_constant_mach(q, mach, tol=5., SI=False, nmax=20):
+    # type: (float, float, float, bool, int) -> float
     """
     Gets the altitude associated with a dynamic pressure.
 
@@ -163,6 +168,7 @@ def get_alt_for_q_with_constant_mach(q, mach, tol=5., SI=False, nmax=20):
     return alt
 
 def get_alt_for_pressure(pressure, tol=5., SI=False, nmax=20):
+    # type: (float, float, bool, int) -> float
     """
     Gets the altitude associated with a given pressure.
 
@@ -207,6 +213,7 @@ def get_alt_for_pressure(pressure, tol=5., SI=False, nmax=20):
     return alt_final
 
 def _feet_to_meters(SI):
+    # type: (bool) -> float
     """converts m -> ft"""
     if SI:
         factor = 0.3048
@@ -215,6 +222,7 @@ def _feet_to_meters(SI):
     return factor
 
 def _rankine_to_kelvin(SI):
+    # type: (bool) -> float
     """converts K -> R"""
     if SI:
         factor = 5 / 9.
@@ -223,6 +231,7 @@ def _rankine_to_kelvin(SI):
     return factor
 
 def _psf_to_pascals(SI):
+    # type: (bool) -> float
     """converts Pa -> psf"""
     if SI:
         factor = 47.880259
@@ -231,6 +240,7 @@ def _psf_to_pascals(SI):
     return factor
 
 def atm_temperature(alt, SI=False, debug=False):
+    # type: (float, bool, bool) -> float
     r"""
     Freestream Temperature \f$ T_{\infty} \f$
 
@@ -282,6 +292,7 @@ def atm_temperature(alt, SI=False, debug=False):
     return T2
 
 def atm_pressure(alt, SI=False, debug=False):
+    # type: (float, bool, bool) -> float
     r"""
     Freestream Pressure \f$ p_{\infty} \f$
 
@@ -334,6 +345,7 @@ def atm_pressure(alt, SI=False, debug=False):
     return p * factor
 
 def atm_dynamic_pressure(alt, mach, SI=False, debug=False):
+    # type: (float, float, bool, bool) -> float
     r"""
     Freestream Dynamic Pressure  \f$ q_{\infty} \f$
 
@@ -379,6 +391,7 @@ def atm_dynamic_pressure(alt, mach, SI=False, debug=False):
     return q2
 
 def atm_speed_of_sound(alt, SI=False, gamma=1.4, debug=False):
+    # type: (float, bool, float, bool) -> float
     r"""
     Freestream Speed of Sound  \f$ a_{\infty} \f$
 
@@ -417,6 +430,7 @@ def atm_speed_of_sound(alt, SI=False, gamma=1.4, debug=False):
     return a2
 
 def atm_velocity(alt, mach, SI=False, debug=False):
+    # type: (float, float, bool, bool) -> float
     r"""
     Freestream Velocity  \f$ V_{\infty} \f$
 
@@ -452,6 +466,7 @@ def atm_velocity(alt, mach, SI=False, debug=False):
     return V
 
 def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
+    # type: (float, float, bool, bool) -> float
     """
     EAS = TAS * sqrt(rho/rho0)
     p = rho * R * T
@@ -489,6 +504,7 @@ def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
     return eas
 
 def atm_mach(alt, V, SI=False, debug=False):
+    # type: (float, float, bool, bool) -> float
     r"""
     Freestream Mach Number
 
@@ -529,6 +545,7 @@ def atm_mach(alt, V, SI=False, debug=False):
     return mach
 
 def atm_density(alt, R=1716., SI=False, debug=False):
+    # type: (float, float, bool, bool) -> float
     r"""
     Freestream Density   \f$ \rho_{\infty} \f$
 
@@ -574,6 +591,7 @@ def atm_density(alt, R=1716., SI=False, debug=False):
     return P / (R * T) * factor
 
 def atm_kinematic_viscosity_nu(alt, SI=False, debug=False):
+    # type: (float, bool, bool) -> float
     r"""
     Freestream Kinematic Viscosity \f$ \nu_{\infty} \f$
 
@@ -606,6 +624,7 @@ def atm_kinematic_viscosity_nu(alt, SI=False, debug=False):
     return nu
 
 def atm_dynamic_viscosity_mu(alt, SI=False):
+    # type: (float, bool) -> float
     r"""
     Freestream Dynamic Viscosity  \f$ \mu_{\infty} \f$
 
@@ -632,6 +651,7 @@ def atm_dynamic_viscosity_mu(alt, SI=False):
     return mu
 
 def atm_unit_reynolds_number2(alt, mach, SI=False, debug=False):
+    # type: (float, float, bool, bool) -> float
     r"""
     Returns the Reynolds Number per unit length
 
@@ -683,6 +703,7 @@ def atm_unit_reynolds_number2(alt, mach, SI=False, debug=False):
     return ReL
 
 def atm_unit_reynolds_number(alt, mach, SI=False, debug=False):
+    # type: (float, float, bool, bool) -> float
     r"""
     Returns the Reynolds Number per unit length
 
@@ -723,6 +744,7 @@ def atm_unit_reynolds_number(alt, mach, SI=False, debug=False):
     return ReL
 
 def sutherland_viscoscity(T):
+    # type: (float) -> float
     r"""
     Helper function that calculates the dynamic viscosity \f$ \mu \f$ of air at
     a given temperature

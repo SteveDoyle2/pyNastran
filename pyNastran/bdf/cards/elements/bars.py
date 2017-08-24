@@ -27,10 +27,11 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def __init__(self):
         Element.__init__(self)
+        self.pid_ref = None  # type: Optional[Any]
 
     def C(self):
         """torsional constant"""
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.C()
@@ -41,49 +42,49 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
     def E(self):
         """returns the Young's Modulus, :math:`E`"""
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.mid_ref.E()
 
     def G(self):
         """returns the Shear Modulus, :math:`G`"""
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.mid_ref.G()
 
     def J(self):
         """returns the Polar Moment of Inertia, :math:`J`"""
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.J()
 
     def I11(self):
         """returns the Moment of Inertia, :math:`I_{11}`"""
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.I11()
 
     def I22(self):
         """returns the Moment of Inertia, :math:`I_{22}`"""
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.I22()
 
     def I12(self):
         """returns the Moment of Inertia, :math:`I_{12}`"""
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.I12()
 
     def Nu(self):
         """Get Poisson's Ratio, :math:`\nu`"""
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.mid_ref.nu
@@ -92,7 +93,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         """Get the material density, :math:`\rho`"""
         #print(str(self.pid), type(self.pid))
         #raise NotImplementedError('implement self.Rho() for %s' % self.type)
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.mid_ref.rho
@@ -105,7 +106,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         """
         Get the mass per unit length, :math:`\frac{m}{L}`
         """
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.MassPerLength()
@@ -139,16 +140,15 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
             the BDF object
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.g0 = model.nodes[self.g0]
-        self.pid_ref = self.pid
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def Length(self):
         r"""
@@ -418,9 +418,11 @@ class CBAR(LineElement):
         self.pb = pb
         self.wa = wa
         self.wb = wb
-        self._validate_input()
+        self.pid_ref = None
+        self.ga_ref = None
+        self.gb_ref = None
 
-    def _validate_input(self):
+    def validate(self):
         if isinstance(self.offt, integer_types):
             assert self.offt in [1, 2], 'invalid offt; offt=%i' % self.offt
             raise NotImplementedError('invalid offt; offt=%i' % self.offt)
@@ -526,13 +528,13 @@ class CBAR(LineElement):
             assert L > 0.0, 'eid=%s L=%s' % (eid, L)
 
     def Mid(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.Mid()
 
     def Area(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         A = self.pid_ref.Area()
@@ -540,11 +542,14 @@ class CBAR(LineElement):
         return A
 
     def J(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         j = self.pid_ref.J()
-        assert isinstance(j, float), 'J=%r for CBAR eid=%s pid=%s pidType=%s' % (j, self.eid, self.pid_ref.pid, self.pid_ref.type)
+        if not isinstance(j, float):
+            msg = 'J=%r must be a float; CBAR eid=%s pid=%s pidType=%s' % (
+                j, self.eid, self.pid_ref.pid, self.pid_ref.type)
+            raise TypeError(msg)
         return j
 
     def Length(self):
@@ -554,7 +559,7 @@ class CBAR(LineElement):
         return L
 
     def Nsm(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         nsm = self.pid_ref.Nsm()
@@ -562,15 +567,21 @@ class CBAR(LineElement):
         return nsm
 
     def I1(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.I1()
 
     def I2(self):
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.I2()
 
     def Centroid(self):
+        if self.pid_ref is None:
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
 
     def center_of_mass(self):
@@ -610,14 +621,9 @@ class CBAR(LineElement):
         #if self.g0:
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
         msg = ' which is required by CBAR eid=%s' % (self.eid)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.ga_ref = self.ga
-        self.gb = model.Node(self.gb, msg=msg)
-        self.gb_ref = self.gb
-        self.nodes = model.Nodes([self.ga.nid, self.gb.nid], msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
         if model.is_nx:
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
 
@@ -625,19 +631,19 @@ class CBAR(LineElement):
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.pid_ref, self.ga_ref, self.gb_ref
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
+        if self.ga_ref is None:
             return self.ga
-        else:
-            return self.ga_ref.nid
+        return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, integer_types):
+        if self.gb_ref is None:
             return self.gb
-        else:
-            return self.gb_ref.nid
+        return self.gb_ref.nid
 
     def get_x_g0_defaults(self):
         """
@@ -694,6 +700,16 @@ class CBAR(LineElement):
     def nodes(self, values):
         self.ga = values[0]
         self.gb = values[1]
+
+    @property
+    def nodes_ref(self):
+        return [self.ga_ref, self.gb_ref]
+
+    @nodes_ref.setter
+    def nodes_ref(self, values):
+        assert values is not None, values
+        self.ga_ref = values[0]
+        self.gb_ref = values[1]
 
     def raw_fields(self):
         """
@@ -765,6 +781,10 @@ class CBEAM3(LineElement):  # was CBAR
         self.wc = wc
         self.tw = tw
         self.s = s
+        self.ga_ref = None
+        self.gb_ref = None
+        self.gc_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -819,21 +839,20 @@ class CBEAM3(LineElement):  # was CBAR
             the BDF object
         """
         msg = ' which is required by CBEAM3 eid=%s' % (self.eid)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.ga_ref = self.ga
-        self.gb = model.Node(self.gb, msg=msg)
-        self.gb_ref = self.gb
-        self.gc = model.Node(self.gc, msg=msg)
-        self.gc_ref = self.gc
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.gc_ref = model.Node(self.gc, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.gc = self.Gc()
         self.pid = self.Pid()
-        del self.ga_ref, self.gb_ref, self.gc_ref, self.pid_ref
+        self.ga_ref = None
+        self.gb_ref = None
+        self.gc_ref = None
+        self.pid_ref = None
 
     def Length(self):
         """
@@ -845,7 +864,7 @@ class CBEAM3(LineElement):  # was CBAR
         return L
 
     def Area(self):
-        if isinstance(self.pid, integer_types):
+        if isinstance(self.pid_ref, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         A = self.pid_ref.Area()
@@ -853,7 +872,7 @@ class CBEAM3(LineElement):  # was CBAR
         return A
 
     def Nsm(self):
-        if isinstance(self.pid, integer_types):
+        if isinstance(self.pid_ref, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         nsm = self.pid_ref.Nsm()
@@ -861,22 +880,19 @@ class CBEAM3(LineElement):  # was CBAR
         return nsm
 
     def Ga(self):
-        if isinstance(self.ga, integer_types):
+        if self.ga_ref is None:
             return self.ga
-        else:
-            return self.ga_ref.nid
+        return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, integer_types):
+        if self.gb_ref is None:
             return self.gb
-        else:
-            return self.gb_ref.nid
+        return self.gb_ref.nid
 
     def Gc(self):
-        if isinstance(self.gc, integer_types):
+        if self.gc_ref is None:
             return self.gc
-        else:
-            return self.gc_ref.nid
+        return self.gc_ref.nid
 
     @property
     def node_ids(self):
@@ -971,11 +987,16 @@ class CBEND(LineElement):
         self.pid = pid
         self.ga = nids[0]
         self.gb = nids[1]
+
+        if g0 is None:
+            assert x is not None, 'g0=%s x=%s; one must not be None' % (g0, x)
         self.g0 = g0
         self.x = x
         self.geom = geom
         assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
-        self._validate_input()
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1014,6 +1035,29 @@ class CBEND(LineElement):
         assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
         return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        #data = [[eid, pid, ga, gb, geom], [f, x1, x2, x3]]
+        #data = [[eid, pid, ga, gb, geom], [f, g0]]
+
+        main = data[0]
+        flag = data[1][0]
+        if flag in [0, 1]:
+            g0 = None
+            x = np.array([data[1][1],
+                          data[1][2],
+                          data[1][3]], dtype='float64')
+        else:
+            g0 = data[1][1]
+            x = None
+
+        eid = main[0]
+        pid = main[1]
+        ga = main[2]
+        gb = main[3]
+        geom = main[4]
+        return CBEND(eid, pid, [ga, gb], g0, x, geom, comment=comment)
+
     def get_x_g0_defaults(self):
         if self.g0 is not None:
             return (self.g0, None, None)
@@ -1035,17 +1079,17 @@ class CBEND(LineElement):
         #bend_radius = prop.rb
         #theta_bend = prop.thetab
         #length_oa = None
-        if self.geom == 1:
+        #if self.geom == 1:
             #The center of curvature lies on the line AO
             #(or its extension) or vector .
-            pass
-        elif self.geom == 2:
+            #pass
+        #elif self.geom == 2:
             # The tangent of centroid arc at end A is
             # parallel to line AO or vector . Point O (or
             # vector) and the arc must be on the
             # same side of the chord .
-            pass
-        elif self.geom == 3:
+            #pass
+        #elif self.geom == 3:
             # The bend radius (RB) is specified on the
             # PBEND entry: Points A, B, and O (or
             # vector ) define a plane parallel or
@@ -1053,23 +1097,31 @@ class CBEND(LineElement):
             # arc. Point O (or vector ) lies on the
             # opposite side of line AB from the center of
             # the curvature.
-            pass
-        elif self.geom == 4:
+            #pass
+        #elif self.geom == 4:
             # THETAB is specified on the PBEND entry.
             # Points A, B, and O (or vector ) define a
             # plane parallel or coincident with the plane
             # of the element arc. Point O (or vector )
             # lies on the opposite side of line AB from the
             # center of curvature.
-            pass
-        else:
-            raise RuntimeError('geom=%r is not supported on the CBEND' % self.geom)
-        return L
+            #pass
+        #else:
+            #raise RuntimeError('geom=%r is not supported on the CBEND' % self.geom)
+        #return L
 
-    def _validate_input(self):
+    def validate(self):
+        if self.g0 is not None:
+            assert isinstance(self.g0, integer_types), 'g0=%s must be an integer' % self.g0
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
+        #BEND ELEMENT %1 BEND RADIUS OR ARC ANGLE INCONSISTENT
+        #WITH GEOM OPTION
+        #RB is nonzero on PBEND entry when GEOM option on CBEND entry is 1,
+        #2, or 4 or RB is zero when GEOM option is 3 or AB is nonzero when
+        #when GEOM option is 1, 2, or 3 or B is <= 0. or > 180, when
+        #GEOM option is 4.
 
     @property
     def node_ids(self):
@@ -1079,17 +1131,33 @@ class CBEND(LineElement):
     def nodes(self):
         return [self.ga, self.gb]
 
+    @nodes.setter
+    def nodes(self, values):
+        self.ga = values[0]
+        self.gb = values[1]
+
     def Ga(self):
-        if isinstance(self.ga, integer_types):
+        if self.ga_ref is None:
             return self.ga
-        else:
-            return self.ga_ref.nid
+        return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, integer_types):
+        if self.gb_ref is None:
             return self.gb
-        else:
-            return self.gb_ref.nid
+        return self.gb_ref.nid
+
+    #def get_edge_ids(self):
+        #return [tuple(sorted(self.node_ids))]
+
+    @property
+    def nodes_ref(self):
+        return [self.ga_ref, self.gb_ref]
+
+    @nodes_ref.setter
+    def nodes_ref(self, values):
+        assert values is not None, values
+        self.ga_ref = values[0]
+        self.gb_ref = values[1]
 
     def Area(self):
         if isinstance(self.pid, integer_types):
@@ -1110,20 +1178,19 @@ class CBEND(LineElement):
             the BDF object
         """
         msg = ' which is required by CBEND eid=%s' % (self.eid)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         #self.g0 = model.nodes[self.g0]
-        self.ga_ref = self.ga
-        self.gb_ref = self.gb
-        self.pid_ref = self.pid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
 
     def uncross_reference(self):
         node_ids = self.node_ids
         self.ga = node_ids[0]
         self.gb = node_ids[1]
         self.pid = self.Pid()
-        del self.ga_ref, self.gb_ref, self.pid_ref
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
 
     def raw_fields(self):
         (x1, x2, x3) = self.get_x_g0_defaults()

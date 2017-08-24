@@ -462,8 +462,11 @@ class Abaqus(object):
         # TODO: skips header parsing
 
         iline += 1
+        nlines = len(lines)
         line0 = lines[iline].strip().lower()
-        while not line0.startswith('*end assembly'):
+        element_types = {}
+
+        while not line0.startswith('*end assembly') and iline < nlines:
             #print('line0 assembly =', line0)
 
             word = line0.strip('*').lower()
@@ -505,6 +508,24 @@ class Abaqus(object):
                 line0 = lines[iline].strip().lower()
                 assert 'instance' in params_map, params_map
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+            elif word == 'node':
+                #self.log.debug('  skipping assembly *node')
+                node_output = []
+                iline += 1
+                line0 = lines[iline].strip().lower()
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+            elif '*element' in line0:
+                #iline += 1
+                #line0 = lines[iline].strip().lower()
+                line0, iline, etype, elements = self._read_elements(lines, line0, iline)
+                element_types[etype] = elements
+                iline += 1
+                line0 = lines[iline].strip().lower()
+                #print('line_end =', line0)
             else:
                 raise NotImplementedError('\nword=%r\nline=%r' % (word, line0))
         return iline, line0
@@ -518,7 +539,7 @@ class Abaqus(object):
         assert 'name' in name_slot, name_slot
         part_name = name_slot.split('=', 1)[1]
         self.log.debug('part_name = %r' % part_name)
-        #asdf
+        self.part_name = part_name
 
         iline += 1
         line0 = lines[iline].strip().lower()
@@ -574,30 +595,7 @@ class Abaqus(object):
                     raise RuntimeError(msg)
 
             elif '*element' in line0:
-                sline = line0.split(',')[1:]
-                allowed_element_types = [
-                    'r2d2',
-                    'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
-                    'cax3', 'cax4r']
-                assert len(sline) == 1, 'looking for element_type; line0=%r sline=%s' % (line0, sline)
-                etype_sline = sline[0]
-                assert 'type' in etype_sline, etype_sline
-                etype = etype_sline.split('=')[1]
-                if etype not in allowed_element_types:
-                    msg = 'etype=%s allowed=[%s]' % (etype, ','.join(allowed_element_types))
-                    raise RuntimeError(msg)
-
-                if self.debug:
-                    self.log.debug('    etype = %r' % etype)
-
-                #iline += 1
-                line0 = lines[iline].strip().lower()
-
-                elements = []
-                while not line0.startswith('*'):
-                    elements.append(line0.split(','))
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
+                line0, iline, etype, elements = self._read_elements(lines, line0, iline)
                 element_types[etype] = elements
 
             elif '*nset' in line0:
@@ -648,6 +646,24 @@ class Abaqus(object):
                     data_lines.append(line0.split(','))
                     iline += 1
                     line0 = lines[iline].strip().lower()
+            elif '*mass' in line0:
+                # TODO: skips header parsing
+                #iline += 1
+                line0 = lines[iline].strip().lower()
+                data_lines = []
+                while not line0.startswith('*'):
+                    data_lines.append(line0.split(','))
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+            elif '*rotary inertia' in line0:
+                # TODO: skips header parsing
+                #iline += 1
+                line0 = lines[iline].strip().lower()
+                data_lines = []
+                while not line0.startswith('*'):
+                    data_lines.append(line0.split(','))
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
             else:
                 msg = 'line=%r\n' % line0
                 allowed = ['*node', '*element', '*nset', '*elset', '*surface',
@@ -667,7 +683,44 @@ class Abaqus(object):
             self.log.debug('part_name = %r' % part_name)
         part = Part(part_name, nids, nodes, element_types, node_sets, element_sets,
                     solid_sections, self.log)
+        self.part_name = None
         return iline, line0, part_name, part
+
+    def _read_elements(self, lines, line0, iline):
+        """
+        '*element, type=mass, elset=topc_inertia-2_mass_'
+        """
+        #print('------------------')
+        #print('%s: %s' % (self.part_name, line0))
+        sline = line0.split(',')[1:]
+        allowed_element_types = [
+            'r2d2', 'conn2d2',
+            'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
+            'cax3', 'cax4r', 'cps4r', 'mass', 'rotaryi']
+        if len(sline) != 1:
+            raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
+                               "line0=%r\nsline=%s" % (line0, sline))
+        etype_sline = sline[0]
+        assert 'type' in etype_sline, etype_sline
+        etype = etype_sline.split('=')[1]
+        if etype not in allowed_element_types:
+            msg = 'etype=%s allowed=[%s]' % (etype, ','.join(allowed_element_types))
+            raise RuntimeError(msg)
+
+        if self.debug:
+            self.log.debug('    etype = %r' % etype)
+
+        #iline += 1
+        line0 = lines[iline].strip().lower()
+
+        elements = []
+        while not line0.startswith('*'):
+            #print(line0)
+            elements.append(line0.split(','))
+            iline += 1
+            line0 = lines[iline].strip().lower()
+        #print('elements =', elements)
+        return line0, iline, etype, elements
 
     def read_step(self, lines, iline, line0, istep):
         """reads a step object"""

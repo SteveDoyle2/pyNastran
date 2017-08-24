@@ -9,7 +9,7 @@ from numpy import zeros, concatenate
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -79,6 +79,7 @@ class ComplexSolidArray(OES_Object):
         return nnodes
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexSolidArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return

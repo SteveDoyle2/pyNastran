@@ -4,10 +4,11 @@ from six.moves import range
 import vtk
 from vtk import vtkQuad
 
-from numpy import zeros, array, cross, dot
-from numpy.linalg import det, norm
+from numpy import zeros, array, cross
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.converters.dev.plot3d.plot3d import Plot3d
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 raise NotImplementedError()
 
@@ -21,7 +22,7 @@ class Plot3d_io(object):  # pragma: no cover
                 None, None)
         return data
 
-    def load_plot3d_geometry(self, p3d_filename, dirname, name='main'):
+    def load_plot3d_geometry(self, p3d_filename, name='main'):
         print("load_plot3d_geometry")
         self.nid_map = {}
 
@@ -119,7 +120,7 @@ class Plot3d_io(object):  # pragma: no cover
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['Plot3d', '']}
+        self.isubcase_name_map = {1: ['Plot3d', '']}
         cases = {}
         ID = 1
 
@@ -142,7 +143,12 @@ class Plot3d_io(object):  # pragma: no cover
                                       #'rhoU', 'rhoV', 'rhoW', 'rhoE']
         #nelements, three = elements.shape
         #print regions
-        cases[(ID, icase, 'Region', 1, 'centroid', '%i', '')] = regions
+        icase = 0
+        itime = 0
+
+        region_res = GuiResult(ID, header='Region', title='Region',
+                               location='centroid', scalar=regions)
+        cases[icase] =region_res(nid_res, (itime, 'Region'))
         icase += 1
 
         # centroidal
@@ -192,6 +198,6 @@ class Plot3d_io(object):  # pragma: no cover
                 #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
 
-    #def load_panair_results(self, panairFileName, dirname):
+    #def load_panair_results(self, panairFileName):
         ##self.result_cases = {}
         #pass

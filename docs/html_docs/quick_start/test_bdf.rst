@@ -143,7 +143,7 @@ The list of modified cards include:
  * FREQ1
  * FREQ2
 
-When things go Wrong
+When things go wrong
 ====================
 
 Try:
@@ -200,7 +200,7 @@ Calling Signature
     -e E, --nerrors E  Allow for cross-reference errors (default=100)
     -h, --help     show this help message and exit
 
-What test_bdf Does
+What test_bdf does
 ------------------
 ``test_bdf`` is useful for quickly finding out if your deck has a
 cross-reference error, which may not be caught by Nastran (often

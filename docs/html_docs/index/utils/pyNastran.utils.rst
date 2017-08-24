@@ -42,16 +42,6 @@ This is the pyNastran.utils.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`egg_info` Module
-----------------------
-
-.. inheritance-diagram:: pyNastran.utils.egg_info
-
-.. automodule:: pyNastran.utils.egg_info
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`gui_choices` Module
 -------------------------
 

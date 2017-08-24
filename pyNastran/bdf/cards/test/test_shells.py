@@ -1,7 +1,9 @@
+"""defines various shell element tests"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import unittest
-from six.moves import range
+from six.moves import range, StringIO
+import numpy as np
 from numpy import array
 
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
@@ -149,7 +151,7 @@ class TestShells(unittest.TestCase):
         # pcomp
         pcomp = model.Property(pid + 1)
         self.assertEqual(pcomp.Pid(), pid + 1)
-        self.assertEqual(pcomp.nPlies(), 4)
+        self.assertEqual(pcomp.nplies, 4)
 
         self.assertEqual(pcomp.Mid(0), mid)
         self.assertEqual(pcomp.Nsm(), nsm)
@@ -301,7 +303,7 @@ class TestShells(unittest.TestCase):
         ft = 0.
         tref = 0.
         ge = 0.
-        lam = 'NO' # isSymmetrical YES/NO
+        lam = 'NO' # is_symmetrical YES/NO
         Mid = [1, 2, 3]
         theta = [0., 10., 20.]
         T = [.1, .2, .3]
@@ -309,8 +311,8 @@ class TestShells(unittest.TestCase):
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
 
         p = PCOMP.add_op2_data(data)
-        self.assertFalse(p.isSymmetrical())
-        self.assertEqual(p.nPlies(), 3)
+        self.assertFalse(p.is_symmetrical())
+        self.assertEqual(p.nplies, 3)
 
         self.assertAlmostEqual(p.Thickness(), 0.6)
         self.assertAlmostEqual(p.Thickness(0), 0.1)
@@ -434,15 +436,15 @@ class TestShells(unittest.TestCase):
         ft = 0.
         tref = 0.
         ge = 0.
-        lam = 'SYM'  # isSymmetrical SYM
+        lam = 'SYM'  # is_symmetrical SYM
         Mid = [1, 2, 3]
         theta = [0., 10., 20.]
         T = [.1, .2, .3]
         sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
         p = PCOMP.add_op2_data(data)
-        self.assertTrue(p.isSymmetrical())
-        self.assertEqual(p.nPlies(), 6)
+        self.assertTrue(p.is_symmetrical())
+        self.assertEqual(p.nplies, 6)
 
         self.assertAlmostEqual(p.Thickness(), 1.2)
         self.assertAlmostEqual(p.Thickness(0), 0.1)
@@ -548,10 +550,10 @@ class TestShells(unittest.TestCase):
     def test_cshear(self):
         """tests a PSHEAR/CSHEAR"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
         eid = 10
         pid = 20
@@ -590,17 +592,17 @@ class TestShells(unittest.TestCase):
     def test_shells(self):
         """tests a CTRIA3/CQUAD4/PSHELL and CTRIA6/CQUAD8/CQUAD/PCOMP"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(6, xyz=[1., 0.5, 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(6, [1., 0.5, 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
 
-        model.add_grid(9, xyz=[.5, .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
 
         E = 30.e7
         G = None
@@ -674,17 +676,17 @@ class TestShells(unittest.TestCase):
     def test_trax(self):
         """tests a CTRAX3/CTRAX6/???"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(6, xyz=[1., 0.5, 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(6, [1., 0.5, 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
 
-        model.add_grid(9, xyz=[.5, .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
 
         mid1 = 1
         E = 30.e7
@@ -708,7 +710,7 @@ class TestShells(unittest.TestCase):
 
         plsolid = model.add_plsolid(pid, mid1, stress_strain='GRID', ge=0.,
                                     comment='plsolid')
-
+        mathp = model.add_mathp(mid1)
         #assert pcomp.Thickness() == sum(thicknesses), thicknesses
 
         #pcomp.lam = 'SYM'
@@ -746,14 +748,15 @@ class TestShells(unittest.TestCase):
         #pcomp.write_card(size=8)
         #pcomp.write_card(size=16)
         #pcomp.write_card(size=16, is_double=True)
+        save_load_deck(model)
 
     def test_ctriar_cquadr(self):
         """tests a CTRIAR/PSHELL/MAT8"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         eid = 6
         pid = 13
         nids = [1, 2, 3]
@@ -761,7 +764,7 @@ class TestShells(unittest.TestCase):
         ctriar.raw_fields()
         ctriar.write_card(size=8, is_double=False)
         ctriar.write_card(size=16, is_double=False)
-        ctriar.flipNormal()
+        ctriar.flip_normal()
 
         eid = 8
         nids = [1, 2, 3, 4]
@@ -769,7 +772,7 @@ class TestShells(unittest.TestCase):
         cquadr.raw_fields()
         cquadr.write_card(size=8, is_double=False)
         cquadr.write_card(size=16, is_double=False)
-        cquadr.flipNormal()
+        cquadr.flip_normal()
 
         mid = 42
         model.add_pshell(pid, mid1=mid, t=0.2)
@@ -788,10 +791,10 @@ class TestShells(unittest.TestCase):
     def test_cplstn34(self):
         """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         pid = 4
         eid = 3
         nids = [1, 2, 3, 4]
@@ -824,18 +827,19 @@ class TestShells(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
+        save_load_deck(model)
 
     def test_cplstn68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
         model = BDF(debug=False)
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(5, xyz=[.5, 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(6, xyz=[1., .5, 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(7, xyz=[.5, 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
-        model.add_grid(8, xyz=[0., .5, 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
         pid = 4
         eid = 3
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -868,7 +872,205 @@ class TestShells(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
+        save_load_deck(model)
 
+    def test_ctrishell68(self):
+        """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
+        pid = 4
+        eid = 3
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        cquad8 = model.add_cquad8(eid, pid, nids, comment='cquad8')
+
+        eid = 5
+        nids = [1, 2, 3, 4, 5, 6]
+        mid = 10
+        ctria6 = model.add_ctria6(eid, pid, nids, comment='ctria6')
+        pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
+                                  formulation_option=0, comment='pplane')
+        E = 1e7
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        ctria6.raw_fields()
+        cquad8.raw_fields()
+        pplane.raw_fields()
+
+        model.validate()
+        model._verify_bdf(xref=False)
+        ctria6.write_card(size=8)
+        cquad8.write_card(size=8)
+        pplane.write_card(size=8)
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+        save_load_deck(model)
+        #model.mass_properties()
+
+    def test_shear(self):
+        """tests a CSHEAR, PSHEAR"""
+        pid = 10
+        mid = 100
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_cquad4(10, pid, [1, 2, 3, 4])
+
+        model.add_cshear(14, pid, [1, 2, 3, 4],
+                         comment='cshear')
+        model.add_pshear(pid, mid, t=1., comment='pshear')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0)
+        model.validate()
+
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        mass = model.mass_properties(element_ids=10)[0]
+        bdf_file = StringIO()
+        model.write_bdf(bdf_file)
+        model.uncross_reference()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        assert np.allclose(mass, 1.0), mass
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model.uncross_reference()
+        #bdf_file = model.write_bdf(bdf_file)
+
+        save_load_deck(model)
+
+    def test_cquadx4(self):
+        """tests a CQUADX4"""
+        model = BDF(debug=False)
+        eid = 1
+        pid = 2
+        mid = 3
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        cquadx4 = model.add_cquadx4(eid, pid, [1, 2, 3, 4], theta=0., comment='cquadx4')
+        psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
+                                 isop=None, fctn='SMECH', comment='psolid')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        mass = model.mass_properties()[0]
+        assert np.allclose(mass, 0.0), mass  # TODO: not sure
+
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model.uncross_reference()
+        #bdf_file = model.write_bdf(bdf_file)
+
+        save_load_deck(model)
+
+    def test_ctria6_cquad8_cquad9(self):
+        """tests a CQUAD8 and CQUAD9"""
+        model = BDF(debug=False)
+        eid = 1
+        pid = 10
+        mid = 100
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        cquad8 = model.add_cquad8(eid, pid, nids, theta_mcid=0., comment='cquad8')
+
+        eid = 2
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        cquad = model.add_cquad(eid, pid, nids, theta_mcid=0., comment='cquad')
+        model.add_pshell(pid, mid1=mid, t=1.0)
+
+        eid = 3
+        nids = [1, 2, 3, 5, 6, 9]
+        ctria6 = model.add_ctria6(eid, pid, nids, theta_mcid=0., comment='ctria6')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.1)
+
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        assert np.allclose(cquad8.Mass(), 0.1), cquad8.Mass()
+        assert np.allclose(cquad.Mass(), 0.1), cquad.Mass()
+        assert np.allclose(ctria6.Mass(), 0.05), ctria6.Mass()
+
+        save_load_deck(model)
+
+    def test_cquadx8(self):
+        """tests a CQUADX, CTRIAX, CTRIAX6"""
+        model = BDF(debug=False)
+        eid = 1
+        pid = 10
+        mid = 100
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(5, [.5, 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(6, [1., .5, 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(7, [.5, 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(8, [0., .5, 0.])
+        model.add_grid(9, [.5, .5, 0.])
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        model.add_cquadx8(eid, pid, nids, theta=0., comment='cquadx8')
+
+        eid = 2
+        # 4---7---3
+        # |     / |
+        # 8   9   6
+        # |/      |
+        # 1---5---2
+        nids = [1, 2, 3, 5, 6, 9]
+        model.add_ctriax(eid, pid, nids, theta_mcid=0., comment='ctriax')
+
+        eid = 3
+        nids = [1, 5, 2, 6, 3, 9]
+        model.add_ctriax6(eid, mid, nids, theta=0., comment='ctriax6')
+
+        model.add_psolid(pid, mid)
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        model.cross_reference()
+        model.pop_xref_errors()
+        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

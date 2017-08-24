@@ -3,6 +3,7 @@ Defines the BDFCard class that is passed into the various Nastran cards.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import List, Union, Optional
 from pyNastran.bdf.utils import deprecated
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_16 import print_field_16
@@ -16,6 +17,7 @@ class BDFCard(object):
     range.
     """
     def __init__(self, card, has_none=True):
+        # type: (List[str], bool) -> None
         """
         Parameters
         ----------
@@ -42,10 +44,12 @@ class BDFCard(object):
         self.nfields = len(self.card)
 
     def deprecated(self, old_name, new_name, deprecated_version):
+        # type: (str, str, str) -> None
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def pop(self):
+        # type: () -> str
         """card.pop()"""
         self.nfields -= 1
         return self.card.pop()
@@ -71,6 +75,7 @@ class BDFCard(object):
         return self.card.index(value)
 
     def __repr__(self):
+        # type: () -> str
         """
         Prints the card as a list
 
@@ -87,6 +92,7 @@ class BDFCard(object):
         return print_card(self.card, size=size, is_double=is_double)
 
     def __len__(self):
+        # type: () -> int
         """len(card)"""
         return self.nfields
 
@@ -129,6 +135,7 @@ class BDFCard(object):
         return out
 
     def field(self, i, default=None):
+        # type: (int, Optional[Union[int, float, str]]) -> str
         """
         Gets the ith field on the card
 

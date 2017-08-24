@@ -45,8 +45,7 @@ class TestUgridGui(unittest.TestCase):
         assert os.path.exists(ugrid_filename), ugrid_filename
         test = UGRID_GUI()
         test.log = log
-        dirname = None
-        test.load_ugrid_geometry(ugrid_filename, dirname, name='main',
+        test.load_ugrid_geometry(ugrid_filename, name='main',
                                  plot=True)
 
     def test_ugrid_gui_02(self):
@@ -60,8 +59,7 @@ class TestUgridGui(unittest.TestCase):
                              properties=None, check_shells=True, check_solids=False, log=log)
         #assert os.path.exists(ugrid_filename), ugrid_filename
         #test = UGRID_GUI()
-        #dirname = None
-        #test.load_ugrid_geometry(ugrid_filename, dirname, name='main',
+        #test.load_ugrid_geometry(ugrid_filename, name='main',
                                  #plot=True)
 
 

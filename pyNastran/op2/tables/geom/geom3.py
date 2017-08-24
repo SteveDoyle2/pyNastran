@@ -2,6 +2,7 @@
 defines readers for BDF objects in the OP2 GEOM3/GEOM3S table
 """
 #pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326
+from __future__ import print_function
 from struct import unpack, Struct
 from six import b
 from six.moves import range
@@ -45,6 +46,7 @@ class GEOM3(GeomCommon):
             (6802, 68, 199): ['PLOAD2', self._read_pload2],    # record 18 - buggy
             (7109, 81, 255): ['PLOAD3', self._read_pload3],    # record 19 - not done
             (7209, 72, 299): ['PLOAD4', self._read_pload4],    # record 20 - buggy - g1/g3/g4
+            (7001, 70, 278) : ['PLOADX', self._read_ploadx],
             (7309, 73, 351): ['PLOADX1', self._read_ploadx1],  # record 22
             (4509, 45, 239): ['QBDY1', self._read_qbdy1],      # record 24
             (4909, 49, 240): ['QBDY2', self._read_qbdy2],      # record 25
@@ -73,15 +75,63 @@ class GEOM3(GeomCommon):
             (11529, 115, 9604): ['', self._read_fake],  # record
             (7002, 70, 254) : ['BOLTFOR', self._read_boltfor],  # record
             (7601, 76, 608) : ['BOLTLD', self._read_boltld],  # record
+
+            # ???
+            (6701,67,978): ['PLOADE1', self._read_fake],  # record
+
+            # nx-specific
+            (3909, 39, 333): ['LOADCYT', self._read_fake],  # record
         }
 
     def _read_accel(self, data, n):
+        """ACCEL"""
         self.log.info('skipping ACCEL in GEOM3\n')
         return len(data)
 
     def _read_accel1(self, data, n):
-        self.log.info('skipping ACCEL1 in GEOM3\n')
+        """
+        ACCEL1
+
+        1 SID    I Load set identification number
+        2 CID    I Coordinate system identification number
+        3 A     RS Acceleration vector scale factor
+        4 N(3)  RS Components of a vector coordinate system defined by CID
+        7 GRIDID I Grid ID or THRU or BY code
+        """
+        ntotal = 28  # 7*4
+        ints = np.fromstring(data, dtype='int32')
+        floats = np.fromstring(data, dtype='float32')
+        i_minus_1s = np.where(ints == -1)[0]
+
+        i0 = 0
+        for i_minus_1 in i_minus_1s:
+            #print(ints)
+            #print(floats)
+            sid = ints[i0]
+            cid = ints[i0 + 1]
+            scale = floats[i0 + 2]
+            n1 = floats[i0 + 3]
+            n2 = floats[i0 + 4]
+            n3 = floats[i0 + 5]
+            nids = ints[i0 + 6:i_minus_1]
+            assert nids[-1] > 0
+            print('cid =', cid)
+            print('nids =', nids)
+            a
+            accel = self.add_accel1(sid, scale, [n1, n2, n3], nids, cid=cid)
+            accel.validate()
+            i0 = i_minus_1 + 1
         return len(data)
+
+        #s = Struct(b(self._endian + '2i 4f 3i'))
+        #nentries = (len(data) - n) // ntotal
+        #for i in range(nentries):
+            #out = s.unpack(data[n:n+ntotal])
+            #sid, cid, scale, n1, n2, n3, nid = out
+            #self.add_accel1(sid, scale, [n1, n2, n3], [nid], cid=cid)
+            #n += ntotal
+        #self.card_count['ACCEL1'] = nentries
+        #return n
 
     def _read_force(self, data, n):
         """
@@ -95,8 +145,8 @@ class GEOM3(GeomCommon):
             (sid, g, cid, f, n1, n2, n3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  FORCE=%s\n' % str(out))
-            load = FORCE(sid, g, f, cid=cid, xyz=np.array([n1, n2, n3]))
-            self._add_load_object(load)
+            force = FORCE(sid, g, f, cid=cid, xyz=np.array([n1, n2, n3]))
+            self._add_load_object(force)
             n += 28
         self.card_count['FORCE'] = nentries
         return n
@@ -139,12 +189,20 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_gmload(self, data, n):
+        """GMLOAD"""
         self.log.info('skipping GMLOAD in GEOM3\n')
         return len(data)
 
     def _read_grav(self, data, n):
         """
         GRAV(4401,44,26) - the marker for Record 7
+
+        Word Name Type Description
+        1 SID I Load set identification number
+        2 CID I Coordinate system identification number
+        3 A RS Acceleration vector scale factor
+        4 N(3) RS Components of a vector coordinate system defined by CID
+        7 MB I Bulk Data Section with CID definition: -1=main, 0=partitioned
         """
         ntotal = 28  # 7*4
         s = Struct(b(self._endian + 'ii4fi'))
@@ -152,6 +210,8 @@ class GEOM3(GeomCommon):
         for i in range(nentries):
             edata = data[n:n + 28]
             out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  GRAV=%s\n' % str(out))
             (sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV.add_op2_data(out)
             self._add_load_object(grav)
@@ -203,16 +263,19 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_loadcyh(self, data, n):
+        """LOADCYH"""
         self.log.info('skipping LOADCYH in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping LOADCYH in GEOM3\n')
         return len(data)
 
     def _read_loadcyn(self, data, n):
+        """LOADCYN"""
         self.log.info('skipping LOADCYN in GEOM3\n')
         return len(data)
 
     def _read_loadcyt(self, data, n):
+        """LOADCYT"""
         self.log.info('skipping LOADCYT in GEOM3\n')
         return len(data)
 
@@ -318,8 +381,7 @@ class GEOM3(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD1=%s\n' % str(out))
-            (sid, eid, Type, scale, x1, p1, x2, p2) = out
-            #print("PLOAD1 = ", out)
+            (sid, eid, load_type, scale, x1, p1, x2, p2) = out
             load = PLOAD1.add_op2_data(out)
             self._add_load_object(load)
             n += 32
@@ -362,37 +424,92 @@ class GEOM3(GeomCommon):
         self.card_count['PLOAD3'] = nentries
         return n
 
-    def _read_pload4(self, data, n):  ## inconsistent with DMAP
+    def _read_rbar(self, data, n):
+        """RBAR(6601,66,292) - Record 22"""
+        n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_msc,
+                                 'RBAR', self._add_rigid_element_object)
+        return n
+
+    def _read_pload4(self, data, n):
+        """PLOAD4(7209,72,299) - the marker for Record 20"""
+        n = self._read_dual_card(data, n, self._read_pload4_nx, self._read_pload4_msc,
+                                 'PLOAD4', self._add_load_object)
+        return n
+
+    def _read_pload4_msc(self, data, n):  ## inconsistent with DMAP
         """
         PLOAD4(7209,72,299) - the marker for Record 20
+
+        Word Name Type Description
+        1 SID          I Load set identification number
+        2 EID          I Element identification number
+        3 P(4)        RS Pressures
+        7 G1           I Grid point identification number at a corner of the face
+        8 G34          I Grid point identification number at a diagonal from G1 or CTETRA corner
+        9  CID         I Coordinate system identification number
+        10 N(3)       RS Components of a vector coordinate system defined by CID
+        13 SDRL(2) CHAR4 Load set on element SURF or LINE
+        15 LDIR(2) CHAR4 Load direction
         """
-        ntotal = 48  # 13*4
+        ntotal = 64  # 16*4
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        loads = []
+        for i in range(nentries):
+            edata = data[n:n + 64]
+            out = unpack('2i 4f 3i 3f 8s 8s', edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PLOAD4=%s\n' % str(out))
+            (sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3, surf_or_line, line_load_dir) = out
+
+            surf_or_line = surf_or_line.rstrip()
+            line_load_dir = line_load_dir.rstrip()
+            load = PLOAD4.add_op2_data(
+                [sid, eid, [p1, p2, p3, p4], g1, g34,
+                 cid, [n1, n2, n3], surf_or_line, line_load_dir])
+            loads.append(load)
+            n += ntotal
+        self.card_count['PLOAD4'] = nentries
+        return n, loads
+
+    def _read_pload4_nx(self, data, n):  ## inconsistent with DMAP
+        """
+        PLOAD4(7209,72,299) - the marker for Record 20
+
+        Word Name Type Description
+        1 SID          I Load set identification number
+        2 EID          I Element identification number
+        3 P(4)        RS Pressures
+        7 G1           I Grid point identification number at a corner of the face
+        8 G34          I Grid point identification number at a diagonal from G1 or CTETRA corner
+        9  CID         I Coordinate system identification number
+        10 N(3)       RS Components of a vector coordinate system defined by CID
+        """
+        ntotal = 48  # 12*4
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        loads = []
         for i in range(nentries):
             edata = data[n:n + 48]
-                         #iiffffiiifffi   ssssssssssssssss
             out = unpack('2i 4f 3i 3f', edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD4=%s\n' % str(out))
             (sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3) = out
-            #s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8
-            #sdrlA = s1+s2+s3+s4
-            #sdrlB = s5+s6+s7+s8
-            #line_load_dirA = L1+L2+L3+L4
-            #line_load_dirB = L5+L6+L7+L8
-            sdrlA = None
-            sdrlB = None
-            line_load_dirA = None
-            line_load_dirB = None
+
+            surf_or_line = None
+            line_load_dir = None
             load = PLOAD4.add_op2_data(
                 [sid, eid, [p1, p2, p3, p4], g1, g34,
-                 cid, [n1, n2, n3], sdrlA, sdrlB, line_load_dirA, line_load_dirB])
-            self._add_load_object(load)
+                 cid, [n1, n2, n3], surf_or_line, line_load_dir])
+            loads.append(load)
             n += 48
         self.card_count['PLOAD4'] = nentries
-        return n
+        return n, loads
 
-# PLOADX - obsolete
+    def _read_ploadx(self, data, n):
+        self.log.info('skipping PLOADX in GEOM4\n')
+        return len(data)
+
     def _read_ploadx1(self, data, n):
         ntotal = 28  # 7*4
         nentries = (len(data) - n) // ntotal

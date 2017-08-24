@@ -23,7 +23,7 @@ class SurfIO(object):
             None, None)
         return data
 
-    def load_surf_geometry(self, surf_filename, dirname, name=None, plot=True):
+    def load_surf_geometry(self, surf_filename, name=None, plot=True):
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
@@ -115,7 +115,7 @@ class SurfIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['AFLR Surface', '']}
+        self.isubcase_name_map = {1: ['AFLR Surface', '']}
         cases = {}
         ID = 1
 
@@ -126,7 +126,7 @@ class SurfIO(object):
     def clear_surf(self):
         pass
 
-    #def _load_surf_results(self, openfoam_filename, dirname):
+    #def _load_surf_results(self, openfoam_filename):
         #raise NotImplementedError()
 
     def _fill_surf_case(self, surf_filename, cases, ID, nnodes, nelements, model):

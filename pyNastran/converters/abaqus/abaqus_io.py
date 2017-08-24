@@ -28,7 +28,7 @@ class AbaqusIO(object):
                 )
         return data
 
-    def load_abaqus_geometry(self, abaqus_filename, dirname, name='main', plot=True):
+    def load_abaqus_geometry(self, abaqus_filename, name='main', plot=True):
         """loads abaqus input files into the gui"""
         skip_reading = self._remove_old_geometry(abaqus_filename)
         if skip_reading:
@@ -263,7 +263,7 @@ class AbaqusIO(object):
         self.scalarBar.Modified()
 
         note = ''
-        self.iSubcaseNameMap = {1: ['Abaqus%s' % note, '']}
+        self.isubcase_name_map = {1: ['Abaqus%s' % note, '']}
         #form = []
         cases = {}
         ID = 1
@@ -275,7 +275,7 @@ class AbaqusIO(object):
         """does nothing"""
         pass
 
-    def load_abaqus_results(self, cart3d_filename, dirname):
+    def load_abaqus_results(self, abaqusd_filename):
         """does nothing"""
         raise NotImplementedError()
 

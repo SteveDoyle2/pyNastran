@@ -6,12 +6,13 @@ import os
 from six import iteritems
 from six.moves import range
 
-from numpy import arange, mean, vstack, zeros, unique, where, sqrt
+from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
 
 import vtk
 from vtk import vtkTriangle
 
+from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry #, Cart3dResult
@@ -19,12 +20,17 @@ from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry #, Cart3dRe
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
 
-
 class Cart3dIO(object):
+    """
+    Defines the GUI class for Cart3d.
+    """
     def __init__(self):
         pass
 
     def get_cart3d_wildcard_geometry_results_functions(self):
+        """
+        gets the Cart3d wildcard loader used in the file load menu
+        """
         data = ('Cart3d',
                 'Cart3d (*.tri; *.triq)', self.load_cart3d_geometry,
                 'Cart3d (*.triq)', self.load_cart3d_results)
@@ -51,7 +57,7 @@ class Cart3dIO(object):
             try:
                 del self.case_keys
                 del self.icase
-                del self.iSubcaseNameMap
+                del self.isubcase_name_map
             except:
                 # print("cant delete geo")
                 pass
@@ -62,7 +68,20 @@ class Cart3dIO(object):
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_cart3d_geometry(self, cart3d_filename, dirname, name='main', plot=True):
+    def load_cart3d_geometry(self, cart3d_filename, name='main', plot=True):
+        """
+        The entry point for Cart3d geometry loading.
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the cart3d filename to load
+        name : str
+            the name of the "main" actor for the GUI
+        plot : bool; default=True
+            should the model be generated or should we wait until
+            after the results are loaded
+        """
         skip_reading = self._remove_old_cart3d_geometry(cart3d_filename)
         if skip_reading:
             return
@@ -123,26 +142,30 @@ class Cart3dIO(object):
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
+        self.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
-        form, cases, icase = self._fill_cart3d_case2(cases, ID, nodes, elements, regions, model)
+        form, cases, icase = self._fill_cart3d_geometry_objects(
+            cases, ID, nodes, elements, regions, model)
         mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
         #mach = None
         self._fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
         self._finish_results_io2(form, cases)
 
     def _create_box(self, cart3d_filename, ID, form, cases, icase, regions):
-        stack = True
+        """creates the bounding box for boundary conditions"""
         dirname = os.path.dirname(os.path.abspath(cart3d_filename))
         input_c3d_filename = os.path.join(dirname, 'input.c3d')
         input_cntl_filename = os.path.join(dirname, 'input.cntl')
         mach = None
         alpha = None
         beta = None
+        gamma = None
+
+        bcs = None
         if os.path.exists(input_cntl_filename):
             cntl = read_input_cntl(input_cntl_filename, log=self.log, debug=self.debug)
-            mach, alpha, beta = cntl.get_flow_conditions()
+            mach, alpha, beta, gamma = cntl.get_flow_conditions()
             bcs = cntl.get_boundary_conditions()
             bc_xmin, bc_xmax, bc_ymin, bc_ymax, bc_xmin, bc_xmax, surfbcs = bcs
             #stack = False
@@ -158,12 +181,12 @@ class Cart3dIO(object):
                 ]
                 icase += 5
                 nelements = self.nElements
-                rho = zeros(nelements, dtype='float32')
-                xvel = zeros(nelements, dtype='float32')
-                yvel = zeros(nelements, dtype='float32')
-                zvel = zeros(nelements, dtype='float32')
-                #vel = zeros(nelements, dtype='float32')
-                pressure = zeros(nelements, dtype='float32')
+                rho = np.full(nelements, np.nan, dtype='float32')
+                xvel = np.full(nelements, np.nan, dtype='float32')
+                yvel = np.full(nelements, np.nan, dtype='float32')
+                zvel = np.full(nelements, np.nan, dtype='float32')
+                #vel = np.full(nelements, np.nan, dtype='float32')
+                pressure = np.full(nelements, np.nan, dtype='float32')
 
                 uregions = set(unique(regions))
                 surf_bc_regions = set(surfbcs.keys())
@@ -179,6 +202,14 @@ class Cart3dIO(object):
                     yvel[i] = yveli
                     zvel[i] = zveli
                     pressure[i] = pressi
+
+                inan = np.where(rho == 0.0)
+                rho[inan] = np.nan
+                xvel[inan] = np.nan
+                yvel[inan] = np.nan
+                zvel[inan] = np.nan
+                #vel[inan] = np.nan
+                pressure[inan] = np.nan
 
                 mach = sqrt(xvel ** 2 + yvel ** 2 + zvel ** 2)
 
@@ -207,117 +238,135 @@ class Cart3dIO(object):
 
 
         if os.path.exists(input_c3d_filename):
-            nodes, elements = read_input_c3d(input_c3d_filename, stack=stack,
-                                             log=self.log, debug=self.debug)
+            # put in one group
 
             # Planes
             # ----------
             # xmin, xmax
             # ymin, ymax
             # zmin, zmax
+            nodes, elements = read_input_c3d(input_c3d_filename, stack=True,
+                                             log=self.log, debug=self.debug)
 
-            if stack:
-                red = (1., 0., 0.)
-                color = red
-                self.set_quad_grid('box', nodes, elements, color, line_width=1, opacity=1.)
-            else:
-                red = (1., 0., 0.)
-                inflow_nodes = []
-                inflow_elements = []
+            red = (1., 0., 0.)
+            color = red
+            self.set_quad_grid('box', nodes, elements, color, line_width=1, opacity=1.)
 
-                green = (0., 1., 0.)
-                symmetry_nodes = []
-                symmetry_elements = []
+            #-------------------------------------------------------------------
+            # put in multiple groups
+            nodes, elements = read_input_c3d(input_c3d_filename, stack=False,
+                                             log=self.log, debug=self.debug)
 
-                colori = (1., 1., 0.)
-                outflow_nodes = []
-                outflow_elements = []
+            red = (1., 0., 0.)
+            inflow_nodes = []
+            inflow_elements = []
 
-                blue = (0., 0., 1.)
-                farfield_nodes = []
-                farfield_elements = []
+            green = (0., 1., 0.)
+            symmetry_nodes = []
+            symmetry_elements = []
 
-                ifarfield = 0
-                isymmetry = 0
-                iinflow = 0
-                ioutflow = 0
+            colori = (1., 1., 0.)
+            outflow_nodes = []
+            outflow_elements = []
 
-                nfarfield_nodes = 0
-                nsymmetry_nodes = 0
-                ninflow_nodes = 0
-                noutflow_nodes = 0
-                for bcsi, nodesi, elementsi in zip(bcs, nodes, elements):
-                    # 0 = FAR FIELD
-                    # 1 = SYMMETRY
-                    # 2 = INFLOW  (specify all)
-                    # 3 = OUTFLOW (simple extrap)
-                    self.log.info('bcsi = %s' % bcsi)
-                    nnodes = nodesi.shape[0]
-                    bc = bcsi
-                    if isinstance(bc, int):
-                        if bc == 0:
-                            farfield_nodes.append(nodesi)
-                            farfield_elements.append(elementsi + nfarfield_nodes)
-                            nfarfield_nodes += nnodes
-                            ifarfield += 1
-                        elif bc == 1:
-                            symmetry_nodes.append(nodesi)
-                            symmetry_elements.append(elementsi + nsymmetry_nodes)
-                            nsymmetry_nodes += nnodes
-                            isymmetry += 1
-                        elif bc == 2:
-                            inflow_nodes.append(nodesi)
-                            inflow_elements.append(elementsi + ninflow_nodes)
-                            ninflow_nodes += nnodes
-                            iinflow += 1
-                        elif bc == 3:
-                            outflow_nodes.append(nodesi)
-                            outflow_elements.append(elementsi + noutflow_nodes)
-                            noutflow_nodes += nnodes
-                            ioutflow += 1
-                        else:
-                            msg = 'bc=%s' % str(bc)
-                            raise NotImplementedError(msg)
-                    elif isinstance(bc, dict):
-                        continue
+            blue = (0., 0., 1.)
+            farfield_nodes = []
+            farfield_elements = []
+
+            ifarfield = 0
+            isymmetry = 0
+            iinflow = 0
+            ioutflow = 0
+
+            nfarfield_nodes = 0
+            nsymmetry_nodes = 0
+            ninflow_nodes = 0
+            noutflow_nodes = 0
+            if bcs is None:
+                bcs = [None] * len(nodes)
+            for bcsi, nodesi, elementsi in zip(bcs, nodes, elements):
+                # 0 = FAR FIELD
+                # 1 = SYMMETRY
+                # 2 = INFLOW  (specify all)
+                # 3 = OUTFLOW (simple extrap)
+                self.log.info('bcsi = %s' % bcsi)
+                nnodes = nodesi.shape[0]
+                bc = bcsi
+                if bc is None:  # fake case
+                    continue
+                elif isinstance(bc, integer_types):
+                    if bc == 0:
+                        farfield_nodes.append(nodesi)
+                        farfield_elements.append(elementsi + nfarfield_nodes)
+                        nfarfield_nodes += nnodes
+                        ifarfield += 1
+                    elif bc == 1:
+                        symmetry_nodes.append(nodesi)
+                        symmetry_elements.append(elementsi + nsymmetry_nodes)
+                        nsymmetry_nodes += nnodes
+                        isymmetry += 1
+                    elif bc == 2:
+                        inflow_nodes.append(nodesi)
+                        inflow_elements.append(elementsi + ninflow_nodes)
+                        ninflow_nodes += nnodes
+                        iinflow += 1
+                    elif bc == 3:
+                        outflow_nodes.append(nodesi)
+                        outflow_elements.append(elementsi + noutflow_nodes)
+                        noutflow_nodes += nnodes
+                        ioutflow += 1
                     else:
                         msg = 'bc=%s' % str(bc)
                         raise NotImplementedError(msg)
+                elif isinstance(bc, dict): # ???
+                    if len(bc) == 0:
+                        continue
+                    # bc = {
+                    #    2: [2.0, 3.0, 0.0, 0.0, 5.0],
+                    #    3: [1.0, 1.5, 0.0, 0.0, 0.714285]
+                    # }
+                    continue
+                    #msg = 'bc=%s' % str(bc)
+                    #raise NotImplementedError(msg)
+                else:
+                    msg = 'bc=%s' % str(bc)
+                    raise NotImplementedError(msg)
 
-                if ifarfield:
-                    color = blue
-                    nodes = vstack(farfield_nodes)
-                    elements = vstack(farfield_elements)
-                    self.set_quad_grid('farfield', nodes, elements, color, line_width=1, opacity=1.)
+            if ifarfield:
+                color = blue
+                nodes = vstack(farfield_nodes)
+                elements = vstack(farfield_elements)
+                self.set_quad_grid('farfield', nodes, elements, color, line_width=1, opacity=1.)
 
-                if isymmetry:
-                    color = green
-                    nodes = vstack(symmetry_nodes)
-                    elements = vstack(symmetry_elements)
-                    self.set_quad_grid('symmetry', nodes, elements, color, line_width=1, opacity=1.)
+            if isymmetry:
+                color = green
+                nodes = vstack(symmetry_nodes)
+                elements = vstack(symmetry_elements)
+                self.set_quad_grid('symmetry', nodes, elements, color, line_width=1, opacity=1.)
 
-                if iinflow:
-                    color = red
-                    nodes = vstack(inflow_nodes)
-                    elements = vstack(inflow_elements)
-                    self.set_quad_grid('inflow', nodes, elements, color, line_width=1, opacity=1.)
+            if iinflow:
+                color = red
+                nodes = vstack(inflow_nodes)
+                elements = vstack(inflow_elements)
+                self.set_quad_grid('inflow', nodes, elements, color, line_width=1, opacity=1.)
 
-                if ioutflow:
-                    color = colori
-                    nodes = vstack(outflow_nodes)
-                    elements = vstack(outflow_elements)
-                    self.set_quad_grid('outflow', nodes, elements, color, line_width=1, opacity=1.)
+            if ioutflow:
+                color = colori
+                nodes = vstack(outflow_nodes)
+                elements = vstack(outflow_elements)
+                self.set_quad_grid('outflow', nodes, elements, color, line_width=1, opacity=1.)
 
-                #i = 0
-                #for nodesi, elementsi in zip(nodes, elements):
-                    #self.set_quad_grid('box_%i' % i, nodesi, elementsi, color,
-                                       #line_width=1, opacity=1.)
-                    #i += 1
+            #i = 0
+            #for nodesi, elementsi in zip(nodes, elements):
+                #self.set_quad_grid('box_%i' % i, nodesi, elementsi, color,
+                                   #line_width=1, opacity=1.)
+                #i += 1
         else:
             self.log.warning('input_c3d_filename doesnt exist = %s' % input_c3d_filename)
         return mach, alpha, beta
 
     def _create_cart3d_free_edges(self, model, nodes, elements):
+        """creates the free edges to help identify unclosed models"""
         free_edges_array = model.get_free_edges(elements)
         nfree_edges = len(free_edges_array)
 
@@ -353,10 +402,13 @@ class Cart3dIO(object):
     def clear_cart3d(self):
         pass
 
-    def load_cart3d_results(self, cart3d_filename, dirname):
-        self.load_cart3d_geometry(cart3d_filename, dirname)
+    def load_cart3d_results(self, cart3d_filename):
+        """
+        Loads the Cart3d results into the GUI
+        """
+        self.load_cart3d_geometry(cart3d_filename)
 
-    def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
+    def _fill_cart3d_geometry_objects(self, cases, ID, nodes, elements, regions, model):
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
@@ -400,27 +452,25 @@ class Cart3dIO(object):
         ]
         icase = 7
         return form, cases, icase
-
         #cnormals = model.get_normals(nodes, elements)
         #nnormals = model.get_normals_at_nodes(nodes, elements, cnormals)
 
-        #cases_new[i] = (ID, nnormals[:, 0], 'Normal X', 'node', '%.3f')
-        #cases_new[i + 1] = (ID, nnormals[:, 1], 'Normal Y', 'node', '%.3f')
-        #cases_new[i + 2] = (ID, nnormals[:, 2], 'Normal Z', 'node', '%.3f')
-        #i += 3
-
     def _fill_cart3d_results(self, cases, form, icase, ID, loads, model, mach):
-        new = False
         results_form = []
         cases_new = []
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                         'rhoU', 'rhoV', 'rhoW', 'rhoE', 'a', 'T', 'q', 'Pressure']
 
+        inan = None
+        if 'rho' in loads:
+            rho = loads['rho']
+            inan = np.where(rho == 0.)
         for result_name in result_names:
             #print('result_name = %r' % result_name)
             if result_name in loads:
                 nodal_data = loads[result_name]
-
+                if inan is not None:
+                    nodal_data[inan] = np.nan
                 rho_res = GuiResult(ID, header=result_name, title=result_name,
                                     location='node', scalar=nodal_data)
                 cases[icase] = (rho_res, (0, result_name))

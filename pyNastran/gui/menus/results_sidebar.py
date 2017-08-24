@@ -76,16 +76,20 @@ class QTreeView2(QTreeView):
             tuple : valid case
                 ('centroid', None, [])
                 0 - the location (e.g. node, centroid)
-                1 - ???
-                2 - ???
+                1 - iCase
+                2 - []
         """
         # if there's only 1 data member, we don't need to extract the data id
         if self.single:
             return True, self.data[0]
 
-        # TODO: what is this for???
         irow = 0
-        data = deepcopy(self.data)
+
+        # TODO: what is this for???
+        #     crashes some PyQt4 cases when clicking on the first
+        #     non-results level of the sidebar
+        #data = deepcopy(self.data)
+        data = self.data
         for row in self.old_rows:
             try:
                 key = data[row][0]
@@ -283,7 +287,7 @@ class Sidebar(QWidget):
         if isinstance(method, string_types):
             datai = self.result_data_window.data[0]
             self.result_data_window.data[0] = (method, datai[1], datai[2])
-            print('method=%s datai=%s' % (method, datai))
+            #print('method=%s datai=%s' % (method, datai))
             self.result_data_window.update_data(self.result_data_window.data)
         else:
             return

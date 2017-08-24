@@ -46,6 +46,79 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
+-----------------------v1.1.0 released 2017/?/?-----------------------
+Relase notes:
+   - This is a fairly minor release, but as there are some
+     small changes to the API, so there's a version bump
+
+BDF bug fixes:
+ - numpy 1.13 support added (not done...)
+ - more add_card documentation (e.g., add_grid, add_ctria3)
+ - fixed NSMADD card type (was SPCADD)
+ - fixed CPLTSTN3 card type (was CTRIA3)
+ - fixed CPLTSTS3 card type (was CTRIA3)
+ - fixed shell MCIDs not renumbering
+ - fixed FREQx renumbering crash
+ - model may be pickled again (model.save('model.obj') and model.load('model.obj')
+ - fixed PBARL/PBEAML DBOX error
+ - fixed PositionWRT bug
+
+BDF API changes (might not get changed for v1.0.1):
+ - renumbering:
+   - bdf_renumber now supports renumbers SETs and SPLINEx cards
+   - SPOINTs/EPOINTs now use dictionaries to enable SPOINT/EPOINT renumbering
+   - renumbering mapper object returned now
+ - model.Node(nid, allow_empty_nodes=False msg='') no longer supports allow_empty_nodes
+   use model.EmptyNode(nid, msg='') instead for that
+   model.Node(nid, msg='') is the new form
+ - model.Nodes(nid, allow_empty_nodes=False msg='') no longer supports allow_empty_nodes
+   use model.EmptyNodes(nid, msg='') instead for that
+   model.Nodes(nid, msg='') is the new form
+ - PCOMPG.validate() now checks that global ply ids are unique
+ - xref_nodes_with_elements now creates a list instead of a set (fixes a Python 3.x bug)
+ - get_MPCx_node_ids_c1 is now get_MPCx_node_ids_c1 (was inconsistent with what it does)
+ - get_MPCx_node_ids_c1 created
+ - xref'd objects now use _ref globally
+
+New BDF features:
+ - model.get_reduced_loads(load_id)
+ - model.get_reduced_dloads(dload_id)
+ - card1 == card2 now supported
+ - PBARL/PBEAML support the NX TUBE2 type
+ - added FREQ3, FREQ5, CAERO5, PAERO5, MATT3, SPLINE3
+ - more xref
+ - added pierce_shells
+ - added model.clear_attributes()
+
+OP2/F06 features:
+ - added model.set_additional_generalized_tables_to_read(tables) to create custom OP2 readers
+
+OP2 bug fixes:
+ - improved table skipping
+
+GUI features:
+ - control surfaces now get labels (label size doesn't resize properly)
+ - in gui animation
+
+GUI bug fixes:
+ - displays control surfaces again (aesurf)
+ - changing secondary actor color works again
+ - fixing random crash
+ - "Show/Hide CAERO panels" updates the "Edit Geometry Properties" menu
+ - "Toggle CAERO Subpanels" updates the "Edit Geometry Properties" menu
+ - "Toggle CONM2s" updates the "Edit Geometry Properties" menu
+ - fixing Windows taskbar icon bug
+ - fixing first launch bug
+
+OP4 bug fixes:
+ - fixed Python 3 bytes bug
+
+Applictions:
+ - removed due to excessively amount of unmaintained code
+
+-----------------------v1.0.1 released 2017/?/?-----------------------
+
+
 -----------------------v1.0.0 released 2017/5/25-----------------------
 This is a major release.  The focus this time has been on robustness and testing.
 Hopefully, it shows.  The software has also been relicensed to be BSD-3, which

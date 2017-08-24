@@ -8,7 +8,7 @@ from six.moves import range, zip
 
 import numpy as np
 from numpy import array, cross, unique, where, allclose, zeros, arange, ravel, ones, argsort
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.converters.openfoam.openfoam_parser import FoamFile, convert_to_dict, write_dict
 from pyNastran.bdf.field_writer_8 import print_card_8

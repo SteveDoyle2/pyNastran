@@ -1,10 +1,20 @@
+"""
+defines:
+    model = bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                                  renumber_nodes=False, neq_max=4, xref=True,
+                                  node_set=None,
+                                  size=8, is_double=False,
+                                  remove_collapsed_elements=False,
+                                  avoid_collapsed_elements=False,
+                                  crash_on_collapse=False, log=None, debug=True)
+"""
 from __future__ import print_function
 from six import iteritems, string_types, PY2
 
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 import scipy
 
 from pyNastran.utils import integer_types
@@ -210,14 +220,7 @@ def _eq_nodes_setup(bdf_filename, tol,
         for eid, element in sorted(iteritems(model.masses)):
             spoint_epoint_nid_set.update(element.node_ids)
 
-        if model.spoints and model.epoints:
-            nids_new = spoint_epoint_nid_set - model.spoints.points - model.epoints.points
-        elif model.spoints:
-            nids_new = spoint_epoint_nid_set - model.spoints.points
-        elif model.epoints:
-            nids_new = spoint_epoint_nid_set - model.epoints.points
-        else:
-            nids_new = spoint_epoint_nid_set
+        nids_new = spoint_epoint_nid_set - set(model.spoints) - set(model.epoints)
 
         if None in nids_new:
             nids_new.remove(None)
@@ -269,7 +272,7 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         node2 = model.nodes[nid2]
 
         # TODO: doesn't use get position...
-        distance = norm(node1.xyz - node2.xyz)
+        distance = norm(node1.get_position() - node2.get_position())
 
         #print('  irow=%s->n1=%s icol=%s->n2=%s' % (irow, nid1, icol, nid2))
         if distance > tol:

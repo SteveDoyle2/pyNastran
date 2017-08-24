@@ -8,7 +8,7 @@ ints = (int, np.int32)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -41,6 +41,7 @@ class RealBushArray(OES_Object):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the RealBushArray"""
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)
@@ -51,7 +52,8 @@ class RealBushArray(OES_Object):
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
 
         if self.element_type == 102:
-            nnodes_per_element = 1
+            #nnodes_per_element = 1
+            pass
         else:
             raise NotImplementedError(self.element_type)
 

@@ -11,31 +11,31 @@ import cgi #  html lib
 import traceback
 from copy import deepcopy
 from collections import OrderedDict
-from itertools import count
+from itertools import count, cycle
 from math import ceil
 
 from six import string_types, iteritems, itervalues, PY2, PY3
 from six.moves import range
 
 import numpy as np
-#from numpy import arange
-#from numpy import eye, array, zeros, loadtxt
-#from numpy.linalg import norm
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtGui import (
+        QMessageBox, QWidget,
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from PyQt4.QtCore import QString
 elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
+        QMessageBox, QWidget,
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from six import text_type as QString
 elif qt_version == 'pyside':
     from PySide import QtCore, QtGui
     from PySide.QtGui import (
+        QMessageBox, QWidget,
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from six import text_type as QString
 else:
@@ -84,9 +84,6 @@ from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
 
-from pyNastran.converters.nastran.displacements import DisplacementResults
-from pyNastran.gui.gui_objects.gui_result import GuiResult
-
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -112,11 +109,6 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
         #self.Highlight
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
-# old
-#class GuiCommon2(GuiCommon):
-#    def __init__(self, fmt_order, html_logging, inputs):
-
-# new
 class GuiCommon2(QMainWindow, GuiCommon):
     def __init__(self, **kwds):
         """
@@ -384,21 +376,28 @@ class GuiCommon2(QMainWindow, GuiCommon):
                             print(msg)
                         return
 
+        #is_geom_results = input_filename == results_filename and len(input_filenames) == 1
+        is_geom_results = False
         for i, input_filename in enumerate(input_filenames):
             if i == 0:
                 name = 'main'
             else:
                 name = input_filename
             #form = inputs['format'].lower()
+            #if is_geom_results:
+            #    is_failed = self.on_load_geometry_and_results(
+            #        infile_name=input_filename, name=name, geometry_format=form,
+            #        plot=plot, raise_error=True)
+            #else:
             is_failed = self.on_load_geometry(
                 infile_name=input_filename, name=name, geometry_format=form,
                 plot=plot, raise_error=True)
         self.name = 'main'
-        print('keys =', self.nid_maps.keys())
+        #print('keys =', self.nid_maps.keys())
 
         if is_failed:
             return
-        if results_filename:
+        if results_filename:  #  and not is_geom_results
             self.on_load_results(results_filename)
 
         post_script = inputs['postscript']
@@ -445,6 +444,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
 
             tools = file_tools + [
+                ('log_clear', 'Clear Application Log', '', None, 'Clear Application Log', self.clear_application_log),
                 ('label_clear', 'Clear Current Labels', '', None, 'Clear current labels', self.clear_labels),
                 ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
@@ -573,10 +573,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def deprecated(self, old_name, new_name, deprecated_version):
         deprecated(old_name, new_name, deprecated_version, levels=[-1])
 
-    #def add_tools(self, tools):
-        #self.deprecated('add_tools', 'removed...', '0.7')
-        #self.tools += tools
-
     def on_flip_picker(self):
         return
         # if self.pick_state == 'centroidal':
@@ -624,7 +620,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'set_preferences', '',
-            'label_clear', 'label_reset', '',
+            'log_clear', 'label_clear', 'label_reset', '',
             'legend', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
             #'anti_alias_4', 'anti_alias_8',],
@@ -2710,7 +2706,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #if args[-1] == 'plot':
             try:
                 t0 = time.time()
-                has_results = load_function(infile_name, self.last_dir, name=name, plot=plot)
+                has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
                 dt = time.time() - t0
                 print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
                 #else:
@@ -2718,8 +2714,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #self.log_error(str(args))
                     #self.log_error("'plot' needs to be added to %r; "
                                    #"args[-1]=%r" % (name, args[-1]))
-                    #has_results = load_function(infile_name, self.last_dir)
-                    #form, cases = load_function(infile_name, self.last_dir)
+                    #has_results = load_function(infile_name) # , self.last_dir
+                    #form, cases = load_function(infile_name) # , self.last_dir
             except Exception as e:
                 msg = traceback.format_exc()
                 self.log_error(msg)
@@ -2877,7 +2873,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self._load_deflection(out_filename)
                 restype = 'Deflection'
             elif iwildcard == 3:
-                self._load_load_patran_nod(out_filename)
+                self._load_patran_nod(out_filename)
                 restype = 'Patran_nod'
             else:
                 raise NotImplementedError('wildcard_level = %s' % wildcard_level)
@@ -2888,39 +2884,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
         is_failed = False
         return is_failed
-
-    def _load_load_patran_nod(self, nod_filename):
-        """reads a Patran formatted *.nod file"""
-        from pyNastran.bdf.patran_utils.read_patran import read_patran
-        data_dict = read_patran(nod_filename, fdtype='float32', idtype='int32')
-        nids = data_dict['nids']
-        data = data_dict['data']
-        data_headers = data_dict['headers']
-        ndata = data.shape[0]
-        if len(data.shape) == 1:
-            shape = (ndata, 1)
-            data = data.reshape(shape)
-
-        if ndata != self.node_ids.shape[0]:
-            inids = np.searchsorted(self.node_ids, nids)
-            assert np.array_equal(nids, self.node_ids[inids]), 'the node ids are invalid'
-            data2 = np.full(data.shape, np.nan, data.dtype)
-            data2[inids, :] = data
-        else:
-            data2 = data
-
-        A = {}
-        fmt_dict = {}
-        headers = data_headers['SEC']
-        for i, header in enumerate(headers):
-            A[header] = data2[:, i]
-            fmt_dict[header] = '%f'
-
-        out_filename_short = os.path.relpath(nod_filename)
-        result_type = 'node'
-        self._add_cases_to_form(A, fmt_dict, headers, result_type,
-                                out_filename_short, update=True)
-
 
     def _on_load_nodal_elemental_results(self, result_type, out_filename=None):
         """
@@ -3007,114 +2970,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
                                 out_filename_short, update=True)
 
-    def _add_cases_to_form(self, A, fmt_dict, headers, result_type,
-                           out_filename_short, update=True):
-        """
-        common method between:
-          - _load_csv
-          - _load_deflection_csv
-
-        Parameters
-        ----------
-        A : dict[key] = (n, m) array
-            the numpy arrays
-            key : str
-                the name
-            n : int
-                number of nodes/elements
-            m : int
-                secondary dimension
-                N/A : 1D array
-                3 : deflection
-        fmt_dict : dict[header] = fmt
-            the format of the arrays
-            header : str
-                the name
-            fmt : str
-                '%i', '%f'
-        headers : List[str]???
-            the titles???
-        result_type : str
-            'node', 'centroid'
-        out_filename_short : str
-            the display name
-        update : bool; default=True
-            ???
-
-        # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
-        # dtype=[('f0', '<f8'), ('f1', '<i4')])
-        # A['f0']
-        # A['f1']
-        """
-        #print('A =', A)
-        formi = []
-        form = self.get_form()
-        icase = len(self.case_keys)
-        islot = 0
-        for case_key in self.case_keys:
-            if isinstance(case_key, tuple):
-                islot = case_key[0]
-                break
-
-        for header in headers:
-            datai = A[header]
-            fmti = fmt_dict[header]
-            title = header
-            location = result_type
-
-            dimension = len(datai.shape)
-            if dimension == 1:
-                vector_size = 1
-            elif dimension == 2:
-                vector_size = datai.shape[1]
-            else:
-                raise RuntimeError('dimension=%s' % (dimension))
-
-            if vector_size == 1:
-                res_obj = GuiResult(
-                    islot, header, title, location, datai,
-                    nlabels=None, labelsize=None, ncolors=None,
-                    colormap='jet', data_format=fmti,
-                )
-            elif vector_size == 3:
-                # title is 3 values
-                # header is 3 values
-                # scale is 3 values
-                titles = [header]
-                headers = header
-
-                norm_max = np.linalg.norm(datai, axis=1).max()
-                scales = [self.dim_max / norm_max * 0.25]
-                data_formats = [fmti] * 3
-                scalar = None
-                dxyz = datai
-                xyz = self.xyz_cid0
-                res_obj = DisplacementResults(
-                    islot, titles, headers,
-                    xyz, dxyz, scalar, scales, data_formats=data_formats,
-                    nlabels=None, labelsize=None, ncolors=None,
-                    colormap='jet',
-                    set_max_min=True, deflects=True)
-            else:
-                raise RuntimeError('vector_size=%s' % (vector_size))
-
-            #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
-            #form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
-            #key = (res_obj, (0, title))
-            self.case_keys.append(icase)
-            self.result_cases[icase] = (res_obj, (islot, title))
-            formi.append((header, icase, []))
-
-            # TODO: double check this should be a string instead of an int
-            self.label_actors[icase] = []
-            self.label_ids[icase] = set([])
-            icase += 1
-        form.append((out_filename_short, None, formi))
-
-        self.ncases += len(headers)
-        #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
-        self.res_widget.update_results(form, 'main')
-
     def on_load_results(self, out_filename=None):
         """
         Loads a results file.  Must have called on_load_geometry first.
@@ -3177,7 +3032,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #raise IOError(msg)
             self.last_dir = os.path.split(out_filenamei)[0]
             try:
-                load_function(out_filenamei, self.last_dir)
+                load_function(out_filenamei)
             except Exception: #  as e
                 msg = traceback.format_exc()
                 self.log_error(msg)
@@ -3211,12 +3066,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
 
-        if PY2 and qt_version == 4:
-            self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-        elif qt_version == 5:  # tested on PY2
-            self.restoreGeometry(settings.value("mainWindowGeometry"))
-        else:
-            raise NotImplementedError('PY2=%s PY3=%s qt_version=%s' % (PY2, PY3, qt_version))
+        main_window_geometry = settings.value("mainWindowGeometry")
+        if main_window_geometry is not None:
+            if PY2 and qt_version == 4:
+                self.restoreGeometry(main_window_geometry.toByteArray())
+            elif qt_version == 5:  # tested on PY2
+                self.restoreGeometry(main_window_geometry)
+            else:
+                raise NotImplementedError('PY2=%s PY3=%s qt_version=%s' % (PY2, PY3, qt_version))
 
         self.reset_settings = False
         #if self.reset_settings or qt_version in [5, 'pyside']:
@@ -3229,8 +3086,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
-        if PY2 and qt_version == 4:
-            self.restoreState(settings.value("mainWindowState").toByteArray())
+        main_window_state = settings.value("mainWindowState")
+        if main_window_state is not None:
+            if PY2 and qt_version == 4:
+                self.restoreState(main_window_state.toByteArray())
         self.create_corner_axis()
         #-------------
         # loading
@@ -3539,10 +3398,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             sline = os.path.basename(csv_filename).rsplit('.', 1)
             name = sline[0]
 
-        self._add_user_points_from_csv(csv_filename, name, color)
-        self.num_user_points += 1
-        self.log_command('on_load_csv_points(%r, %r, %s)' % (
-            csv_filename, name, str(color)))
+        is_failed = self._add_user_points_from_csv(csv_filename, name, color)
+        if not is_failed:
+            self.num_user_points += 1
+            self.log_command('on_load_csv_points(%r, %r, %s)' % (
+                csv_filename, name, str(color)))
+        return is_failed
 
     def create_cell_picker(self):
         """creates the vtk picker objects"""
@@ -3719,7 +3580,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _get_closest_node_xyz(self, cell_id, world_position):
         duplicate_key = None
-        return_flag = False
         (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
             world_position, cell_id)
         assert self.icase in self.label_actors, result_name
@@ -3751,7 +3611,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return return_flag, None, None, None
         msg = "%s = %s" % (result_name, result_value)
         if self.result_name in ['Node_ID', 'Node ID', 'NodeID']:
-            msg += '; xyz=(%s, %s, %s)' % tuple(xyz)
+            x1, y1, z1 = xyz
+            x2, y2, z2 = world_position
+            msg += '; xyz=(%s, %s, %s); pierce_xyz=(%s, %s, %s)' % (x1, y1, z1,
+                                                                    x2, y2, z2)
         self.log_info(msg)
         return return_flag, duplicate_key, result_value, result_name, xyz
 
@@ -3837,6 +3700,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.rend.AddActor(follower)
         follower.SetPickable(False)
         self.label_actors[icase].append(follower)
+        #print('added label actor %r; icase=%s' % (text, icase))
+        #print(self.label_actors)
 
         #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
         #camera.GetPosition()
@@ -4105,7 +3970,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                  icase=None, icase_start=None, icase_end=None, icase_delta=None,
                  time=2.0, onesided=True,
                  nrepeat=0, fps=30, magnify=1,
-                 make_images=True, delete_images=False, make_gif=True):
+                 make_images=True, delete_images=False, make_gif=True, stop_animation=False,
+                 animate_in_gui=True):
         """
         Makes an animated gif
 
@@ -4118,6 +3984,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         istep : int; default=None
             the png file number (let's you pick a subset of images)
             useful for when you press ``Step``
+        stop_animation : bool; default=False
+            stops the animation; don't make any images/gif
+        animate_in_gui : bool; default=True
+            animates the model; don't make any images/gif
+            stop_animation overrides animate_in_gui
+            animate_in_gui overrides make_gif
 
         Pick One
         --------
@@ -4199,6 +4071,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - analysis_time should be one-sided
          - set onesided=False
         """
+        if stop_animation:
+            return self.stop_animation()
+
         if animate_time or animate_phase:
             onesided = True
         analysis_time = get_analysis_time(time, onesided)
@@ -4257,12 +4132,108 @@ class GuiCommon2(QMainWindow, GuiCommon):
             phases = (phases[istep],)
             isteps = (istep,)
 
+        parent = self
+        phases, icases, isteps, scales = self._update_animation_inputs(
+            phases, icases, isteps, scales)
+
+        animate_in_gui = True
+        self.stop_animation()
+        if len(icases) == 1:
+            pass
+        elif animate_in_gui:
+            class vtkAnimationCallback(object):
+                """
+                http://www.vtk.org/Wiki/VTK/Examples/Python/Animation
+                """
+                def __init__(self):
+                    self.timer_count = 0
+                    self.cycler = cycle(range(len(icases)))
+
+                    self.icase0 = -1
+                    self.ncases = len(icases)
+
+                def execute(self, obj, event):
+                    iren = obj
+                    i = self.timer_count % self.ncases
+                    #j = next(self.cycler)
+                    istep = isteps[i]
+                    icase = icases[i]
+                    scale = scales[i]
+                    phase = phases[i]
+                    if icase != self.icase0:
+                        #self.cycle_results(case=icase)
+                        parent.cycle_results_explicit(icase, explicit=True)
+                    try:
+                        parent.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
+                    except AttributeError:
+                        parent.log_error('Invalid Case %i' % icase)
+                        parent.stop_animation()
+                    self.icase0 = icase
+
+                    parent.vtk_interactor.Render()
+                    self.timer_count += 1
+
+            # Sign up to receive TimerEvent
+            callback = vtkAnimationCallback()
+
+            observer_name = self.iren.AddObserver('TimerEvent', callback.execute)
+            self.observers['TimerEvent'] = observer_name
+
+            # total_time not needed
+            # fps
+            # -> frames_per_second = 1/fps
+            delay = int(1. / fps * 1000)
+            timerId = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
+            return
+
         return self.make_gif_helper(
             gif_filename, icases, scales,
             phases=phases, isteps=isteps,
             time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
             onesided=onesided, nrepeat=nrepeat,
             make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+
+    def stop_animation(self):
+        """removes the animation timer"""
+        if 'TimerEvent' in self.observers:
+            observer_name = self.observers['TimerEvent']
+            self.iren.RemoveObserver(observer_name)
+            del self.observers['TimerEvent']
+
+    def _update_animation_inputs(self, phases, icases, isteps, scales):
+        """helper method for make_gif_helper"""
+        if phases is not None:
+            pass
+        elif phases is None:
+            phases = [0.] * len(scales)
+        else:
+            raise RuntimeError('phases=%r' % phases)
+
+        if isinstance(icases, integer_types):
+            icases = [icases] * len(scales)
+
+
+        if len(icases) != len(scales):
+            msg = 'ncases=%s nscales=%s' % (len(icases), len(scales))
+            print(msg)
+            raise ValueError(msg)
+
+        if len(icases) != len(phases):
+            msg = 'ncases=%s nphases=%s' % (len(icases), len(phases))
+            print(msg)
+            raise ValueError(msg)
+
+        if isteps is None:
+            isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
+            print("setting isteps in make_gif")
+
+        if len(scales) != len(isteps):
+            msg = 'len(scales)=%s len(isteps)=%s analysis_time=%s fps=%s' % (
+                len(scales), len(isteps), analysis_time, fps)
+            print(msg)
+            raise ValueError(msg)
+        assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
+        return phases, icases, isteps, scales
 
     def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
                         max_value=None, min_value=None,
@@ -4350,37 +4321,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if not os.path.exists(png_dirname):
             os.makedirs(png_dirname)
 
-        if phases is not None:
-            pass
-        elif phases is None:
-            phases = [0.] * len(scales)
-        else:
-            raise RuntimeError('phases=%r' % phases)
-
-        if isinstance(icases, integer_types):
-            icases = [icases] * len(scales)
-
-
-        if len(icases) != len(scales):
-            msg = 'ncases=%s nscales=%s' % (len(icases), len(scales))
-            print(msg)
-            raise ValueError(msg)
-
-        if len(icases) != len(phases):
-            msg = 'ncases=%s nphases=%s' % (len(icases), len(phases))
-            print(msg)
-            raise ValueError(msg)
-
-        if isteps is None:
-            isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
-            print("setting isteps in make_gif")
-
-        if len(scales) != len(isteps):
-            msg = 'len(scales)=%s len(isteps)=%s analysis_time=%s fps=%s' % (
-                len(scales), len(isteps), analysis_time, fps)
-            print(msg)
-            raise ValueError(msg)
-        assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
+        phases, icases, isteps, scales = self._update_animation_inputs(
+            phases, icases, isteps, scales)
 
         png_filenames = []
         fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
@@ -4403,7 +4345,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
         return write_gif(gif_filename, png_filenames, time=time,
-                         fps=fps, onesided=onesided,
+                         onesided=onesided,
                          nrepeat=nrepeat, delete_images=delete_images,
                          make_gif=make_gif)
 
@@ -4771,7 +4713,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.ncases = 0
         self.set_form(form)
 
-    def _finish_results_io2(self, form, cases):
+    def _finish_results_io2(self, form, cases, reset_labels=True):
         """
         Adds results to the Sidebar
 
@@ -4793,6 +4735,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 the case id
             result : GuiResult
                 the class that stores the result
+        reset_labels : bool; default=True
+            should the label actors be reset
 
         form = [
             'Model', None, [
@@ -4834,7 +4778,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print("cases =", cases)
         #print("case_keys =", self.case_keys)
 
-        self.reset_labels()
+        self.reset_labels(reset_minus1=reset_labels)
         self.cycle_results_explicit()  # start at nCase=0
         if self.ncases:
             self.scalarBar.VisibilityOn()
@@ -4886,7 +4830,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.show_elements_mask(np.arange(self.nElements))
 
     def get_result_by_cell_id(self, cell_id, world_position, icase=None):
-        """TODO: should handle multiple cell_ids"""
+        """should handle multiple cell_ids"""
         if icase is None:
             icase = self.icase
         case_key = self.case_keys[icase] # int for object
@@ -4929,6 +4873,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         elif cell_type in [24, 25, 26, 27]: # CTETRA10, CHEXA20, CPENTA15, CPYRAM13
             xyz = world_position
         elif cell_type in [3]: # CBAR, CBEAM, CELASx, CDAMPx, CBUSHx
+            node_xyz = np.zeros((nnodes, 3), dtype='float32')
+            for ipoint in range(nnodes):
+                point = points.GetPoint(ipoint)
+                node_xyz[ipoint, :] = point
+            xyz = node_xyz.mean(axis=0)
+        elif cell_type in [21]: # CBEND
+            # 21-QuadraticEdge
             node_xyz = np.zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):
                 point = points.GetPoint(ipoint)
@@ -5090,16 +5041,56 @@ class GuiCommon2(QMainWindow, GuiCommon):
         data2 = [('node/centroid', None, [])]
         self.res_widget.update_methods(data2)
 
+    def clear_application_log(self, force=False):
+        """
+        Clears the application log
 
-    def reset_labels(self):
+        Parameters
+        ----------
+        force : bool; default=False
+            clears the dialog without asking
+        """
+        # popup menu
+        if force:
+            self.log_widget.clear()
+            self.log_command('clear_application_log(force=%s)' % force)
+        else:
+            widget = QWidget()
+            title = 'Clear Application Log'
+            msg = 'Are you sure you want to clear the Application Log?'
+            result = QMessageBox.question(widget, title, msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if result == QMessageBox.Yes:
+                self.log_widget.clear()
+                self.log_command('clear_application_log(force=%s)' % force)
+
+    def delete_actor(self, name):
+        """deletes an actor and associated properties"""
+        if name != 'main':
+            if name in self.geometry_actors:
+                actor = self.geometry_actors[name]
+                self.rend.RemoveActor(actor)
+                del self.geometry_actors[name]
+            if name in self.geometry_properties:
+                prop = self.geometry_properties[name]
+                del self.geometry_properties[name]
+            self.Render()
+
+    def reset_labels(self, reset_minus1=True):
         """
         Wipe all labels and regenerate the key slots based on the case keys.
         This is used when changing the model.
         """
         self._remove_labels()
 
+        reset_minus1 = True
         # new geometry
-        self.label_actors = {}
+        if reset_minus1:
+            self.label_actors = {-1 : []}
+        else:
+            for idi in self.label_actors:
+                if idi == -1:
+                    continue
+                self.label_actors[idi] = []
         self.label_ids = {}
 
         #self.case_keys = [
@@ -5110,6 +5101,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #result_name = self.get_result_name(icase)
             self.label_actors[icase] = []
             self.label_ids[icase] = set([])
+        #print(self.label_actors)
+        #print(self.label_ids)
 
     def _remove_labels(self):
         """
@@ -5122,6 +5115,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # existing geometry
         for icase, actors in iteritems(self.label_actors):
+            if icase == -1:
+                continue
             for actor in actors:
                 self.rend.RemoveActor(actor)
                 del actor
@@ -5167,7 +5162,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 actor.VisibilityOff()
                 count += 1
         if count and show_msg:
-            self.log_command('hide_labels(%s' % names)
+            self.log_command('resize_labels(%s)' % names)
 
     def hide_labels(self, case_keys=None, show_msg=True):
         if case_keys is None:
@@ -5185,7 +5180,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #prop = actor.GetProperty()
                 count += 1
         if count and show_msg:
-            self.log_command('hide_labels(%s' % names)
+            self.log_command('hide_labels(%s)' % names)
 
     def show_labels(self, case_keys=None, show_msg=True):
         if case_keys is None:
@@ -5209,7 +5204,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 count += 1
         if count and show_msg:
             # yes the ) is intentionally left off because it's already been added
-            self.log_command('show_labels(%s' % names)
+            self.log_command('show_labels(%s)' % names)
 
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
                           data_format,
@@ -5748,7 +5743,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if name in ['clicked_ok', 'clicked_cancel']:
                 continue
 
-            #color2 = group.color_float
+            if name not in self.geometry_properties:
+                # we've deleted the actor
+                continue
+
             geom_prop = self.geometry_properties[name]
             if isinstance(geom_prop, CoordProperties):
                 pass
@@ -5819,7 +5817,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             data[group.name] = group
         self.groups = data
 
-    def on_update_geometry_properties(self, out_data, write_log=True):
+    def on_update_geometry_properties(self, out_data, name=None, write_log=True):
         """
         Applies the changed properties to the different actors if
         something changed.
@@ -5829,28 +5827,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         being actually "hidden" at the same time.
         """
         lines = []
-        for name, group in iteritems(out_data):
-            if name in ['clicked_ok', 'clicked_cancel']:
-                continue
-            actor = self.geometry_actors[name]
-            if isinstance(actor, vtk.vtkActor):
-                lines += self._update_geomtry_properties_actor(name, group, actor)
-            elif isinstance(actor, vtk.vtkAxesActor):
-                changed = False
-                is_visible1 = bool(actor.GetVisibility())
-                is_visible2 = group.is_visible
-                if is_visible1 != is_visible2:
-                    actor.SetVisibility(is_visible2)
-                    alt_prop = self.geometry_properties[name]
-                    alt_prop.is_visible = is_visible2
-                    actor.Modified()
-                    changed = True
-
-                if changed:
-                    lines.append('    %r : CoordProperties(is_visible=%s),\n' % (
-                        name, is_visible2))
-            else:
-                raise NotImplementedError(actor)
+        if name is None:
+            for namei, group in iteritems(out_data):
+                if namei in ['clicked_ok', 'clicked_cancel']:
+                    continue
+                self._update_ith_geometry_properties(namei, group, lines, render=False)
+        else:
+            group = out_data[name]
+            self._update_ith_geometry_properties(name, group, lines, render=False)
 
         self.vtk_interactor.Render()
         if write_log and lines:
@@ -5859,6 +5843,33 @@ class GuiCommon2(QMainWindow, GuiCommon):
             msg += '}\n'
             msg += 'self.on_update_geometry_properties(out_data)'
             self.log_command(msg)
+
+    def _update_ith_geometry_properties(self, namei, group, lines, render=True):
+        """updates a geometry"""
+        if namei not in self.geometry_actors:
+            # we've deleted the actor
+            return
+        actor = self.geometry_actors[namei]
+        if isinstance(actor, vtk.vtkActor):
+            lines += self._update_geomtry_properties_actor(namei, group, actor)
+        elif isinstance(actor, vtk.vtkAxesActor):
+            changed = False
+            is_visible1 = bool(actor.GetVisibility())
+            is_visible2 = group.is_visible
+            if is_visible1 != is_visible2:
+                actor.SetVisibility(is_visible2)
+                alt_prop = self.geometry_properties[namei]
+                alt_prop.is_visible = is_visible2
+                actor.Modified()
+                changed = True
+
+            if changed:
+                lines.append('    %r : CoordProperties(is_visible=%s),\n' % (
+                    namei, is_visible2))
+        else:
+            raise NotImplementedError(actor)
+        if render:
+            self.vtk_interactor.Render()
 
     def _update_geomtry_properties_actor(self, name, group, actor):
         """
@@ -5884,7 +5895,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         prop = actor.GetProperty()
         backface_prop = actor.GetBackfaceProperty()
 
-        if backface_prop is None and group.name == 'main':
+        if name == 'main' and backface_prop is None:
             # don't edit these
             # we're lying about the colors to make sure the
             # colors aren't reset for the Normals
@@ -5922,6 +5933,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         bar_scale2 = group.bar_scale
         # bar_scale2 = max(0.0, bar_scale2)
 
+        #print('name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
         if color1 != color2:
             #print('color_2662[%s] = %s' % (name, str(color1)))
             assert isinstance(color1[0], float), color1
@@ -6028,15 +6040,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
         point_size : int; default=4
             the nominal point size
         """
-        assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
-        # read input file
+        is_failed = True
         try:
-            user_points = np.loadtxt(csv_points_filename, delimiter=',')
-        except ValueError:
-            user_points = loadtxt_nice(csv_points_filename, delimiter=',')
-            # can't handle leading spaces?
-            #raise
+            assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
+            # read input file
+            try:
+                user_points = np.loadtxt(csv_points_filename, delimiter=',')
+            except ValueError:
+                user_points = loadtxt_nice(csv_points_filename, delimiter=',')
+                # can't handle leading spaces?
+                #raise
+        except ValueError as e:
+            #self.log_error(traceback.print_stack(f))
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
+            return is_failed
+
         self._add_user_points(user_points, name, color, csv_points_filename, point_size=point_size)
+        is_failed = False
+        return False
+
 
     def _add_user_points(self, user_points, name, color, csv_points_filename='', point_size=4):
         """

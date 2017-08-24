@@ -9,16 +9,16 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from copy import deepcopy
 from six import exec_
 
-from pyNastran.bdf.cards.base_card import BaseCard
-
 import numpy as np
-from numpy import cos, sin, tan, log, log10
-from numpy import arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2
-from numpy import arcsinh as asinh, arccosh as acosh, arctanh as atanh
+from numpy import (
+    cos, sin, tan, log, log10, mean, exp, sqrt, square, mod, abs, sum,
+    arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2,
+    arcsinh as asinh, arccosh as acosh, arctanh as atanh)
 # atan2h
-from numpy import mean, exp, sqrt, square, sum
-from numpy import mod, abs
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
+
+from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.bdf.cards.deqatn import lines_to_eqs
 
 def pi(num):
     """weird way to multiply p by a number"""
@@ -139,17 +139,17 @@ class DEQATN(BaseCard):  # needs work...
         comment : str; default=''
             a comment for the card
 
-        DEQATN  41      F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R)
+        DEQATN  41      F1(A,B,C,D,R) = A+B *Câ€“(D**3 + 10.0) + sin(PI(1) * R)
                         + A**2 / (B - C); F = A + B - F1 * D
 
         def F1(A, B, C, D, R):
-            F1 = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B – C)
+            F1 = A+B *C-(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B â€“ C)
             F = A + B - F1 * D
             return F
 
         eqs = [
-            'F1(A,B,C,D,R) = A+B *C–(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B – C)',
-            'F = A + B – F1 * D',
+            'F1(A,B,C,D,R) = A+B *Câ€“(D**3 + 10.0) + sin(PI(1) * R) + A**2 / (B â€“ C)',
+            'F = A + B â€“ F1 * D',
         ]
         >>> deqatn = DEQATN(41, eq, comment='')
         """
@@ -196,61 +196,10 @@ class DEQATN(BaseCard):  # needs work...
 
         equation_id = int(eq_id)
 
-        line0_eq = line0[16:]
-
         # combine the equations into a single organized block
-        eqs_temp = []
-        eqs_temp1 = [line0_eq] + card[1:]
-        for eq in eqs_temp1:
-            eq2 = eq.rstrip(';')
-            if ';' in eq2:
-                eqs_temp += [eqi + ';' for eqi in eq.split(';')]
-            else:
-                eqs_temp.append(eq)
-        #print('eqs_temp = ', eqs_temp)
-
-        eqs = []
-        neqs = len(eqs_temp)
-        is_join = False
-        for i, eq in enumerate(eqs_temp):
-            #print('i=%s join=%s eq=%r' % (i, is_join, eq))
-            if is_join:
-                eq = eqi.rstrip() + eq.lstrip()
-            eqi = eq.strip().replace(' ', '')
-            if i == 0 and eqi == '':
-                #self.eqs.append(eqi)
-                continue
-
-            if i == 0:
-                # first line
-                if eqi.endswith(';'):
-                    eqi = eqi[:-1]
-                    assert not eqi.endswith(';'), eq
-                else:
-                    is_join = True
-                assert len(eqi) <= 56, eqi
-            elif i != neqs-1:
-                # mid line
-                assert len(eqi) <= 64, 'len(eqi)=%s eq=%r' % (len(eqi), eqi)
-                if eqi.endswith(';'):
-                    eqi = eqi[:-1]
-                    is_join = False
-                    assert not eqi.endswith(';'), eq
-                else:
-                    is_join = True
-            else:
-                # last line
-                is_join = False
-            if not is_join:
-                if '=' not in eqi:
-                    raise SyntaxError('line=%r expected an equal sign' % eqi)
-                eqs.append(eqi)
-            #print(i, eqi)
-        #assert not is_join
-        if is_join:
-            eqs.append(eqi)
-        assert len(eqs) > 0, eqs
-        #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(eqID))
+        line0_eq = line0[16:]
+        eqs_temp = [line0_eq] + card[1:]
+        eqs = lines_to_eqs(eqs_temp)
         return DEQATN(equation_id, eqs, comment=comment)
 
     def _setup_equation(self):
@@ -270,8 +219,8 @@ class DEQATN(BaseCard):  # needs work...
         dtable_ref = self.model.dtable
         if dtable_ref is not None:
             default_values = dtable_ref.default_values
-        func_name, nargs, func_str = fortran_to_python(self.eqs, default_values,
-                                                       str(self))
+        func_name, nargs, func_str = fortran_to_python(
+            self.eqs, default_values, str(self))
         self.func_str = func_str
         self.func_name = func_name
         exec_(func_str)
@@ -313,7 +262,8 @@ class DEQATN(BaseCard):  # needs work...
         #print('args =', args2)
         if len(args) > self.nargs:
             msg = 'len(args) > nargs\n'
-            msg += 'nargs=%s len(args)=%s; func_name=%s' % (self.nargs, len(args), self.func_name)
+            msg += 'nargs=%s len(args)=%s; func_name=%s' % (
+                self.nargs, len(args), self.func_name)
             raise RuntimeError(msg)
         return self.func(*args)
         #self.func(*args)
@@ -415,6 +365,7 @@ def _split_equation(lines_out, line, n, isplit=0):
     return lines_out
 
 def fortran_to_python_short(line, default_values):
+    """the function used by the DRESP2"""
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
     d = {}
@@ -502,6 +453,28 @@ def write_function_header(f, eq, default_values, comment=''):
         except:
             print(locals())
             raise
+
+    Parameters
+    ----------
+    f : str
+        the function header
+        f(a, b, c)
+    eq : str
+        the value on the other side of the equals sign (f=eq)
+        1.
+        max(a, b, c)
+    default_values : dict[name] = value
+        the default values from the DTABLE card
+
+    Returns
+    -------
+    func_name : str
+        the name of the function ``f``
+    msg : str
+        see above
+    variables : List[str]
+        the variables used by the equation header
+        a, b, c
     """
     msg = ''
     out = ''

@@ -5,7 +5,7 @@ from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -48,6 +48,7 @@ class ComplexRodForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexRodForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -262,6 +263,7 @@ class ComplexCShearForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCShearForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -514,6 +516,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexSpringDamperForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -626,6 +629,10 @@ class ComplexSpringDamperForceArray(ScalarObject):
             msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 1 )\n']
         elif self.element_type == 21: # CDAMP2
             msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 2 )\n']
+        elif self.element_type == 22: # CDAMP3
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 3 )\n']
+        elif self.element_type == 23: # CDAMP4
+            msg = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   D A M P E R S   ( C D A M P 4 )\n']
         else:
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
 
@@ -732,6 +739,7 @@ class ComplexViscForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexViscForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -929,6 +937,7 @@ class ComplexPlateForceArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexPlateForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -1155,6 +1164,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexPlate2ForceArray"""
         if self.is_built:
             return
 
@@ -1412,6 +1422,7 @@ class ComplexCBarForceArray(ScalarObject):
         return True
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBarForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
@@ -1667,6 +1678,7 @@ class ComplexCBeamForceArray(ScalarObject):
         return True
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBeamForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
@@ -1931,6 +1943,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBendForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2186,6 +2199,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
         #return headers
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexSolidPressureForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -2401,6 +2415,7 @@ class ComplexCBushForceArray(ScalarObject):
         self.ielement = 0
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBushForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
@@ -2689,6 +2704,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         return ['xxb', 'force_x', 'shear_y', 'shear_z', 'torsion', 'bending_y', 'bending_z']
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexCBendForceVUArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
@@ -2768,9 +2784,12 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
                     (xxb2, fx2, fy2, fz2, mx2, my2, mz2) = t2
 
                     if not np.array_equal(t1, t2):
-                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s)\n' % (
-                            eid, nid,
+                        eid_nid1 = '(%s, %s)  ' % (eid, nid)
+                        eid_nid2 = ' ' * len(eid_nid1)
+                        msg += ('%s(%s, %s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s, %s)\n' % (
+                            eid_nid1,
                             xxb1, fx1, fy1, fz1, mx1, my1, mz1,
+                            eid_nid2,
                             xxb2, fx2, fy2, fz2, mx2, my2, mz2))
                         i += 1
                         if i > 10:

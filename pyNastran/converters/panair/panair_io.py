@@ -27,7 +27,7 @@ class PanairIO(object):
                 'Panair (*agps)', self.load_panair_results)
         return data
 
-    def load_panair_geometry(self, panair_filename, dirname, name='main', plot=True):
+    def load_panair_geometry(self, panair_filename, name='main', plot=True):
         self.nid_map = {}
 
         #key = self.case_keys[self.icase]
@@ -105,7 +105,7 @@ class PanairIO(object):
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['Panair', '']}
+        self.isubcase_name_map = {1: ['Panair', '']}
         cases = {}
         ID = 1
 
@@ -230,7 +230,7 @@ class PanairIO(object):
 
         return form, cases
 
-    def load_panair_results(self, panair_filename, dirname):
+    def load_panair_results(self, panair_filename):
         cases = self.result_cases
         if os.path.basename(panair_filename) == 'agps':
             model = AGPS(log=self.log, debug=self.debug)

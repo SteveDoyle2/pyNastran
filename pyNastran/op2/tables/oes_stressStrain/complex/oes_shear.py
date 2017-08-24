@@ -6,7 +6,7 @@ from pyNastran.f06.f06_formatting import get_key0, write_imag_floats_13e
 import numpy as np
 ints = (int, np.int32)
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -46,6 +46,7 @@ class ComplexShearArray(OES_Object):
         return get_nnodes(self)
 
     def build(self):
+        """sizes the vectorized attributes of the ComplexShearArray"""
         #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']

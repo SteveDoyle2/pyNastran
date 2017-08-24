@@ -8,7 +8,7 @@ pkg_path = pyNastran.__path__[0]
 
 
 def create_rst_from_ipython_notebooks():
-    curdir = os.getcwd()
+    #curdir = os.getcwd()
     notebook_dir = os.path.join(pkg_path, '..', 'docs', 'quick_start', 'demo')
     pydocs_dir = os.path.join(pkg_path, '..', 'docs', 'html_docs', 'quick_start')
 

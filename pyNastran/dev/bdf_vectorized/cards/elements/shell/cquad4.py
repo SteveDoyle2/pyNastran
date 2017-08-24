@@ -6,7 +6,7 @@ from six.moves import zip, range
 
 import numpy as np
 from numpy import array, zeros, arange, searchsorted, unique, cross
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.dev.bdf_vectorized.cards.elements.shell.shell_element import ShellElement
 
@@ -572,9 +572,9 @@ class CQUAD4(ShellElement):
 
             #print("Lsize = ", Lambda.shape)
             #print("qsize = ", q.shape)
-            u_axial = dot(array(Lambda), q_axial)
+            u_axial = np.dot(array(Lambda), q_axial)
             du_axial = u_axial[0] - u_axial[1]
-            u_torsion = dot(array(Lambda), q_torsion)
+            u_torsion = np.dot(array(Lambda), q_torsion)
             du_torsion = u_torsion[0] - u_torsion[1]
 
             #L = self.Length()

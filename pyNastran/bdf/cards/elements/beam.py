@@ -1,8 +1,12 @@
+"""
+defines:
+ - CBEAM
+"""
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import print_function
 from six import string_types
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.elements.bars import CBAR, LineElement
@@ -11,6 +15,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+
 
 class CBEAM(CBAR):
     """
@@ -151,6 +156,9 @@ class CBEAM(CBAR):
         self.sa = sa
         self.sb = sb
         self._validate_input()
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -439,7 +447,6 @@ class CBEAM(CBAR):
             wa = cd1_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
         else:
             msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, self.offt)
-            self.log.error(msg)
             return is_failed, msg
             #raise NotImplementedError(msg)
 
@@ -515,22 +522,32 @@ class CBEAM(CBAR):
         #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
         #print('   Li=%s' % (Li))
         is_failed = False
-        return is_failed, wa, wb, ihat, yhat, zhat
+        return is_failed, (wa, wb, ihat, yhat, zhat)
+
+    @property
+    def nodes_ref(self):
+        return [self.ga_ref, self.gb_ref]
+
+    @nodes_ref.setter
+    def nodes_ref(self, values):
+        assert values is not None, values
+        self.ga_ref = values[0]
+        self.gb_ref = values[1]
 
     def Mid(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.Mid()
 
     def Area(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.Area()
 
     def Nsm(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid_ref.Nsm()
@@ -568,17 +585,13 @@ class CBEAM(CBAR):
             the BDF object
         """
         msg = ' which is required by CBEAM eid=%s' % (self.eid)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.ga_ref = self.ga
-        self.gb = model.Node(self.gb, msg=msg)
-        self.gb_ref = self.gb
-        self.nodes = model.Nodes([self.ga.nid, self.gb.nid], msg=msg)
-        self.nodes_ref = self.nodes
-        self.pid = model.Property(self.pid, msg=msg)
-        self.pid_ref = self.pid
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.nodes_ref = [self.ga_ref, self.gb_ref]
+        self.pid_ref = model.Property(self.pid, msg=msg)
         if self.g0:
             g0 = model.nodes[self.g0]
-            self.g0_vector = g0.get_position() - self.ga.get_position()
+            self.g0_vector = g0.get_position() - self.ga_ref.get_position()
         else:
             self.g0_vector = self.x
         if model.is_nx:
@@ -586,21 +599,19 @@ class CBEAM(CBAR):
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CBEAM eid=%s' % (self.eid)
-        self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
 
-        self.ga_ref = self.ga
-        self.gb_ref = self.gb
+        self.ga_ref = model.Node(self.ga, msg=msg)
+        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.nodes_ref = [self.ga_ref, self.gb_ref]
         try:
-            self.pid = model.Property(self.pid, msg=msg)
-            self.pid_ref = self.pid
+            self.pid_ref = model.Property(self.pid, msg=msg)
         except KeyError:
             model.log.warning('pid=%s%s' % (self.pid, msg))
 
         if self.g0:
             try:
                 g0 = model.nodes[self.g0]
-                self.g0_vector = g0.get_position() - self.ga.get_position()
+                self.g0_vector = g0.get_position() - self.ga_ref.get_position()
             except KeyError:
                 model.log.warning('Node=%s%s' % (self.g0, msg))
         else:
@@ -610,7 +621,9 @@ class CBEAM(CBAR):
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.ga_ref, self.gb_ref, self.pid_ref
+        self.ga_ref = None
+        self.gb_ref = None
+        self.pid_ref = None
 
     def _verify(self, xref=False):
         eid = self.eid
@@ -621,7 +634,7 @@ class CBEAM(CBAR):
             nsm = self.Nsm()
             assert isinstance(mid, int), 'mid=%r' % mid
             assert isinstance(nsm, float), 'nsm=%r' % nsm
-            assert self.pid_ref.type in ['PBEAM', 'PBEAML', 'PBCOMP'], '%s%s' % (self, self.pid_ref)
+            assert self.pid_ref.type in ['PBEAM', 'PBEAML', 'PBCOMP', 'PBMSECT'], '%s%s' % (self, self.pid_ref)
             A = self.Area()
             mpl = self.MassPerLength()
             L = self.Length()

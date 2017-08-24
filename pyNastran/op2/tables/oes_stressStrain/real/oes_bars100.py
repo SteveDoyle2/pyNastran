@@ -1,14 +1,14 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
 from six import iteritems, integer_types
 
-from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 
@@ -53,6 +53,7 @@ class RealBar10NodesArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
+        """sizes the vectorized attributes of the RealBar10NodesArray"""
         #print("self.ielement =", self.ielement)
         # print('RealBar10NodesArray isubcase=%s ntimes=%s nelements=%s ntotal=%s' % (
             # self.isubcase, self.ntimes, self.nelements, self.ntotal))
@@ -94,11 +95,13 @@ class RealBar10NodesArray(OES_Object):
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, major_axis=self.element,
+                                       minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -114,8 +117,8 @@ class RealBar10NodesArray(OES_Object):
             if self.is_sort1():
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
                         (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
                         (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
                         if not np.allclose(t1, t2):
@@ -150,10 +153,11 @@ class RealBar10NodesArray(OES_Object):
 
     def get_stats(self, short=False):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.nelements
         ntimes = self.ntimes
@@ -206,7 +210,7 @@ class RealBar10NodesArray(OES_Object):
         return page_num
 
     def _write_sort1_as_sort1(self, f06_file, header, page_stamp, msg, page_num):
-        (ntimes, ntotal) = self.data.shape[:2]
+        ntimes = self.data.shape[0]
         eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]
@@ -224,7 +228,7 @@ class RealBar10NodesArray(OES_Object):
             MS = self.data[itime, :, 8]
 
             for (i, eid, sdi, sxci, sxdi, sxei, sxfi, axiali, smaxi, smini, MSi) in zip(
-                     count(), eids, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
+                    count(), eids, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
 
                 vals = [sdi, sxci, sxdi, sxei, sxfi, axiali, smaxi, smini, MSi]
                 vals2 = write_floats_13e(vals)
@@ -293,4 +297,3 @@ class RealBar10NodesStrainArray(RealBar10NodesArray, StrainObject):
             #'            1   0.000   4.919032E+05 -4.348710E+05 -4.348710E+05  4.919032E+05   0.0            4.919032E+05 -4.348710E+05 \n'
         ]
         return msg
-

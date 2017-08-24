@@ -53,6 +53,7 @@ class PROD(Property):
         self.j = j
         self.c = c
         self.nsm = nsm
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -122,12 +123,18 @@ class PROD(Property):
         return self.nsm
 
     def E(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.E()
 
     def G(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.G()
 
     def Rho(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.Rho()
 
     def cross_reference(self, model):
@@ -140,8 +147,12 @@ class PROD(Property):
             the BDF object
         """
         msg = ' which is required by PROD mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
+
+    def uncross_reference(self):
+        # type: () -> None
+        self.mid = self.Mid()
+        self.mid_ref = None
 
     def raw_fields(self):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
@@ -199,6 +210,7 @@ class PTUBE(Property):
         self.OD2 = OD2
         self.t = t
         self.nsm = nsm
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -268,13 +280,19 @@ class PTUBE(Property):
             the BDF object
         """
         msg = ' which is required by PTUBE mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
+
+    def uncross_reference(self):
+        # type: () -> None
+        self.mid = self.Mid()
+        self.mid_ref = None
 
     def Rho(self):
         """
         Gets the density :math:`\rho` of the CTUBE.
         """
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.Rho()
 
     def MassPerLength(self):
@@ -286,9 +304,13 @@ class PTUBE(Property):
         return self.Area() * self.Rho() + self.nsm
 
     def E(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.E()
 
     def G(self):
+        if self.mid_ref is None:
+            raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.G()
 
     def J(self):

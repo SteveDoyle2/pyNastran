@@ -12,5 +12,10 @@ from pyNastran.converters.abaqus.test_unit_abaqus import TestAbaqus
 from pyNastran.converters.aflr.aflr2.test_bedge import TestBEdge
 from pyNastran.converters.aflr.ugrid.test_ugrid import TestUgrid
 
+try:
+    from pyNastran.converters.dev.avus.test_avus import TestAvus
+except ImportError:
+    pass
+
 if __name__ == '__main__':
     unittest.main()

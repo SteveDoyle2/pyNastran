@@ -8,6 +8,7 @@ from six import iteritems, StringIO
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.cards.test.utils import save_load_deck
 #from pyNastran.op2.op2 import OP2, read_op2
 #from pyNastran.f06.test.f06_unit_tests import run_model
 
@@ -36,8 +37,41 @@ class TestMassElements(unittest.TestCase):
         conm1.write_card(size=16)
         conm1.write_card(size=16, is_double=True)
         conm1.raw_fields()
+
+        model.add_grid(nid, [0., 0., 0.])
         model.validate()
-        read_write(model)
+        save_load_deck(model)
+
+    def test_conm2(self):
+        """tests a conm2"""
+        model = BDF(debug=False)
+        nid = 10
+        eid = 20
+        massi = 42.
+        model.add_conm2(eid, nid, massi, cid=0, X=None, I=None, comment='conm2')
+        model.add_grid(nid, [0., 0., 0.])
+        model.validate()
+        model.cross_reference()
+        save_load_deck(model)
+        pids_to_mass, mass_type_to_mass = model.get_mass_breakdown(property_ids=None)
+        assert len(pids_to_mass) == 0, pids_to_mass
+        assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
+
+        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=None, reference_point=None,
+                                            sym_axis=None, scale=None)
+        assert np.allclose(mass, massi), 'massi=%s mass=%s' % (massi, mass)
+        assert np.array_equal(cg, np.zeros(3))
+        assert np.array_equal(I, np.zeros(6))
+
+        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=[20], reference_point=None,
+                                            sym_axis=None, scale=None)
+        assert np.allclose(mass, massi), 'massi=%s mass=%s' % (massi, mass)
+        assert np.array_equal(cg, np.zeros(3))
+        assert np.array_equal(I, np.zeros(6))
+
+        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=[42], reference_point=None,
+                                            sym_axis=None, scale=None)
+        assert np.allclose(mass, 0.), 'massi=%s mass=%s' % (massi, mass) ## TODO: is this reasonable behavior
 
     def test_cmass1(self):
         """tests a CMASS1, PMASS, CMASS2, DDVAL"""
@@ -69,6 +103,9 @@ class TestMassElements(unittest.TestCase):
         cmass2.write_card(size=16, is_double=True)
         cmass2.raw_fields()
 
+        model.add_grid(g1, [0., 0., 0.])
+        model.add_grid(g2, [0., 0., 0.])
+
         oid = 3
         ddvals = 1. # promoted to a list
         ddval = model.add_ddval(oid, ddvals, comment='ddval')
@@ -83,7 +120,7 @@ class TestMassElements(unittest.TestCase):
         cmass2.write_card(size=8)
         pmass.write_card(size=8)
         ddval.write_card(size=8)
-        read_write(model)
+        save_load_deck(model)
 
     def test_mass_3_4(self):
         """tests a CMASS3, PMASS, CMASS4"""
@@ -118,52 +155,45 @@ class TestMassElements(unittest.TestCase):
         cmass3.write_card(size=8)
         cmass4.write_card(size=8)
         pmass.write_card(size=8)
-        read_write(model)
+        #save_load_deck(model)
 
     def test_nsm(self):
         """tests the NSM card"""
-        model = BDF()
+        model = BDF(debug=False)
         sid = 1
         nsmi = 0.1
         pid = 10
         mid = 100
         model.add_nsm(sid, 'PSHELL', pid, nsmi, comment='nsm')
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         model.add_ctria3(1, pid, [1, 2, 3]) # A=0.5
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
         model.add_mat1(mid, 3.0e7, None, 0.3)
+        save_load_deck(model)
 
     def test_nsm1(self):
         """tests the NSM1 card"""
-        model = BDF()
+        model = BDF(debug=False)
         sid = 1
         Type = 'PSHELL'
         nsmi = 0.1
         pid = 10
         mid = 100
         model.add_nsm1(sid, 'PSHELL', nsmi, [pid])
-        model.add_grid(1, xyz=[0., 0., 0.])
-        model.add_grid(2, xyz=[1., 0., 0.])
-        model.add_grid(3, xyz=[1., 1., 0.])
-        model.add_grid(4, xyz=[0., 1., 0.])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
         model.add_ctria3(1, pid, [1, 2, 3]) # A=0.5
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
         model.add_mat1(mid, 3.0e7, None, 0.3)
+        save_load_deck(model)
 
-def read_write(model):
-    """tests the add_card methods"""
-    bdf_file = StringIO()
-    model.write_bdf(bdf_file, close=False)
-    bdf_file.seek(0)
-    model2 = read_bdf(bdf_file, xref=False, punch=True)
-    return model2
-    #msg = bdf_file.getvalue()
-    #bdf_file.close()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -29,16 +29,9 @@ class ThermalBC(ThermalCard):
 
 
 class ThermalElement(ThermalCard):
-    pid = 0
 
     def __init__(self):
         ThermalCard.__init__(self)
-
-    def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        else:
-            return self.pid_ref.pid
 
 
 class ThermalProperty(ThermalCard):
@@ -94,6 +87,7 @@ class CHBDYE(ThermalElement):
         'CQUAD4': [1, 2, 3, 4],
     }
 
+    pid = 0
     def __init__(self, eid, eid2, side, iview_front=0, ivew_back=0,
                  rad_mid_front=0, rad_mid_back=0, comment=''):
         """
@@ -204,6 +198,12 @@ class CHBDYE(ThermalElement):
     def node_ids(self):
         return _node_ids(self, nodes=self.grids, allow_empty_nodes=False, msg='')
 
+    def Pid(self):
+        return 0
+        #if self.pid_ref is not None:
+            #return self.pid_ref.pid
+        #return self.pid
+
     def get_edge_ids(self):
         # TODO: not implemented
         return []
@@ -248,6 +248,15 @@ class CHBDYE(ThermalElement):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -269,7 +278,7 @@ class CHBDYG(ThermalElement):
     """
     type = 'CHBDYG'
 
-    def __init__(self, eid, Type, nodes, iview_front=0, ivew_back=0,
+    def __init__(self, eid, surface_type, nodes, iview_front=0, ivew_back=0,
                  rad_mid_front=0, rad_mid_back=0, comment=''):
         ThermalElement.__init__(self)
         if comment:
@@ -278,7 +287,7 @@ class CHBDYG(ThermalElement):
         self.eid = eid
 
         #: Surface type
-        self.Type = Type
+        self.surface_type = surface_type
 
         #: A VIEW entry identification number for the front face
         self.iview_front = iview_front
@@ -297,15 +306,39 @@ class CHBDYG(ThermalElement):
         #: Grid point IDs of grids bounding the surface (Integer > 0)
         self.nodes = nodes
 
-        assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r' % Type
+        assert self.surface_type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'surface_type=%r' % surface_type
         assert len(nodes) > 0, nodes
+        self.nodes_ref = None
 
     def validate(self):
-        #assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r' % self.Type
-        if self.Type != 'REV':
-            nnodes = int(self.Type[-1])
-            if len(self.nodes) != nnodes:
-                msg = 'nnodes=%s Type=%r' % (len(self.nodes), self.Type)
+        #assert self.surface_type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'surface_type=%r' % self.surface_type
+        if self.surface_type == 'REV':
+            assert len(self.nodes) == 3, 'CHBDYG: REV; nodes=%s' % str(self.nodes)
+        elif self.surface_type == 'REV1':
+            assert len(self.nodes) == 3, 'CHBDYG: REV; nodes=%s' % str(self.nodes)
+        else:
+            if self.surface_type == 'AREA3':
+                nnodes_required = 3
+                nnodes_allowed = 3
+            elif self.surface_type == 'AREA4':
+                nnodes_required = 4
+                nnodes_allowed = 4
+            elif self.surface_type == 'AREA6':
+                nnodes_required = 3
+                nnodes_allowed = 6
+            elif self.surface_type == 'AREA8':
+                nnodes_required = 4
+                nnodes_allowed = 8
+            else:
+                raise RuntimeError('CHBDYG surface_type=%r' % self.surface_type)
+
+            if len(self.nodes) < nnodes_required:
+                msg = 'nnodes=%s nnodes_required=%s; surface_type=%r' % (
+                    len(self.nodes), nnodes_required, self.surface_type)
+                raise ValueError(msg)
+            if len(self.nodes) > nnodes_allowed:
+                msg = 'nnodes=%s nnodes_allowed=%s; surface_type=%r' % (
+                    len(self.nodes), nnodes_allowed, self.surface_type)
                 raise ValueError(msg)
 
     @classmethod
@@ -323,7 +356,7 @@ class CHBDYG(ThermalElement):
         eid = integer(card, 1, 'eid')
         # no field 2
 
-        Type = string(card, 3, 'Type')
+        surface_type = string(card, 3, 'Type')
         i_view_front = integer_or_blank(card, 4, 'iview_front', 0)
         i_view_back = integer_or_blank(card, 8, 'ivew_back', 0)
         rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', 0)
@@ -336,7 +369,7 @@ class CHBDYG(ThermalElement):
             grid = integer_or_blank(card, i, 'grid%i' % n)
             nodes.append(grid)  # used to have a None option
         assert len(nodes) > 0, 'card=%s' % card
-        return CHBDYG(eid, Type, nodes,
+        return CHBDYG(eid, surface_type, nodes,
                       iview_front=i_view_front, ivew_back=i_view_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
@@ -354,29 +387,29 @@ class CHBDYG(ThermalElement):
             a comment for the card
         """
         eid = data[0]
-        Type = data[1]
+        surface_type = data[1]
         i_view_front = data[2]
         i_view_back = data[3]
         rad_mid_front = data[4]
         rad_mid_back = data[5]
         nodes = [datai for datai in data[6:14] if datai > 0]
-        if Type == 3:
-            Type = 'REV'
-        elif Type == 4:
-            Type = 'AREA3'
-        elif Type == 5:
-            Type = 'AREA4'
-        #elif Type == 7: # ???
-            #Type = 'AREA6'
-        elif Type == 8:
-            Type = 'AREA6'
-        elif Type == 9:
-            Type = 'AREA8'
+        if surface_type == 3:
+            surface_type = 'REV'
+        elif surface_type == 4:
+            surface_type = 'AREA3'
+        elif surface_type == 5:
+            surface_type = 'AREA4'
+        #elif surface_type == 7: # ???
+            #surface_type = 'AREA6'
+        elif surface_type == 8:
+            surface_type = 'AREA6'
+        elif surface_type == 9:
+            surface_type = 'AREA8'
         else:
-            raise NotImplementedError('eid=%s Type=%r' % (eid, Type))
+            raise NotImplementedError('eid=%s surface_type=%r' % (eid, surface_type))
 
-        assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
-        return CHBDYG(eid, Type, nodes,
+        assert surface_type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'surface_type=%r data=%s' % (surface_type, data)
+        return CHBDYG(eid, surface_type, nodes,
                       iview_front=i_view_front, ivew_back=i_view_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
@@ -386,9 +419,19 @@ class CHBDYG(ThermalElement):
         assert isinstance(eid, integer_types)
 
     @property
+    def Type(self):
+        return self.surface_type
+
+    @Type.setter
+    def Type(self, surface_type):
+        self.surface_type = surface_type
+
+    @property
     def node_ids(self):
+        if self.nodes_ref is None:
+            return self.nodes
         # TODO: is this correct?
-        return _node_ids(self, nodes=self.nodes, allow_empty_nodes=True, msg='')
+        return _node_ids(self, nodes=self.nodes_ref, allow_empty_nodes=True, msg='')
 
     def get_edge_ids(self):
         # TODO: not implemented
@@ -404,24 +447,22 @@ class CHBDYG(ThermalElement):
             the BDF object
         """
         msg = ' which is required by CHBDYG eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CHBDYG eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.nodes_ref = self.nodes
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        del self.nodes_ref
+        self.nodes_ref = None
 
     def Eid(self):
         return self.eid
 
     def raw_fields(self):
         list_fields = (
-            ['CHBDYG', self.eid, None, self.Type, self.iview_front,
+            ['CHBDYG', self.eid, None, self.surface_type, self.iview_front,
              self.ivew_back, self.rad_mid_front, self.rad_mid_back, None,] +
             self.node_ids)
         return list_fields
@@ -432,11 +473,20 @@ class CHBDYG(ThermalElement):
         rad_mid_front = set_blank_if_default(self.rad_mid_front, 0)
         rad_mid_back = set_blank_if_default(self.rad_mid_back, 0)
 
-        list_fields = (['CHBDYG', self.eid, None, self.Type, i_view_front,
+        list_fields = (['CHBDYG', self.eid, None, self.surface_type, i_view_front,
                         i_view_back, rad_mid_front, rad_mid_back, None, ] + self.node_ids)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -458,7 +508,7 @@ class CHBDYP(ThermalElement):
     """
     type = 'CHBDYP'
 
-    def __init__(self, eid, pid, Type, g1, g2, g0=0, gmid=None, ce=0,
+    def __init__(self, eid, pid, surface_type, g1, g2, g0=0, gmid=None, ce=0,
                  iview_front=0, ivew_back=0,
                  rad_mid_front=0, rad_mid_back=0,
                  e1=None, e2=None, e3=None, comment=''):
@@ -471,7 +521,7 @@ class CHBDYP(ThermalElement):
             Surface element ID
         pid : int
             PHBDY property entry identification numbers. (Integer > 0)
-        Type : str
+        surface_type : str
             Surface type
             Must be {POINT, LINE, ELCYL, FTUBE, TUBE}
         iview_front : int; default=0
@@ -505,7 +555,7 @@ class CHBDYP(ThermalElement):
 
         #: PHBDY property entry identification numbers. (Integer > 0)
         self.pid = pid
-        self.Type = Type
+        self.surface_type = surface_type
 
         #: A VIEW entry identification number for the front face.
         self.iview_front = iview_front
@@ -547,6 +597,16 @@ class CHBDYP(ThermalElement):
         self.e3 = e3
 
         assert self.pid > 0
+        self.nodes_ref = None
+        self.pid_ref = None
+
+    @property
+    def Type(self):
+        return self.surface_type
+
+    @Type.setter
+    def Type(self, surface_type):
+        self.surface_type = surface_type
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -563,16 +623,13 @@ class CHBDYP(ThermalElement):
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
-        Type = string(card, 3, 'Type')
-        #print("self.Type = %s" % self.Type)
-        # msg = 'CHBDYP Type=%r' % self.Type
-        #assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'], msg
+        surface_type = string(card, 3, 'Type')
 
         iview_front = integer_or_blank(card, 4, 'iview_front', 0)
         ivew_back = integer_or_blank(card, 5, 'ivew_back', 0)
         g1 = integer(card, 6, 'g1')
 
-        if Type != 'POINT':
+        if surface_type != 'POINT':
             g2 = integer(card, 7, 'g2')
         else:
             g2 = blank(card, 7, 'g2')
@@ -586,7 +643,7 @@ class CHBDYP(ThermalElement):
         e2 = double_or_blank(card, 14, 'e3')
         e3 = double_or_blank(card, 15, 'e3')
         assert len(card) <= 16, 'len(CHBDYP card) = %i\ncard=%s' % (len(card), card)
-        return CHBDYP(eid, pid, Type, g1, g2, g0=g0, gmid=gmid, ce=ce,
+        return CHBDYP(eid, pid, surface_type, g1, g2, g0=g0, gmid=gmid, ce=ce,
                       iview_front=iview_front, ivew_back=ivew_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       e1=e1, e2=e2, e3=e3, comment=comment)
@@ -603,35 +660,34 @@ class CHBDYP(ThermalElement):
         comment : str; default=''
             a comment for the card
         """
-        [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
+        [eid, pid, surface_type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
          dislin, ce, e1, e2, e3] = data
         #eid = data[0]
-        #Type = data[1]
+        #surface_type = data[1]
         #iview_front = data[2]
         #ivew_back = data[3]
         #rad_mid_front = data[4]
         #rad_mid_back = data[5]
         #nodes = [datai for datai in data[6:14] if datai > 0]
-        if Type == 1:
-            Type = 'POINT'
-        elif Type == 2:
-            Type = 'LINE'
-        elif Type == 6:
-            Type = 'ELCYL'
-        elif Type == 7:
-            Type = 'FTUBE'
-        elif Type == 10:
-            Type = 'TUBE'
+        if surface_type == 1:
+            surface_type = 'POINT'
+        elif surface_type == 2:
+            surface_type = 'LINE'
+        elif surface_type == 6:
+            surface_type = 'ELCYL'
+        elif surface_type == 7:
+            surface_type = 'FTUBE'
+        elif surface_type == 10:
+            surface_type = 'TUBE'
         else:
-            raise NotImplementedError('CHBDYP Type=%r data=%s' % (Type, data))
-        #assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
+            raise NotImplementedError('CHBDYP surface_type=%r data=%s' % (surface_type, data))
 
         #assert dislin == 0, 'CHBDYP dislin=%r data=%s' % (dislin, data)
-        if dislin  == 0:
+        if dislin == 0:
             gmid = None
         else:
             gmid = dislin
-        return CHBDYP(eid, pid, Type, g1, g2, g0=g0, gmid=gmid, ce=ce,
+        return CHBDYP(eid, pid, surface_type, g1, g2, g0=g0, gmid=gmid, ce=ce,
                       iview_front=iviewf, ivew_back=iviewb,
                       rad_mid_front=radmidf, rad_mid_back=radmidb,
                       e1=e1, e2=e2, e3=e3, comment=comment)
@@ -662,22 +718,21 @@ class CHBDYP(ThermalElement):
             the BDF object
         """
         msg = ' which is required by CHBDYP pid=%s' % self.pid
-        self.pid = model.Phbdy(self.pid, msg=msg)
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid_ref = self.pid
-        self.nodes_ref = self.nodes
+        self.pid_ref = model.Phbdy(self.pid, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
-        self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
+        self.nodes = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = self.pid
         self.nodes_ref = self.nodes
 
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -688,9 +743,14 @@ class CHBDYP(ThermalElement):
     def Eid(self):
         return self.eid
 
+    def Pid(self):
+        if self.pid_ref is not None:
+            return self.pid_ref.pid
+        return self.pid
+
     def raw_fields(self):
         (g1, g2, g0, gmid) = self.node_ids
-        list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type,
+        list_fields = ['CHBDYP', self.eid, self.Pid(), self.surface_type,
                        self.iview_front, self.ivew_back, g1, g2, g0,
                        self.rad_mid_front, self.rad_mid_back, gmid, self.ce,
                        self.e1, self.e2, self.e3]
@@ -706,12 +766,21 @@ class CHBDYP(ThermalElement):
         g0 = set_blank_if_default(g0, 0)
         ce = set_blank_if_default(self.ce, 0)
 
-        list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, iview_front,
+        list_fields = ['CHBDYP', self.eid, self.Pid(), self.surface_type, iview_front,
                        ivew_back, g1, g2, g0, rad_mid_front, rad_mid_back,
                        gmid, ce, self.e1, self.e2, self.e3]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -906,6 +975,15 @@ class PCONV(ThermalProperty):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1035,6 +1113,15 @@ class PCONVM(ThermalProperty):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1152,6 +1239,15 @@ class PHBDY(ThermalProperty):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1216,6 +1312,7 @@ class CONV(ThermalBC):
         else:
             self.ta = ta
         assert self.eid > 0, 'eid=%s\n%s' % (eid, str(self))
+        self.eid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1265,6 +1362,7 @@ class CONV(ThermalBC):
                    #[wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
         ## weights are unique to MSC nastran
         eid, pconid, film_node, cntrlnd, ta, weights = data
+        del weights
         #ta1, ta2, ta3, ta5, ta6, ta7, ta8 = ta
         #wt1, wt2, wt3, wt5, wt6, wt7, wt8 = aft
 
@@ -1286,7 +1384,12 @@ class CONV(ThermalBC):
             assert self.eid_ref.type in ['CHBDYG', 'CHBDYE', 'CHBDYP']
 
     def uncross_reference(self):
-        del self.eid_ref
+        self.eid_ref = None
+
+    def Eid(self):
+        if self.eid_ref is not None:
+            return self.eid_ref.eid
+        return self.eid
 
     def TA(self, i=None):
         if i is None:
@@ -1294,7 +1397,7 @@ class CONV(ThermalBC):
         return self.ta[i]
 
     def raw_fields(self):
-        list_fields = ['CONV', self.eid, self.pconid, self.film_node,
+        list_fields = ['CONV', self.Eid(), self.pconid, self.film_node,
                        self.cntrlnd] + self.ta
         return list_fields
 
@@ -1306,10 +1409,19 @@ class CONV(ThermalBC):
         ta = [ta0]
         for tai in self.ta[1:]:
             ta.append(set_blank_if_default(tai, ta0))
-        list_fields = ['CONV', self.eid, self.pconid, film_node, cntrlnd] + ta
+        list_fields = ['CONV', self.Eid(), self.pconid, film_node, cntrlnd] + ta
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1378,6 +1490,9 @@ class CONVM(ThermalBC):
                 self.mdot = 1.0
         else:
             assert self.cntmdot > 0
+        self.eid_ref = None
+        self.pconvm_ref = None
+        self.film_node_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1428,21 +1543,29 @@ class CONVM(ThermalBC):
             the BDF object
         """
         msg = ' which is required by CONVM eid=%s' % self.eid
-        self.eid = model.CYBDY(self.eid, msg=msg)
-        self.pconvm = model.PCONV(self.pconvm, msg=msg)
-        self.film_node = model.Grid(self.film_node, msg=msg)
-        self.eid_ref = self.eid
-        self.pconvm_ref = self.pconvm
-        self.film_node_ref = self.film_node
+        self.eid_ref = model.CYBDY(self.eid, msg=msg)
+        self.pconvm_ref = model.PCONV(self.pconvm, msg=msg)
+        self.film_node_ref = model.Grid(self.film_node, msg=msg)
+
+    def Eid(self):
+        if self.eid_ref is not None:
+            return self.eid_ref.eid
+        return self.eid
 
     @property
     def film_node_id(self):
-        if isinstance(self.film_node, integer_types):
-            return self.film_node
-        return self.film_node.nid
+        if self.film_node_ref is not None:
+            return self.film_node_ref.nid
+        return self.film_node
+
+    @property
+    def pconvm_id(self):
+        if self.pconvm_ref is not None:
+            return self.pconvm_ref.pconid
+        return self.pconvm
 
     def raw_fields(self):
-        list_fields = ['CONVM', self.eid, self.pconvm, self.film_node_id,
+        list_fields = ['CONVM', self.Eid(), self.pconvm_id, self.film_node_id,
                        self.cntmdot, self.ta1, self.ta2, self.mdot]
         return list_fields
 
@@ -1450,11 +1573,20 @@ class CONVM(ThermalBC):
         film_node_id = set_blank_if_default(self.film_node_id, 0)
         ta2 = set_blank_if_default(self.ta2, self.ta1)
         mdot = set_blank_if_default(self.mdot, 1.0)
-        list_fields = ['CONVM', self.eid, self.pconvm, film_node_id,
+        list_fields = ['CONVM', self.Eid(), self.pconvm_id, film_node_id,
                        self.cntmdot, self.ta1, ta2, mdot]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1518,7 +1650,7 @@ class RADM(ThermalBC):
             a comment for the card
         """
         radmid, absorb = data[:2]
-        emissivity  = data[2:]
+        emissivity = data[2:]
         return RADM(radmid, absorb, emissivity, comment=comment)
 
     #def cross_reference(self, model):
@@ -1533,6 +1665,15 @@ class RADM(ThermalBC):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1562,7 +1703,6 @@ class RADBC(ThermalBC):
         self.cntrlnd = cntrlnd
 
         #: CHBDYi element identification number
-        print('eids =', eids)
         self.eids = expand_thru_by(eids)
 
         assert self.nodamb > 0
@@ -1572,6 +1712,7 @@ class RADBC(ThermalBC):
         if min_eid < 1:
             msg = 'min(eids)=%i' % min_eid
             raise ValueError(msg)
+        self.eids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1603,20 +1744,19 @@ class RADBC(ThermalBC):
             the BDF object
         """
         msg = ' which is required by RADBC pid=%s' % self.nodamb
-        for i, eid in enumerate(self.eids):
-            self.eids[i] = model.Element(eid, msg=msg)
-        self.eids_ref = self.eids
+        elems = []
+        for eid in self.eids:
+            elem = model.Element(eid, msg=msg)
+            elems.append(elem)
+        self.eids_ref = elems
 
     def Eids(self):
+        if self.eids_ref is None:
+            return self.eids
         eids = []
-        for eid in self.eids:
-            eids.append(self.Eid(eid))
+        for eid_ref in self.eids_ref:
+            eids.append(eid_ref.eid)
         return eids
-
-    def Eid(self, eid):
-        if isinstance(eid, integer_types):
-            return eid
-        return eid.eid
 
     def raw_fields(self):
         list_fields = (['RADBC', self.nodamb, self.famb, self.cntrlnd] +
@@ -1630,6 +1770,15 @@ class RADBC(ThermalBC):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

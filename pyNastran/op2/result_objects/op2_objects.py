@@ -166,11 +166,11 @@ class BaseScalarObject(Op2Codes):
                 # Convert eigenvalues to frequencies
                 # TODO: add damping header
             elif name in ['eign']:
-                column_names.append('Eigenvalue')
-                column_values.append(times)
                 abs_freqs = np.sqrt(np.abs(self.eigns)) / (2 * np.pi)
                 column_names.append('Freq')
                 column_values.append(abs_freqs)
+                column_names.append('Eigenvalue')
+                column_values.append(times)
                 column_names.append('Radians')
                 column_values.append(abs_freqs * 2 * np.pi)
 
@@ -184,7 +184,7 @@ class BaseScalarObject(Op2Codes):
                 eigr = np.array(self.eigrs)
                 eigi = np.array(self.eigis)
                 damping = -eigr / np.sqrt(eigr ** 2 + eigi ** 2)
-                column_names.append('Damping (-eigr/sqrt(eigr^2+eigi^2); check)')
+                column_names.append('Damping')
                 column_values.append(times)
                 #calculate_damping
             elif name in ['mode_cycle']:
@@ -456,9 +456,9 @@ class ScalarObject(BaseScalarObject):
         raise RuntimeError(msg)
         #assert dt>=0.
         #print("updating dt...dt=%s" % dt)
-        if dt is not None:
-            self.dt = dt
-            self.add_new_transient()
+        #if dt is not None:
+            #self.dt = dt
+            #self.add_new_transient()
 
     def _write_table_header(self, f, fascii, date):
         table_name = '%-8s' % self.table_name # 'BOUGV1  '
