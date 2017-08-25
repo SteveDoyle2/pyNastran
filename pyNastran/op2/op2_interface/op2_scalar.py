@@ -631,14 +631,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_msc = False
         self.is_optistruct = False
         self.is_radioss = False
-        self._nastran_format = 'msc'
+        self._nastran_format = 'nx'
 
     def set_as_msc(self):
         self.is_nx = False
         self.is_msc = True
         self.is_optistruct = False
         self.is_radioss = False
-        self._nastran_format = 'nx'
+        self._nastran_format = 'msc'
 
     def set_as_optistruct(self):
         self.is_nx = False

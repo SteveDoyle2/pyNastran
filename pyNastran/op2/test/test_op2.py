@@ -17,6 +17,12 @@ try:
 except ImportError:
     is_pandas = False
 
+try:
+    import h5py
+    is_hdf5 = True
+except ImportError:
+    is_hdf5 = False
+
 #import warnings
 #warnings.filterwarnings('error')
 #warnings.filterwarnings('error', category=UnicodeWarning)
@@ -376,6 +382,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             mb = kb / 1024.
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
+        if is_hdf5:
+            op2.export_to_hdf5(model + '.test_op2.h5')
         if write_f06:
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
                           is_sort1=not is_sort2, quiet=quiet, repr_check=True)

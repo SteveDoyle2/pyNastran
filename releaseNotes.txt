@@ -50,6 +50,7 @@ Solver
 Relase notes:
    - This is a fairly minor release, but as there are some
      small changes to the API, so there's a version bump
+   - Added support for exporting OP2 to HDF5
 
 BDF bug fixes:
  - numpy 1.13 support added (not done...)
