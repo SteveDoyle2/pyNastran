@@ -179,6 +179,13 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
 
+    def test_gui_elements_06(self):
+        """tests a large number of elements and results in SOL 107-complex modes"""
+        #bdf_filename = os.path.join(model_path, 'elements', 'modes_elements.bdf')
+        op2_filename = os.path.join(model_path, 'elements', 'modes_complex_elements.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+
     def test_gui_thermal_01(self):
         """tests thermal"""
         #bdf_filename = os.path.join(model_path, 'thermal', 'thermal_test_153.bdf')

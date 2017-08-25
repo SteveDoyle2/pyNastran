@@ -43,6 +43,13 @@ class SpringElement(Element):
         return self.comment + print_card_16(card)
 
 class CELAS1(SpringElement):
+    """
+    +--------+-----+-----+----+----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |
+    +========+=====+=====+====+====+====+====+
+    | CELAS1 | EID | PID | G1 | C1 | G2 | C2 |
+    +--------+-----+-----+----+----+----+----+
+    """
     type = 'CELAS1'
     _field_map = {
         1: 'eid', 2:'pid', 4:'c1', 6:'c2',
@@ -195,6 +202,13 @@ class CELAS1(SpringElement):
 
 
 class CELAS2(SpringElement):
+    """
+    +--------+-----+-----+----+----+----+----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |  8 |  9 |
+    +========+=====+=====+====+====+====+====+====+====+
+    | CELAS2 | EID |  K  | G1 | C1 | G2 | C2 | GE | S  |
+    +--------+-----+-----+----+----+----+----+----+----+
+    """
     type = 'CELAS2'
     _field_map = {
         1: 'eid', 2:'k', 4:'c1', 6:'c2',
@@ -363,6 +377,13 @@ class CELAS2(SpringElement):
 
 
 class CELAS3(SpringElement):
+    """
+    +--------+-----+-----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |
+    +========+=====+=====+====+====+
+    | CELAS3 | EID | PID | S1 | S2 |
+    +--------+-----+-----+----+----+
+    """
     type = 'CELAS3'
     _field_map = {
         1: 'eid', 2:'pid', #4:'s1', 6:'s2',
@@ -499,6 +520,13 @@ class CELAS3(SpringElement):
 
 
 class CELAS4(SpringElement):
+    """
+    +--------+-----+-----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |
+    +========+=====+=====+====+====+
+    | CELAS4 | EID |  K  | S1 | S2 |
+    +--------+-----+-----+----+----+
+    """
     type = 'CELAS4'
     _field_map = {
         1: 'eid', 2:'k', #4:'s1', 6:'s2',

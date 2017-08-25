@@ -226,8 +226,8 @@ class CROD(RodElement):
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        massPerLength = self.pid_ref.mid_ref.rho * self.pid_ref.A + self.pid_ref.nsm
-        return massPerLength
+        mass_per_length = self.pid_ref.mid_ref.rho * self.pid_ref.A + self.pid_ref.nsm
+        return mass_per_length
 
     def raw_fields(self):
         list_fields = ['CROD', self.eid, self.Pid()] + self.node_ids
@@ -516,6 +516,7 @@ class CONROD(RodElement):
         j = double_or_blank(card, 6, 'j', 0.0)
         c = double_or_blank(card, 7, 'c', 0.0)
         nsm = double_or_blank(card, 8, 'nsm', 0.0)
+        assert len(card) <= 9, 'len(CONROD card) = %i\ncard=%s' % (len(card), str(card))
         return CONROD(eid, mid, nids, A, j, c, nsm, comment=comment)
 
     @classmethod
