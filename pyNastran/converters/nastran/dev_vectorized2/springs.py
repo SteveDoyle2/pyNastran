@@ -17,6 +17,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double, print_car
 
 
 class Springs(object):
+    """intializes the Springs"""
     def __init__(self, model):
         self.model = model
         self.celas1 = model.celas1
@@ -62,10 +63,10 @@ class SpringElement(object):
     """base class for CELAS1, CELAS2, CELAS3, and CELAS4"""
     card_name = ''
 
-    def check_if_current(self, nid, nids):
+    def check_if_current(self, eid, eids):
         """we split this up to reason about it easier"""
         if self._is_current:
-            if nid in nids:
+            if eid in eids:
                 # card exists, so we use that slot
                 add_card = False
             else:

@@ -1,25 +1,19 @@
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems
 import numpy as np
 from pyNastran.utils import integer_types
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
-    integer_or_double, components_or_blank, integer_double_or_blank)
+    integer, integer_or_blank, double_or_blank, blank,
+    integer_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_field_8
-from pyNastran.bdf.cards.utils import wipe_empty_fields
-from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
-from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
-from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
-from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
 
 class ShellElement(object):
     """base class for CTRIA3, CQUAD4"""
     card_name = ''
     def __init__(self, model):
+        """intializes the ShellElement"""
         self.model = model
         self._is_current = False
         self.eid = np.array([], dtype='int32')
@@ -28,8 +22,12 @@ class ShellElement(object):
         self.theta = np.array([], dtype='int32')  # np.nan if undefined
         self.mcid = np.array([], dtype='int32') # -1 if undefined
         #self.theta_mcid_flag = np.array([], dtype='bool')
-        #self.thickness
-        #self.thickness_flag
+        self.zoffset = np.array([], dtype='float64')
+        self.thickness = np.array([], dtype='float64')  # np.nan is undefined
+
+        # 0 : Ti are actual user specified thicknesses
+        # 1 : Ti are fractions relative to the T value of the PSHELL
+        self.thickness_flag = np.array([], dtype='int32')
 
         self._eid = []
         self._pid = []
@@ -37,8 +35,9 @@ class ShellElement(object):
         self._theta = []
         self._mcid = []
         #self._theta_mcid_flag = []
-        #self.thickness
-        #self.thickness_flag
+        self._zoffset = []
+        self._thickness = []
+        self._thickness_flag = []
         self.comment = defaultdict(str)
 
     @property
@@ -60,17 +59,23 @@ class ShellElement(object):
             add_card = True
         return add_card
 
+    #def get_element_by_eid(self, eid):
+        #self._make_current()
+        #ieid = np.searchsorted(eid, self.eid)
+        #return self[ieid]
+
     def _make_current(self):
         """creates an array of the GRID points"""
         if not self._is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
-                self.eid = np.hstack(self.eid, self._eid)
-                self.pid = np.vstack(self.pid, self._pid)
-                self.nids = np.hstack(self.nids, self._nids)
-                self.theta = np.hstack(self.theta, self._theta)
-                self.mcid = np.hstack(self.mcid, self._mcid)
-                #self.cd = np.hstack(self.cd, self._cd)
-                #self.ps = np.hstack(self.ps, self._ps)
+                self.eid = np.hstack([self.eid, self._eid])
+                self.pid = np.vstack([self.pid, self._pid])
+                self.nids = np.hstack([self.nids, self._nids])
+                self.theta = np.hstack([self.theta, self._theta])
+                self.mcid = np.hstack([self.mcid, self._mcid])
+                self.thickness = np.vstack([self.thickness, self._thickness])
+                self.thickness_flag = np.hstack([self.thickness_flag, self._thickness_flag])
+                self.zoffset = np.hstack([self.zoffset, self._zoffset])
                 #self.seid = np.hstack(self.seid, self._seid)
                 # don't need to handle comments
             else:
@@ -79,7 +84,9 @@ class ShellElement(object):
                 self.nids = np.array(self._nids, dtype='int32')
                 self.theta = np.array(self._theta, dtype='float64')
                 self.mcid = np.array(self._mcid, dtype='int32')
-                #self.cd = np.array(self._cd)
+                self.thickness = np.array(self._thickness, dtype='float64')
+                self.thickness_flag = np.array(self._thickness_flag, dtype='int32')
+                self.zoffset = np.array(self._zoffset, dtype='float64')
                 #self.ps = np.array(self._ps)
                 #self.seid = np.array(self._seid)
             assert len(self.eid) == len(np.unique(self.eid))
@@ -89,9 +96,10 @@ class ShellElement(object):
             self._nids = []
             self._theta = []
             self._mcid = []
+            self.zoffset = []
+            self.thickness = []
+            self.thickness_flag = []
             #self._cd = []
-            #self._ps = []
-            #self._seid = []
             self._is_current = True
         #else:
             #print('no GRIDs')
@@ -150,8 +158,7 @@ class CTRIA3v(ShellElement):
     nthickness = 3
 
     def add(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-            tflag=0, T1=None, T2=None, T3=None,
-            comment=''):
+            thickness_flag=0, thickness=None, comment=''):
         """
         Creates a CTRIA3 card
 
@@ -171,11 +178,11 @@ class CTRIA3v(ShellElement):
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
                   mcid is projected onto the element
-        tflag : int; default=0
+        thickness_flag : int; default=0
             0 : Ti are actual user specified thicknesses
             1 : Ti are fractions relative to the T value of the PSHELL
-        T1 / T2 / T3 : float; default=None
-            If it is not supplied, then T1 through T3 will be set equal
+        thickness : List[float, float, float]; default=None
+            If a thickness is not supplied, then the thickness will be set equal
             to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
@@ -191,12 +198,11 @@ class CTRIA3v(ShellElement):
         else:
             self._theta.append(theta_mcid)
             self._mcid.append(-1)
-        #self._cp.append(cp)
-        #self._cd.append(cd)
-        #self._ps.append(ps)
-        #self._seid.append(seid)
+        self._zoffset.append(zoffset)
+        self._thickness_flag.append(thickness_flag)
+        self._thickness.append(thickness)
         if comment:
-            self.comment[nid] = comment
+            self.comment[eid] = comment
 
     def add_card(self, card, comment=''):
         # type: (Any, str) -> CTRIA3
@@ -226,32 +232,31 @@ class CTRIA3v(ShellElement):
             blank(card, 8, 'blank')
             blank(card, 9, 'blank')
 
-            tflag = integer_or_blank(card, 10, 'tflag', 0)
-            T1 = double_or_blank(card, 11, 'T1')
-            T2 = double_or_blank(card, 12, 'T2')
-            T3 = double_or_blank(card, 13, 'T3')
+            thickness_flag = integer_or_blank(card, 10, 'tflag', 0)
+            thickness = [
+                double_or_blank(card, 11, 'T1'),
+                double_or_blank(card, 12, 'T2'),
+                double_or_blank(card, 13, 'T3')
+            ]
             assert len(card) <= 14, 'len(CTRIA3 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta_mcid = 0.0
             zoffset = 0.0
-            tflag = 0
-            T1 = 1.0
-            T2 = 1.0
-            T3 = 1.0
-        self.add(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset, tflag=tflag,
-                 T1=T1, T2=T2, T3=T3)
+            thickness_flag = 0
+            thickness = [1.0, 1.0, 1.0]
+        self.add(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                 thickness_flag=thickness_flag, thickness=thickness)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self._make_current()
         msg = ''
-        for eid, pid, nids, theta, mcid in zip(self.eid, self.pid, self.nids, self.theta, self.mcid):
+        for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
+            self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
             #zoffset = set_blank_if_default(self.zoffset, 0.0)
             #tflag = set_blank_if_default(self.tflag, 0)
             #theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
             zoffset = 0.
-            tflag = 0
-            T1 = T2 = T3 = 1.0
             #T1 = set_blank_if_default(self.T1, 1.0)
             #T2 = set_blank_if_default(self.T2, 1.0)
             #T3 = set_blank_if_default(self.T3, 1.0)
@@ -259,7 +264,7 @@ class CTRIA3v(ShellElement):
             if mcid != -1:
                 theta = mcid
             row2_data = [theta, zoffset, # theta is theta_mcid
-                         tflag, T1, T2, T3]
+                         thickness_flag] + thickness.tolist()
             row2 = [print_field_8(field) for field in row2_data]
             data = [eid, pid] + nids.tolist() + row2
             msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
@@ -274,8 +279,7 @@ class CQUAD4v(ShellElement):
     nthickness = 4
 
     def add(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
-            tflag=0, T1=None, T2=None, T3=None, T4=None,
-            comment=''):
+            thickness_flag=0, thickness=None, comment=''):
         """
         Creates a CQUAD4 card
 
@@ -295,11 +299,11 @@ class CQUAD4v(ShellElement):
                     relative to the element coordinate system
             int : x-axis from material coordinate system angle defined by
                   mcid is projected onto the element
-        tflag : int; default=0
+        thickness_flag : int; default=0
             0 : Ti are actual user specified thicknesses
             1 : Ti are fractions relative to the T value of the PSHELL
-        T1 / T2 / T3 / T4 : float; default=None
-            If it is not supplied, then T1 through T4 will be set equal
+        thickness : List[float, float, float, float]; default=None
+            If a thickness is not supplied, then the thickness will be set equal
             to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
@@ -315,10 +319,11 @@ class CQUAD4v(ShellElement):
         else:
             self._theta.append(theta_mcid)
             self._mcid.append(-1)
-        #self._ps.append(ps)
-        #self._seid.append(seid)
+        self._zoffset.append(zoffset)
+        self._thickness_flag.append(thickness_flag)
+        self._thickness.append(thickness)
         if comment:
-            self.comment[nid] = comment
+            self.comment[eid] = comment
 
     def add_card(self, card, comment=''):
         """
@@ -341,41 +346,38 @@ class CQUAD4v(ShellElement):
             theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
             zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
             blank(card, 9, 'blank')
-            tflag = integer_or_blank(card, 10, 'tflag', 0)
-            T1 = double_or_blank(card, 11, 'T1')
-            T2 = double_or_blank(card, 12, 'T2')
-            T3 = double_or_blank(card, 13, 'T3')
-            T4 = double_or_blank(card, 14, 'T4')
+            thickness_flag = integer_or_blank(card, 10, 'tflag', 0)
+            thickness = [
+                double_or_blank(card, 11, 'T1'),
+                double_or_blank(card, 12, 'T2'),
+                double_or_blank(card, 13, 'T3'),
+                double_or_blank(card, 14, 'T4'),
+            ]
             assert len(card) <= 15, 'len(CQUAD4 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta_mcid = 0.0
             zoffset = 0.0
-            tflag = 0
-            T1 = 1.0
-            T2 = 1.0
-            T3 = 1.0
-            T4 = 1.0
-        self.add(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset, tflag=tflag,
-                 T1=T1, T2=T2, T3=T3, T4=T4)
+            thickness_flag = 0
+            thickness = [1.0, 1.0, 1.0, 1.0]
+        self.add(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                 thickness_flag=thickness_flag, thickness=thickness)
 
-    def update(self, grid):
-        """functions like a dictionary"""
-        asdf
-        nid = grid.nid
-
-        add_card = self.check_if_current(nid, nids)
-        if add_grid:
-            self.add_grid(nid, grid.xyz, cp=grid.cp, cd=grid.cd,
-                          ps=grid.ps, seid=grid.seid, comment=grid.comment)
-            self._is_current = False
-        else:
-            inid = np.where(nid == self.nid)[0]
-            self.nid[inid] = nid
-            self.xyz[inid] = xyz
-            self.cp[inid] = cp
-            self.cd[inid] = cd
-            self.ps[inid] = ps
-            self.seid[inid] = seid
+    #def update(self, grid):
+        #"""functions like a dictionary"""
+        #nid = grid.nid
+        #add_card = self.check_if_current(eid, self.eid)
+        #if add_card:
+            #self.add(nid, grid.xyz, cp=grid.cp, cd=grid.cd,  # add_cquad4
+                     #ps=grid.ps, seid=grid.seid, comment=grid.comment)
+            #self._is_current = False
+        #else:
+            #inid = np.where(nid == self.nid)[0]
+            #self.nid[inid] = grid.nid
+            #self.xyz[inid] = grid.xyz
+            #self.cp[inid] = grid.cp
+            #self.cd[inid] = grid.cd
+            #self.ps[inid] = grid.ps
+            #self.seid[inid] = grid.seid
             #self.comment[nid] = comment
             #self._is_current = True  # implicit
 
@@ -389,17 +391,12 @@ class CQUAD4v(ShellElement):
         #pass
     #def __values__(self):
         #pass
-    def __getitem__(self, i):
-        """this works on index"""
-        self._make_current()
-        eid = self.eid[i]
-        return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
-                    ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
-
-    def get_grid_by_nid(self, nid):
-        self._make_current()
-        ieid = np.searchsorted(self.eid, eid)
-        return self[ieid]
+    #def __getitem__(self, i):
+        #"""this works on index"""
+        #self._make_current()
+        #eid = self.eid[i]
+        #return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
+                    #ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
 
     #def __setitem__(self, i, value):
         #pass
@@ -409,13 +406,12 @@ class CQUAD4v(ShellElement):
         assert bdf_file is not None
         self._make_current()
         msg = ''
-        for eid, pid, nids, theta, mcid in zip(self.eid, self.pid, self.nids, self.theta, self.mcid):
+        for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
+            self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
             #zoffset = set_blank_if_default(self.zoffset, 0.0)
             #tflag = set_blank_if_default(self.tflag, 0)
             #theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
             zoffset = 0.
-            tflag = 0
-            T1 = T2 = T3 = T4 = 1.0
             #T1 = set_blank_if_default(self.T1, 1.0)
             #T2 = set_blank_if_default(self.T2, 1.0)
             #T3 = set_blank_if_default(self.T3, 1.0)
@@ -424,7 +420,7 @@ class CQUAD4v(ShellElement):
             if mcid != -1:
                 theta = mcid
             row2_data = [theta, zoffset, # theta is theta_mcid
-                         tflag, T1, T2, T3, T4]
+                         thickness_flag] + thickness.tolist()
             row2 = [print_field_8(field) for field in row2_data]
             data = [eid, pid] + nids.tolist() + row2
             msgi = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'

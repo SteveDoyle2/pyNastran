@@ -2,25 +2,22 @@ from __future__ import print_function
 from collections import defaultdict
 from six import iteritems
 import numpy as np
-from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import BDF as BDF_, GRID
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
-    integer_or_double, components_or_blank, integer_double_or_blank)
-from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
-from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.utils import wipe_empty_fields
-from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
-from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
-from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
-from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
+    integer, integer_or_blank, double_or_blank,
+    components_or_blank)
+from pyNastran.bdf.field_writer_8 import print_float_8, set_string8_blank_if_default
+from pyNastran.bdf.field_writer_16 import print_float_16, set_string16_blank_if_default
+from pyNastran.bdf.field_writer_double import print_scientific_double
 
-from pyNastran.converters.nastran.springs import CELAS1, CELAS2, CELAS3, CELAS4, Springs
-from pyNastran.converters.nastran.shells import CQUAD4v, CTRIA3v, Shells
-from pyNastran.converters.nastran.solids import (CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
-                                                 CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
+from pyNastran.converters.nastran.dev_vectorized2.springs import (
+    CELAS1, CELAS2, CELAS3, CELAS4, Springs)
+from pyNastran.converters.nastran.dev_vectorized2.shells import CQUAD4v, CTRIA3v, Shells
+from pyNastran.converters.nastran.dev_vectorized2.solids import (
+    CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
+    CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
+
 
 class GRIDv(object):
     card_name = 'GRID'
@@ -135,19 +132,19 @@ class GRIDv(object):
         """functions like a dictionary"""
         nid = grid.nid
 
-        add_grid = self.check_if_current(nid, nids)
+        add_grid = self.check_if_current(nid, self.nid)
         if add_grid:
-            self.add_grid(nid, grid.xyz, cp=grid.cp, cd=grid.cd,
-                          ps=grid.ps, seid=grid.seid, comment=grid.comment)
+            self.add(nid, grid.xyz, cp=grid.cp, cd=grid.cd,
+                     ps=grid.ps, seid=grid.seid, comment=grid.comment)
             self._is_current = False
         else:
             inid = np.where(nid == self.nid)[0]
-            self.nid[inid] = nid
-            self.xyz[inid] = xyz
-            self.cp[inid] = cp
-            self.cd[inid] = cd
-            self.ps[inid] = ps
-            self.seid[inid] = seid
+            self.nid[inid] = grid.nid
+            self.xyz[inid] = grid.xyz
+            self.cp[inid] = grid.cp
+            self.cd[inid] = grid.cd
+            self.ps[inid] = grid.ps
+            self.seid[inid] = grid.seid
             #self.comment[nid] = comment
             #self._is_current = True  # implicit
 
@@ -155,12 +152,12 @@ class GRIDv(object):
         """creates an array of the GRID points"""
         if not self._is_current:
             if len(self.nid) > 0: # there are already nodes in self.nid
-                self.nid = np.hstack(self.nid, self._nid)
-                self.xyz = np.vstack(self.xyz, self._xyz)
-                self.cp = np.hstack(self.cp, self._cp)
-                self.cd = np.hstack(self.cd, self._cd)
-                self.ps = np.hstack(self.ps, self._ps)
-                self.seid = np.hstack(self.seid, self._seid)
+                self.nid = np.hstack([self.nid, self._nid])
+                self.xyz = np.vstack([self.xyz, self._xyz])
+                self.cp = np.hstack([self.cp, self._cp])
+                self.cd = np.hstack([self.cd, self._cd])
+                self.ps = np.hstack([self.ps, self._ps])
+                self.seid = np.hstack([self.seid, self._seid])
                 # don't need to handle comments
             else:
                 self.nid = np.array(self._nid)
@@ -247,9 +244,9 @@ class GRIDv(object):
         """
         self._make_current()
         xyz = self.xyz
-        cp = set_string16_blank_if_default(self.Cp(), 0)
-        cd = set_string16_blank_if_default(self.Cd(), 0)
-        seid = set_string16_blank_if_default(self.SEid(), 0)
+        cp = set_string16_blank_if_default(cp, 0)
+        cd = set_string16_blank_if_default(cd, 0)
+        seid = set_string16_blank_if_default(seid, 0)
 
         if is_double:
             if [cd, self.ps, self.seid] == [0, '', 0]:

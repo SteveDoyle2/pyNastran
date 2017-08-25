@@ -1,19 +1,9 @@
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems
 import numpy as np
-from pyNastran.utils import integer_types
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
-    integer_or_double, components_or_blank, integer_double_or_blank)
-from pyNastran.bdf.field_writer_8 import print_field_8
-from pyNastran.bdf.cards.utils import wipe_empty_fields
-from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
-from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
-from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
-from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
+    integer, integer_or_blank)
 
 
 class Solids(object):
@@ -80,6 +70,7 @@ class Solids(object):
 class SolidElement(object):
     """base class for CTETRA4, CPENTA6, CHEXA8, CPYRAM5, CTETRA10, CPENTA15, CHEXA20, CPYRAM13"""
     card_name = ''
+    nnodes = 0
     def __init__(self, model):
         self.model = model
         self._is_current = False
@@ -101,6 +92,7 @@ class SolidElement(object):
         #self.thickness
         #self.thickness_flag
         self.comment = defaultdict(str)
+        self.is_current = True
 
     def add(self, eid, pid, nids, comment=''):
         """
@@ -141,9 +133,9 @@ class SolidElement(object):
         """creates an array of the elements"""
         if not self._is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
-                self.eid = np.hstack(self.eid, self._eid)
-                self.pid = np.vstack(self.pid, self._pid)
-                self.nids = np.hstack(self.nids, self._nids)
+                self.eid = np.hstack([self.eid, self._eid])
+                self.pid = np.vstack([self.pid, self._pid])
+                self.nids = np.hstack([self.nids, self._nids])
                 # don't need to handle comments
             else:
                 self.eid = np.array(self._eid, dtype='int32')
@@ -293,14 +285,15 @@ class CTETRA10v(SolidElement):
         assert len(card) <= 13, 'len(CTETRA10 card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, pid, nids, comment=comment)
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
         self._make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             #data = [eid, pid] + nids.tolist()
             nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
 
-            data = [self.eid, self.Pid()] + nodes[:4] + nodes2
+            data = [eid, pid] + nodes[:4] + nodes2
             msgi = ('CTETRA  %8i%8i%8i%8i%8i%8i%8s%8s\n'
                     '        %8s%8s%8s%8s' % tuple(data))
             #row2_data = [theta, zoffset, # theta is theta_mcid
