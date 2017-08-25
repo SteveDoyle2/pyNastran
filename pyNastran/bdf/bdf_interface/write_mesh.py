@@ -203,7 +203,7 @@ class WriteMesh(BDFAttributes):
         self._write_nodes(bdf_file, size, is_double)
 
         if interspersed:
-            self._write_elements_properties(bdf_file, size, is_double)
+            self._write_elements_interspersed(bdf_file, size, is_double)
         else:
             self._write_elements(bdf_file, size, is_double)
             self._write_properties(bdf_file, size, is_double)
@@ -313,7 +313,7 @@ class WriteMesh(BDFAttributes):
                         raise
             bdf_file.write(''.join(msg))
 
-    def _write_elements_properties(self, bdf_file, size=8, is_double=False):
+    def _write_elements_interspersed(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
         """
         Writes the elements and properties in and interspersed order

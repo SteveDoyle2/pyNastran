@@ -397,13 +397,13 @@ class EPT(GeomCommon):
         """
         PBEND
 
-        1 PID     I Property identification number
-        2 MID     I Material identification number
+        1 PID     I  Property identification number
+        2 MID     I  Material identification number
         3 A       RS Area
         4 I1      RS Area moment of inertia in plane 1
         5 I2      RS Area moment of inertia in plane 2
         6 J       RS Torsional constant
-        7 FSI     I flexibility and stress intensification factors
+        7 FSI     I  flexibility and stress intensification factors
         8 RM      RS Mean cross-sectional radius of the curved pipe
         9 T       RS Wall thickness of the curved pipe
         10 P      RS Internal pressure
@@ -422,11 +422,11 @@ class EPT(GeomCommon):
         23 NSM    RS Nonstructural mass per unit length
         24 RC     RS Radial offset of the geometric centroid
         25 ZC     RS Offset of the geometric centroid
-        26 DELTAN I Radial offset of the neutral axis from the geometric
-                  centroid
+        26 DELTAN  I Radial offset of the neutral axis from the geometric
+                     centroid
         """
         ntotal = 104  # 26*4
-        s = Struct(b(self._endian + '2i 4f i 18f i'))
+        s = Struct(b(self._endian + '2i 4f i 18f f'))  # delta_n is a float, not an integer
         nproperties = (len(data) - n) // ntotal
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
@@ -446,10 +446,15 @@ class EPT(GeomCommon):
                 delta_n = None
                 beam_type = 2
             if delta_n == 0:
+                #: Radial offset of the neutral axis from the geometric
+                #: centroid, positive is toward the center of curvature
                 delta_n = None
             pbend = PBEND(pid, mid, beam_type, area, i1, i2, j,
                           c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
                           nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b)
+            print(pbend)
+            pbend.validate()
+
             properties.append(pbend)
             n += ntotal
         return n, properties
@@ -515,6 +520,7 @@ class EPT(GeomCommon):
             pbend = PBEND(pid, mid, beam_type, area, i1, i2, j,
                           c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
                           nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b)
+            pbend.validate()
             properties.append(pbend)
             n += ntotal
         return n, properties

@@ -27,6 +27,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.utils import to_fields
+from pyNastran.utils import float_types
 
 
 def Iyy_beam(b, h):
@@ -2177,6 +2178,12 @@ class PBEND(LineProperty):
                      e1, e2, f1, f2, k1, k2, nsm,
                      rc, zc, delta_n, fsi, rm, t,
                      p, rb, theta_b, comment=comment)
+
+    def validate(self):
+        """card checking method"""
+        if self.delta_n is not None and not isinstance(self.delta_n, float_types):
+            raise RuntimeError('delta_n=%r must be None or a float; type=%s; fsi=%s\n%s' % (
+                self.delta_n, type(self.delta_n), self.fsi, str(self)))
 
     #def Nsm(self):
         #""".. warning:: nsm field not supported fully on PBEND card"""

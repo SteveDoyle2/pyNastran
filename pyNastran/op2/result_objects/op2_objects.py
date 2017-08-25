@@ -183,9 +183,13 @@ class BaseScalarObject(Op2Codes):
                 column_values.append(times)
                 eigr = np.array(self.eigrs)
                 eigi = np.array(self.eigis)
-                damping = -eigr / np.sqrt(eigr ** 2 + eigi ** 2)
+                denom = np.sqrt(eigr ** 2 + eigi ** 2)
+                damping = np.zeros(len(eigr), dtype=eigr.dtype)
+                inonzero = np.where(denom != 0)[0]
+                if len(inonzero):
+                    damping[inonzero] = -eigr[inonzero] / denom[inonzero]
                 column_names.append('Damping')
-                column_values.append(times)
+                column_values.append(damping)
                 #calculate_damping
             elif name in ['mode_cycle']:
                 continue
