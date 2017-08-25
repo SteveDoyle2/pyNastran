@@ -452,7 +452,7 @@ class EPT(GeomCommon):
             pbend = PBEND(pid, mid, beam_type, area, i1, i2, j,
                           c1, c2, d1, d2, e1, e2, f1, f2, k1, k2,
                           nsm, rc, zc, delta_n, fsi, rm, t, p, rb, theta_b)
-            print(pbend)
+            #print(pbend)
             pbend.validate()
 
             properties.append(pbend)
