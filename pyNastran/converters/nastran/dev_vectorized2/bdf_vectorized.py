@@ -13,6 +13,10 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 
 from pyNastran.converters.nastran.dev_vectorized2.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
+from pyNastran.converters.nastran.dev_vectorized2.dampers import (
+    CDAMP1, CDAMP2, CDAMP3, CDAMP4, Dampers)
+from pyNastran.converters.nastran.dev_vectorized2.rods import (
+    CONRODv, CRODv, CTUBEv, Rods)
 from pyNastran.converters.nastran.dev_vectorized2.shells import CQUAD4v, CTRIA3v, Shells
 from pyNastran.converters.nastran.dev_vectorized2.solids import (
     CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
@@ -23,7 +27,7 @@ class GRIDv(object):
     card_name = 'GRID'
     def __init__(self, model):
         self.model = model
-        self._is_current = False
+        self.is_current = False
         self.nid = np.array([], dtype='int32')
         self.xyz = np.array([], dtype='float64')
         self.cp = np.array([], dtype='int32')
@@ -118,7 +122,7 @@ class GRIDv(object):
 
     def check_if_current(self, nid, nids):
         """we split this up to reason about it easier"""
-        if self._is_current:
+        if self.is_current:
             if nid in nids:
                 # card exists, so we use that slot
                 add_card = False
@@ -136,7 +140,7 @@ class GRIDv(object):
         if add_grid:
             self.add(nid, grid.xyz, cp=grid.cp, cd=grid.cd,
                      ps=grid.ps, seid=grid.seid, comment=grid.comment)
-            self._is_current = False
+            self.is_current = False
         else:
             inid = np.where(nid == self.nid)[0]
             self.nid[inid] = grid.nid
@@ -146,11 +150,11 @@ class GRIDv(object):
             self.ps[inid] = grid.ps
             self.seid[inid] = grid.seid
             #self.comment[nid] = comment
-            #self._is_current = True  # implicit
+            #self.is_current = True  # implicit
 
     def _make_current(self):
         """creates an array of the GRID points"""
-        if not self._is_current:
+        if not self.is_current:
             if len(self.nid) > 0: # there are already nodes in self.nid
                 self.nid = np.hstack([self.nid, self._nid])
                 self.xyz = np.vstack([self.xyz, self._xyz])
@@ -174,7 +178,7 @@ class GRIDv(object):
             self._cd = []
             self._ps = []
             self._seid = []
-            self._is_current = True
+            self.is_current = True
         #else:
             #print('no GRIDs')
 
@@ -347,9 +351,12 @@ class Elements(object):
     """stores all the elements"""
     def __init__(self, model):
         self.model = model
+
+        self.springs = model.springs
+        self.dampers = model.dampers
+        self.rods = model.rods
         self.shells = model.shells
         self.solids = model.solids
-        self.springs = model.springs
 
     def repr_indent(self, indent=''):
         indent = ''
@@ -357,6 +364,12 @@ class Elements(object):
 
         msg += '%s  springs:  %s\n' % (indent, len(self.springs))
         msg += self.springs.repr_indent('    ')
+
+        msg += '%s  dampers:  %s\n' % (indent, len(self.dampers))
+        msg += self.dampers.repr_indent('    ')
+
+        msg += '%s  rods:  %s\n' % (indent, len(self.rods))
+        msg += self.rods.repr_indent('    ')
 
         msg += '%s  shells:  %s\n' % (indent, len(self.shells))
         msg += self.shells.repr_indent('    ')
@@ -368,11 +381,14 @@ class Elements(object):
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self.springs.write_card(size, is_double, bdf_file)
+        self.dampers.write_card(size, is_double, bdf_file)
+        self.rods.write_card(size, is_double, bdf_file)
         self.shells.write_card(size, is_double, bdf_file)
         self.solids.write_card(size, is_double, bdf_file)
 
     def __len__(self):
-        return len(self.springs) + len(self.shells) + len(self.solids)
+        return (len(self.springs) + len(self.shells) +
+                len(self.solids) + len(self.dampers) + len(self.rods))
     def __repr__(self):
         return self.repr_indent('')
 
@@ -398,7 +414,7 @@ class BDF(BDF_):
         self.cquad4 = CQUAD4v(model)
         self.ctria6 = CTRIA3v(model)  # TODO: temp
         self.cquad8 = CQUAD4v(model)  # TODO: temp
-        #self.cquad = CQUADv(model)  # TODO: temp
+        self.cquad = CQUAD4v(model)   # TODO: temp
         self.shells = Shells(model)
         #self.pshell = PSHELLv(model)  # TODO: temp
 
@@ -407,10 +423,10 @@ class BDF(BDF_):
         #self.ctriax6 = CTRIA3v(model)  # TODO: temp
         #self.cquadx8 = CTRIA3v(model)  # TODO: temp
 
-        #self.crod = CRODv(model)      # TODO: temp
-        #self.conrod = CONRODv(model)  # TODO: temp
-        #self.ctube = CTUBEv(model)    # TODO: temp
-        #self.rods = Rods(model)       # TODO: temp
+        self.crod = CRODv(model)      # TODO: temp
+        self.conrod = CONRODv(model)  # TODO: temp
+        self.ctube = CTUBEv(model)    # TODO: temp
+        self.rods = Rods(model)       # TODO: temp
 
         self.celas1 = CELAS1(model)
         self.celas2 = CELAS2(model)
@@ -418,12 +434,12 @@ class BDF(BDF_):
         self.celas4 = CELAS4(model)
         self.springs = Springs(model)
 
-        #self.cdamp1 = CDAMP1(model)    # TODO: temp
-        #self.cdamp2 = CDAMP2(model)    # TODO: temp
-        #self.cdamp3 = CDAMP3(model)    # TODO: temp
-        #self.cdamp4 = CDAMP4(model)    # TODO: temp
+        self.cdamp1 = CDAMP1(model)
+        self.cdamp2 = CDAMP2(model)
+        self.cdamp3 = CDAMP3(model)
+        self.cdamp4 = CDAMP4(model)
         #self.cdamp5 = CDAMP5(model)    # TODO: temp
-        #self.dampers = Dampers(model)  # TODO: temp
+        self.dampers = Dampers(model)
 
         self.ctetra4 = CTETRA4v(model)
         self.ctetra10 = CTETRA10v(model)
@@ -435,7 +451,7 @@ class BDF(BDF_):
         self.cpyram13 = CPYRAM13v(model)
         self.solids = Solids(model)
 
-        self.elements2 = Elements(model)
+        self.elements2 = Elements(model)  # TODO: change this name
 
         self._update_card_parser()
 
@@ -456,11 +472,6 @@ class BDF(BDF_):
             self.elements[key] = elem
             self._type_to_id_map[elem.type].append(key)
 
-    def _prepare_cquad4(self, card, card_obj, comment=''):
-        self.cquad4.add_card(card_obj, comment=comment)
-    def _prepare_ctria3(self, card, card_obj, comment=''):
-        self.ctria3.add_card(card_obj, comment=comment)
-
     def _prepare_celas1(self, card, card_obj, comment=''):
         self.celas1.add_card(card_obj, comment=comment)
     def _prepare_celas2(self, card, card_obj, comment=''):
@@ -470,12 +481,34 @@ class BDF(BDF_):
     def _prepare_celas4(self, card, card_obj, comment=''):
         self.celas4.add_card(card_obj, comment=comment)
 
+    def _prepare_cdamp1(self, card, card_obj, comment=''):
+        self.cdamp1.add_card(card_obj, comment=comment)
+    def _prepare_cdamp2(self, card, card_obj, comment=''):
+        self.cdamp2.add_card(card_obj, comment=comment)
+    def _prepare_cdamp3(self, card, card_obj, comment=''):
+        self.cdamp3.add_card(card_obj, comment=comment)
+    def _prepare_cdamp4(self, card, card_obj, comment=''):
+        self.cdamp4.add_card(card_obj, comment=comment)
+    #def _prepare_cdamp5(self, card, card_obj, comment=''):
+        #self.cdamp5.add_card(card_obj, comment=comment)
+
+    def _prepare_conrod(self, card, card_obj, comment=''):
+        self.conrod.add_card(card_obj, comment=comment)
+    def _prepare_crod(self, card, card_obj, comment=''):
+        self.crod.add_card(card_obj, comment=comment)
+    def _prepare_ctube(self, card, card_obj, comment=''):
+        self.ctube.add_card(card_obj, comment=comment)
+
+    def _prepare_cquad4(self, card, card_obj, comment=''):
+        self.cquad4.add_card(card_obj, comment=comment)
+    def _prepare_ctria3(self, card, card_obj, comment=''):
+        self.ctria3.add_card(card_obj, comment=comment)
     #def _prepare_ctria6(self, card, card_obj, comment=''):
         #self.ctria6.add_card(card_obj, comment=comment)
     #def _prepare_cquad8(self, card, card_obj, comment=''):
         #self.cquad8.add_card(card_obj, comment=comment)
-    #def _prepare_ctetra(self, card, card_obj, comment=''):
-        #self.ctetra.add_card(card_obj, comment=comment)
+    #def _prepare_cquad(self, card, card_obj, comment=''):
+        #self.cquad.add_card(card_obj, comment=comment)
 
     def _prepare_ctetra(self, card, card_obj, comment=''):
         """adds a CTETRA4/CTETRA10"""
@@ -509,11 +542,10 @@ class BDF(BDF_):
         del self._card_parser['GRID']
         self._card_parser_prepare['GRID'] = self._prepare_grid
 
-        del self._card_parser['CQUAD4']
-        self._card_parser_prepare['CQUAD4'] = self._prepare_cquad4
-
         del self._card_parser['CTRIA3']
+        del self._card_parser['CQUAD4']
         self._card_parser_prepare['CTRIA3'] = self._prepare_ctria3
+        self._card_parser_prepare['CQUAD4'] = self._prepare_cquad4
 
         del self._card_parser['CELAS1']
         del self._card_parser['CELAS2']
@@ -523,6 +555,22 @@ class BDF(BDF_):
         self._card_parser_prepare['CELAS2'] = self._prepare_celas2
         self._card_parser_prepare['CELAS3'] = self._prepare_celas3
         self._card_parser_prepare['CELAS4'] = self._prepare_celas4
+
+        del self._card_parser['CDAMP1']
+        del self._card_parser['CDAMP2']
+        del self._card_parser['CDAMP3']
+        #del self._card_parser['CDAMP4']
+        self._card_parser_prepare['CDAMP1'] = self._prepare_cdamp1
+        self._card_parser_prepare['CDAMP2'] = self._prepare_cdamp2
+        self._card_parser_prepare['CDAMP3'] = self._prepare_cdamp3
+        self._card_parser_prepare['CDAMP4'] = self._prepare_cdamp4
+
+        del self._card_parser['CONROD']
+        del self._card_parser['CROD']
+        del self._card_parser['CTUBE']
+        self._card_parser_prepare['CONROD'] = self._prepare_conrod
+        self._card_parser_prepare['CROD'] = self._prepare_crod
+        self._card_parser_prepare['CTUBE'] = self._prepare_ctube
 
     #def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
         #pass
@@ -666,43 +714,3 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
                    xref=xref, punch=punch, read_includes=True, encoding=encoding)
     return model
-
-
-def test_vectorized():
-    import os
-    import pyNastran
-    pkg_path = pyNastran.__path__[0]
-    model_path = os.path.join(pkg_path, '../', 'models')
-
-    bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
-    bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
-    bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
-    model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
-                     skip_cards=None, encoding=None, log=None, debug=True,
-                     mode='msc')
-
-    #model.grids[10] = GRID(10, [0., 0., 0.])
-    print(model.grid)
-    print(model.grid[10]) # nid or index?
-    print(model.grid.get_grid_by_nid(10))
-    print(model.cquad4)
-    print(model.ctria3)
-    print(model.shells)
-    print(model.solids)
-    print(model.ctetra4)
-    print(model.ctetra10)
-
-    print(model.celas1)
-    print(model.celas2)
-    print(model.celas3)
-    print(model.celas4)
-
-    print(model.elements2)
-    print(len(model.elements2))
-    out_filename = 'spike.bdf'
-    model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
-                    interspersed=False, enddata=None,
-                    close=True)
-
-if __name__ == '__main__':  # pragma: no cover
-    test_vectorized()

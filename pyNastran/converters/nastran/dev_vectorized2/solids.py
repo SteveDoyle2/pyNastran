@@ -73,7 +73,7 @@ class SolidElement(object):
     nnodes = 0
     def __init__(self, model):
         self.model = model
-        self._is_current = False
+        self.is_current = False
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
@@ -119,7 +119,7 @@ class SolidElement(object):
 
     def check_if_current(self, nid, nids):
         """we split this up to reason about it easier"""
-        if self._is_current:
+        if self.is_current:
             if nid in nids:
                 # card exists, so we use that slot
                 add_card = False
@@ -131,7 +131,7 @@ class SolidElement(object):
 
     def _make_current(self):
         """creates an array of the elements"""
-        if not self._is_current:
+        if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
                 self.eid = np.hstack([self.eid, self._eid])
                 self.pid = np.vstack([self.pid, self._pid])
@@ -146,7 +146,7 @@ class SolidElement(object):
             self._eid = []
             self._pid = []
             self._nids = []
-            self._is_current = True
+            self.is_current = True
         #else:
             #print('no GRIDs')
 

@@ -15,7 +15,7 @@ class ShellElement(object):
     def __init__(self, model):
         """intializes the ShellElement"""
         self.model = model
-        self._is_current = False
+        self.is_current = False
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='float64')
@@ -49,7 +49,7 @@ class ShellElement(object):
 
     def check_if_current(self, nid, nids):
         """we split this up to reason about it easier"""
-        if self._is_current:
+        if self.is_current:
             if nid in nids:
                 # card exists, so we use that slot
                 add_card = False
@@ -66,7 +66,7 @@ class ShellElement(object):
 
     def _make_current(self):
         """creates an array of the GRID points"""
-        if not self._is_current:
+        if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
                 self.eid = np.hstack([self.eid, self._eid])
                 self.pid = np.vstack([self.pid, self._pid])
@@ -100,7 +100,7 @@ class ShellElement(object):
             self.thickness = []
             self.thickness_flag = []
             #self._cd = []
-            self._is_current = True
+            self.is_current = True
         #else:
             #print('no GRIDs')
 
@@ -188,7 +188,7 @@ class CTRIA3v(ShellElement):
             a comment for the card
         """
         self.model.shells.add(eid)
-        self._is_current = False
+        self.is_current = False
         self._eid.append(eid)
         self._pid.append(pid)
         self._nids.append(nids)
@@ -309,7 +309,7 @@ class CQUAD4v(ShellElement):
             a comment for the card
         """
         self.model.shells.add(eid)
-        self._is_current = False
+        self.is_current = False
         self._eid.append(eid)
         self._pid.append(pid)
         self._nids.append(nids)
@@ -369,7 +369,7 @@ class CQUAD4v(ShellElement):
         #if add_card:
             #self.add(nid, grid.xyz, cp=grid.cp, cd=grid.cd,  # add_cquad4
                      #ps=grid.ps, seid=grid.seid, comment=grid.comment)
-            #self._is_current = False
+            #self.is_current = False
         #else:
             #inid = np.where(nid == self.nid)[0]
             #self.nid[inid] = grid.nid
@@ -379,7 +379,7 @@ class CQUAD4v(ShellElement):
             #self.ps[inid] = grid.ps
             #self.seid[inid] = grid.seid
             #self.comment[nid] = comment
-            #self._is_current = True  # implicit
+            #self.is_current = True  # implicit
 
     #def __iter__(self):
         #pass
@@ -429,6 +429,7 @@ class CQUAD4v(ShellElement):
         bdf_file.write(msg)
         return msg
 
+
 class Shells(object):
     """
     Stores shell elements that exist in 3D space
@@ -440,6 +441,7 @@ class Shells(object):
         self.cquad4 = model.cquad4
         self.ctria6 = model.ctria6
         self.cquad8 = model.cquad8
+        self.cquad = model.cquad
         self._eids = set([])
 
     def add(self, eid):
@@ -458,9 +460,12 @@ class Shells(object):
             self.ctria6.write_card(size, is_double, bdf_file)
         if len(self.cquad8):
             self.cquad8.write_card(size, is_double, bdf_file)
+        if len(self.cquad):
+            self.cquad.write_card(size, is_double, bdf_file)
 
     def __len__(self):
-        return len(self.cquad4) + len(self.cquad8) + len(self.ctria3) + len(self.ctria6)
+        return(len(self.cquad4) + len(self.cquad8) +
+               len(self.ctria3) + len(self.ctria6) + len(self.cquad))
 
     def repr_indent(self, indent=''):
         msg = '%s<Shells> : nelements=%s\n' % (indent, len(self))
@@ -468,6 +473,7 @@ class Shells(object):
         msg += '%s  CQUAD4: %s\n' % (indent, len(self.cquad4))
         msg += '%s  CTRIA6: %s\n' % (indent, len(self.ctria6))
         msg += '%s  CQUAD8: %s\n' % (indent, len(self.cquad8))
+        msg += '%s  CQUAD : %s\n' % (indent, len(self.cquad))
         return msg
 
     def __repr__(self):
