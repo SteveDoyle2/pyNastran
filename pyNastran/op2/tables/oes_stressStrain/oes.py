@@ -479,6 +479,7 @@ class OES(OP2Common):
 
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X') : ('conrod_stress', RealRodStressArray),
+            (10, 2, 5, b'OES1X') : ('conrod_stress', ComplexRodStressArray),
             (10, 1, 5, b'OES1X1') : ('conrod_stress', RealRodStressArray),
             (10, 2, 5, b'OESVM1') : ('conrod_stress', ComplexRodStressArray),
             (10, 3, 5, b'OESVM1') : ('conrod_stress', ComplexRodStressArray),
