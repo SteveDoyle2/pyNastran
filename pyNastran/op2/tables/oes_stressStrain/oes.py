@@ -497,6 +497,7 @@ class OES(OP2Common):
             (4, 1, 4, b'OES1X1') : ('cshear_stress', RealShearStressArray),
             #(4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 5) : ('cshear_stress', ComplexShearStressArray),
+            (4, 2, 5, b'OES1X') : ('cshear_stress', ComplexShearStressArray),
             (4, 2, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
             (4, 3, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 3) : ('cshear_stress', RandomShearStressArray),
