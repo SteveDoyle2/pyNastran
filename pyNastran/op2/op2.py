@@ -424,8 +424,16 @@ class OP2(OP2_Scalar):
 
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
         result_types = self.get_table_types()
-        i = 0
-        #nbreak = 0
+
+        if len(self.matrices):
+            for key, matrix in sorted(iteritems(self.matrices)):
+                if hasattr(matrix, 'build_dataframe'):
+                    matrix.build_dataframe()
+                else:
+                    self.log.warning('pandas: build_dataframe is not supported for key=%s type=%s' % (key, str(type(matrix))))
+                    #raise NotImplementedError()
+                    continue
+
         for result_type in result_types:
             result = getattr(self, result_type)
             for obj in itervalues(result):
@@ -433,7 +441,7 @@ class OP2(OP2_Scalar):
                 #print('working on %s' % class_name)
                 obj.object_attributes()
                 obj.object_methods()
-                i += 1
+
                 if class_name in no_sort2_classes:
                     try:
                         obj.build_dataframe()
@@ -457,8 +465,6 @@ class OP2(OP2_Scalar):
                     self.log.error(obj)
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
-                #if i >= nbreak:
-                    #return
 
     def export_to_hdf5(self, hdf5_filename):
         """
@@ -491,6 +497,7 @@ class OP2(OP2_Scalar):
                         matrix.export_to_hdf5(matrixi_group, self.log)
                     else:
                         self.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
+                        #raise
                         continue
 
             subcase_groups = {}
@@ -516,8 +523,8 @@ class OP2(OP2_Scalar):
                     #result_name = result_type + ':' + class_name
                     result_name = result_type
                     result_group = subcase_group.create_group(result_name)
-                    i += 1
                     obj.export_to_hdf5(result_group, self.log)
+                    i += 1
 
     def combine_results(self, combine=True):
         """

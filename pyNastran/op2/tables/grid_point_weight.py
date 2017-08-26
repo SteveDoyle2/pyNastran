@@ -325,4 +325,3 @@ class GridPointWeight(object):
         f.write('\n'.join(msg))
         #print('\n'.join(msg))
         return page_num + 1
-
