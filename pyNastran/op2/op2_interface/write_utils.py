@@ -1,7 +1,7 @@
 """
 Defines methods for the op2 writer
 """
-from __future__ import unicode_literals
+from __future__ import print_function
 from struct import Struct, pack
 import numpy as np
 
@@ -56,7 +56,7 @@ def export_to_hdf5(self, group, log):
 
             # the size of the array is the |S8 or |S12 or whatever
             max_len = max([(len(valuei)) for valuei in svalue])
-            dtype = b'|S%i' % max_len
+            dtype = '|S%i' % max_len
             value = np.array(svalue, dtype=dtype)
 
         #if hasattr(value, 'export_to_hdf5'):
