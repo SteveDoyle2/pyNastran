@@ -22,7 +22,7 @@ Defines the main OP2 class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iterkeys, iteritems, string_types, itervalues
+from six import iterkeys, iteritems, string_types, itervalues, b
 import os
 import sys
 
@@ -492,7 +492,8 @@ class OP2(OP2_Scalar):
             if len(self.matrices):
                 matrix_group = hdf5_file.create_group('matrices')
                 for key, matrix in sorted(iteritems(self.matrices)):
-                    matrixi_group = matrix_group.create_group(bytes(key))
+                    print('type(key) = ', type(key))
+                    matrixi_group = matrix_group.create_group(b(key))
                     if hasattr(matrix, 'export_to_hdf5'):
                         matrix.export_to_hdf5(matrixi_group, self.log)
                     else:

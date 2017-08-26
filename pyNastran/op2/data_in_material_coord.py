@@ -77,8 +77,8 @@ def get_eids_from_op2_vector(vector):
     vector : op2 vector
         An op2 vector obtained, for example, doing::
 
-            vector = op2.cqua4_force[1]
-            vector = op2.cqua8_stress[1]
+            vector = op2.cquad4_force[1]
+            vector = op2.cquad8_stress[1]
             vector = op2.ctriar_force[1]
             vector = op2.ctria3_stress[1]
 
@@ -90,11 +90,23 @@ def get_eids_from_op2_vector(vector):
 
 
 def is_mcid(elem):
+    """
+    Determines if the element uses theta or the mcid (projected material coordinate system)
+
+    Parameters
+    ----------
+    elem : varies
+        an element object
+        CQUAD4, CQUAD8, CQUADR
+        CTRIA3, CTRIA6, CTRIAR
+
+    Returns
+    -------
+    is_mcid : bool
+        the projected material coordinate system is used
+    """
     theta_mcid = getattr(elem, 'theta_mcid', None)
-    if isinstance(theta_mcid, integer_types):
-        return True
-    else:
-        return False
+    return isinstance(theta_mcid, integer_types)
 
 
 def check_theta(elem):
