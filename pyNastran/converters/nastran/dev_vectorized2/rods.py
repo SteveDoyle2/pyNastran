@@ -5,6 +5,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
+from pyNastran.bdf.cards.base_card import _format_comment
 
 
 class Rods(object):
@@ -37,8 +38,8 @@ class Rods(object):
     def repr_indent(self, indent='  '):
         msg = '%s<Rods> : nelements=%s\n' % (indent, len(self))
         msg += '%s  CONROD:  %s\n' % (indent, len(self.conrod))
-        msg += '%s  CROD:  %s\n' % (indent, len(self.crod))
-        msg += '%s  CTUBE:  %s\n' % (indent, len(self.ctube))
+        msg += '%s  CROD  :  %s\n' % (indent, len(self.crod))
+        msg += '%s  CTUBE :  %s\n' % (indent, len(self.ctube))
         return msg
 
     def __repr__(self):
@@ -173,7 +174,7 @@ class CONRODv(RodElement):
         self._c.append(c)
         self._nsm.append(nsm)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -255,7 +256,7 @@ class CRODv(RodElement):
     | CROD | EID | PID | N1 | N2 |
     +------+-----+-----+----+----+
     """
-    card_name = 'CRODv'
+    card_name = 'CROD'
 
     def __init__(self, model):
         self.model = model
@@ -291,7 +292,7 @@ class CRODv(RodElement):
         self._pid.append(pid)
         self._nids.append(nids)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -352,7 +353,7 @@ class CTUBEv(RodElement):
     | CELAS3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
     """
-    card_name = 'CELAS3'
+    card_name = 'CTUBE'
 
     def __init__(self, model):
         self.model = model
@@ -387,7 +388,7 @@ class CTUBEv(RodElement):
         self._pid.append(pid)
         self._nids.append(nids)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -412,7 +413,7 @@ class CTUBEv(RodElement):
         self._make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
-            list_fields = ['CELAS3', eid, pid, nodes[0], nodes[1]]
+            list_fields = ['CTUBE', eid, pid, nodes[0], nodes[1]]
             msgi = print_card_8(list_fields)
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)

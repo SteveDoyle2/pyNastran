@@ -6,7 +6,8 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, blank,
     integer_double_or_blank)
-from pyNastran.bdf.field_writer_8 import print_field_8
+from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8, set_blank_if_default
+from pyNastran.bdf.cards.base_card import _format_comment
 
 
 class ShellElement(object):
@@ -90,15 +91,26 @@ class ShellElement(object):
                 #self.ps = np.array(self._ps)
                 #self.seid = np.array(self._seid)
             assert len(self.eid) == len(np.unique(self.eid))
+
+            isort = np.argsort(self.eid)
+            self.eid = self.eid[isort]
+            self.pid = self.pid[isort]
+            self.nids = self.nids[isort, :]
+            self.theta = self.theta[isort]
+            self.mcid = self.mcid[isort]
+            self.thickness = self.thickness[isort, :]
+            self.thickness_flag = self.thickness_flag[isort]
+            self.zoffset = self.zoffset[isort]
+
             #print(self.nid)
             self._eid = []
             self._pid = []
             self._nids = []
             self._theta = []
             self._mcid = []
-            self.zoffset = []
-            self.thickness = []
-            self.thickness_flag = []
+            self._zoffset = []
+            self._thickness = []
+            self._thickness_flag = []
             #self._cd = []
             self.is_current = True
         #else:
@@ -153,6 +165,15 @@ class ShellElement(object):
 
 
 class CTRIA3v(ShellElement):
+    """
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |  9  |
+    +========+=======+=======+=====+===+====+============+=========+=====+
+    | CTRIA3 |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |        |       | TFLAG | T1 | T2 | T3 |            |         |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    """
     card_name = 'CTRIA3'
     nnodes = 3
     nthickness = 3
@@ -202,7 +223,7 @@ class CTRIA3v(ShellElement):
         self._thickness_flag.append(thickness_flag)
         self._thickness.append(thickness)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         # type: (Any, str) -> CTRIA3
@@ -224,7 +245,7 @@ class CTRIA3v(ShellElement):
         nids = [
             integer(card, 3, 'n1'),
             integer(card, 4, 'n2'),
-            integer(card, 5, 'n3')
+            integer(card, 5, 'n3'),
         ]
         if len(card) > 5:
             theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', 0.0)
@@ -236,7 +257,7 @@ class CTRIA3v(ShellElement):
             thickness = [
                 double_or_blank(card, 11, 'T1'),
                 double_or_blank(card, 12, 'T2'),
-                double_or_blank(card, 13, 'T3')
+                double_or_blank(card, 13, 'T3'),
             ]
             assert len(card) <= 14, 'len(CTRIA3 card) = %i\ncard=%s' % (len(card), card)
         else:
@@ -254,7 +275,7 @@ class CTRIA3v(ShellElement):
         for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
             self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
             #zoffset = set_blank_if_default(self.zoffset, 0.0)
-            #tflag = set_blank_if_default(self.tflag, 0)
+            thickness_flag = set_blank_if_default(thickness_flag, 0)
             #theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
             zoffset = 0.
             #T1 = set_blank_if_default(self.T1, 1.0)
@@ -273,7 +294,146 @@ class CTRIA3v(ShellElement):
         bdf_file.write(msg)
         return msg
 
+class CTRIA6v(ShellElement):
+    """
+    +--------+------------+---------+----+----+----+----+----+-----+
+    |   1    |      2     |    3    |  4 |  5 |  6 | 7  | 8  |  9  |
+    +========+============+=========+=====+===+====+====+====+=====+
+    | CTRIA3 |    EID     |   PID   | N1 | N2 | N3 | N4 | N5 | N6  |
+    +--------+------------+---------+----+----+----+----+----+-----+
+    |        | THETA/MCID | ZOFFSET | T1 | T2 | T3 |    |    |     |
+    +--------+------------+---------+----+----+----+----+----+-----+
+    """
+    card_name = 'CTRIA6'
+    nnodes = 6
+    nthickness = 3
+
+    def add(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
+            thickness_flag=0, thickness=None, comment=''):
+        """
+        Creates a CTRIA3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int/None, int/None, int/None]
+            node ids
+        zoffset : float; default=0.0
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        thickness_flag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        thickness : List[float, float, float]; default=None
+            If a thickness is not supplied, then the thickness will be set equal
+            to the value of T on the PSHELL entry.
+        comment : str; default=''
+            a comment for the card
+        """
+        self.model.shells.add(eid)
+        self.is_current = False
+        self._eid.append(eid)
+        self._pid.append(pid)
+        self._nids.append(nids)
+        if isinstance(theta_mcid, integer_types):
+            self._mcid.append(theta_mcid)
+            self._theta.append(np.nan)
+        else:
+            self._theta.append(theta_mcid)
+            self._mcid.append(-1)
+        self._zoffset.append(zoffset)
+        self._thickness_flag.append(thickness_flag)
+        self._thickness.append(thickness)
+        if comment:
+            self.comment[eid] = _format_comment(comment)
+
+    def add_card(self, card, comment=''):
+        # type: (Any, str) -> CTRIA3
+        """
+        Adds a CTRIA6 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        #: Element ID
+        eid = integer(card, 1, 'eid')
+        #: Property ID
+        pid = integer(card, 2, 'pid')
+
+        nids = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3'),
+            integer_or_blank(card, 6, 'n4', 0),
+            integer_or_blank(card, 7, 'n5', 0),
+            integer_or_blank(card, 8, 'n6', 0),
+        ]
+        if len(card) > 9:
+            theta_mcid = integer_double_or_blank(card, 9, 'theta_mcid', 0.0)
+            zoffset = double_or_blank(card, 10, 'zoffset', 0.0)
+
+            thickness = [
+                double_or_blank(card, 11, 'T1'),
+                double_or_blank(card, 12, 'T2'),
+                double_or_blank(card, 13, 'T3'),
+            ]
+            thickness_flag = integer_or_blank(card, 14, 'tflag', 0)
+            assert len(card) <= 15, 'len(CTRIA6 card) = %i\ncard=%s' % (len(card), card)
+        else:
+            theta_mcid = 0.0
+            zoffset = 0.0
+            thickness = [1.0, 1.0, 1.0]
+            thickness_flag = 0
+        self.add(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                 thickness_flag=thickness_flag, thickness=thickness)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self._make_current()
+        msg = ''
+        for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
+            self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
+            #zoffset = set_blank_if_default(self.zoffset, 0.0)
+            thickness_flag = set_blank_if_default(thickness_flag, 0)
+            #theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+            if mcid == -1:
+                mcid = theta # theta_mcid
+            zoffset = 0.
+            #T1 = set_blank_if_default(self.T1, 1.0)
+            #T2 = set_blank_if_default(self.T2, 1.0)
+            #T3 = set_blank_if_default(self.T3, 1.0)
+
+            if mcid != -1:
+                theta = mcid
+            list_fields = (['CTRIA6', eid, pid] + nids.tolist() +
+                           [mcid, zoffset] + thickness.tolist() + [thickness_flag])
+            msg += self.comment[eid] + print_card_8(list_fields)
+        bdf_file.write(msg)
+        return msg
+
+
 class CQUAD4v(ShellElement):
+    """
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |     8      |    9    |
+    +========+=======+=======+=====+===+====+====+============+=========+
+    | CQUAD4 |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 | T4 |            |         |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    """
     card_name = 'CQUAD4'
     nnodes = 4
     nthickness = 4
@@ -323,7 +483,7 @@ class CQUAD4v(ShellElement):
         self._thickness_flag.append(thickness_flag)
         self._thickness.append(thickness)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -409,8 +569,181 @@ class CQUAD4v(ShellElement):
         for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
             self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
             #zoffset = set_blank_if_default(self.zoffset, 0.0)
-            #tflag = set_blank_if_default(self.tflag, 0)
+            thickness_flag = set_blank_if_default(thickness_flag, 0)
             #theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+            zoffset = 0.
+            #T1 = set_blank_if_default(self.T1, 1.0)
+            #T2 = set_blank_if_default(self.T2, 1.0)
+            #T3 = set_blank_if_default(self.T3, 1.0)
+            #T4 = set_blank_if_default(self.T4, 1.0)
+
+            if mcid == -1:
+                mcid = theta # theta_mcid
+            row2_data = [mcid, zoffset,
+                         thickness_flag] + thickness.tolist()
+            row2 = [print_field_8(field) for field in row2_data]
+            data = [eid, pid] + nids.tolist() + row2
+            msgi = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+                    '                %8s%8s%8s%8s%8s\n' % tuple(data))
+            msg += self.comment[eid] + msgi.rstrip() + '\n'
+        bdf_file.write(msg)
+        return msg
+
+class CQUAD8v(ShellElement):
+    """
+    +--------+-------+-----+----+----+----+----+------------+-------+
+    |    1   |   2   |  3  |  4 |  5 |  6 |  7 |      8     |   9   |
+    +========+=======+=====+====+====+====+====+============+=======+
+    | CQUAD8 |  EID  | PID | G1 | G2 | G3 | G4 |     G5     |  G6   |
+    +--------+-------+-----+----+----+----+----+------------+-------+
+    |        |   G7  | G8  | T1 | T2 | T3 | T4 | THETA/MCID | ZOFFS |
+    +--------+-------+-----+----+----+----+----+------------+-------+
+    |        | TFLAG |     |    |    |    |    |            |       |
+    +--------+-------+-----+----+----+----+----+------------+-------+
+    """
+    card_name = 'CQUAD8'
+    nnodes = 8
+    nthickness = 4
+
+    def add(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.,
+            thickness_flag=0, thickness=None, comment=''):
+        """
+        Creates a CQUAD8 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int, int/None, int/None, int/None, int/None]
+            node ids
+        zoffset : float; default=0.0
+            Offset from the surface of grid points to the element reference
+            plane.  Requires MID1 and MID2.
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        thickness_flag : int; default=0
+            0 : Ti are actual user specified thicknesses
+            1 : Ti are fractions relative to the T value of the PSHELL
+        thickness : List[float, float, float, float]; default=None
+            If a thickness is not supplied, then the thickness will be set equal
+            to the value of T on the PSHELL entry.
+        comment : str; default=''
+            a comment for the card
+        """
+        self.model.shells.add(eid)
+        self.is_current = False
+        self._eid.append(eid)
+        self._pid.append(pid)
+        self._nids.append(nids)
+        if isinstance(theta_mcid, integer_types):
+            self._mcid.append(theta_mcid)
+            self._theta.append(np.nan)
+        else:
+            self._theta.append(theta_mcid)
+            self._mcid.append(-1)
+        self._zoffset.append(zoffset)
+        self._thickness_flag.append(thickness_flag)
+        self._thickness.append(thickness)
+        if comment:
+            self.comment[eid] = _format_comment(comment)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a CQUAD8 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer(card, 5, 'n3'),
+                integer(card, 6, 'n4'),
+                integer_or_blank(card, 7, 'n5', 0),
+                integer_or_blank(card, 8, 'n6', 0),
+                integer_or_blank(card, 9, 'n7', 0),
+                integer_or_blank(card, 10, 'n8', 0)]
+        if len(card) > 11:
+            thickness = [
+                double_or_blank(card, 11, 'T1'),
+                double_or_blank(card, 12, 'T2'),
+                double_or_blank(card, 13, 'T3'),
+                double_or_blank(card, 14, 'T4'),
+            ]
+            theta_mcid = integer_double_or_blank(card, 15, 'theta_mcid', 0.0)
+            zoffset = double_or_blank(card, 16, 'zoffset', 0.0)
+            thickness_flag = integer_or_blank(card, 17, 'tflag', 0)
+            assert len(card) <= 18, 'len(CQUAD8 card) = %i\ncard=%s' % (len(card), card)
+        else:
+            theta_mcid = 0.0
+            zoffset = 0.0
+            thickness_flag = 0
+            thickness = [1.0, 1.0, 1.0, 1.0]
+        self.add(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                 thickness_flag=thickness_flag, thickness=thickness)
+
+    #def update(self, grid):
+        #"""functions like a dictionary"""
+        #nid = grid.nid
+        #add_card = self.check_if_current(eid, self.eid)
+        #if add_card:
+            #self.add(nid, grid.xyz, cp=grid.cp, cd=grid.cd,  # add_cquad4
+                     #ps=grid.ps, seid=grid.seid, comment=grid.comment)
+            #self.is_current = False
+        #else:
+            #inid = np.where(nid == self.nid)[0]
+            #self.nid[inid] = grid.nid
+            #self.xyz[inid] = grid.xyz
+            #self.cp[inid] = grid.cp
+            #self.cd[inid] = grid.cd
+            #self.ps[inid] = grid.ps
+            #self.seid[inid] = grid.seid
+            #self.comment[nid] = comment
+            #self.is_current = True  # implicit
+
+    #def __iter__(self):
+        #pass
+    #def __next__(self):
+        #pass
+    #def __items__(self):
+        #pass
+    #def __keys__(self):
+        #pass
+    #def __values__(self):
+        #pass
+    #def __getitem__(self, i):
+        #"""this works on index"""
+        #self._make_current()
+        #eid = self.eid[i]
+        #return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
+                    #ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
+
+    #def __setitem__(self, i, value):
+        #pass
+    #def __delitem__(self, i):
+        #pass
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self._make_current()
+        msg = ''
+        for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
+            self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
+            #zoffset = set_blank_if_default(self.zoffset, 0.0)
+            thickness_flag = set_blank_if_default(thickness_flag, 0)
+            #theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
+
+            if mcid == -1:
+                mcid = theta # theta_mcid
             zoffset = 0.
             #T1 = set_blank_if_default(self.T1, 1.0)
             #T2 = set_blank_if_default(self.T2, 1.0)
@@ -419,13 +752,10 @@ class CQUAD4v(ShellElement):
 
             if mcid != -1:
                 theta = mcid
-            row2_data = [theta, zoffset, # theta is theta_mcid
-                         thickness_flag] + thickness.tolist()
-            row2 = [print_field_8(field) for field in row2_data]
-            data = [eid, pid] + nids.tolist() + row2
-            msgi = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
-                    '                %8s%8s%8s%8s%8s\n' % tuple(data))
-            msg += self.comment[eid] + msgi.rstrip() + '\n'
+
+            list_fields = (['CQUAD8', eid, pid] + nids.tolist() + thickness.tolist() + [
+                mcid, zoffset, thickness_flag])
+            msg += self.comment[eid] + print_card_8(list_fields)
         bdf_file.write(msg)
         return msg
 
@@ -453,7 +783,7 @@ class Shells(object):
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         if len(self.ctria3):
-            self.ctria3.write_card(size, is_double, bdf_file)
+            msg = self.ctria3.write_card(size, is_double, bdf_file)
         if len(self.cquad4):
             self.cquad4.write_card(size, is_double, bdf_file)
         if len(self.ctria6):

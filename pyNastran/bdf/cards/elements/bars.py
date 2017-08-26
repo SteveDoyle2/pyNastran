@@ -456,7 +456,7 @@ class CBAR(LineElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
-        x, g0 = cls._init_x_g0(card, eid)
+        x, g0 = init_x_g0(card, eid)
 
         # doesn't exist in NX nastran
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
@@ -587,28 +587,6 @@ class CBAR(LineElement):
     def center_of_mass(self):
         return self.Centroid()
 
-    @classmethod
-    def _init_x_g0(cls, card, eid):
-        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
-        if isinstance(field5, integer_types):
-            g0 = field5
-            x = None
-        elif isinstance(field5, float):
-            g0 = None
-            x = np.array([field5,
-                          double_or_blank(card, 6, 'x2', 0.0),
-                          double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
-            if norm(x) == 0.0:
-                msg = 'G0 vector defining plane 1 is not defined.\n'
-                msg += 'G0 = %s\n' % g0
-                msg += 'X  = %s\n' % x
-                raise RuntimeError(msg)
-        else:
-            msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
-                   'type=%s' % (cls.type, eid, field5, type(field5)))
-            raise RuntimeError(msg)
-        return x, g0
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -738,7 +716,7 @@ class CBAR(LineElement):
         w1b = set_blank_if_default(self.wb[0], 0.0)
         w2b = set_blank_if_default(self.wb[1], 0.0)
         w3b = set_blank_if_default(self.wb[2], 0.0)
-        (x1, x2, x3) = self.get_x_g0_defaults()
+        x1, x2, x3 = self.get_x_g0_defaults()
 
         # offt doesn't exist in NX nastran
         offt = set_blank_if_default(self.offt, 'GGG')
@@ -804,7 +782,7 @@ class CBEAM3(LineElement):  # was CBAR
         gb = integer(card, 4, 'gb')
         gc = integer(card, 5, 'gc')
 
-        x, g0 = cls._init_x_g0(card, eid)
+        x, g0 = init_x_g0(card, eid)
 
         wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
                        double_or_blank(card, 10, 'w2a', 0.0),
@@ -1207,3 +1185,25 @@ class CBEND(LineElement):
             return self.comment + print_card_8(card)
         else:
             return self.comment + print_card_16(card)
+
+def init_x_g0(card, eid):
+    """common method to read the x/g0 field for the CBAR, CBEAM, CBEAM3"""
+    field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+    if isinstance(field5, integer_types):
+        g0 = field5
+        x = None
+    elif isinstance(field5, float):
+        g0 = None
+        x = np.array([field5,
+                      double_or_blank(card, 6, 'x2', 0.0),
+                      double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+        if norm(x) == 0.0:
+            msg = 'G0 vector defining plane 1 is not defined.\n'
+            msg += 'G0 = %s\n' % g0
+            msg += 'X  = %s\n' % x
+            raise RuntimeError(msg)
+    else:
+        msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
+               'type=%s' % (card.field(0), eid, field5, type(field5)))
+        raise RuntimeError(msg)
+    return x, g0

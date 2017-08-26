@@ -5,6 +5,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.base_card import _format_comment
 
 
 class Dampers(object):
@@ -148,7 +149,7 @@ class CDAMP1(DamperElement):
         self._nids.append(nids)
         self._dofs.append(dofs)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -259,7 +260,7 @@ class CDAMP2(DamperElement):
         self._nids.append(nids)
         self._dofs.append(dofs)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -278,7 +279,7 @@ class CDAMP2(DamperElement):
                 integer_or_blank(card, 5, 'g2', 0)]
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 9, 'len(CELAS2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, 'len(CDAMP2 card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, b, nids, [c1, c2], comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -286,7 +287,7 @@ class CDAMP2(DamperElement):
         self._make_current()
         msg = ''
         for eid, b, nodes, dofs in zip(self.eid, self.b, self.nids, self.dofs):
-            list_fields = ['CELAS2', eid, b, nodes[0], dofs[0], nodes[1], dofs[1]]
+            list_fields = ['CDAMP2', eid, b, nodes[0], dofs[0], nodes[1], dofs[1]]
             msgi = print_card_8(list_fields)
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
@@ -360,7 +361,7 @@ class CDAMP3(DamperElement):
         self._pid.append(pid)
         self._nids.append(nids)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -378,7 +379,7 @@ class CDAMP3(DamperElement):
 
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, 'len(CDAMP3 card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, pid, [s1, s2], comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -386,7 +387,7 @@ class CDAMP3(DamperElement):
         self._make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
-            list_fields = ['CELAS3', eid, pid, nodes[0], nodes[1]]
+            list_fields = ['CDAMP3', eid, pid, nodes[0], nodes[1]]
             msgi = print_card_8(list_fields)
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
@@ -458,7 +459,7 @@ class CDAMP4(DamperElement):
         self._b.append(b)
         self._nids.append(nids)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """

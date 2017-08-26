@@ -1,15 +1,10 @@
 from __future__ import print_function
-from collections import defaultdict
+#from collections import defaultdict
 from six import iteritems
-import numpy as np
-from pyNastran.bdf.bdf import BDF as BDF_, GRID
+#import numpy as np
+from pyNastran.bdf.bdf import BDF as BDF_
 
-from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank,
-    components_or_blank)
-from pyNastran.bdf.field_writer_8 import print_float_8, set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import print_float_16, set_string16_blank_if_default
-from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.converters.nastran.dev_vectorized2.nodes import GRIDv
 
 from pyNastran.converters.nastran.dev_vectorized2.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
@@ -17,335 +12,14 @@ from pyNastran.converters.nastran.dev_vectorized2.dampers import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, Dampers)
 from pyNastran.converters.nastran.dev_vectorized2.rods import (
     CONRODv, CRODv, CTUBEv, Rods)
-from pyNastran.converters.nastran.dev_vectorized2.shells import CQUAD4v, CTRIA3v, Shells
+from pyNastran.converters.nastran.dev_vectorized2.bars import CBARv, Bars
+from pyNastran.converters.nastran.dev_vectorized2.beams import CBEAMv, Beams
+from pyNastran.converters.nastran.dev_vectorized2.shears import CSHEARv, Shears
+from pyNastran.converters.nastran.dev_vectorized2.shells import CTRIA3v, CTRIA6v, CQUAD4v, CQUAD8v, Shells
 from pyNastran.converters.nastran.dev_vectorized2.solids import (
     CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
     CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
 
-
-class GRIDv(object):
-    card_name = 'GRID'
-    def __init__(self, model):
-        self.model = model
-        self.is_current = False
-        self.nid = np.array([], dtype='int32')
-        self.xyz = np.array([], dtype='float64')
-        self.cp = np.array([], dtype='int32')
-        self.cd = np.array([], dtype='int32')
-        self.ps = np.array([], dtype='|U8')
-        self.seid = np.array([], dtype='int32')
-
-        self._nid = []
-        self._xyz = []
-        self._cp = []
-        self._cd = []
-        self._ps = []
-        self._seid = []
-        self.comment = defaultdict(str)
-
-    def add(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
-        # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
-        """
-        Creates the GRID card
-
-        Parameters
-        ----------
-        nid : int
-            node id
-        cp : int; default=0
-            the xyz coordinate frame
-        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
-            the xyz/r-theta-z/rho-theta-phi values
-        cd : int; default=0
-            the analysis coordinate frame
-        ps : str; default=''
-            Additional SPCs in the analysis coordinate frame (e.g. '123').
-            This corresponds to DOF set ``SG``.
-        seid : int; default=0
-            superelement id
-            TODO: how is this used by Nastran???
-        comment : str; default=''
-            a comment for the card
-        """
-        self.is_current = False
-        self._nid.append(nid)
-        self._xyz.append(xyz)
-        self._cp.append(cp)
-        self._cd.append(cd)
-        self._ps.append(ps)
-        self._seid.append(seid)
-        if comment:
-            self.comment[nid] = comment
-
-    def add_card(self, card, comment=''):
-        # type: (Any, str) -> GRID
-        """
-        Adds a GRID card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        nfields = len(card)
-        #print('card = %s' % card)
-        #: Node ID
-        nid = integer(card, 1, 'nid')
-
-        #: Grid point coordinate system
-        cp = integer_or_blank(card, 2, 'cp', 0)
-
-        #: node location in local frame
-        xyz = [
-            double_or_blank(card, 3, 'x1', 0.),
-            double_or_blank(card, 4, 'x2', 0.),
-            double_or_blank(card, 5, 'x3', 0.)]
-
-        if nfields > 6:
-            #: Analysis coordinate system
-            cd = integer_or_blank(card, 6, 'cd', 0)
-
-            #: SPC constraint
-            ps = components_or_blank(card, 7, 'ps', '')
-            #u(integer_or_blank(card, 7, 'ps', ''))
-
-            #: Superelement ID
-            seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(GRID card) = %i\ncard=%s' % (len(card), card)
-        else:
-            cd = 0
-            ps = ''
-            seid = 0
-        self.add(nid, xyz, cp, cd, ps, seid, comment=comment)
-
-    def check_if_current(self, nid, nids):
-        """we split this up to reason about it easier"""
-        if self.is_current:
-            if nid in nids:
-                # card exists, so we use that slot
-                add_card = False
-            else:
-                add_card = True
-        else:
-            add_card = True
-        return add_card
-
-    def update(self, grid):
-        """functions like a dictionary"""
-        nid = grid.nid
-
-        add_grid = self.check_if_current(nid, self.nid)
-        if add_grid:
-            self.add(nid, grid.xyz, cp=grid.cp, cd=grid.cd,
-                     ps=grid.ps, seid=grid.seid, comment=grid.comment)
-            self.is_current = False
-        else:
-            inid = np.where(nid == self.nid)[0]
-            self.nid[inid] = grid.nid
-            self.xyz[inid] = grid.xyz
-            self.cp[inid] = grid.cp
-            self.cd[inid] = grid.cd
-            self.ps[inid] = grid.ps
-            self.seid[inid] = grid.seid
-            #self.comment[nid] = comment
-            #self.is_current = True  # implicit
-
-    def _make_current(self):
-        """creates an array of the GRID points"""
-        if not self.is_current:
-            if len(self.nid) > 0: # there are already nodes in self.nid
-                self.nid = np.hstack([self.nid, self._nid])
-                self.xyz = np.vstack([self.xyz, self._xyz])
-                self.cp = np.hstack([self.cp, self._cp])
-                self.cd = np.hstack([self.cd, self._cd])
-                self.ps = np.hstack([self.ps, self._ps])
-                self.seid = np.hstack([self.seid, self._seid])
-                # don't need to handle comments
-            else:
-                self.nid = np.array(self._nid)
-                self.xyz = np.array(self._xyz)
-                self.cp = np.array(self._cp)
-                self.cd = np.array(self._cd)
-                self.ps = np.array(self._ps)
-                self.seid = np.array(self._seid)
-            assert len(self.nid) == len(np.unique(self.nid))
-            #print(self.nid)
-            self._nid = []
-            self._xyz = []
-            self._cp = []
-            self._cd = []
-            self._ps = []
-            self._seid = []
-            self.is_current = True
-        #else:
-            #print('no GRIDs')
-
-    def cross_reference(self, model):
-        """does this do anything?"""
-        self._make_current()
-
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
-        """
-        The writer method used by BDF.write_card
-
-        Parameters
-        ----------
-        size : int; default=8
-            the size of the card (8/16)
-        is_double : bool; default=False
-            should this card be written with double precision
-
-        Returns
-        -------
-        msg : str
-            the card as a string
-        """
-        if size == 8:
-            return self.write_card_8()
-        else:
-            return self.write_card_16(is_double)
-
-    def write_card_8(self):
-        # type: () -> str
-        """
-        Writes a GRID card in 8-field format
-        """
-        self._make_current()
-        msg = ''
-        for nid, xyz, cp, cd, ps, seid in zip(self.nid, self.xyz, self.cp, self.cd, self.ps, self.seid):
-            cps = set_string8_blank_if_default(cp, 0)
-            if [cd, ps, seid] == [0, '', 0]:
-                # default
-                print_float_8(xyz[0])
-                print_float_8(xyz[1])
-                print_float_8(xyz[2])
-                msgi = 'GRID    %8i%8s%s%s%s\n' % (
-                    nid, cps,
-                    print_float_8(xyz[0]),
-                    print_float_8(xyz[1]),
-                    print_float_8(xyz[2]),
-                )
-                msg += self.comment[nid] + msgi
-            else:
-                cds = set_string8_blank_if_default(cd, 0)
-                seids = set_string8_blank_if_default(seid, 0)
-                msgi = 'GRID    %8i%8s%s%s%s%s%8s%s\n' % (
-                    nid, cps,
-                    print_float_8(xyz[0]),
-                    print_float_8(xyz[1]),
-                    print_float_8(xyz[2]),
-                    cds, ps, seids)
-                msg += self.comment[nid] + msgi
-        return msg
-
-    def write_card_16(self, is_double=False):
-        # type: (bool) -> str
-        """
-        Writes a GRID card in 16-field format
-        """
-        self._make_current()
-        xyz = self.xyz
-        cp = set_string16_blank_if_default(cp, 0)
-        cd = set_string16_blank_if_default(cd, 0)
-        seid = set_string16_blank_if_default(seid, 0)
-
-        if is_double:
-            if [cd, self.ps, self.seid] == [0, '', 0]:
-                msg = ('GRID*   %16i%16s%16s%16s\n'
-                       '*       %16s\n' % (
-                           self.nid,
-                           cp,
-                           print_scientific_double(xyz[0]),
-                           print_scientific_double(xyz[1]),
-                           print_scientific_double(xyz[2])))
-            else:
-                msg = ('GRID*   %16i%16s%16s%16s\n'
-                       '*       %16s%16s%16s%16s\n' % (
-                           self.nid,
-                           cp,
-                           print_scientific_double(xyz[0]),
-                           print_scientific_double(xyz[1]),
-                           print_scientific_double(xyz[2]),
-                           cd, self.ps, seid))
-        else:
-            if [cd, self.ps, self.seid] == [0, '', 0]:
-                msg = ('GRID*   %16i%16s%16s%16s\n'
-                       '*       %16s\n' % (
-                           self.nid,
-                           cp,
-                           print_float_16(xyz[0]),
-                           print_float_16(xyz[1]),
-                           print_float_16(xyz[2])))
-            else:
-                msg = ('GRID*   %16i%16s%16s%16s\n'
-                       '*       %16s%16s%16s%16s\n' % (
-                           self.nid,
-                           cp,
-                           print_float_16(xyz[0]),
-                           print_float_16(xyz[1]),
-                           print_float_16(xyz[2]),
-                           cd, self.ps, seid))
-        return self.comment + msg
-
-    def __repr__(self):
-        self._make_current()
-        msg = 'GRID_Vector; ngrids=%s:\n' % len(self.nid)
-        msg += '  nid = %s\n' % self.nid
-
-        ucp = np.unique(self.cp)
-        if len(ucp) == 1 and ucp[0] == 0:
-            msg += '  ucp = %s\n' % ucp
-        else:
-            msg += '  cp = %s\n' % self.cp
-
-        ucd = np.unique(self.cd)
-        if len(ucd) == 1 and ucd[0] == 0:
-            msg += '  ucd = %s\n' % ucd
-        else:
-            msg += '  cd = %s\n' % self.cd
-
-        ups = np.unique(self.ps)
-        if len(ups) == 1 and ups[0] == '':
-            msg += '  ups = %s\n' % ups
-        else:
-            msg += '  ps = %s\n' % self.ps
-
-        useid = np.unique(self.seid)
-        if len(useid) == 1 and useid[0] == 0:
-            msg += '  useid = %s\n' % useid
-        else:
-            msg += '  seid = %s\n' % self.seid
-        #msg += '  xyz =\n%s' % self.xyz
-        return msg
-    #def __iter__(self):
-        #pass
-    #def __next__(self):
-        #pass
-    #def __items__(self):
-        #pass
-    #def __keys__(self):
-        #pass
-    #def __values__(self):
-        #pass
-    def __getitem__(self, i):
-        """this works on index"""
-        self._make_current()
-        nid = self.nid[i]
-        return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
-                    ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
-
-    def get_grid_by_nid(self, nid):
-        self._make_current()
-        inid = np.searchsorted(self.nid, nid)
-        return self[inid]
-
-    def __setitem__(self, i, value):
-        pass
-    #def __delitem__(self, i):
-        #pass
 
 class Elements(object):
     """stores all the elements"""
@@ -355,7 +29,10 @@ class Elements(object):
         self.springs = model.springs
         self.dampers = model.dampers
         self.rods = model.rods
+        self.bars = model.bars
+        self.beams = model.beams
         self.shells = model.shells
+        self.shears = model.shears
         self.solids = model.solids
 
     def repr_indent(self, indent=''):
@@ -371,8 +48,16 @@ class Elements(object):
         msg += '%s  rods:  %s\n' % (indent, len(self.rods))
         msg += self.rods.repr_indent('    ')
 
+        msg += '%s  bars:  %s\n' % (indent, len(self.bars))
+        msg += self.bars.repr_indent('    ')
+        msg += '%s  beams:  %s\n' % (indent, len(self.beams))
+        msg += self.beams.repr_indent('    ')
+
         msg += '%s  shells:  %s\n' % (indent, len(self.shells))
         msg += self.shells.repr_indent('    ')
+
+        msg += '%s  shears:  %s\n' % (indent, len(self.shears))
+        msg += self.shears.repr_indent('    ')
 
         msg += '%s  solids:  %s\n' % (indent, len(self.solids))
         msg += self.solids.repr_indent('    ')
@@ -380,15 +65,21 @@ class Elements(object):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self.springs.write_card(size, is_double, bdf_file)
-        self.dampers.write_card(size, is_double, bdf_file)
-        self.rods.write_card(size, is_double, bdf_file)
-        self.shells.write_card(size, is_double, bdf_file)
-        self.solids.write_card(size, is_double, bdf_file)
+        self.springs.write_card(size, is_double, bdf_file)  # celas
+        self.dampers.write_card(size, is_double, bdf_file)  # cdamp
+        self.rods.write_card(size, is_double, bdf_file)   # crod, conrod, ctube
+        self.bars.write_card(size, is_double, bdf_file)   # cbar
+        self.beams.write_card(size, is_double, bdf_file)  # cbeam
+        self.shears.write_card(size, is_double, bdf_file) # cshear
+        self.shells.write_card(size, is_double, bdf_file) # cquad4, ctria3, cquad8, ctria6, cquad
+        self.solids.write_card(size, is_double, bdf_file) # ctetra, cpenta, chexa, cpyram
 
     def __len__(self):
-        return (len(self.springs) + len(self.shells) +
-                len(self.solids) + len(self.dampers) + len(self.rods))
+        return (len(self.springs) +  + len(self.dampers) +
+                len(self.rods) + len(self.bars) + len(self.beams) +
+                len(self.shells) + len(self.shears) +
+                len(self.solids))
+
     def __repr__(self):
         return self.repr_indent('')
 
@@ -410,24 +101,6 @@ class BDF(BDF_):
         model = self
         self.grid = GRIDv(model)
 
-        self.ctria3 = CTRIA3v(model)
-        self.cquad4 = CQUAD4v(model)
-        self.ctria6 = CTRIA3v(model)  # TODO: temp
-        self.cquad8 = CQUAD4v(model)  # TODO: temp
-        self.cquad = CQUAD4v(model)   # TODO: temp
-        self.shells = Shells(model)
-        #self.pshell = PSHELLv(model)  # TODO: temp
-
-        #self.ctriax = CTRIA3v(model)   # TODO: temp
-        #self.cquadx = CTRIA3v(model)   # TODO: temp
-        #self.ctriax6 = CTRIA3v(model)  # TODO: temp
-        #self.cquadx8 = CTRIA3v(model)  # TODO: temp
-
-        self.crod = CRODv(model)      # TODO: temp
-        self.conrod = CONRODv(model)  # TODO: temp
-        self.ctube = CTUBEv(model)    # TODO: temp
-        self.rods = Rods(model)       # TODO: temp
-
         self.celas1 = CELAS1(model)
         self.celas2 = CELAS2(model)
         self.celas3 = CELAS3(model)
@@ -440,6 +113,33 @@ class BDF(BDF_):
         self.cdamp4 = CDAMP4(model)
         #self.cdamp5 = CDAMP5(model)    # TODO: temp
         self.dampers = Dampers(model)
+
+        self.crod = CRODv(model)
+        self.conrod = CONRODv(model)
+        self.ctube = CTUBEv(model)
+        self.rods = Rods(model)
+
+        self.cbar = CBARv(model)
+        self.bars = Bars(model)
+
+        self.cbeam = CBEAMv(model)  # TODO: temp
+        self.beams = Beams(model)   # TODO: temp
+
+        self.ctria3 = CTRIA3v(model)
+        self.cquad4 = CQUAD4v(model)
+        self.ctria6 = CTRIA6v(model)
+        self.cquad8 = CQUAD8v(model)
+        self.cquad = CQUAD4v(model)   # TODO: temp
+        self.shells = Shells(model)
+        #self.pshell = PSHELLv(model)  # TODO: temp
+
+        self.cshear = CSHEARv(model)
+        self.shears = Shears(model)
+
+        #self.ctriax = CTRIA3v(model)   # TODO: temp
+        #self.cquadx = CTRIA3v(model)   # TODO: temp
+        #self.ctriax6 = CTRIA3v(model)  # TODO: temp
+        #self.cquadx8 = CTRIA3v(model)  # TODO: temp
 
         self.ctetra4 = CTETRA4v(model)
         self.ctetra10 = CTETRA10v(model)
@@ -499,16 +199,24 @@ class BDF(BDF_):
     def _prepare_ctube(self, card, card_obj, comment=''):
         self.ctube.add_card(card_obj, comment=comment)
 
+    def _prepare_cbar(self, card, card_obj, comment=''):
+        self.cbar.add_card(card_obj, comment=comment)
+    def _prepare_cbeam(self, card, card_obj, comment=''):
+        self.cbeam.add_card(card_obj, comment=comment)
+
     def _prepare_cquad4(self, card, card_obj, comment=''):
         self.cquad4.add_card(card_obj, comment=comment)
     def _prepare_ctria3(self, card, card_obj, comment=''):
         self.ctria3.add_card(card_obj, comment=comment)
-    #def _prepare_ctria6(self, card, card_obj, comment=''):
-        #self.ctria6.add_card(card_obj, comment=comment)
-    #def _prepare_cquad8(self, card, card_obj, comment=''):
-        #self.cquad8.add_card(card_obj, comment=comment)
+    def _prepare_ctria6(self, card, card_obj, comment=''):
+        self.ctria6.add_card(card_obj, comment=comment)
+    def _prepare_cquad8(self, card, card_obj, comment=''):
+        self.cquad8.add_card(card_obj, comment=comment)
     #def _prepare_cquad(self, card, card_obj, comment=''):
         #self.cquad.add_card(card_obj, comment=comment)
+
+    def _prepare_cshear(self, card, card_obj, comment=''):
+        self.cshear.add_card(card_obj, comment=comment)
 
     def _prepare_ctetra(self, card, card_obj, comment=''):
         """adds a CTETRA4/CTETRA10"""
@@ -542,11 +250,6 @@ class BDF(BDF_):
         del self._card_parser['GRID']
         self._card_parser_prepare['GRID'] = self._prepare_grid
 
-        del self._card_parser['CTRIA3']
-        del self._card_parser['CQUAD4']
-        self._card_parser_prepare['CTRIA3'] = self._prepare_ctria3
-        self._card_parser_prepare['CQUAD4'] = self._prepare_cquad4
-
         del self._card_parser['CELAS1']
         del self._card_parser['CELAS2']
         del self._card_parser['CELAS3']
@@ -571,6 +274,27 @@ class BDF(BDF_):
         self._card_parser_prepare['CONROD'] = self._prepare_conrod
         self._card_parser_prepare['CROD'] = self._prepare_crod
         self._card_parser_prepare['CTUBE'] = self._prepare_ctube
+
+        del self._card_parser['CBAR']
+        del self._card_parser['CBEAM']
+        self._card_parser_prepare['CBAR'] = self._prepare_cbar
+        self._card_parser_prepare['CBEAM'] = self._prepare_cbeam
+
+        del self._card_parser['CTRIA3']
+        del self._card_parser['CTRIA6']
+        del self._card_parser['CQUAD4']
+        del self._card_parser['CQUAD8']
+        #del self._card_parser['CQUAD']
+        self._card_parser_prepare['CTRIA3'] = self._prepare_ctria3
+        self._card_parser_prepare['CTRIA6'] = self._prepare_ctria6
+        self._card_parser_prepare['CQUAD4'] = self._prepare_cquad4
+        self._card_parser_prepare['CQUAD8'] = self._prepare_cquad8
+        #self._card_parser_prepare['CQUAD'] = self._prepare_cquad
+
+        del self._card_parser['CSHEAR']
+        self._card_parser_prepare['CSHEAR'] = self._prepare_cshear
+
+
 
     #def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
         #pass

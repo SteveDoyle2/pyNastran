@@ -4,6 +4,7 @@ import numpy as np
 
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank)
+from pyNastran.bdf.cards.base_card import _format_comment
 
 
 class Solids(object):
@@ -115,7 +116,7 @@ class SolidElement(object):
         self._pid.append(pid)
         self._nids.append(nids)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def check_if_current(self, nid, nids):
         """we split this up to reason about it easier"""
@@ -142,6 +143,12 @@ class SolidElement(object):
                 self.pid = np.array(self._pid, dtype='int32')
                 self.nids = np.array(self._nids, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
+
+            isort = np.argsort(self.eid)
+            self.eid = self.eid[isort]
+            self.pid = self.pid[isort]
+            self.nids = self.nids[isort, :]
+
             #print(self.nid)
             self._eid = []
             self._pid = []

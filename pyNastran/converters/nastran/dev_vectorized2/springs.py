@@ -5,6 +5,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.base_card import _format_comment
 
 
 class Springs(object):
@@ -164,7 +165,7 @@ class CELAS1(SpringElement):
         self._nids.append(nids)
         self._dofs.append(dofs)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -281,7 +282,7 @@ class CELAS2(SpringElement):
         self._ge.append(ge)
         self._s.append(s)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -390,7 +391,7 @@ class CELAS3(SpringElement):
         self._pid.append(pid)
         self._nids.append(nids)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
@@ -488,7 +489,7 @@ class CELAS4(SpringElement):
         self._k.append(k)
         self._nids.append(nids)
         if comment:
-            self.comment[eid] = comment
+            self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """

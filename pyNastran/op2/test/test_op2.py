@@ -213,7 +213,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             is_mag_phase=False, is_sort2=False, is_nx=None,
             delete_f06=False, skip_dataframe=False,
             subcases=None, exclude=None, short_stats=False,
-            compare=True, debug=False, binary_debug=False,
+            compare=True, debug=False, log=None, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True, dev=False):
     """
     Runs an OP2
@@ -256,6 +256,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         False : doesn't run slow vectorized result
     debug : bool; default=False
         debug flag for OP2
+    log : logger; default=None
+        a custom logger
+        None : use debug
     binary_debug : bool; default=False
         creates a very cryptic developer debug file showing exactly what was parsed
     quiet : bool; default=False
@@ -303,9 +306,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
     if make_geom and not is_geom:
         raise RuntimeError('make_geom=%s is not supported' % make_geom)
     if make_geom:
-        op2 = OP2Geom(debug=debug)
-        op2_nv = OP2Geom(debug=debug, debug_file=debug_file)
-        op2_bdf = OP2Geom(debug=debug)
+        op2 = OP2Geom(debug=debug, log=log)
+        op2_nv = OP2Geom(debug=debug, log=log, debug_file=debug_file)
+        op2_bdf = OP2Geom(debug=debug, log=log)
         if is_nx is None:
             pass
         elif is_nx:
@@ -320,8 +323,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         op2_bdf.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                                   nxref_errors=0, stop_on_xref_error=True)
     else:
-        op2 = OP2(debug=debug)
-        op2_nv = OP2(debug=debug, debug_file=debug_file) # have to double write this until
+        op2 = OP2(debug=debug, log=log)
+        op2_nv = OP2(debug=debug, log=log, debug_file=debug_file) # have to double write this until
     op2_nv.use_vector = False
 
     if not quiet:

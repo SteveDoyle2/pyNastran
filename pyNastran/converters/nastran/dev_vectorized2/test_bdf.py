@@ -14,6 +14,7 @@ class TestVectorized(unittest.TestCase):
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
                          mode='msc')
+        #print(model.get_bdf_stats())
 
         #model.grids[10] = GRID(10, [0., 0., 0.])
         print(model.grid)
@@ -29,6 +30,7 @@ class TestVectorized(unittest.TestCase):
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
                          mode='msc')
+        #print(model.get_bdf_stats())
 
         out_filename = 'spike.bdf'
         model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
@@ -77,6 +79,9 @@ class TestVectorized(unittest.TestCase):
 
         out_filename = 'spike.bdf'
         model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
+                        interspersed=False, enddata=None,
+                        close=True)
+        model.write_bdf(out_filename, encoding=None, size=16, is_double=False,
                         interspersed=False, enddata=None,
                         close=True)
 

@@ -16,6 +16,7 @@ except ImportError:
     is_pandas = False
 
 import pyNastran
+from pyNastran.utils.log import get_logger
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
@@ -1198,17 +1199,17 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
-        debug = False
+        log = get_logger(level='warning')
         #debug_file = 'solid_bending.debug.out'
         model, ext = os.path.splitext(op2_filename)
         debug_file = model + '.debug.out'
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2_geom(op2_filename, debug=debug)
+        read_op2_geom(op2_filename, log=log)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                                  subcases=[], write_f06=write_f06,
-                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+                                 log=log, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
         # rod_force = op2.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
@@ -1245,19 +1246,19 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = False
-        debug = False
+        log = get_logger(level='warning')
         op2_filename = os.path.join(model_path, 'plate_py', 'plate_py.op2')
-        read_op2(op2_filename, debug=False)
+        read_op2(op2_filename, log=log)
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, quiet=True)
+                log=log, stop_on_failure=True, quiet=True)
 
         make_geom = False
         write_bdf = False
         write_f06 = True
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
-                debug=debug, stop_on_failure=True, quiet=True)
+                log=log, stop_on_failure=True, quiet=True)
 
     def test_op2_good_sine_01(self):
         """tests freq_sine/good_sine.op2"""
@@ -1265,11 +1266,11 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = False
-        debug = False
-        read_op2(op2_filename, debug=False)
+        log = get_logger(level='warning')
+        read_op2(op2_filename, log=log)
         op2i, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                   write_f06=write_f06,
-                                  debug=debug, stop_on_failure=True,
+                                  log=log, stop_on_failure=True,
                                   quiet=True)
 
         nids = [5]
@@ -1305,14 +1306,14 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
-        debug = False
-        bdf = BDF(debug=False)
+        log = get_logger(level='warning')
+        bdf = BDF(log=log)
         bdf.read_bdf(bdf_filename)
 
         debug = False
         debug_file = 'debug.out'
 
-        read_op2(op2_filename, debug=False)
+        read_op2(op2_filename, log=log)
         op2 = OP2(debug=debug, debug_file=debug_file)
         op2.read_op2(op2_filename)
         assert os.path.exists(debug_file), os.listdir('.')
@@ -1328,8 +1329,8 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
-        debug = False
-        bdf = BDF(debug=False)
+        log = get_logger(level='warning')
+        bdf = BDF(log=log)
         bdf.read_bdf(bdf_filename, xref=False)
 
         debug = False
@@ -1361,17 +1362,17 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
-        debug = False
+        log = get_logger(level='warning')
         #debug_file = 'solid_bending.debug.out'
         model, ext = os.path.splitext(op2_filename)
         debug_file = model + '.debug.out'
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename, debug=False)
+        read_op2(op2_filename, log=log)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06, compare=True,
-                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+                                 log=log, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
 
         cbush_stress = op2.cbush_stress[isubcase]
