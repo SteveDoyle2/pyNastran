@@ -17,6 +17,7 @@ from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
 
 # testing these imports are up to date
+from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
@@ -266,11 +267,10 @@ def cmd_line_mirror():  # pragma: no cover
     model = read_bdf(bdf_filename)
     size = 16
     bdf_filename_temp = '__temp.bdf__'
-    model.write_bdf_symmetric(bdf_filename_temp, encoding=None, size=size,
-                              is_double=False,
-                              enddata=None,
-                              close=True,
-                              plane='xz')
+    write_bdf_symmetric(model, bdf_filename_temp, encoding=None, size=size,
+                        is_double=False,
+                        enddata=None, close=True,
+                        plane='xz')
     tol = 0.000001
     bdf_equivalence_nodes(bdf_filename_temp, bdf_filename_out, tol,
                           renumber_nodes=False,

@@ -2435,45 +2435,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             #raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)
 
-    def add_card_class(self, class_instance):
-        """
-        Adds a card object to the BDF object.
-
-        Parameters
-        ----------
-        class_instance : BaseCard()
-            the card class representation of card
-        """
-        #if card_name == 'ECHOON':
-            #self.echo = True
-            #return
-        #elif card_name == 'ECHOOFF':
-            #self.echo = False
-            #return
-
-        if self.echo:
-            try:
-                print(print_card_8(class_instance).rstrip())
-            except:
-                print(print_card_16(class_instance).rstrip())
-
-        card_name = class_instance.type
-        if card_name in self._card_parser:
-            add_card_function = self._card_parser[card_name][1]
-            add_card_function(class_instance)
-
-        elif card_name in self._card_parser_prepare:
-            # TODO: could be faster...
-            comment = class_instance.comment
-            class_instance.comment = ''
-            card_lines = str(class_instance).split('\n')
-            self.add_card(card_lines, card_name, comment=comment,
-                          is_list=False, has_none=True)
-            #add_card_function = self._card_parser_prepare[card_name]
-            #add_card_function(card, card_obj)
-        else:
-            self.reject_cards.append(class_instance)
-
     def get_bdf_stats(self, return_type='string'):
         """
         Print statistics for the BDF

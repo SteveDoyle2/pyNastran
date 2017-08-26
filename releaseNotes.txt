@@ -92,14 +92,23 @@ New BDF features:
  - added model.clear_attributes()
 
 OP2/F06 features:
- - added model.set_additional_generalized_tables_to_read(tables) to create custom OP2 readers
+ - added model.set_additional_generalized_tables_to_read(tables) to create
+   custom OP2 readers
+ - added complex/average strain energy
 
 OP2 bug fixes:
  - improved table skipping
 
+OP2 removed features:
+ - buggy/imcomplete/slow xlsx exporter removed
+
+OP2 Geometry:
+ - improved table reading
+
 GUI features:
  - control surfaces now get labels (label size doesn't resize properly)
- - in gui animation
+ - in-gui animation
+ - delete secondary actor support
 
 GUI bug fixes:
  - displays control surfaces again (aesurf)
@@ -139,12 +148,12 @@ Programmatics:
  - Dropping Python 3.3 support
  - Adding Python 3.6 support
 
-BDF : 
- - This version makes it much easier to programmatically create BDFs with the 
-   ``add_grid``, ``add_ctria3(...)``, etc. methods.  Almost every card has a 
+BDF :
+ - This version makes it much easier to programmatically create BDFs with the
+   ``add_grid``, ``add_ctria3(...)``, etc. methods.  Almost every card has a
     method and many have documentation of every parameter.
 
-OP2 : 
+OP2 :
  - Added support for MATPOOL matrices and RANDOM OUG-style tables.
  - First release of read_op2_geom.  Much improved OP2 Geometry reading.
 
@@ -156,7 +165,7 @@ F06 :
    - input/output units
    - mode switching not fixed yet
 
-GUI : 
+GUI :
   - Animation plots
   - NaN colors
   - improved picking tolerancing
@@ -192,18 +201,19 @@ BDF:
   - other bugs:
     - fixed DIVERG bug (bad key when adding card)
     - fixed PFAST bug (bad xref)
-    - really annoying DTABLE/TABLED1 bug (they were both called by DTable, but are very different)
+    - really annoying DTABLE/TABLED1 bug (they were both called by DTable,
+      but are very different)
     - fixed bug in SET3 card (multiple THRUs on single card)
     - write_path function works (Windows)
     - corrections to CBAR/CBEAM area formulas
     - CBAR/CBEAM MSCBLM0 is not MSCBLMO
-    
+
  - minor changes
     - simplified comment writing per Jeff Lyon
       >>> card.comment = 'this is a comment'
       '$ this is a comment\n'
       >>> card.comment = 'this is a multi lined\n  - comment'
-      card._comment = 
+      card._comment =
       '$ this is a multi lined\n'
       '$  - comment\n'
 
@@ -212,7 +222,7 @@ BDF:
    - TABLEMx are no longer in tables and instead tables_m
    - card init methods now use nids instead of ga/gb so all cards are consistent
    - frequencies is now a dictionary of lists (not a single value)
-   
+
  - bdf_renumber
    - removed execs from bdf_renumber, so Python 3 will work
    - fixed bug with handling Nones (caused by exec change)
@@ -240,16 +250,16 @@ OP2:
  - vectorized:
    - RealCBeamForceVUArray -> cbeam_force_vu
    - ComplexCBeamForceVUArray -> cbeam_force_vu
-   
+
  - fixed:
    - MEFF, ASSIG, ASEPS tables now skipped properly
    - removed beta_transforms from gpforce
    - stress/strain/force transforms now support complex numbers
- 
+
  - API changes:
    - real eigenvectors have eign; complex eigenvectors have eigi/eigr;
      thus a different variable and frequency formula is required
-   - 
+   -
 GUI:
  - improved PyQt5 support
  - significantly faster reading
@@ -264,7 +274,7 @@ GUI:
        Freq.  Constant  Constant    Constant      Variable
        Time   Variable  Variable    Constant      Constant
 
-   - NaN colors for invalid results (e.g., normal=NaN for a 
+   - NaN colors for invalid results (e.g., normal=NaN for a
      CTRIA3 that has 2 coincident points)
    - area picking for groups
    - custom displacement results
@@ -317,7 +327,7 @@ Major changes:
    - much better SOL 200/optimization support
  - OP2:
    - 500x faster
-     - removed v0.6 style dictionary result objects 
+     - removed v0.6 style dictionary result objects
      - it's just too slow to maintain
    - much better NX Nastran support
    - much better SOL 200/optimization support
@@ -390,7 +400,7 @@ BDF:
          grid = GRID(nid, cp, x, y, z, cd, ps, seid)
      Not all cards have defaults fully defined.  The order of cards may change
      such that all optional fields are at the end in field number order. This
-     is card dependent. Old approach can be done using 
+     is card dependent. Old approach can be done using
      `model.add_card(...)` or `GRID.add_card(card, comment)`.
    - case control now returns PRESSURE as DISPLACEMENT and not VECTOR
    - SPCD is now in self.loads, not self.spcs
@@ -881,7 +891,7 @@ BDF API Changes
 
 BDF Bug Fixes
    - enabled PDAMP, CREEP
-   - bug fix in NLPARM, MAT9,GRDSET
+   - bug fix in NLPARM, MAT9, GRDSET
    - BEGIN BULK may now have multiple spaces in it
    - Continuation markers can have more than 1 character in them for CSV cards
    - Unincluded cards at the end of an INCLUDE file won't crash the BDF reader
@@ -950,7 +960,7 @@ BDF Bug Fixes
 
 BDF API Changes
    - test_bdf can be called from the command line
-   - renamed read method  to readBDF (it got confusing when the op2 object can
+   - renamed read method to readBDF (it got confusing when the op2 object can
      read the bdf b/c it needs to initialize the bdf cards for the geomX tables)
    - renamed write to writeBDF
    - renamed writeAsPatran to writeBDFAsPatran
@@ -978,9 +988,8 @@ Overall OP2
    - SORT2 is not supported...for example:
          use   DISPLACEMENT(PLOT,SORT1)=ALL
          not   DISPLACEMENT(PLOT,SORT2)=ALL
-   - Many examples outside of SOL 101 have been tested
-     and dont crash.  This includes large SOL 200 models.  Verify your results
-     first.
+   - Many examples outside of SOL 101 have been tested and don't crash.
+     This includes large SOL 200 models.  Verify your results first.
    - The user has the option to read the Geometry tables (GEOM1 (nodes/coords),
      GEOM2 (elements), GEOM3 (loads), GEOM4 (constraints),
      EPT/EPTS (properties), MPT/MPTS (materials) and can write the data to a
