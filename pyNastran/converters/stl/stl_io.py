@@ -37,19 +37,19 @@ class STL_IO(object):
         normals = model.get_normals(elements, stop_on_failure=False)
         areas = model.get_area(elements, stop_on_failure=False)
         #nnormals = model.get_normals_at_nodes(elements)
-        self.nNodes = nodes.shape[0]
-        self.nElements = elements.shape[0]
+        self.nnodes = nodes.shape[0]
+        self.nelements = elements.shape[0]
 
-        self.log.info('nnodes=%s nelements=%s' % (self.nNodes, self.nElements))
+        self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = self.numpy_to_vtk_points(nodes)
         self.nid_map = {}
         #elem.SetNumberOfPoints(nnodes)
         if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
+            fraction = 1. / self.nnodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
                 self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)

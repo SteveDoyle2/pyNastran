@@ -95,14 +95,14 @@ class Cart3dIO(object):
         regions = model.regions
         loads = model.loads
 
-        self.nNodes = model.npoints
-        self.nElements = model.nelements
+        self.nnodes = model.npoints
+        self.nelements = model.nelements
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
+        grid.Allocate(self.nelements, 1000)
 
         if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
+            fraction = 1. / self.nnodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
                 self.grid_result.InsertNextValue(nid * fraction)
 
@@ -180,7 +180,7 @@ class Cart3dIO(object):
                     ('Pressure', icase + 5, []),
                 ]
                 icase += 5
-                nelements = self.nElements
+                nelements = self.nelements
                 rho = np.full(nelements, np.nan, dtype='float32')
                 xvel = np.full(nelements, np.nan, dtype='float32')
                 yvel = np.full(nelements, np.nan, dtype='float32')

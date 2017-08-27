@@ -60,20 +60,20 @@ class FastIO(object):
         #mapbc = model.mapbc
         #loads = model.loads
 
-        self.nNodes = nnodes
-        self.nElements = ntris + ntets
+        self.nnodes = nnodes
+        self.nelements = ntris + ntets
 
-        #print("nNodes = %i" % self.nNodes)
-        #print("nElements = %i" % self.nElements)
+        #print("nnodes = %i" % self.nnodes)
+        #print("nelements = %i" % self.nelements)
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = self.numpy_to_vtk_points(nodes)
         self.nid_map = {}
         if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
+            fraction = 1. / self.nnodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
                 self.gridResult.InsertNextValue(nid * fraction)
 

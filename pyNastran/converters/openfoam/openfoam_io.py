@@ -110,9 +110,9 @@ class OpenFoamIO(object):
 
 
         if mesh_3d == 'hex':
-            self.nElements = len(hexas)
+            self.nelements = len(hexas)
         elif mesh_3d == 'shell':
-            self.nElements = len(quads)
+            self.nelements = len(quads)
         elif mesh_3d == 'faces':
             dirname = os.path.dirname(openfoam_filename)
             point_filename = os.path.join(dirname, 'points')
@@ -126,22 +126,22 @@ class OpenFoamIO(object):
             patches = None
             nodes, quads, names = boundary.read_openfoam(
                 point_filename, face_filename, boundary_filename)
-            self.nElements = len(quads) + len(tris)
+            self.nelements = len(quads) + len(tris)
         else:
             raise RuntimeError(mesh_3d)
 
-        self.nNodes = len(nodes)
-        print("nNodes = %s" % self.nNodes)
-        print("nElements = %s" % self.nElements)
+        self.nnodes = len(nodes)
+        print("nnodes = %s" % self.nnodes)
+        print("nelements = %s" % self.nelements)
 
 
-        self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
         self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        points.SetNumberOfPoints(self.nnodes)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nidMap = {}
         #elem.SetNumberOfPoints(nNodes)
@@ -271,7 +271,7 @@ class OpenFoamIO(object):
                 raise RuntimeError(msg)
             bdf_file.write('ENDDATA\n')
 
-        self.nElements = nelements
+        self.nelements = nelements
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)

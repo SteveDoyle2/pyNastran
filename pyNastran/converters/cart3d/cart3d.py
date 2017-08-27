@@ -108,7 +108,7 @@ class Cart3dIO(object):
         self.infile = None
         # self.readHalf = False
         # self.nPoints = None
-        # self.nElements = None
+        # self.nelements = None
         self.infilename = None
         self.points = None
         self.elements = None

@@ -34,26 +34,26 @@ class LaWGS_IO(object):
         self.model_type = model.model_type
 
         nodes, elements, regions = model.get_points_elements_regions()
-        self.nNodes = len(nodes)
-        self.nElements = len(elements)
+        self.nnodes = len(nodes)
+        self.nelements = len(elements)
 
         nodes = array(nodes, dtype='float32')
         elements = array(elements, dtype='int32')
 
-        #print("nNodes = ",self.nNodes)
-        #print("nElements = ", self.nElements)
+        #print("nNodes = ",self.nnodes)
+        #print("nElements = ", self.nelements)
 
-        self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        points.SetNumberOfPoints(self.nnodes)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
+            fraction = 1. / self.nnodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
                 points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)

@@ -40,11 +40,11 @@ class SurfIO(object):
         nelements = ntris + nquads
 
         nodes = model.nodes
-        self.nElements = nelements
-        self.nNodes = nnodes
+        self.nelements = nelements
+        self.nnodes = nnodes
 
-        #print("nNodes = %s" % self.nNodes)
-        #print("nElements = %s" % self.nElements)
+        #print("nNodes = %s" % self.nnodes)
+        #print("nElements = %s" % self.nelements)
         assert nelements > 0, nelements
 
 
@@ -60,7 +60,7 @@ class SurfIO(object):
         quads = model.quads - 1
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
+        grid.Allocate(self.nelements, 1000)
 
         elements = []
         etypes = []
@@ -104,7 +104,7 @@ class SurfIO(object):
             prop.SetRepresentationToPoints()
             prop.SetPointSize(10)
 
-        self.nElements = nelements
+        self.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
         if hasattr(grid, 'Update'):

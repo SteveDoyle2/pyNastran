@@ -35,9 +35,9 @@ class AvusIO(object):
 
         self.model_type = 'avus'
         #self.model_type = model.model_type
-        self.nNodes = model.nnodes
+        self.nnodes = model.nnodes
 
-        #self._make_tecplot_geometry(model, self.nNodes, quads_only=True) # cart3d
+        #self._make_tecplot_geometry(model, self.nnodes, quads_only=True) # cart3d
         is_surface = self._make_avus_geometry(model, quads_only=False)
 
         #self._create_cart3d_free_edegs(model, nodes, elements)
@@ -74,10 +74,10 @@ class AvusIO(object):
 
     def _make_avus_geometry(self, model, quads_only=False):
         nodes = model.nodes
-        #nnodes = self.nNodes
+        #nnodes = self.nnodes
 
         grid = self.grid
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
@@ -132,8 +132,8 @@ class AvusIO(object):
             if ntets:
                 elements = tets
                 is_surface = False
-                self.nElements = model.nelements
-                grid.Allocate(self.nElements, 1000)
+                self.nelements = model.nelements
+                grid.Allocate(self.nelements, 1000)
 
                 nelements = elements.shape[0]
                 for node_ids in elements:
@@ -154,7 +154,7 @@ class AvusIO(object):
                 is_volume = not is_surface
 
                 if is_surface:
-                    self.nElements = model.nelements
+                    self.nelements = model.nelements
                     free_faces = array(model.get_free_faces(), dtype='int32')# + 1
                     nfaces = len(free_faces)
                     elements = free_faces
@@ -171,8 +171,8 @@ class AvusIO(object):
                         grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
                 elif is_volume:
-                    self.nElements = model.nelements
-                    grid.Allocate(self.nElements, 1000)
+                    self.nelements = model.nelements
+                    grid.Allocate(self.nelements, 1000)
 
                     nelements = elements.shape[0]
                     for eid in range(nelements):

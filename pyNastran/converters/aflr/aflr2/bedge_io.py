@@ -33,11 +33,11 @@ class BEdge_IO(object):
         nelements = nbars
 
         nodes = model.nodes
-        self.nElements = nelements
-        self.nNodes = nnodes
+        self.nelements = nelements
+        self.nnodes = nnodes
 
-        self.log.debug("nNodes = %s" % self.nNodes)
-        self.log.debug("nElements = %s" % self.nElements)
+        self.log.debug("nNodes = %s" % self.nnodes)
+        self.log.debug("nElements = %s" % self.nelements)
         assert nelements > 0, nelements
 
         black = (0., 0., 0.)
@@ -48,7 +48,7 @@ class BEdge_IO(object):
         alt_grid.Allocate(nnodes, 1000)
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
+        grid.Allocate(self.nelements, 1000)
 
         points = self.numpy_to_vtk_points(nodes)
 
@@ -74,7 +74,7 @@ class BEdge_IO(object):
         etype = 3  # vtkLine().GetCellType()
         self.create_vtk_cells_of_constant_element_type(grid, bars, etype)
 
-        self.nElements = nelements
+        self.nelements = nelements
         alt_grid.SetPoints(points)
         grid.SetPoints(points)
         grid.Modified()

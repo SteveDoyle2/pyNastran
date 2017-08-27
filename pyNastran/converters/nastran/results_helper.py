@@ -29,7 +29,7 @@ class NastranGuiResults(NastranGuiAttributes):
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
         new_cases = True
-        nnodes = self.nNodes
+        nnodes = self.nnodes
         displacement_like = [
             # slot, name, deflects
 
@@ -647,7 +647,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #energy, percent, density
             #modes = [1, 2, 3]
 
-        nelements = self.nElements
+        nelements = self.nelements
 
         eids = self.element_ids
         ese = np.full(nelements, np.nan, dtype='float32')
@@ -887,7 +887,7 @@ class NastranGuiResults(NastranGuiAttributes):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
-        nelements = self.nElements
+        nelements = self.nelements
         out = self._create_op2_time_centroidal_force_arrays(
             model, nelements, key, itime, header_dict, keys_map)
         found_force, fx, fy, fz, rx, ry, rz, is_element_on = out
@@ -941,12 +941,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict[(key, itime)].append(('BendingZ', icase + 5, []))
                 icase += 6
 
-                is_axial = np.zeros(self.nElements, dtype='int8')
-                is_shear_y = np.zeros(self.nElements, dtype='int8')
-                is_shear_z = np.zeros(self.nElements, dtype='int8')
-                is_torsion = np.zeros(self.nElements, dtype='int8')
-                is_bending_y = np.zeros(self.nElements, dtype='int8')
-                is_bending_z = np.zeros(self.nElements, dtype='int8')
+                is_axial = np.zeros(self.nelements, dtype='int8')
+                is_shear_y = np.zeros(self.nelements, dtype='int8')
+                is_shear_z = np.zeros(self.nelements, dtype='int8')
+                is_torsion = np.zeros(self.nelements, dtype='int8')
+                is_bending_y = np.zeros(self.nelements, dtype='int8')
+                is_bending_z = np.zeros(self.nelements, dtype='int8')
                 is_axial[np.where(np.abs(fx) > 0.0)[0]] = 1
                 is_shear_y[np.where(np.abs(fy) > 0.0)[0]] = 1
                 is_shear_z[np.where(np.abs(fz) > 0.0)[0]] = 1
@@ -998,7 +998,7 @@ class NastranGuiResults(NastranGuiAttributes):
         assert is_stress in [True, False], is_stress
         eids = self.element_ids
         assert len(eids) > 0, eids
-        nelements = self.nElements
+        nelements = self.nelements
         dt = None
 
         is_element_on = np.zeros(nelements, dtype='int8')  # is the element supported

@@ -45,7 +45,7 @@ class TetgenIO(object):
         tris = model.tris
         tets = model.tets
 
-        self.nNodes = nodes.shape[0]
+        self.nnodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if dimension_flag == 2:
@@ -54,14 +54,14 @@ class TetgenIO(object):
             ntets = tets.shape[0]
         else:
             raise RuntimeError()
-        self.nElements = ntris + ntets
+        self.nelements = ntris + ntets
 
-        #print("nNodes = ",self.nNodes)
-        #print("nElements = ", self.nElements)
+        #print("nnodes = ",self.nnodes)
+        #print("nelements = ", self.nelements)
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         assert nodes is not None
         points = self.numpy_to_vtk_points(nodes)

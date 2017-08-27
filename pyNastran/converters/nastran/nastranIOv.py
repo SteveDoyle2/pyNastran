@@ -353,9 +353,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print('dt_nastran_xyz =', time.time() - t0)
         return xyz_cid0, nid_cp_cd
 
-    def _get_model(self, bdf_filename, xref_loads=True):
+    def _get_model_nonvectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
-        #print('get_model')
         ext = os.path.splitext(bdf_filename)[1].lower()
         punch = False
         if ext == '.pch':
@@ -367,36 +366,28 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             debug_file=None)
             model.clear_results()
             model.read_op2(op2_filename=bdf_filename)
-            model.cross_reference(xref=True, xref_loads=xref_loads,
-                                  xref_constraints=False,
-                                  xref_nodes_with_elements=False)
-            #model.safe_cross_reference(xref=True, xref_loads=xref_loads,
-                                       #xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             model.read_bdf(bdf_filename,
                            punch=punch, xref=False,
                            validate=True)
             #print('done with read_bdf')
-
             #xref_loads = False
-            xref_aero = len(model.caeros) > 0
-            #model.cross_reference(
-            model.safe_cross_reference(
-                xref=True,
-                xref_nodes=True,
-                xref_elements=True,
-                xref_nodes_with_elements=False,
-                xref_properties=True,
-                xref_masses=True,
-                xref_materials=False,
-                xref_loads=xref_loads,
-                xref_constraints=False,
-                xref_optimization=False,
-                xref_aero=True,
-                xref_sets=False,
-            )
-            #print('done with cross_reference')
+        xref_aero = len(model.caeros) > 0
+        model.safe_cross_reference(
+            xref=True,
+            xref_nodes=True,
+            xref_elements=True,
+            xref_nodes_with_elements=False,
+            xref_properties=True,
+            xref_masses=True,
+            xref_materials=False,
+            xref_loads=xref_loads,
+            xref_constraints=False,
+            xref_optimization=False,
+            xref_aero=True,
+            xref_sets=False,
+        )
         return model
 
     def load_nastran_geometry(self, bdf_filename, name='main', plot=True, **kwargs):
@@ -439,13 +430,115 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if skip_reading:
             return
 
+        self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+        if IS_TESTING and bdf_filename.lower().endswith('.bdf'):
+            self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+
+    def load_nastran_geometry_vectorized(self, bdf_filename, plot=True):
+        """
+        The entry point for Nastran geometry loading.
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the Nastran filename to load
+        plot : bool; default=True
+            should the model be generated or should we wait until
+            after the results are loaded
+        """
         reset_labels = True
         if plot:
             self.scalarBar.VisibilityOff()
             self.scalarBar.Modified()
 
         xref_loads = True # should be True
-        model = self._get_model(bdf_filename, xref_loads=xref_loads)
+        model = self._get_model_vectorized(bdf_filename, xref_loads=xref_loads)
+
+        nnodes = len(model.grid)
+        nspoints = len(model.spoints)
+        nepoints = len(model.epoints)
+        #if model.spoints:
+            #spoints = sorted([spoint.nid for spoint in itervalues(model.spoints)])
+        #if model.epoints:
+            #epoints = sorted([epoint.nid for epoint in itervalues(model.epoints)])
+
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes + nspoints + nepoints = 0\n'
+            msg += 'card_count = %r' % str(model.card_count)
+            raise NoGeometry(msg)
+
+        nelements = len(model.elements)
+        nelements2 = len(model.elements2)
+        nmasses = len(model.masses)
+        nplotels = len(model.plotels)
+        ncaero_cards = len(model.caeros)
+        nrigid = len(model.rigid_elements)
+        #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
+        if nelements2 + nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:
+            msg = 'nelements2 + nelements + nmasses + ncaero_cards + nplotels + nrigid = 0\n'
+            msg += 'card_count = %r' % str(model.card_count)
+            raise NoGeometry(msg)
+
+        self.nnodes = nnodes + nspoints
+        self.nelements = nelements  # approximate...
+
+    def _get_model_vectorized(self, bdf_filename, xref_loads=True):
+        """Loads the BDF/OP2 geometry"""
+        from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import BDF as BDF_
+        ext = os.path.splitext(bdf_filename)[1].lower()
+        punch = False
+        if ext == '.pch':
+            punch = True
+
+        self.model_type = 'nastran'
+        if ext == '.op2':
+            model = OP2Geom(make_geom=True, debug=False, log=self.log,
+                            debug_file=None)
+            model.clear_results()
+            model.read_op2(op2_filename=bdf_filename)
+        else:  # read the bdf/punch
+            model = BDF_(log=self.log, debug=True)
+            model.read_bdf(bdf_filename,
+                           punch=punch, xref=False,
+                           validate=True)
+
+        #xref_loads = False
+        xref_aero = len(model.caeros) > 0
+        #model.safe_cross_reference(
+            #xref=True,
+            #xref_nodes=True,
+            #xref_elements=True,
+            #xref_nodes_with_elements=False,
+            #xref_properties=True,
+            #xref_masses=True,
+            #xref_materials=False,
+            #xref_loads=xref_loads,
+            #xref_constraints=False,
+            #xref_optimization=False,
+            #xref_aero=True,
+            #xref_sets=False,
+        #)
+        return model
+
+    def load_nastran_geometry_nonvectorized(self, bdf_filename, plot=True):
+        """
+        The entry point for Nastran geometry loading.
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the Nastran filename to load
+        plot : bool; default=True
+            should the model be generated or should we wait until
+            after the results are loaded
+        """
+        reset_labels = True
+        if plot:
+            self.scalarBar.VisibilityOff()
+            self.scalarBar.Modified()
+
+        xref_loads = True # should be True
+        model = self._get_model_nonvectorized(bdf_filename, xref_loads=xref_loads)
 
         nnodes = len(model.nodes)
         nspoints = len(model.spoints)
@@ -471,15 +564,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
-        self.nNodes = nnodes + nspoints
-        self.nElements = nelements  # approximate...
+        self.nnodes = nnodes + nspoints
+        self.nelements = nelements  # approximate...
 
         out = self.make_caeros(model)
         (caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
          ncaeros_points, ncaero_sub_points,
          has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
 
-        self.log_info("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
+        self.log_info("nnodes=%i nelements=%i" % (self.nnodes, self.nelements))
         msg = model.get_bdf_stats(return_type='string')
         self.log_debug(msg)
         msg = model.get_bdf_stats(return_type='list')
@@ -503,7 +596,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 representation='point')
 
         # Allocate grids
-        self.grid.Allocate(self.nElements, 1000)
+        self.grid.Allocate(self.nelements, 1000)
         self._create_caero_actors(ncaeros, ncaeros_sub, ncaeros_cs, has_control_surface)
         if nconm2 > 0:
             self.alt_grids['conm2'].Allocate(nconm2, 1000)
@@ -2709,7 +2802,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #cpyrams = model._type_to_id_map['CPYRAM']
 
         #nelements = i
-        self.nElements = nelements
+        self.nelements = nelements
         #print('nelements=%s pids=%s' % (nelements, list(pids)))
         #pids = pids[:nelements]
 
@@ -2815,7 +2908,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #return self._map_elements2(points, nid_map, model, j, dim_max,
                                    #nid_cp_cd, plot=plot, xref_loads=xref_loads)
 
-        out = self._map_elements(model, dim_max, nid_map, j)
+        out = self._map_elements1(model, dim_max, nid_map, j)
         (nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
          area, min_interior_angle, max_interior_angle, max_aspect_ratio,
          max_skew_angle, taper_ratio, dideal_theta,
@@ -2921,7 +3014,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 point_size=5, representation='wire', is_visible=True)
             self._add_nastran_lines_to_grid('plotel', lines, model)
 
-    def _map_elements(self, model, dim_max, nid_map, j):
+    def _map_elements1(self, model, dim_max, nid_map, j):
         """
         Helper for map_elements
 
@@ -3778,7 +3871,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print('mapped elements')
 
         nelements = i
-        self.nElements = nelements
+        self.nelements = nelements
         #print('nelements=%s pids=%s' % (nelements, list(pids)))
         pids = pids[:nelements]
 

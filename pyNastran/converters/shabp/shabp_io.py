@@ -44,19 +44,19 @@ class ShabpIO(object):
             #print "node[%s] = %s" %(nid,str(node))
 
         nnodes = len(nodes)
-        self.nNodes = len(nodes)
-        self.nElements = len(elements)
-        #print("nNodes = ",self.nNodes)
-        #print("nElements = ", self.nElements)
+        self.nnodes = len(nodes)
+        self.nelements = len(elements)
+        #print("nnodes = ",self.nnodes)
+        #print("nelements = ", self.nelements)
 
-        self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        points.SetNumberOfPoints(self.nnodes)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        #elem.SetNumberOfPoints(nNodes)
+        #elem.SetNumberOfPoints(nnodes)
         #if 0:
             #fraction = 1. / nnodes  # so you can color the nodes by ID
             #for nid, node in sorted(iteritems(nodes)):
@@ -104,7 +104,7 @@ class ShabpIO(object):
         cases = {}
         ID = 1
 
-        self.log.debug("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
+        self.log.debug("nNodes=%i nElements=%i" % (self.nnodes, self.nelements))
         form, cases = self._fill_shabp_geometry_case(
             cases, ID, nodes, elements, patches, components, impact, shadow)
         self._finish_results_io2(form, cases)

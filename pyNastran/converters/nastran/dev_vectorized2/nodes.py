@@ -300,6 +300,10 @@ class GRIDv(object):
                 msg += self.comment[nid] + msgi
         return msg
 
+    def __len__(self):
+        self._make_current()
+        return len(self.nid)
+
     def __repr__(self):
         self._make_current()
         msg = 'GRID_Vector; ngrids=%s:\n' % len(self.nid)

@@ -77,7 +77,7 @@ class Usm3dIO(object):
     def load_usm3d_results(self, flo_filename):
         model = Usm3d(log=self.log, debug=False)
         #self.result_cases = {}
-        npoints = self.nNodes
+        npoints = self.nnodes
         node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
 
         cases = self.result_cases
@@ -126,7 +126,7 @@ class Usm3dIO(object):
 
         bcmap_to_bc_name = model.bcmap_to_bc_name
 
-        self.nNodes = nodes.shape[0]
+        self.nnodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if tris is not None:
@@ -139,20 +139,20 @@ class Usm3dIO(object):
             ntets = 0
         else:
             raise RuntimeError()
-        self.nElements = ntris + ntets
+        self.nelements = ntris + ntets
 
-        self.log.debug("nNodes = %i" % self.nNodes)
-        self.log.debug("nElements = %i" % self.nElements)
+        self.log.debug("nnodes = %i" % self.nnodes)
+        self.log.debug("nelements = %i" % self.nelements)
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         self.nid_map = {}
         self.eid_map = {}
-        #elem.SetNumberOfPoints(nNodes)
+        #elem.SetNumberOfPoints(nnodes)
         #if 0:
-            #fraction = 1. / self.nNodes  # so you can color the nodes by ID
+            #fraction = 1. / self.nnodes  # so you can color the nodes by ID
             #for nid, node in sorted(iteritems(nodes)):
                 #points.InsertPoint(nid - 1, *node)
                 #self.gridResult.InsertNextValue(nid * fraction)

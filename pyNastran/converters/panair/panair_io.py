@@ -45,20 +45,20 @@ class PanairIO(object):
         #for nid, node in enumerate(nodes):
             #print "node[%s] = %s" % (nid, str(node))
 
-        self.nNodes = len(nodes)
-        self.nElements = len(elements)
+        self.nnodes = len(nodes)
+        self.nelements = len(elements)
 
-        #print("nNodes = ",self.nNodes)
-        #print("nElements = ", self.nElements)
+        #print("nnodes = ",self.nnodes)
+        #print("nelements = ", self.nelements)
 
-        self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        points.SetNumberOfPoints(self.nnodes)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        #elem.SetNumberOfPoints(nNodes)
+        #elem.SetNumberOfPoints(nnodes)
         if 0:
             fraction = 1. / nnodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
@@ -239,7 +239,7 @@ class PanairIO(object):
             raise RuntimeError('only files named "agps" files are supported')
 
         # get the Cp on the nodes
-        Cp_array = zeros(self.nNodes, dtype='float32')
+        Cp_array = zeros(self.nnodes, dtype='float32')
         imin = 0
         for ipatch, Cp in sorted(iteritems(model.pressures)):
             Cpv = ravel(Cp)

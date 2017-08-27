@@ -43,12 +43,12 @@ class SU2_IO(object):
         assert nnodes > 0, nnodes
         assert nelements > 0, nelements
 
-        self.nNodes = nnodes
-        self.nElements = nelements
+        self.nnodes = nnodes
+        self.nelements = nelements
 
-        self.log.info('nnodes=%s nelements=%s' % (self.nNodes, self.nElements))
-        self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
+        self.grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}

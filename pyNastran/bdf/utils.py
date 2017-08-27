@@ -902,6 +902,8 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
 def deprecated(old_name, new_name, deprecated_version, levels=None):
     # type: (str, str, str, Optional[List[int]]) -> None
     """
+    Throws a deprecation message and crashes if past a specific version.
+
     Parameters
     ----------
     old_name : str

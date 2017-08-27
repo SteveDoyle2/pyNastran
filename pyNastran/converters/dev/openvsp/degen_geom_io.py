@@ -46,15 +46,15 @@ class DegenGeomIO(object):
                 nnodes = nodes.shape[0]
                 nelements = elements.shape[0]
 
-        self.nNodes = nnodes
-        self.nElements = nelements
+        self.nnodes = nnodes
+        self.nelements = nelements
 
-        self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        points.SetNumberOfPoints(self.nnodes)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
 

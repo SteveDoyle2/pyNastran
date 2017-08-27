@@ -49,7 +49,6 @@ from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowIn
 import pyNastran
 
 from pyNastran.bdf.utils import write_patran_syntax_dict
-from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
@@ -569,9 +568,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command('on_set_font_size(%s)' % font_size)
 
         return False
-
-    def deprecated(self, old_name, new_name, deprecated_version):
-        deprecated(old_name, new_name, deprecated_version, levels=[-1])
 
     def on_flip_picker(self):
         return
@@ -2104,7 +2100,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """masks the specific 0-based element ids"""
         #print('ids_to_show = ', ids_to_show)
         prop = self.geom_actor.GetProperty()
-        if len(ids_to_show) == self.nElements:
+        if len(ids_to_show) == self.nelements:
             #prop.BackfaceCullingOn()
             pass
         else:
@@ -2155,7 +2151,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         helper method for ``show_ids_mask``
         .. todo:: doesn't work
         """
-        all_i = np.arange(self.nElements, dtype='int32')
+        all_i = np.arange(self.nelements, dtype='int32')
         ids_to_hide = np.setdiff1d(all_i, ids_to_show)
         self._hide_ids_mask(ids_to_hide)
 
@@ -2900,7 +2896,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         result0 = A[header0]
         nrows = result0.shape[0]
 
-        assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
+        assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
         result_type2 = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
                                 out_filename_short, update=True)
@@ -2926,11 +2922,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         nrows = result0.size
 
         if result_type == 'Nodal':
-            assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
+            assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
             result_type2 = 'node'
             #ids = self.node_ids
         elif result_type == 'Elemental':
-            assert nrows == self.nElements, 'nrows=%s nelements=%s' % (nrows, self.nElements)
+            assert nrows == self.nelements, 'nrows=%s nelements=%s' % (nrows, self.nelements)
             result_type2 = 'centroid'
             #ids = self.element_ids
         else:
@@ -4806,7 +4802,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.groups['main'] = main_group
             self.groups['anti_main'] = anti_main_group
             self.post_group(main_group)
-            #self.show_elements_mask(np.arange(self.nElements))
+            #self.show_elements_mask(np.arange(self.nelements))
 
     def get_result_by_cell_id(self, cell_id, world_position, icase=None):
         """should handle multiple cell_ids"""

@@ -44,18 +44,18 @@ class Plot3d_io(object):  # pragma: no cover
             nelements += (shape[0] - 1)  * (shape[1] - 1) * (shape[2] - 1)
 
         nblocks = len(model.block_shapes)
-        self.nNodes = npoints
-        self.nElements = nelements
+        self.nnodes = npoints
+        self.nelements = nelements
 
 
         #nodes, elements, regions = model.getPointsElementsRegions()
         #for nid,node in enumerate(nodes):
             #print "node[%s] = %s" %(nid,str(node))
 
-        self.grid.Allocate(self.nElements, 1000)
+        self.grid.Allocate(self.nelements, 1000)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
+        points.SetNumberOfPoints(self.nnodes)
 
         nid = 0
         nid_base = 0
@@ -136,8 +136,8 @@ class Plot3d_io(object):  # pragma: no cover
 
     def fill_plot3d_geometry_case(self, cases, ID, nodes, elements, regions, loads):
         #print "regions**** = ",regions
-        #nNodes = self.nNodes
-        #nElements = self.nElements
+        #nNodes = self.nnodes
+        #nElements = self.nelements
 
         #result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                                       #'rhoU', 'rhoV', 'rhoW', 'rhoE']

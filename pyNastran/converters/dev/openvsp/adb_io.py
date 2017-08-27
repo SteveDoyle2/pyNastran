@@ -81,15 +81,15 @@ class ADB_IO(object):  # pragma: no cover
         else:
             nnodes = nxyz_nodes
             nelements = nxyz_elements
-        self.nNodes = nnodes
-        self.nElements = nelements
+        self.nnodes = nnodes
+        self.nelements = nelements
 
-        self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        points.SetNumberOfPoints(self.nnodes)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
 

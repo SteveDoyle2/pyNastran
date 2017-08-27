@@ -71,13 +71,13 @@ class UGRID_IO(object):
         nelements = ntris + nquads
 
         nodes = model.nodes
-        self.nElements = nelements
-        self.nNodes = nnodes
+        self.nelements = nelements
+        self.nnodes = nnodes
 
-        self.log.info("nnodes=%s nelements=%s" % (self.nNodes, self.nElements))
+        self.log.info("nnodes=%s nelements=%s" % (self.nnodes, self.nelements))
         assert nelements > 0, nelements
 
-        self.grid.Allocate(self.nElements, 1000)
+        self.grid.Allocate(self.nelements, 1000)
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
@@ -114,7 +114,7 @@ class UGRID_IO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
 
-        self.nElements = nelements
+        self.nelements = nelements
         self.grid.SetPoints(points)
         self.grid.Modified()
         self.log.info('update...')

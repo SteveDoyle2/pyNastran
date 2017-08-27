@@ -55,8 +55,8 @@ class NastranGuiAttributes(object):
         self.node_ids = None
         self.nid_map = None
         self.eid_map = None
-        self.nNodes = None
-        self.nElements = None
+        self.nnodes = None
+        self.nelements = None
         self.model_type = None
         self.isubcase_name_map = None
         self.has_caero = False

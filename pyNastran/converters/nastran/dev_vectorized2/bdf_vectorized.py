@@ -326,7 +326,7 @@ class BDF(BDF_):
 
     @property
     def grids(self):
-        raise NotImplementedError('grids')
+        raise NotImplementedError('grids is removed; use grid')
         #return self.grid
 
     @grids.setter

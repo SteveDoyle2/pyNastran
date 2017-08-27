@@ -11,6 +11,7 @@ from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.nastran.displacements import DisplacementResults
+from pyNastran.bdf.cards.base_card import deprecated
 
 #from pyNastran.gui.qt_version import qt_version
 #if qt_version == 4:
@@ -94,8 +95,8 @@ class GuiAttributes(object):
 
         self.ncases = 0
         self.icase = 0
-        self.nNodes = 0
-        self.nElements = 0
+        self.nnodes = 0
+        self.nelements = 0
 
         self.supported_formats = []
         self.model_type = None
@@ -160,6 +161,48 @@ class GuiAttributes(object):
 
         self.main_edge_mappers = {}
         self.main_edge_actors = {}
+
+    #-------------------------------------------------------------------
+    # deprecated attributes
+    def deprecated(self, old_name, new_name, deprecated_version):
+        # type: (str, str, str, Optional[List[int]]) -> None
+        """
+        Throws a deprecation message and crashes if past a specific version.
+
+        Parameters
+        ----------
+        old_name : str
+            the old function name
+        new_name : str
+            the new function name
+        deprecated_version : float
+            the version the method was first deprecated in
+        """
+        deprecated(old_name, new_name, deprecated_version, levels=[0])
+
+    @property
+    def nNodes(self):
+        """gets the number of nodes"""
+        self.deprecated('self.nNodes', 'self.nnodes', '1.1')
+        return self.nnodes
+
+    @nNodes.setter
+    def nNodes(self, nnodes):
+        """sets the number of nodes"""
+        self.deprecated('self.nNodes', 'self.nnodes', '1.1')
+        self.nnodes = nnodes
+
+    @property
+    def nElements(self):
+        """gets the number of elements"""
+        self.deprecated('self.nElements', 'self.nelements', '1.1')
+        return self.nelements
+
+    @nElements.setter
+    def nElements(self, nelements):
+        """sets the number of elements"""
+        self.deprecated('self.nElements', 'self.nelements', '1.1')
+        self.nelements = nelements
 
     #-------------------------------------------------------------------
     # geom
