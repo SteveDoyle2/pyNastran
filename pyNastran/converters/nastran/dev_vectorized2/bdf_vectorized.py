@@ -1,10 +1,10 @@
 from __future__ import print_function
-#from collections import defaultdict
+from collections import defaultdict
 from six import iteritems
-#import numpy as np
-from pyNastran.bdf.bdf import BDF as BDF_
+import numpy as np
 
-from pyNastran.converters.nastran.dev_vectorized2.nodes import GRIDv
+from pyNastran.bdf.bdf import BDF as BDF_
+from pyNastran.converters.nastran.dev_vectorized2.nodes import GRIDv, Nodes
 
 from pyNastran.converters.nastran.dev_vectorized2.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
@@ -34,6 +34,15 @@ class Elements(object):
         self.shells = model.shells
         self.shears = model.shears
         self.solids = model.solids
+        self.eids = []
+
+    def make_current(self):
+        elems = [self.springs, self.dampers, self.rods,
+                 self.bars, self.beams,
+                 self.shells, self.shells, self.shears, self.solids]
+        self.eids = []
+        for elem in elems:
+            elem._make_current()
 
     def repr_indent(self, indent=''):
         indent = ''
@@ -100,6 +109,7 @@ class BDF(BDF_):
 
         model = self
         self.grid = GRIDv(model)
+        self.nodes = Nodes(model)
 
         self.celas1 = CELAS1(model)
         self.celas2 = CELAS2(model)
@@ -337,6 +347,9 @@ class BDF(BDF_):
         #self.grid.add_grid(grid.nid, grid.xyz, cp=grid.cp, cd=grid.cd,
                            #ps=grid.ps, seid=grid.seid, comment=grid.comment)
 
+    def xyz_cid0(self):
+        return self.xyz_cid0
+
     def _write_nodes(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
         """
@@ -371,7 +384,68 @@ class BDF(BDF_):
                 bdf_file.write(element.write_card(size, is_double))
         self._write_nsm(bdf_file, size, is_double)
 
+    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32'):
+        # type: (str, str, bool) -> Any
+        """
+        Get index and transformation matricies for nodes with
+        their output in coordinate systems other than the global.
+        Used in combination with ``OP2.transform_displacements_to_global``
 
+        Parameters
+        ----------
+        fdtype : str
+            the type of xyz_cp
+        idtype : str
+            the type of nid_cp_cd
+
+        Returns
+        -------
+        icd_transform : dict{int cd : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their output (`CD`) in that
+            coordinate system.
+        icp_transform : dict{int cp : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their input (`CP`) in that
+            coordinate system.
+        xyz_cp : (n, 3) float ndarray
+            points in the CP coordinate system
+        nid_cp_cd : (n, 3) int ndarray
+            node id, CP, CD for each node
+
+        Example
+        --------
+        # assume GRID 1 has a CD=10, CP=0
+        # assume GRID 2 has a CD=10, CP=0
+        # assume GRID 5 has a CD=50, CP=0
+        >>> model.point_ids
+        [1, 2, 5]
+        >>> out = model.get_displacement_index_xyz_cp_cd()
+        >>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        >>> nid_cp_cd
+        [
+           [1, 0, 10],
+           [2, 0, 10],
+           [5, 0, 50],
+        ]
+        >>> icd_transform[10]
+        [0, 1]
+
+        >>> icd_transform[50]
+        [2]
+        """
+        return self.nodes.get_displacement_index_xyz_cp_cd(
+            fdtype=fdtype, idtype=idtype)
+
+    def get_node_index(self, nids):
+        """maps the requested nodes to their desired index in the array"""
+        i = self.nodes.get_node_index(nids)
+        return i
+
+    def validate(self):
+        pass
+    def get_bdf_stats(self, return_type='string'):
+        pass
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None,
@@ -437,4 +511,5 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         model.disable_cards(skip_cards)
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
                    xref=xref, punch=punch, read_includes=True, encoding=encoding)
+    self.elements.make_current()
     return model

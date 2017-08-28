@@ -353,6 +353,32 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print('dt_nastran_xyz =', time.time() - t0)
         return xyz_cid0, nid_cp_cd
 
+    def get_xyz_in_coord_vectorized(self, model, cid=0, fdtype='float32'):
+        """Creates the grid points efficiently"""
+        #import time
+        #t0 = time.time()
+
+        # t=.578
+        #print("get_displacement_index_xyz_cp_cd")
+        out = model.get_displacement_index_xyz_cp_cd(
+            fdtype=fdtype, idtype='int32')
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        self.i_transform = icd_transform
+
+        #print("transform_xyzcp_to_xyz_cid")
+        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
+                                                    in_place=False)
+        model.nodes.xyz_cid0 = xyz_cid0
+        model.nodes.nids = nid_cp_cd[:, 0]
+
+        nid_map = self.nid_map
+        for i, nid in enumerate(nid_cp_cd[:, 0]):
+            nid_map[nid] = i
+
+        self._add_nastran_spoints_to_grid(model)
+        #print('dt_nastran_xyz =', time.time() - t0)
+        return xyz_cid0, nid_cp_cd
+
     def _get_model_nonvectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
         ext = os.path.splitext(bdf_filename)[1].lower()
@@ -430,9 +456,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if skip_reading:
             return
 
-        self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
-        if IS_TESTING and bdf_filename.lower().endswith('.bdf'):
-            self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+        #if IS_TESTING and bdf_filename.lower().endswith('.bdf'):
+        self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+        #self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
 
     def load_nastran_geometry_vectorized(self, bdf_filename, plot=True):
         """
@@ -446,6 +472,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             should the model be generated or should we wait until
             after the results are loaded
         """
+        #self.isubcase_name_map[None] = ['a', 'b']
         reset_labels = True
         if plot:
             self.scalarBar.VisibilityOff()
@@ -467,20 +494,391 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
-        nelements = len(model.elements)
         nelements2 = len(model.elements2)
+        nelements = len(model.elements) + nelements2
         nmasses = len(model.masses)
         nplotels = len(model.plotels)
         ncaero_cards = len(model.caeros)
         nrigid = len(model.rigid_elements)
         #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
-        if nelements2 + nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:
-            msg = 'nelements2 + nelements + nmasses + ncaero_cards + nplotels + nrigid = 0\n'
+        if nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:
+            msg = 'nelements + nmasses + ncaero_cards + nplotels + nrigid = 0\n'
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
         self.nnodes = nnodes + nspoints
         self.nelements = nelements  # approximate...
+
+        self.log_info("nnodes=%i nelements=%i" % (self.nnodes, self.nelements))
+        msg = model.get_bdf_stats(return_type='string')
+        self.log_debug(msg)
+        msg = model.get_bdf_stats(return_type='list')
+
+        # this call will break the GUI if there are a lot of lines and
+        # by a lot I mean 37641.  It's fine for a single call.
+        #for msgi in msg:
+            #model.log.debug(msgi)
+
+        nconm2 = 0
+        #if 'CONM2' in model.card_count:
+            #nconm2 += model.card_count['CONM2']
+        #if 'CMASS1' in model.card_count:
+            #nconm2 += model.card_count['CMASS1']
+        #if 'CMASS2' in model.card_count:
+            #nconm2 += model.card_count['CMASS2']
+
+        if nconm2 > 0:
+            self.create_alternate_vtk_grid(
+                'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
+                representation='point')
+
+        # Allocate grids
+        self.grid.Allocate(self.nelements, 1000)
+        #self._create_caero_actors(ncaeros, ncaeros_sub, ncaeros_cs, has_control_surface)
+        #if nconm2 > 0:
+            #self.alt_grids['conm2'].Allocate(nconm2, 1000)
+
+        if self.save_data:
+            self.model = model
+
+        #-----------------------------------------------------------------------
+        # nodes/coords
+        #print('get_xyz_in_coord')
+        xyz_cid0, nid_cp_cd = self.get_xyz_in_coord_vectorized(model, cid=0, fdtype='float32')
+        points = self.numpy_to_vtk_points(xyz_cid0)
+        #self.grid.SetPoints(points)
+        self.xyz_cid0 = xyz_cid0
+
+        maxi = xyz_cid0.max(axis=0)
+        mini = xyz_cid0.min(axis=0)
+        assert len(maxi) == 3, len(maxi)
+        xmax, ymax, zmax = maxi
+        xmin, ymin, zmin = mini
+        dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
+
+        #print('_create_nastran_coords')
+        #self._create_nastran_coords(model, dim_max)
+        #print('done _create_nastran_coords')
+
+        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        #-----------------------------------------------------------------------
+
+        #------------------------------------------------------------
+        # TEMP
+        j = 0
+        self._map_elements_vectorized(points, self.nid_map, model, j, dim_max,
+                                      nid_cp_cd, plot=True, xref_loads=True)
+        has_control_surface = False
+        geometry_names = []
+        #------------------------------------------------------------
+        cases = OrderedDict()
+        form = ['Geometry', None, []]
+        form0 = form[2]
+
+        subcase_id = 0
+
+
+        icase = 0
+        all_nids = nid_cp_cd[:, 0]
+
+        # this intentionally makes a deepcopy
+        cds = np.array(nid_cp_cd[:, 2])
+        nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
+                            mask_value=0,
+                            nlabels=None,
+                            labelsize=None,
+                            ncolors=None,
+                            colormap='jet',
+                            data_format=None,
+                            uname='GuiResult')
+        cases[icase] = (nid_res, (0, 'Node ID'))
+        form0.append(('Node ID', icase, []))
+        icase += 1
+
+        #------------------------------------------------------------
+        # add alternate actors
+        self._add_alt_actors(self.alt_grids)
+
+        # set default representation
+        self._set_caero_representation(has_control_surface)
+
+        for grid_name in geometry_names:
+            if grid_name in self.geometry_actors:
+                self.geometry_actors[grid_name].Modified()
+
+        #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        if plot:
+            #self.log.info(cases.keys())
+            self._finish_results_io2([form], cases, reset_labels=reset_labels)
+        else:
+            self._set_results([form], cases)
+
+
+    def _map_elements_vectorized(self, points, nid_map, model, j, dim_max,
+                                 nid_cp_cd, plot=True, xref_loads=True):
+        """
+        Much, much faster way to add elements that directly builds the VTK objects
+        rather than using for loops.
+
+        Parameters
+        ----------
+        points : ???
+           ???
+        nid_map : ???
+           ???
+        model : BDF()
+            the BDF model object
+        j : int
+            ???
+        dim_max : float
+            ???
+        nid_cp_cd : ???
+            ???
+        plot : bool; default=True
+            ???
+        xref_loads : bool; default=True
+            ???
+
+        Returns
+        -------
+        nid_to_pid_map  : dict
+            node to property id map
+            used to show SPC constraints (we don't want to show constraints on 456 DOFs)
+        icase : int
+            the result number
+        cases : dict
+            the GuiResult objects
+        form : List[???, ???, ???]
+            the Results sidebar data
+
+        TDOO: Not quite done on:
+               - ???
+        """
+        grid = self.grid
+
+        if len(model.ctria3):
+            model.ctria3.quality()
+        #if len(model.tria6):
+            #model.tria6.quality()
+        #if len(model.quad4):
+            #model.quad4.quality()
+        #if len(model.cquad8):
+            #model.cquad8.quality()
+        #if len(model.cquad):
+            #model.cquad.quality()
+
+        nids_list = []
+        ieid = 0
+        cell_offset = 0
+
+        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
+        if isize == 4:
+            dtype = 'int32' # TODO: can we include endian?
+        elif isize == 8:
+            dtype = 'int64'
+        else:
+            msg = 'isize=%s' % str(isize)
+            raise NotImplementedError(msg)
+        #print('isize = ', isize)
+        #print('dtype = ', dtype)
+
+        nelements = self.nelements
+        eids_array = np.zeros(nelements, dtype=dtype)
+        cell_types_array = np.zeros(nelements, dtype=dtype)
+        cell_offsets_array = np.zeros(nelements, dtype=dtype)
+
+        #cell_type_point = vtk.vtkVertex().GetCellType()
+        #cell_type_line = vtk.vtkLine().GetCellType()
+        cell_type_tri3 = vtkTriangle().GetCellType()
+        #cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
+        cell_type_quad4 = vtkQuad().GetCellType()
+        #cell_type_quad8 = vtkQuadraticQuad().GetCellType()
+        cell_type_tetra4 = vtkTetra().GetCellType()
+        #cell_type_tetra10 = vtkQuadraticTetra().GetCellType()
+        #cell_type_pyram5 = vtkPyramid().GetCellType()
+        #cell_type_pyram13 = vtk.vtkQuadraticPyramid().GetCellType()
+        #cell_type_penta6 = vtkWedge().GetCellType()
+        #cell_type_penta15 = vtkQuadraticWedge().GetCellType()
+        #cell_type_hexa8 = vtkHexahedron().GetCellType()
+        #cell_type_hexa20 = vtkQuadraticHexahedron().GetCellType()
+
+        all_eids = model.elements2.eids
+        print('type(eids) =', type(all_eids))
+        print('all_eids =', all_eids)
+
+        nbars = len(model.cbar)
+        nbeams = len(model.cbeam)
+
+        nctria3 = len(model.ctria3)
+        ncquad4 = len(model.cquad4)
+        nctria6 = len(model.ctria6)
+        cquad8 = len(model.cquad8)
+        cquad = len(model.cquad)
+
+        nctetra4 = len(model.ctetra4)
+        ncpenta6 = len(model.cpenta6)
+        nchexa8 = len(model.chexa8)
+        #nsolids = nctetra4 + ncpenta6 + nchexa8
+
+        ieid0 = 0
+        cell_offset0 = 0
+        nids_list = []
+
+        if nbars:
+            nelems = nbars
+            elem = model.cbar
+            elem._make_current()
+            nnodes = np.full((nelems, 1), 2)
+
+            eid = elem.eid
+            nids = elem.nids
+            pid = elem.pid
+            cell_type = cell_type_tetra4
+            inids = model.nodes.get_node_index(nids)
+
+            nnodes_inids = np.hstack([nnodes, inids])
+            nids_list.append(nnodes_inids)
+
+            eid_type = np.full(nelems, cell_type_tri3)
+            dim = np.full(nelems, 2)
+            ieid = np.arange(ieid0, ieid0 + nelems)
+
+            nnodes[0] = 0
+            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
+            assert len(ieid) == len(cumsum)
+            eids_array[ieid] = eid
+            cell_types_array[ieid] = cell_type
+            cell_offsets_array[ieid] = cumsum
+            ieid0 += nelems
+            cell_offset0 += cumsum[-1]
+
+        if nctria3:
+            nelems = nctria3
+            elem = model.ctria3
+            elem._make_current()
+            nnodes = np.full((nelems, 1), 3)
+
+            eid = elem.eid
+            nids = elem.nids
+            pid = elem.pid
+            cell_type = cell_type_tetra4
+            inids = model.nodes.get_node_index(nids)
+
+            nnodes_inids = np.hstack([nnodes, inids])
+            nids_list.append(nnodes_inids)
+
+            eid_type = np.full(nelems, cell_type_tri3)
+            dim = np.full(nelems, 2)
+            ieid = np.arange(ieid0, ieid0 + nelems)
+
+            nnodes[0] = 0
+            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
+            assert len(ieid) == len(cumsum)
+            eids_array[ieid] = eid
+            cell_types_array[ieid] = cell_type
+            cell_offsets_array[ieid] = cumsum
+            ieid0 += nelems
+            cell_offset0 += cumsum[-1]
+
+        if ncquad4:
+            nelems = ncquad4
+            elem = model.cquad4
+            elem._make_current()
+            nnodes = np.full((nelems, 1), 4)
+
+            eid = elem.eid
+            nids = elem.nids
+            pid = elem.pid
+            cell_type = cell_type_tetra4
+            inids = model.nodes.get_node_index(nids)
+
+            nnodes_inids = np.hstack([nnodes, inids])
+            nids_list.append(nnodes_inids)
+
+            eid_type = np.full(nelems, cell_type_quad4)
+            dim = np.full(nelems, 2)
+            ieid = np.arange(ieid0, ieid0 + nelems)
+
+            nnodes[0] = 0
+            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
+            assert len(ieid) == len(cumsum)
+            eids_array[ieid] = eid
+            cell_types_array[ieid] = cell_type
+            cell_offsets_array[ieid] = cumsum
+            ieid0 += nelems
+            cell_offset0 += cumsum[-1]
+
+        if nctetra4:
+            nelems = nctetra4
+            elem = model.ctetra4
+            elem._make_current()
+            nnodes = np.full((nelems, 1), 4)
+
+            eid = elem.eid
+            nids = elem.nids
+            pid = elem.pid
+            cell_type = cell_type_tetra4
+            inids = model.nodes.get_node_index(nids)
+
+            nnodes_inids = np.hstack([nnodes, inids])
+            nids_list.append(nnodes_inids)
+
+            eid_type = np.full(nelems, cell_type_tetra4)
+            dim = np.full(nelems, 3)
+            ieid = np.arange(ieid0, ieid0 + nelems)
+
+            nnodes[0] = 0
+            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
+            assert len(ieid) == len(cumsum)
+            eids_array[ieid] = eid
+            cell_types_array[ieid] = cell_type
+            cell_offsets_array[ieid] = cumsum
+            ieid0 += nelems
+            cell_offset0 += cumsum[-1]
+
+            #min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
+                #_ctetra_faces, nids, nid_map, xyz_cid0)
+            #dim = 3
+
+        deep = 1
+        if len(nids_list) == 1:
+            nids_array = nids_list[0].ravel()
+        else:
+            #raise NotImplementedError(len(nids_list))
+            nids_array = np.hstack([nid_list.flatten() for nid_list in nids_list])
+            #nids_array = np.array(nids_list, dtype=dtype)
+
+        #-----------------------------------------------------------------
+        # saving some data members
+        self.element_ids = eids_array
+
+        #-----------------------------------------------------------------
+        # build the grid
+
+        #self.log.info('nids_array = %s' % nids_array)
+        #self.log.info('cell_offsets_array = %s' % cell_offsets_array)
+        #self.log.info('cell_types_array = %s' % cell_types_array)
+
+        # Create the array of cells
+        print('nids_array =', nids_array)
+        cells_id_type = numpy_to_vtkIdTypeArray(nids_array, deep=1)
+        vtk_cells = vtk.vtkCellArray()
+        vtk_cells.SetCells(nelements, cells_id_type)
+
+        # Cell types
+        vtk_cell_types = numpy_to_vtk(
+            cell_types_array, deep=deep,
+            array_type=vtk.vtkUnsignedCharArray().GetDataType())
+
+        vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=deep,
+                                        array_type=vtk.VTK_ID_TYPE)
+
+        grid = self.grid
+        #grid = vtk.vtkUnstructuredGrid()
+        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
+
 
     def _get_model_vectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
@@ -601,11 +999,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if nconm2 > 0:
             self.alt_grids['conm2'].Allocate(nconm2, 1000)
 
-        #vectorReselt.SetNumberOfComponents(3)
-        #elem.SetNumberOfPoints(nNodes)
-
         if self.save_data:
             self.model = model
+
+        #-----------------------------------------------------------------------
+        # nodes/coords
 
         #print('get_xyz_in_coord')
         xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
@@ -626,6 +1024,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        #-----------------------------------------------------------------------
 
         j = 0
         nid_to_pid_map, icase, cases, form = self.map_elements(
@@ -1701,10 +2100,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _map_elements3(self, points, nid_map, model, j, dim_max,
                        nid_cp_cd, plot=True, xref_loads=True):
-        """much, much faster way to add elements
+        """
+        Much, much faster way to add elements that directly builds the VTK objects
+        rather than using for loops.
 
         Returns
         -------
+        points : vtkpoints?
+            ???
         nid_to_pid_map  : dict
             node to property id map
             used to show SPC constraints (we don't want to show constraints on 456 DOFs)
@@ -1714,6 +2117,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             the GuiResult objects
         form : List[???, ???, ???]
             the Results sidebar data
+
+        TDOO: Not quite done on:
+               - ???
         """
         # these normals point inwards
         #      4
@@ -1836,11 +2242,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_type_tetra4 = vtkTetra().GetCellType()
         cell_type_tetra10 = vtkQuadraticTetra().GetCellType()
         cell_type_pyram5 = vtkPyramid().GetCellType()
-        #cell_type_pyram13 = vtk.vtkQuadraticPyramid().GetCellType()
+        cell_type_pyram13 = vtk.vtkQuadraticPyramid().GetCellType()
         cell_type_penta6 = vtkWedge().GetCellType()
-        #cell_type_penta15 = vtkQuadraticWedge().GetCellType()
+        cell_type_penta15 = vtkQuadraticWedge().GetCellType()
         cell_type_hexa8 = vtkHexahedron().GetCellType()
-        #cell_type_hexa20 = vtkQuadraticHexahedron().GetCellType()
+        cell_type_hexa20 = vtkQuadraticHexahedron().GetCellType()
 
         # per gui/testing_methods.py/create_vtk_cells_of_constant_element_type
         #1  = vtk.vtkVertex().GetCellType()
@@ -1892,9 +2298,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     theta_array[ieid] = elem.theta_mcid
                 else:
                     mcid_array[ieid] = elem.theta_mcid
-
                 nnodes = 3
                 dim = 2
+
             elif etype in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CQUADX4']:
                 nids = elem.nodes
                 pid = elem.pid
@@ -1911,6 +2317,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     mcid_array[ieid] = elem.theta_mcid
                 nnodes = 4
                 dim = 2
+
             elif etype in ['CTRIA6']:
                 nids = elem.nodes
                 pid = elem.pid
@@ -1958,43 +2365,65 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     cell_type = cell_type_tetra10
                     nnodes = 10
-
                 inids = np.searchsorted(all_nids, nids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _ctetra_faces, nids, nid_map, xyz_cid0)
                 dim = 3
+
             elif etype == 'CHEXA':
-                # TODO: assuming 8
-                nids = elem.nodes[:8]
+                nids = elem.nodes
                 pid = elem.pid
-                cell_type = cell_type_hexa8
+                if None in nids:
+                    cell_type = cell_type_hexa8
+                    nids = nids[:8]
+                    nnodes = 8
+                else:
+                    cell_type = cell_type_hexa20
+                    nnodes = 20
+
                 inids = np.searchsorted(all_nids, nids)
-                nnodes = 8
-                dim = 3
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _chexa_faces, nids, nid_map, xyz_cid0)
+                dim = 3
+
             elif etype == 'CPENTA':
-                # TODO: assuming 5
-                nids = elem.nodes[:6]
+                nids = elem.nodes
                 pid = elem.pid
+
+                if None in nids:
+                    cell_type = cell_type_penta6
+                    nids = nids[:6]
+                    nnodes = 6
+                else:
+                    cell_type = cell_type_penta15
+                    nnodes = 15
+
                 inids = np.searchsorted(all_nids, nids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpenta_faces, nids, nid_map, xyz_cid0)
-                cell_type = cell_type_penta6
-                nnodes = 6
                 dim = 3
             elif etype == 'CPYRAM':
                 # TODO: assuming 5
-                nids = elem.nodes[:5]
+                nids = elem.nodes
                 pid = elem.pid
+                if None in nids:
+                    cell_type = cell_type_pyram5
+                    nids = nids[:5]
+                    nnodes = 5
+                else:
+                    cell_type = cell_type_penta13
+                    nnodes = 13
+
                 inids = np.searchsorted(all_nids, nids)
-                cell_type = cell_type_pyram5
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpyram_faces, nids, nid_map, xyz_cid0)
-                nnodes = 5
                 dim = 3
             elif etype in ['CELAS2', 'CELAS4', 'CDAMP4']:
                 # these can have empty nodes and have no property
+                # CELAS1: 1/2 GRID/SPOINT and pid
+                # CELAS2: 1/2 GRID/SPOINT, k, ge, and s
+                # CELAS3: 1/2 SPOINT and pid
+                # CELAS4: 1/2 SPOINT and k
                 nids = elem.nodes
                 assert nids[0] != nids[1]
                 if None in nids:
@@ -2529,6 +2958,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _map_elements2(self, points, nid_map, model, j, dim_max,
                        nid_cp_cd, plot=True, xref_loads=True):  # pragma: no cover
+        """
+        This uses a variation on _map_elements1 that tries to add cards
+        using BDF._type_to_id_map to speed up reading
+        """
         #model = BDF()
         cards_to_consider = [
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -2895,6 +3328,24 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                      nid_cp_cd, plot=True, xref_loads=True):
         """
         Creates the elements
+
+        points : ???
+            ???
+        nid_map : dict[nid] : nid_index
+            nid : int
+                the GRID/SPOINT/EPOINT id
+            nid_index : int
+                the index for the GRID/SPOINT/EPOINT in xyz_cid0
+        model : BDF()
+            the model object
+        j : int
+            ???
+        dim_max : float
+            the max(dx, dy, dz) dimension
+            use for ???
+        nid_cp_cd : (nnodes, 3) int ndarray
+            the node_id and coordinate systems corresponding to xyz_cid0
+            used for setting the NodeID and CD coordinate results
         """
         grid = self.grid
         grid.SetPoints(points)

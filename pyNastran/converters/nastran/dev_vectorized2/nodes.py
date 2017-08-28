@@ -1,5 +1,6 @@
 from __future__ import print_function
 from collections import defaultdict
+from six import iteritems
 import numpy as np
 from pyNastran.bdf.bdf import GRID
 
@@ -11,6 +12,173 @@ from pyNastran.bdf.field_writer_16 import print_float_16, set_string16_blank_if_
 from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 
+class Nodes(object):
+    def __init__(self, model):
+        self.model = model
+        self.grid = model.grid
+        self.spoints = model.spoints
+        self.epoints = model.epoints
+        self.xyz_cid0 = None
+
+    def __len__(self):
+        """returns the number of nodes"""
+        return len(self.model.grid) + len(self.spoints) + len(self.epoints)
+    def __repr__(self):
+        return self.repr_indent('')
+    def repr_indent(self, indent=''):
+        msg = '%s<Nodes>:\n' % indent
+        msg += '%s  GRID: %s\n' % len(indent, self.nodes)
+        msg += '%s  GRID: %s\n' % len(indent, self.spoints)
+        msg += '%s  GRID: %s\n' % len(indent, self.epoints)
+
+    def get_grid_by_nid(self, nid):
+        self.grid._make_current()
+        inid = np.searchsorted(self.nid, nid)
+        return self[inid]
+
+    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32'):
+        # type: (str, str, bool) -> Any
+        """
+        Get index and transformation matricies for nodes with
+        their output in coordinate systems other than the global.
+        Used in combination with ``OP2.transform_displacements_to_global``
+
+        Parameters
+        ----------
+        fdtype : str
+            the type of xyz_cp
+        idtype : str
+            the type of nid_cp_cd
+
+        Returns
+        -------
+        icd_transform : dict{int cd : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their output (`CD`) in that
+            coordinate system.
+        icp_transform : dict{int cp : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their input (`CP`) in that
+            coordinate system.
+        xyz_cp : (n, 3) float ndarray
+            points in the CP coordinate system
+        nid_cp_cd : (n, 3) int ndarray
+            node id, CP, CD for each node
+
+        Example
+        --------
+        # assume GRID 1 has a CD=10, CP=0
+        # assume GRID 2 has a CD=10, CP=0
+        # assume GRID 5 has a CD=50, CP=0
+        >>> model.point_ids
+        [1, 2, 5]
+        >>> out = model.get_displacement_index_xyz_cp_cd()
+        >>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        >>> nid_cp_cd
+        [
+           [1, 0, 10],
+           [2, 0, 10],
+           [5, 0, 50],
+        ]
+        >>> icd_transform[10]
+        [0, 1]
+
+        >>> icd_transform[50]
+        [2]
+        """
+        self.grid._make_current()
+        nids_cd_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
+        nids_cp_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
+
+        nnodes = len(self.model.grid)
+        nspoints = 0
+        nepoints = 0
+        spoints = None
+        epoints = None
+        nrings = len(self.model.ringaxs)
+        if self.model.spoints:
+            spoints = list(self.model.spoints)
+            nspoints = len(spoints)
+        if self.model.epoints:
+            epoints = list(self.model.epoints)
+            nepoints = len(epoints)
+
+        if nnodes + nspoints + nepoints + nrings == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s nrings=%s' % (nnodes, nspoints, nepoints, nrings)
+            raise ValueError(msg)
+
+        xyz_cp = np.zeros((nnodes + nspoints + nepoints, 3), dtype=fdtype)
+        nid_cp_cd = np.zeros((nnodes + nspoints + nepoints, 3), dtype=idtype)
+
+        xyz_cp[:nnodes, :] = self.model.grid.xyz
+        nid_cp_cd[:nnodes, 0] = self.model.grid.nid
+        nid_cp_cd[:nnodes, 1] = self.model.grid.cp
+        nid_cp_cd[:nnodes, 2] = self.model.grid.cd
+        i = nnodes
+
+        if nspoints:
+            for nid in sorted(spoints):
+                nid_cp_cd[i, 0] = nid
+                i += 1
+        if nepoints:
+            for nid in sorted(epoints):
+                nid_cp_cd[i, 0] = nid
+                i += 1
+        assert nid_cp_cd[:, 0].min() > 0, nid_cp_cd[:, 0].tolist()
+        #assert nid_cp_cd[:, 0].min() > 0, nid_cp_cd[:, 0].min()
+
+        # sorting
+        nids = nid_cp_cd[:, 0]
+        isort = nids.argsort()
+        nid_cp_cd = nid_cp_cd[isort, :]
+        xyz_cp = xyz_cp[isort, :]
+
+        icp_transform = {}
+        icd_transform = {}
+        nids_all = nid_cp_cd[:, 0]
+
+        # get the indicies of the xyz array where the nodes that
+        # need to be transformed are
+        for cd, nids in sorted(iteritems(nids_cd_transform)):
+            if cd in [0, -1]:
+                continue
+            nids = np.array(nids)
+            icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
+
+        for cp, nids in sorted(iteritems(nids_cp_transform)):
+            if cp in [0, -1]:
+                continue
+            nids = np.array(nids)
+            icp_transform[cp] = np.where(np.in1d(nids_all, nids))[0]
+        return icd_transform, icp_transform, xyz_cp, nid_cp_cd
+
+    def get_node_index(self, nids):
+        """maps the requested nodes to their desired index in the array"""
+        self.grid._make_current()
+        nids = np.asarray(nids)
+        nids_ravel = nids.ravel()
+
+        sorted_nodes = self.nids
+        #print('sorted_nodes = %s' % sorted_nodes.tolist())
+        #print(nids)
+        #print(nids_ravel)
+        i = np.searchsorted(sorted_nodes, nids_ravel)
+        if not np.array_equal(sorted_nodes[i], nids_ravel):
+            msg = (
+                '  nids:\n%s\n'
+                '  self.nid = %s\n'
+                '  i = %s\n'
+                '  nid[i]    = %s\n'
+                '  nid_ravel = %s\n'
+                '  nids_new:\n%s\n' % (
+                    nids, sorted_nodes.tolist(),
+                    i,
+                    sorted_nodes[i].tolist(),
+                    nids_ravel.tolist(),
+                    nids.reshape(nids.shape)))
+            raise RuntimeError(msg)
+        i = i.reshape(nids.shape)
+        return i
 
 class GRIDv(object):
     """
@@ -350,11 +518,6 @@ class GRIDv(object):
         nid = self.nid[i]
         return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
                     ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
-
-    def get_grid_by_nid(self, nid):
-        self._make_current()
-        inid = np.searchsorted(self.nid, nid)
-        return self[inid]
 
     def __setitem__(self, i, value):
         pass
