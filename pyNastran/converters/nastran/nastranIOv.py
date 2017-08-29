@@ -313,6 +313,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self._create_coord(dim_max, cid, coord, cid_type)
 
     def _remove_old_nastran_geometry(self, bdf_filename):
+        """cleans up the nastran model"""
         #return self._remove_old_geometry(bdf_filename)
 
         # skip_reading = self.removeOldGeometry(bdf_filename)
@@ -1753,9 +1754,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         mpc_ids_used = set()
         suport1_ids_used = set()
         for subcase_id, subcase in sorted(iteritems(model.subcases)):
-            #print(subcase.params.keys())
             if 'SPC' in subcase:
-                #print('getting spcs')
                 spc_id = subcase.get_parameter('SPC')[0]
                 if spc_id is not None and spc_id not in spc_ids_used:
                     spc_ids_used.add(spc_id)
@@ -1764,14 +1763,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nspcds = model.card_count['SPCD'] if 'SPCD' in model.card_count else 0
 
                     ## TODO: this line seems too loose...
-                    ## TODO: why isn't SPCDs included?
+                    ## TODO: why aren't SPCDs included?
                     if nspcs + nspc1s + nspcds:
                         spc_names += self._fill_spc(spc_id, nspcs, nspc1s, nspcds, dim_max,
                                                     model, nid_to_pid_map)
 
             # rigid body elements and MPCs
             if 'MPC' in subcase:
-                #print('getting mpc')
                 mpc_id = subcase.get_parameter('MPC')[0]
                 if mpc_id is not None and mpc_id not in mpc_ids_used:
                     mpc_ids_used.add(mpc_id)
@@ -1860,7 +1858,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return spc_names
 
     def create_bar_pin_flag_text(self, pin_flag=None):
-        """TODO: needs a better interface in the gui"""
+        """
+        Lists the pin flag for each element (that has a pin flag)
+        self.nid_release_map is set by ``_fill_bar_yz``
+
+        TODO: needs a better interface in the gui
+        """
         nids = []
         text = []
         #result_name = self.icase
@@ -4415,6 +4418,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                area, max_skew_angle, taper_ratio,
                                max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio):
         """
+        Creates some nastran specific results
+
         creates:
          - ElementDim
          - Normal X/Y/Z
