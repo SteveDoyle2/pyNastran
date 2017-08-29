@@ -4136,7 +4136,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         phases, icases, isteps, scales = self._update_animation_inputs(
             phases, icases, isteps, scales)
 
-        animate_in_gui = True
+        #animate_in_gui = True
         self.stop_animation()
         if len(icases) == 1:
             pass
