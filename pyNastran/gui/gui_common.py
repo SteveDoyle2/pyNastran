@@ -1111,6 +1111,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
 
+    def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
+                                     opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
+                                     follower_nodes=None, is_pickable=False):
+        self.alt_grids[name] = vtk.vtkUnstructuredGrid()
+        if name_duplicate_from == 'main':
+            grid_copy_from = self.grid
+            representation = 'toggle'
+        else:
+            grid_copy_from = self.alt_grids[name_duplicate_from]
+            props = self.geometry_properties[name_duplicate_from]
+            representation = props.representation
+        self.alt_grids[name].DeepCopy(grid_copy_from)
+
+        self.geometry_properties[name] = AltGeometry(self, name, color=color, line_width=line_width,
+                                                     opacity=opacity, point_size=point_size,
+                                                     bar_scale=bar_scale,
+                                                     representation=representation,
+                                                     is_visible=is_visible, is_pickable=is_pickable)
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
+
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
         #Frame that VTK will render on
@@ -4115,7 +4136,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         phases, icases, isteps, scales = self._update_animation_inputs(
             phases, icases, isteps, scales)
 
-        animate_in_gui = True
+        #animate_in_gui = True
         self.stop_animation()
         if len(icases) == 1:
             pass
@@ -4569,7 +4590,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if representation == 'point':
             prop.SetRepresentationToPoints()
             prop.SetPointSize(point_size)
-        elif representation == 'surface':
+        elif representation in ['surface', 'toggle']:
             prop.SetRepresentationToSurface()
             prop.SetLineWidth(line_width)
         elif representation == 'wire':
