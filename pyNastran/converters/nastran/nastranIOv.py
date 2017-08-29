@@ -94,6 +94,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     """
     def __init__(self):
         super(NastranIO, self).__init__()
+        self.nid_release_map = {}
 
     def get_nastran_wildcard_geometry_results_functions(self):
         """
@@ -704,36 +705,54 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_offsets_array = np.zeros(nelements, dtype=dtype)
 
         #cell_type_point = vtk.vtkVertex().GetCellType()
-        #cell_type_line = vtk.vtkLine().GetCellType()
+        cell_type_line = vtk.vtkLine().GetCellType()
         cell_type_tri3 = vtkTriangle().GetCellType()
-        #cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
+        cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
         cell_type_quad4 = vtkQuad().GetCellType()
-        #cell_type_quad8 = vtkQuadraticQuad().GetCellType()
+        cell_type_quad8 = vtkQuadraticQuad().GetCellType()
         cell_type_tetra4 = vtkTetra().GetCellType()
         #cell_type_tetra10 = vtkQuadraticTetra().GetCellType()
-        #cell_type_pyram5 = vtkPyramid().GetCellType()
+        cell_type_pyram5 = vtkPyramid().GetCellType()
         #cell_type_pyram13 = vtk.vtkQuadraticPyramid().GetCellType()
-        #cell_type_penta6 = vtkWedge().GetCellType()
+        cell_type_penta6 = vtkWedge().GetCellType()
         #cell_type_penta15 = vtkQuadraticWedge().GetCellType()
-        #cell_type_hexa8 = vtkHexahedron().GetCellType()
+        cell_type_hexa8 = vtkHexahedron().GetCellType()
         #cell_type_hexa20 = vtkQuadraticHexahedron().GetCellType()
 
         all_eids = model.elements2.eids
         print('type(eids) =', type(all_eids))
         print('all_eids =', all_eids)
 
-        nbars = len(model.cbar)
-        nbeams = len(model.cbeam)
+        #ncelas1 = len(model.celas1)
+        #ncelas2 = len(model.celas2)
+        #ncelas3 = len(model.celas3)
+        #ncelas4 = len(model.celas4)
 
-        nctria3 = len(model.ctria3)
-        ncquad4 = len(model.cquad4)
-        nctria6 = len(model.ctria6)
-        ncquad8 = len(model.cquad8)
-        ncquad = len(model.cquad)
+        #ncdamp1 = len(model.cdamp1)
+        #ncdamp2 = len(model.cdamp2)
+        #ncdamp3 = len(model.cdamp3)
+        #ncdamp4 = len(model.cdamp4)
+        #ncdamp5 = len(model.cdamp5)
 
-        nctetra4 = len(model.ctetra4)
-        ncpenta6 = len(model.cpenta6)
-        nchexa8 = len(model.chexa8)
+        nconrod = len(model.conrod)
+        #ncrod = len(model.crod)
+        #nctube = len(model.ctube)
+
+        #ncbar = len(model.cbar)
+        #ncbeam = len(model.cbeam)
+
+        #ncshear = len(model.cshear)
+
+        #nctria3 = len(model.ctria3)
+        #ncquad4 = len(model.cquad4)
+        #nctria6 = len(model.ctria6)
+        #ncquad8 = len(model.cquad8)
+        #ncquad = len(model.cquad)
+
+        #nctetra4 = len(model.ctetra4)
+        #ncpenta6 = len(model.cpenta6)
+        #nchexa8 = len(model.chexa8)
+        #ncpyram5 = len(model.cpyram5)
         #nsolids = nctetra4 + ncpenta6 + nchexa8
 
         ieid0 = 0
@@ -741,23 +760,67 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nids_list = []
 
         nodes = model.nodes2
-        if nbars:
-            nelems = nbars
-            elem = model.cbar
+
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.celas1, cell_type_line, nnodesi=2, dimi=1)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.celas2, cell_type_line, nnodesi=2, dimi=1)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.celas3, cell_type_line, nnodesi=2, dimi=1)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.celas4, cell_type_line, nnodesi=2, dimi=1)
+
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cdamp1, cell_type_line, nnodesi=2, dimi=1)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cdamp2, cell_type_line, nnodesi=2, dimi=1)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cdamp3, cell_type_line, nnodesi=2, dimi=1)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cdamp4, cell_type_line, nnodesi=2, dimi=1)
+
+
+        if nconrod:
+            nelems = nconrod
+            elem = model.conrod
             elem.make_current()
-            nnodes = np.full((nelems, 1), 2)
+            nnodes = np.full((nelems, 1), 2, dtype='int32')
 
             eid = elem.eid
             nids = elem.nids
-            pid = elem.pid
-            cell_type = cell_type_tetra4
+            #pid = elem.pid
+            cell_type = cell_type_line
             inids = nodes.get_node_index(nids)
 
             nnodes_inids = np.hstack([nnodes, inids])
             nids_list.append(nnodes_inids)
 
-            eid_type = np.full(nelems, cell_type_tri3)
-            dim = np.full(nelems, 2)
+            eid_type = np.full(nelems, cell_type, dtype='int32')
+            dim = np.full(nelems, 1, dtype='int32')
             ieid = np.arange(ieid0, ieid0 + nelems)
 
             nnodes[0] = 0
@@ -769,149 +832,85 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ieid0 += nelems
             cell_offset0 += cumsum[-1]
 
-        if nctria3:
-            nelems = nctria3
-            elem = model.ctria3
-            elem.make_current()
-            nnodes = np.full((nelems, 1), 3)
 
-            eid = elem.eid
-            nids = elem.nids
-            pid = elem.pid
-            cell_type = cell_type_tetra4
-            inids = nodes.get_node_index(nids)
 
-            nnodes_inids = np.hstack([nnodes, inids])
-            nids_list.append(nnodes_inids)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.crod, cell_type_line, nnodesi=2, dimi=2)
 
-            eid_type = np.full(nelems, cell_type_tri3)
-            dim = np.full(nelems, 2)
-            ieid = np.arange(ieid0, ieid0 + nelems)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cbar, cell_type_line, nnodesi=2, dimi=1)
 
-            nnodes[0] = 0
-            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
-            assert len(ieid) == len(cumsum)
-            eids_array[ieid] = eid
-            cell_types_array[ieid] = cell_type
-            cell_offsets_array[ieid] = cumsum
-            ieid0 += nelems
-            cell_offset0 += cumsum[-1]
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cbeam, cell_type_line, nnodesi=2, dimi=1)
 
-        if nctria6:
-            nelems = nctria6
-            elem = model.ctria6
-            elem.make_current()
-            nnodes = np.full((nelems, 1), 6)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cshear, cell_type_quad4, nnodesi=4, dimi=2)
 
-            eid = elem.eid
-            nids = elem.nids
-            pid = elem.pid
-            cell_type = cell_type_tetra4
-            inids = nodes.get_node_index(nids)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.ctria3, cell_type_tri3, nnodesi=3, dimi=2)
 
-            nnodes_inids = np.hstack([nnodes, inids])
-            nids_list.append(nnodes_inids)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cquad4, cell_type_quad4, nnodesi=4, dimi=2)
 
-            eid_type = np.full(nelems, cell_type_tri3)
-            dim = np.full(nelems, 2)
-            ieid = np.arange(ieid0, ieid0 + nelems)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.ctria6, cell_type_tri6, nnodesi=6, dimi=2)
 
-            nnodes[0] = 0
-            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
-            assert len(ieid) == len(cumsum)
-            eids_array[ieid] = eid
-            cell_types_array[ieid] = cell_type
-            cell_offsets_array[ieid] = cumsum
-            ieid0 += nelems
-            cell_offset0 += cumsum[-1]
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cquad8, cell_type_quad8, nnodesi=8, dimi=2)
 
-        if ncquad4:
-            nelems = ncquad4
-            elem = model.cquad4
-            elem.make_current()
-            nnodes = np.full((nelems, 1), 4)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.ctetra4, cell_type_tetra4, nnodesi=4, dimi=3)
 
-            eid = elem.eid
-            nids = elem.nids
-            pid = elem.pid
-            cell_type = cell_type_tetra4
-            inids = nodes.get_node_index(nids)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cpenta6, cell_type_penta6, nnodesi=8, dimi=3)
 
-            nnodes_inids = np.hstack([nnodes, inids])
-            nids_list.append(nnodes_inids)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.chexa8, cell_type_hexa8, nnodesi=8, dimi=3)
 
-            eid_type = np.full(nelems, cell_type_quad4)
-            dim = np.full(nelems, 2)
-            ieid = np.arange(ieid0, ieid0 + nelems)
+        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cpyram5, cell_type_pyram5, nnodesi=8, dimi=3)
 
-            nnodes[0] = 0
-            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
-            assert len(ieid) == len(cumsum)
-            eids_array[ieid] = eid
-            cell_types_array[ieid] = cell_type
-            cell_offsets_array[ieid] = cumsum
-            ieid0 += nelems
-            cell_offset0 += cumsum[-1]
-
-        if ncquad8:
-            nelems = ncquad8
-            elem = model.cquad8
-            elem.make_current()
-            nnodes = np.full((nelems, 1), 8)
-
-            eid = elem.eid
-            nids = elem.nids
-            pid = elem.pid
-            cell_type = cell_type_tetra4
-            inids = nodes.get_node_index(nids)
-
-            nnodes_inids = np.hstack([nnodes, inids])
-            nids_list.append(nnodes_inids)
-
-            eid_type = np.full(nelems, cell_type_quad8)
-            dim = np.full(nelems, 2)
-            ieid = np.arange(ieid0, ieid0 + nelems)
-
-            nnodes[0] = 0
-            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
-            assert len(ieid) == len(cumsum)
-            eids_array[ieid] = eid
-            cell_types_array[ieid] = cell_type
-            cell_offsets_array[ieid] = cumsum
-            ieid0 += nelems
-            cell_offset0 += cumsum[-1]
-
-        if nctetra4:
-            nelems = nctetra4
-            elem = model.ctetra4
-            elem.make_current()
-            nnodes = np.full((nelems, 1), 4)
-
-            eid = elem.eid
-            nids = elem.nids
-            pid = elem.pid
-            cell_type = cell_type_tetra4
-            inids = nodes.get_node_index(nids)
-
-            nnodes_inids = np.hstack([nnodes, inids])
-            nids_list.append(nnodes_inids)
-
-            eid_type = np.full(nelems, cell_type_tetra4)
-            dim = np.full(nelems, 3)
-            ieid = np.arange(ieid0, ieid0 + nelems)
-
-            nnodes[0] = 0
-            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
-            assert len(ieid) == len(cumsum)
-            eids_array[ieid] = eid
-            cell_types_array[ieid] = cell_type
-            cell_offsets_array[ieid] = cumsum
-            ieid0 += nelems
-            cell_offset0 += cumsum[-1]
-
-            #min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
-                #_ctetra_faces, nids, nid_map, xyz_cid0)
-            #dim = 3
+        if cell_types_array.min() == 0:
+            msg = ('Cell Type is not defined (cell_type=0).\n'
+                   '  cell_types_array = %s\n'
+                   '  card_count=\n%s' % (cell_types_array, model.card_count))
+            raise RuntimeError(msg)
 
         deep = 1
         if len(nids_list) == 1:
@@ -950,6 +949,43 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #grid = vtk.vtkUnstructuredGrid()
         grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
+    def map_elements_vectorized_fill(self,
+                                     ieid0, cell_offset0,
+                                     nodes, nids_list,
+                                     eids_array, cell_types_array, cell_offsets_array,
+                                     model_obj, cell_type, nnodesi=None, dimi=None):
+        """helper method for ``map_elements_vectorized``"""
+        assert nnodesi is not None
+        assert dimi is not None
+
+        nelems = len(model_obj)
+        if nelems:
+            elem = model_obj
+            elem.make_current()
+            nnodes = np.full((nelems, 1), nnodesi, dtype='int32')
+
+            eid = elem.eid
+            nids = elem.nids
+            if hasattr(elem, 'pid'):
+                pid = elem.pid
+            inids = nodes.get_node_index(nids)
+
+            nnodes_inids = np.hstack([nnodes, inids])
+            nids_list.append(nnodes_inids)
+
+            eid_type = np.full(nelems, cell_type, dtype='int32')
+            dim = np.full(nelems, dimi, dtype='int32')
+            ieid = np.arange(ieid0, ieid0 + nelems)
+
+            nnodes[0] = 0
+            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
+            assert len(ieid) == len(cumsum)
+            eids_array[ieid] = eid
+            cell_types_array[ieid] = cell_type
+            cell_offsets_array[ieid] = cumsum
+            ieid0 += nelems
+            cell_offset0 += cumsum[-1]
+        return ieid0, cell_offset0
 
     def _get_model_vectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
