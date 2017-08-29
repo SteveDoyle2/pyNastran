@@ -42,7 +42,10 @@ class GuiAttributes(object):
         self._camera_mode = None
         self.observers = {}
 
-        self.is_testing = False
+        if 'test' in inputs:
+            self.is_testing_flag = inputs['test']
+        else:
+            self.is_testing_flag = False
         self.is_groups = False
         self._logo = None
         self._script_path = None
@@ -813,7 +816,6 @@ class FakeGUIMethods(GuiAttributes):
             'res_widget' : res_widget
         }
         GuiAttributes.__init__(self, **kwds)
-        self.is_testing = True
         self.debug = False
         self._form = []
         self.result_cases = {}
