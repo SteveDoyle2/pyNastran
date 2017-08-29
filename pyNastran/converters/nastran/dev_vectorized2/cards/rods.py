@@ -32,6 +32,11 @@ class Rods(object):
         if len(self.ctube):
             self.ctube.write_card(size, is_double, bdf_file)
 
+    def make_current(self):
+        self.conrod.make_current()
+        self.crod.make_current()
+        self.ctube.make_current()
+
     def __len__(self):
         return len(self.conrod) + len(self.crod) + len(self.ctube)
 
@@ -64,14 +69,14 @@ class RodElement(object):
 
     def cross_reference(self, model):
         """does this do anything?"""
-        self._make_current()
+        self.make_current()
 
     def __len__(self):
         """returns the number of elements"""
         return len(self.eid) + len(self._eid)
 
     def repr_indent(self, indent=''):
-        self._make_current()
+        self.make_current()
         neids = len(self.eid)
         if neids == 0:
             return '%s%sv; nelements=%s' % (indent, self.card_name, neids)
@@ -199,7 +204,7 @@ class CONRODv(RodElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, mid, nodes, A, j, c, nsm in zip(self.eid, self.mid,
                                                  self.nids, self.A, self.j, self.c, self.nsm):
@@ -212,7 +217,7 @@ class CONRODv(RodElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -314,7 +319,7 @@ class CRODv(RodElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             list_fields = ['CROD', eid, pid] + nodes.tolist()
@@ -323,7 +328,7 @@ class CRODv(RodElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -410,7 +415,7 @@ class CTUBEv(RodElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             list_fields = ['CTUBE', eid, pid, nodes[0], nodes[1]]
@@ -419,7 +424,7 @@ class CTUBEv(RodElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid

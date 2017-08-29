@@ -381,8 +381,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print("transform_xyzcp_to_xyz_cid")
         xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
                                                     in_place=False)
-        model.nodes.xyz_cid0 = xyz_cid0
-        model.nodes.nids = nid_cp_cd[:, 0]
+        model.nodes2.xyz_cid0 = xyz_cid0
+        model.nodes2.nids = nid_cp_cd[:, 0]
 
         nid_map = self.nid_map
         for i, nid in enumerate(nid_cp_cd[:, 0]):
@@ -469,9 +469,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if skip_reading:
             return
 
-        #if IS_TESTING and bdf_filename.lower().endswith('.bdf'):
-        self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-        #self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+        if IS_TESTING and bdf_filename.lower().endswith('.bdf'):
+            self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+        self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
 
     def load_nastran_geometry_vectorized(self, bdf_filename, plot=True):
         """
@@ -519,7 +519,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
-        self.nnodes = nnodes + nspoints
+        self.nnodes = nnodes + nspoints + nepoints
         self.nelements = nelements  # approximate...
 
         self.log_info("nnodes=%i nelements=%i" % (self.nnodes, self.nelements))
@@ -669,6 +669,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         TDOO: Not quite done on:
                - ???
         """
+        self.isubcase_name_map = {1: ['Nastran', '']}
         grid = self.grid
 
         if len(model.ctria3):
@@ -727,8 +728,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nctria3 = len(model.ctria3)
         ncquad4 = len(model.cquad4)
         nctria6 = len(model.ctria6)
-        cquad8 = len(model.cquad8)
-        cquad = len(model.cquad)
+        ncquad8 = len(model.cquad8)
+        ncquad = len(model.cquad)
 
         nctetra4 = len(model.ctetra4)
         ncpenta6 = len(model.cpenta6)
@@ -739,17 +740,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_offset0 = 0
         nids_list = []
 
+        nodes = model.nodes2
         if nbars:
             nelems = nbars
             elem = model.cbar
-            elem._make_current()
+            elem.make_current()
             nnodes = np.full((nelems, 1), 2)
 
             eid = elem.eid
             nids = elem.nids
             pid = elem.pid
             cell_type = cell_type_tetra4
-            inids = model.nodes.get_node_index(nids)
+            inids = nodes.get_node_index(nids)
 
             nnodes_inids = np.hstack([nnodes, inids])
             nids_list.append(nnodes_inids)
@@ -770,14 +772,42 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if nctria3:
             nelems = nctria3
             elem = model.ctria3
-            elem._make_current()
+            elem.make_current()
             nnodes = np.full((nelems, 1), 3)
 
             eid = elem.eid
             nids = elem.nids
             pid = elem.pid
             cell_type = cell_type_tetra4
-            inids = model.nodes.get_node_index(nids)
+            inids = nodes.get_node_index(nids)
+
+            nnodes_inids = np.hstack([nnodes, inids])
+            nids_list.append(nnodes_inids)
+
+            eid_type = np.full(nelems, cell_type_tri3)
+            dim = np.full(nelems, 2)
+            ieid = np.arange(ieid0, ieid0 + nelems)
+
+            nnodes[0] = 0
+            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
+            assert len(ieid) == len(cumsum)
+            eids_array[ieid] = eid
+            cell_types_array[ieid] = cell_type
+            cell_offsets_array[ieid] = cumsum
+            ieid0 += nelems
+            cell_offset0 += cumsum[-1]
+
+        if nctria6:
+            nelems = nctria6
+            elem = model.ctria6
+            elem.make_current()
+            nnodes = np.full((nelems, 1), 6)
+
+            eid = elem.eid
+            nids = elem.nids
+            pid = elem.pid
+            cell_type = cell_type_tetra4
+            inids = nodes.get_node_index(nids)
 
             nnodes_inids = np.hstack([nnodes, inids])
             nids_list.append(nnodes_inids)
@@ -798,14 +828,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if ncquad4:
             nelems = ncquad4
             elem = model.cquad4
-            elem._make_current()
+            elem.make_current()
             nnodes = np.full((nelems, 1), 4)
 
             eid = elem.eid
             nids = elem.nids
             pid = elem.pid
             cell_type = cell_type_tetra4
-            inids = model.nodes.get_node_index(nids)
+            inids = nodes.get_node_index(nids)
 
             nnodes_inids = np.hstack([nnodes, inids])
             nids_list.append(nnodes_inids)
@@ -823,17 +853,45 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ieid0 += nelems
             cell_offset0 += cumsum[-1]
 
+        if ncquad8:
+            nelems = ncquad8
+            elem = model.cquad8
+            elem.make_current()
+            nnodes = np.full((nelems, 1), 8)
+
+            eid = elem.eid
+            nids = elem.nids
+            pid = elem.pid
+            cell_type = cell_type_tetra4
+            inids = nodes.get_node_index(nids)
+
+            nnodes_inids = np.hstack([nnodes, inids])
+            nids_list.append(nnodes_inids)
+
+            eid_type = np.full(nelems, cell_type_quad8)
+            dim = np.full(nelems, 2)
+            ieid = np.arange(ieid0, ieid0 + nelems)
+
+            nnodes[0] = 0
+            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
+            assert len(ieid) == len(cumsum)
+            eids_array[ieid] = eid
+            cell_types_array[ieid] = cell_type
+            cell_offsets_array[ieid] = cumsum
+            ieid0 += nelems
+            cell_offset0 += cumsum[-1]
+
         if nctetra4:
             nelems = nctetra4
             elem = model.ctetra4
-            elem._make_current()
+            elem.make_current()
             nnodes = np.full((nelems, 1), 4)
 
             eid = elem.eid
             nids = elem.nids
             pid = elem.pid
             cell_type = cell_type_tetra4
-            inids = model.nodes.get_node_index(nids)
+            inids = nodes.get_node_index(nids)
 
             nnodes_inids = np.hstack([nnodes, inids])
             nids_list.append(nnodes_inids)
@@ -975,7 +1033,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             msg += 'card_count = %r' % str(model.card_count)
             raise NoGeometry(msg)
 
-        self.nnodes = nnodes + nspoints
+        self.nnodes = nnodes + nspoints + nepoints
         self.nelements = nelements  # approximate...
 
         out = self.make_caeros(model)
@@ -1145,7 +1203,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         name = 'main_copy'
         self.duplicate_alternate_vtk_grid(name, 'main', color=(0., 0., 0.), line_width=5,
-                                          is_visible=False)
+                                          opacity=0.1, is_visible=False)
 
         #------------------------------------------------------------
         # add alternate actors

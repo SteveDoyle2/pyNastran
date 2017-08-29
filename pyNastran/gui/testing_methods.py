@@ -794,6 +794,7 @@ class MockResWidget(object):
     def __init__(self):
         pass
     def update_results(self, form, name):
+        """fake method"""
         pass
 
 class FakeGUIMethods(GuiAttributes):
@@ -859,7 +860,9 @@ class FakeGUIMethods(GuiAttributes):
             assert isinstance(key, integer_types), key
             obj, (i, name) = cases[key]
             value = cases[key]
-            assert not isinstance(value[0], int), 'key=%s\n type=%s value=%s' % (key, type(value[0]), value)
+            if isinstance(value[0], int):
+                raise RuntimeError('old style key is being used.\n key=%s\n type=%s value=%s' % (
+                    key, type(value[0]), value))
             #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))
 
             subcase_id = obj.subcase_id
@@ -917,33 +920,42 @@ class FakeGUIMethods(GuiAttributes):
             self.ncases = 0
 
     def cycle_results(self):
+        """fake method"""
         pass
 
     def cycle_results_explicit(self):
+        """fake method"""
         pass
 
     def _create_annotation(self, label, icase, x, y, z):
+        """fake method"""
         pass
 
     def  turn_text_on(self):
+        """fake method"""
         pass
 
     def turn_text_off(self):
+        """fake method"""
         pass
 
     def create_global_axes(self, dim_max):
+        """fake method"""
         pass
 
     def update_axes_length(self, value):
         self.dim_max = value
 
     def passer(self):
+        """fake method"""
         pass
 
     def passer1(self, a):
+        """fake method"""
         pass
 
     def passer2(self, a, b):
+        """fake method"""
         pass
 
     @property
@@ -954,31 +966,58 @@ class FakeGUIMethods(GuiAttributes):
                                   opacity=None, point_size=None, bar_scale=None,
                                   representation=None, is_visible=True,
                                   follower_nodes=None, is_pickable=False):
+        """Fake creates an AltGeometry object"""
         self.alt_grids[name] = Grid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
                            point_size=point_size, bar_scale=bar_scale,
                            opacity=opacity, representation=representation,
                            is_visible=is_visible, is_pickable=is_pickable)
         self.geometry_properties[name] = geom
-        self.follower_nodes[name] = follower_nodes
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
+
+    def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
+                                     opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
+                                     follower_nodes=None, is_pickable=False):
+        """Fake copies the VTK actor"""
+        if name_duplicate_from == 'main':
+            grid_copy_from = self.grid
+            representation = 'toggle'
+        else:
+            grid_copy_from = self.alt_grids[name_duplicate_from]
+            props = self.geometry_properties[name_duplicate_from]
+            representation = props.representation
+
+        self.alt_grids[name] = Grid()
+        geom = AltGeometry(self, name, color=color, line_width=line_width,
+                           point_size=point_size, bar_scale=bar_scale,
+                           opacity=opacity, representation=representation,
+                           is_visible=is_visible, is_pickable=is_pickable)
+        self.geometry_properties[name] = geom
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
 
     def _add_alt_actors(self, alt_grids):
         for name, grid in iteritems(alt_grids):
             self.geometry_actors[name] = GeometryActor()
 
     def log_debug(self, msg):
+        """turns logs into prints to aide testing debug"""
         if self.debug:
             print('DEBUG:  ', msg)
 
     def log_info(self, msg):
+        """turns logs into prints to aide testing debug"""
         if self.debug:
             print('INFO:  ', msg)
 
     def log_error(self, msg):
+        """turns logs into prints to aide testing debug"""
         if self.debug:
             print('ERROR:  ', msg)
 
     def log_warning(self, msg):
+        """turns logs into prints to aide testing debug"""
         if self.debug:
             print('WARNING:  ', msg)
 

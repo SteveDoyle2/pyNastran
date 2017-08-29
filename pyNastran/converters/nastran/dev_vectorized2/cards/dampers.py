@@ -38,6 +38,12 @@ class Dampers(object):
         #if len(self.cdamp5):
             #self.cdamp5.write_card(size, is_double, bdf_file)
 
+    def make_current(self):
+        self.cdamp1.make_current()
+        self.cdamp2.make_current()
+        self.cdamp3.make_current()
+        self.cdamp4.make_current()
+
     def __len__(self):
         return(len(self.cdamp1) + len(self.cdamp2) +
                len(self.cdamp3) + len(self.cdamp4)) #+ len(self.cdamp5)
@@ -73,14 +79,14 @@ class DamperElement(object):
 
     def cross_reference(self, model):
         """does this do anything?"""
-        self._make_current()
+        self.make_current()
 
     def __len__(self):
         """returns the number of elements"""
         return len(self.eid) + len(self._eid)
 
     def repr_indent(self, indent=''):
-        self._make_current()
+        self.make_current()
         neids = len(self.eid)
         if neids == 0:
             return '%s%sv; nelements=%s' % (indent, self.card_name, neids)
@@ -174,7 +180,7 @@ class CDAMP1(DamperElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nodes, dofs in zip(self.eid, self.pid, self.nids, self.dofs):
             list_fields = ['CDAMP1', eid, pid, nodes[0], dofs[0], nodes[1], dofs[1]]
@@ -183,7 +189,7 @@ class CDAMP1(DamperElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -284,7 +290,7 @@ class CDAMP2(DamperElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, b, nodes, dofs in zip(self.eid, self.b, self.nids, self.dofs):
             list_fields = ['CDAMP2', eid, b, nodes[0], dofs[0], nodes[1], dofs[1]]
@@ -293,7 +299,7 @@ class CDAMP2(DamperElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -384,7 +390,7 @@ class CDAMP3(DamperElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             list_fields = ['CDAMP3', eid, pid, nodes[0], nodes[1]]
@@ -393,7 +399,7 @@ class CDAMP3(DamperElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -481,7 +487,7 @@ class CDAMP4(DamperElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, b, nodes in zip(self.eid, self.b, self.nids):
             list_fields = ['CDAMP4', eid, b, nodes[0], nodes[1]]
@@ -490,7 +496,7 @@ class CDAMP4(DamperElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid

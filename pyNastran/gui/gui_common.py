@@ -1098,6 +1098,35 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
                                   bar_scale=0.0, representation=None, is_visible=True,
                                   follower_nodes=None, is_pickable=False):
+        """
+        Creates an AltGeometry object
+
+        Parameters
+        ----------
+        line_width : int
+            the width of the line for 'surface' and 'main'
+        color : [int, int, int]
+            the RGB colors
+        opacity : float
+            0.0 -> solid
+            1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
+        representation : str
+            main - change with main mesh
+            wire - always wireframe
+            point - always points
+            surface - always surface
+            bar - can use bar scale
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
+        follower_nodes : List[int]
+            the nodes that are brought along with a deflection
+        """
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         self.geometry_properties[name] = AltGeometry(
             self, name, color=color,
@@ -1110,6 +1139,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
                                      opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
                                      follower_nodes=None, is_pickable=False):
+        """
+        Copies the VTK actor
+
+        Parameters
+        ----------
+        line_width : int
+            the width of the line for 'surface' and 'main'
+        color : [int, int, int]
+            the RGB colors
+        opacity : float
+            0.0 -> solid
+            1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
+        follower_nodes : List[int]
+            the nodes that are brought along with a deflection
+        """
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         if name_duplicate_from == 'main':
             grid_copy_from = self.grid
@@ -1120,6 +1172,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             representation = props.representation
         self.alt_grids[name].DeepCopy(grid_copy_from)
 
+        #representation : str
+            #main - change with main mesh
+            #wire - always wireframe
+            #point - always points
+            #surface - always surface
+            #bar - can use bar scale
         self.geometry_properties[name] = AltGeometry(self, name, color=color, line_width=line_width,
                                                      opacity=opacity, point_size=point_size,
                                                      bar_scale=bar_scale,

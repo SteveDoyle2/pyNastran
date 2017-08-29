@@ -46,6 +46,16 @@ class Solids(object):
         if len(self.cpyram13):
             self.cpyram13.write_card(size, is_double, bdf_file)
 
+    def make_current(self):
+        self.ctetra4.make_current()
+        self.ctetra10.make_current()
+        self.chexa8.make_current()
+        self.chexa20.make_current()
+        self.cpenta6.make_current()
+        self.cpenta15.make_current()
+        self.cpyram5.make_current()
+        self.cpyram13.make_current()
+
     def __len__(self):
         return(len(self.ctetra4) + len(self.ctetra10) +
                len(self.cpenta6) + len(self.cpenta15) +
@@ -130,7 +140,7 @@ class SolidElement(object):
             add_card = True
         return add_card
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -159,14 +169,14 @@ class SolidElement(object):
 
     def cross_reference(self, model):
         """does this do anything?"""
-        self._make_current()
+        self.make_current()
 
     def __len__(self):
         """returns the number of elements"""
         return len(self.eid) + len(self._eid)
 
     def repr_indent(self, indent=''):
-        self._make_current()
+        self.make_current()
         neids = len(self.eid)
         if neids == 0:
             return '%s%s%sv; nelements=%s' % (indent, self.card_name, self.nnodes, neids)
@@ -232,7 +242,7 @@ class CTETRA4v(SolidElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()
@@ -294,7 +304,7 @@ class CTETRA10v(SolidElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             #data = [eid, pid] + nids.tolist()
@@ -361,7 +371,7 @@ class CPENTA6v(SolidElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()
@@ -410,7 +420,7 @@ class CPENTA15v(SolidElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()
@@ -465,7 +475,7 @@ class CHEXA8v(SolidElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()
@@ -515,7 +525,7 @@ class CHEXA20v(SolidElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()
@@ -564,7 +574,7 @@ class CPYRAM5v(SolidElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()
@@ -612,7 +622,7 @@ class CPYRAM13v(SolidElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()

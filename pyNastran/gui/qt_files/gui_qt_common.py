@@ -92,6 +92,15 @@ class GuiCommon(GuiAttributes):
         self.cycle_results(self.icase + 1)
 
     def cycle_results(self, case=None):
+        """
+        Selects the next case
+
+        Parameters
+        ----------
+        case : int; default=None
+            selects the icase
+            None : defaults to self.icase+1
+        """
         #print('-----------------')
         #print('real-cycle_results(case=%r)' % case)
         if case is None:

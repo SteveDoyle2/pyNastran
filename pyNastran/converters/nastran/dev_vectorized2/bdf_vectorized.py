@@ -4,93 +4,25 @@ from six import iteritems
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF as BDF_
-from pyNastran.converters.nastran.dev_vectorized2.nodes import GRIDv, Nodes
+from pyNastran.converters.nastran.dev_vectorized2.cards.nodes import GRIDv, Nodes
+from pyNastran.converters.nastran.dev_vectorized2.cards.elements import Elements
 
-from pyNastran.converters.nastran.dev_vectorized2.springs import (
+from pyNastran.converters.nastran.dev_vectorized2.cards.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
-from pyNastran.converters.nastran.dev_vectorized2.dampers import (
+from pyNastran.converters.nastran.dev_vectorized2.cards.dampers import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, Dampers)
-from pyNastran.converters.nastran.dev_vectorized2.rods import (
+from pyNastran.converters.nastran.dev_vectorized2.cards.rods import (
     CONRODv, CRODv, CTUBEv, Rods)
-from pyNastran.converters.nastran.dev_vectorized2.bars import CBARv, Bars
-from pyNastran.converters.nastran.dev_vectorized2.beams import CBEAMv, Beams
-from pyNastran.converters.nastran.dev_vectorized2.shears import CSHEARv, Shears
-from pyNastran.converters.nastran.dev_vectorized2.shells import CTRIA3v, CTRIA6v, CQUAD4v, CQUAD8v, Shells
-from pyNastran.converters.nastran.dev_vectorized2.solids import (
+from pyNastran.converters.nastran.dev_vectorized2.cards.loads import (
+    Loads, PLOAD2v, PLOAD4v, FORCEv, FORCE1v, FORCE2v)
+from pyNastran.converters.nastran.dev_vectorized2.cards.bars import CBARv, Bars
+from pyNastran.converters.nastran.dev_vectorized2.cards.beams import CBEAMv, Beams
+from pyNastran.converters.nastran.dev_vectorized2.cards.shears import CSHEARv, Shears
+from pyNastran.converters.nastran.dev_vectorized2.cards.shells import (
+    CTRIA3v, CTRIA6v, CQUAD4v, CQUAD8v, Shells)
+from pyNastran.converters.nastran.dev_vectorized2.cards.solids import (
     CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
     CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
-
-
-class Elements(object):
-    """stores all the elements"""
-    def __init__(self, model):
-        self.model = model
-
-        self.springs = model.springs
-        self.dampers = model.dampers
-        self.rods = model.rods
-        self.bars = model.bars
-        self.beams = model.beams
-        self.shells = model.shells
-        self.shears = model.shears
-        self.solids = model.solids
-        self.eids = []
-
-    def make_current(self):
-        elems = [self.springs, self.dampers, self.rods,
-                 self.bars, self.beams,
-                 self.shells, self.shells, self.shears, self.solids]
-        self.eids = []
-        for elem in elems:
-            elem._make_current()
-
-    def repr_indent(self, indent=''):
-        indent = ''
-        msg = '%s<Elements> : nelements=%s\n' % (indent, len(self))
-
-        msg += '%s  springs:  %s\n' % (indent, len(self.springs))
-        msg += self.springs.repr_indent('    ')
-
-        msg += '%s  dampers:  %s\n' % (indent, len(self.dampers))
-        msg += self.dampers.repr_indent('    ')
-
-        msg += '%s  rods:  %s\n' % (indent, len(self.rods))
-        msg += self.rods.repr_indent('    ')
-
-        msg += '%s  bars:  %s\n' % (indent, len(self.bars))
-        msg += self.bars.repr_indent('    ')
-        msg += '%s  beams:  %s\n' % (indent, len(self.beams))
-        msg += self.beams.repr_indent('    ')
-
-        msg += '%s  shells:  %s\n' % (indent, len(self.shells))
-        msg += self.shells.repr_indent('    ')
-
-        msg += '%s  shears:  %s\n' % (indent, len(self.shears))
-        msg += self.shears.repr_indent('    ')
-
-        msg += '%s  solids:  %s\n' % (indent, len(self.solids))
-        msg += self.solids.repr_indent('    ')
-        return msg
-
-    def write_card(self, size=8, is_double=False, bdf_file=None):
-        assert bdf_file is not None
-        self.springs.write_card(size, is_double, bdf_file)  # celas
-        self.dampers.write_card(size, is_double, bdf_file)  # cdamp
-        self.rods.write_card(size, is_double, bdf_file)   # crod, conrod, ctube
-        self.bars.write_card(size, is_double, bdf_file)   # cbar
-        self.beams.write_card(size, is_double, bdf_file)  # cbeam
-        self.shears.write_card(size, is_double, bdf_file) # cshear
-        self.shells.write_card(size, is_double, bdf_file) # cquad4, ctria3, cquad8, ctria6, cquad
-        self.solids.write_card(size, is_double, bdf_file) # ctetra, cpenta, chexa, cpyram
-
-    def __len__(self):
-        return (len(self.springs) +  + len(self.dampers) +
-                len(self.rods) + len(self.bars) + len(self.beams) +
-                len(self.shells) + len(self.shears) +
-                len(self.solids))
-
-    def __repr__(self):
-        return self.repr_indent('')
 
 
 class BDF(BDF_):
@@ -109,7 +41,7 @@ class BDF(BDF_):
 
         model = self
         self.grid = GRIDv(model)
-        self.nodes = Nodes(model)
+        self.nodes2 = Nodes(model)
 
         self.celas1 = CELAS1(model)
         self.celas2 = CELAS2(model)
@@ -162,6 +94,14 @@ class BDF(BDF_):
         self.solids = Solids(model)
 
         self.elements2 = Elements(model)  # TODO: change this name
+
+
+        self.force = FORCEv(model)
+        self.force1 = FORCE1v(model)
+        self.force2 = FORCE2v(model)
+        self.pload2 = PLOAD2v(model)
+        self.pload4 = PLOAD4v(model)
+        self.loads2 = Loads(model)
 
         self._update_card_parser()
 
@@ -256,6 +196,17 @@ class BDF(BDF_):
         else:
             self.cpyram13.add_card(card_obj, comment=comment)
 
+    def _prepare_force(self, card, card_obj, comment=''):
+        self.force.add_card(card_obj, comment=comment)
+    def _prepare_force1(self, card, card_obj, comment=''):
+        self.force1.add_card(card_obj, comment=comment)
+    def _prepare_force2(self, card, card_obj, comment=''):
+        self.force2.add_card(card_obj, comment=comment)
+    def _prepare_pload2(self, card, card_obj, comment=''):
+        self.pload2.add_card(card_obj, comment=comment)
+    def _prepare_pload4(self, card, card_obj, comment=''):
+        self.pload4.add_card(card_obj, comment=comment)
+
     def _update_card_parser(self):
         del self._card_parser['GRID']
         self._card_parser_prepare['GRID'] = self._prepare_grid
@@ -304,6 +255,17 @@ class BDF(BDF_):
         del self._card_parser['CSHEAR']
         self._card_parser_prepare['CSHEAR'] = self._prepare_cshear
 
+
+        del self._card_parser['PLOAD2']
+        del self._card_parser['PLOAD4']
+        del self._card_parser['FORCE']
+        del self._card_parser['FORCE1']
+        del self._card_parser['FORCE2']
+        self._card_parser_prepare['PLOAD2'] = self._prepare_pload2
+        self._card_parser_prepare['PLOAD4'] = self._prepare_pload4
+        self._card_parser_prepare['FORCE'] = self._prepare_force
+        self._card_parser_prepare['FORCE1'] = self._prepare_force1
+        self._card_parser_prepare['FORCE2'] = self._prepare_force2
 
 
     #def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
@@ -356,7 +318,7 @@ class BDF(BDF_):
         Writes the NODE-type cards
         """
         BDF_._write_nodes(self, bdf_file, size=size, is_double=is_double)
-        bdf_file.write(self.grid.write_card(size=size, is_double=is_double))
+        self.nodes2.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
 
     def _write_elements(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
@@ -434,12 +396,12 @@ class BDF(BDF_):
         >>> icd_transform[50]
         [2]
         """
-        return self.nodes.get_displacement_index_xyz_cp_cd(
+        return self.nodes2.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype=idtype)
 
     def get_node_index(self, nids):
         """maps the requested nodes to their desired index in the array"""
-        i = self.nodes.get_node_index(nids)
+        i = self.nodes2.get_node_index(nids)
         return i
 
     def validate(self):
@@ -511,5 +473,5 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         model.disable_cards(skip_cards)
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
                    xref=xref, punch=punch, read_includes=True, encoding=encoding)
-    self.elements.make_current()
+    model.elements2.make_current()
     return model

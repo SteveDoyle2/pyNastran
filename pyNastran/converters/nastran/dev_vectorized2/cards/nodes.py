@@ -20,19 +20,30 @@ class Nodes(object):
         self.epoints = model.epoints
         self.xyz_cid0 = None
 
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        if len(self.grid):
+            self.grid.write_card(size, is_double, bdf_file)
+        #if len(self.spoints):
+            #self.spoints.write_card(size, is_double, bdf_file)
+        #if len(self.epoints):
+            #self.epoints.write_card(size, is_double, bdf_file)
+
     def __len__(self):
         """returns the number of nodes"""
         return len(self.model.grid) + len(self.spoints) + len(self.epoints)
+
     def __repr__(self):
         return self.repr_indent('')
+
     def repr_indent(self, indent=''):
         msg = '%s<Nodes>:\n' % indent
         msg += '%s  GRID: %s\n' % len(indent, self.nodes)
         msg += '%s  GRID: %s\n' % len(indent, self.spoints)
         msg += '%s  GRID: %s\n' % len(indent, self.epoints)
 
-    def get_grid_by_nid(self, nid):
-        self.grid._make_current()
+    def get_by_nid(self, nid):
+        #self.grid.make_current()
         inid = np.searchsorted(self.nid, nid)
         return self[inid]
 
@@ -86,7 +97,7 @@ class Nodes(object):
         >>> icd_transform[50]
         [2]
         """
-        self.grid._make_current()
+        self.grid.make_current()
         nids_cd_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
         nids_cp_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
 
@@ -154,7 +165,7 @@ class Nodes(object):
 
     def get_node_index(self, nids):
         """maps the requested nodes to their desired index in the array"""
-        self.grid._make_current()
+        self.grid.make_current()
         nids = np.asarray(nids)
         nids_ravel = nids.ravel()
 
@@ -285,6 +296,11 @@ class GRIDv(object):
             seid = 0
         self.add(nid, xyz, cp, cd, ps, seid, comment=comment)
 
+    def get_by_nid(self, nid):
+        self.make_current()
+        inid = np.searchsorted(self.nid, nid)
+        return self[inid]
+
     def check_if_current(self, nid, nids):
         """we split this up to reason about it easier"""
         if self.is_current:
@@ -317,7 +333,7 @@ class GRIDv(object):
             #self.comment[nid] = comment
             #self.is_current = True  # implicit
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the GRID points"""
         if not self.is_current:
             if len(self.nid) > 0: # there are already nodes in self.nid
@@ -358,9 +374,9 @@ class GRIDv(object):
 
     def cross_reference(self, model):
         """does this do anything?"""
-        self._make_current()
+        self.make_current()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False, bdf_file=None):
         # type: (int, bool) -> str
         """
         The writer method used by BDF.write_card
@@ -377,17 +393,19 @@ class GRIDv(object):
         msg : str
             the card as a string
         """
+        assert bdf_file is not None
         if size == 8:
-            return self.write_card_8()
+            return self.write_card_8(bdf_file=bdf_file)
         else:
-            return self.write_card_16(is_double)
+            return self.write_card_16(is_double, bdf_file=bdf_file)
 
-    def write_card_8(self):
+    def write_card_8(self, bdf_file=None):
         # type: () -> str
         """
         Writes a GRID card in 8-field format
         """
-        self._make_current()
+        assert bdf_file is not None
+        self.make_current()
         msg = ''
         for nid, xyz, cp, cd, ps, seid in zip(
             self.nid, self.xyz, self.cp, self.cd, self.ps, self.seid):
@@ -413,14 +431,16 @@ class GRIDv(object):
                     print_float_8(xyz[2]),
                     cds, ps, seids)
             msg += self.comment[nid] + msgi
+        bdf_file.write(msg)
         return msg
 
-    def write_card_16(self, is_double=False):
+    def write_card_16(self, is_double=False, bdf_file=None):
         # type: (bool) -> str
         """
         Writes a GRID card in 16-field format
         """
-        self._make_current()
+        assert bdf_file is not None
+        self.make_current()
         msg = ''
         for nid, xyz, cp, cd, ps, seid in zip(
             self.nid, self.xyz, self.cp, self.cd, self.ps, self.seid):
@@ -466,15 +486,16 @@ class GRIDv(object):
                                 print_float_16(xyz[2]),
                                 cd, ps, seid))
                 msg += self.comment[nid] + msgi
+        bdf_file.write(msg)
         return msg
 
     def __len__(self):
-        self._make_current()
+        self.make_current()
         return len(self.nid)
 
     def __repr__(self):
-        self._make_current()
-        msg = 'GRID_Vector; ngrids=%s:\n' % len(self.nid)
+        self.make_current()
+        msg = 'GRIDv; ngrids=%s:\n' % len(self.nid)
         msg += '  nid = %s\n' % self.nid
 
         ucp = np.unique(self.cp)
@@ -502,6 +523,7 @@ class GRIDv(object):
             msg += '  seid = %s\n' % self.seid
         #msg += '  xyz =\n%s' % self.xyz
         return msg
+
     #def __iter__(self):
         #pass
     #def __next__(self):
@@ -512,9 +534,10 @@ class GRIDv(object):
         #pass
     #def __values__(self):
         #pass
+
     def __getitem__(self, i):
         """this works on index"""
-        self._make_current()
+        self.make_current()
         nid = self.nid[i]
         return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
                     ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])

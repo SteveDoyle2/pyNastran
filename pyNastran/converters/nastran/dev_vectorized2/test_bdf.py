@@ -19,7 +19,7 @@ class TestVectorized(unittest.TestCase):
         #model.grids[10] = GRID(10, [0., 0., 0.])
         print(model.grid)
         print(model.grid[10]) # nid or index?
-        print(model.grid.get_grid_by_nid(10))
+        print(model.grid.get_by_nid(10))
         out_filename = 'spike.bdf'
         model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
                         interspersed=False, enddata=None,

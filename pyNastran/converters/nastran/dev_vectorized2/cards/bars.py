@@ -16,7 +16,7 @@ class BarElement(object):
     def __init__(self, model):
         """intializes the BarElement"""
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='float64')
@@ -46,11 +46,11 @@ class BarElement(object):
         return add_card
 
     #def get_element_by_eid(self, eid):
-        #self._make_current()
+        #self.make_current()
         #ieid = np.searchsorted(eid, self.eid)
         #return self[ieid]
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the GRID points"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -94,14 +94,14 @@ class BarElement(object):
 
     def cross_reference(self, model):
         """does this do anything?"""
-        self._make_current()
+        self.make_current()
 
     def __len__(self):
         """returns the number of elements"""
         return len(self.eid) + len(self._eid)
 
     def repr_indent(self, indent=''):
-        self._make_current()
+        self.make_current()
         neids = len(self.eid)
         if neids == 0:
             return '%s%sv; nelements=%s' % (indent, self.card_name, neids)
@@ -264,7 +264,7 @@ class CBARv(BarElement):
         #pass
     #def __getitem__(self, i):
         #"""this works on index"""
-        #self._make_current()
+        #self.make_current()
         #eid = self.eid[i]
         #return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
                     #ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
@@ -298,7 +298,7 @@ class CBARv(BarElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nodes, x, g0, offt, pin_flags in zip(
             self.eid, self.pid, self.nids, self.x, self.g0, self.offt, self.pin_flags):
@@ -347,6 +347,9 @@ class Bars(object):
         assert bdf_file is not None
         if len(self.cbar):
             self.cbar.write_card(size, is_double, bdf_file)
+
+    def make_current(self):
+        self.cbar.make_current()
 
     def __len__(self):
         return len(self.cbar)

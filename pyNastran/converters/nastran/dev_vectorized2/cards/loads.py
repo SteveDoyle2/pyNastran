@@ -1,12 +1,18 @@
 from __future__ import print_function
 from collections import defaultdict
+from itertools import count
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank)
-from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
+    integer, integer_or_blank, double, double_or_blank, string_or_blank,
+    integer_string_or_blank, fields)
+from pyNastran.bdf.field_writer_8 import (
+    print_float_8, print_card_8, set_blank_if_default, set_string8_blank_if_default)
+from pyNastran.bdf.field_writer_16 import (
+    print_float_16, print_card_16, set_string16_blank_if_default)
+from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
-
+from pyNastran.bdf.cards.base_card import expand_thru
 
 class Loads(object):
     """intializes the Loads"""
@@ -49,7 +55,7 @@ class BaseLoad(object):
     card_name = ''
     def __init__(self, model):
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.sid = np.array([], dtype='int32')
         self._sid = []
 
@@ -67,7 +73,7 @@ class BaseLoad(object):
 
     def cross_reference(self, model):
         """does this do anything?"""
-        self._make_current()
+        self.make_current()
 
     def __len__(self):
         """returns the number of elements"""
@@ -76,7 +82,7 @@ class BaseLoad(object):
     def __repr__(self):
         return self.repr_indent(indent='')
 
-    def _make_current(self):
+    def make_current(self):
         raise NotImplementedError(self.card_name)
     def repr_indent(self, indent=''):
         raise NotImplementedError(self.card_name)
@@ -159,7 +165,7 @@ class PLOAD2v(BaseLoad):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for i, sid, pressure, eid in zip(count(), self.sid, self.pressure, self.eid):
             list_fields = ['PLOAD2', sid, pressure, eid]
@@ -169,7 +175,7 @@ class PLOAD2v(BaseLoad):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.sid) > 0: # there are already elements in self.eid
@@ -327,7 +333,7 @@ class PLOAD4v(BaseLoad):
             # alternate form
             eid2 = integer(card, 8, 'eid2')
             if eid2:
-                eids = list(unique(
+                eids = list(np.unique(
                     expand_thru([eid, 'THRU', eid2], set_fields=False, sort_fields=False)
                 ))
             g1 = None
@@ -339,9 +345,9 @@ class PLOAD4v(BaseLoad):
             g34 = integer_or_blank(card, 8, 'g34')
 
         cid = integer_or_blank(card, 9, 'cid', 0)
-        nvector = array([double_or_blank(card, 10, 'N1', 0.0),
-                         double_or_blank(card, 11, 'N2', 0.0),
-                         double_or_blank(card, 12, 'N3', 0.0)])
+        nvector = np.array([double_or_blank(card, 10, 'N1', 0.0),
+                            double_or_blank(card, 11, 'N2', 0.0),
+                            double_or_blank(card, 12, 'N3', 0.0)])
         surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
         line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
         assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
@@ -352,11 +358,11 @@ class PLOAD4v(BaseLoad):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
-        for sid, eid, cid, g1, g34, pressures, nvector in zip(self.sid, self.eid, self.cid,
-                                                              self.g1, self.g34, self.pressures,
-                                                              self.nvector):
+        for sid, eid, cid, g1, g34, pressures, nvector, surf_or_line, line_load_dir in zip(
+            self.sid, self.eid, self.cid, self.g1, self.g34, self.pressures,
+            self.nvector, self.surf_or_line, self.line_load_dir):
             p1 = self.pressures[0]
             p2 = set_blank_if_default(self.pressures[1], p1)
             p3 = set_blank_if_default(self.pressures[2], p1)
@@ -367,20 +373,21 @@ class PLOAD4v(BaseLoad):
                 # is it a SOLID element
                 list_fields += [g1, g34]
             else:
-                if len(eids) > 1:
-                    try:
-                        list_fields.append('THRU')
-                        eidi = eids[-1]
-                    except:
-                        print("g1  = %s" % g1)
-                        print("g34 = %s" % g34)
-                        print("eid = %s" % eid)
-                        raise
-                    list_fields.append(eidi)
-                else:
-                    list_fields += [None, None]
+                list_fields.extend([eid, None])
+                #if len(eids) > 1:
+                    #try:
+                        #list_fields.append('THRU')
+                        #eidi = eids[-1]
+                    #except:
+                        #print("g1  = %s" % g1)
+                        #print("g34 = %s" % g34)
+                        #print("eid = %s" % eid)
+                        #raise
+                    #list_fields.append(eidi)
+                #else:
+                    #list_fields += [None, None]
 
-            if cid or norm(nvector) > 0.0:
+            if cid or np.linalg.norm(nvector) > 0.0:
                 n1 = nvector[0]
                 n2 = nvector[1]
                 n3 = nvector[2]
@@ -402,7 +409,7 @@ class PLOAD4v(BaseLoad):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.sid) > 0: # there are already elements in self.eid
@@ -479,7 +486,7 @@ class FORCEv(BaseLoad):
         self._xyz = []
         self.comment = defaultdict(str)
 
-    def add(self, sid, node, mag, xyz, cid=0, comment=''):
+    def add(self, sid, nid, mag, xyz, cid=0, comment=''):
         """
         Creates a FORCE card
 
@@ -487,7 +494,7 @@ class FORCEv(BaseLoad):
         ----------
         sid : int
             load id
-        node : int
+        nid : int
             the node to apply the load to
         mag : float
             the load's magnitude
@@ -522,16 +529,16 @@ class FORCEv(BaseLoad):
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', 0)
         mag = double(card, 4, 'mag')
-        xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                     double_or_blank(card, 6, 'X2', 0.0),
-                     double_or_blank(card, 7, 'X3', 0.0)])
+        xyz = np.array([double_or_blank(card, 5, 'X1', 0.0),
+                        double_or_blank(card, 6, 'X2', 0.0),
+                        double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(FORCE card) = %i\ncard=%s' % (len(card), card)
         #return FORCE(sid, node, mag, xyz, cid=cid, comment=comment)
         self.add(sid, node, mag, xyz, cid=cid, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for sid, node_id, cid, mag, xyz in zip(self.sid, self.nid, self.cid, self.mag, self.xyz):
             if size == 8:
@@ -560,7 +567,7 @@ class FORCEv(BaseLoad):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.sid) > 0: # there are already elements in self.eid
@@ -670,12 +677,12 @@ class FORCE1v(BaseLoad):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for i, sid, node_id, mag, g12 in zip(count(), self.sid, self.nid, self.mag, self.g12):
             nid1, nid2 = g12
             if size == 8:
-                msgi = print_card_8(list_fields)
+                #msgi = print_card_8(list_fields)
                 msgi = 'FORCE1  %8i%8i%8s%8i%8i\n' % (
                     sid, node_id,
                     print_float_8(mag), nid1, nid2)
@@ -696,7 +703,7 @@ class FORCE1v(BaseLoad):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.sid) > 0: # there are already elements in self.eid
@@ -752,7 +759,7 @@ class FORCE2v(BaseLoad):
         self._g1234 = []
         self.comment = defaultdict(str)
 
-    def add(self, sid, node, mag, g1, g2, g3, g4, comment=''):
+    def add(self, sid, nid, mag, g1, g2, g3, g4, comment=''):
         """
         Creates a FORCE2 card
 
@@ -760,7 +767,7 @@ class FORCE2v(BaseLoad):
         ----------
         sid : int
             load id
-        node : int
+        nid : int
             the node to apply the load to
         mag : float
             the load's magnitude
@@ -801,11 +808,12 @@ class FORCE2v(BaseLoad):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for i, sid, node_id, mag, g1234 in zip(count(), self.sid, self.nid, self.mag, self.g1234):
             nid1, nid2, nid3, nid4 = g1234
             list_fields = ['FORCE2', sid, node_id, mag, nid1, nid2, nid3, nid4]
+            msgi = print_card_8(list_fields)
             #if size == 8:
                 #msgi = print_card_8(list_fields)
                 #msgi = 'FORCE2  %8i%8i%8s%8i%8i%8i%8i\n' % (
@@ -828,7 +836,7 @@ class FORCE2v(BaseLoad):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.sid) > 0: # there are already elements in self.eid

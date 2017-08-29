@@ -16,7 +16,7 @@ class ShellElement(object):
     def __init__(self, model):
         """intializes the ShellElement"""
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='float64')
@@ -61,11 +61,11 @@ class ShellElement(object):
         return add_card
 
     #def get_element_by_eid(self, eid):
-        #self._make_current()
+        #self.make_current()
         #ieid = np.searchsorted(eid, self.eid)
         #return self[ieid]
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the GRID points"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -118,14 +118,14 @@ class ShellElement(object):
 
     def cross_reference(self, model):
         """does this do anything?"""
-        self._make_current()
+        self.make_current()
 
     def __len__(self):
         """returns the number of elements"""
         return len(self.eid) + len(self._eid)
 
     def repr_indent(self, indent=''):
-        self._make_current()
+        self.make_current()
         neids = len(self.eid)
         if neids == 0:
             return '%s%sv; nelements=%s' % (indent, self.card_name, neids)
@@ -270,7 +270,7 @@ class CTRIA3v(ShellElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
             self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
@@ -298,10 +298,10 @@ class CTRIA3v(ShellElement):
         """gets the quality metrics for a tri"""
         assert eids is None
         piover3 = np.pi / 3.
-        self._make_current()
+        self.make_current()
         nelements = len(self)
         #print("nelements =", nelements)
-        xyz_cid0 = self.model.nodes.xyz_cid0
+        xyz_cid0 = self.model.nodes2.xyz_cid0
         i123 = self.model.get_node_index(self.nids)
         #print('i123 = ', i123)
         p1 = xyz_cid0[i123[:, 0], :]
@@ -497,7 +497,7 @@ class CTRIA6v(ShellElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
             self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
@@ -649,7 +649,7 @@ class CQUAD4v(ShellElement):
         #pass
     #def __getitem__(self, i):
         #"""this works on index"""
-        #self._make_current()
+        #self.make_current()
         #eid = self.eid[i]
         #return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
                     #ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
@@ -660,7 +660,7 @@ class CQUAD4v(ShellElement):
         #pass
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
             self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
@@ -819,7 +819,7 @@ class CQUAD8v(ShellElement):
         #pass
     #def __getitem__(self, i):
         #"""this works on index"""
-        #self._make_current()
+        #self.make_current()
         #eid = self.eid[i]
         #return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
                     #ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
@@ -830,7 +830,7 @@ class CQUAD8v(ShellElement):
         #pass
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
             self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
@@ -888,6 +888,13 @@ class Shells(object):
             self.cquad8.write_card(size, is_double, bdf_file)
         if len(self.cquad):
             self.cquad.write_card(size, is_double, bdf_file)
+
+    def make_current(self):
+        self.ctria3.make_current()
+        self.cquad4.make_current()
+        self.ctria6.make_current()
+        self.cquad8.make_current()
+        self.cquad.make_current()
 
     def __len__(self):
         return(len(self.cquad4) + len(self.cquad8) +

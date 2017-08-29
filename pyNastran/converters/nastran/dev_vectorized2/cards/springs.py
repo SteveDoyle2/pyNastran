@@ -35,6 +35,12 @@ class Springs(object):
         if len(self.celas4):
             self.celas4.write_card(size, is_double, bdf_file)
 
+    def make_current(self):
+        self.celas1.make_current()
+        self.celas2.make_current()
+        self.celas3.make_current()
+        self.celas4.make_current()
+
     def __len__(self):
         return(len(self.celas1) + len(self.celas2) +
                len(self.celas3) + len(self.celas4))
@@ -69,14 +75,14 @@ class SpringElement(object):
 
     def cross_reference(self, model):
         """does this do anything?"""
-        self._make_current()
+        self.make_current()
 
     def __len__(self):
         """returns the number of elements"""
         return len(self.eid) + len(self._eid)
 
     def repr_indent(self, indent=''):
-        self._make_current()
+        self.make_current()
         neids = len(self.eid)
         if neids == 0:
             return '%s%sv; nelements=%s' % (indent, self.card_name, neids)
@@ -190,7 +196,7 @@ class CELAS1(SpringElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nodes, dofs in zip(self.eid, self.pid, self.nids, self.dofs):
             list_fields = ['CELAS1', eid, pid, nodes[0], dofs[0], nodes[1], dofs[1]]
@@ -199,7 +205,7 @@ class CELAS1(SpringElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -308,7 +314,7 @@ class CELAS2(SpringElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, k, nodes, dofs, ge, s in zip(self.eid, self.k, self.nids, self.dofs, self.ge, self.s):
             list_fields = ['CELAS2', eid, k, nodes[0], dofs[0], nodes[1], dofs[1], ge, s]
@@ -317,7 +323,7 @@ class CELAS2(SpringElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -414,7 +420,7 @@ class CELAS3(SpringElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             list_fields = ['CELAS3', eid, pid, nodes[0], nodes[1]]
@@ -423,7 +429,7 @@ class CELAS3(SpringElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
@@ -511,7 +517,7 @@ class CELAS4(SpringElement):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        self._make_current()
+        self.make_current()
         msg = ''
         for eid, k, nodes in zip(self.eid, self.k, self.nids):
             list_fields = ['CELAS4', eid, k, nodes[0], nodes[1]]
@@ -520,7 +526,7 @@ class CELAS4(SpringElement):
         bdf_file.write(msg)
         return msg
 
-    def _make_current(self):
+    def make_current(self):
         """creates an array of the elements"""
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
