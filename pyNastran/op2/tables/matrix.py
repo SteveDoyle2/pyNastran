@@ -2,6 +2,8 @@
 from __future__ import print_function
 from scipy.sparse import coo_matrix  # type: ignore
 import numpy as np
+from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
+from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import object_attributes
 
@@ -68,6 +70,10 @@ class Matrix(object):
         else:
             raise RuntimeError('form = %s' % self.form)
 
+    def export_to_hdf5(self, group, log):
+        """exports the object to HDF5 format"""
+        export_to_hdf5(self, group, log)
+
     def write(self, mat, print_full=True):
         """writes to the F06"""
         mat.write(np.compat.asbytes(str(self) + '\n'))
@@ -88,6 +94,25 @@ class Matrix(object):
             #f06.write(str(matrix))
             #print('WARNING: matrix type=%s does not support writing' % type(matrix))
         mat.write(np.compat.asbytes('\n\n'))
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = []
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __repr__(self):
         class_name = str(type(self.data)).replace('<class ', '').replace('>', '').replace("'", '') + ';'

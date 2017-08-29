@@ -479,6 +479,7 @@ class OES(OP2Common):
 
             (10, 1, 5, b'OES1') : ('conrod_stress', RealRodStressArray),
             (10, 1, 5, b'OES1X') : ('conrod_stress', RealRodStressArray),
+            (10, 2, 5, b'OES1X') : ('conrod_stress', ComplexRodStressArray),
             (10, 1, 5, b'OES1X1') : ('conrod_stress', RealRodStressArray),
             (10, 2, 5, b'OESVM1') : ('conrod_stress', ComplexRodStressArray),
             (10, 3, 5, b'OESVM1') : ('conrod_stress', ComplexRodStressArray),
@@ -496,6 +497,7 @@ class OES(OP2Common):
             (4, 1, 4, b'OES1X1') : ('cshear_stress', RealShearStressArray),
             #(4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 5) : ('cshear_stress', ComplexShearStressArray),
+            (4, 2, 5, b'OES1X') : ('cshear_stress', ComplexShearStressArray),
             (4, 2, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
             (4, 3, 5, b'OESVM1') : ('cshear_stress', ComplexShearStressArray),
             #(4, 3, 3) : ('cshear_stress', RandomShearStressArray),

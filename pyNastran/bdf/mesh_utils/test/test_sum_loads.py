@@ -435,21 +435,20 @@ class TestLoadSum(unittest.TestCase):
         origin = [0., 0., 0.]
         zaxis = [0., 0., 1.]
         xaxis = [1., 0., 0.]
-        model.coords[1] = CORD2C(cid, rid=0, origin=origin, zaxis=zaxis,
-                                 xzplane=xaxis, comment='')
+        model.add_cord2c(cid, rid=0, origin=origin, zaxis=zaxis, xzplane=xaxis,
+                         comment='')
+
         sid = 1
         node = 1
         cid = 1
         mag = 1.1
         xyz = [1., 0., 0.]
-        radial_force = FORCE(sid, node, mag, cid=cid, xyz=xyz, comment='')
-        model.add_card_class(radial_force)
+        radial_force = model.add_force(sid, node, mag, xyz, cid=cid, comment='')
 
         sid = 2
         xyz = [1., 90., 0.]
         mag = 2.2
-        theta_force = FORCE(sid, node, mag, cid=cid, xyz=xyz, comment='')
-        model.add_card_class(theta_force)
+        theta_force = model.add_force(sid, node, mag, xyz, cid=cid, comment='')
         model.cross_reference()
 
         p0 = 1
@@ -482,6 +481,7 @@ class TestLoadSum(unittest.TestCase):
         M2_expected = np.array([0., 0., 0.])
         self.assertTrue(allclose(F2_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F2_expected, F))
         self.assertTrue(allclose(M2_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M2_expected, M))
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

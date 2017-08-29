@@ -519,7 +519,7 @@ class CTRIA3(TriShell):
         nids = [
             integer(card, 3, 'n1'),
             integer(card, 4, 'n2'),
-            integer(card, 5, 'n3')
+            integer(card, 5, 'n3'),
         ]
         if len(card) > 5:
             theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', 0.0)
@@ -734,7 +734,7 @@ class CPLSTN3(TriShell):
         nids = [
             integer(card, 3, 'n1'),
             integer(card, 4, 'n2'),
-            integer(card, 5, 'n3')
+            integer(card, 5, 'n3'),
         ]
         if len(card) > 5:
             theta = double_or_blank(card, 6, 'theta', 0.0)
@@ -905,7 +905,7 @@ class CTRIA6(TriShell):
             integer(card, 5, 'n3'),
             integer_or_blank(card, 6, 'n4', 0),
             integer_or_blank(card, 7, 'n5', 0),
-            integer_or_blank(card, 8, 'n6', 0)
+            integer_or_blank(card, 8, 'n6', 0),
         ]
         if len(card) > 9:
             theta_mcid = integer_double_or_blank(card, 9, 'theta_mcid', 0.0)
@@ -1188,7 +1188,7 @@ class CTRIAR(TriShell):
         nids = [
             integer(card, 3, 'n1'),
             integer(card, 4, 'n2'),
-            integer(card, 5, 'n3')
+            integer(card, 5, 'n3'),
         ]
 
         theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', 0.0)
@@ -1853,7 +1853,7 @@ class CQUAD4(QuadShell):
         nids = [integer(card, 3, 'n1'),
                 integer(card, 4, 'n2'),
                 integer(card, 5, 'n3'),
-                integer(card, 6, 'n4')]
+                integer(card, 6, 'n4'),]
         if len(card) > 6:
             theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
             zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
@@ -2354,7 +2354,7 @@ class CPLSTN4(QuadShell):
         nids = [integer(card, 3, 'n1'),
                 integer(card, 4, 'n2'),
                 integer(card, 5, 'n3'),
-                integer(card, 6, 'n4')]
+                integer(card, 6, 'n4'),]
 
         theta = double_or_blank(card, 7, 'theta', 0.0)
         assert len(card) <= 8, 'len(CPLSTN4 card) = %i\ncard=%s' % (len(card), card)
@@ -2474,7 +2474,7 @@ class CPLSTN6(TriShell):
             integer(card, 5, 'n3'),
             integer_or_blank(card, 6, 'n4', 0),
             integer_or_blank(card, 7, 'n5', 0),
-            integer_or_blank(card, 8, 'n6', 0)
+            integer_or_blank(card, 8, 'n6', 0),
         ]
         if len(card) > 9:
             theta = double_or_blank(card, 9, 'theta', 0.0)
@@ -2671,7 +2671,7 @@ class CPLSTN8(QuadShell):
                 integer_or_blank(card, 7, 'n5', 0),
                 integer_or_blank(card, 8, 'n6', 0),
                 integer_or_blank(card, 9, 'n7', 0),
-                integer_or_blank(card, 10, 'n8', 0)]
+                integer_or_blank(card, 10, 'n8', 0),]
         if len(card) > 11:
             theta = double_or_blank(card, 15, 'theta', 0.0)
             assert len(card) <= 18, 'len(CPLSTN8 card) = %i\ncard=%s' % (len(card), card)
@@ -2909,9 +2909,9 @@ class CQUADR(QuadShell):
         nids = [integer_or_blank(card, 3, 'n1'),
                 integer_or_blank(card, 4, 'n2'),
                 integer_or_blank(card, 5, 'n3'),
-                integer_or_blank(card, 6, 'n4')]
+                integer_or_blank(card, 6, 'n4'),]
 
-        theta_mcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
+        theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
         zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
 
         tflag = integer_or_blank(card, 10, 'tflag', 0)
@@ -3137,7 +3137,7 @@ class CPLSTS3(TriShell):
         nids = [
             integer(card, 3, 'n1'),
             integer(card, 4, 'n2'),
-            integer(card, 5, 'n3')
+            integer(card, 5, 'n3'),
         ]
         if len(card) > 5:
             theta = double_or_blank(card, 6, 'theta', 0.0)
@@ -3328,7 +3328,7 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 8, 'n6'),
                 integer_or_blank(card, 9, 'n7'),
                 integer_or_blank(card, 10, 'n8'),
-                integer_or_blank(card, 11, 'n9')]
+                integer_or_blank(card, 11, 'n9'),]
         theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', 0.)
         assert len(card) <= 13, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
         return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
@@ -3498,16 +3498,16 @@ class CQUAD8(QuadShell):
                 integer_or_blank(card, 7, 'n5', 0),
                 integer_or_blank(card, 8, 'n6', 0),
                 integer_or_blank(card, 9, 'n7', 0),
-                integer_or_blank(card, 10, 'n8', 0)]
+                integer_or_blank(card, 10, 'n8', 0),]
         if len(card) > 11:
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
             T4 = double_or_blank(card, 14, 'T4')
-            theta_mcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
+            theta_mcid = integer_double_or_blank(card, 15, 'theta_mcid', 0.0)
             zoffset = double_or_blank(card, 16, 'zoffset', 0.0)
             tflag = integer_or_blank(card, 17, 'tflag', 0)
-            assert len(card) <= 18, 'len(CQUAD4 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 18, 'len(CQUAD8 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta_mcid = 0.0
             zoffset = 0.0

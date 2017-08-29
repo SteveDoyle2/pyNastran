@@ -22,12 +22,13 @@ Defines the main OP2 class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iterkeys, iteritems, string_types, itervalues
+from six import iterkeys, iteritems, string_types, itervalues, b
 import os
 import sys
 
 import numpy as np
 
+import pyNastran
 from pyNastran.utils import (
     object_attributes, object_methods, integer_types, ipython_info)
 from pyNastran.op2.tables.monpnt import MONPNT1, MONPNT3
@@ -423,8 +424,16 @@ class OP2(OP2_Scalar):
 
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
         result_types = self.get_table_types()
-        i = 0
-        #nbreak = 0
+
+        if len(self.matrices):
+            for key, matrix in sorted(iteritems(self.matrices)):
+                if hasattr(matrix, 'build_dataframe'):
+                    matrix.build_dataframe()
+                else:
+                    self.log.warning('pandas: build_dataframe is not supported for key=%s type=%s' % (key, str(type(matrix))))
+                    #raise NotImplementedError()
+                    continue
+
         for result_type in result_types:
             result = getattr(self, result_type)
             for obj in itervalues(result):
@@ -432,7 +441,7 @@ class OP2(OP2_Scalar):
                 #print('working on %s' % class_name)
                 obj.object_attributes()
                 obj.object_methods()
-                i += 1
+
                 if class_name in no_sort2_classes:
                     try:
                         obj.build_dataframe()
@@ -456,8 +465,67 @@ class OP2(OP2_Scalar):
                     self.log.error(obj)
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
-                #if i >= nbreak:
-                    #return
+
+    def export_to_hdf5(self, hdf5_filename):
+        """
+        Converts the OP2 objects into hdf5 object
+
+        TODO: doesn't support:
+                - matrices
+                - RealEigenvalues
+                - ComplexEigenvalues
+                - BucklingEigenvalues
+        """
+        import h5py
+        no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
+        result_types = self.get_table_types()
+        i = 0
+
+        with h5py.File(hdf5_filename, 'w') as hdf5_file:
+            info_group = hdf5_file.create_group('info')
+            info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
+            info_group.create_dataset('nastran_format', data=self._nastran_format)
+            #info_group.create_dataset('is_msc', data=self.is_msc)
+            #info_group.create_dataset('is_nx', data=self.is_nx)
+            #info_group.create_dataset('nastran_version', data=self.is_nx)
+
+            if len(self.matrices):
+                matrix_group = hdf5_file.create_group('matrices')
+                for key, matrix in sorted(iteritems(self.matrices)):
+                    print('type(key) = ', type(key))
+                    matrixi_group = matrix_group.create_group(b(key))
+                    if hasattr(matrix, 'export_to_hdf5'):
+                        matrix.export_to_hdf5(matrixi_group, self.log)
+                    else:
+                        self.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
+                        #raise
+                        continue
+
+            subcase_groups = {}
+            for result_type in result_types:
+                result = getattr(self, result_type)
+                #if len(result):
+                    #print(result)
+
+                for key, obj in iteritems(result):
+                    class_name = obj.__class__.__name__
+                    #print('working on %s' % class_name)
+                    obj.object_attributes()
+                    subcase_name = 'Subcase=%s' % str(key)
+                    if subcase_name in subcase_groups:
+                        subcase_group = subcase_groups[subcase_name]
+                    else:
+                        subcase_group = hdf5_file.create_group(subcase_name)
+                        subcase_groups[subcase_name] = subcase_group
+
+                    #if hasattr(obj, 'element_name'):
+                        #class_name += ': %s' % obj.element_name
+
+                    #result_name = result_type + ':' + class_name
+                    result_name = result_type
+                    result_group = subcase_group.create_group(result_name)
+                    obj.export_to_hdf5(result_group, self.log)
+                    i += 1
 
     def combine_results(self, combine=True):
         """

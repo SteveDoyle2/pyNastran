@@ -1,6 +1,6 @@
 from six.moves import zip
 import numpy as np
-from numpy import arange, cross, abs, searchsorted, array
+from numpy import arange, cross, searchsorted, array
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -137,9 +137,9 @@ class CPYRAM5(SolidElement):
         (A2, c2) = tri_area_centroid(n4, n5, n6)
         volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
         if total:
-            volume = abs(volume).sum()
+            volume = np.abs(volume).sum()
         else:
-            volume = abs(volume)
+            volume = np.abs(volume)
         return volume
 
     def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
@@ -193,9 +193,9 @@ class CPYRAM5(SolidElement):
         volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
         if total:
             centroid = centroid.mean()
-            volume = abs(volume).sum()
+            volume = np.abs(volume).sum()
         else:
-            volume = abs(volume)
+            volume = np.abs(volume)
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 

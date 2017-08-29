@@ -12,8 +12,7 @@ from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import list_print
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes
-from pyNastran.op2.op2_interface.write_utils import write_table_header
-
+from pyNastran.op2.op2_interface.write_utils import write_table_header, export_to_hdf5
 
 class BaseScalarObject(Op2Codes):
     def __init__(self):
@@ -183,9 +182,13 @@ class BaseScalarObject(Op2Codes):
                 column_values.append(times)
                 eigr = np.array(self.eigrs)
                 eigi = np.array(self.eigis)
-                damping = -eigr / np.sqrt(eigr ** 2 + eigi ** 2)
+                denom = np.sqrt(eigr ** 2 + eigi ** 2)
+                damping = np.zeros(len(eigr), dtype=eigr.dtype)
+                inonzero = np.where(denom != 0)[0]
+                if len(inonzero):
+                    damping[inonzero] = -eigr[inonzero] / denom[inonzero]
                 column_names.append('Damping')
-                column_values.append(times)
+                column_values.append(damping)
                 #calculate_damping
             elif name in ['mode_cycle']:
                 continue
@@ -223,6 +226,10 @@ class BaseScalarObject(Op2Codes):
 
     def build_dataframe(self):
         print('build_dataframe is not implemented in %s' % self.__class__.__name__)
+
+    def export_to_hdf5(self, group, log):
+        """exports the object to HDF5 format"""
+        export_to_hdf5(self, group, log)
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:

@@ -4,6 +4,7 @@ from six import StringIO
 
 from pyNastran.bdf.bdf import read_bdf, BDF, CHBDYG, CaseControlDeck
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
 
 
 class TestThermal(unittest.TestCase):
@@ -186,11 +187,9 @@ class TestThermal(unittest.TestCase):
                         is_double=True,
                         interspersed=False,
                         enddata=None, close=False)
-        model.write_bdf_symmetric(bdf_filename4, encoding=None, size=8,
-                                 is_double=False,
-                                 enddata=None,
-                                 close=False,
-                                 plane='xz')
+        write_bdf_symmetric(model, bdf_filename4, encoding=None, size=8,
+                            is_double=False,
+                            enddata=None, close=False, plane='xz')
         #model.cross_reference()
 
         #print(bdf_filename.getvalue())

@@ -7,6 +7,7 @@ from pyNastran.converters.panair.panairGridPatch import PanairGridHelper
 from pyNastran.converters.cart3d.cart3d_reader import Cart3d
 
 def load_panair_file(fname='panair.in'):
+    """loads the panair.in file, which is just a python file"""
     if not os.path.exists(fname):
         raise IOError('%s does not exist' % fname)
     execfile(fname)
@@ -38,7 +39,6 @@ def load_panair_file(fname='panair.in'):
                 msg = 'type(%s)=%s type(%s)=%s' %(default, type(default),
                                                    localvars[varname], type(localvars[varname]))
                 raise RuntimeError(msg)
-            assert type(default)==type(localvars[varname])
             varmap[varname] = localvars[varname]
         else:
             if default is not {}:
@@ -50,28 +50,28 @@ def load_panair_file(fname='panair.in'):
         raise RuntimeError('variable bcMap is not defined')
     return varmap
 
-if 0:
-    title = 'simple wing-body with composite panel. (run with a502i)'
-    alphas = 4.
-    alpha_compressibility = 4.
+#if 0:
+    #title = 'simple wing-body with composite panel. (run with a502i)'
+    #alphas = 4.
+    #alpha_compressibility = 4.
 
-    beta = 0.
-    beta_compressibility = 0.
-    xy_sym = True
-    yz_sym = False
-    mach = 0.6
-    Sref = 2400.
-    Bref = 60.
-    Cref = 40.
-    Dref = 90.
-    xref = 46.
-    yref = 0.
-    zref = 0.
-    bcMap = {
-        1: [1., None],  # kt,cpnorm
-        #2: [1.,2.], # kt,cpnorm
-        #3: [1.,2.], # kt,cpnorm
-    }
+    #beta = 0.
+    #beta_compressibility = 0.
+    #xy_sym = True
+    #yz_sym = False
+    #mach = 0.6
+    #Sref = 2400.
+    #Bref = 60.
+    #Cref = 40.
+    #Dref = 90.
+    #xref = 46.
+    #yref = 0.
+    #zref = 0.
+    #bcMap = {
+        #1: [1., None],  # kt,cpnorm
+        ##2: [1.,2.], # kt,cpnorm
+        ##3: [1.,2.], # kt,cpnorm
+    #}
 
 #$title
 #simple wing-body with composite panel. (run with a502i)
@@ -113,6 +113,7 @@ def sInt(value):
 
 
 class Cart3dToPanair(PanairGridHelper):
+    """converts a cart3d file into panair format"""
     def __init__(self, cart3d_geom_filename, oname, varmap):
         self.printout = ("$printout options\n"
                          "=isings   igeomp    isingp    icontp    ibconp    iedgep\n"
@@ -145,7 +146,6 @@ class Cart3dToPanair(PanairGridHelper):
         return pointOut
 
     def run(self, cart3d_geom_filename, oname, varmap):
-        f = open(oname, 'w')
         print("oname", oname)
         self.title = varmap['title']
         self.mach = varmap['mach']
@@ -164,76 +164,76 @@ class Cart3dToPanair(PanairGridHelper):
         self.dref = varmap['Dref']
         self.isEnd = True
         msg = ''
-        msg += self.write_title()
-        msg += self.write_mach()
-        msg += self.write_cases()
-        msg += self.write_alphas()
-        msg += self.write_betas()
-        msg += self.write_reference_quantities()
-        msg += self.printout
-        f.write(msg)
+        with open(oname, 'w') as f:
+            msg += self.write_title()
+            msg += self.write_mach()
+            msg += self.write_cases()
+            msg += self.write_alphas()
+            msg += self.write_betas()
+            msg += self.write_reference_quantities()
+            msg += self.printout
+            f.write(msg)
 
-        BCMap = varmap['bcMap']
+            BCMap = varmap['bcMap']
 
-        cart = Cart3d()
-        cart.read_cart3d(cart3d_geom_filename)
-        points = cart.points
-        elements = cart.elements
-        regions = cart.regions
-        #(points, elements, regions, loads) =
+            cart = Cart3d()
+            cart.read_cart3d(cart3d_geom_filename)
+            points = cart.points
+            elements = cart.elements
+            regions = cart.regions
+            #(points, elements, regions, loads) =
 
-        #for pid, point in sorted(iteritems(points)):
-            #if pid<85:
-            #    print(pid,point)
-            #pass
-        region_old = 9
-        for eid, element in sorted(iteritems(elements)):
-            header = ''
-            region = regions[eid]
-            if region not in BCMap:
-                #continue
-                msg = 'regionID=%s is not defined in the BCMap' % region
-                raise RuntimeError(msg)
+            #for pid, point in sorted(iteritems(points)):
+                #if pid<85:
+                #    print(pid,point)
+                #pass
+            region_old = 9
+            for eid, element in sorted(iteritems(elements)):
+                header = ''
+                region = regions[eid]
+                if region not in BCMap:
+                    #continue
+                    msg = 'regionID=%s is not defined in the BCMap' % region
+                    raise RuntimeError(msg)
 
-            (kt, cp_norm) = BCMap[region]
-            if cp_norm is None:
-                cp_norm = ''
-            if region != region_old:
-                header += '=region %s\n' % region
-            region_old = region
+                (kt, cp_norm) = BCMap[region]
+                if cp_norm is None:
+                    cp_norm = ''
+                if region != region_old:
+                    header += '=region %s\n' % region
+                region_old = region
 
-            #print("****")
-            #print("element =",element)
-            #print("region  =",region)
-            #if eid==2:
-               #print("points = ",points)
-            nid1, nid2, nid3 = element
-            n1, n2, n3 = points[nid1], points[nid2], points[nid3]
-            #print("n1=%s" % n1)
-            #print("n2=%s" % n2)
-            #print("n3=%s" % n3)
-            #p1 =
-            #sys.exit()
+                #print("****")
+                #print("element =",element)
+                #print("region  =",region)
+                #if eid==2:
+                   #print("points = ",points)
+                nid1, nid2, nid3 = element
+                n1, n2, n3 = points[nid1], points[nid2], points[nid3]
+                #print("n1=%s" % n1)
+                #print("n2=%s" % n2)
+                #print("n3=%s" % n3)
+                #p1 =
+                #sys.exit()
 
-            net_name = 'e%s' % eid
+                net_name = 'e%s' % eid
 
-            header += '$points - surface panels\n'
+                header += '$points - surface panels\n'
 
-            header += '%-10s%-10s\n' % ('1.', cp_norm)  # nNetworks is 1
-            header += '%-10s\n' % sInt(kt)
-            header += '%-10s%-10s%50s%-10s\n' % (
-                sInt(2), sInt(2), '', net_name)
-            points_out = self.write_points(n1, n2)
-            points_out += self.write_points(n3, n3)
-            f.write(header + points_out)
-            #break
-        #print(points)
-        #print(outfilename)
+                header += '%-10s%-10s\n' % ('1.', cp_norm)  # nNetworks is 1
+                header += '%-10s\n' % sInt(kt)
+                header += '%-10s%-10s%50s%-10s\n' % (
+                    sInt(2), sInt(2), '', net_name)
+                points_out = self.write_points(n1, n2)
+                points_out += self.write_points(n3, n3)
+                f.write(header + points_out)
+                #break
+            #print(points)
+            #print(outfilename)
 
-        f.write('$end of panair inputs\n')
-        #sys.exit()
+            f.write('$end of panair inputs\n')
 
-def main():
+def main():  # pragma: no cover
     panair_in = sys.argv[1]
     cart3d_geom_filename = sys.argv[2]
     panair_inp_filename = sys.argv[3]

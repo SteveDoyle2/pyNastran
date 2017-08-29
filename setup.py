@@ -101,7 +101,7 @@ try:
     sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
     if sver < [1, 5, 1]:
         print("matplotlib.__version__ = %r < '1.5.1'" % matplotlib.__version__)
-        py_packages.append('matplotlib >= 1.5.1, <2')
+        py_packages.append('matplotlib >= 1.5.1')
 except ImportError:
     py_packages.append('matplotlib >= 1.5.1')
 
@@ -182,7 +182,7 @@ setup(
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: BSD License (BSD-3)',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',

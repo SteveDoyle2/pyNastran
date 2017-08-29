@@ -123,7 +123,7 @@ class AddCards(AddMethods):
         AddMethods.__init__(self)
 
     def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
-    # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
+        # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
         """
         Creates the GRID card
 

@@ -1810,6 +1810,8 @@ class CTETRA4(SolidElement):
             property id (PSOLID, PLSOLID)
         nids : List[int]
             node ids; n=4
+        comment : str; default=''
+            a comment for the card
         """
         SolidElement.__init__(self)
         if comment:

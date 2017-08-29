@@ -9,7 +9,7 @@ import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.elements.bars import CBAR, LineElement
+from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, init_x_g0
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -19,7 +19,6 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 class CBEAM(CBAR):
     """
-
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
     |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
     +=======+=====+=====+=====+=====+=====+=====+=====+==========+
@@ -177,8 +176,8 @@ class CBEAM(CBAR):
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
 
-        x, g0 = cls._init_x_g0(card, eid)
-        offt, bit = cls._init_offt_bit(card, eid)# offt doesn't exist in NX nastran
+        x, g0 = init_x_g0(card, eid)
+        offt, bit = _init_offt_bit(card, eid)# offt doesn't exist in NX nastran
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
 
@@ -278,31 +277,6 @@ class CBEAM(CBAR):
 
     def Nodes(self):
         return [self.ga, self.gb]
-
-    @classmethod
-    def _init_offt_bit(cls, card, eid):
-        """
-        offt doesn't exist in NX nastran
-        """
-        field8 = integer_double_string_or_blank(card, 8, 'field8')
-        if isinstance(field8, float):
-            offt = None
-            bit = field8
-        elif field8 is None:
-            offt = 'GGG'  # default
-            bit = None
-        elif isinstance(field8, string_types):
-            bit = None
-            offt = field8
-            msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
-            assert offt[0] in ['G', 'B', 'O', 'E'], msg
-            assert offt[1] in ['G', 'B', 'O', 'E'], msg
-            assert offt[2] in ['G', 'B', 'O', 'E'], msg
-        else:
-            msg = ('field8 on %s card is not a string(offt) or bit '
-                   '(float)...field8=%s\n' % (cls.type, field8))
-            raise RuntimeError("Card Instantiation: %s" % msg)
-        return offt, bit
 
     def Centroid(self):
         return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
@@ -682,3 +656,29 @@ class CBEAM(CBAR):
     def write_card_16(self, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_16(card)
+
+def _init_offt_bit(card, eid):
+    """
+    offt doesn't exist in NX nastran
+    """
+    field8 = integer_double_string_or_blank(card, 8, 'field8')
+    if isinstance(field8, float):
+        offt = None
+        bit = field8
+    elif field8 is None:
+        offt = 'GGG'  # default
+        bit = None
+    elif isinstance(field8, string_types):
+        bit = None
+        offt = field8
+        msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
+        assert offt[0] in ['G', 'B', 'O', 'E'], msg
+        assert offt[1] in ['G', 'B', 'O', 'E'], msg
+        assert offt[2] in ['G', 'B', 'O', 'E'], msg
+    else:
+        msg = ('field8 on %s card is not a string(offt) or bit '
+               '(float)...field8=%s\n' % (card.field(0), field8))
+        raise RuntimeError("Card Instantiation: %s" % msg)
+    return offt, bit
+
+

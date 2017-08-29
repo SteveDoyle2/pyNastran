@@ -34,8 +34,13 @@ class WeightResponse(object):
         #     ID       ID     LABEL     ID    ID    BOUND     VALUE       VALUE     BOUND
         # ---------------------------------------------------------------------------------
         #       1       1    WEIGHT     3     3       N/A   2.9861E+05  2.9852E+05   N/A
-        #(1, 1,    1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
-        #(1, 1000, 1, 'W       ', 0, 1,    3, 3, 0, 0, 0, 0, 0, 0)
+
+        # ?  ?     ?  LABEL?      ?  ?     ROW_ID? COL_ID? ?  ?  ?          ?          ?  ?
+        #(1, 1,    1, 'WEIGHT  ', 0, 1011, 3,      3,      0, 0, 0,         0,         0, 0)
+        #(1, 1000, 1, 'W       ', 0, 1,    3,      3,      0, 0, 0,         0,         0, 0)
+        #
+        # per dev forum; 538976288 is probably just '    '
+        #(1, 1,    1, 'WEIGHT  ', 0, 1,    3,      3,      0, 0, 538976288, 538976288, 0, 0)
         """
         # F:\work\pyNastran\examples\Dropbox\move_tpl\mbcgen.op2
         # (1,  15, 1, 'W       ', -1,    1, 3, 3, 0, 0, 0, 0, 0, 10)

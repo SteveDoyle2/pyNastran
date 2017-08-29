@@ -1348,7 +1348,6 @@ class GRID(BaseCard):
                 print_float_8(xyz[0]),
                 print_float_8(xyz[1]),
                 print_float_8(xyz[2]))
-            return self.comment + msg
         else:
             cds = set_string8_blank_if_default(cd, 0)
             seid = set_string8_blank_if_default(self.SEid(), 0)
@@ -1358,7 +1357,7 @@ class GRID(BaseCard):
                 print_float_8(xyz[1]),
                 print_float_8(xyz[2]),
                 cds, self.ps, seid)
-            return self.comment + msg
+        return self.comment + msg
 
     def write_card_16(self, is_double=False):
         # type: (bool) -> str
