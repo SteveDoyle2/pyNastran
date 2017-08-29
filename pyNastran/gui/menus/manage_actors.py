@@ -566,7 +566,7 @@ class EditGeometryProperties(PyDialog):
                         show_points = True
 
                     show_line_width = False
-                    if self.representation in ['wire', 'wire+point', 'bar']:
+                    if self.representation in ['wire', 'wire+point', 'bar', 'toggle']:
                         show_line_width = True
 
                     if representation == 'bar':

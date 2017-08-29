@@ -185,13 +185,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.show_caero_actor = not self.show_caero_actor
 
         names = ['caero', 'caero_subpanels', 'caero_control_surfaces']
-        geometry_properties = {}
-        for name in names:
-            try:
-                prop = self.geometry_properties[name]
-            except KeyError:
-                continue
-            geometry_properties[name] = prop
+        geometry_properties = self._get_geometry_properties_by_name(names)
 
         if self.show_caero_actor:
             try:
@@ -211,6 +205,31 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             geometry_properties['caero_subpanels'].is_visible = False
         self.on_update_geometry_properties_override_dialog(geometry_properties)
 
+    def _get_geometry_properties_by_name(self, names):
+        """
+        Get a subset of the self.geometry_properties dict specified by names. any names not in the
+        dict will be ignored.
+
+        Parameters
+        -----------
+        names : list [str, ...]
+            List of names.
+
+        Returns
+        --------
+        geometry_properties : dict {str : AltGeometry or CoordProperties}
+            Dictonairy from name to property object.
+
+        """
+        geometry_properties = {}
+        for name in names:
+            try:
+                prop = self.geometry_properties[name]
+            except KeyError:
+                continue
+            geometry_properties[name] = prop
+        return geometry_properties
+
     def on_update_geometry_properties_window(self, geometry_properties):
         """updates the 'Edit Geometry Properties' window"""
         if self._edit_geometry_properties_window_shown:
@@ -225,13 +244,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
 
         names = ['caero', 'caero_subpanels']
-        geometry_properties = {}
-        for name in names:
-            try:
-                prop = self.geometry_properties[name]
-            except KeyError:
-                continue
-            geometry_properties[name] = prop
+        geometry_properties = self._get_geometry_properties_by_name(names)
 
         self.show_caero_sub_panels = not self.show_caero_sub_panels
         if self.show_caero_actor:
@@ -1129,6 +1142,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if len(formii):
                 form0.append(formi)
+
+        name = 'main_copy'
+        self.duplicate_alternate_vtk_grid(name, 'main', color=(0., 0., 0.), line_width=5,
+                                          is_visible=False)
 
         #------------------------------------------------------------
         # add alternate actors

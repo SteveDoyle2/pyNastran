@@ -1575,12 +1575,8 @@ class NastranGuiResults(NastranGuiAttributes):
             cases[icase] = (minp_res, (subcase_id, 'MinPrincipal'))
             form_dict[(key, itime)].append(('Min Principal', icase, []))
             icase += 1
-        if vm_word is not None:
-            if not is_stress:
-                max_min = max(ovm.max(), np.abs(ovm.min()))
-                if max_min > 100:
-                    raise RuntimeError('vm strain = %s' % ovm)
 
+        if vm_word is not None:
             ovm_res = GuiResult(subcase_id, header=vm_word, title=vm_word,
                                 location='centroid', scalar=ovm, data_format=fmt)
             cases[icase] = (ovm_res, (subcase_id, vm_word))

@@ -161,7 +161,7 @@ class RealNonlinearPlateArray(OES_Object):
             #print(self.element_node[:10, :])
             #raise RuntimeError()
         #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
-        assert eid == self.element[self.ielement - 1], 'eid=%s self.element[i-1] = ' % (eid, self.element[self.ielement - 1])
+        assert eid == self.element[self.ielement - 1], 'eid=%s self.element[i-1]=%s' % (eid, self.element[self.ielement - 1])
         self.data[self.itime, self.itotal, :] = [fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy]
         self.itotal += 1
 

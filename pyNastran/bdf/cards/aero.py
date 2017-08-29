@@ -6338,17 +6338,17 @@ class SPLINE3(Spline):
         ai = [a1]
         for irow in range(1, nrows):
             j = 1 + nrows * 8
-            gii = integer(card, j, 'Gi_' % i)
-            cii = integer(card, j + 1, 'Ci_' % i)
-            aii = double(card, j + 2, 'Ai_' % i)
+            gii = integer(card, j, 'Gi_%i' % i)
+            cii = integer(card, j + 1, 'Ci_%i' % i)
+            aii = double(card, j + 2, 'Ai_%i' % i)
             Gi.append(gii)
             ci.append(cii)
             ai.append(aii)
             if card[j + 3] or card[j + 4] or card[j + 5]:
                 i += 1
-                gii = integer(card, j, 'Gi_' % i)
-                cii = parse_components(card, j + 1, 'Ci_' % i)
-                aii = double(card, j + 2, 'Ai_' % i)
+                gii = integer(card, j, 'Gi_%i' % i)
+                cii = parse_components(card, j + 1, 'Ci_%i' % i)
+                aii = double(card, j + 2, 'Ai_%i' % i)
                 Gi.append(gii)
                 ci.append(cii)
                 ai.append(aii)
