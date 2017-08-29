@@ -7,16 +7,19 @@ class Elements(object):
 
         self.springs = model.springs
         self.dampers = model.dampers
+        self.bushes = model.bushes
         self.rods = model.rods
+
         self.bars = model.bars
         self.beams = model.beams
+
         self.shells = model.shells
         self.shears = model.shears
         self.solids = model.solids
         self.eids = []
 
     def make_current(self):
-        elems = [self.springs, self.dampers, self.rods,
+        elems = [self.springs, self.dampers, self.bushes, self.rods,
                  self.bars, self.beams,
                  self.shells, self.shells, self.shears, self.solids]
         self.eids = []
@@ -32,6 +35,9 @@ class Elements(object):
 
         msg += '%s  dampers:  %s\n' % (indent, len(self.dampers))
         msg += self.dampers.repr_indent('    ')
+
+        msg += '%s  bushes:  %s\n' % (indent, len(self.bushes))
+        msg += self.bushes.repr_indent('    ')
 
         msg += '%s  rods:  %s\n' % (indent, len(self.rods))
         msg += self.rods.repr_indent('    ')
@@ -55,6 +61,7 @@ class Elements(object):
         assert bdf_file is not None
         self.springs.write_card(size, is_double, bdf_file)  # celas
         self.dampers.write_card(size, is_double, bdf_file)  # cdamp
+        self.bushes.write_card(size, is_double, bdf_file)  # cbush, cbush1d, cbush2d
         self.rods.write_card(size, is_double, bdf_file)   # crod, conrod, ctube
         self.bars.write_card(size, is_double, bdf_file)   # cbar
         self.beams.write_card(size, is_double, bdf_file)  # cbeam
@@ -63,7 +70,7 @@ class Elements(object):
         self.solids.write_card(size, is_double, bdf_file) # ctetra, cpenta, chexa, cpyram
 
     def __len__(self):
-        return (len(self.springs) +  + len(self.dampers) +
+        return (len(self.springs) +  + len(self.dampers) + len(self.bushes) +
                 len(self.rods) + len(self.bars) + len(self.beams) +
                 len(self.shells) + len(self.shears) +
                 len(self.solids))

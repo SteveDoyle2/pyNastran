@@ -470,9 +470,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if skip_reading:
             return
 
-        if IS_TESTING and bdf_filename.lower().endswith('.bdf'):
-            self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-        self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+        load_geom = True
+        if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch')):
+            if IS_TESTING or self.is_testing_flag:
+                self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+                self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+            else:
+                self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+        else:
+            self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
 
     def load_nastran_geometry_vectorized(self, bdf_filename, plot=True):
         """
@@ -672,6 +678,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         self.isubcase_name_map = {1: ['Nastran', '']}
         grid = self.grid
+        grid.SetPoints(points)
 
         if len(model.ctria3):
             model.ctria3.quality()
@@ -704,7 +711,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_types_array = np.zeros(nelements, dtype=dtype)
         cell_offsets_array = np.zeros(nelements, dtype=dtype)
 
-        #cell_type_point = vtk.vtkVertex().GetCellType()
+        cell_type_point = vtk.vtkVertex().GetCellType()
         cell_type_line = vtk.vtkLine().GetCellType()
         cell_type_tri3 = vtkTriangle().GetCellType()
         cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
@@ -720,8 +727,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #cell_type_hexa20 = vtkQuadraticHexahedron().GetCellType()
 
         all_eids = model.elements2.eids
-        print('type(eids) =', type(all_eids))
-        print('all_eids =', all_eids)
+        #print('type(eids) =', type(all_eids)) # list
+        #print('all_eids =', all_eids)
 
         #ncelas1 = len(model.celas1)
         #ncelas2 = len(model.celas2)
@@ -761,48 +768,53 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         nodes = model.nodes2
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
-            model.celas1, cell_type_line, nnodesi=2, dimi=1)
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            model.celas1, cell_type_line, cell_type_point)
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
-            model.celas2, cell_type_line, nnodesi=2, dimi=1)
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            model.celas2, cell_type_line, cell_type_point)
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
-            model.celas3, cell_type_line, nnodesi=2, dimi=1)
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            model.celas3, cell_type_line, cell_type_point)
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
-            model.celas4, cell_type_line, nnodesi=2, dimi=1)
+            model.celas4, cell_type_line, cell_type_point)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
-            model.cdamp1, cell_type_line, nnodesi=2, dimi=1)
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            model.cdamp1, cell_type_line, cell_type_point)
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
-            model.cdamp2, cell_type_line, nnodesi=2, dimi=1)
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            model.cdamp2, cell_type_line, cell_type_point)
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
-            model.cdamp3, cell_type_line, nnodesi=2, dimi=1)
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+            model.cdamp3, cell_type_line, cell_type_point)
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
-            model.cdamp4, cell_type_line, nnodesi=2, dimi=1)
+            model.cdamp4, cell_type_line, cell_type_point)
 
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, cell_types_array, cell_offsets_array,
+            model.cbush, cell_type_line, cell_type_point)
 
         if nconrod:
             nelems = nconrod
@@ -834,73 +846,73 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
 
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.crod, cell_type_line, nnodesi=2, dimi=2)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.cbar, cell_type_line, nnodesi=2, dimi=1)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.cbeam, cell_type_line, nnodesi=2, dimi=1)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.cshear, cell_type_quad4, nnodesi=4, dimi=2)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.ctria3, cell_type_tri3, nnodesi=3, dimi=2)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.cquad4, cell_type_quad4, nnodesi=4, dimi=2)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.ctria6, cell_type_tri6, nnodesi=6, dimi=2)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.cquad8, cell_type_quad8, nnodesi=8, dimi=2)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.ctetra4, cell_type_tetra4, nnodesi=4, dimi=3)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.cpenta6, cell_type_penta6, nnodesi=8, dimi=3)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
             model.chexa8, cell_type_hexa8, nnodesi=8, dimi=3)
 
-        ieid0, cell_offset0 = self.map_elements_vectorized_fill(
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, cell_types_array, cell_offsets_array,
@@ -932,7 +944,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.log.info('cell_types_array = %s' % cell_types_array)
 
         # Create the array of cells
-        print('nids_array =', nids_array)
+        #print('nids_array =', nids_array)
         cells_id_type = numpy_to_vtkIdTypeArray(nids_array, deep=1)
         vtk_cells = vtk.vtkCellArray()
         vtk_cells.SetCells(nelements, cells_id_type)
@@ -949,11 +961,61 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #grid = vtk.vtkUnstructuredGrid()
         grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
-    def map_elements_vectorized_fill(self,
-                                     ieid0, cell_offset0,
-                                     nodes, nids_list,
-                                     eids_array, cell_types_array, cell_offsets_array,
-                                     model_obj, cell_type, nnodesi=None, dimi=None):
+    def _map_elements_vectorized_fill_spring(self,
+                                             ieid0, cell_offset0,
+                                             nodes, nids_list,
+                                             eids_array, cell_types_array, cell_offsets_array,
+                                             model_obj, cell_type_line, cell_type_point):
+        """helper method for ``map_elements_vectorized``"""
+        nelems = len(model_obj)
+        if nelems:
+            dimi = 1
+            nnodesi = 2
+            elem = model_obj
+            elem.make_current()
+
+            ieid = np.arange(ieid0, ieid0 + nelems)
+            eid_type = np.full(nelems, cell_type_line, dtype='int32')
+            dim = np.full(nelems, dimi, dtype='int32')
+            nnodes = np.full((nelems, 1), nnodesi, dtype='int32')
+
+            eid = elem.eid
+            eids_array[ieid] = eid
+
+            nids = elem.nids
+            inonzero = np.where(nids[:, 1] > 0)[0]
+            izero = np.where(nids[:, 1] == 0)[0]
+
+            if len(inonzero):
+                cell_types_array[ieid[inonzero]] = cell_type_line
+
+            if len(izero):
+                raise NotImplementedError('izero')
+                #eid_type[izero] = cell_type_point
+                #nnodes[izero] = 1
+                #cell_types_array[ieid[izero]] = cell_type_point
+
+            if hasattr(elem, 'pid'):
+                pid = elem.pid
+            inids = nodes.get_node_index(nids, allow0=True)
+            print('inids =', inids)
+
+            nnodes_inids = np.hstack([nnodes, inids])
+            nids_list.append(nnodes_inids)
+
+            nnodes[0] = 0
+            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
+            assert len(ieid) == len(cumsum)
+            cell_offsets_array[ieid] = cumsum
+            ieid0 += nelems
+            cell_offset0 += cumsum[-1]
+        return ieid0, cell_offset0
+
+    def _map_elements_vectorized_fill(self,
+                                      ieid0, cell_offset0,
+                                      nodes, nids_list,
+                                      eids_array, cell_types_array, cell_offsets_array,
+                                      model_obj, cell_type, nnodesi=None, dimi=None):
         """helper method for ``map_elements_vectorized``"""
         assert nnodesi is not None
         assert dimi is not None
@@ -976,11 +1038,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             eid_type = np.full(nelems, cell_type, dtype='int32')
             dim = np.full(nelems, dimi, dtype='int32')
             ieid = np.arange(ieid0, ieid0 + nelems)
+            assert len(ieid) == nelems
 
             nnodes[0] = 0
             cumsum = cell_offset0 + np.cumsum(nnodes + 1)
             assert len(ieid) == len(cumsum)
-            eids_array[ieid] = eid
+            try:
+                eids_array[ieid] = eid
+            except IndexError:
+                # this hits when an element doesn't correctly implement make_current()
+                self.log.error('nelems = %s' % nelems)
+                self.log.error('card_count = %s' % model_obj.model.card_count)
+                self.log.error('eids_array = %s' % eids_array)
+                self.log.error('eids_array.shape = %s' % str(eids_array.shape))
+                self.log.error('ieid.max() = %s' % ieid.max())
+                raise
             cell_types_array[ieid] = cell_type
             cell_offsets_array[ieid] = cumsum
             ieid0 += nelems
@@ -5359,7 +5431,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             model._results.saved.add(result)
                 model.read_op2(op2_filename, combine=False)
 
-                if not self.is_testing:
+                if not IS_TESTING or self.is_testing_flag:
                     self.log.info(model.get_op2_stats())
                 # print(model.get_op2_stats())
 

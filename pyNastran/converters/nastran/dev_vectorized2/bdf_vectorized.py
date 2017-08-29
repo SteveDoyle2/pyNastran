@@ -11,6 +11,9 @@ from pyNastran.converters.nastran.dev_vectorized2.cards.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
 from pyNastran.converters.nastran.dev_vectorized2.cards.dampers import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, Dampers)
+from pyNastran.converters.nastran.dev_vectorized2.cards.bush import (
+    CBUSHv, Bushes)
+
 from pyNastran.converters.nastran.dev_vectorized2.cards.rods import (
     CONRODv, CRODv, CTUBEv, Rods)
 from pyNastran.converters.nastran.dev_vectorized2.cards.loads import (
@@ -55,6 +58,9 @@ class BDF(BDF_):
         self.cdamp4 = CDAMP4(model)
         #self.cdamp5 = CDAMP5(model)    # TODO: temp
         self.dampers = Dampers(model)
+
+        self.cbush = CBUSHv(model)
+        self.bushes = Bushes(model)
 
         self.crod = CRODv(model)
         self.conrod = CONRODv(model)
@@ -142,6 +148,13 @@ class BDF(BDF_):
     #def _prepare_cdamp5(self, card, card_obj, comment=''):
         #self.cdamp5.add_card(card_obj, comment=comment)
 
+    def _prepare_cbush(self, card, card_obj, comment=''):
+        self.cbush.add_card(card_obj, comment=comment)
+    #def _prepare_cbush1d(self, card, card_obj, comment=''):
+        #self.cbush1d.add_card(card_obj, comment=comment)
+    #def _prepare_cbush2d(self, card, card_obj, comment=''):
+        #self.cbush2d.add_card(card_obj, comment=comment)
+
     def _prepare_conrod(self, card, card_obj, comment=''):
         self.conrod.add_card(card_obj, comment=comment)
     def _prepare_crod(self, card, card_obj, comment=''):
@@ -223,11 +236,18 @@ class BDF(BDF_):
         del self._card_parser['CDAMP1']
         del self._card_parser['CDAMP2']
         del self._card_parser['CDAMP3']
-        #del self._card_parser['CDAMP4']
+        #del self._card_parser['CDAMP4']  # no
         self._card_parser_prepare['CDAMP1'] = self._prepare_cdamp1
         self._card_parser_prepare['CDAMP2'] = self._prepare_cdamp2
         self._card_parser_prepare['CDAMP3'] = self._prepare_cdamp3
         self._card_parser_prepare['CDAMP4'] = self._prepare_cdamp4
+
+        del self._card_parser['CBUSH']
+        #del self._card_parser['CBUSH1D']
+        #del self._card_parser['CBUSH2D']
+        self._card_parser_prepare['CBUSH'] = self._prepare_cbush
+        #self._card_parser_prepare['CBUSH1D'] = self._prepare_cbush1d
+        #self._card_parser_prepare['CBUSH2D'] = self._prepare_cbush2d
 
         del self._card_parser['CONROD']
         del self._card_parser['CROD']
@@ -399,9 +419,9 @@ class BDF(BDF_):
         return self.nodes2.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype=idtype)
 
-    def get_node_index(self, nids):
+    def get_node_index(self, nids, allow0=False):
         """maps the requested nodes to their desired index in the array"""
-        i = self.nodes2.get_node_index(nids)
+        i = self.nodes2.get_node_index(nids, allow0=allow0)
         return i
 
     def validate(self):

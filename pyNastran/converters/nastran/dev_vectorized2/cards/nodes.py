@@ -12,6 +12,7 @@ from pyNastran.bdf.field_writer_16 import print_float_16, set_string16_blank_if_
 from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 
+
 class Nodes(object):
     def __init__(self, model):
         self.model = model
@@ -163,7 +164,7 @@ class Nodes(object):
             icp_transform[cp] = np.where(np.in1d(nids_all, nids))[0]
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
-    def get_node_index(self, nids):
+    def get_node_index(self, nids, allow0=False):
         """maps the requested nodes to their desired index in the array"""
         self.grid.make_current()
         nids = np.asarray(nids)
@@ -174,22 +175,28 @@ class Nodes(object):
         #print(nids)
         #print(nids_ravel)
         i = np.searchsorted(sorted_nodes, nids_ravel)
-        if not np.array_equal(sorted_nodes[i], nids_ravel):
-            msg = (
-                '  nids:\n%s\n'
-                '  self.nid = %s\n'
-                '  i = %s\n'
-                '  nid[i]    = %s\n'
-                '  nid_ravel = %s\n'
-                '  nids_new:\n%s\n' % (
-                    nids, sorted_nodes.tolist(),
-                    i,
-                    sorted_nodes[i].tolist(),
-                    nids_ravel.tolist(),
-                    nids.reshape(nids.shape)))
-            raise RuntimeError(msg)
+
+        if allow0:
+            izero = np.where(nids_ravel == 0)[0]
+            i[izero] = -1
+        else:
+            if not np.array_equal(sorted_nodes[i], nids_ravel):
+                msg = (
+                    '  nids:\n%s\n'
+                    '  self.nid = %s\n'
+                    '  i = %s\n'
+                    '  nid[i]    = %s\n'
+                    '  nid_ravel = %s\n'
+                    '  nids_new:\n%s\n' % (
+                        nids, sorted_nodes.tolist(),
+                        i,
+                        sorted_nodes[i].tolist(),
+                        nids_ravel.tolist(),
+                        nids.reshape(nids.shape)))
+                raise RuntimeError(msg)
         i = i.reshape(nids.shape)
         return i
+
 
 class GRIDv(object):
     """
@@ -546,5 +553,3 @@ class GRIDv(object):
         pass
     #def __delitem__(self, i):
         #pass
-
-

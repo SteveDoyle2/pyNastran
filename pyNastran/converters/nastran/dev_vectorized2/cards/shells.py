@@ -337,7 +337,7 @@ class CTRIA3v(ShellElement):
         assert len(length13) == nelements, 'len(length13)=%s nelements=%s' % (len(length13), nelements)
 
         length = np.vstack([length21, length32, length13])
-        print(length)
+        #print(length)
 
         #min_edge_length = min(length21, length32, length13)
         min_edge_length = length.min(axis=0)
