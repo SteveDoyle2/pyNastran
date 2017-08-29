@@ -846,9 +846,6 @@ class CONM1(PointMassElement):
         m = np.zeros((6, 6))
         (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
          m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = data
-        eid = eid
-        nid = nid
-        cid = cid
         m[0, 0] = m1   # M11
         m[1, 0] = m2a  # M21
         m[1, 1] = m2b  # M22
