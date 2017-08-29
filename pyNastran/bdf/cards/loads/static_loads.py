@@ -935,6 +935,14 @@ class FORCE1(Force):
     """
     Defines a static concentrated force at a grid point by specification of a
     magnitude and two grid points that determine the direction.
+
+    +--------+-----+----+-------+----+----+
+    |   1    |  2  | 3  |   4   | 5  | 6  |
+    +========+=====+====+=======+====+====+
+    | FORCE1 | SID | G  |   F   | G1 | G2 |
+    +--------+-----+----+-------+----+----+
+    | FORCE1 |  6  | 13 | -2.93 | 16 | 13 |
+    +--------+-----+----+-------+----+----+
     """
     type = 'FORCE1'
 
