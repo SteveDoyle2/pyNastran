@@ -62,6 +62,23 @@ class TestVectorized(unittest.TestCase):
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
                          mode='msc')
+        #print(model.get_bdf_stats())
+
+        out_filename = 'spike.bdf'
+        model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
+                        interspersed=False, enddata=None,
+                        close=True)
+        print(model.cbush)
+        print(model.get_bdf_stats())
+        print(model.elements)
+        print(model.elements2)
+
+    def test_static_elements(self):
+        """tests static_elements"""
+        bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
+        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
+                         skip_cards=None, encoding=None, log=None, debug=True,
+                         mode='msc')
 
         print(model.cquad4)
         print(model.ctria3)

@@ -10,7 +10,7 @@ from pyNastran.converters.nastran.dev_vectorized2.cards.elements import Elements
 from pyNastran.converters.nastran.dev_vectorized2.cards.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
 from pyNastran.converters.nastran.dev_vectorized2.cards.dampers import (
-    CDAMP1, CDAMP2, CDAMP3, CDAMP4, Dampers)
+    CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, CVISCv, PLOTELv, Dampers)
 from pyNastran.converters.nastran.dev_vectorized2.cards.bush import (
     CBUSHv, Bushes)
 
@@ -22,7 +22,7 @@ from pyNastran.converters.nastran.dev_vectorized2.cards.bars import CBARv, Bars
 from pyNastran.converters.nastran.dev_vectorized2.cards.beams import CBEAMv, Beams
 from pyNastran.converters.nastran.dev_vectorized2.cards.shears import CSHEARv, Shears
 from pyNastran.converters.nastran.dev_vectorized2.cards.shells import (
-    CTRIA3v, CTRIA6v, CQUAD4v, CQUAD8v, Shells)
+    CTRIA3v, CTRIA6v, CTRIARv, CQUAD4v, CQUAD8v, CQUADRv, Shells)
 from pyNastran.converters.nastran.dev_vectorized2.cards.solids import (
     CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
     CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
@@ -57,6 +57,8 @@ class BDF(BDF_):
         self.cdamp3 = CDAMP3(model)
         self.cdamp4 = CDAMP4(model)
         #self.cdamp5 = CDAMP5(model)    # TODO: temp
+        self.cvisc = CVISCv(model)    # this is in dampers right now
+        self.plotel = PLOTELv(model)  # this is in dampers right now
         self.dampers = Dampers(model)
 
         self.cbush = CBUSHv(model)
@@ -78,6 +80,9 @@ class BDF(BDF_):
         self.ctria6 = CTRIA6v(model)
         self.cquad8 = CQUAD8v(model)
         self.cquad = CQUAD4v(model)   # TODO: temp
+        self.cquadr = CQUADRv(model)
+        self.ctriar = CTRIARv(model)
+
         self.shells = Shells(model)
         #self.pshell = PSHELLv(model)  # TODO: temp
 
@@ -148,6 +153,10 @@ class BDF(BDF_):
     #def _prepare_cdamp5(self, card, card_obj, comment=''):
         #self.cdamp5.add_card(card_obj, comment=comment)
 
+    def _prepare_cvisc(self, card, card_obj, comment=''):
+        self.cvisc.add_card(card_obj, comment=comment)
+    def _prepare_plotel(self, card, card_obj, comment=''):
+        self.plotel.add_card(card_obj, comment=comment)
     def _prepare_cbush(self, card, card_obj, comment=''):
         self.cbush.add_card(card_obj, comment=comment)
     #def _prepare_cbush1d(self, card, card_obj, comment=''):
@@ -177,6 +186,10 @@ class BDF(BDF_):
         self.cquad8.add_card(card_obj, comment=comment)
     #def _prepare_cquad(self, card, card_obj, comment=''):
         #self.cquad.add_card(card_obj, comment=comment)
+    def _prepare_cquadr(self, card, card_obj, comment=''):
+        self.cquadr.add_card(card_obj, comment=comment)
+    def _prepare_ctriar(self, card, card_obj, comment=''):
+        self.ctriar.add_card(card_obj, comment=comment)
 
     def _prepare_cshear(self, card, card_obj, comment=''):
         self.cshear.add_card(card_obj, comment=comment)
@@ -249,6 +262,12 @@ class BDF(BDF_):
         #self._card_parser_prepare['CBUSH1D'] = self._prepare_cbush1d
         #self._card_parser_prepare['CBUSH2D'] = self._prepare_cbush2d
 
+        del self._card_parser['CVISC']
+        del self._card_parser['PLOTEL']
+        self._card_parser_prepare['CVISC'] = self._prepare_cvisc
+        self._card_parser_prepare['PLOTEL'] = self._prepare_plotel
+
+
         del self._card_parser['CONROD']
         del self._card_parser['CROD']
         del self._card_parser['CTUBE']
@@ -263,14 +282,18 @@ class BDF(BDF_):
 
         del self._card_parser['CTRIA3']
         del self._card_parser['CTRIA6']
+        del self._card_parser['CTRIAR']
         del self._card_parser['CQUAD4']
         del self._card_parser['CQUAD8']
         #del self._card_parser['CQUAD']
+        del self._card_parser['CQUADR']
         self._card_parser_prepare['CTRIA3'] = self._prepare_ctria3
         self._card_parser_prepare['CTRIA6'] = self._prepare_ctria6
+        self._card_parser_prepare['CTRIAR'] = self._prepare_ctriar
         self._card_parser_prepare['CQUAD4'] = self._prepare_cquad4
         self._card_parser_prepare['CQUAD8'] = self._prepare_cquad8
         #self._card_parser_prepare['CQUAD'] = self._prepare_cquad
+        self._card_parser_prepare['CQUADR'] = self._prepare_cquadr
 
         del self._card_parser['CSHEAR']
         self._card_parser_prepare['CSHEAR'] = self._prepare_cshear
@@ -426,8 +449,8 @@ class BDF(BDF_):
 
     def validate(self):
         pass
-    def get_bdf_stats(self, return_type='string'):
-        pass
+    #def get_bdf_stats(self, return_type='string'):
+        #pass
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None,

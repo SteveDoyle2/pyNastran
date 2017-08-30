@@ -702,5 +702,6 @@ class PLOTEL(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        nodes = self.node_ids
+        msg = 'PLOTEL  %8i%8i%8i\n' % (self.eid, nodes[0], nodes[1])
+        return self.comment + msg

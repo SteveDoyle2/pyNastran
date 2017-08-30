@@ -121,6 +121,19 @@ class BushElement(object):
 
 
 class CBUSHv(BushElement):
+    """
+    Generalized Spring-and-Damper Connection
+
+    Defines a generalized spring-and-damper structural element that
+    may be nonlinear or frequency dependent.
+    +-------+-----+------+----+----+-------+----+----+-----+
+    |   1   |  2  |  3   |  4 |  5 |   6   |  7 |  8 |  9  |
+    +=======+=====+======+====+====+=======+====+====+=====+
+    | CBUSH | EID | PID  | GA | GB | GO/X1 | X2 | X3 | CID |
+    +-------+-----+------+----+----+-------+----+----+-----+
+    |       |  S  | OCID | S1 | S2 |  S3   |    |    |     |
+    +-------+-----+------+----+----+-------+----+----+-----+
+    """
     card_name = 'CBUSH'
 
     def __init__(self, model):

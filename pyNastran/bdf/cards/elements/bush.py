@@ -42,6 +42,19 @@ class BushElement(Element):
         return [tuple(sorted(self.node_ids))]
 
 class CBUSH(BushElement):
+    """
+    Generalized Spring-and-Damper Connection
+
+    Defines a generalized spring-and-damper structural element that
+    may be nonlinear or frequency dependent.
+    +-------+-----+------+----+----+-------+----+----+-----+
+    |   1   |  2  |  3   |  4 |  5 |   6   |  7 |  8 |  9  |
+    +=======+=====+======+====+====+=======+====+====+=====+
+    | CBUSH | EID | PID  | GA | GB | GO/X1 | X2 | X3 | CID |
+    +-------+-----+------+----+----+-------+----+----+-----+
+    |       |  S  | OCID | S1 | S2 |  S3   |    |    |     |
+    +-------+-----+------+----+----+-------+----+----+-----+
+    """
     type = 'CBUSH'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'cid', 9:'s', 10:'ocid'
