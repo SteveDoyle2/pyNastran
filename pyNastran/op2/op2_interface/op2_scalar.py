@@ -1532,7 +1532,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #if 0:
                 #self._skip_table(table_name)
             #else:
-            if table_name in GEOM_TABLES:
+            if table_name in self.generalized_tables:
+                self.generalized_tables[table_name](self)
+            elif table_name in GEOM_TABLES:
                 self._read_geom_table()  # DIT (agard)
             elif table_name == b'GPL':
                 self._read_gpl()
@@ -1564,8 +1566,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_ibulk()
             elif table_name == b'CMODEXT':
                 self._read_cmodext()
-            elif table_name in self.generalized_tables:
-                self.generalized_tables[table_name](self)
             elif table_name in MATRIX_TABLES:
                 self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:
