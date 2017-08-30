@@ -711,7 +711,7 @@ class RealGridPointForcesArray(ScalarObject):
         assert self.is_unique, self.is_unique
         # sort1 as sort1
         for itime in range(self.ntimes):
-            dt = self._times[itime]
+            #dt = self._times[itime]
             t1 = self.data[itime, :, 0]
             t2 = self.data[itime, :, 1]
             t3 = self.data[itime, :, 2]

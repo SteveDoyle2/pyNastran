@@ -16,19 +16,19 @@ def force_to_pressure(bdf_filename, bdf_filename_out=None):
                          encoding=None, log=None, debug=True,
                          mode='msc')
 
-    if 0:
-        card_types = ['CQUAD4', 'CTRIA3']
-        card_ids_map = model.get_card_ids_by_card_types(card_types=None,
-                                                        reset_type_to_slot_map=False,
-                                                        stop_on_missing_card=False)
+    #if 0:
+        ##card_types = ['CQUAD4', 'CTRIA3']
+        #card_ids_map = model.get_card_ids_by_card_types(card_types=None,
+                                                        #reset_type_to_slot_map=False,
+                                                        #stop_on_missing_card=False)
 
-        for eid in card_ids_map['CQUAD4']:
-            elem = model.elements[eid]
-            #for nid in elem.node_ids:
-            #raise NotImplementedError(elem)
+        #for eid in card_ids_map['CQUAD4']:
+            #elem = model.elements[eid]
+            ##for nid in elem.node_ids:
+            ##raise NotImplementedError(elem)
 
-        for eid in card_ids_map['CTRIA3']:
-            elem = model.elements[eid]
+        #for eid in card_ids_map['CTRIA3']:
+            #elem = model.elements[eid]
             #raise NotImplementedError(elem)
 
     nid_elem_count = defaultdict(int)

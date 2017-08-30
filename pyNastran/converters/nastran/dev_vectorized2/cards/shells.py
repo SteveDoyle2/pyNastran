@@ -1185,6 +1185,12 @@ class Shells(object):
         self.cquadr.make_current()
         self.ctriar.make_current()
 
+    @property
+    def elements(self):
+        return [self.ctria3, self.cquad4,
+                self.ctria6, self.cquad8,
+                self.cquad, self.cquadr, self.ctriar,]
+
     def __len__(self):
         return(len(self.cquad4) + len(self.cquad8) +
                len(self.ctria3) + len(self.ctria6) + len(self.cquad) +

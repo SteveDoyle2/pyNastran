@@ -769,7 +769,7 @@ class GetCard(GetMethods):
                 forces[nid_map[nid]] += load.xyz * scale2
 
             elif load.type == 'PLOAD2':
-                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:
                     elem = self.elements[eid]
                     if elem.type in ['CTRIA3',
