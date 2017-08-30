@@ -333,6 +333,13 @@ class CDAMP2(LineDamper):
 
 
 class CDAMP3(LineDamper):
+    """
+    +--------+-----+-----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |
+    +========+=====+=====+====+====+
+    | CDAMP3 | EID | PID | S1 | S2 |
+    +--------+-----+-----+----+----+
+    """
     type = 'CDAMP3'
     _field_map = {
         1: 'eid', 2:'pid',
@@ -701,6 +708,16 @@ class CDAMP5(LineDamper):
 
 
 class CVISC(LineDamper):
+    """
+    Viscous Damper Connection
+    Defines a viscous damper element.
+
+    +-------+-----+-----+----+----+
+    |   1   |  2  |  3  | 4  | 5  |
+    +=======+=====+=====+====+====+
+    | CVISC | EID | PID | G1 | G2 |
+    +-------+-----+-----+----+----+
+    """
     type = 'CVISC'
     _field_map = {
         1: 'eid', 2:'pid',

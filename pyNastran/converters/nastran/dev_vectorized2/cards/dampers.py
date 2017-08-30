@@ -16,6 +16,8 @@ class Dampers(object):
         self.cdamp2 = model.cdamp2
         self.cdamp3 = model.cdamp3
         self.cdamp4 = model.cdamp4
+        self.cvisc = model.cvisc    # TODO: temp
+        self.plotel = model.plotel  # TODO: temp
         #self.cdamp5 = model.cdamp5
         self._eids = set([])
 
@@ -37,16 +39,24 @@ class Dampers(object):
             self.cdamp4.write_card(size, is_double, bdf_file)
         #if len(self.cdamp5):
             #self.cdamp5.write_card(size, is_double, bdf_file)
+        if len(self.cvisc):
+            self.cvisc.write_card(size, is_double, bdf_file)
+        if len(self.plotel):
+            self.plotel.write_card(size, is_double, bdf_file)
 
     def make_current(self):
         self.cdamp1.make_current()
         self.cdamp2.make_current()
         self.cdamp3.make_current()
         self.cdamp4.make_current()
+        #self.cdamp5.make_current()
+        self.cvisc.make_current()
+        self.plotel.make_current()
 
     def __len__(self):
         return(len(self.cdamp1) + len(self.cdamp2) +
-               len(self.cdamp3) + len(self.cdamp4)) #+ len(self.cdamp5)
+               len(self.cdamp3) + len(self.cdamp4) +
+               len(self.cvisc) + len(self.plotel)) #+ len(self.cdamp5)
 
     def repr_indent(self, indent='  '):
         msg = '%s<Dampers> : nelements=%s\n' % (indent, len(self))
@@ -55,6 +65,8 @@ class Dampers(object):
         msg += '%s  CDAMP3:  %s\n' % (indent, len(self.cdamp3))
         msg += '%s  CDAMP4:  %s\n' % (indent, len(self.cdamp4))
         #msg += '%s  CDAMP5:  %s\n' % (indent, len(self.cdamp5))
+        msg += '%s  CVISC:  %s\n' % (indent, len(self.cvisc))
+        msg += '%s  PLOTEL:  %s\n' % (indent, len(self.plotel))
         return msg
 
     def __repr__(self):
@@ -119,7 +131,7 @@ class CDAMP1(DamperElement):
 
     def __init__(self, model):
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
@@ -226,7 +238,7 @@ class CDAMP2(DamperElement):
 
     def __init__(self, model):
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.b = np.array([], dtype='float64')
         self.nids = np.array([], dtype='int32')
@@ -336,7 +348,7 @@ class CDAMP3(DamperElement):
 
     def __init__(self, model):
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
@@ -420,6 +432,12 @@ class CDAMP3(DamperElement):
         #else:
             #print('no GRIDs')
 
+class CDAMP5(DamperElement):  # TODO: temp
+    def __init__(self, model):
+        self.model = model
+        self.is_current = True
+    def __len__(self):
+        return 0
 
 class CDAMP4(DamperElement):
     """
@@ -433,7 +451,7 @@ class CDAMP4(DamperElement):
 
     def __init__(self, model):
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.b = np.array([], dtype='float64')
         self.nids = np.array([], dtype='int32')
@@ -512,6 +530,198 @@ class CDAMP4(DamperElement):
             #print(self.nid)
             self._eid = []
             self._b = []
+            self._nids = []
+            self.is_current = True
+        #else:
+            #print('no GRIDs')
+
+
+class CVISCv(DamperElement):
+    """
+    Viscous Damper Connection
+    Defines a viscous damper element.
+
+    +-------+-----+-----+----+----+
+    |   1   |  2  |  3  | 4  | 5  |
+    +=======+=====+=====+====+====+
+    | CVISC | EID | PID | G1 | G2 |
+    +-------+-----+-----+----+----+
+    """
+    card_name = 'CVISC'
+
+    def __init__(self, model):
+        self.model = model
+        self.is_current = True
+        self.eid = np.array([], dtype='int32')
+        self.pid = np.array([], dtype='int32')
+        self.nids = np.array([], dtype='int32')
+
+        self._eid = []
+        self._pid = []
+        self._nids = []
+        self.comment = defaultdict(str)
+
+    def add(self, eid, pid, nids, comment=''):
+        """
+        Creates a CVISC card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PVISC)
+        nids : List[int, int]
+            GRID ids
+        comment : str; default=''
+            a comment for the card
+        """
+        self.model.bushes.add(eid)
+        self.is_current = False
+        self._eid.append(eid)
+        self._pid.append(pid)
+        self._nids.append(nids)
+        if comment:
+            self.comment[eid] = _format_comment(comment)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a CVISC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        nids = [integer_or_blank(card, 3, 'n1', 0),
+                integer_or_blank(card, 4, 'n2', 0)]
+        assert len(card) <= 5, 'len(CVISC card) = %i\ncard=%s' % (len(card), card)
+        self.add(eid, pid, nids, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
+            list_fields = ['CVISC', eid, pid, nodes[0], nodes[1]]
+            msgi = print_card_8(list_fields)
+            msg += self.comment[eid] + msgi.rstrip() + '\n'
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.eid) > 0: # there are already elements in self.eid
+                self.eid = np.hstack([self.eid, self._eid])
+                self.pid = np.vstack([self.pid, self._pid])
+                self.nids = np.hstack([self.nids, self._nids])
+                # don't need to handle comments
+            else:
+                self.eid = np.array(self._eid, dtype='int32')
+                self.pid = np.array(self._pid, dtype='int32')
+                self.nids = np.array(self._nids, dtype='int32')
+            assert len(self.eid) == len(np.unique(self.eid))
+            #print(self.nid)
+            self._eid = []
+            self._pid = []
+            self._nids = []
+            self.is_current = True
+        #else:
+            #print('no GRIDs')
+
+class PLOTELv(DamperElement):
+    """
+    Defines a 1D dummy element used for plotting.
+
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
+    +--------+-----+-----+-----+
+    |   1    |  2  |  3  |  4  |
+    +========+=====+=====+=====+
+    | PLOTEL | EID | G1  | G2  |
+    +--------+-----+-----+-----+
+    """
+    card_name = 'PLOTEL'
+
+    def __init__(self, model):
+        self.model = model
+        self.is_current = True
+        self.eid = np.array([], dtype='int32')
+        self.nids = np.array([], dtype='int32')
+
+        self._eid = []
+        self._nids = []
+        self.comment = defaultdict(str)
+
+    def add(self, eid, nids, comment=''):
+        """
+        Adds a PLOTEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        self.model.bushes.add(eid)
+        self.is_current = False
+        self._eid.append(eid)
+        self._nids.append(nids)
+        if comment:
+            self.comment[eid] = _format_comment(comment)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a PLOTEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+        ]
+        assert len(card) <= 4, 'len(PLOTEL card) = %i\ncard=%s' % (len(card), card)
+        self.add(eid, nodes, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for eid, nodes in zip(self.eid, self.nids):
+            msgi = 'PLOTEL  %8i%8i%8i\n' % (eid, nodes[0], nodes[1])
+            msg += self.comment[eid] + msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.eid) > 0: # there are already elements in self.eid
+                self.eid = np.hstack([self.eid, self._eid])
+                self.nids = np.hstack([self.nids, self._nids])
+                # don't need to handle comments
+            else:
+                self.eid = np.array(self._eid, dtype='int32')
+                self.nids = np.array(self._nids, dtype='int32')
+            assert len(self.eid) == len(np.unique(self.eid))
+            #print(self.nid)
+            self._eid = []
             self._nids = []
             self.is_current = True
         #else:

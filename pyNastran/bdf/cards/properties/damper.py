@@ -297,6 +297,18 @@ class PDAMPT(DamperProperty):
 
 
 class PVISC(DamperProperty):
+    """
+    Viscous Damping Element Property
+    Defines properties of a one-dimensional viscous damping element (CVISC entry).
+
+    +-------+------+-----+------+------+-----+-----+
+    |   1   |  2   |  3  |  4   |   5  |  6  |  7  |
+    +=======+======+=====+======+======+=====+=====+
+    | PVISC | PID1 | CE1 | CR1  | PID2 | CE2 | CR2 |
+    +-------+------+-----+------+------+-----+-----+
+    | PVISC |  3   | 6.2 | 3.94 |      |     |     |
+    +-------+------+-----+------+------+-----+-----+
+    """
     type = 'PVISC'
     _field_map = {
         1: 'pid', 2:'ce', 3:'cr',
@@ -311,9 +323,9 @@ class PVISC(DamperProperty):
         pid : int
             property id for a CVISC
         ce : float
-            ???
+            Viscous damping values for extension in units of force per unit velocity
         cr : float
-            ???
+            Viscous damping values for rotation in units of moment per unit velocity.
         comment : str; default=''
             a comment for the card
         """

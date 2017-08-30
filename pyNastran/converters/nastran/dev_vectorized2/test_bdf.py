@@ -10,6 +10,7 @@ model_path = os.path.join(pkg_path, '../', 'models')
 
 class TestVectorized(unittest.TestCase):
     def test_solid_bending(self):
+        """tests solid_bending"""
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
@@ -26,6 +27,7 @@ class TestVectorized(unittest.TestCase):
                         close=True)
 
     def test_bwb(self):
+        """tests bwb"""
         bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
@@ -37,7 +39,42 @@ class TestVectorized(unittest.TestCase):
                         interspersed=False, enddata=None,
                         close=True)
 
+    def test_isat(self):
+        """tests isat"""
+        bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm.dat')
+        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
+                         skip_cards=None, encoding=None, log=None, debug=True,
+                         mode='msc')
+        #print(model.get_bdf_stats())
+
+        out_filename = 'spike.bdf'
+        model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
+                        interspersed=False, enddata=None,
+                        close=True)
+        print(model.cbush)
+        print(model.get_bdf_stats())
+        print(model.elements)
+        print(model.elements2)
+
     def test_static_elements(self):
+        """tests static_elements"""
+        bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
+        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
+                         skip_cards=None, encoding=None, log=None, debug=True,
+                         mode='msc')
+        #print(model.get_bdf_stats())
+
+        out_filename = 'spike.bdf'
+        model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
+                        interspersed=False, enddata=None,
+                        close=True)
+        print(model.cbush)
+        print(model.get_bdf_stats())
+        print(model.elements)
+        print(model.elements2)
+
+    def test_static_elements(self):
+        """tests static_elements"""
         bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
@@ -48,7 +85,6 @@ class TestVectorized(unittest.TestCase):
         print(model.shells)
         print(model.solids)
         print(model.elements)
-
 
         print(model.ctetra4)
         print(model.cpenta6)
@@ -74,7 +110,7 @@ class TestVectorized(unittest.TestCase):
         print(model.ctube)
 
         print(model.elements2)
-        print(len(model.elements2))
+        len(model.elements2)
         print(model.get_bdf_stats())
 
         out_filename = 'spike.bdf'

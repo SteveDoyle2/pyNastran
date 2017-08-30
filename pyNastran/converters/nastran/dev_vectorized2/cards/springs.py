@@ -61,6 +61,10 @@ class SpringElement(object):
     """base class for CELAS1, CELAS2, CELAS3, and CELAS4"""
     card_name = ''
 
+    def __init__(self, model):
+        self.model = model
+        self.is_current = True
+
     def check_if_current(self, eid, eids):
         """we split this up to reason about it easier"""
         if self.is_current:
@@ -134,8 +138,7 @@ class CELAS1(SpringElement):
     card_name = 'CELAS1'
 
     def __init__(self, model):
-        self.model = model
-        self.is_current = False
+        SpringElement.__init__(self, model)
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
@@ -220,7 +223,8 @@ class CELAS1(SpringElement):
                 self.nids = np.array(self._nids, dtype='int32')
                 self.dofs = np.array(self._dofs, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
-            #print(self.nid)
+            #print(self.nids)
+            assert self.nids[:, 0].min() > 0, self.nids
             self._eid = []
             self._pid = []
             self._nids = []
@@ -241,8 +245,7 @@ class CELAS2(SpringElement):
     card_name = 'CELAS2'
 
     def __init__(self, model):
-        self.model = model
-        self.is_current = False
+        SpringElement.__init__(self, model)
         self.eid = np.array([], dtype='int32')
         self.k = np.array([], dtype='float64')
         self.nids = np.array([], dtype='int32')
@@ -342,6 +345,7 @@ class CELAS2(SpringElement):
                 self.ge = np.array(self._ge, dtype='float64')
                 self.s = np.array(self._s, dtype='float64')
             assert len(self.eid) == len(np.unique(self.eid))
+            assert self.nids[:, 0].min() > 0, self.nids
             #print(self.nid)
             self._eid = []
             self._k = []
@@ -365,8 +369,7 @@ class CELAS3(SpringElement):
     card_name = 'CELAS3'
 
     def __init__(self, model):
-        self.model = model
-        self.is_current = False
+        SpringElement.__init__(self, model)
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
@@ -442,6 +445,7 @@ class CELAS3(SpringElement):
                 self.pid = np.array(self._pid, dtype='int32')
                 self.nids = np.array(self._nids, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
+            assert self.nids[:, 0].min() > 0, self.nids
             #print(self.nid)
             self._eid = []
             self._pid = []
@@ -462,8 +466,7 @@ class CELAS4(SpringElement):
     card_name = 'CELAS4'
 
     def __init__(self, model):
-        self.model = model
-        self.is_current = False
+        SpringElement.__init__(self, model)
         self.eid = np.array([], dtype='int32')
         self.k = np.array([], dtype='float64')
         self.nids = np.array([], dtype='int32')
@@ -539,6 +542,7 @@ class CELAS4(SpringElement):
                 self.k = np.array(self._k, dtype='float64')
                 self.nids = np.array(self._nids, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
+            assert self.nids[:, 0].min() > 0, self.nids
             #print(self.nid)
             self._eid = []
             self._k = []

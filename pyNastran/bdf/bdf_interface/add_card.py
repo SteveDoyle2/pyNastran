@@ -988,6 +988,20 @@ class AddCards(AddMethods):
         return elem
 
     def add_pvisc(self, pid, ce, cr, comment=''):
+        """
+        Creates a PVISC card
+
+        Parameters
+        ----------
+        pid : int
+            property id for a CVISC
+        ce : float
+            Viscous damping values for extension in units of force per unit velocity
+        cr : float
+            Viscous damping values for rotation in units of moment per unit velocity.
+        comment : str; default=''
+            a comment for the card
+        """
         # type: (int, float, float, str) -> PVISC
         prop = PVISC(pid, ce, cr, comment=comment)
         self._add_property_object(prop)
