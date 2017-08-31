@@ -5,8 +5,8 @@ from pyNastran.utils import integer_types
 
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
-    integer_string_or_blank, string_or_blank, string, integer_or_double)
-from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8, set_blank_if_default
+    integer_string_or_blank)
+from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.cards.base_card import _format_comment
 
 

@@ -1,12 +1,9 @@
 from __future__ import print_function
 from collections import defaultdict
 import numpy as np
-from pyNastran.utils import integer_types
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, blank,
-    integer_double_or_blank)
-from pyNastran.bdf.field_writer_8 import print_field_8
+    integer, integer_or_blank)
 from pyNastran.bdf.cards.base_card import _format_comment
 
 

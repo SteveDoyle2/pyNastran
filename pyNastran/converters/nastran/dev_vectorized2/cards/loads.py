@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import (
     print_float_8, print_card_8, set_blank_if_default, set_string8_blank_if_default)
 from pyNastran.bdf.field_writer_16 import (
-    print_float_16, print_card_16, set_string16_blank_if_default)
+    print_float_16, set_string16_blank_if_default)
 from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 from pyNastran.bdf.cards.base_card import expand_thru
@@ -629,7 +629,7 @@ class FORCE1v(BaseLoad):
         self._g12 = []
         self.comment = defaultdict(str)
 
-    def add(self, sid, node, mag, g1, g2, comment=''):
+    def add(self, sid, nid, mag, g1, g2, comment=''):
         """
         Creates a FORCE1 card
 
@@ -637,7 +637,7 @@ class FORCE1v(BaseLoad):
         ----------
         sid : int
             load id
-        node : int
+        nid : int
             the node to apply the load to
         mag : float
             the load's magnitude

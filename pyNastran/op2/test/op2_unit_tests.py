@@ -21,7 +21,7 @@ from pyNastran.utils.log import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
-from pyNastran.op2.op2_geom import read_op2_geom
+from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
@@ -36,10 +36,34 @@ model_path = os.path.abspath(os.path.join(test_path, '..', 'models'))
 
 
 class TestOP2(Tester):
+    """various OP2 tests"""
     #def _spike(self):
         #op2 = OP2()
         #op2.set_results('solidStress.oxx')
         #op2.read_op2(op2_filename, vectorized=False)
+
+    def test_generalized_tables(self):
+        """tests that set_additional_generalized_tables_to_read overwrites the GEOM1S class"""
+        op2_filename = os.path.join(model_path, 'elements', 'static_elements.op2')
+        model = OP2Geom()
+        model.read_op2(op2_filename=op2_filename, combine=True, build_dataframe=None,
+                       skip_undefined_matrices=False,
+                       encoding=None)
+
+        def read_some_table(self):
+            """crashes"""
+            raise NotImplementedError('read_some_table')
+
+        model2 = OP2Geom()
+        tables = {
+            b'GEOM1S' : read_some_table,
+        }
+        model2.set_additional_generalized_tables_to_read(tables)
+        with self.assertRaises(NotImplementedError):
+            model2.read_op2(op2_filename=op2_filename, combine=True, build_dataframe=None,
+                           skip_undefined_matrices=False,
+                           encoding=None)
+
 
     def test_filter1d(self):
         """tests filtering small values out of arrays"""

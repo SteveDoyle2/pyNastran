@@ -1724,6 +1724,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Adds methods to call a generalized table.
         Everything is left to the user.
+
+        ::
+
+          def read_some_table(self):
+              # read the data from self.f
+              pass
+
+          # let's overwrite the existing OP2 table
+          model2 = OP2Geom(debug=True)
+          generalized_tables = {
+              b'GEOM1S' : read_some_table,
+          }
+
+          model.set_additional_generalized_tables_to_read(generalized_tables)
         """
         self._update_generalized_tables(tables)
         self.generalized_tables = tables

@@ -110,6 +110,8 @@ class BDF(BDF_):
         self.force = FORCEv(model)
         self.force1 = FORCE1v(model)
         self.force2 = FORCE2v(model)
+        #self.pload = PLOADv(model)    # TODO: temp
+        #self.pload1 = PLOAD1v(model)  # TODO: temp
         self.pload2 = PLOAD2v(model)
         self.pload4 = PLOAD4v(model)
         self.loads2 = Loads(model)

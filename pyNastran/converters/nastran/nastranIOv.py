@@ -475,7 +475,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch')):
             if IS_TESTING or self.is_testing_flag:
                 self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-                #self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+                self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
         else:
@@ -702,9 +702,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # materials
         upid = np.unique(pids_array)
         for pid in upid: # upid_old
+            if pid == 0:
+                # elements w/o properties
+                continue
+
             ipid = np.where(pids_array == pid)[0]
             if len(ipid):
-                prop = model.properties[pid]
+                try:
+                    prop = model.properties[pid]
+                except KeyError:
+                    raise KeyError('pid=%r properties=%s' % (pid, str(model.properties)))
                 if prop.type == 'PSHELL':
                     nplies[ipid] = 4
                     thickness[ipid, 0] = prop.Thickness()
@@ -713,8 +720,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     for iply in range(prop.nplies):
                         mids[ipid, iply+1] = prop.Mid(iply)
                         thickness[ipid, iply+1] = prop.Thickness(iply)
-                else:
-                    self.log.error('nplies\n%s' % str(prop))
+                #else:
+                    #self.log.error('nplies\n%s' % str(prop))
+        if len(model.conrod):
+            #mids[ieid, 0] = 42
+            pass
 
         #if nplies.max() > 0:
             #nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
@@ -954,21 +964,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
-            model.cbush, cell_type_line, cell_type_point)
-
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
             model.cvisc, cell_type_line, cell_type_point)
-
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.conrod, cell_type_line, nnodesi=2, dimi=2)
 
         ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
@@ -977,7 +973,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cell_types_array, cell_offsets_array,
             model.plotel, cell_type_line, nnodesi=2, dimi=2)
 
-        model.elements2.get_objects_and_lengths()
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, pids_array, nnodes_array, dim_array,
+            cell_types_array, cell_offsets_array,
+            model.cbush, cell_type_line, cell_type_point)
+
+        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+            ieid0, cell_offset0,
+            nodes, nids_list,
+            eids_array, pids_array, nnodes_array, dim_array,
+            cell_types_array, cell_offsets_array,
+            model.conrod, cell_type_line, nnodesi=2, dimi=2)
         ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
@@ -1005,6 +1013,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cell_types_array, cell_offsets_array,
             model.cbeam, cell_type_line, nnodesi=2, dimi=1)
 
+        #model.cbend
         ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
@@ -1018,7 +1027,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.ctria3, cell_type_tri3, nnodesi=3, dimi=2)
-
         ieid0, cell_offset0 = self._map_elements_vectorized_fill(
             ieid0, cell_offset0,
             nodes, nids_list,
@@ -1110,11 +1118,78 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.cpyram13, cell_type_pyram13, nnodesi=8, dimi=3,
             allow0=True, cell_type_allow=cell_type_pyram5)
 
+        # model.chbdyg
+        # model.chbdye
+        # model.chbdyp
+
         if cell_types_array.min() == 0:
-            msg = ('Cell Type is not defined (cell_type=0).\n'
-                   '  cell_types_array = %s\n'
-                   '  card_count=\n%s\n' % (cell_types_array, model.card_count))
-            msg += model.get_bdf_stats()
+
+            # all the non-elemental cards should be listed
+            # it's not hugely important, but it cleans up dev error messages
+            skip_cards = [
+                'CONM2',
+                #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'PLOTEL',
+                'PARAM',
+                #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CVISC',
+                'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+                'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLEST',
+                'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
+                'MATT1', 'MATT2', 'MATT8',
+                'MATS1',
+
+                'PLOAD', 'PLOAD1', 'PLOAD2', 'FORCE', 'PLOAD4', 'LOAD',
+                'MAT1', 'PSHEAR', 'PSHELL', 'PTUBE', 'PDAMP',
+                'PELAST', 'PBEND', 'PBEAM', 'PCOMP', 'PCOMPG', 'PBAR', 'PSOLID',
+                'PROD', 'PELAS', 'PVISC', 'PBUSH1D', 'PBUSH2D',
+                #'EPOINT',
+                #'CQUADR', 'CTRIAR', 'SPOINT',
+                #'CQUAD8', 'CTRIA6',
+                'ENDDATA',
+                'CORD2R', 'CORD2C', 'CORD2S', 'CORD1R', 'CORD1C', 'CORD1S',
+                'GRID', 'SPOINT', 'EPOINT', 'TF',
+
+                'RFORCE', 'RFORCE1', 'RFORCE2', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
+                'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'LOAD', 'TLOAD1', 'TLOAD2', 'DLOAD', 'LSEQ', 'DAREA',
+                'RLOAD1', 'RLOAD2',
+
+                'SUPORT', 'SUPORT1', 'MPC', 'MPCADD', 'RBE1', 'RBE2', 'RBE3', 'RBAR', 'RCROSS',
+                'SPCADD', 'SPC', 'SPC1', 'SPCD', 'SPCAX', 'DMIG', 'DMI', 'DMIJ', 'DMIJI', 'DMIK',
+
+                'AELIST', 'AELINK', 'AESURF', 'AESURFS', 'AERO', 'AEROS', 'TRIM', 'FLUTTER', 'DIVERG',
+                'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+                'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
+                'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7',
+            ]
+            potential_elements_found = [key for key in model.card_count if key not in skip_cards]
+            etypes = [
+                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC',
+                'CBUSH', 'CBUSH1D', 'CBUSH2D',
+                'CONROD', 'CROD', 'CTUBE', 'PLOTEL',
+                'CBAR', 'CBEAM', 'CBEND',
+                'CSHEAR',
+                'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CTRIAR', 'CQUADR',
+                'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+                'CHBDYG', 'CHBDYE', 'CHBDYP',
+            ]
+            for key in potential_elements_found:
+                if key not in etypes:
+                    self.log.warning('is %s an element?' % key)
+
+            msg = (
+                'Cell Type is not defined (cell_type=0).\n'
+                '  cell_types_array = %s\n'
+                '  potential_elements_found=[%s]\n'
+                '  nelements=%s\n\n'
+                '%s\n\n' % (
+                    cell_types_array,
+                    ', '.join(potential_elements_found),
+                    len(cell_types_array),
+                    '', #str(model.elements2),
+                )
+            )
+            print(str(model.elements2))
+            #msg += model.get_bdf_stats()
             raise RuntimeError(msg)
 
         deep = 1
@@ -1164,6 +1239,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """helper method for ``map_elements_vectorized``"""
         nelems = len(model_obj)
         if nelems:
+            ieid0_in = ieid0
             dimi = 1
             nnodesi = 2
             elem = model_obj
@@ -1215,9 +1291,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cumsum = cell_offset0 + np.cumsum(nnodes + 1)
             #print("nnodes =", nnodes)
             #print('offset0=%s cumsum=%s' % (cell_offset0, cumsum))
+            self.log.debug('  ieid = %s' % ieid)
+            assert len(ieid) == nelems
             assert len(ieid) == len(cumsum)
             cell_offsets_array[ieid] = cumsum
             ieid0 += nelems
+            self.log.debug("  ieid0_in=%s ieid0_out=%s" % (ieid0_in, ieid0))
             cell_offset0 += cumsum[-1]
             #print('nids_list[%s] = %s' % (model_obj.card_name, nids_list[-1]))
             #print('cell_offsets_array =', cell_offsets_array)
@@ -1237,6 +1316,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nelems = len(model_obj)
         #print('nelements =', nelems)
         if nelems:
+            ieid0_in = ieid0
             elem = model_obj
             elem.make_current()
             self.log.info('%s; nelem=%s nnodes=%s' % (
@@ -1274,11 +1354,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eid_type = np.full(nelems, cell_type, dtype='int32')
 
             nnodes = np.full((nelems, 1), nnodesi, dtype='int32')
-            nnodes_array[ieid] = nnodes
+            assert len(ieid) == len(nnodes), 'len(ieid)=%s len(nnodes)=%s' % (len(ieid), len(nnodes))
+
+            # nnodes is a 2D column matrix and nnodes_array is a 1D array,
+            # so we ravel it
+            nnodes_array[ieid] = nnodes.ravel()
             assert -1 not in inids, inids
             nnodes_inids = np.hstack([nnodes, inids])
             nids_list.append(nnodes_inids)
-
+            self.log.debug('  ieid = %s' % ieid)
             assert len(ieid) == nelems
 
             nnodes[0] = -1
@@ -1300,6 +1384,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cell_offset0 += cumsum[-1]
             #print('nids_list[%s] = %s' % (model_obj.card_name, nids_list[-1]))
             #print('cell_offsets_array =', cell_offsets_array)
+            self.log.debug("  ieid0_in=%s ieid0_out=%s" % (ieid0_in, ieid0))
         return ieid0, cell_offset0
 
     def _get_model_vectorized(self, bdf_filename, xref_loads=True):

@@ -224,7 +224,7 @@ setup(
             'f06 = pyNastran.f06.utils:cmd_line',
 
             'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
-            'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
+            #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
             #'nastranToCodeAster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
         ]
     },

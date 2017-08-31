@@ -535,7 +535,7 @@ class CTRIARv(ShellElement):
     nrequired = 3
 
     def add(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
-                 thickness_flag=0, thickness=None, comment=''):
+            thickness_flag=0, thickness=None, comment=''):
         """
         Creates a CTRIAR card
 

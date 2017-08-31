@@ -4,14 +4,14 @@ import unittest
 import pyNastran
 from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import read_bdf
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, '../', 'models')
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, '../', 'models')
 
 
 class TestVectorized(unittest.TestCase):
     def test_solid_bending(self):
         """tests solid_bending"""
-        bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
                          mode='msc')
@@ -28,7 +28,7 @@ class TestVectorized(unittest.TestCase):
 
     def test_bwb(self):
         """tests bwb"""
-        bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'BWB_saero.bdf')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
                          mode='msc')
@@ -41,7 +41,7 @@ class TestVectorized(unittest.TestCase):
 
     def test_isat(self):
         """tests isat"""
-        bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm.dat')
+        bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm.dat')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
                          mode='msc')
@@ -58,7 +58,7 @@ class TestVectorized(unittest.TestCase):
 
     def test_static_elements(self):
         """tests static_elements"""
-        bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
                          mode='msc')
@@ -75,7 +75,7 @@ class TestVectorized(unittest.TestCase):
 
     def test_static_elements(self):
         """tests static_elements"""
-        bdf_filename = os.path.join(model_path, 'elements', 'static_elements.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          skip_cards=None, encoding=None, log=None, debug=True,
                          mode='msc')
