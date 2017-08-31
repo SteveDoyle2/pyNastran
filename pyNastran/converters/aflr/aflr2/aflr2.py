@@ -391,7 +391,8 @@ class AFLR2(object):
         subcurves = hstack([self.subcurves, bedge.subcurves])
         self.log.debug('ugrid_bcs = %s' % unique(grid_bc))
 
-        export_to_bedge(bedge_filename, nodes, grid_bc, curves, subcurves, axis=2, log=self.log)
+        export_to_bedge(bedge_filename,
+                        nodes, grid_bc, curves, subcurves, axis=2, log=self.log)
 
 def _flip_value(lst):
     """flips a 0 to 1 and vice-versa"""
@@ -400,14 +401,31 @@ def _flip_value(lst):
         for val in lst
     ]
 
-def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, log=None):
+def export_to_bedge(bedge_filename,
+                    nodes, grid_bcs, curves, subcurves, axis=1, log=None):
     """
+    Creates a bedge file
+
     Parameters
     ----------
+    bedge_filename : str
+        the *.bedge file
+    nodes : ???
+        ???
+    grid_bcs : ???
+        ???
+        source is model.grid_bc, not model.grid_bcs
+    curves : ???
+        ???
+    subcurves : ???
+        ???
     axis : int; default=1
         the axis to remove (nodes in Nx3)
+    log : Logger(); default=None
+        a required logging object
     """
     log.debug('bedge_filename = %s' % bedge_filename)
+    log.debug('grid_bc = %s' % grid_bcs)
     #if bedge_filename == 'farfield.bedge':
         #print(grid_bcs)
 
@@ -455,7 +473,10 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
         bedge_file.write('\n')
         nsubcurves = len(grid_bcs)
         log.debug('nsubcurves = %s?' % nsubcurves)
-        assert nsubcurves < 20
+        if nsubcurves > 30:
+            msg = 'Are you sure you are merging model.grid_bc and not model.grid_bcs?\n'
+            msg += 'nsubcurves=%s' % (nsubcurves)
+            raise RuntimeError(msg)
         #assert nsubcurves == len(nsubcurves_list) #  wrong check...
 
         for nnodes in nodes_pack:

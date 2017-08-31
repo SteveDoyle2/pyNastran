@@ -45,8 +45,7 @@ class TestUgridGui(unittest.TestCase):
         assert os.path.exists(ugrid_filename), ugrid_filename
         test = UGRID_GUI()
         test.log = log
-        test.load_ugrid_geometry(ugrid_filename, name='main',
-                                 plot=True)
+        test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
 
     def test_ugrid_gui_02(self):
         """tests plate_with_circular_hole"""
@@ -59,8 +58,29 @@ class TestUgridGui(unittest.TestCase):
                              properties=None, check_shells=True, check_solids=False, log=log)
         #assert os.path.exists(ugrid_filename), ugrid_filename
         #test = UGRID_GUI()
-        #test.load_ugrid_geometry(ugrid_filename, name='main',
-                                 #plot=True)
+        #test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
+
+    def test_ugrid2d_gui(self):
+        """simple UGRID2D model"""
+        ugrid_filename = 'quad_tri.ugrid'
+        msg = (
+            #(nnodes, ntrias, nquads), ntets, npyram5, npenta6, nhexas8s
+            '5 1 1   0 0 0 0\n'
+            '0. 0. 0.\n'
+            '1. 0. 0.\n'
+            '1. 1. 0.\n'
+            '0. 1. 0.\n'
+            '0. 2. 0.\n'
+            '3 4 5\n'
+            '1 2 3 4\n'
+        )
+        with open(ugrid_filename, 'w') as ugrid_file:
+            ugrid_file.write(msg)
+
+        log = get_logger(level='warning')
+        test = UGRID_GUI()
+        test.log = log
+        test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

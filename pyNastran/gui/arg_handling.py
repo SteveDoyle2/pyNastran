@@ -207,6 +207,7 @@ def get_inputs(argv=None):
     is_groups = False
     no_update = True
     log = None
+    test = False
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")

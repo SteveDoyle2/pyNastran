@@ -33,6 +33,7 @@ class TestUgrid(unittest.TestCase):
                                    convert_pyram_to_penta=False,
                                    encoding=None, size=16,
                                    is_double=False, log=log)
+        model.skin_solids()
         assert os.path.exists(nastran_filename2), nastran_filename2
 
         #tecplot_filename1 = os.path.join(nastran_path, 'solid_bending', 'solid_bending.plt')

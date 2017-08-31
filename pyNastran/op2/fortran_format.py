@@ -39,7 +39,7 @@ class FortranFormat(object):
         self.is_all_subcases = True
         self.valid_subcases = []
 
-    def show(self, n, types='ifs', endian=None):
+    def show(self, n, types='ifs', endian=None):  # pragma: no cover
         """
         Shows binary data
         """
@@ -50,7 +50,7 @@ class FortranFormat(object):
         self.f.seek(self.n)
         return strings, ints, floats
 
-    def show_data(self, data, types='ifs', endian=None):
+    def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
         """
         Shows a data block as various types
 
@@ -76,7 +76,7 @@ class FortranFormat(object):
         """
         return self.write_data(sys.stdout, data, types=types, endian=endian)
 
-    def write_data(self, f, data, types='ifs', endian=None):
+    def write_data(self, f, data, types='ifs', endian=None):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
 
@@ -142,10 +142,10 @@ class FortranFormat(object):
         f.write('\n')
         return strings, ints, floats
 
-    def show_ndata(self, n, types='ifs'):
+    def show_ndata(self, n, types='ifs'):  # pragma: no cover
         return self.write_ndata(sys.stdout, n, types=types)
 
-    def write_ndata(self, f, n, types='ifs'):
+    def write_ndata(self, f, n, types='ifs'):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
         """
@@ -330,11 +330,11 @@ class FortranFormat(object):
             markers = self.get_nmarkers(1, rewind=True)
         self.read_markers([0])
 
-    def passer(self, data):
-        """
-        dummy function used for unsupported tables
-        """
-        pass
+    #def passer(self, data):
+        #"""
+        #dummy function used for unsupported tables
+        #"""
+        #pass
 
     def _get_table_mapper(self):
         raise NotImplementedError('this should be overwritten')

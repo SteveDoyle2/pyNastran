@@ -40,6 +40,7 @@ class UGRID_IO(object):
             base, ext = os.path.basename(ugrid_filename).split('.')
             model = UGRID2D_Reader(log=self.log, debug=True)
             is_2d = True
+        is_3d = not is_2d
 
         self.model_type = 'ugrid'
         self.log.debug('ugrid_filename = %s' % ugrid_filename)
@@ -86,13 +87,14 @@ class UGRID_IO(object):
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
-        diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
-        if len(diff_node_ids):
-            red = (1., 0., 0.)
-            self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1.,
-                                           point_size=10, representation='point')
-            self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
-            self._add_alt_actors(self.alt_grids)
+        if is_3d:
+            diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
+            if len(diff_node_ids):
+                red = (1., 0., 0.)
+                self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1.,
+                                               point_size=10, representation='point')
+                self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
+                self._add_alt_actors(self.alt_grids)
 
         points = self.numpy_to_vtk_points(nodes)
 

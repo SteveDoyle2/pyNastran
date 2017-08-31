@@ -409,12 +409,12 @@ class Cart3dIO(object):
         """binary results are not supported"""
         pass
 
-    def _rewind(self):
+    def _rewind(self):  # pragma: no cover
         """go back to the beginning of the file"""
         self.n = 0
         self.infile.seek(self.n)
 
-    def show(self, n, types='ifs', endian=None):
+    def show(self, n, types='ifs', endian=None):  # pragma: no cover
         assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
         #nints = n // 4
         data = self.infile.read(4 * n)
@@ -422,10 +422,10 @@ class Cart3dIO(object):
         self.infile.seek(self.n)
         return strings, ints, floats
 
-    def show_data(self, data, types='ifs', endian=None):
+    def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
         return self._write_data(sys.stdout, data, types=types, endian=endian)
 
-    def _write_data(self, outfile, data, types='ifs', endian=None):
+    def _write_data(self, outfile, data, types='ifs', endian=None):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
         """
@@ -464,10 +464,10 @@ class Cart3dIO(object):
             outfile.write("long long = %s\n" % str(longs))
         return strings, ints, floats
 
-    def show_ndata(self, n, types='ifs'):
+    def show_ndata(self, n, types='ifs'):  # pragma: no cover
         return self._write_ndata(sys.stdout, n, types=types)
 
-    def _write_ndata(self, outfile, n, types='ifs'):
+    def _write_ndata(self, outfile, n, types='ifs'):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
         """
