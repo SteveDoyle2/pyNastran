@@ -9,6 +9,7 @@ import numpy as np
 def convert(model, units_to, units=None):
     """
     Converts a model from a set of defined units
+
     Parameters
     ----------
     xref : bool
@@ -17,7 +18,6 @@ def convert(model, units_to, units=None):
         [length, mass, time]
     units : list
         overwrites model.units
-    TODO: not done...
     """
     # units_start = 'in'
     # units_end = 'mm'

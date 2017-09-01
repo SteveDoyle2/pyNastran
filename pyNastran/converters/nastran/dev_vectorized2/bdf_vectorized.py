@@ -17,7 +17,7 @@ from pyNastran.converters.nastran.dev_vectorized2.cards.bush import (
 from pyNastran.converters.nastran.dev_vectorized2.cards.rods import (
     CONRODv, CRODv, CTUBEv, Rods)
 from pyNastran.converters.nastran.dev_vectorized2.cards.loads import (
-    Loads, PLOAD2v, PLOAD4v, FORCEv, FORCE1v, FORCE2v)
+    Loads, PLOADv, PLOAD2v, PLOAD4v, FORCEv, FORCE1v, FORCE2v)
 from pyNastran.converters.nastran.dev_vectorized2.cards.bars import CBARv, Bars
 from pyNastran.converters.nastran.dev_vectorized2.cards.beams import CBEAMv, Beams
 from pyNastran.converters.nastran.dev_vectorized2.cards.shears import CSHEARv, Shears
@@ -110,11 +110,13 @@ class BDF(BDF_):
         self.force = FORCEv(model)
         self.force1 = FORCE1v(model)
         self.force2 = FORCE2v(model)
-        #self.pload = PLOADv(model)    # TODO: temp
+        self.pload = PLOADv(model)
         #self.pload1 = PLOAD1v(model)  # TODO: temp
         self.pload2 = PLOAD2v(model)
         self.pload4 = PLOAD4v(model)
-        self.loads2 = Loads(model)
+
+        self.load_combinations = {}
+        self.loads = Loads(model)
 
         self._update_card_parser()
 
@@ -224,12 +226,37 @@ class BDF(BDF_):
         else:
             self.cpyram13.add_card(card_obj, comment=comment)
 
+    def _prepare_load(self, card, card_obj, comment=''):
+        load = LOAD.add_card(card_obj, comment=comment)
+        key = load.sid
+        assert key not in self.load_combinations
+        self.load_combinations[key] = load
+
+    #def _prepare_grav(self, card, card_obj, comment=''):
+        #self.grav.add_card(card_obj, comment=comment)
+    #def _prepare_accel(self, card, card_obj, comment=''):
+        #self.accel.add_card(card_obj, comment=comment)
+    #def _prepare_accel1(self, card, card_obj, comment=''):
+        #self.accel1.add_card(card_obj, comment=comment)
+    def _prepare_sload(self, card, card_obj, comment=''):
+        self.sload.add_card(card_obj, comment=comment)
     def _prepare_force(self, card, card_obj, comment=''):
         self.force.add_card(card_obj, comment=comment)
     def _prepare_force1(self, card, card_obj, comment=''):
         self.force1.add_card(card_obj, comment=comment)
     def _prepare_force2(self, card, card_obj, comment=''):
         self.force2.add_card(card_obj, comment=comment)
+    #def _prepare_moment(self, card, card_obj, comment=''):
+        #self.moment.add_card(card_obj, comment=comment)
+    #def _prepare_moment1(self, card, card_obj, comment=''):
+        #self.moment1.add_card(card_obj, comment=comment)
+    #def _prepare_moment2(self, card, card_obj, comment=''):
+        #self.moment2.add_card(card_obj, comment=comment)
+
+    def _prepare_pload(self, card, card_obj, comment=''):
+        self.pload.add_card(card_obj, comment=comment)
+    #def _prepare_pload1(self, card, card_obj, comment=''):
+        #self.pload1.add_card(card_obj, comment=comment)
     def _prepare_pload2(self, card, card_obj, comment=''):
         self.pload2.add_card(card_obj, comment=comment)
     def _prepare_pload4(self, card, card_obj, comment=''):
@@ -300,17 +327,28 @@ class BDF(BDF_):
         del self._card_parser['CSHEAR']
         self._card_parser_prepare['CSHEAR'] = self._prepare_cshear
 
-
+        del self._card_parser['LOAD']
+        #del self._card_parser['SLOAD']
+        del self._card_parser['PLOAD']
         del self._card_parser['PLOAD2']
         del self._card_parser['PLOAD4']
         del self._card_parser['FORCE']
         del self._card_parser['FORCE1']
         del self._card_parser['FORCE2']
+        #del self._card_parser['MOMENT']
+        #del self._card_parser['MOMENT1']
+        #del self._card_parser['MOMENT2']
+        self._card_parser_prepare['LOAD'] = self._prepare_load
+        #self._card_parser_prepare['SLOAD'] = self._prepare_sload
+        self._card_parser_prepare['PLOAD'] = self._prepare_pload
         self._card_parser_prepare['PLOAD2'] = self._prepare_pload2
         self._card_parser_prepare['PLOAD4'] = self._prepare_pload4
         self._card_parser_prepare['FORCE'] = self._prepare_force
         self._card_parser_prepare['FORCE1'] = self._prepare_force1
         self._card_parser_prepare['FORCE2'] = self._prepare_force2
+        #self._card_parser_prepare['MOMENT'] = self._prepare_moment
+        #self._card_parser_prepare['MOMENT1'] = self._prepare_moment1
+        #self._card_parser_prepare['MOMENT2'] = self._prepare_moment2
 
 
     #def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):

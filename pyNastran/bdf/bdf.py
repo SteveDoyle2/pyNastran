@@ -3928,6 +3928,12 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     print(str(card))
                     raise
 
+        for key, card in sorted(iteritems(self.gusts)):
+            try:
+                card._verify(self, xref)
+            except:
+                print(str(card))
+                raise
 
 IGNORE_COMMENTS = (
     '$EXECUTIVE CONTROL DECK',

@@ -4621,7 +4621,7 @@ class GUST(BaseCard):
         dload = integer(card, 2, 'dload')
         wg = double(card, 3, 'wg')
         x0 = double(card, 4, 'x0')
-        V = double_or_blank(card, 4, 'V')
+        V = double_or_blank(card, 5, 'V')
         assert len(card) <= 6, 'len(GUST card) = %i\ncard=%s' % (len(card), card)
         return GUST(sid, dload, wg, x0, V=V, comment=comment)
 
@@ -4641,6 +4641,11 @@ class GUST(BaseCard):
 
     #def uncross_reference(self):
         #pass
+
+    def _verify(self, model, xref):
+        if model.aero:
+            pass
+            #assert model.aero.V == self.V
 
     def raw_fields(self):
         """

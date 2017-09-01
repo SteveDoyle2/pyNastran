@@ -769,8 +769,6 @@ class FORCE(Force):
     +=======+=====+======+=======+======+======+======+======+
     | FORCE | SID | NODE |  CID  | MAG  |  FX  |  FY  |  FZ  |
     +-------+-----+------+-------+------+------+------+------+
-
-    +-------+-----+------+-------+------+------+------+------+
     | FORCE |  3  |  1   |       | 100. |  0.  |  0.  |  1.  |
     +-------+-----+------+-------+------+------+------+------+
     """
@@ -2003,12 +2001,26 @@ class GMLOAD(Load):
 
 
 class PLOAD(Load):
+    """
+    Static Pressure Load
+
+    Defines a uniform static pressure load on a triangular or quadrilateral surface
+    comprised of surface elements and/or the faces of solid elements.
+
+    +-------+-----+------+----+----+----+----+
+    |   1   |  2  |  3   | 4  | 5  | 6  | 7  |
+    +=======+=====+======+====+====+====+====+
+    | PLOAD | SID |  P   | G1 | G2 | G3 | G4 |
+    +-------+-----+------+----+----+----+----+
+    | PLOAD |  1  | -4.0 | 16 | 32 | 11 |    |
+    +-------+-----+------+----+----+----+----+
+    """
     type = 'PLOAD'
 
     def __init__(self, sid, pressure, nodes, comment=''):
         """
         Creates a PLOAD card, which defines a uniform pressure load on a
-        shell/solid face or arbitrarily defined quad/tri face
+        shell/solid face or arbitrarily defined quad/tri face.
 
         Parameters
         ----------
@@ -2119,10 +2131,28 @@ class PLOAD(Load):
 
 
 class PLOAD1(Load):
+    """
+    Applied Load on CBAR, CBEAM or CBEND Elements
+
+    Defines concentrated, uniformly distributed, or linearly distributed
+    applied loads to the CBAR or CBEAM elements at user-chosen points
+    along the axis. For the CBEND element, only distributed loads over
+    an entire length may be defined.
+
+    +--------+-----+------+------+-------+-----+-------+-----+-------+
+    |   1    |  2  |  3   |  4   |   5   |  6  |   7   |  8  |   9   |
+    +========+=====+======+======+=======+=====+=======+=====+=======+
+    | PLOAD1 | SID | EID  | TYPE | SCALE | X1  |  P1   |  X2 |  P2   |
+    +--------+-----+------+------+-------+-----+-------+-----+-------+
+    | PLOAD1 | 25  | 1065 |  MY  | FRPR  | 0.2 | 2.5E3 | 0.8 | 3.5E3 |
+    +--------+-----+------+------+-------+-----+-------+-----+-------+
+    """
     type = 'PLOAD1'
     valid_types = ['FX', 'FY', 'FZ', 'FXE', 'FYE', 'FZE',
                    'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
-    valid_scales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
+
+    # LE: length-based; FR: fractional; PR:projected
+    valid_scales = ['LE', 'FR', 'LEPR', 'FRPR']
 
     def __init__(self, sid, eid, load_type, scale, x1, p1, x2=None, p2=None, comment=''):
         """

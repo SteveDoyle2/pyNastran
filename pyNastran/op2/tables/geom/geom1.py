@@ -54,7 +54,7 @@ class GEOM1(GeomCommon):
             (14301,143,651): ['CORD3G', self._read_cord3g],  # record 7
 
             (4501,  45,  1): ['GRID',   self._read_grid],    # record 17
-            (5301,  53,  4): ['SEQGP',  self._read_seqgp],   # record 27 - not done
+            (5301,  53,  4): ['SEQGP',  self._read_seqgp],   # record 27
 
             (2301,  23, 304): ['CSUPER',  self._read_fake],  # record 8
             (5501,  55, 297): ['CSUPEXT', self._read_fake],  # record 9

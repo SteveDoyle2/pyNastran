@@ -65,7 +65,8 @@ def export_to_hdf5(self, group, log):
         try:
             group.create_dataset(name, data=value)
         except TypeError:
-            print(name, type(name))
+            print('name = %r; type=%s' % (name, type(value)))
+            print(value)
             print('------------------')
             raise
             #continue
