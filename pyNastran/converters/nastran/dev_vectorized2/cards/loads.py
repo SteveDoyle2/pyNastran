@@ -17,15 +17,61 @@ from pyNastran.bdf.cards.base_card import expand_thru
 class Loads(object):
     """intializes the Loads"""
     def __init__(self, model):
+        """
+        This is mostly me thinking about the problem, not what the code does...
+
+        In the BDF, we create multiple Loads objects that is stored in a
+        dictionary called self.loads[sid].  Thus, we don't need to store
+        the sid locally.
+
+        We also store a self.load, which stores only LOAD cards.  Then, in the
+        case control deck, there are a few cases:
+
+          - The LOAD=1 is set:
+                1) no LOAD card exists
+                2) a FORCE is applied
+                Currently handled in the non-vectorized BDF
+
+          - The LOAD=1 is set:
+                1) a LOAD card exists
+                2) a FORCE is applied
+                3) the LOAD doesn't reference the FORCE
+            Currently handled in the non-vectorized BDF
+
+          - The LOAD=1 is set:
+                1) a LOAD card exists
+                2) a FORCE is applied
+                3) the LOAD doesn't reference the FORCE
+            Currently **not** handled in the non-vectorized BDF
+
+
+        By using a self.load and self.loads (or some other similar names), we need to:
+
+          - Prevent recursion.
+            (Currently handled in the non-vectorized BDF)
+
+          - Prevent secondary LOAD cards from being called.
+            (Currently **not** handled in the non-vectorized BDF)
+
+          - Allow for LOAD=1 to reference and scale FORCE=1, which is bizarre,
+            but allowed.
+            (Currently **not** handled in the non-vectorized BDF)
+        """
         self.model = model
+        self.pload = model.pload
         self.pload2 = model.pload2
         self.pload4 = model.pload4
         self.force = model.force
         self.force1 = model.force1
         self.force2 = model.force2
+        self.unhandled = []
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
+        if len(self.pload):
+            self.pload.write_card(size, is_double, bdf_file)
+        if len(self.pload2):
+            self.pload2.write_card(size, is_double, bdf_file)
         if len(self.pload4):
             self.pload4.write_card(size, is_double, bdf_file)
         if len(self.force):
@@ -34,6 +80,30 @@ class Loads(object):
             self.force1.write_card(size, is_double, bdf_file)
         if len(self.force2):
             self.force2.write_card(size, is_double, bdf_file)
+
+    #def make_current(self):
+        #"""calls make_current() for each group"""
+        #self.eids = []
+        #for group in self.groups:
+            #group.make_current()
+
+    @property
+    def groups(self):
+        """gets the sub-load groups"""
+        groups = [
+            self.pload4, self.pload2, self.pload4,
+            self.force, self.force1, self.force2,
+            #self.moment, self.moment1, self.moment2,
+        ]
+        return groups
+
+    #@property
+    #def loads(self):
+        #"""gets all the loads in the expected sorted order"""
+        #elems = []
+        #for group in self.groups:
+            #elems += group.elements
+        #return elems
 
     def __len__(self):
         return len(self.pload4) + len(self.force)
@@ -44,6 +114,9 @@ class Loads(object):
         msg += '%s  FORCE :  %s\n' % (indent, len(self.force))
         msg += '%s  FORCE1:  %s\n' % (indent, len(self.force1))
         msg += '%s  FORCE2:  %s\n' % (indent, len(self.force2))
+        #msg += '%s  MOMENT :  %s\n' % (indent, len(self.moment))
+        #msg += '%s  MOMENT1:  %s\n' % (indent, len(self.moment1))
+        #msg += '%s  MOMENT2:  %s\n' % (indent, len(self.moment2))
         return msg
 
     def __repr__(self):
@@ -86,6 +159,122 @@ class BaseLoad(object):
         raise NotImplementedError(self.card_name)
     def repr_indent(self, indent=''):
         raise NotImplementedError(self.card_name)
+
+
+class PLOADv(BaseLoad):
+    """
+    Static Pressure Load
+
+    Defines a uniform static pressure load on a triangular or quadrilateral surface
+    comprised of surface elements and/or the faces of solid elements.
+
+    +-------+-----+------+----+----+----+----+
+    |   1   |  2  |  3   | 4  | 5  | 6  | 7  |
+    +=======+=====+======+====+====+====+====+
+    | PLOAD | SID |  P   | G1 | G2 | G3 | G4 |
+    +-------+-----+------+----+----+----+----+
+    | PLOAD |  1  | -4.0 | 16 | 32 | 11 |    |
+    +-------+-----+------+----+----+----+----+
+    """
+    card_name = 'PLOAD'
+
+    def __init__(self, model):
+        BaseLoad.__init__(self, model)
+        #self.model = model
+        self.is_current = False
+        #self.sid = np.array([], dtype='int32')
+        self.pressure = np.array([], dtype='float64')
+        self.nids = np.array([], dtype='int32')
+
+        #self._sid = []
+        self._pressure = []
+        self._nids = []
+        self.comment = defaultdict(str)
+
+    def add(self, sid, pressure, eids, comment=''):
+        """
+        Creates a PLOAD card, which defines a uniform pressure load on a
+        shell/solid face or arbitrarily defined quad/tri face.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        pressure : float
+            the pressure to apply
+        nodes : List[int]
+            The nodes that are used to define the normal are defined
+            using the same method as the CTRIA3/CQUAD4 normal.
+            n = 3 or 4
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment[len(self)] = _format_comment(comment)
+        self.is_current = False
+        self._sid.append(sid)
+        self._pressure.append(pressure)
+        self._nids.append(nodes)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a PLOAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+        pressure = double(card, 2, 'pressure')
+        nodes = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3'),
+            integer_or_blank(card, 6, 'n4', 0),
+        ]
+        assert len(card) <= 7, 'len(PLOAD card) = %i\ncard=%s' % (len(card), card)
+        self.add(sid, pressure, nodes, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for i, sid, pressure, nids in zip(count(), self.sid, self.pressure, self.nids):
+            list_fields = ['PLOAD', self.sid, self.pressure] + self.node_ids
+            msgi = print_card_8(list_fields)
+            msg += self.comment[eid] + msgi
+            msg += msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.sid) > 0: # there are already elements in self.eid
+                self.sid = np.hstack([self.sid, self._sid])
+                self.nids = np.vstack([self.eid, self._nids])
+
+                self.pressure = np.hstack([self.pressure, self._pressure])
+                # TODO: need to handle comments
+            else:
+                self.sid = np.array(self._sid, dtype='int32')
+                self.nids = np.array(self._nids, dtype='int32')
+                self.pressure = np.array(self._pressure, dtype='float64')
+
+            self._sid = []
+            self._nids = []
+            self._pressure = []
+            self.is_current = True
+        #else:
+            #print('no GRIDs')
+
+    def repr_indent(self, indent=''):
+        msg = '%sPLOADv:\n' % indent
+        msg += '%s  sid = %s\n' % self.sid
+        return msg
 
 
 class PLOAD2v(BaseLoad):
@@ -461,8 +650,6 @@ class FORCEv(BaseLoad):
     |   1   |  2  |  3   |   4   |  5   |  6   |   7  |   8  |
     +=======+=====+======+=======+======+======+======+======+
     | FORCE | SID | NODE |  CID  | MAG  |  FX  |  FY  |  FZ  |
-    +-------+-----+------+-------+------+------+------+------+
-
     +-------+-----+------+-------+------+------+------+------+
     | FORCE |  3  |  1   |       | 100. |  0.  |  0.  |  1.  |
     +-------+-----+------+-------+------+------+------+------+
