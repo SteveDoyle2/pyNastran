@@ -266,8 +266,6 @@ class CTETRA10v(SolidElement):
     +--------+-----+-----+-----+-----+-----+----+-----+-----+
     |        | G7  |  G8 | G9  | G10 |     |    |     |     |
     +--------+-----+-----+-----+-----+-----+----+-----+-----+
-
-    +--------+-----+-----+-----+-----+-----+----+-----+-----+
     | CTETRA | 1   | 1   | 239 | 229 | 516 | 99 | 335 | 103 |
     +--------+-----+-----+-----+-----+-----+----+-----+-----+
     |        | 265 | 334 | 101 | 102 |     |    |     |     |
@@ -389,18 +387,22 @@ class CPENTA6v(SolidElement):
 
 class CPENTA15v(SolidElement):
     """
-    +--------+-----+-----+----+----+----+----+
-    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |
-    +========+=====+=====+====+====+====+====+
-    | CTETRA | EID | PID | G1 | G2 | G3 | G4 |
-    +--------+-----+-----+----+----+----+----+
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4 |  5  |  6  |  7  |  8  |  9  |
+    +=========+=====+=====+====+=====+=====+=====+=====+=====+
+    |  CPENTA | EID | PID | G1 | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |         | G7  | G8  | G9 | G10 | G11 | G12 | G13 | G14 |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
+    |         | G15 |     |    |     |     |     |     |     |
+    +---------+-----+-----+----+-----+-----+-----+-----+-----+
     """
     card_name = 'CPENTA'
     nnodes = 15
 
     def add_card(self, card, comment=''):
         """
-        Adds a CTETRA4 card from ``BDF.add_card(...)``
+        Adds a CPENTA15 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -411,20 +413,36 @@ class CPENTA15v(SolidElement):
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-        nids = [integer(card, 3, 'nid1'),
-                integer(card, 4, 'nid2'),
-                integer(card, 5, 'nid3'),
-                integer(card, 6, 'nid4'), ]
-        assert len(card) == 7, 'len(CTETRA4 card) = %i\ncard=%s' % (len(card), card)
+        nids = [
+            integer(card, 3, 'nid1'),
+            integer(card, 4, 'nid2'),
+            integer(card, 5, 'nid3'),
+            integer(card, 6, 'nid4'),
+            integer(card, 7, 'nid5'),
+            integer(card, 8, 'nid6'),
+            integer_or_blank(card, 9, 'nid7'),
+            integer_or_blank(card, 10, 'nid8'),
+            integer_or_blank(card, 11, 'nid9'),
+            integer_or_blank(card, 12, 'nid10'),
+            integer_or_blank(card, 13, 'nid11'),
+            integer_or_blank(card, 14, 'nid12'),
+            integer_or_blank(card, 15, 'nid13'),
+            integer_or_blank(card, 16, 'nid14'),
+            integer_or_blank(card, 17, 'nid15'),
+        ]
+        assert len(card) <= 18, 'len(CPENTA15 card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, pid, nids, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, pid, nids in zip(self.eid, self.pid, self.nids):
-            data = [eid, pid] + nids.tolist()
-            msgi = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
+        for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
+            nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
+            data = [self.eid, self.Pid()] + nodes[:6] + nodes2
+            msgi = ('CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n'
+                    '        %8s%8s%8s%8s%8s%8s%8s%8s\n'
+                    '        %8s' % tuple(data))
             #row2_data = [theta, zoffset, # theta is theta_mcid
                          #tflag, T1, T2, T3]
             #row2 = [print_field_8(field) for field in row2_data]
@@ -494,18 +512,22 @@ class CHEXA8v(SolidElement):
 
 class CHEXA20v(SolidElement):
     """
-    +--------+-----+-----+----+----+----+----+
-    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |
-    +========+=====+=====+====+====+====+====+
-    | CTETRA | EID | PID | G1 | G2 | G3 | G4 |
-    +--------+-----+-----+----+----+----+----+
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+=====+=====+=====+=====+=====+=====+
+    | CHEXA | EID | PID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |       | G7  | G8  | G9  | G10 | G11 | G12 | G13 | G14 |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |       | G15 | G16 | G17 | G18 | G19 | G20 |     |     |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     card_name = 'CHEXA'
     nnodes = 20
 
     def add_card(self, card, comment=''):
         """
-        Adds a CTETRA4 card from ``BDF.add_card(...)``
+        Adds a CHEXA20 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -516,26 +538,37 @@ class CHEXA20v(SolidElement):
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
-        nids = [integer(card, 3, 'nid1'),
-                integer(card, 4, 'nid2'),
-                integer(card, 5, 'nid3'),
-                integer(card, 6, 'nid4'), ]
-        assert len(card) == 7, 'len(CTETRA4 card) = %i\ncard=%s' % (len(card), card)
+        nids = [
+            integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+            integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+            integer(card, 7, 'nid5'), integer(card, 8, 'nid6'),
+            integer(card, 9, 'nid7'), integer(card, 10, 'nid8'),
+            integer_or_blank(card, 11, 'nid9'),
+            integer_or_blank(card, 12, 'nid10'),
+            integer_or_blank(card, 13, 'nid11'),
+            integer_or_blank(card, 14, 'nid12'),
+            integer_or_blank(card, 15, 'nid13'),
+            integer_or_blank(card, 16, 'nid14'),
+            integer_or_blank(card, 17, 'nid15'),
+            integer_or_blank(card, 18, 'nid16'),
+            integer_or_blank(card, 19, 'nid17'),
+            integer_or_blank(card, 20, 'nid18'),
+            integer_or_blank(card, 21, 'nid19'),
+            integer_or_blank(card, 22, 'nid20'),
+        ]
+        assert len(card) <= 23, 'len(CHEXA20 card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, pid, nids, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, pid, nids in zip(self.eid, self.pid, self.nids):
-            data = [eid, pid] + nids.tolist()
-            msgi = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
-            #row2_data = [theta, zoffset, # theta is theta_mcid
-                         #tflag, T1, T2, T3]
-            #row2 = [print_field_8(field) for field in row2_data]
-            #data = [eid, pid] + nids.tolist() + row2
-            #msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-                   #'                %8s%8s%8s%8s\n' % tuple(data))
+        for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
+            nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
+            data = [eid, pid] + nodes[:8] + nodes2
+            msgi = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
+                    '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
+                    '        %8s%8s%8s%8s%8s%8s' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
         return msg
@@ -543,18 +576,18 @@ class CHEXA20v(SolidElement):
 
 class CPYRAM5v(SolidElement):
     """
-    +--------+-----+-----+----+----+----+----+
-    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |
-    +========+=====+=====+====+====+====+====+
-    | CTETRA | EID | PID | G1 | G2 | G3 | G4 |
-    +--------+-----+-----+----+----+----+----+
+    +--------+-----+-----+-----+-----+-----+-----+-----+
+    |    1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+    +========+=====+=====+=====+=====+=====+=====+=====+
+    | CPYRAM | EID | PID | G1  | G2  | G3  | G4  | G5  |
+    +--------+-----+-----+-----+-----+-----+-----+-----+
     """
     card_name = 'CPYRAM'
     nnodes = 5
 
     def add_card(self, card, comment=''):
         """
-        Adds a CTETRA4 card from ``BDF.add_card(...)``
+        Adds a CPYRAM5 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -564,45 +597,40 @@ class CPYRAM5v(SolidElement):
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        pid = integer(card, 2, 'pid')
-        nids = [integer(card, 3, 'nid1'),
-                integer(card, 4, 'nid2'),
-                integer(card, 5, 'nid3'),
-                integer(card, 6, 'nid4'), ]
-        assert len(card) == 7, 'len(CTETRA4 card) = %i\ncard=%s' % (len(card), card)
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+                integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+                integer(card, 7, 'nid5')]
+        assert len(card) == 8, 'len(CPYRAM5 1card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, pid, nids, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, pid, nids in zip(self.eid, self.pid, self.nids):
-            data = [eid, pid] + nids.tolist()
-            msgi = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
-            #row2_data = [theta, zoffset, # theta is theta_mcid
-                         #tflag, T1, T2, T3]
-            #row2 = [print_field_8(field) for field in row2_data]
-            #data = [eid, pid] + nids.tolist() + row2
-            #msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-                   #'                %8s%8s%8s%8s\n' % tuple(data))
+        for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
+            data = [eid, pid] + nodes
+            msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
         return msg
 
 class CPYRAM13v(SolidElement):
     """
-    +--------+-----+-----+----+----+----+----+
-    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |
-    +========+=====+=====+====+====+====+====+
-    | CTETRA | EID | PID | G1 | G2 | G3 | G4 |
-    +--------+-----+-----+----+----+----+----+
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |    1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +========+=====+=====+=====+=====+=====+=====+=====+=====+
+    | CPYRAM | EID | PID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |        | G7  | G8  | G9  | G10 | G11 | G12 |     |     |
+    +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     """
     card_name = 'CPYRAM'
     nnodes = 13
 
     def add_card(self, card, comment=''):
         """
-        Adds a CTETRA4 card from ``BDF.add_card(...)``
+        Adds a CPYRAM5 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -612,27 +640,24 @@ class CPYRAM13v(SolidElement):
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        pid = integer(card, 2, 'pid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'nid1'),
                 integer(card, 4, 'nid2'),
                 integer(card, 5, 'nid3'),
-                integer(card, 6, 'nid4'), ]
-        assert len(card) == 7, 'len(CTETRA4 card) = %i\ncard=%s' % (len(card), card)
+                integer(card, 6, 'nid4'),
+                integer(card, 7, 'nid5')]
+        assert len(card) == 8, 'len(CPYRAM5 1card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, pid, nids, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, pid, nids in zip(self.eid, self.pid, self.nids):
-            data = [eid, pid] + nids.tolist()
-            msgi = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
-            #row2_data = [theta, zoffset, # theta is theta_mcid
-                         #tflag, T1, T2, T3]
-            #row2 = [print_field_8(field) for field in row2_data]
-            #data = [eid, pid] + nids.tolist() + row2
-            #msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-                   #'                %8s%8s%8s%8s\n' % tuple(data))
+        for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
+            nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:]]
+            data = [eid, pid] + nodes[:5] + nodes2
+            msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
+                   '        %8s%8s%8s%8s%8s%8s%s' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
         return msg

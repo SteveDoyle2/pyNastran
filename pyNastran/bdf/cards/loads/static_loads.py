@@ -197,7 +197,7 @@ class LOAD(LoadCombination):
 
 class GRAV(BaseCard):
     """
-    Defines acceleration vectors for gravity or other acceleration loading.::
+    Defines acceleration vectors for gravity or other acceleration loading.
 
     +------+-----+-----+------+-----+-----+------+-----+
     |  1   |  2  |  3  |   4  |  5  |  6  |   7  |  8  |
@@ -1327,7 +1327,7 @@ class FORCE2(Force):
 class MOMENT(Moment):
     """
     Defines a static concentrated moment at a grid point by specifying a
-    scale factor and a vector that determines the direction.::
+    scale factor and a vector that determines the direction.
 
     +--------+-----+---+-----+-----+-----+-----+-----+
     |   1    |  2  | 3 |  4  |  5  |  6  |  7  |  8  |
@@ -1492,7 +1492,7 @@ class MOMENT(Moment):
 class MOMENT1(Moment):
     """
     Defines a static concentrated moment at a grid point by specifying a
-    magnitude and two grid points that determine the direction.::
+    magnitude and two grid points that determine the direction.
 
     +---------+-----+---+---+----+----+
     |    1    |  2  | 3 | 4 | 5  | 6  |
@@ -1658,7 +1658,7 @@ class MOMENT1(Moment):
 class MOMENT2(Moment):
     """
     Defines a static concentrated moment at a grid point by specification
-    of a magnitude and four grid points that determine the direction.::
+    of a magnitude and four grid points that determine the direction.
 
     +---------+-----+---+---+----+----+----+----+
     |    1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
@@ -2576,6 +2576,7 @@ class PLOAD4(Load):
     ============
     Defines a pressure load on a face of a CTRIA3, CTRIA6, CTRIAR,
     CQUAD4, CQUAD8, or CQUADR element.
+
     +--------+-----+-----+----+----+------+------+------+-------+
     |   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
     +========+=====+=====+====+====+======+======+======+=======+
@@ -3016,6 +3017,7 @@ class PLOADX1(Load):
 
     Defines surface traction to be used with the CQUADX, CTRIAX, and CTRIAX6
     axisymmetric element.
+
     +---------+-----+-----+----+----+----+----+-------+
     |    1    |  2  |  3  |  4 |  5 |  6 |  7 |   8   |
     +=========+=====+=====+====+====+====+====+=======+

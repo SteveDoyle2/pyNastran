@@ -665,7 +665,11 @@ class WriteMesh(BDFAttributes):
             for key, tempd in sorted(iteritems(self.tempds)):
                 msg.append(tempd.write_card(size, is_double))
             bdf_file.write(''.join(msg))
+        self._write_dloads(bdf_file, size=size, is_double=is_double)
 
+    def _write_dloads(self, bdf_file, size=8, is_double=False):
+    # type: (Any, int, bool) -> None
+        """Writes the dload cards sorted by ID"""
         if self.dloads or self.dload_entries:
             msg = ['$DLOADS\n']
             for (key, loadcase) in sorted(iteritems(self.dloads)):
@@ -752,9 +756,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_nodes(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
-        """
-        Writes the NODE-type cards
-        """
+        """Writes the NODE-type cards"""
         if self.spoints:
             msg = []  # type: List[str]
             msg.append('$SPOINTS\n')
@@ -776,6 +778,16 @@ class WriteMesh(BDFAttributes):
             for nid, ringax_pointax in iteritems(self.ringaxs):
                 bdf_file.write(ringax_pointax.write_card(size, is_double))
 
+        self._write_grids(bdf_file, size=size, is_double=is_double)
+        if self.seqgp:
+            bdf_file.write(self.seqgp.write_card(size, is_double))
+
+        #if 0:  # not finished
+            #self._write_nodes_associated(bdf_file, size, is_double)
+
+    def _write_grids(self, bdf_file, size=8, is_double=False):
+        # type: (Any, int, bool) -> None
+        """Writes the GRID-type cards"""
         if self.nodes:
             msg = []
             msg.append('$NODES\n')
@@ -789,11 +801,6 @@ class WriteMesh(BDFAttributes):
                 for (unused_nid, node) in sorted(iteritems(self.nodes)):
                     msg.append(node.write_card(size, is_double))
             bdf_file.write(''.join(msg))
-        if self.seqgp:
-            bdf_file.write(self.seqgp.write_card(size, is_double))
-
-        #if 0:  # not finished
-            #self._write_nodes_associated(bdf_file, size, is_double)
 
     #def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
         #"""

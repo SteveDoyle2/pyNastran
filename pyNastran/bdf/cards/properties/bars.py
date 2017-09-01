@@ -873,10 +873,7 @@ class IntegratedLineProperty(LineProperty):
 
 class PBAR(LineProperty):
     """
-    .. todo::
-        support solution 600 default
-        do a check for mid -> MAT1      for structural
-        do a check for mid -> MAT4/MAT5 for thermal
+    Defines the properties of a simple beam element (CBAR entry).
 
     +------+-----+-----+-----+----+----+----+-----+-----+
     |   1  |  2  |  3  |  4  |  5 |  6 |  7 |  8  |  9  |
@@ -887,6 +884,11 @@ class PBAR(LineProperty):
     +------+-----+-----+-----+----+----+----+-----+-----+
     |      | K1  | K2  | I12 |    |    |    |     |     |
     +------+-----+-----+-----+----+----+----+-----+-----+
+
+    .. todo::
+        support solution 600 default
+        do a check for mid -> MAT1      for structural
+        do a check for mid -> MAT4/MAT5 for thermal
     """
     type = 'PBAR'
 

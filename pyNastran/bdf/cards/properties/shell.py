@@ -1141,6 +1141,7 @@ class PLPLANE(ShellProperty):
     +=========+=====+=====+=====+=====+
     | PLPLANE | PID | MID | CID | STR |
     +---------+-----+-----+-----+-----+
+
     MSC
 
     +---------+-----+-----+-----+-----+---+
@@ -1148,6 +1149,7 @@ class PLPLANE(ShellProperty):
     +=========+=====+=====+=====+=====+===+
     | PLPLANE | PID | MID | CID | STR | T |
     +---------+-----+-----+-----+-----+---+
+
     NX
 
     Referenced by:

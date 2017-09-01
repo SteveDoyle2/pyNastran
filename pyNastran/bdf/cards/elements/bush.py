@@ -47,6 +47,7 @@ class CBUSH(BushElement):
 
     Defines a generalized spring-and-damper structural element that
     may be nonlinear or frequency dependent.
+
     +-------+-----+------+----+----+-------+----+----+-----+
     |   1   |  2  |  3   |  4 |  5 |   6   |  7 |  8 |  9  |
     +=======+=====+======+====+====+=======+====+====+=====+

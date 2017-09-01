@@ -483,8 +483,8 @@ class Cart3D(Cart3dIO):
     Cart3d interface class
     """
     model_type = 'cart3d'
-    isStructured = False
-    isOutwardNormals = True
+    is_structured = False
+    is_outward_normals = True
 
     def __init__(self, log=None, debug=False):
         Cart3dIO.__init__(self, log=log, debug=debug)

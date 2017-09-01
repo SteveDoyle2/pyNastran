@@ -147,7 +147,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
-             skip_cards=None,
+             skip_cards=None, read_cards=None,
              encoding=None, log=None, debug=True, mode='msc'):
     # type: (Union[str, None], bool, bool, bool, Union[List[str], None], Union[str, None], Union[SimpleLogger, None], Optional[bool], str) -> BDF
     """
@@ -174,6 +174,9 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     skip_cards : List[str]; default=None
         None : include all cards
         list of cards to skip
+    read_cards : List[str]; default=None
+        None : include all cards
+        list of cards to read (all the cards)
     encoding : str; default=None -> system default
         the unicode encoding
     mode : str; default='msc'
@@ -206,8 +209,13 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     .. todo:: finish this
     """
     model = BDF(log=log, debug=debug, mode=mode)
+    if read_cards and skip_cards:
+        msg = 'read_cards=%s skip_cards=%s cannot be used at the same time'
+        raise NotImplementedError(msg)
     if skip_cards:
         model.disable_cards(skip_cards)
+    elif read_cards:
+        model.set_cards(read_cards)
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
                    xref=xref, punch=punch, read_includes=True, encoding=encoding)
 
@@ -266,9 +274,13 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     return model
 
 
-class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
+class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     """
-    NASTRAN BDF Reader/Writer/Editor class.
+    Base class for the BDF Reader/Writer/Editor class.
+
+    If you add very few methods and attributes to this, you get the ``BDF``
+    class.  The point of this class is to break out a attributes, so the
+    names (e.g., nodes) can be reused when vectorize the data.
     """
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
@@ -276,7 +288,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def __init__(self, debug=True, log=None, mode='msc'):
         # type: (Optional[bool], SimpleLogger, str) -> None
         """
-        Initializes the BDF object
+        Initializes the BDF_ object
 
         Parameters
         ----------
@@ -731,6 +743,27 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         else:
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
+
+    def set_cards(self, cards):
+        """
+        Method for setting the cards that will be processed
+
+        Parameters
+        ----------
+        cards : List[str]; Set[str]
+            a list/set of cards that should not be read
+
+        .. python ::
+
+            bdfModel.set_cards(['GRID', 'CTRIA3'])
+        """
+        if cards is None:
+            return
+        elif isinstance(cards, string_types):
+            enable_set = set([cards])
+        else:
+            enable_set = set(cards)
+        self.cards_to_read = enable_set
 
     def set_error_storage(self, nparse_errors=100, stop_on_parsing_error=True,
                           nxref_errors=100, stop_on_xref_error=True):
@@ -2875,7 +2908,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
         """
-        card_stats = [
+        card_dict_groups = [
             'params', 'nodes', 'points', 'elements', 'rigid_elements',
             'properties', 'materials', 'creep_materials',
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
@@ -2935,7 +2968,6 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ## TODO: why are some of these ignored?
         ignored_types2 = set([
             'case_control_deck', 'caseControlDeck',
-            'spcObject2', 'mpcObject2',
 
             # done
             'sol', 'loads', 'mkaeros',
@@ -2944,13 +2976,13 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # not cards
             'debug', 'executive_control_lines',
             'case_control_lines', 'cards_to_read', 'card_count',
-            'isStructured', 'uniqueBulkDataCards',
-            'nCardLinesMax', 'model_type', 'includeDir',
+            'is_structured', 'uniqueBulkDataCards',
+            'model_type', 'include_dir',
             'sol_method', 'log',
-            'linesPack', 'lineNumbers', 'sol_iline',
-            'reject_count', '_relpath', 'isOpened',
+            'sol_iline',
+            'reject_count', '_relpath',
             #'foundEndData',
-            'specialCards',])
+            'special_cards',])
 
         unsupported_types = ignored_types.union(ignored_types2)
         all_params = object_attributes(self, keys_to_skip=unsupported_types)
@@ -2958,16 +2990,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         msg = ['---BDF Statistics---']
         # sol
         msg.append('SOL %s\n' % self.sol)
-
-        # loads
-        for (lid, loads) in sorted(iteritems(self.loads)):
-            msg.append('bdf.loads[%s]' % lid)
-            groups_dict = {}  # type: Dict[str, int]
-            for loadi in loads:
-                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
-                msg.append('  %-8s %s' % (name + ':', count_name))
-            msg.append('')
+        msg.extend(self._get_bdf_stats_loads())
 
         # dloads
         for (lid, loads) in sorted(iteritems(self.dloads)):
@@ -3003,18 +3026,22 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             msg.append('bdf:mkaeros')
             msg.append('  %-8s %s' % ('MKAERO:', len(self.mkaeros)))
 
-        for card_group_name in card_stats:
+        for card_group_name in card_dict_groups:
             try:
                 card_group = getattr(self, card_group_name)
             except AttributeError:
-                msg = 'cant find card_group_name=%r' % card_group_name
-                raise AttributeError(msg)
+                msgi = 'cant find card_group_name=%r' % card_group_name
+                raise AttributeError(msgi)
 
             groups = set([]) # type: Set[str]
 
             if not isinstance(card_group, dict):
-                msg = '%s is a %s; not dictionary' % (card_group_name, type(card_group))
-                raise RuntimeError(msg)
+                msgi = '%s is a %s; not dictionary, which is required by get_bdf_stats()' % (
+                    card_group_name, type(card_group))
+                self.log.error(msgi)
+                continue
+                #raise RuntimeError(msg)
+
             for card in itervalues(card_group):
                 if isinstance(card, list):
                     for card2 in card:
@@ -3044,6 +3071,19 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         msg.append('')
         if return_type == 'string':
             return '\n'.join(msg)
+        return msg
+
+    def _get_bdf_stats_loads(self):
+        # loads
+        msg = []
+        for (lid, loads) in sorted(iteritems(self.loads)):
+            msg.append('bdf.loads[%s]' % lid)
+            groups_dict = {}  # type: Dict[str, int]
+            for loadi in loads:
+                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
+                msg.append('  %-8s %s' % (name + ':', count_name))
+            msg.append('')
         return msg
 
     def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32',
@@ -3934,6 +3974,41 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             except:
                 print(str(card))
                 raise
+
+class BDF(BDF_):
+    """
+    NASTRAN BDF Reader/Writer/Editor class.
+    """
+    def __init__(self, debug=True, log=None, mode='msc'):
+        # type: (Optional[bool], SimpleLogger, str) -> None
+        """
+        Initializes the BDF object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        mode : str; default='msc'
+            the type of Nastran
+            valid_modes = {'msc', 'nx'}
+        """
+        BDF_.__init__(self, debug=debug, log=log, mode=mode)
+        #: stores SPOINT, GRID cards
+        self.nodes = {}  # type: Dict[int, Any]
+
+        # loads
+        #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+        #: PLOAD, PLOAD2, PLOAD4, SLOAD
+        #: GMLOAD, SPCD,
+        #: QVOL
+        self.loads = {}  # type: Dict[int, List[Any]]
+
 
 IGNORE_COMMENTS = (
     '$EXECUTIVE CONTROL DECK',

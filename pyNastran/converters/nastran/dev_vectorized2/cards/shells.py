@@ -301,7 +301,7 @@ class CTRIA3v(ShellElement):
         self.make_current()
         nelements = len(self)
         #print("nelements =", nelements)
-        xyz_cid0 = self.model.nodes2.xyz_cid0
+        xyz_cid0 = self.model.nodes.xyz_cid0
         i123 = self.model.get_node_index(self.nids)
         #print('i123 = ', i123)
         p1 = xyz_cid0[i123[:, 0], :]

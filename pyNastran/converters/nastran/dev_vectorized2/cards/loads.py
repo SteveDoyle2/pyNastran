@@ -22,10 +22,10 @@ class Loads(object):
 
         In the BDF, we create multiple Loads objects that is stored in a
         dictionary called self.loads[sid].  Thus, we don't need to store
-        the sid locally.
+        the sid locally (we do though).
 
-        We also store a self.load, which stores only LOAD cards.  Then, in the
-        case control deck, there are a few cases:
+        We also store a self.load_combinations, which stores only LOAD cards.
+        Then, in the case control deck, there are a few cases:
 
           - The LOAD=1 is set:
                 1) no LOAD card exists
@@ -45,7 +45,8 @@ class Loads(object):
             Currently **not** handled in the non-vectorized BDF
 
 
-        By using a self.load and self.loads (or some other similar names), we need to:
+        By using a self.load_combinations and self.loads (or some other similar
+        names), we need to:
 
           - Prevent recursion.
             (Currently handled in the non-vectorized BDF)
@@ -91,7 +92,7 @@ class Loads(object):
     def groups(self):
         """gets the sub-load groups"""
         groups = [
-            self.pload4, self.pload2, self.pload4,
+            self.pload, self.pload2, self.pload4, #self.sload, self.pload1,
             self.force, self.force1, self.force2,
             #self.moment, self.moment1, self.moment2,
         ]
@@ -106,10 +107,15 @@ class Loads(object):
         #return elems
 
     def __len__(self):
-        return len(self.pload4) + len(self.force)
+        """gets the number of loads"""
+        return sum([len(group) for group in self.groups])
 
     def repr_indent(self, indent='  '):
-        msg = '%s<Rods> : nelements=%s\n' % (indent, len(self))
+        msg = '%s<Loads> : nelements=%s\n' % (indent, len(self))
+        #msg += '%s  SLOAD :  %s\n' % (indent, len(self.pload4))
+        msg += '%s  PLOAD :  %s\n' % (indent, len(self.pload4))
+        #msg += '%s  PLOAD1:  %s\n' % (indent, len(self.pload4))
+        msg += '%s  PLOAD2:  %s\n' % (indent, len(self.pload4))
         msg += '%s  PLOAD4:  %s\n' % (indent, len(self.pload4))
         msg += '%s  FORCE :  %s\n' % (indent, len(self.force))
         msg += '%s  FORCE1:  %s\n' % (indent, len(self.force1))
@@ -180,9 +186,6 @@ class PLOADv(BaseLoad):
 
     def __init__(self, model):
         BaseLoad.__init__(self, model)
-        #self.model = model
-        self.is_current = False
-        #self.sid = np.array([], dtype='int32')
         self.pressure = np.array([], dtype='float64')
         self.nids = np.array([], dtype='int32')
 
@@ -191,7 +194,7 @@ class PLOADv(BaseLoad):
         self._nids = []
         self.comment = defaultdict(str)
 
-    def add(self, sid, pressure, eids, comment=''):
+    def add(self, sid, pressure, nids, comment=''):
         """
         Creates a PLOAD card, which defines a uniform pressure load on a
         shell/solid face or arbitrarily defined quad/tri face.
@@ -214,7 +217,7 @@ class PLOADv(BaseLoad):
         self.is_current = False
         self._sid.append(sid)
         self._pressure.append(pressure)
-        self._nids.append(nodes)
+        self._nids.append(nids)
 
     def add_card(self, card, comment=''):
         """
@@ -242,10 +245,10 @@ class PLOADv(BaseLoad):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for i, sid, pressure, nids in zip(count(), self.sid, self.pressure, self.nids):
-            list_fields = ['PLOAD', self.sid, self.pressure] + self.node_ids
+        for i, sid, pressure, node_ids in zip(count(), self.sid, self.pressure, self.nids):
+            list_fields = ['PLOAD', sid, pressure] + node_ids.tolist()
             msgi = print_card_8(list_fields)
-            msg += self.comment[eid] + msgi
+            msg += self.comment[i] + msgi
             msg += msgi
         bdf_file.write(msg)
         return msg
@@ -293,13 +296,9 @@ class PLOAD2v(BaseLoad):
 
     def __init__(self, model):
         BaseLoad.__init__(self, model)
-        #self.model = model
-        self.is_current = False
-        #self.sid = np.array([], dtype='int32')
         self.pressure = np.array([], dtype='float64')
         self.eid = np.array([], dtype='int32')
 
-        #self._sid = []
         self._pressure = []
         self._eid = []
         self.comment = defaultdict(str)
@@ -409,6 +408,7 @@ class PLOAD4v(BaseLoad):
     ============
     Defines a pressure load on a face of a CTRIA3, CTRIA6, CTRIAR,
     CQUAD4, CQUAD8, or CQUADR element.
+
     +--------+-----+-----+----+----+------+------+------+-------+
     |   1    |  2  |  3  |  4 |  5 |  6   |   7  |   8  |   9   |
     +========+=====+=====+====+====+======+======+======+=======+
@@ -423,9 +423,6 @@ class PLOAD4v(BaseLoad):
 
     def __init__(self, model):
         BaseLoad.__init__(self, model)
-        #self.model = model
-        self.is_current = False
-        #self.sid = np.array([], dtype='int32')
         self.eid = np.array([], dtype='int32')
         self.cid = np.array([], dtype='int32')
         self.pressures = np.array([], dtype='float64')
@@ -435,7 +432,6 @@ class PLOAD4v(BaseLoad):
         self.surf_or_line = np.array([], dtype='|U8')
         self.line_load_dir = np.array([], dtype='|U8')
 
-        #self._sid = []
         self._eid = []
         self._cid = []
         self._pressures = []
@@ -525,8 +521,8 @@ class PLOAD4v(BaseLoad):
                 eids = list(np.unique(
                     expand_thru([eid, 'THRU', eid2], set_fields=False, sort_fields=False)
                 ))
-            g1 = None
-            g34 = None
+            g1 = 0
+            g34 = 0
         else:
             # standard form
             eids = [eid]
@@ -545,6 +541,10 @@ class PLOAD4v(BaseLoad):
                      surf_or_line, line_load_dir, comment=comment)
             comment = ''
 
+    @property
+    def is_solid(self):
+        return np.where(self.g1 == 0)[0]
+
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self.make_current()
@@ -552,11 +552,11 @@ class PLOAD4v(BaseLoad):
         for sid, eid, cid, g1, g34, pressures, nvector, surf_or_line, line_load_dir in zip(
             self.sid, self.eid, self.cid, self.g1, self.g34, self.pressures,
             self.nvector, self.surf_or_line, self.line_load_dir):
-            p1 = self.pressures[0]
-            p2 = set_blank_if_default(self.pressures[1], p1)
-            p3 = set_blank_if_default(self.pressures[2], p1)
-            p4 = set_blank_if_default(self.pressures[3], p1)
-            list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
+            p1 = pressures[0]
+            p2 = set_blank_if_default(pressures[1], p1)
+            p3 = set_blank_if_default(pressures[2], p1)
+            p4 = set_blank_if_default(pressures[3], p1)
+            list_fields = ['PLOAD4', sid, eid, pressures[0], p2, p3, p4]
 
             if g1 is not None:
                 # is it a SOLID element
@@ -658,15 +658,11 @@ class FORCEv(BaseLoad):
 
     def __init__(self, model):
         BaseLoad.__init__(self, model)
-        #self.model = model
-        #self.is_current = False
-        #self.sid = np.array([], dtype='int32')
         self.nid = np.array([], dtype='int32')
         self.cid = np.array([], dtype='int32')
         self.mag = np.array([], dtype='int32')
         self.xyz = np.array([], dtype='float64')
 
-        #self._sid = []
         self._nid = []
         self._cid = []
         self._mag = []
@@ -803,14 +799,10 @@ class FORCE1v(BaseLoad):
 
     def __init__(self, model):
         BaseLoad.__init__(self, model)
-        #self.model = model
-        #self.is_current = False
-        #self.sid = np.array([], dtype='int32')
         self.nid = np.array([], dtype='int32')
         self.mag = np.array([], dtype='int32')
         self.g12 = np.array([], dtype='int32')
 
-        #self._sid = []
         self._nid = []
         self._mag = []
         self._g12 = []
@@ -933,14 +925,10 @@ class FORCE2v(BaseLoad):
 
     def __init__(self, model):
         BaseLoad.__init__(self, model)
-        #self.model = model
-        #self.is_current = False
-        #self.sid = np.array([], dtype='int32')
         self.nid = np.array([], dtype='int32')
         self.mag = np.array([], dtype='int32')
         self.g1234 = np.array([], dtype='int32')
 
-        #self._sid = []
         self._nid = []
         self._mag = []
         self._g1234 = []

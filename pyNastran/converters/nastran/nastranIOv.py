@@ -383,8 +383,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print("transform_xyzcp_to_xyz_cid")
         xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
                                                     in_place=False)
-        model.nodes2.xyz_cid0 = xyz_cid0
-        model.nodes2.nids = nid_cp_cd[:, 0]
+        model.nodes.xyz_cid0 = xyz_cid0
+        model.nodes.nids = nid_cp_cd[:, 0]
 
         nid_map = self.nid_map
         for i, nid in enumerate(nid_cp_cd[:, 0]):
@@ -475,7 +475,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch')):
             if IS_TESTING or self.is_testing_flag:
                 self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-                self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+                #self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
         else:
@@ -907,7 +907,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_offset0 = 0
         nids_list = []
 
-        nodes = model.nodes2
+        nodes = model.nodes
 
         ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
             ieid0, cell_offset0,

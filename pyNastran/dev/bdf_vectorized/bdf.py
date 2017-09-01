@@ -2523,13 +2523,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             # not cards
             'debug', 'executive_control_lines',
             'case_control_lines', 'cards_to_read', 'card_count',
-            'isStructured', 'uniqueBulkDataCards',
-            'nCardLinesMax', 'model_type', 'includeDir',
+            'is_structured', 'uniqueBulkDataCards',
+            'model_type', 'include_dir',
             'sol_method', 'log',
-            'linesPack', 'lineNumbers', 'sol_iline',
-            'reject_count', '_relpath', 'isOpened',
+            'sol_iline',
+            'reject_count', '_relpath',
             #'foundEndData',
-            'specialCards',])
+            'special_cards',])
 
         unsupported_types = ignored_types.union(ignored_types2)
         all_params = object_attributes(self, keys_to_skip=unsupported_types)

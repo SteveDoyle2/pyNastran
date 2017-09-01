@@ -1151,8 +1151,13 @@ class GetCard(GetMethods):
                 # +------+-----+-----+-----+-------+-----+-----+-----+
                 dependent = elem.dependent_nodes
                 independent = elem.independent_nodes
-                assert len(dependent) == 1, dependent
-                assert len(independent) == 1, independent
+                #assert len(dependent) == 1, dependent
+                #assert len(independent) == 1, independent
+                if len(independent) != 1 or len(dependent) != 1:
+                    msg = 'skipping card because len(independent) != 1 or len(dependent) != 1\n'
+                    msg += str(elem)
+                    self.log.error(msg)
+                    continue
                 lines_rigid.append([dependent[0], independent[0]])
             else:
                 print(str(elem))

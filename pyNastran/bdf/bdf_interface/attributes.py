@@ -251,8 +251,6 @@ class BDFAttributes(object):
         self.params = {}  # type: Dict[str, Any]
         # ------------------------------- nodes -------------------------------
         # main structural block
-        #: stores SPOINT, GRID cards
-        self.nodes = {}  # type: Dict[int, Any]
         #: stores POINT cards
         self.points = {}  # type: Dict[int, Any]
         self.ringaxs = {}  # type: Dict[int, Any]
@@ -316,12 +314,6 @@ class BDFAttributes(object):
         #: stores the CREEP card
         self.creep_materials = {}  # type: Dict[int, Any]
 
-        # loads
-        #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-        #: PLOAD, PLOAD2, PLOAD4, SLOAD
-        #: GMLOAD, SPCD,
-        #: QVOL
-        self.loads = {}  # type: Dict[int, List[Any]]
         self.tics = {}  # type: Optional[Any]
 
         # stores DLOAD entries.

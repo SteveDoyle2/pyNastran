@@ -3,7 +3,8 @@ from collections import defaultdict
 from six import iteritems
 import numpy as np
 
-from pyNastran.bdf.bdf import BDF as BDF_
+from pyNastran.bdf.bdf import BDF_, LOAD
+#from pyNastran.bdf.bdf import BDF as BDF_, LOAD
 from pyNastran.converters.nastran.dev_vectorized2.cards.nodes import GRIDv, Nodes
 from pyNastran.converters.nastran.dev_vectorized2.cards.elements import Elements
 
@@ -44,7 +45,7 @@ class BDF(BDF_):
 
         model = self
         self.grid = GRIDv(model)
-        self.nodes2 = Nodes(model)
+        self.nodes = Nodes(model)
 
         self.celas1 = CELAS1(model)
         self.celas2 = CELAS2(model)
@@ -395,19 +396,57 @@ class BDF(BDF_):
     def xyz_cid0(self):
         return self.xyz_cid0
 
-    def _write_nodes(self, bdf_file, size=8, is_double=False):
+    def _get_bdf_stats_loads(self):
+        # loads
+        msg = []
+        #for (lid, loads) in sorted(iteritems(self.loads)):
+            #msg.append('bdf.loads[%s]' % lid)
+            #groups_dict = {}  # type: Dict[str, int]
+            #for loadi in loads:
+                #groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
+            #for name, count_name in sorted(iteritems(groups_dict)):
+                #msg.append('  %-8s %s' % (name + ':', count_name))
+            #msg.append('')
+        return msg
+
+
+    #def _write_header(self, bdf_file, encoding):
+        #"""
+        #Writes the executive and case control decks.
+        #"""
+        #if self.punch is None:
+            ## writing a mesh without using read_bdf
+            #if self.executive_control_lines or self.case_control_deck:
+                #self.punch = False
+            #else:
+                #self.punch = True
+
+        #if self.nastran_format:
+            #bdf_file.write('$pyNastran: version=%s\n' % self.nastran_format)
+            #bdf_file.write('$pyNastran: punch=%s\n' % self.punch)
+            #bdf_file.write('$pyNastran: encoding=%s\n' % encoding)
+            #bdf_file.write('$pyNastran: nnodes=%s\n' % self.grid.n)
+            #bdf_file.write('$pyNastran: nelements=%s\n' % len(self.elements))
+
+        #if not self.punch:
+            #self._write_executive_control_deck(bdf_file)
+            #self._write_case_control_deck(bdf_file)
+
+    #def _write_nodes(self, bdf_file, size=8, is_double=False):
+        ## type: (Any, int, bool) -> None
+        #"""
+        #Writes the NODE-type cards
+        #"""
+        #BDF_._write_nodes(self, bdf_file, size=size, is_double=is_double)
+
+    def _write_grids(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
-        """
-        Writes the NODE-type cards
-        """
-        BDF_._write_nodes(self, bdf_file, size=size, is_double=is_double)
-        self.nodes2.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
+        """Writes the GRID-type cards"""
+        self.nodes.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
 
     def _write_elements(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
-        """
-        Writes the elements in a sorted order
-        """
+        """Writes the elements in a sorted order"""
         if self.elements:
             bdf_file.write('$ELEMENTS\n')
             if self.is_long_ids:
@@ -428,6 +467,24 @@ class BDF(BDF_):
             for (eid, element) in sorted(iteritems(self.ao_element_flags)):
                 bdf_file.write(element.write_card(size, is_double))
         self._write_nsm(bdf_file, size, is_double)
+
+    #def _write_loads(self, bdf_file, size=8, is_double=False):
+        #"""Writes the loads in a sorted order"""
+        #BDF_._write_loads(self, bdf_file, size=size, is_double=is_double)
+        ##for key, loadi in sorted(self.loads):
+            ##bdf_file.write(loadi.write_card(size=size, is_double=is_double))
+
+    def _write_loads(self, bdf_file, size=8, is_double=False):
+        # type: (Any, int, bool) -> None
+        """Writes the load cards sorted by ID"""
+        if self.loads or self.tempds:
+            msg = ['$LOADS\n']
+            self.loads.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
+            for key, load in sorted(self.load_combinations.iteritems()):
+                bdf_file.write(load.write_card(size=size, is_double=is_double))
+
+        assert len(self.tempds) == 0, self.tempds
+        self._write_dloads(bdf_file, size=size, is_double=is_double)
 
     def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32'):
         # type: (str, str, bool) -> Any
@@ -479,12 +536,12 @@ class BDF(BDF_):
         >>> icd_transform[50]
         [2]
         """
-        return self.nodes2.get_displacement_index_xyz_cp_cd(
+        return self.nodes.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype=idtype)
 
     def get_node_index(self, nids, allow0=False):
         """maps the requested nodes to their desired index in the array"""
-        i = self.nodes2.get_node_index(nids, allow0=allow0)
+        i = self.nodes.get_node_index(nids, allow0=allow0)
         return i
 
     def validate(self):
