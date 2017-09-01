@@ -3,15 +3,15 @@ Parses Nastran fields
 """
 from __future__ import print_function
 from typing import Union, Optional
-from numpy import float32
+from numpy import int32, float32
 from six import string_types, PY2
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 if PY2:
     integer_types = (int, long)
-    integer_float_types = (int, long, float, float32)
+    integer_float_types = (int, int32, long, float, float32)
 else:
     integer_types = int,
-    integer_float_types = (int, float, float32)
+    integer_float_types = (int, int32, float, float32)
 float_types = (float, float32)
 
 def parse_components(card, ifield, fieldname):
@@ -981,7 +981,7 @@ def interpret_value(value_raw, card=''):
     except AttributeError:
         # it's already an int/float
         msg = 'value_raw=%s type=%s' % (value_raw, type(value_raw))
-        assert isinstance(value_raw, (int, float)), msg
+        assert isinstance(value_raw, integer_float_types), msg
         return value_raw
 
     if len(value_in) == 0:

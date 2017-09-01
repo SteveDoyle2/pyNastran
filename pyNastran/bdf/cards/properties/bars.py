@@ -1041,6 +1041,10 @@ class PBAR(LineProperty):
         k1 = data[16]
         k2 = data[17]
         i12 = data[18]
+        if k1 == 0.:
+            k1 = None
+        if k2 == 0.:
+            k2 = None
         return PBAR(pid, mid, A, i1, i2, i12, j, nsm,
                     c1, c2, d1, d2, e1, e2,
                     f1, f2, k1, k2, comment=comment)

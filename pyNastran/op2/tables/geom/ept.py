@@ -143,6 +143,29 @@ class EPT(GeomCommon):
         """
         PBAR(52,20,181) - the marker for Record 11
         .. warning:: this makes a funny property...
+
+        MSC 2016/NX10
+
+        Word Name Type Description
+        1  PID  I Property identification number
+        2  MID  I Material identification number
+        3  A   RS Area
+        4  I1  RS Area moment of inertia in plane 1
+        5  I2  RS Area moment of inertia in plane 2
+        6  J   RS Torsional constant
+        7  NSM RS Nonstructural mass per unit length
+        8  FE  RS
+        9  C1  RS Stress recovery location at point C in element y-axis
+        10 C2  RS Stress recovery location at point C in element z-axis
+        11 D1  RS Stress recovery location at point D in element y-axis
+        12 D2  RS Stress recovery location at point D in element z-axis
+        13 E1  RS Stress recovery location at point E in element y-axis
+        14 E2  RS Stress recovery location at point E in element z-axis
+        15 F1  RS Stress recovery location at point F in element y-axis
+        16 F2  RS Stress recovery location at point F in element z-axis
+        17 K1  RS Area factor for shear in plane 1
+        18 K2  RS Area factor for shear in plane 2
+        19 I12 RS Area product of inertia for plane 1 and 2
         """
         ntotal = 76  # 19*4
         s = Struct(b(self._endian + '2i17f'))
@@ -257,7 +280,7 @@ class EPT(GeomCommon):
                 raise NotImplementedError('PBCOMP nsections=%r' % nsections)
 
             if self.is_debug_file:
-                self.binary_debug.write('     %s\n' % str(pack))
+                self.binary_debug.write('     PBCOMP: %s\n' % str([data1, data2]))
                 msg = (
                     '    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
                     'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))

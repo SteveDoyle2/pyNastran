@@ -24,6 +24,7 @@ class GEOM4(GeomCommon):
     """defines methods for reading op2 constraints"""
 
     def _read_geom4_4(self, data, ndata):
+        """reads the GEOM4/GEOM4OLD table"""
         return self._read_geom_4(self._geom4_map, data, ndata)
 
     def __init__(self):

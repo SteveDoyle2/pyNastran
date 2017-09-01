@@ -278,6 +278,40 @@ class GEOM2(GeomCommon):
     def _read_cbar(self, data, n):
         """
         CBAR(2408,24,180) - the marker for Record 8
+
+        MSC/NX
+        Word Name Type Description
+        1 EID    I  Element identification number
+        2 PID    I  Property identification number
+        3 GA     I  Grid point identification number at end A
+        4 GB     I  Grid point identification number at end B
+
+        F=0* XYZ option -- basic coordinate system
+           5 X1 RS  T1 component of orientation vector from GA
+           6 X2 RS  T2 component of orientation vector from GA
+           7 X3 RS  T3 component of orientation vector from GA
+           8 FE  I  Orientation vector flag (encoded)
+        F=1* XYZ option -- global coordinate system
+           5 X1 RS  T1 component of orientation vector from GA
+           6 X2 RS  T2 component of orientation vector from GA
+           7 X3 RS  T3 component of orientation vector from GA
+           8 FE  I   Orientation vector flag (encoded)
+        F=2* Grid option
+           5 GO I Grid point identification number at end of orientation vector
+           6 UNDEF(2) none Not used
+           8 FE I Orientation vector flag (encoded)
+        *F = FE bit-wise AND with 3
+        End F
+
+        9  PA   I Pin flags for end A
+        10 PB   I Pin flags for end B
+        11 W1A RS T1 component of offset vector from GA
+        12 W2A RS T2 component of offset vector from GA
+        13 W3A RS T3 component of offset vector from GA
+        14 W1B RS T1 component of offset vector from GB
+        15 W2B RS T2 component of offset vector from GB
+        16 W3B RS T3 component of offset vector from GB
+        F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sebload1.op2
         """
         nelements = (len(data) - n) // 64
         for i in range(nelements):

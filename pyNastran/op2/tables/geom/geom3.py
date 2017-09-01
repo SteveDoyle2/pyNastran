@@ -90,48 +90,41 @@ class GEOM3(GeomCommon):
 
     def _read_accel1(self, data, n):
         """
-        ACCEL1
+        ACCEL1(7401,74,601)
 
         1 SID    I Load set identification number
         2 CID    I Coordinate system identification number
         3 A     RS Acceleration vector scale factor
         4 N(3)  RS Components of a vector coordinate system defined by CID
         7 GRIDID I Grid ID or THRU or BY code
+        Words 7 repeats until (-1) occurs.
+        NX/MSC
         """
         ntotal = 28  # 7*4
-        ints = np.fromstring(data, dtype='int32')
-        floats = np.fromstring(data, dtype='float32')
+        ints = np.fromstring(data[n:], dtype='int32')
+        floats = np.fromstring(data[n:], dtype='float32')
+        strings = np.fromstring(data[n:], dtype='|S4')
         i_minus_1s = np.where(ints == -1)[0]
 
         i0 = 0
+        self.show_data(data[n:])
         for i_minus_1 in i_minus_1s:
-            #print(ints)
-            #print(floats)
             sid = ints[i0]
             cid = ints[i0 + 1]
             scale = floats[i0 + 2]
             n1 = floats[i0 + 3]
             n2 = floats[i0 + 4]
             n3 = floats[i0 + 5]
-            nids = ints[i0 + 6:i_minus_1]
+            nids = [
+                strings[i].decode('utf8').strip() if strings[i] in [b'THRU', b'BY  '] else ints[i]
+                for i in range(i0+6, i_minus_1)]
             assert nids[-1] > 0
-            print('cid =', cid)
-            print('nids =', nids)
-            a
+            if self.is_debug_file:
+                self.binary_debug.write('  ACCEL1=%s\n' % str([sid, cid, scale, n1, n2, n3, nids]))
             accel = self.add_accel1(sid, scale, [n1, n2, n3], nids, cid=cid)
             accel.validate()
             i0 = i_minus_1 + 1
         return len(data)
-
-        #s = Struct(b(self._endian + '2i 4f 3i'))
-        #nentries = (len(data) - n) // ntotal
-        #for i in range(nentries):
-            #out = s.unpack(data[n:n+ntotal])
-            #sid, cid, scale, n1, n2, n3, nid = out
-            #self.add_accel1(sid, scale, [n1, n2, n3], [nid], cid=cid)
-            #n += ntotal
-        #self.card_count['ACCEL1'] = nentries
-        #return n
 
     def _read_force(self, data, n):
         """

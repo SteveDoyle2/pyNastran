@@ -308,7 +308,11 @@ class CELAS2(SpringElement):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
-        assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
+        if self.nodes[0] == self.nodes[1] and self.c1 == self.c2:
+            msg = (
+                'Thee nodes=%s must be unique or dofs=[%s, %s] must not be '
+                'the same; CELAS2 eid=%s' % (self.nodes, self.c1, self.c2, self.eid))
+            raise AssertionError(msg)
 
     @property
     def node_ids(self):

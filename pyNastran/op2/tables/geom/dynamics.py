@@ -597,13 +597,13 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, f2, freq_type, nef, bias = out
+            freq_type = freq_type.strip().decode('latin1')
             if freq_type == 'LINE':
                 freq_type = 'LINEAR'
 
             if self.is_debug_file:
                 self.binary_debug.write('  FREQ3=%s\n' % str(out))
 
-            freq_type = freq_type.strip().decode('latin1')
             self.add_freq3(sid, f1, f2=f2, Type=freq_type, nef=nef, cluster=bias)
             n += ntotal
         self.increase_card_count('FREQ3', nentries)

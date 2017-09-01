@@ -442,7 +442,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [''], self.table_name
+            assert self.table_name in [b'OUPV1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code)

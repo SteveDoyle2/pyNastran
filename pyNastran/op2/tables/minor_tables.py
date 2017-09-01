@@ -1474,8 +1474,8 @@ class MinorTables(OP2Common):
                         matrix = scipy.sparse.coo_matrix(
                             (real_imag, (GCi, GCj)),
                             shape=(mrows, ncols), dtype=dtype)
-                        msg = 'created %s...verify the complex matrix' % self.table_name
-                        self.log.warning(msg)
+                        #msg = 'created %s (complex)' % self.table_name
+                        #self.log.debug(msg)
                         #raise RuntimeError(msg)
                     else:
                         raise RuntimeError('this should never happen')

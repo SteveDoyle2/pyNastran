@@ -1025,6 +1025,9 @@ class OEF(OP2Common):
         elif self.table_name in [b'OEFNO1']:
             assert self.table_code in [904], self.code_information()
             result_name += '_NO'
+        elif self.table_name in [b'DOEF1']:
+            assert self.thermal in [8], self.code_information()  # Scaled response spectra NRL
+            assert self.table_code in [4], self.code_information()
         else:
             raise NotImplementedError(self.code_information())
         #print(result_name, self.table_name)

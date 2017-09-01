@@ -4,6 +4,7 @@ Defines methods for the op2 writer
 from __future__ import print_function
 from struct import Struct, pack
 import numpy as np
+import scipy.sparse as sp
 
 
 def _write_markers(f, fascii, markers):
@@ -41,6 +42,16 @@ def export_to_hdf5(self, group, log):
             continue
         elif isinstance(value, dict):
             log.warning('HDF5: skipping name=%r value=%s' % (name, value))
+            continue
+        elif isinstance(value, sp.coo.coo_matrix):
+            # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_bsh111svd2.op2
+            #
+            # https://stackoverflow.com/questions/43390038/storing-scipy-sparse-matrix-as-hdf5
+            #g = group.create_group('Mcoo')
+            group.create_dataset('data', data=value.data)
+            group.create_dataset('row', data=value.row)
+            group.create_dataset('col', data=value.col)
+            group.attrs['shape'] = value.shape
             continue
 
         #if name in ['dt', 'nonlinear_factor', 'element'] and value is None:
