@@ -480,7 +480,7 @@ class BDF(BDF_):
         if self.loads or self.tempds:
             msg = ['$LOADS\n']
             self.loads.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
-            for key, load in sorted(self.load_combinations.iteritems()):
+            for key, load in sorted(iteritems(self.load_combinations)):
                 bdf_file.write(load.write_card(size=size, is_double=is_double))
 
         assert len(self.tempds) == 0, self.tempds
