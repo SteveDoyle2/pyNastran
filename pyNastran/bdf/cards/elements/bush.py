@@ -130,16 +130,14 @@ class CBUSH(BushElement):
             si = [None, None, None]
         self.eid = eid
         self.pid = pid
-        self.ga = nids[0]
-        self.gb = nids[1]
+        self.nodes = nids
         self.x = x
         self.g0 = g0
         self.cid = cid
         self.s = s
         self.ocid = ocid
         self.si = si
-        self.ga_ref = None
-        self.gb_ref = None
+        self.nodes_ref = None
         self.pid_ref = None
         self.cid_ref = None
         self.ocid_ref = None
@@ -212,9 +210,9 @@ class CBUSH(BushElement):
         ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
         return CBUSH(eid, pid, [ga, gb], x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
-    @property
-    def nodes(self):
-        return [self.ga, self.gb]
+    #@property
+    #def nodes(self):
+        #return [self.ga, self.gb]
 
     @property
     def node_ids(self):
@@ -234,14 +232,16 @@ class CBUSH(BushElement):
         assert isinstance(ocid, integer_types), 'ocid=%r' % ocid
 
     def Ga(self):
-        if self.gb_ref is None:
-            return self.ga
-        return self.ga_ref.nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[0].nid
+        return self.nodes[0]
 
     def Gb(self):
-        if self.gb_ref is None:
-            return self.gb
-        return self.gb_ref.nid
+        if self.nodes[1] in [0, None]:
+            return 0
+        if self.nodes_ref is not None:
+            return self.nodes_ref[1].nid
+        return self.nodes[1]
 
     def OCid(self):
         if self.ocid_ref is not None:
@@ -263,9 +263,7 @@ class CBUSH(BushElement):
             the BDF object
         """
         msg = ' which is required by CBUSH eid=%s' % self.eid
-        self.ga_ref = model.Node(self.ga, msg=msg)
-        if self.gb is not None:
-            self.gb_ref = model.Node(self.gb, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid_ref = model.Coord(self.cid, msg=msg)

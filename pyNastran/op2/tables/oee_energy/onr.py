@@ -335,16 +335,31 @@ class ONR(OP2Common):
                 obj._times[obj.itime] = dt
 
                 strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 5)
-                s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                #print(strings)
                 if obj.itime == 0:
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
-                    eids = ints[:, 0] // 10
-                    assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
-                    obj.element_type[obj.itime, itotal:itotal2, :] = s
+                    if obj.element_name == 'DMIG':
+                        s = array([(s1+s2).decode('latin1').strip()
+                                   for s1, s2 in zip(strings[:, 0], strings[:, 1])], dtype='|U8')
+                        obj.element[itotal:itotal2] = s
+                    else:
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+
+                        s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+                        obj.element[itotal:itotal2] = eids
+                        obj.element_type[obj.itime, itotal:itotal2, :] = s
 
                 #[energy, percent, density]
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:]
+                print(floats)
+                print(floats[:, 2:])
+                print(floats[:, 3:])
+                print(obj.data[obj.itime, itotal:itotal2, :])
+                print(obj.data[obj.itime, itotal:itotal2, :].shape)
+                if obj.element_name == 'DMIG':
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
+                else:
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:]
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:

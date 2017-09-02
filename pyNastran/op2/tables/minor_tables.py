@@ -1370,6 +1370,9 @@ class MinorTables(OP2Common):
             self.log.warning(msg)
             raise RuntimeError(msg)
 
+        #self.log.error('name=%r matrix_num=%s form=%s mrows=%s '
+        #               'ncols=%s tout=%s nvalues=%s g=%s' % (
+        #                   table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
         if form == 1:
             if ncols != mrows:
                 self.log.warning('unexpected size for %s; form=%s mrows=%s ncols=%s' % (
@@ -1456,13 +1459,15 @@ class MinorTables(OP2Common):
                         matrix = None
                         self.log.warning('what is the dtype?')
                     elif tout in [1, 2]:
+                        # real
                         real_array = np.array(reals, dtype=dtype)
                         matrix = scipy.sparse.coo_matrix(
                             (real_array, (GCi, GCj)),
                             shape=(mrows, ncols), dtype=dtype)
-                        matrix = matrix.todense()
+                        matrix = np.asarray(matrix.todense())
                         #self.log.info('created %s' % self.table_name)
                     elif tout in [3, 4]:
+                        # complex
                         real_array = np.array(reals, dtype=dtype)
                         nvalues_matrix = real_array.shape[0] // 2
                         real_complex = real_array.reshape((nvalues_matrix, 2))

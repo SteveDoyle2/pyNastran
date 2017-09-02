@@ -139,13 +139,14 @@ def get_failed_files(filename):
 
     files = []
     for line in lines:
-        files.append(line.strip())
+        line = line.strip()
+        if line not in files:
+            files.append(line)
     return files
 
 
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, skip_dataframe=False, write_op2=False,
-                      is_vector=False, vector_stop=True,
                       debug=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000,
                       short_stats=False, binary_debug=False,
@@ -157,9 +158,6 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     assert make_geom in [True, False]
     assert write_bdf in [True, False]
     assert write_f06 in [True, False]
-    if is_vector in [True, False]:
-        is_vector = [is_vector]
-        vector_stop = [vector_stop]
     if binary_debug in [True, False]:
         binary_debug = [binary_debug]
 
@@ -172,35 +170,33 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     for i, op2file in enumerate(files[nstart:nstop], nstart):  # 149
         basename = os.path.basename(op2file)
         #if basename not in skip_files and not basename.startswith('acms') and i not in nskip:
+        sys.stderr.write('%s file=%s\n' % (i, op2file))
         if basename not in skip_files and '#' not in op2file:
             print("%" * 80)
             print('file=%s\n' % op2file)
             n = '%s ' % i
-            sys.stderr.write('%sfile=%s\n' % (n, op2file))
             ntotal += 1
 
             is_passed = True
             is_vector_failed = []
-            for vectori, vector_stopi in zip(is_vector, vector_stop):
-                for binary_debugi in binary_debug:
-                    print('------running is_vector=%s binary_debug=%s------' % (
-                        vectori, binary_debugi))
-                    is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                                          write_f06=write_f06, write_op2=write_op2,
-                                          is_mag_phase=False,
-                                          delete_f06=delete_f06,
-                                          skip_dataframe=skip_dataframe,
-                                          short_stats=short_stats,
-                                          subcases=subcases, debug=debug,
-                                          stop_on_failure=stop_on_failure,
-                                          binary_debug=binary_debug,
-                                          compare=True, dev=dev)[1]
-                    if not is_passed_i and vector_stopi:
-                        is_passed = False
-                    if not is_passed_i:
-                        is_vector_failed.append(vectori)
+            for binary_debugi in binary_debug:
+                print('------running binary_debug=%s------' % binary_debugi)
+                is_passedi = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
+                                     write_f06=write_f06, write_op2=write_op2,
+                                     is_mag_phase=False,
+                                     delete_f06=delete_f06,
+                                     skip_dataframe=skip_dataframe,
+                                     short_stats=short_stats,
+                                     subcases=subcases, debug=debug,
+                                     stop_on_failure=stop_on_failure,
+                                     binary_debug=binary_debug,
+                                     compare=compare, dev=dev)[1]
+                if not is_passedi:
+                    is_passed = False
+                    break
+
             if not is_passed:
-                sys.stderr.write('**file=%s vector_failed=%s\n' % (op2file, is_vector_failed))
+                sys.stderr.write('**file=%s\n' % op2file)
                 failed_cases.append(op2file)
                 nfailed += 1
             else:

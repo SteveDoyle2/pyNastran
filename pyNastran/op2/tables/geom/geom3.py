@@ -455,11 +455,17 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  PLOAD4=%s\n' % str(out))
             (sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3, surf_or_line, line_load_dir) = out
 
-            surf_or_line = surf_or_line.rstrip()
-            line_load_dir = line_load_dir.rstrip()
+            surf_or_line = surf_or_line.rstrip().decode('latin1')
+            line_load_dir = line_load_dir.rstrip().decode('latin1')
+
+            # forces NX pload4 function to get called if it should be
+            assert surf_or_line in ['SURF', 'LINE']
+            assert line_load_dir in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']
+
             load = PLOAD4.add_op2_data(
                 [sid, eid, [p1, p2, p3, p4], g1, g34,
                  cid, [n1, n2, n3], surf_or_line, line_load_dir])
+            load.validate()
             loads.append(load)
             n += ntotal
         self.card_count['PLOAD4'] = nentries
@@ -494,6 +500,7 @@ class GEOM3(GeomCommon):
             load = PLOAD4.add_op2_data(
                 [sid, eid, [p1, p2, p3, p4], g1, g34,
                  cid, [n1, n2, n3], surf_or_line, line_load_dir])
+            load.validate()
             loads.append(load)
             n += 48
         self.card_count['PLOAD4'] = nentries

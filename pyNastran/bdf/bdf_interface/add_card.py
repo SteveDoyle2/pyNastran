@@ -641,8 +641,8 @@ class AddCards(AddMethods):
         self._add_property_mass_object(prop)
         return prop
 
-    def add_cmass1(self, eid, pid, g1, c1, g2, c2, comment=''):
-        # type: (int, int, int, int, int, int, str) -> CMASS1
+    def add_cmass1(self, eid, pid, nids, c1=0, c2=0, comment=''):
+        # type: (int, int, [int, int], int, int, str) -> CMASS1
         """
         Creates a CMASS1 card
 
@@ -652,21 +652,19 @@ class AddCards(AddMethods):
             element id
         pid : int
             property id (PMASS)
-        g1 : int
-            node id
-        g2 : int; default=None
-            node id
+        nids : List[int, int]
+            node ids
         c1 / c2 : int; default=None
             DOF for nid1 / nid2
         comment : str; default=''
             a comment for the card
         """
-        mass_obj = CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
+        mass_obj = CMASS1(eid, pid, nids, c1, c2, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_cmass2(self, eid, mass, g1, c1, g2, c2, comment=''):
-        # type: (int, float, int, int, int, int, str) -> CMASS2
+    def add_cmass2(self, eid, mass, nids, c1, c2, comment=''):
+        # type: (int, float, [int, int], int, int, str) -> CMASS2
         """
         Creates a CMASS2 card
 
@@ -676,21 +674,19 @@ class AddCards(AddMethods):
             element id
         mass : float
             mass
-        g1 : int
-            node id
-        g2 : int; default=None
-            node id
+        nids : List[int, int]
+            node ids
         c1 / c2 : int; default=None
             DOF for nid1 / nid2
         comment : str; default=''
             a comment for the card
         """
-        mass_obj = CMASS2(eid, mass, g1, c1, g2, c2, comment=comment)
+        mass_obj = CMASS2(eid, mass, nids, c1, c2, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_cmass3(self, eid, pid, s1, s2, comment=''):
-        # type: (int, int, int, int, str) -> CMASS3
+    def add_cmass3(self, eid, pid, nids, comment=''):
+        # type: (int, int, [int, int], str) -> CMASS3
         """
         Creates a CMASS3 card
 
@@ -700,19 +696,17 @@ class AddCards(AddMethods):
             element id
         pid : int
             property id (PMASS)
-        s1 : int
-            SPOINT id
-        s2 : int
-            SPOINT id
+        nids : List[int, int]
+            SPOINT ids
         comment : str; default=''
             a comment for the card
         """
-        mass = CMASS3(eid, pid, s1, s2, comment=comment)
+        mass = CMASS3(eid, pid, nids, comment=comment)
         self._add_mass_object(mass)
         return mass
 
-    def add_cmass4(self, eid, mass, s1, s2=0, comment=''):
-        # type: (int, float, int, int, str) -> CMASS4
+    def add_cmass4(self, eid, mass, nids, comment=''):
+        # type: (int, float, [int, int], str) -> CMASS4
         """
         Creates a CMASS4 card
 
@@ -722,14 +716,12 @@ class AddCards(AddMethods):
             element id
         mass : float
             SPOINT mass
-        s1 : int
-            SPOINT id
-        s2 : int; default=0
-            SPOINT id
+        nids : List[int, int]
+            SPOINT ids
         comment : str; default=''
             a comment for the card
         """
-        mass_obj = CMASS4(eid, mass, s1, s2=s2, comment=comment)
+        mass_obj = CMASS4(eid, mass, nids, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
 

@@ -431,8 +431,8 @@ class OP2(OP2_Scalar):
                     matrix.build_dataframe()
                 else:
                     self.log.warning('pandas: build_dataframe is not supported for key=%s type=%s' % (key, str(type(matrix))))
-                    #raise NotImplementedError()
-                    continue
+                    raise NotImplementedError()
+                    #continue
 
         for result_type in result_types:
             result = getattr(self, result_type)
@@ -492,13 +492,12 @@ class OP2(OP2_Scalar):
             if len(self.matrices):
                 matrix_group = hdf5_file.create_group('matrices')
                 for key, matrix in sorted(iteritems(self.matrices)):
-                    print('type(key) = ', type(key))
                     matrixi_group = matrix_group.create_group(b(key))
                     if hasattr(matrix, 'export_to_hdf5'):
                         matrix.export_to_hdf5(matrixi_group, self.log)
                     else:
                         self.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
-                        #raise
+                        #raise NotImplementedError()
                         continue
 
             subcase_groups = {}

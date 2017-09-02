@@ -83,7 +83,7 @@ class TestMassElements(unittest.TestCase):
 
         g2 = 2
         c2 = 4
-        cmass1 = model.add_cmass1(eid, pid, g1, c1, g2, c2, comment='cmass1')
+        cmass1 = model.add_cmass1(eid, pid, [g1, g2], c1, c2, comment='cmass1')
         cmass1.write_card(size=8)
         cmass1.write_card(size=16)
         cmass1.write_card(size=16, is_double=True)
@@ -97,7 +97,7 @@ class TestMassElements(unittest.TestCase):
         pmass.raw_fields()
 
         eid = 10
-        cmass2 = model.add_cmass2(eid, mass, g1, c1, g2, c2, comment='cmass2')
+        cmass2 = model.add_cmass2(eid, mass, [g1, g2], c1, c2, comment='cmass2')
         cmass2.write_card(size=8)
         cmass2.write_card(size=16)
         cmass2.write_card(size=16, is_double=True)
@@ -129,7 +129,7 @@ class TestMassElements(unittest.TestCase):
         pid = 2
         s1 = 1
         s2 = 2
-        cmass3 = model.add_cmass3(eid, pid, s1, s2, comment='cmass3')
+        cmass3 = model.add_cmass3(eid, pid, [s1, s2], comment='cmass3')
         cmass3.write_card(size=8)
         cmass3.write_card(size=16)
         cmass3.write_card(size=16, is_double=True)
@@ -143,7 +143,7 @@ class TestMassElements(unittest.TestCase):
         pmass.raw_fields()
 
         eid = 10
-        cmass4 = model.add_cmass4(eid, mass, s1, s2, comment='cmass4')
+        cmass4 = model.add_cmass4(eid, mass, [s1, s2], comment='cmass4')
         cmass4.write_card(size=8)
         cmass4.write_card(size=16)
         cmass4.write_card(size=16, is_double=True)

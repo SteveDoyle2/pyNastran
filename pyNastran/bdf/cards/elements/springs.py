@@ -563,7 +563,8 @@ class CELAS4(SpringElement):
         self.nodes_ref = None
 
     def validate(self):
-        assert self.nodes[0] > 0 or self.nodes[1] > 0, 's1=%s s2=%s' % (self.nodes[0], self.nodes[1])
+        if self.nodes[0] is not None and self.nodes[1] is not None:
+            assert self.nodes[0] > 0 or self.nodes[1] > 0, 's1=%s s2=%s' % (self.nodes[0], self.nodes[1])
 
     @classmethod
     def add_card(cls, card, comment=''):

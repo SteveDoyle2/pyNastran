@@ -64,8 +64,6 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
 
     isubcases = []
     write_op2 = False
-    is_vector = [True] # is this vectorized
-    vector_stop = [True]  # corresponds to is_vector; stop if case fails=True
     binary_debug = [True, False]  # catch any errors
     quiet = True
 
@@ -104,7 +102,6 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
                                      skip_dataframe=skip_dataframe,
                                      write_op2=write_op2, debug=debug,
                                      skip_files=skip_files, stop_on_failure=stop_on_failure,
-                                     is_vector=is_vector, vector_stop=vector_stop,
                                      nstart=nstart, nstop=nstop, binary_debug=binary_debug,
                                      compare=compare, short_stats=short_stats,
                                      quiet=quiet, dev=True)

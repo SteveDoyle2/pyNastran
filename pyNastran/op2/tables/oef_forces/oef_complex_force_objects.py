@@ -1762,7 +1762,7 @@ class ComplexCBeamForceArray(ScalarObject):
                              shear12.real, shear12.imag, shear22.real, shear22.imag,
                              axial2.real, axial2.imag,], atol=0.0001):
                         #if not np.array_equal(t1, t2):
-                            msg += ('%-4s  (%s, %sj, %s, %sj, %s,%sj, %s,  %sj, %s, %sj)\n'
+                            msg += ('%-4s  (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
                                     '      (%s, %sj, %s, %sj, %s, %sj, %s, %sj, %s, %sj)\n'
                                     '  dt12=(%s, %sj, %s, %sj)\n' % (
                                         eid,

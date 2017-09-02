@@ -231,7 +231,8 @@ GEOM_TABLES = [
 
     # other
     b'CONTACT', b'VIEWTB',
-    #b'KDICT',
+    b'KDICT',
+    #b'MDICTP' where does this go?
 
     # aero?
     #b'MONITOR',
@@ -497,6 +498,7 @@ NX_MATRIX_TABLES = [
     b'MPATRN', b'MIDENT', b'MRANDM', b'MCMPLX',
     b'MATPOOL',
     #b'KELM',
+    b'MELM', b'BELM',
 ]
 
 

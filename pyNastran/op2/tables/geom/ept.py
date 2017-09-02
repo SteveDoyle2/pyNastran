@@ -49,7 +49,7 @@ class EPT(GeomCommon):
             (1602, 16, 30): ['PTUBE', self._read_ptube],      # record 56
 
             (5402, 54, 262): ['PBEAM', self._read_pbeam],      # record 14 - not done
-            (9202, 92, 53): ['PBEAML', self._read_pbeaml],     # record 15 - not done
+            (9202, 92, 53): ['PBEAML', self._read_pbeaml],     # record 15
             (2502, 25, 248): ['PBEND', self._read_pbend],      # record 16 - not done
             (1402, 14, 37): ['PBUSH', self._read_pbush],       # record 19 - not done
             (3101, 31, 219): ['PBUSH1D', self._read_pbush1d],  # record 20 - not done
@@ -71,6 +71,7 @@ class EPT(GeomCommon):
             (3301, 33, 56): ['NSM1', self._read_fake],  # record 3
             (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
             (3501, 35, 58): ['NSML', self._read_fake],  # record 6
+            (3501, 35, 994) : ['NSM?', self._read_fake],
             (3601, 36, 62): ['NSML1', self._read_fake],  # record 7
             (1502, 15, 36): ['PAABSF', self._read_fake],  # record 8
             (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
@@ -117,18 +118,16 @@ class EPT(GeomCommon):
         NSM(3201,32,55) - the marker for Record 2
         .. todo:: this isnt a property...
         """
-        self.log.info('skipping NSM in EPT\n')
-        return len(data)
-        #s = Struct(b(self._endian + 'i4sif'))
-        #while len(data) >= 16:  # 4*4
-            #edata = data[:16]
-            #data = data[16:]
-            #out = s.unpack(edata)
-            #(sid, prop_set, ID, value) = out
-            ##print("sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value))
-            #prop = NSM.add_op2_data([sid, prop_set, ID, value])
-            ##self._add_op2_property(prop)
-        #return n
+        s = Struct(b(self._endian + 'i4sif'))
+        while len(data) >= 16:  # 4*4
+            edata = data[:16]
+            data = data[16:]
+            out = s.unpack(edata)
+            (sid, prop_set, ID, value) = out
+            self.log.info("sid=%s prop_set=%s ID=%s value=%s" %(sid, prop_set, ID, value))
+            prop = NSM.add_op2_data([sid, prop_set, ID, value])
+            self._add_nsm_object(prop)
+        return n
 
 # NSM1
 # NSML1
@@ -384,6 +383,17 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbeaml(self, data, n):
+        """
+        PBEAML(9202,92,53)
+
+        Word Name Type Description
+        1 PID        I   Property identification number
+        2 MID        I   Material identification number
+        3 GROUP(2) CHAR4 Cross-section group name
+        5 TYPE(2)  CHAR4 Cross section type
+        7 VALUE      RS  Cross section values for XXB, SO, NSM, and dimensions
+        Word 7 repeats until (-1) occurs
+        """
         #strs = numpy.core.defchararray.reshapesplit(data, sep=",")
         ints = np.fromstring(data[n:], self._endian + 'i')
         floats = np.fromstring(data[n:], self._endian + 'f')
@@ -396,13 +406,14 @@ class EPT(GeomCommon):
         for i, (istarti, iendi) in enumerate(zip(istart, iend)):
             idata = data[n+istarti*4 : n+(istarti+6)*4]
             pid, mid, group, beam_type = struct1.unpack(idata)
-            group = group.decode('latin1')
-            beam_type = beam_type.decode('latin1')
+            group = group.decode('latin1').strip()
+            beam_type = beam_type.decode('latin1').strip()
             fvalues = floats[istarti+6: iendi]
             if self.is_debug_file:
                 self.binary_debug.write('     %s\n' % str(fvalues))
                 self.log.debug('pid=%i mid=%i group=%r beam_type=%r' % (pid, mid, group, beam_type))
                 self.log.debug(fvalues)
+            #self.log.debug('pid=%i mid=%i group=%s beam_type=%s' % (pid, mid, group, beam_type))
             data_in = [pid, mid, group, beam_type, fvalues]
             prop = PBEAML.add_op2_data(data_in)
             self._add_op2_property(prop)
@@ -977,7 +988,6 @@ class EPT(GeomCommon):
         """
         PMASS(402,4,44) - the marker for Record 48
         """
-        n = 0
         s = Struct(b(self._endian + 'if'))
         nentries = (len(data) - n) // 8  # 2*4
         for i in range(nentries):

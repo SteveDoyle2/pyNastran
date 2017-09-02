@@ -476,38 +476,91 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_rbe2(self, data, n):
-        """RBE2(6901,69,295) - Record 24"""
-        #s_nx = Struct(b(self._endian + '3i f 3i'))
-        s_msc = Struct(b(self._endian + '5i'))
-        struct_i = Struct(b(self._endian + 'i'))
-        nelements = 0
+        """
+        RBE2(6901,69,295) - Record 24
 
-        while n < len(data):
-            # (eid, gn, cm, gm, ..., alpha)
-            out = s_msc.unpack(data[n:n+20])
-            eid, gn, cm, gm1, gm2 = out
-            n += 20
+        ::
 
-            Gmi = [gm1, gm2]
-            while gm2 != -1:
-                gm2, = struct_i.unpack(data[n:n+4])
-                Gmi.append(gm2)
-                n += 4
-            Gmi = [gmi for gmi in Gmi if gmi != -1]
+          data = (1, 1, 123456, 10000, -1, 0.0,
+                  2, 2, 123456, 20000, -1, 0.0,
+                  3, 3, 12345,  30000, 30001, 30002, 30003, 30004, 30005, -1, 0.0,
+                  4, 4, 123,    40000, 40001, 40010, 40011, 40020, 40021, 40030, 40031, 40040, 40041, 40050, 40051, -1, 0.0,
+                  5, 5, 123,    50000, 50001, 50010, 50011, 50020, 50021, 50030, 50031, 50040, 50041, 50050, 50051, -1, 0.0)
+        """
+        idata = np.fromstring(data[n:], self.idtype)
+        iminus1 = np.where(idata == -1)[0]
+        if idata[-1] == -1:
+            is_alpha = False
+            i = np.hstack([[0], iminus1[:-1]+1])
+            j = np.hstack([iminus1[:-1], len(idata)])
+        else:
+            is_alpha = True
+            i = np.hstack([[0], iminus1[:-1]+1])
+            fdata = np.fromstring(data[n:], self.fdtype)
+            j = np.hstack([iminus1[:-1], len(idata)-2])
 
-            ## TODO: according to the MSC/NX manual, alpha should be here,
-            ##       but it's not...
-            alpha = 0.
+        #print('i=%s' % i)
+        #print('j=%s' % j)
+        #print('idata=%s' % idata)
+        #print(fdata, len(fdata))
+        nelements = len(j)
+        if is_alpha:
+            for ii, jj in zip(i, j):
+                eid, gn, cm = idata[ii:ii + 3]
+                gm = idata[ii+3:jj-1].tolist()
+                #print('eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm))
+                #alpha = fdata[jj]
+                alpha = fdata[jj+1]
+                #print('eid=%s gn=%s cm=%s gm=%s alpha=%s' % (eid, gn, cm, gm, alpha))
 
-            if self.is_debug_file:
-                self.binary_debug.write('  RBE2=%s\n' % str(out))
+                out = (eid, gn, cm, gm, alpha)
+                if self.is_debug_file:
+                    self.binary_debug.write('  RBE2=%s\n' % str(out))
+                #print('  RBE2=%s\n' % str(out))
+                elem = RBE2.add_op2_data(out)
+                self._add_rigid_element_object(elem)
+        else:
+            alpha = 0.0
+            for ii, jj in zip(i, j):
+                #eid, gn, cm, gm1, gm2 = idata[ii:ii + 5]
+                eid, gn, cm = idata[ii:ii + 3]
+                gm = idata[ii+3:jj-1].tolist()
 
-            out = (eid, gn, cm, Gmi, alpha)
-            elem = RBE2.add_op2_data(out)
-            self._add_rigid_element_object(elem)
-            nelements += 1
+                out = (eid, gn, cm, gm, alpha)
+                if self.is_debug_file:
+                    self.binary_debug.write('  RBE2=%s\n' % str(out))
+                #print('  RBE2=%s\n' % str(out))
+                elem = RBE2.add_op2_data(out)
+                self._add_rigid_element_object(elem)
         self.card_count['RBE2'] = nelements
         return n
+
+        #while n < len(data):
+            ## (eid, gn, cm, gm, ..., alpha)
+            #out = s_msc.unpack(data[n:n+20])
+            #eid, gn, cm, gm1, gm2 = out
+            #n += 20
+
+            #Gmi = [gm1, gm2]
+            #while gm2 != -1:
+                #gm2, = struct_i.unpack(data[n:n+4])
+                #Gmi.append(gm2)
+                #n += 4
+            #Gmi = [gmi for gmi in Gmi if gmi != -1]
+
+            ### TODO: according to the MSC/NX manual, alpha should be here,
+            ###       but it's not...
+            #alpha = 0.
+
+            #if self.is_debug_file:
+                #self.binary_debug.write('  RBE2=%s\n' % str(out))
+            #print('  RBE2=%s\n' % str(out))
+            #out = (eid, gn, cm, Gmi, alpha)
+            #elem = RBE2.add_op2_data(out)
+            #self._add_rigid_element_object(elem)
+            #nelements += 1
+        #self.card_count['RBE2'] = nelements
+        #return n
 
     def _read_rbe3(self, data, n):
         """RBE3(7101,71,187) - Record 25"""
@@ -695,6 +748,7 @@ class GEOM4(GeomCommon):
         3 C   I  Component numbers
         4 D   RS Enforced displacement
         """
+        msg = ''
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries
@@ -710,13 +764,16 @@ class GEOM4(GeomCommon):
                 self.binary_debug.write('SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (
                     sid, nid, comp, dx))
 
+            assert comp != 7, 'SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
             if nid < 100000000:
-                assert comp != 7, 'SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
                 constraint = SPC.add_op2_data([sid, nid, comp, dx])
                 constraints.append(constraint)
+                #msg += '  SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
             else:
-                self.log.warning('SPC-NX sid=%s nid=%s comp=%s dx=%s' % (sid, nid, comp, dx))
+                msg += '  SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
             n += 16
+        if msg:
+            self.log.warning('Invalid Node IDs; skipping\n' + msg)
         return n, constraints
 
     def _read_spcoff1(self, data, n):
@@ -1132,19 +1189,33 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
     data = [1001100 1001100 123456 1.0 123456 10011 10002          -1 -2 -3
             1002500 1002500 123456 1.0 123456 10025 10020          -1 -2 -3]
             eid     refg    refc   wt  c      g     ...
+    data = [107, 1, 123456, 1.0, 1234, 10600, 10601, -1, -2, -3, 0/0.0,
+            207, 2, 123456, 1.0, 1234, 20600, 20601, -1, -2, -3, 0/0.0,
+            307, 3, 123456, 1.0, 1234, 30600, 30601, -1, -2, -3, 0/0.0]]
     """
     rbe3s = []
 
     #iminus1 = np.where(idata == -1)[0]
     #iminus2 = np.where(idata == -2)[0]
-    iminus3 = np.where(idata == -3)[0]
     #assert len(iminus1) == 1, idata
     #assert len(iminus2) == 1, idata
     #assert len(iminus3) == 1, idata
-    i = np.hstack([[0], iminus3[:-1]+1])
+
+    iminus3 = np.where(idata == -3)[0]
+    if idata[-1] == -3:
+        is_alpha = False
+        i = np.hstack([[0], iminus3[:-1]+1])
+    else:
+        is_alpha = True
+        i = np.hstack([[0], iminus3[:-1]+2])
     j = np.hstack([iminus3[:-1], len(idata)])
 
-    #print('idata =', idata)
+    #print('idata = %s' % idata.tolist())
+    #print('fdata = %s' % fdata.tolist())
+    #print('i = %s' % i.tolist())
+    #print('j = %s' % j.tolist())
+    #print('is_alpha = %s' % is_alpha)
+    assert len(i) == len(j)
     for ii, jj in zip(i, j):
 
         idatai = idata[ii:jj]
@@ -1196,11 +1267,19 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
                 cmi.append(cm)
                 ii += 2
 
-        alpha = 0.0
+        if is_alpha:
+            alpha = fdata[ii]
+            ii += 1
+        else:
+            alpha = 0.0
+        #print('alpha = %s' % alpha)
         in_data = [eid, refg, refc, weights, comps, gijs,
                    gmi, cmi, alpha]
+        if self.is_debug_file:
+            self.binary_debug.write('  RBE3=%s\n' % str(in_data))
         #print('rbe3 =', in_data)
         rbe3 = RBE3.add_op2_data(in_data)
+
         self._add_rigid_element_object(rbe3)
         rbe3s.append(rbe3)
         #print('--------------------------------------')

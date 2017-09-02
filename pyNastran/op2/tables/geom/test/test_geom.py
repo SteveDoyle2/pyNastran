@@ -1,7 +1,7 @@
 from __future__ import print_function
 import unittest
 import numpy as np
-from pyNastran.bdf.bdf import BDF
+from pyNastran.op2.op2_geom import OP2Geom
 from pyNastran.op2.tables.geom.geom4 import read_rbe3s_from_idata_fdata
 
 class TestOP2GeomUnit(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestOP2GeomUnit(unittest.TestCase):
                 1002500 1002500 123456 1.0 123456 10025 10020          -1 -2 -3]
                 eid     refg    refc   wt  c      g     ...
         """
-        model = BDF()
+        model = OP2Geom()
         data = [99, 99, 123456, 1.0, 123, 44, 45, 48, 49, -1, -3]
         rbes = read_rbe3s_from_idata_fdata(
             model, np.array(data, dtype='int32'), np.array(data, dtype='float32'))

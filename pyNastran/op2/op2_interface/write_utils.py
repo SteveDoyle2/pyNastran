@@ -62,7 +62,7 @@ def export_to_hdf5(self, group, log):
         # on the subtitle/label being actual unicode.
         if name in ['element_names']:  # grid point forces
             value = np.asarray(value, dtype='|S8').tolist()
-        elif name in ['headers', 'data_names', 'words', 'gridtype_str']:
+        elif name in ['headers', 'data_names', 'words', 'gridtype_str', 'element_data_type']:
             svalue = [str(valuei) for valuei in value]
 
             # the size of the array is the |S8 or |S12 or whatever
@@ -70,6 +70,14 @@ def export_to_hdf5(self, group, log):
             dtype = '|S%i' % max_len
             value = np.array(svalue, dtype=dtype)
 
+        elif name in ['element', 'element_type'] and isinstance(value, np.ndarray):
+            if value.dtype is np.dtype(np.int32):
+                print('%r' % value.dtype)
+            else:
+                # unicode
+                #value = value.tolist()
+
+                value = np.asarray(value, dtype='|S8').tolist()
         #if hasattr(value, 'export_to_hdf5'):
             #msg = 'sub-object export_to_hdf5 not supported\nkey=%s value=%s' % (key, value)
             #raise NotImplementedError(msg)

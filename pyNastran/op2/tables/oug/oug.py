@@ -400,7 +400,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1', 'OCRUG'], self.table_name
+            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1', b'OCRUG'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,
@@ -427,12 +427,13 @@ class OUG(OP2Common):
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code)
         elif self.thermal == 4:
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\ms103.op2
             #result_name = 'displacement_scaled_response_spectra_SRSS'
             #storage_obj = self.displacement_scaled_response_spectra_SRSS
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            assert self.table_name in [''], self.table_name
+            assert self.table_name in [b'OUPV1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code)

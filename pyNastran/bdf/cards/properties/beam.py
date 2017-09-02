@@ -1079,35 +1079,44 @@ class PBEAML(IntegratedLineProperty):
         beam_type = beam_type.strip()
         ndim = cls.valid_types[beam_type]
         nfvalues = len(fvalues)
-        nsections = nfvalues // (3+ndim)
+        nsections = nfvalues // (3 + ndim)
         sections = fvalues.reshape(nsections, ndim+3)
+        #print('sections = \n%s' % sections)
 
         xxb = []
         so = []
         dims = []
         nsm = []
+        # XXB, SO, NSM, and dimensions
+        isections = []
         for i, section in enumerate(sections):
-            xxbi = section[0]
+            xxbi = section[1]
+            #print('PBEAML - i=%s x/xb=%s' % (i, xxbi))
             if i > 0 and allclose(xxbi, 0.0):
-                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
+                #print('  PBEAML - skipping i=%s x/xb=%s' % (i, xxbi))
                 continue
+            if xxbi in xxb:
+                #print("  PBEAML - skipping i=%s x/xb=%s because it's a duplicate" % (i, xxbi))
+                continue
+            isections.append(i)
 
-
-            sof = section[1]
-            if sof == 0.:
-                sos = 'YES'
-            elif sof == 1.:
-                sos = 'NO'
+            so_float = section[0]
+            if so_float == 0.:
+                so_string = 'YES'
+            elif so_float == 1.:
+                so_string = 'NO'
             else:
-                raise NotImplementedError(sof)
+                msg = 'so_float=%r; expected 0.0 or 1.0; data=%s' % (so_float, data)
+                raise NotImplementedError(msg)
 
             dim = list(section[2:-1])
             nsmi = section[-1]
             #print(dim, section)
             xxb.append(xxbi)
-            so.append(sos)
+            so.append(so_string)
             dims.append(dim)
             nsm.append(nsmi)
+        #print('sections2 = \n%s' % sections[isections])
         return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 

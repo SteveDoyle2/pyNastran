@@ -2870,7 +2870,8 @@ class MATHP(HyperelasticMaterial):
             a comment for the card
         """
         main = data[0]
-        (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
+        av = None
+        (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
          a20, a11, a02, d2,
          a30, a21, a12, a03, d3,
          a40, a31, a22, a13, a04, d4,

@@ -145,6 +145,9 @@ class PLSOLID(SolidProperty):
         """
         return self.mid_ref.rho
 
+    def _verify(self, xref=False):
+        pass
+
     def raw_fields(self):
         stress_strain = set_blank_if_default(self.stress_strain, 'GRID')
         fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
