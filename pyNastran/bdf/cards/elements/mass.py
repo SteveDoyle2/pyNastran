@@ -506,9 +506,19 @@ class CMASS3(PointMassElement):
     def Mass(self):
         return self.pid_ref.mass
 
+    def S1(self):
+        if self.nodes_ref is not None:
+            return self.nodes_ref[0].nid
+        return self.nodes[0]
+
+    def S2(self):
+        if self.nodes_ref is not None:
+            return self.nodes_ref[1].nid
+        return self.nodes[1]
+
     @property
     def node_ids(self):
-        return [self.s1, self.s2]
+        return [self.S1(), self.S2()]
 
     def cross_reference(self, model):
         """
@@ -529,7 +539,7 @@ class CMASS3(PointMassElement):
         self.pid_ref = None
 
     def raw_fields(self):
-        fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
+        fields = ['CMASS3', self.eid, self.Pid(), self.S1(), self.S2()]
         return fields
 
     def write_card(self, size=8, is_double=False):

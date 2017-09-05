@@ -72,7 +72,7 @@ def export_to_hdf5(self, group, log):
 
         elif name in ['element', 'element_type'] and isinstance(value, np.ndarray):
             if value.dtype is np.dtype(np.int32):
-                print('%r' % value.dtype)
+                pass
             else:
                 # unicode
                 #value = value.tolist()
