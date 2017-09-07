@@ -17,13 +17,17 @@ from pyNastran.converters.nastran.dev_vectorized2.cards.bush import (
 
 from pyNastran.converters.nastran.dev_vectorized2.cards.rods import (
     CONRODv, CRODv, CTUBEv, Rods)
+from pyNastran.converters.nastran.dev_vectorized2.cards.masses import (
+    CONM2v, Masses)
 from pyNastran.converters.nastran.dev_vectorized2.cards.loads import (
-    Loads, PLOADv, PLOAD2v, PLOAD4v, FORCEv, FORCE1v, FORCE2v)
+    Loads, PLOADv, PLOAD1v, PLOAD2v, PLOAD4v,
+    FORCEv, FORCE1v, FORCE2v,
+    MOMENTv, MOMENT1v, MOMENT2v)
 from pyNastran.converters.nastran.dev_vectorized2.cards.bars import CBARv, Bars
 from pyNastran.converters.nastran.dev_vectorized2.cards.beams import CBEAMv, Beams
 from pyNastran.converters.nastran.dev_vectorized2.cards.shears import CSHEARv, Shears
 from pyNastran.converters.nastran.dev_vectorized2.cards.shells import (
-    CTRIA3v, CTRIA6v, CTRIARv, CQUAD4v, CQUAD8v, CQUADRv, Shells)
+    CTRIA3v, CTRIA6v, CTRIARv, CQUAD4v, CQUAD8v, CQUADv, CQUADRv, Shells)
 from pyNastran.converters.nastran.dev_vectorized2.cards.solids import (
     CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
     CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
@@ -65,6 +69,14 @@ class BDF(BDF_):
         self.cbush = CBUSHv(model)
         self.bushes = Bushes(model)
 
+        #self.conm1 = CONM1v(model)
+        self.conm2 = CONM2v(model)
+        #self.cmass1 = CMASS1v(model)
+        #self.cmass2 = CMASS2v(model)
+        #self.cmass3 = CMASS3v(model)
+        #self.cmass4 = CMASS4v(model)
+        self.masses2 = Masses(model)
+
         self.crod = CRODv(model)
         self.conrod = CONRODv(model)
         self.ctube = CTUBEv(model)
@@ -73,14 +85,14 @@ class BDF(BDF_):
         self.cbar = CBARv(model)
         self.bars = Bars(model)
 
-        self.cbeam = CBEAMv(model)  # TODO: temp
-        self.beams = Beams(model)   # TODO: temp
+        self.cbeam = CBEAMv(model)
+        self.beams = Beams(model)
 
         self.ctria3 = CTRIA3v(model)
         self.cquad4 = CQUAD4v(model)
         self.ctria6 = CTRIA6v(model)
         self.cquad8 = CQUAD8v(model)
-        self.cquad = CQUAD4v(model)   # TODO: temp
+        self.cquad = CQUADv(model)
         self.cquadr = CQUADRv(model)
         self.ctriar = CTRIARv(model)
 
@@ -108,13 +120,19 @@ class BDF(BDF_):
         self.elements2 = Elements(model)  # TODO: change this name
 
 
+        #self.sload = SLOADv(model)
+        #self.grav = GRAVv(model)
         self.force = FORCEv(model)
         self.force1 = FORCE1v(model)
         self.force2 = FORCE2v(model)
         self.pload = PLOADv(model)
-        #self.pload1 = PLOAD1v(model)  # TODO: temp
+        self.pload1 = PLOAD1v(model)
         self.pload2 = PLOAD2v(model)
         self.pload4 = PLOAD4v(model)
+
+        self.moment =  MOMENTv(model)
+        self.moment1 = MOMENT1v(model)
+        self.moment2 = MOMENT2v(model)
 
         self.load_combinations = {}
         self.loads = Loads(model)
@@ -137,6 +155,19 @@ class BDF(BDF_):
         else:
             self.elements[key] = elem
             self._type_to_id_map[elem.type].append(key)
+
+    #def _prepare_conm1(self, card, card_obj, comment=''):
+        #self.conm1.add_card(card_obj, comment=comment)
+    def _prepare_conm2(self, card, card_obj, comment=''):
+        self.conm2.add_card(card_obj, comment=comment)
+    #def _prepare_cmass1(self, card, card_obj, comment=''):
+        #self.cmass1.add_card(card_obj, comment=comment)
+    #def _prepare_cmass2(self, card, card_obj, comment=''):
+        #self.cmass2.add_card(card_obj, comment=comment)
+    #def _prepare_cmass3(self, card, card_obj, comment=''):
+        #self.cmass3.add_card(card_obj, comment=comment)
+    #def _prepare_cmass4(self, card, card_obj, comment=''):
+        #self.cmass4.add_card(card_obj, comment=comment)
 
     def _prepare_celas1(self, card, card_obj, comment=''):
         self.celas1.add_card(card_obj, comment=comment)
@@ -189,8 +220,8 @@ class BDF(BDF_):
         self.ctria6.add_card(card_obj, comment=comment)
     def _prepare_cquad8(self, card, card_obj, comment=''):
         self.cquad8.add_card(card_obj, comment=comment)
-    #def _prepare_cquad(self, card, card_obj, comment=''):
-        #self.cquad.add_card(card_obj, comment=comment)
+    def _prepare_cquad(self, card, card_obj, comment=''):
+        self.cquad.add_card(card_obj, comment=comment)
     def _prepare_cquadr(self, card, card_obj, comment=''):
         self.cquadr.add_card(card_obj, comment=comment)
     def _prepare_ctriar(self, card, card_obj, comment=''):
@@ -247,17 +278,17 @@ class BDF(BDF_):
         self.force1.add_card(card_obj, comment=comment)
     def _prepare_force2(self, card, card_obj, comment=''):
         self.force2.add_card(card_obj, comment=comment)
-    #def _prepare_moment(self, card, card_obj, comment=''):
-        #self.moment.add_card(card_obj, comment=comment)
-    #def _prepare_moment1(self, card, card_obj, comment=''):
-        #self.moment1.add_card(card_obj, comment=comment)
-    #def _prepare_moment2(self, card, card_obj, comment=''):
-        #self.moment2.add_card(card_obj, comment=comment)
+    def _prepare_moment(self, card, card_obj, comment=''):
+        self.moment.add_card(card_obj, comment=comment)
+    def _prepare_moment1(self, card, card_obj, comment=''):
+        self.moment1.add_card(card_obj, comment=comment)
+    def _prepare_moment2(self, card, card_obj, comment=''):
+        self.moment2.add_card(card_obj, comment=comment)
 
     def _prepare_pload(self, card, card_obj, comment=''):
         self.pload.add_card(card_obj, comment=comment)
-    #def _prepare_pload1(self, card, card_obj, comment=''):
-        #self.pload1.add_card(card_obj, comment=comment)
+    def _prepare_pload1(self, card, card_obj, comment=''):
+        self.pload1.add_card(card_obj, comment=comment)
     def _prepare_pload2(self, card, card_obj, comment=''):
         self.pload2.add_card(card_obj, comment=comment)
     def _prepare_pload4(self, card, card_obj, comment=''):
@@ -266,6 +297,20 @@ class BDF(BDF_):
     def _update_card_parser(self):
         del self._card_parser['GRID']
         self._card_parser_prepare['GRID'] = self._prepare_grid
+
+
+        #del self._card_parser['CONM1']
+        del self._card_parser['CONM2']
+        #del self._card_parser['CMASS1']
+        #del self._card_parser['CMASS2']
+        #del self._card_parser['CMASS3']
+        #del self._card_parser['CMASS4']
+        #self._card_parser_prepare['CONM1'] = self._prepare_conm1
+        self._card_parser_prepare['CONM2'] = self._prepare_conm2
+        #self._card_parser_prepare['CMASS1'] = self._prepare_cmass1
+        #self._card_parser_prepare['CMASS2'] = self._prepare_cmass2
+        #self._card_parser_prepare['CMASS3'] = self._prepare_cmass3
+        #self._card_parser_prepare['CMASS4'] = self._prepare_cmass4
 
         del self._card_parser['CELAS1']
         del self._card_parser['CELAS2']
@@ -315,14 +360,14 @@ class BDF(BDF_):
         del self._card_parser['CTRIAR']
         del self._card_parser['CQUAD4']
         del self._card_parser['CQUAD8']
-        #del self._card_parser['CQUAD']
+        del self._card_parser['CQUAD']
         del self._card_parser['CQUADR']
         self._card_parser_prepare['CTRIA3'] = self._prepare_ctria3
         self._card_parser_prepare['CTRIA6'] = self._prepare_ctria6
         self._card_parser_prepare['CTRIAR'] = self._prepare_ctriar
         self._card_parser_prepare['CQUAD4'] = self._prepare_cquad4
         self._card_parser_prepare['CQUAD8'] = self._prepare_cquad8
-        #self._card_parser_prepare['CQUAD'] = self._prepare_cquad
+        self._card_parser_prepare['CQUAD'] = self._prepare_cquad
         self._card_parser_prepare['CQUADR'] = self._prepare_cquadr
 
         del self._card_parser['CSHEAR']
@@ -330,26 +375,30 @@ class BDF(BDF_):
 
         del self._card_parser['LOAD']
         #del self._card_parser['SLOAD']
+        #del self._card_parser['GRAV']
         del self._card_parser['PLOAD']
+        del self._card_parser['PLOAD1']
         del self._card_parser['PLOAD2']
         del self._card_parser['PLOAD4']
         del self._card_parser['FORCE']
         del self._card_parser['FORCE1']
         del self._card_parser['FORCE2']
-        #del self._card_parser['MOMENT']
-        #del self._card_parser['MOMENT1']
-        #del self._card_parser['MOMENT2']
+        del self._card_parser['MOMENT']
+        del self._card_parser['MOMENT1']
+        del self._card_parser['MOMENT2']
         self._card_parser_prepare['LOAD'] = self._prepare_load
         #self._card_parser_prepare['SLOAD'] = self._prepare_sload
+        #self._card_parser_prepare['GRAV'] = self._prepare_grav
         self._card_parser_prepare['PLOAD'] = self._prepare_pload
+        self._card_parser_prepare['PLOAD1'] = self._prepare_pload1
         self._card_parser_prepare['PLOAD2'] = self._prepare_pload2
         self._card_parser_prepare['PLOAD4'] = self._prepare_pload4
         self._card_parser_prepare['FORCE'] = self._prepare_force
         self._card_parser_prepare['FORCE1'] = self._prepare_force1
         self._card_parser_prepare['FORCE2'] = self._prepare_force2
-        #self._card_parser_prepare['MOMENT'] = self._prepare_moment
-        #self._card_parser_prepare['MOMENT1'] = self._prepare_moment1
-        #self._card_parser_prepare['MOMENT2'] = self._prepare_moment2
+        self._card_parser_prepare['MOMENT'] = self._prepare_moment
+        self._card_parser_prepare['MOMENT1'] = self._prepare_moment1
+        self._card_parser_prepare['MOMENT2'] = self._prepare_moment2
 
 
     #def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
@@ -393,8 +442,8 @@ class BDF(BDF_):
         #self.grid.add_grid(grid.nid, grid.xyz, cp=grid.cp, cd=grid.cd,
                            #ps=grid.ps, seid=grid.seid, comment=grid.comment)
 
-    def xyz_cid0(self):
-        return self.xyz_cid0
+    #def xyz_cid0(self):
+        #return self.xyz_cid0
 
     def _get_bdf_stats_loads(self):
         # loads

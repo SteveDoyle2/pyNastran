@@ -1,8 +1,11 @@
+"""tests the vectorized BDF class before being used by the GUI"""
 from __future__ import print_function
 import os
 import unittest
+import numpy as np
 import pyNastran
-from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import read_bdf
+from pyNastran.bdf.bdf import read_bdf
+from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import read_bdf as read_bdfv
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '../', 'models')
@@ -12,9 +15,9 @@ class TestVectorized(unittest.TestCase):
     def test_solid_bending(self):
         """tests solid_bending"""
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
-        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
-                         skip_cards=None, encoding=None, log=None, debug=True,
-                         mode='msc')
+        model = read_bdfv(bdf_filename, validate=True, xref=False, punch=False,
+                          skip_cards=None, encoding=None, log=None, debug=True,
+                          mode='msc')
         #print(model.get_bdf_stats())
 
         #model.grids[10] = GRID(10, [0., 0., 0.])
@@ -29,9 +32,9 @@ class TestVectorized(unittest.TestCase):
     def test_bwb(self):
         """tests bwb"""
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'BWB_saero.bdf')
-        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
-                         skip_cards=None, encoding=None, log=None, debug=True,
-                         mode='msc')
+        model = read_bdfv(bdf_filename, validate=True, xref=False, punch=False,
+                          skip_cards=None, encoding=None, log=None, debug=True,
+                          mode='msc')
         #print(model.get_bdf_stats())
 
         out_filename = 'spike.bdf'
@@ -42,43 +45,75 @@ class TestVectorized(unittest.TestCase):
     def test_isat(self):
         """tests isat"""
         bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm.dat')
-        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
-                         skip_cards=None, encoding=None, log=None, debug=True,
-                         mode='msc')
+        out_filename_v = 'spike_v.bdf'
+        out_filename_nv = 'spike_nv.bdf'
+        modelv = read_bdfv(bdf_filename, validate=True, xref=False, punch=False,
+                           skip_cards=None, encoding=None, log=None, debug=True,
+                           mode='msc')
         #print(model.get_bdf_stats())
+        modelv.write_bdf(out_filename_v, encoding=None, size=8, is_double=False,
+                         interspersed=False, enddata=None,
+                         close=True)
+        print(modelv.cbush)
+        print(modelv.get_bdf_stats())
+        print(modelv.elements)
+        print(modelv.elements2)
 
-        out_filename = 'spike.bdf'
-        model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
-                        interspersed=False, enddata=None,
-                        close=True)
-        print(model.cbush)
-        print(model.get_bdf_stats())
-        print(model.elements)
-        print(model.elements2)
+        model_nv = read_bdf(bdf_filename, validate=True, xref=True, punch=False,
+                            skip_cards=None, encoding=None, log=None, debug=True,
+                            mode='msc')
+        model_nv.write_bdf(out_filename_nv, encoding=None, size=8, is_double=False,
+                           interspersed=False, enddata=None,
+                           close=True)
+
+        model1 = read_bdf(out_filename_v, validate=True, xref=True, punch=False,
+                          skip_cards=None, encoding=None, log=None, debug=True,
+                          mode='msc')
+        model2 = read_bdf(out_filename_nv, validate=True, xref=True, punch=False,
+                          skip_cards=None, encoding=None, log=None, debug=True,
+                          mode='msc')
+
+        #xyz_cid1, nid_cp_cd1 = model1.get_xyz_in_coord(cid=0, fdtype='float32')
+        #xyz_cid2, nid_cp_cd2 = model2.get_xyz_in_coord(cid=0, fdtype='float32')
+
+        out1 = model1.get_displacement_index_xyz_cp_cd(
+            fdtype='float64', idtype='int32', sort_ids=True)
+        icd_transform1, icp_transform1, xyz_cp1, nid_cp_cd1 = out1
+        xyz_cid1 = model1.transform_xyzcp_to_xyz_cid(xyz_cp1, icp_transform1, cid=0,
+                                                     in_place=False)
+
+        out2 = model2.get_displacement_index_xyz_cp_cd(
+            fdtype='float64', idtype='int32', sort_ids=True)
+        icd_transform2, icp_transform2, xyz_cp2, nid_cp_cd2 = out2
+        xyz_cid2 = model2.transform_xyzcp_to_xyz_cid(xyz_cp2, icp_transform2, cid=0,
+                                                     in_place=False)
+
+        assert np.array_equal(nid_cp_cd1, nid_cp_cd2)
+        assert len(icp_transform1) == len(icp_transform2)
+        assert len(icd_transform1) == len(icd_transform2)
+        for icp1, icp2 in zip(icp_transform1, icp_transform2):
+            assert np.array_equal(icp_transform1[icp1], icp_transform2[icp2])
+        #assert np.array_equal(icp_transform1, icp_transform2)
+        for icd1, icd2 in zip(icd_transform1, icd_transform2):
+            assert np.array_equal(icd_transform1[icd1], icd_transform2[icd2])
+        assert len(model1.nodes) == len(model2.nodes)
+        for nid in model1.nodes:
+            #assert np.array_equal(model1.nodes[nid].xyz, model2.nodes[nid].xyz), 'nid=%s xyz1=%s xyz2=%s' % (nid, model1.nodes[nid].xyz, model2.nodes[nid].xyz)
+            if not np.allclose(model1.nodes[nid].xyz, model2.nodes[nid].xyz):
+                print('nid=%s xyz1=%s xyz2=%s' % (nid, model1.nodes[nid].xyz, model2.nodes[nid].xyz))
+        #assert np.array_equal(xyz_cp1, xyz_cp2)
+        #assert np.array_equal(xyz_cid1, xyz_cid2)
+        for nid, xyz1, xyz2 in zip(nid_cp_cd1[:, 0], xyz_cid1, xyz_cid2):
+            if not np.allclose(xyz1, xyz2):
+                print('xyz_cid0: nid=%s xyz1=%s xyz2=%s' % (nid, xyz1, xyz2))
+
 
     def test_static_elements(self):
         """tests static_elements"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
-        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
-                         skip_cards=None, encoding=None, log=None, debug=True,
-                         mode='msc')
-        #print(model.get_bdf_stats())
-
-        out_filename = 'spike.bdf'
-        model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
-                        interspersed=False, enddata=None,
-                        close=True)
-        print(model.cbush)
-        print(model.get_bdf_stats())
-        print(model.elements)
-        print(model.elements2)
-
-    def test_static_elements(self):
-        """tests static_elements"""
-        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
-        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
-                         skip_cards=None, encoding=None, log=None, debug=True,
-                         mode='msc')
+        model = read_bdfv(bdf_filename, validate=True, xref=False, punch=False,
+                          skip_cards=None, encoding=None, log=None, debug=True,
+                          mode='msc')
 
         print(model.cquad4)
         print(model.ctria3)
@@ -111,6 +146,8 @@ class TestVectorized(unittest.TestCase):
 
         print(model.elements2)
         len(model.elements2)
+        #print(model.load_combinations)
+        print(model.loads)
         print(model.get_bdf_stats())
 
         out_filename = 'spike.bdf'

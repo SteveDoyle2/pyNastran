@@ -1067,7 +1067,7 @@ class CONM2(PointMassElement):
         X = [
             double_or_blank(card, 5, 'x1', 0.0),
             double_or_blank(card, 6, 'x2', 0.0),
-            double_or_blank(card, 7, 'x3', 0.0)
+            double_or_blank(card, 7, 'x3', 0.0),
         ]
 
         I = [
@@ -1076,7 +1076,7 @@ class CONM2(PointMassElement):
             double_or_blank(card, 11, 'I22', 0.0),
             double_or_blank(card, 12, 'I31', 0.0),
             double_or_blank(card, 13, 'I32', 0.0),
-            double_or_blank(card, 14, 'I33', 0.0)
+            double_or_blank(card, 14, 'I33', 0.0),
         ]
         assert len(card) <= 15, 'len(CONM2 card) = %i\ncard=%s' % (len(card), card)
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)

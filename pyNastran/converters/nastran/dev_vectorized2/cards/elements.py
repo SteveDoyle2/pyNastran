@@ -9,6 +9,7 @@ class Elements(object):
         self.springs = model.springs
         self.dampers = model.dampers
         self.bushes = model.bushes
+        self.masses = model.masses2
         self.rods = model.rods
 
         self.bars = model.bars
@@ -46,6 +47,9 @@ class Elements(object):
         indent = ''
         msg = '%s<Elements> : nelements=%s\n' % (indent, len(self))
 
+        msg += '%s  masses:  %s\n' % (indent, len(self.masses))
+        msg += self.masses.repr_indent('    ')
+
         msg += '%s  springs:  %s\n' % (indent, len(self.springs))
         msg += self.springs.repr_indent('    ')
         msg += '%s  dampers:  %s\n' % (indent, len(self.dampers))
@@ -72,6 +76,7 @@ class Elements(object):
         assert bdf_file is not None
         #for group in self.groups:
             #group.write_card(size, is_double, bdf_file)
+        self.masses.write_card(size, is_double, bdf_file)  # conm1, conm2, cmass1, cmass2, cmass3, cmass4
         self.springs.write_card(size, is_double, bdf_file)  # celas
         self.dampers.write_card(size, is_double, bdf_file)  # cdamp
         self.bushes.write_card(size, is_double, bdf_file)  # cbush, cbush1d, cbush2d

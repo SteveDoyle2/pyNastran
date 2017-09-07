@@ -113,8 +113,6 @@ class ShellElement(object):
             self._thickness_flag = []
             #self._cd = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
 
     def cross_reference(self, model):
         """does this do anything?"""
@@ -783,25 +781,35 @@ class CQUAD4v(ShellElement):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
-            self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
-            #zoffset = set_blank_if_default(self.zoffset, 0.0)
-            thickness_flag = set_blank_if_default(thickness_flag, 0)
-            #theta_mcid = set_blank_if_default(self.Theta_mcid(), 0.0)
-            zoffset = 0.
-            #T1 = set_blank_if_default(self.T1, 1.0)
-            #T2 = set_blank_if_default(self.T2, 1.0)
-            #T3 = set_blank_if_default(self.T3, 1.0)
-            #T4 = set_blank_if_default(self.T4, 1.0)
+        for eid, pid, nids, theta, mcid, zoffset, thickness_flag, thickness in zip(
+            self.eid, self.pid, self.nids, self.theta, self.mcid, self.zoffset,
+            self.thickness_flag, self.thickness):
 
+            theta_mcid = mcid
             if mcid == -1:
-                mcid = theta # theta_mcid
-            row2_data = [mcid, zoffset,
+                theta_mcid = theta
+
+            row2_data = [theta_mcid, zoffset,
                          thickness_flag] + thickness.tolist()
-            row2 = [print_field_8(field) for field in row2_data]
-            data = [eid, pid] + nids.tolist() + row2
-            msgi = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
-                    '                %8s%8s%8s%8s%8s\n' % tuple(data))
+
+            #if row2_data == [0.0, 0.0, 0, 1.0, 1.0, 1.0, 1.0]:
+            if row2_data == [0.0, 0.0, 0, np.nan, np.nan, np.nan, np.nan]:
+                data = [eid, pid] + nids.tolist()
+                msgi = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
+            else:
+                theta_mcid = set_blank_if_default(theta_mcid, 0.0)
+                zoffset = set_blank_if_default(zoffset, 0.0)
+                thickness_flag = set_blank_if_default(thickness_flag, 0)
+                row2_data = [theta_mcid, zoffset,
+                             thickness_flag] + thickness.tolist()
+                #T1 = set_blank_if_default(self.T1, 1.0)
+                #T2 = set_blank_if_default(self.T2, 1.0)
+                #T3 = set_blank_if_default(self.T3, 1.0)
+                #T4 = set_blank_if_default(self.T4, 1.0)
+                row2 = [print_field_8(field) for field in row2_data]
+                data = [eid, pid] + nids.tolist() + row2
+                msgi = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+                        '                %8s%8s%8s%8s%8s\n' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
         return msg
@@ -975,6 +983,191 @@ class CQUAD8v(ShellElement):
             msg += self.comment[eid] + print_card_8(list_fields)
         bdf_file.write(msg)
         return msg
+
+
+class CQUADv(ShellElement):
+    """
+    +-------+-------+-----+----+------------+----+----+----+----+
+    |    1  |   2   |  3  |  4 |     5      |  6 |  7 | 8  |  9 |
+    +=======+=======+=====+====+============+====+====+====+====+
+    | CQUAD |  EID  | PID | G1 |     G2     | G3 | G4 | G5 | G6 |
+    +-------+-------+-----+----+------------+----+----+----+----+
+    |       |   G7  | G8  | G9 | THETA/MCID |    |    |    |    |
+    +-------+-------+-----+----+------------+----+----+----+----+
+
+    theta_mcid is an MSC specific variable
+    """
+    card_name = 'CQUAD'
+    nnodes = 9
+    nrequired = 4
+
+    def __init__(self, model):
+        """intializes the ShellElement"""
+        self.model = model
+        self.is_current = True
+        self.eid = np.array([], dtype='int32')
+        self.pid = np.array([], dtype='int32')
+        self.nids = np.array([], dtype='float64')
+        self.theta = np.array([], dtype='int32')  # np.nan if undefined
+        self.mcid = np.array([], dtype='int32') # -1 if undefined
+
+        self._eid = []
+        self._pid = []
+        self._nids = []
+        self._theta = []
+        self._mcid = []
+        self.comment = defaultdict(str)
+
+    def add(self, eid, pid, nids, theta_mcid=0., comment=''):
+        """
+        Creates a CQUAD card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int, int, int/None, int/None,
+                    int/None, int/None, int/None]
+            node ids
+        theta_mcid : float; default=0.0
+            float : material coordinate system angle (theta) is defined
+                    relative to the element coordinate system
+            int : x-axis from material coordinate system angle defined by
+                  mcid is projected onto the element
+        comment : str; default=''
+            a comment for the card
+        """
+        self.model.shells.add(eid)
+        self.is_current = False
+        self._eid.append(eid)
+        self._pid.append(pid)
+        self._nids.append(nids)
+        if isinstance(theta_mcid, integer_types):
+            self._mcid.append(theta_mcid)
+            self._theta.append(np.nan)
+        else:
+            self._theta.append(theta_mcid)
+            self._mcid.append(-1)
+        if comment:
+            self.comment[eid] = _format_comment(comment)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a CQUAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer_or_blank(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4'),
+                integer_or_blank(card, 7, 'n5'),
+                integer_or_blank(card, 8, 'n6'),
+                integer_or_blank(card, 9, 'n7'),
+                integer_or_blank(card, 10, 'n8'),
+                integer_or_blank(card, 11, 'n9'),]
+        theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', 0.)
+        assert len(card) <= 13, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
+        self.add(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
+
+    def make_current(self):
+        """creates an array of the GRID points"""
+        if not self.is_current:
+            if len(self.eid) > 0: # there are already elements in self.eid
+                self.eid = np.hstack([self.eid, self._eid])
+                self.pid = np.vstack([self.pid, self._pid])
+                self.nids = np.hstack([self.nids, self._nids])
+                self.theta = np.hstack([self.theta, self._theta])
+                self.mcid = np.hstack([self.mcid, self._mcid])
+                # don't need to handle comments
+            else:
+                self.eid = np.array(self._eid, dtype='int32')
+                self.pid = np.array(self._pid, dtype='int32')
+                self.nids = np.array(self._nids, dtype='int32')
+                self.theta = np.array(self._theta, dtype='float64')
+                self.mcid = np.array(self._mcid, dtype='int32')
+            assert len(self.eid) == len(np.unique(self.eid))
+
+            isort = np.argsort(self.eid)
+            self.eid = self.eid[isort]
+            self.pid = self.pid[isort]
+            self.nids = self.nids[isort, :]
+            self.theta = self.theta[isort]
+            self.mcid = self.mcid[isort]
+
+            #print(self.nid)
+            self._eid = []
+            self._pid = []
+            self._nids = []
+            self._theta = []
+            self._mcid = []
+            self.is_current = True
+
+    #def update(self, grid):
+        #"""functions like a dictionary"""
+        #nid = grid.nid
+        #add_card = self.check_if_current(eid, self.eid)
+        #if add_card:
+            #self.add(nid, grid.xyz, cp=grid.cp, cd=grid.cd,  # add_cquad4
+                     #ps=grid.ps, seid=grid.seid, comment=grid.comment)
+            #self.is_current = False
+        #else:
+            #inid = np.where(nid == self.nid)[0]
+            #self.nid[inid] = grid.nid
+            #self.xyz[inid] = grid.xyz
+            #self.cp[inid] = grid.cp
+            #self.cd[inid] = grid.cd
+            #self.ps[inid] = grid.ps
+            #self.seid[inid] = grid.seid
+            #self.comment[nid] = comment
+            #self.is_current = True  # implicit
+
+    #def __iter__(self):
+        #pass
+    #def __next__(self):
+        #pass
+    #def __items__(self):
+        #pass
+    #def __keys__(self):
+        #pass
+    #def __values__(self):
+        #pass
+    #def __getitem__(self, i):
+        #"""this works on index"""
+        #self.make_current()
+        #eid = self.eid[i]
+        #return GRID(nid, self.xyz[i], cp=self.cp[i], cd=self.cd[i],
+                    #ps=self.ps[i], seid=self.seid[i], comment=self.comment[nid])
+
+    #def __setitem__(self, i, value):
+        #pass
+    #def __delitem__(self, i):
+        #pass
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
+            self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
+            nodes2 = ['' if node is None else '%8i' % node for node in nids[4:]]
+            theta_mcid = self.theta_mcid
+
+            data = [self.eid, self.Pid()] + nids[:4] + nodes2 + [theta_mcid]
+            msgi = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
+                    '        %8s%8s%8s%8s\n' % tuple(data))
+            msg += self.comment[eid] + msgi.rstrip() + '\n'
+        bdf_file.write(msg)
+        return msg
+
 
 class CQUADRv(ShellElement):
     """
@@ -1187,14 +1380,19 @@ class Shells(object):
 
     @property
     def elements(self):
+        """gets the sub-shell element groups"""
+        return self.groups
+
+    @property
+    def groups(self):
+        """gets the sub-shell element groups"""
         return [self.ctria3, self.cquad4,
                 self.ctria6, self.cquad8,
                 self.cquad, self.cquadr, self.ctriar,]
 
     def __len__(self):
-        return(len(self.cquad4) + len(self.cquad8) +
-               len(self.ctria3) + len(self.ctria6) + len(self.cquad) +
-               len(self.cquadr) + len(self.ctriar))
+        """gets the number of shell elements"""
+        return sum([len(group) for group in self.groups])
 
     def repr_indent(self, indent=''):
         msg = '%s<Shells> : nelements=%s\n' % (indent, len(self))

@@ -24,6 +24,8 @@ class BarElement(object):
         self.x = np.array([], dtype='float64')
         self.g0 = np.array([], dtype='int32')
         self.pin_flags = np.array([], dtype='int32')
+        self.wa_offset = np.array([], dtype='float64')
+        self.wb_offset = np.array([], dtype='float64')
         self._eid = []
         self._pid = []
         self._nids = []
@@ -31,6 +33,8 @@ class BarElement(object):
         self._x = []
         self._g0 = []
         self._pin_flags = []
+        self._wa_offset = []
+        self._wb_offset = []
         self.comment = defaultdict(str)
 
     def check_if_current(self, nid, nids):
@@ -61,6 +65,8 @@ class BarElement(object):
                 self.x = np.hstack([self.x, self._x])
                 self.g0 = np.hstack([self.g0, self._g0])
                 self.pin_flags = np.hstack([self.pin_flags, self._pin_flags])
+                self.wa_offset = np.hstack([self.wa_offset, self._wa_offset])
+                self.wa_offset = np.hstack([self.wa_offset, self._wb_offset])
                 # don't need to handle comments
             else:
                 self.eid = np.array(self._eid, dtype='int32')
@@ -70,6 +76,8 @@ class BarElement(object):
                 self.x = np.array(self._x, dtype='float64')
                 self.g0 = np.array(self._g0, dtype='int32')
                 self.pin_flags = np.array(self._pin_flags, dtype='int32')
+                self.wa_offset = np.array(self._wa_offset, dtype='float64')
+                self.wb_offset = np.array(self._wb_offset, dtype='float64')
             assert len(self.eid) == len(np.unique(self.eid))
 
             isort = np.argsort(self.eid)
@@ -80,6 +88,8 @@ class BarElement(object):
             self.x = self.x[isort, :]
             self.g0 = self.g0[isort]
             self.pin_flags = self.pin_flags[isort, :]
+            self.wa_offset = self.wa_offset[isort, :]
+            self.wb_offset = self.wb_offset[isort, :]
 
             self._eid = []
             self._pid = []
@@ -88,6 +98,8 @@ class BarElement(object):
             self._x = []
             self._g0 = []
             self._pin_flags = []
+            self._wa_offset = []
+            self._wb_offset = []
             self.is_current = True
         #else:
             #print('no GRIDs')
@@ -194,7 +206,8 @@ class CBARv(BarElement):
         if pin_flags is None:
             pin_flags = [0, 0]
         self._pin_flags.append(pin_flags)
-        #self._offset.append(wa_offset)
+        self._wa_offset.append(wa)
+        self._wb_offset.append(wb)
         if comment:
             self.comment[eid] = _format_comment(comment)
 
@@ -300,22 +313,20 @@ class CBARv(BarElement):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, pid, nodes, x, g0, offt, pin_flags in zip(
-            self.eid, self.pid, self.nids, self.x, self.g0, self.offt, self.pin_flags):
+        for eid, pid, nodes, x, g0, offt, pin_flags, wa_offset, wb_offset in zip(
+            self.eid, self.pid, self.nids, self.x, self.g0, self.offt, self.pin_flags, self.wa_offset, self.wb_offset):
             x1, x2, x3 = self.get_x_g0_defaults(x, g0)
-            #pa = set_blank_if_default(self.pa, 0)
-            #pb = set_blank_if_default(self.pb, 0)
+            pin_flag_a = set_blank_if_default(pin_flags[0], 0)
+            pin_flag_b = set_blank_if_default(pin_flags[1], 0)
 
-            #w1a = set_blank_if_default(self.wa[0], 0.0)
-            #w2a = set_blank_if_default(self.wa[1], 0.0)
-            #w3a = set_blank_if_default(self.wa[2], 0.0)
+            w1a = set_blank_if_default(wa_offset[0], 0.0)
+            w2a = set_blank_if_default(wa_offset[1], 0.0)
+            w3a = set_blank_if_default(wa_offset[2], 0.0)
 
-            #w1b = set_blank_if_default(self.wb[0], 0.0)
-            #w2b = set_blank_if_default(self.wb[1], 0.0)
-            #w3b = set_blank_if_default(self.wb[2], 0.0)
+            w1b = set_blank_if_default(wb_offset[0], 0.0)
+            w2b = set_blank_if_default(wb_offset[1], 0.0)
+            w3b = set_blank_if_default(wb_offset[2], 0.0)
             ga, gb = nodes
-            pin_flag_a, pin_flag_b = pin_flags
-            w1a = w2a = w3a = w1b = w2b = w3b = 0.0
             #(x1, x2, x3) = self.get_x_g0_defaults()
 
             # offt doesn't exist in NX nastran

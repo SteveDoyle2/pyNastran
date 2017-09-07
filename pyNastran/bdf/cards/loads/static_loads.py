@@ -764,6 +764,9 @@ class Moment(Load):
 
 class FORCE(Force):
     """
+    Defines a static concentrated force at a grid point by specifying a
+    scale factor and a vector that determines the direction.
+
     +-------+-----+------+-------+------+------+------+------+
     |   1   |  2  |  3   |   4   |  5   |  6   |   7  |   8  |
     +=======+=====+======+=======+======+======+======+======+
@@ -1494,11 +1497,13 @@ class MOMENT1(Moment):
     Defines a static concentrated moment at a grid point by specifying a
     magnitude and two grid points that determine the direction.
 
-    +---------+-----+---+---+----+----+
-    |    1    |  2  | 3 | 4 | 5  | 6  |
-    +=========+=====+===+===+====+====+
-    | MOMENT1 | SID | G | M | G1 | G2 |
-    +---------+-----+---+---+----+----+
+    +---------+-----+----+-------+----+----+
+    |    1    |  2  | 3  |   4   | 5  | 6  |
+    +=========+=====+====+=======+====+====+
+    | MOMENT1 | SID | G  |   M   | G1 | G2 |
+    +---------+-----+----+-------+----+----+
+    | MOMENT1 |  6  | 13 | -2.93 | 16 | 13 |
+    +---------+-----+----+-------+----+----+
     """
     type = 'MOMENT1'
 

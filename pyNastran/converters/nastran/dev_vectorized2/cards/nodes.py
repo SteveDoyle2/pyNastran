@@ -352,12 +352,12 @@ class GRIDv(object):
                 self.seid = np.hstack([self.seid, self._seid])
                 # don't need to handle comments
             else:
-                self.nid = np.array(self._nid)
-                self.xyz = np.array(self._xyz)
-                self.cp = np.array(self._cp)
-                self.cd = np.array(self._cd)
-                self.ps = np.array(self._ps)
-                self.seid = np.array(self._seid)
+                self.nid = np.array(self._nid, dtype='int32')
+                self.xyz = np.array(self._xyz, dtype='float64')
+                self.cp = np.array(self._cp, dtype='int32')
+                self.cd = np.array(self._cd, dtype='int32')
+                self.ps = np.array(self._ps, dtype='|U8')
+                self.seid = np.array(self._seid, dtype='int32')
             assert len(self.nid) == len(np.unique(self.nid))
 
             isort = np.argsort(self.nid)

@@ -5,7 +5,7 @@ import numpy as np
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank)
-from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
@@ -34,12 +34,9 @@ class Bushes(object):
             #self.cbush2d.write_card(size, is_double, bdf_file)
 
     def make_current(self):
-        #if len(self.cbush):
         self.cbush.make_current()
-        #if len(self.cbush1d):
-            #self.cbush1d.make_current()
-        #if len(self.cbush2d):
-            #self.cbush2d.make_current()
+        #self.cbush1d.make_current()
+        #self.cbush2d.make_current()
 
     def __len__(self):
         return len(self.cbush) #+ len(self.cbush1d) + len(self.cbush2d)
@@ -142,19 +139,19 @@ class CBUSHv(BushElement):
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
-        #self.mid = np.array([], dtype='int32')
-        #self.A = np.array([], dtype='float64')
-        #self.j = np.array([], dtype='float64')
-        #self.c = np.array([], dtype='float64')
+        self.cid = np.array([], dtype='int32')
+        self.ocid = np.array([], dtype='int32')
+        self.s = np.array([], dtype='float64')
+        self.si = np.array([], dtype='float64')
         #self.nsm = np.array([], dtype='float64')
 
         self._eid = []
         self._pid = []
         self._nids = []
-        #self._mid = []
-        #self._A = []
-        #self._j = []
-        #self._c = []
+        self._cid = []
+        self._ocid = []
+        self._s = []
+        self._si = []
         #self._nsm = []
         self.comment = defaultdict(str)
 
@@ -201,10 +198,10 @@ class CBUSHv(BushElement):
         self._eid.append(eid)
         self._pid.append(pid)
         self._nids.append(nids)
-        #self._mid.append(mid)
-        #self._A.append(A)
-        #self._j.append(j)
-        #self._c.append(c)
+        self._cid.append(cid)
+        self._ocid.append(ocid)
+        self._s.append(s)
+        self._si.append(si)
         #self._nsm.append(nsm)
         if comment:
             self.comment[eid] = _format_comment(comment)
@@ -266,12 +263,13 @@ class CBUSHv(BushElement):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
-            cid = None
-            s = None
-            ocid = -1
-            si = []
+        assert len(self.eid) == len(self.pid)
+        assert len(self.eid) == len(self.cid)
+        assert len(self.eid) == len(self.ocid)
+        assert len(self.eid) == len(self.s)
+        assert len(self.eid) == len(self.si)
 
+        for eid, pid, nodes, cid, ocid, s, si in zip(self.eid, self.pid, self.nids, self.cid, self.ocid, self.s, self.si):
             ga, gb = nodes
             #if self.g0 is not None:
                 #x = [self.g0, None, None]
@@ -279,10 +277,10 @@ class CBUSHv(BushElement):
                 #x = self.x
 
             x = [None, None, None]
-            #ocid = set_blank_if_default(self.OCid(), -1)
-            #s = set_blank_if_default(self.s, 0.5)
+            ocid = set_blank_if_default(ocid, -1)
+            s = set_blank_if_default(s, 0.5)
             list_fields = (['CBUSH', eid, pid, ga, gb] +
-                           x + [cid, s, ocid] + si)
+                           x + [cid, s, ocid] + si.tolist())
 
             msgi = print_card_8(list_fields)
             msg += self.comment[eid] + msgi.rstrip() + '\n'
@@ -296,10 +294,10 @@ class CBUSHv(BushElement):
                 self.eid = np.hstack([self.eid, self._eid])
                 self.pid = np.vstack([self.pid, self._pid])
                 self.nids = np.hstack([self.nids, self._nids])
-
-                #self.A = np.hstack([self.A, self._A])
-                #self.j = np.hstack([self.j, self._j])
-                #self.c = np.hstack([self.c, self._c])
+                self.cid = np.hstack([self.cid, self._cid])
+                self.ocid = np.hstack([self.ocid, self._ocid])
+                self.s = np.hstack([self.s, self._s])
+                self.si = np.hstack([self.si, self._si])
                 #self.nsm = np.hstack([self.nsm, self._nsm])
 
                 # don't need to handle comments
@@ -307,19 +305,22 @@ class CBUSHv(BushElement):
                 self.eid = np.array(self._eid, dtype='int32')
                 self.pid = np.array(self._pid, dtype='int32')
                 self.nids = np.array(self._nids, dtype='int32')
-                #self.A = np.array(self._A, dtype='float64')
-                #self.j = np.array(self._j, dtype='float64')
-                #self.c = np.array(self._c, dtype='float64')
+                self.cid = np.array(self._cid, dtype='int32')
+                self.ocid = np.array(self._ocid, dtype='int32')
+                self.s = np.array(self._s, dtype='float64')
+                self.si = np.array(self._si, dtype='float64')
                 #self.nsm = np.array(self._nsm, dtype='float64')
             assert len(self.eid) == len(np.unique(self.eid))
             #print(self.nid)
             self._eid = []
             self._pid = []
             self._nids = []
+            self._cid = []
+            self._ocid = []
+            self._s = []
+            self._si = []
             #self._A = []
             #self._j = []
             #self._c = []
             #self._nsm = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
