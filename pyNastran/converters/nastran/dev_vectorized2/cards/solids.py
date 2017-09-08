@@ -273,6 +273,7 @@ class CTETRA10v(SolidElement):
     """
     card_name = 'CTETRA'
     nnodes = 10
+    nrequired = 4
 
     def add_card(self, card, comment=''):
         """
@@ -399,6 +400,7 @@ class CPENTA15v(SolidElement):
     """
     card_name = 'CPENTA'
     nnodes = 15
+    nrequired = 6
 
     def add_card(self, card, comment=''):
         """
@@ -524,6 +526,7 @@ class CHEXA20v(SolidElement):
     """
     card_name = 'CHEXA'
     nnodes = 20
+    nrequired = 8
 
     def add_card(self, card, comment=''):
         """
@@ -627,6 +630,7 @@ class CPYRAM13v(SolidElement):
     """
     card_name = 'CPYRAM'
     nnodes = 13
+    nrequired = 5
 
     def add_card(self, card, comment=''):
         """

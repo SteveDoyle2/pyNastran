@@ -200,6 +200,8 @@ class CBARv(BarElement):
         self._eid.append(eid)
         self._pid.append(pid)
         self._nids.append(nids)
+        if g0 is None:
+            g0 = 0
         self._x.append(x)
         self._g0.append(g0)
         self._offt.append(offt)

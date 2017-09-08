@@ -494,7 +494,7 @@ class RLOAD1(DynamicLoad):
                 #print(subcase, type(subcase))
                 #if 'LOADSET' in subcase:
                     #lseq_id = subcase['LOADSET'][0]
-                    #lseq = model.Load(lseq_id, msg=msg)[0]
+                    #lseq = model.Load(lseq_id, consider_load_combinations=False, msg=msg)[0]
                     #self.excite_id_ref = lseq
                     ##self.dload_id = lseq.
                 #elif 'DLOAD' in subcase:

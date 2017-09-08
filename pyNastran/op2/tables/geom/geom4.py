@@ -1309,8 +1309,8 @@ def _read_spcadd_mpcadd(model, card_name, datai):
         #print('%r %s' % (card_name, dataii))
         if card_name == 'MPCADD':
             constraint = MPCADD.add_op2_data(dataii)
-            model._add_constraint_mpc_object(constraint)
+            model._add_constraint_mpcadd_object(constraint)
         else:
             constraint = SPCADD.add_op2_data(dataii)
-            model._add_constraint_spc_object(constraint)
+            model._add_constraint_spcadd_object(constraint)
     model.increase_card_count(card_name, count_num=count_num)

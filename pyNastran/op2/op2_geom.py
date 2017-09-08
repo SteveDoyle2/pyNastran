@@ -12,6 +12,7 @@ from pyNastran.op2.tables.geom.dynamics import DYNAMICS
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
 
+
 def read_op2_geom(op2_filename=None, combine=True, subcases=None,
                   exclude_results=None, include_results=None,
                   validate=True, xref=True,
@@ -82,8 +83,9 @@ def read_op2_geom(op2_filename=None, combine=True, subcases=None,
         model.cross_reference()
     return model
 
-class OP2Geom(OP2, BDF,
-              GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS):
+
+class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS):
+    """interface for the OP2Geom class for to loading subclasses"""
     def __init__(self, make_geom=True,
                  debug=False, log=None, debug_file=None, mode='msc'):
         """
@@ -103,9 +105,6 @@ class OP2Geom(OP2, BDF,
         mode : str; default='msc'
             {msc, nx}
         """
-        # make_geom=False, debug=True, log=None, debug_file=None
-
-        BDF.__init__(self, debug=debug, log=log)
         GEOM1.__init__(self)
         GEOM2.__init__(self)
         GEOM3.__init__(self)
@@ -360,3 +359,29 @@ class OP2Geom(OP2, BDF,
         Contains the relationship between each p-element and its view-elements and view-grids.
         """
         return self._read_geom_4(self._viewtb_map, data, ndata)
+
+
+class OP2Geom(BDF, OP2GeomCommon):
+    """creates an interface for the OP2 and BDF classes"""
+    def __init__(self, make_geom=True,
+                 debug=False, log=None, debug_file=None, mode='msc'):
+        """
+        Initializes the OP2 object
+
+        Parameters
+        ----------
+        make_geom : bool; default=False
+            reads the BDF tables
+        debug : bool; default=False
+            enables the debug log and sets the debug in the logger
+        log: log()
+            a logging object to write debug messages to
+            (.. seealso:: import logging)
+        debug_file : default=None -> no debug
+            sets the filename that will be written to
+        mode : str; default='msc'
+            {msc, nx}
+        """
+        BDF.__init__(self, debug=debug, log=log)
+        OP2GeomCommon.__init__(self, make_geom=make_geom,
+                               debug=debug, log=log, debug_file=debug_file, mode=mode)

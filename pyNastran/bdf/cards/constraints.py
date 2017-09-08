@@ -1379,14 +1379,14 @@ class SPCADD(ConstraintAdd):
         msg = ', which is required by SPCADD=%s' % self.conid
         self.sets_ref = []
         for spc_id in self.sets:
-            self.sets_ref.append(model.SPC(spc_id, msg=msg))
+            self.sets_ref.append(model.SPC(spc_id, consider_spcadd=False, msg=msg))
 
     def safe_cross_reference(self, model, debug=True):
         self.sets_ref = []
         msg = ' which is required by SPCADD=%s' % self.conid
         for spc_id in self.sets:
             try:
-                spc = model.SPC(spc_id, msg=msg)
+                spc = model.SPC(spc_id, consider_spcadd=False, msg=msg)
             except KeyError:
                 if debug:
                     msg = 'Couldnt find SPC=%i, which is required by SPCADD=%s' % (
@@ -1490,14 +1490,14 @@ class MPCADD(ConstraintAdd):
         msg = ', which is required by MPCADD=%s' % self.conid
         self.sets_ref = []
         for mpc_id in self.sets:
-            self.sets_ref.append(model.MPC(mpc_id, msg=msg))
+            self.sets_ref.append(model.MPC(mpc_id, consider_mpcadd=False, msg=msg))
 
     def safe_cross_reference(self, model, debug=True):
         self.sets_ref = []
         msg = ' which is required by MPCADD=%s' % self.conid
         for mpc_id in self.sets:
             try:
-                mpc = model.MPC(mpc_id, msg=msg)
+                mpc = model.MPC(mpc_id, consider_mpcadd=False, msg=msg)
             except KeyError:
                 if debug:
                     msg = 'Couldnt find MPC=%i, which is required by MPCADD=%s' % (

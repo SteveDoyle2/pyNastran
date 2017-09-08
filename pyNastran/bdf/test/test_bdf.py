@@ -749,6 +749,31 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_ma
             #sol = sol_base
         check_case(sol_base, subcase, fem2, p0, isubcase, subcases)
 
+def check_for_flag_in_subcases(fem2, subcase, parameters):
+    """
+    For a multi-subcase deck, you can define specific required cards
+    (e.g., TSTEP) in secondary cases, but not primary cases.  This
+    results is a non-transient case being defined for the first (1 or more)
+    subcase, but the final subcase must have the TSTEP card.
+
+    You can also use this for things like post-buckling and dynamic time
+    stepping.  In the dynamic time stepping case, for the first 3 seconds
+    you can define one set of time stepping, but then you can switch to
+    a much finer time step/increased number of convergence iterations.
+    """
+    if not any(subcase.has_parameter(*parameters)):
+        subcases = fem2.subcases
+        subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
+        has_flag = False
+        for isubcase, subcasei in iteritems(fem2.subcases):
+            if any(subcasei.has_parameter(*parameters)):
+                has_flag = True
+        if not has_flag:
+            msg = 'sol=%r; %s not in subcase\n' % (fem2.sol, str(parameters))
+            for isubcase, subcasei in iteritems(fem2.subcases):
+                msg += str(subcasei)
+            raise RuntimeError(msg)
+
 def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     """
     Checks to see if the case has all the required case control fields
@@ -817,18 +842,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
-        if not any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
-            subcases = fem2.subcases
-            subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
-            has_flag = False
-            for isubcase, subcasei in iteritems(fem2.subcases):
-                if any(subcasei.has_parameter('TIME', 'TSTEP', 'TSTEPNL')):
-                    has_flag = True
-            if not has_flag:
-                msg = 'sol=%r; [TIME, TSTEP, TSTEPNL] not in subcase\n' % fem2.sol
-                for isubcase, subcasei in iteritems(fem2.subcases):
-                    msg += str(subcasei)
-                raise RuntimeError(msg)
+        check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
 
     elif sol == 110:  # ???
         _assert_has_spc(subcase, fem2)
@@ -837,7 +851,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert subcase.has_parameter('FREQUENCY'), 'sol=%s\n%s' % (sol, subcase)
         assert any(subcase.has_parameter('METHOD', 'RMETHOD')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 112:  # modal transient
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
+        check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
+        #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 114:
         assert 'LOAD' in subcase, subcase
         assert 'HARMONICS' in subcase, subcase
@@ -1628,6 +1643,7 @@ def main():
             crash_cards=crash_cards,
             run_extract_bodies=False,
             pickle_obj=data['--pickle'],
+            print_stats=True,
         )
         prof.dump_stats('bdf.profile')
 
@@ -1669,6 +1685,7 @@ def main():
             crash_cards=crash_cards,
             run_extract_bodies=False,
             pickle_obj=data['--pickle'],
+            print_stats=True,
         )
     print("total time:  %.2f sec" % (time.time() - time0))
 

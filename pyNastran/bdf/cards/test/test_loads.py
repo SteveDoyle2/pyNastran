@@ -190,7 +190,7 @@ class TestLoads(unittest.TestCase):
             #if isubcase != 17:
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.loads[loadcase_id][0]
+            load = model_b.Load(loadcase_id, consider_load_combinations=True, consider_invalid=True)[0]
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
             if load.g34_ref is None:
@@ -273,7 +273,7 @@ class TestLoads(unittest.TestCase):
             #if isubcase != 17:
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.loads[loadcase_id][0]
+            load = model_b.Load(loadcase_id, consider_load_combinations=True, consider_invalid=True)[0]
             elem = load.eids_ref[0]
             area = 0.5
             centroid = elem.Centroid()
@@ -904,7 +904,7 @@ class TestLoads(unittest.TestCase):
         load_id = 120
         scale = 1.
         scale_factors = [1.0, 2.0]
-        load_ids = [12, 13]
+        load_ids = [12, 13] # force, pload4
         load = model.add_load(load_id, scale, scale_factors, load_ids, comment='load')
 
         #-----------------------------------------------------------------------

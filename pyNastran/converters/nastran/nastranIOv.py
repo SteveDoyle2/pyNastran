@@ -472,7 +472,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
 
         load_geom = True
-        if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch')):
+        if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch', '.op2')): # '.op2'
             if IS_TESTING or self.is_testing_flag:
                 self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
                 self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
@@ -1319,9 +1319,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ieid0_in = ieid0
             elem = model_obj
             elem.make_current()
-            self.log.info('%s; nelem=%s nnodes=%s' % (
-                model_obj.card_name, nelems, model_obj.nids.shape[1]))
+            try:
+                nnodes = model_obj.nids.shape[1]
+            except IndexError:
+                self.log.info('%s; nelem=%s nnodes=???' % (
+                    model_obj.card_name, nelems))
+                raise
 
+            self.log.info('%s; nelem=%s nnodes=%s' % (
+                model_obj.card_name, nelems, nnodes))
             eid = elem.eid
             ieid = np.arange(ieid0, ieid0 + nelems)
             dim = np.full(nelems, dimi, dtype='int32')
@@ -1389,7 +1395,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _get_model_vectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
-        from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import BDF as BDF_
         ext = os.path.splitext(bdf_filename)[1].lower()
         punch = False
         if ext == '.pch':
@@ -1397,11 +1402,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         self.model_type = 'nastran'
         if ext == '.op2':
-            model = OP2Geom(make_geom=True, debug=False, log=self.log,
-                            debug_file=None)
+            from pyNastran.converters.nastran.dev_vectorized2.op2_geom_vectorized import OP2Geom as OP2Geom_
+            model = OP2Geom_(make_geom=True, debug=False, log=self.log,
+                             debug_file=None)
             model.clear_results()
             model.read_op2(op2_filename=bdf_filename)
         else:  # read the bdf/punch
+            from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import BDF as BDF_
             model = BDF_(log=self.log, debug=True)
 
             # static_elements.bdf

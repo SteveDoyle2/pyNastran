@@ -142,7 +142,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
         assert pname_fid in ['I1', 'I2', 'A', 'J',
                              'I1(A)', 'I1(B)', 'I2(B)',
                              '-8', '-9', '-10', '-14', '-15', '-16', '-17', '-18', '-19', '-20', '-21',
-                             '-168'], msg
+                             '-168', '-169', '-170', '-174', '-175', '-176', '-177', '-178', '-179',
+                             '-180', '-181',], msg
     elif prop_type == 'PBEAML':
         assert pname_fid in ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6',
                              'DIM1(A)',
@@ -155,6 +156,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
         if pname_fid in ['T', 4]:
             pname_fid = 'T'
         elif pname_fid in [6]:  # 12I/T**3 doesn't support strings
+            pass
+        elif pname_fid in [8]:  # TS/T doesn't support strings?
             pass
         else:
             raise NotImplementedError('PSHELL pname_fid=%r is invalid' % pname_fid)

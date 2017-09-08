@@ -848,6 +848,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             mat.validate()
 
         #------------------------------------------------
+        for key, load_combinations in sorted(iteritems(self.load_combinations)):
+            for loadi in load_combinations:
+                loadi.validate()
         for key, loads in sorted(iteritems(self.loads)):
             for loadi in loads:
                 loadi.validate()
@@ -955,10 +958,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         for se_suport in self.se_suport:
             se_suport.validate()
 
+        for key, spcadds in sorted(iteritems(self.spcadds)):
+            for spcadd in spcadds:
+                spcadd.validate()
         for key, spcs in sorted(iteritems(self.spcs)):
             for spc in spcs:
                 spc.validate()
 
+        for key, mpcadds in sorted(iteritems(self.mpcadds)):
+            for mpcadd in mpcadds:
+                mpcadd.validate()
         for key, mpcs in sorted(iteritems(self.mpcs)):
             for mpc in mpcs:
                 mpc.validate()
@@ -2037,14 +2046,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # CMASS4 - added later because documentation is wrong
 
             'MPC' : (MPC, self._add_constraint_mpc_object),
-            'MPCADD' : (MPCADD, self._add_constraint_mpc_object),
+            'MPCADD' : (MPCADD, self._add_constraint_mpcadd_object),
 
             'SPC' : (SPC, self._add_constraint_spc_object),
             'SPC1' : (SPC1, self._add_constraint_spc_object),
             'SPCOFF' : (SPCOFF, self._add_constraint_spcoff_object),
             'SPCOFF1' : (SPCOFF1, self._add_constraint_spcoff_object),
             'SPCAX' : (SPCAX, self._add_constraint_spc_object),
-            'SPCADD' : (SPCADD, self._add_constraint_spc_object),
+            'SPCADD' : (SPCADD, self._add_constraint_spcadd_object),
             'GMSPC' : (GMSPC, self._add_constraint_spc_object),
 
             'SESUP' : (SESUP, self._add_sesuport_object), # pseudo-constraint
@@ -2059,8 +2068,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'MOMENT2' : (MOMENT2, self._add_load_object),
 
             'LSEQ' : (LSEQ, self._add_lseq_object),
-            'LOAD' : (LOAD, self._add_load_object),
+            'LOAD' : (LOAD, self._add_load_combination_object),
             'LOADCYN' : (LOADCYN, self._add_load_object),
+
             'GRAV' : (GRAV, self._add_load_object),
             'ACCEL' : (ACCEL, self._add_load_object),
             'ACCEL1' : (ACCEL1, self._add_load_object),
@@ -3011,6 +3021,44 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
+        # spcs
+        for (spc_id, spcadds) in sorted(iteritems(self.spcadds)):
+            msg.append('bdf.spcadds[%s]' % spc_id)
+            groups_dict = {}
+            for spcadd in spcadds:
+                groups_dict[spcadd.type] = groups_dict.get(spcadd.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
+                msg.append('  %-8s %s' % (name + ':', count_name))
+            msg.append('')
+
+        for (spc_id, spcs) in sorted(iteritems(self.spcs)):
+            msg.append('bdf.spcs[%s]' % spc_id)
+            groups_dict = {}
+            for spc in spcs:
+                groups_dict[spc.type] = groups_dict.get(spc.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
+                msg.append('  %-8s %s' % (name + ':', count_name))
+            msg.append('')
+
+        # mpcs
+        for (mpc_id, mpcadds) in sorted(iteritems(self.mpcadds)):
+            msg.append('bdf.mpcadds[%s]' % mpc_id)
+            groups_dict = {}
+            for mpcadd in mpcadds:
+                groups_dict[mpcadd.type] = groups_dict.get(mpcadd.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
+                msg.append('  %-8s %s' % (name + ':', count_name))
+            msg.append('')
+
+        for (mpc_id, mpcs) in sorted(iteritems(self.mpcs)):
+            msg.append('bdf.mpcs[%s]' % mpc_id)
+            groups_dict = {}
+            for mpc in mpcs:
+                groups_dict[mpc.type] = groups_dict.get(mpc.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
+                msg.append('  %-8s %s' % (name + ':', count_name))
+            msg.append('')
+
         # aero
         if self.aero:
             msg.append('bdf:aero')
@@ -3055,6 +3103,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     ncards = self.card_count[card_name]
                     group_msg.append('  %-8s : %s' % (card_name, ncards))
                 except KeyError:
+                    if card_name == 'CORD2R':
+                        continue
                     group_msg.append('  %-8s : ???' % card_name)
                     #assert card_name == 'CORD2R', self.card_count
             if group_msg:
@@ -3074,13 +3124,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         return msg
 
     def _get_bdf_stats_loads(self):
+        """helper for ``get_bdf_stats(...)``"""
         # loads
         msg = []
+        for (lid, load_combinations) in sorted(iteritems(self.load_combinations)):
+            msg.append('bdf.load_combinations[%s]' % lid)
+            groups_dict = {}  # type: Dict[str, int]
+            for load_combination in load_combinations:
+                groups_dict[load_combination.type] = groups_dict.get(load_combination.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
+                msg.append('  %-8s %s' % (name + ':', count_name))
+            msg.append('')
+
         for (lid, loads) in sorted(iteritems(self.loads)):
             msg.append('bdf.loads[%s]' % lid)
             groups_dict = {}  # type: Dict[str, int]
-            for loadi in loads:
-                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
+            for load in loads:
+                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
@@ -4008,6 +4068,7 @@ class BDF(BDF_):
         #: GMLOAD, SPCD,
         #: QVOL
         self.loads = {}  # type: Dict[int, List[Any]]
+        self.load_combinations = {}  # type: Dict[int, List[Any]]
 
 
 IGNORE_COMMENTS = (

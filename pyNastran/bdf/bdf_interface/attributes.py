@@ -341,9 +341,11 @@ class BDFAttributes(object):
 
         #: stores SPCADD, SPC, SPC1, SPCAX, GMSPC
         self.spcs = {}  # type: Dict[int, List[Any]]
+        self.spcadds = {}  # type: Dict[int, List[Any]]
 
         self.spcoffs = {}  # type: Dict[int, List[Any]]
         self.mpcs = {}  # type: Dict[int, List[Any]]
+        self.mpcadds = {}  # type: Dict[int, List[Any]]
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
@@ -608,16 +610,19 @@ class BDFAttributes(object):
             'thermal_materials' : ['MAT4', 'MAT5',],
 
             # spc/mpc constraints - TODO: is this correct?
-            'spcs' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD', 'GMSPC'],
+            'spcadds' : ['SPCADD'],
+            'spcs' : ['SPC', 'SPC1', 'SPCAX', 'GMSPC'],
             'spcoffs' : ['SPCOFF', 'SPCOFF1'],
-            'mpcs' : ['MPC', 'MPCADD'],
+            'mpcadds' : ['MPCADD'],
+            'mpcs' : ['MPC'],
             'suport' : ['SUPORT'],
             'suport1' : ['SUPORT1'],
             'se_suport' : ['SESUP'],
 
             # loads
+            'load_combinations' : ['LOAD', 'LSEQ'],
             'loads' : [
-                'LOAD', 'LSEQ', 'RANDPS',
+                'RANDPS',
                 'FORCE', 'FORCE1', 'FORCE2',
                 'MOMENT', 'MOMENT1', 'MOMENT2',
                 'GRAV', 'ACCEL', 'ACCEL1',

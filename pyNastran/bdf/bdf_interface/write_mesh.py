@@ -527,13 +527,16 @@ class WriteMesh(BDFAttributes):
                 msg.append(suport.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
-        if self.spcs or self.spcoffs:
+        if self.spcs or self.spcadds or self.spcoffs:
             #msg = ['$SPCs\n']
             #str_spc = str(self.spcObject) # old
             #if str_spc:
                 #msg.append(str_spc)
             #else:
             msg = ['$SPCs\n']
+            for (unused_id, spcadds) in sorted(iteritems(self.spcadds)):
+                for spcadd in spcadds:
+                    msg.append(str(spcadd))
             for (unused_id, spcs) in sorted(iteritems(self.spcs)):
                 for spc in spcs:
                     msg.append(str(spc))
@@ -542,8 +545,11 @@ class WriteMesh(BDFAttributes):
                     msg.append(str(spc))
             bdf_file.write(''.join(msg))
 
-        if self.mpcs:
+        if self.mpcs or self.mpcadds:
             msg = ['$MPCs\n']
+            for (unused_id, mpcadds) in sorted(iteritems(self.mpcadds)):
+                for mpcadd in mpcadds:
+                    msg.append(str(mpcadd))
             for (unused_id, mpcs) in sorted(iteritems(self.mpcs)):
                 for mpc in mpcs:
                     msg.append(mpc.write_card(size, is_double))
@@ -652,8 +658,16 @@ class WriteMesh(BDFAttributes):
     def _write_loads(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
         """Writes the load cards sorted by ID"""
-        if self.loads or self.tempds:
+        if self.load_combinations or self.loads or self.tempds:
             msg = ['$LOADS\n']
+            for (key, load_combinations) in sorted(iteritems(self.load_combinations)):
+                for load_combination in load_combinations:
+                    try:
+                        msg.append(load_combination.write_card(size, is_double))
+                    except:
+                        print('failed printing load...type=%s key=%r'
+                              % (load_combination.type, key))
+                        raise
             for (key, loadcase) in sorted(iteritems(self.loads)):
                 for load in loadcase:
                     try:

@@ -152,7 +152,7 @@ class LOAD(LoadCombination):
         msg = ' which is required by LOAD=%s' % (self.sid)
         for load_id in self.load_ids:
             assert load_id != self.sid, 'Type=%s sid=%s load_id=%s creates a recursion error' % (self.type, self.sid, load_id)
-            load_id2 = model.Load(load_id, msg=msg)
+            load_id2 = model.Load(load_id,consider_load_combinations=False, msg=msg)
             assert isinstance(load_id2, list), load_id2
             load_ids2.append(load_id2)
         self.load_ids_ref = load_ids2
@@ -162,7 +162,7 @@ class LOAD(LoadCombination):
         msg = ' which is required by LOAD=%s' % (self.sid)
         for load_id in self.load_ids:
             try:
-                load_id2 = model.Load(load_id, msg=msg)
+                load_id2 = model.Load(load_id, consider_load_combinations=False, msg=msg)
             except KeyError:
                 if debug:
                     msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (

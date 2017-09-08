@@ -277,6 +277,7 @@ class CMASS2(PointMassElement):
         self.c1 = c1
         self.c2 = c2
         self.nodes_ref = None
+        assert len(self.nodes) == 2, self.nodes
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -327,6 +328,9 @@ class CMASS2(PointMassElement):
         assert 0 <= c2 <= 123456, 'c2=%s data=%s' % (c2, data)
         return CMASS2(eid, mass, [g1, g2], c1, c2, comment=comment)
 
+    def validate(self):
+        assert len(self.nodes) == 2, self.nodes
+
     def _verify(self, xref=False):
         eid = self.eid
         pid = self.Pid()
@@ -367,10 +371,10 @@ class CMASS2(PointMassElement):
         f = 0.
         p1 = np.array([0., 0., 0.])
         p2 = np.array([0., 0., 0.])
-        if self.g1 is not None:
+        if self.nodes[0] is not None:
             p1 = self.nodes_ref[0].get_position()
             f += 1.
-        if self.g2 is not None:
+        if self.nodes[1] is not None:
             p2 = self.nodes_ref[1].get_position()
             f += 1.
         assert f > 0., str(self)
@@ -390,7 +394,7 @@ class CMASS2(PointMassElement):
             the BDF object
         """
         msg = ' which is required by CMASS2 eid=%s' % self.eid
-        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
         self.nodes = [self.G1(), self.G2()]
@@ -402,7 +406,7 @@ class CMASS2(PointMassElement):
         return self.nodes[0]
 
     def G2(self):
-        if self.nodes_ref is not None:
+        if self.nodes_ref is not None and self.nodes[1] is not None:
             return self.nodes_ref[1].nid
         return self.nodes[1]
 

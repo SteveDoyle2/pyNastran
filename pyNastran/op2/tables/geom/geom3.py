@@ -248,7 +248,7 @@ class GEOM3(GeomCommon):
 
             data_in = [sid, s, Si, L1]
             load = LOAD(sid, s, Si, L1)
-            self._add_load_object(load)
+            self._add_load_combination_object(load)
             count += 1
             if count > 1000:
                 raise RuntimeError('Iteration limit...probably have a bug.')

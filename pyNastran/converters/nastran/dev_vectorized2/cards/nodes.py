@@ -210,7 +210,7 @@ class GRIDv(object):
     def __init__(self, model):
         """initializes the vectorized GRID class"""
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.nid = np.array([], dtype='int32')
         self.xyz = np.array([], dtype='float64')
         self.cp = np.array([], dtype='int32')
@@ -343,7 +343,8 @@ class GRIDv(object):
     def make_current(self):
         """creates an array of the GRID points"""
         if not self.is_current:
-            if len(self.nid) > 0: # there are already nodes in self.nid
+            nnid = len(self.nid)
+            if nnid > 0: # there are already nodes in self.nid
                 self.nid = np.hstack([self.nid, self._nid])
                 self.xyz = np.vstack([self.xyz, self._xyz])
                 self.cp = np.hstack([self.cp, self._cp])

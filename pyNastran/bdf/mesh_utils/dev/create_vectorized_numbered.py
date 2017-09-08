@@ -66,8 +66,10 @@ class FakeBDFVectorized(BDF):
             msg = 'The following types were not converted and may result in a bad deck\n'
             msg += '  %s' % failed_types
             self.log.warning(msg)
+
         # loads are not currently supported
-        self.loads = {}
+        self.loads = {}  # type: Dict[int, List[Any]]
+        self.load_combinations = {}  # type: Dict[int, List[Any]]
 
 def create_vectorized_numbered(bdf_filename_in, bdf_filename_out, debug=True):
     model = FakeBDFVectorized()

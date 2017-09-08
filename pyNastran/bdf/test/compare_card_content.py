@@ -62,7 +62,7 @@ def compare_card_content(fem1, fem2):
         'elements', 'rigid_elements', 'nsms',
         'properties', 'materials', 'creep_materials',
         'loads', 'coords',
-        'spcs', 'spcoffs', 'mpcs', 'dareas', 'dphases',
+        'spcs', 'spcadds', 'spcoffs', 'mpcs', 'mpcadds', 'dareas', 'dphases',
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations',
         'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
         'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
@@ -126,6 +126,12 @@ def compare_card_content(fem1, fem2):
         card2 = fem2.coords[key]
         assert_fields(card1, card2)
 
+    for spc_id in fem1.spcadds:
+        fem1.get_SPCx_node_ids(spc_id)
+        fem1.get_SPCx_node_ids_c1(spc_id)
+        fem1.get_reduced_spcs(spc_id)
+        fem1.get_spcs(spc_id)
+
     for spc_id in fem1.spcs:
         fem1.get_SPCx_node_ids(spc_id)
         fem1.get_SPCx_node_ids_c1(spc_id)
@@ -134,6 +140,12 @@ def compare_card_content(fem1, fem2):
         #card1 = fem1.spcs[key]
         #card2 = fem2.spcs[key]
         #assert_fields(card1, card2)
+
+    for mpc_id in fem1.mpcadds:
+        fem1.get_MPCx_node_ids(mpc_id)
+        fem1.get_MPCx_node_ids_c1(mpc_id)
+        fem1.get_reduced_mpcs(mpc_id)
+        fem1.get_mpcs(mpc_id)
 
     for mpc_id in fem1.mpcs:
         fem1.get_MPCx_node_ids(mpc_id)

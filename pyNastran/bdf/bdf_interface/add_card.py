@@ -2668,7 +2668,7 @@ class AddCards(AddMethods):
             a comment for the card
         """
         load = LOAD(sid, scale, scale_factors, load_ids, comment=comment)
-        self._add_load_object(load)
+        self._add_load_combination_object(load)
         return load
 
     def add_lseq(self, sid, excite_id, lid, tid=None, comment=''):
@@ -3362,7 +3362,7 @@ class AddCards(AddMethods):
 
     def add_spcadd(self, conid, sets, comment=''):
         spcadd = SPCADD(conid, sets, comment=comment)
-        self._add_constraint_spc_object(spcadd)
+        self._add_constraint_spcadd_object(spcadd)
         return spcadd
 
     def add_spcax(self, conid, rid, hid, c, d, comment=''):
@@ -3382,7 +3382,7 @@ class AddCards(AddMethods):
 
     def add_mpcadd(self, conid, sets, comment=''):
         mpcadd = MPCADD(conid, sets, comment=comment)
-        self._add_constraint_mpc_object(mpcadd)
+        self._add_constraint_mpcadd_object(mpcadd)
         return mpcadd
 
     def add_suport(self, nodes, Cs, comment=''):

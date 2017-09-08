@@ -464,6 +464,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'spc_id' in starting_id_dict and spc_id is not None:
         # spc
+        for spc_idi, spc_group in sorted(iteritems(model.spcadds)):
+            for i, spc in enumerate(spc_group):
+                assert hasattr(spc, 'conid')
+                spc.conid = spc_id
+            spc_map[spc_idi] = spc_id
+            spc_id += 1
         for spc_idi, spc_group in sorted(iteritems(model.spcs)):
             for i, spc in enumerate(spc_group):
                 assert hasattr(spc, 'conid')
@@ -471,11 +477,19 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             spc_map[spc_idi] = spc_id
             spc_id += 1
     else:
+        for spc_id in model.spcadds:
+            spc_map[spc_id] = spc_id
         for spc_id in model.spcs:
             spc_map[spc_id] = spc_id
 
     if 'mpc_id' in starting_id_dict and mpc_id is not None:
         # mpc
+        for mpc_idi, mpc_group in sorted(iteritems(model.mpcadds)):
+            for i, mpc in enumerate(mpc_group):
+                assert hasattr(mpc, 'conid')
+                mpc.conid = mpc_id
+            mpc_map[mpc_idi] = mpc_id
+            mpc_id += 1
         for mpc_idi, mpc_group in sorted(iteritems(model.mpcs)):
             for i, mpc in enumerate(mpc_group):
                 assert hasattr(mpc, 'conid')
@@ -483,6 +497,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             mpc_map[mpc_idi] = mpc_id
             mpc_id += 1
     else:
+        for mpc_id in model.mpcadds:
+            mpc_map[mpc_id] = mpc_id
         for mpc_id in model.mpcs:
             mpc_map[mpc_id] = mpc_id
 
@@ -503,6 +519,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             for freq in freqs:
                 freq.sid = freqi
             freq_id += 1
+
     set_map = {}
     if 'set_id' in starting_id_dict and set_id is not None:
         # sets
@@ -621,6 +638,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         dload_id += 1
 
     # loads
+    for load_idi, load_combinations in sorted(iteritems(model.load_combinations)):
+        for load_combination in load_combinations:
+            assert hasattr(load_combination, 'sid')
+            load_combination.sid = load_id
+        load_map[load_idi] = load_id
+        load_id += 1
     for load_idi, loads in sorted(iteritems(model.loads)):
         for load in loads:
             assert hasattr(load, 'sid')
@@ -688,8 +711,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #print('****dresp_map', dresp_map)
     _update_case_control(model, mapper)
     if bdf_filename_out is not None:
+        close = True
+        if not isinstance(bdf_filename_out, file):
+            close = False
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
-                        interspersed=False)
+                        interspersed=False, close=close)
     return model, mapper
 
 def _update_case_control(model, mapper):
