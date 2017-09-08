@@ -128,6 +128,11 @@ if PY2:
     except ImportError:
         py_packages.append('pathlib2 >= 2.2.0')
 
+    try:
+        import scandir
+    except ImportError:
+        py_packages.append('scandir >= 1.4.0')
+
 try:
     import imageio
     if imageio.__version__ < '2.2.0':
