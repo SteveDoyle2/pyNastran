@@ -59,7 +59,7 @@ def comp2tri(in_filenames, out_filename,
     out_filename : str
         output filename
     is_binary : bool; default=False
-        is the output filename binary
+        is the output file binary
     float_fmt : str; default='%6.7f'
         the format string to use for ascii writing
 
@@ -93,7 +93,7 @@ def comp2tri(in_filenames, out_filename,
     model.elements = elements
     model.regions = regions
 
-    model.write_cart3d(out_filename, is_binary=False, float_fmt=float_fmt)
+    model.write_cart3d(out_filename, is_binary=is_binary, float_fmt=float_fmt)
 
 
 class Cart3dIO(object):
@@ -627,7 +627,7 @@ class Cart3D(Cart3dIO):
         nelements = elements.shape[0]
         assert nelements > 0, 'nelements=%s'  % nelements
 
-        inodes_remove = set([])
+        #inodes_remove = set([])
         self.log.info('---starting make_half_model---')
         ax = self._get_ax(axis)
 
@@ -639,7 +639,7 @@ class Cart3D(Cart3dIO):
             raise NotImplementedError('axis=%r ax=%s' % (axis, ax))
         inodes_save.sort()
 
-        inodes_map = np.arange(len(inodes_save))
+        #inodes_map = np.arange(len(inodes_save))
         if not(0 < len(inodes_save) < nnodes):
             msg = 'len(inodes_save)=%s nnodes=%s'  % (len(inodes_save), nnodes)
             raise RuntimeError(msg)
@@ -879,35 +879,35 @@ class Cart3D(Cart3dIO):
             loads = {}
         Cp = results[:, 0]
         rho = results[:, 1]
-        rhoU = results[:, 2]
-        rhoV = results[:, 3]
-        rhoW = results[:, 4]
+        rho_u = results[:, 2]
+        rho_v = results[:, 3]
+        rho_w = results[:, 4]
         E = results[:, 5]
 
         ibad = np.where(rho <= 0.000001)[0]
         if len(ibad) > 0:
 
             if 'Mach' in result_names:
-                Mach = np.sqrt(rhoU**2 + rhoV**2 + rhoW**2)# / rho
+                Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)# / rho
                 Mach[ibad] = 0.0
             if 'U' in result_names:
-                U = rhoU / rho
+                U = rho_u / rho
                 U[ibad] = 0.0
             if 'U' in result_names:
-                V = rhoV / rho
+                V = rho_v / rho
                 V[ibad] = 0.0
             if 'W' in result_names:
-                W = rhoW / rho
+                W = rho_w / rho
                 W[ibad] = 0.0
             #if 'rhoE' in result_names:
-                #rhoE = rhoE / rho
+                #rho_e = rhoE / rho
                 #e[ibad] = 0.0
 
             is_bad = True
-            n = 0
+            #n = 0
             #for i in ibad:
                 #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (
-                    #i, Cp[i], Mach[i], rho[i], rhoU[i], rhoV[i], rhoW[i]))
+                    #i, Cp[i], Mach[i], rho[i], rho_u[i], rho_v[i], rho_w[i]))
                 #Mach[i] = 0.0
                 #n += 1
                 #if n > 10:
@@ -920,34 +920,34 @@ class Cart3D(Cart3dIO):
         if 'Cp' in result_names:
             loads['Cp'] = Cp
         if 'rhoU' in result_names:
-            loads['rhoU'] = rhoU
+            loads['rhoU'] = rho_u
         if 'rhoV' in result_names:
-            loads['rhoV'] = rhoV
+            loads['rhoV'] = rho_v
         if 'rhoW' in result_names:
-            loads['rhoW'] = rhoW
+            loads['rhoW'] = rho_w
         #if 'rhoE' in result_names:
-            #loads['rhoE'] = rhoE
+            #loads['rhoE'] = rho_e
 
         if 'rho' in result_names:
             loads['rho'] = rho
 
         if 'Mach' in result_names:
             if not is_bad:
-                #Mach = np.sqrt(rhoU**2 + rhoV**2 + rhoW**2) / rho
-                Mach = np.sqrt(rhoU**2 + rhoV**2 + rhoW**2)
+                #Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2) / rho
+                Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)
             loads['Mach'] = Mach
 
         if 'U' in result_names:
             if not is_bad:
-                U = rhoU / rho
+                U = rho_u / rho
             loads['U'] = U
         if 'V' in result_names:
             if not is_bad:
-                V = rhoV / rho
+                V = rho_v / rho
             loads['V'] = V
         if 'W' in result_names:
             if not is_bad:
-                W = rhoW / rho
+                W = rho_w / rho
             loads['W'] = W
         if 'E' in result_names:
             #if not is_bad:
@@ -986,8 +986,8 @@ class Cart3D(Cart3dIO):
         # total enthalpy
 
         #i = where(Mach == max(Mach))[0][0]
-        #self.log.info("i=%s Cp=%s rho=%s rhoU=%s rhoV=%s rhoW=%s Mach=%s" % (
-            #i, Cp[i], rho[i], rhoU[i], rhoV[i], rhoW[i], Mach[i]))
+        #self.log.info("i=%s Cp=%s rho=%s rho_u=%s rho_v=%s rho_w=%s Mach=%s" % (
+            #i, Cp[i], rho[i], rho_u[i], rho_v[i], rho_w[i], Mach[i]))
         self.log.debug('---finished read_results---')
         return loads
 

@@ -34,10 +34,10 @@ class UGRID_IO(object):
         #    return
         if is_binary_file(ugrid_filename):
             model = UGRID(log=self.log, debug=True)
-            base, fmt, ext = os.path.basename(ugrid_filename).split('.')
+            ext = os.path.basename(ugrid_filename).split('.')[2] # base, fmt, ext
             is_2d = False
         else:
-            base, ext = os.path.basename(ugrid_filename).split('.')
+            ext = os.path.basename(ugrid_filename).split('.')[1] # base, ext
             model = UGRID2D_Reader(log=self.log, debug=True)
             is_2d = True
         is_3d = not is_2d
@@ -137,7 +137,7 @@ class UGRID_IO(object):
                 ugrid_filename, cases, ID, nnodes, nelements, model)
         else:
             form, cases = self._fill_ugrid2d_case(
-                ugrid_filename, cases, ID, nnodes, nelements, model)
+                cases, ID, nnodes, nelements)
 
         if plot:
             self._finish_results_io2(form, cases)
@@ -178,22 +178,19 @@ class UGRID_IO(object):
     # def _load_ugrid_results(self, openfoam_filename, dirname):
         # pass
 
-    def _fill_ugrid2d_case(self, base, cases, ID, nnodes, nelements, model):
-        cases_new = []
-        results_form = []
+    def _fill_ugrid2d_case(self, cases, ID, nnodes, nelements):
+        #cases_new = []
+        #results_form = []
 
         geometry_form = [
             ('ElementID', 0, []),
             ('NodeID', 1, []),
         ]
 
-        ntris = model.tris.shape[0]
-        nquads = model.quads.shape[0]
+        #ntris = model.tris.shape[0]
+        #nquads = model.quads.shape[0]
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
-
-        #cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
-        #cases[(ID, 1, 'NodeID', 1, 'node', '%i', '')] = nids
 
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
                             location='centroid', scalar=eids)
@@ -237,8 +234,8 @@ class UGRID_IO(object):
             #('GridBC', 6, []),
         ]
 
-        ntris = model.tris.shape[0]
-        nquads = model.quads.shape[0]
+        #ntris = model.tris.shape[0]
+        #nquads = model.quads.shape[0]
         #nelements = ntris + nquads
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)

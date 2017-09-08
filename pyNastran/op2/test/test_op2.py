@@ -154,7 +154,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
         skip_files = []
-    n = ''
+    #n = ''
     assert make_geom in [True, False]
     assert write_bdf in [True, False]
     assert write_f06 in [True, False]
@@ -178,7 +178,6 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             ntotal += 1
 
             is_passed = True
-            is_vector_failed = []
             for binary_debugi in binary_debug:
                 print('------running binary_debug=%s------' % binary_debugi)
                 is_passedi = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,

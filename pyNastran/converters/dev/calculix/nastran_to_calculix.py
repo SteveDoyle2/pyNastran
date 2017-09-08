@@ -1,3 +1,7 @@
+"""
+defines:
+ - CalculixConverter
+"""
 from __future__ import print_function
 from collections import defaultdict
 from six import iteritems
@@ -93,8 +97,8 @@ class CalculixConverter(BDF):
         elems = defaultdict(list)
         for eid in element_ids:
             element = self.elements[eid]
-            Type = element.type
-            elems[Type].append(eid)
+            element_type = element.type
+            elems[element_type].append(eid)
         return elems
 
     def get_properties_by_mid(self):
@@ -185,7 +189,7 @@ class CalculixConverter(BDF):
             'CHEXA20'  : 'C3D20',
         }
         pid_eids = self.get_elements_by_pid(element_ids=None)
-        formE = '%-' + str(self.nelements) + 's, '
+        form_elements = '%-' + str(self.nelements) + 's, '
 
         elsets = []
         for pid, eids in sorted(iteritems(pid_eids)):
@@ -198,7 +202,7 @@ class CalculixConverter(BDF):
                 dat += '** eid,n1,n2,n3,etc... for a %s\n' % etype
                 dat += '*ELEMENT, TYPE=%s, ELSET=%s\n' % (calculix_type, elset)
                 for eid in eids:
-                    dat += formE % eid
+                    dat += form_elements % eid
                     element = self.elements[eid]
                     for nid in element.node_ids:
                         dat += '%s,' % nid
@@ -340,7 +344,7 @@ class CalculixConverter(BDF):
                 loadcase_id = self.case_control_deck.get_subcase_parameter(
                     isubcase, param_name)[0]
                 #loadcase = self.loads[loadcase_id]
-                self._write_loads(loadcase_id)
+                self._write_loads(loadcase_id) # bdf_file, size=8, is_double=False
 
         inp += self.breaker()
         return inp
@@ -403,11 +407,11 @@ class CalculixConverter(BDF):
                 if nnodes == 3:
                     n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
                     axb = cross(n1 - n2, n1 - n3)
-                    centroid = (n1 + n2 + n3) / 3.
+                    #centroid = (n1 + n2 + n3) / 3.
                 elif nnodes == 4:
                     n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
                     axb = cross(n1 - n3, n2 - n4)
-                    centroid = (n1 + n2 + n3 + n4) / 4.
+                    #centroid = (n1 + n2 + n3 + n4) / 4.
                 else:
                     msg = 'invalid number of nodes on PLOAD card; nodes=%s' % str(nodes)
                     raise RuntimeError(msg)
@@ -475,7 +479,7 @@ class CalculixConverter(BDF):
                             msg += 'a x b = %s\n' % axb
                             msg += 'nunit = %s\n' % nunit
                             raise FloatingPointError(msg)
-                        centroid = (n1 + n2 + n3) / 3.
+                        #centroid = (n1 + n2 + n3) / 3.
                     elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         # quads
                         nnodes = 4
@@ -520,8 +524,8 @@ class CalculixConverter(BDF):
                 # we collect them so we only get one print
                 unsupported_types.add(load.type)
 
-        for Type in unsupported_types:
-            self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
+        for load_type in unsupported_types:
+            self.log.debug('case=%s load_type=%r not supported' % (loadcase_id, load_type))
         FM.reshape((nnodes*6, 1))
         return FM
 
@@ -552,17 +556,19 @@ class CalculixConverter(BDF):
         inp += '** BEGIN BULK\n'
         #inp += 'DEBUT();\n\n'
 
-        #inp += "**'Read the mesh' - we use the 'aster' file format here.\n"
-        #inp += 'mesh=LIRE_MAILLAGE(UNITE=20,\n'
-        #inp += "                   FORMAT='ASTER');\n\n"
+        inp += (
+            "**'Read the mesh' - we use the 'aster' file format here.\n"
+            'mesh=LIRE_MAILLAGE(UNITE=20,\n'
+            "                   FORMAT='ASTER');\n\n"
 
-        #inp += "**'MECA_STATIQUE' % SOL 101 - linear statics\n"
-        #inp += "** Assigning the model for which CA will calculate the results:\n"
-        #inp += "** 'Mecanique' - since we are dealing with a linear elastic model and '3D' since it's a 3D model.\n"
-        #inp += 'Meca=AFFE_MODELE(MAILLAGE=mesh,\n'
-        #inp += "                 AFFE=_F(TOUT='OUI',\n"
-        #inp += "                         PHENOMENE='MECANIQUE',\n"
-        #inp += "                         MODELISATION='3D',),);\n\n"
+            "**'MECA_STATIQUE' % SOL 101 - linear statics\n"
+            "** Assigning the model for which CA will calculate the results:\n"
+            "** 'Mecanique' - since we are dealing with a linear elastic model "
+            "and '3D' since it's a 3D model.\n"
+            'Meca=AFFE_MODELE(MAILLAGE=mesh,\n'
+            "                 AFFE=_F(TOUT='OUI',\n"
+            "                         PHENOMENE='MECANIQUE',\n"
+            "                         MODELISATION='3D',),);\n\n")
         inp += self.breaker()
 
         print("writing fname=%s" % (fname + '.dat'))

@@ -206,7 +206,7 @@ class TestBars(unittest.TestCase):
         spc = ['SPC1', 123456, 123456, 1]
         grid1 = ['GRID', 1, None, 0., 0., 0.]
         grid2 = ['GRID', 2, None, 1., 0., 0.]
-        grid3 = ['GRID', 3, None, 1., 0., 0.]
+        #grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
         pid = 11
         mid = 12

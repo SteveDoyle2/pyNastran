@@ -1,6 +1,5 @@
 from six import iteritems
 from collections import OrderedDict
-from pyNastran.utils.dev import write_class
 
 
 def remove_c_comments(lines):

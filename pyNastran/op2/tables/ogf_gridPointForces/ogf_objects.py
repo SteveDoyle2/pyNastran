@@ -722,7 +722,6 @@ class RealGridPointForcesArray(ScalarObject):
             nids = self.node_element[itime, :, 0]
             eids = self.node_element[itime, :, 1]
             enames = self.element_names[itime, :]
-            zero = ' '
             ntotal = self._ntotals[itime]
 
             for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(

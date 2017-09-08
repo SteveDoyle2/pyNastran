@@ -295,7 +295,7 @@ class TestBeams(unittest.TestCase):
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
-        lines_expected = lines
+        #lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
         # correct - 2nd continuation line
@@ -306,7 +306,7 @@ class TestBeams(unittest.TestCase):
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
-        lines_expected = lines
+        #lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
         # BAD x/xb value of 1.4 (should be 0 to 1.0)
@@ -317,7 +317,7 @@ class TestBeams(unittest.TestCase):
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
-        lines_expected = lines
+        #lines_expected = lines
         with self.assertRaises(AssertionError):
             model.add_card(lines, 'PBEAM', is_list=False)
 
@@ -340,7 +340,7 @@ class TestBeams(unittest.TestCase):
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
-        lines_expected = lines
+        #lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
         # correct - skipped 2nd line and last line
@@ -349,7 +349,7 @@ class TestBeams(unittest.TestCase):
             '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
         ]
-        lines_expected = lines
+        #lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
         # correct - skipped 2nd line and last 2 lines
@@ -357,14 +357,14 @@ class TestBeams(unittest.TestCase):
             'PBEAM          6       1 5.094+7 289940.1.6043+7         271610. 3.73058',
             '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
         ]
-        lines_expected = lines
+        #lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
         # correct - single line
         lines = [
             'PBEAM          7       1 5.094+7 289940.1.6043+7         271610. 3.73058',
         ]
-        lines_expected = lines
+        #lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
     def test_pbeam_11(self):

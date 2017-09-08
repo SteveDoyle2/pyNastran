@@ -298,7 +298,7 @@ class AFLR2(object):
                 mag_theta = sign(theta12g - theta23g)
                 izero = where(beta == 0.)[0]
                 mag_theta[izero] = 0.
-                inotzero = where(beta != 0)
+                #inotzero = where(beta != 0)
                 #print('i')
                 #izero = where(allclose(mag_theta, 0.))[0]
                 #mag_theta[izero] = 1.0
