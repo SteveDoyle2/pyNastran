@@ -323,7 +323,7 @@ class F06Writer(OP2_F06_Common):
                  # bar flags
                  'BAROR', 'CBARAO',
                  # bars
-                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
+                 'CBAR', 'CROD', 'CTUBE', 'BEAMOR', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
 
                  # shells
                  'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',

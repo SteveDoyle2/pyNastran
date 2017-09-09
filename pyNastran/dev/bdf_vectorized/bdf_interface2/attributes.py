@@ -32,7 +32,7 @@ from pyNastran.dev.bdf_vectorized.cards.elements.rod.ctube import CTUBE
 
 # bars
 from pyNastran.dev.bdf_vectorized.cards.elements.bar.cbar import CBAR
-#from pyNastran.dev.bdf_vectorized.cards.elements.bar.cbaror import CBAROR
+#from pyNastran.dev.bdf_vectorized.cards.elements.bar.baror import BAROR
 from pyNastran.dev.bdf_vectorized.cards.elements.bar.pbar import PBAR
 from pyNastran.dev.bdf_vectorized.cards.elements.bar.pbarl import PBARL
 from pyNastran.dev.bdf_vectorized.cards.elements.bar.properties_bar import PropertiesBar
@@ -198,7 +198,7 @@ class BDFAttributes(object):
 
         # bars
         self.cbar = CBAR(self)
-        #self.cbaror = CBAROR(self)
+        #self.baror = BAROR(self)
         self.pbar = PBAR(self)
         self.pbarl = PBARL(self)
         self.properties_bar = PropertiesBar(self)
@@ -723,12 +723,13 @@ class BDFAttributes(object):
             'CTUBE' : self.ctube,
 
             # bars
+            #'BAROR' : self.baror,
             'CBAR' : self.cbar,
-            #'CBAROR' : self.cbaror,
             'PBAR' : self.pbar,
             'PBARL' : self.pbarl,
 
             # beams
+            #'BEAMOR' : self.beamor,
             'CBEAM' : self.cbeam,
             'PBEAM' : self.pbeam,
             'PBEAML' : self.pbeaml,

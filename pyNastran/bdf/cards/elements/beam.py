@@ -1,6 +1,7 @@
 """
 defines:
  - CBEAM
+ - BEAMOR
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import print_function
@@ -682,3 +683,45 @@ def _init_offt_bit(card, eid):
     return offt, bit
 
 
+class BEAMOR(object):
+    """
+    +--------+-----+---+---+---+-------+-----+-------+------+
+    |    1   |  2  | 3 | 4 | 5 |   6   |  7  |   8   |  9   |
+    +========+=====+===+===+===+=======+=====+=======+======+
+    | BEAMOR | PID |   |   |   | G0/X1 |  X2 |  X3   | OFFT |
+    +--------+-----+---+---+---+-------+-----+-------+------+
+    | BEAMOR | 39  |   |   |   |  0.6  | 2.9 | -5.87 | GOG  |
+    +--------+-----+---+---+---+-------+-----+-------+------+
+    """
+    type = 'BEAMOR'
+    def __init__(self):
+        self.n = 0
+        self.property_id = None
+        self.g0 = None
+        self.x = None
+        self.offt = None
+
+    def add_card(self, card, comment=''):
+        if self.n == 1:
+            raise RuntimeError('only one CBEAMOR is allowed')
+        self.n = 1
+        if comment:
+            self.comment = comment
+
+        self.property_id = integer_or_blank(card, 2, 'pid')
+
+        # x / g0
+        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+        if isinstance(field5, integer_types):
+            self.is_g0 = True
+            self.g0 = field5
+            self.x = [0., 0., 0.]
+        elif isinstance(field5, float):
+            self.is_g0 = False
+            self.g0 = None
+            self.x = np.array([field5,
+                               double_or_blank(card, 6, 'x2', 0.0),
+                               double_or_blank(card, 7, 'x3', 0.0)],
+                              dtype='float64')
+        self.offt = string_or_blank(card, 8, 'offt', 'GGG')
+        assert len(card) <= 8, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)

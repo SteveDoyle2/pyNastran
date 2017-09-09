@@ -46,8 +46,8 @@ from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, 
                                                  CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
-from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND#, CBAROR
-from pyNastran.bdf.cards.elements.beam import CBEAM
+from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND#, BAROR
+from pyNastran.bdf.cards.elements.beam import CBEAM#, BEAMOR
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT

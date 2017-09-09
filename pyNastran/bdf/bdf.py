@@ -3289,8 +3289,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         -------
         xyz_cid : (n, 3) float ndarray
             points in the CID coordinate system
+
+        F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\heli112em7.dat
         """
-        #self.log.info('transform_xycp_to_xyz_cid; cid=%s' % cid)
         coord2 = self.coords[cid]
 
         #assert in_place is False, 'in_place=%s' % in_place
@@ -3304,7 +3305,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # transform the grids to the global coordinate system
             xyz_cid0_correct = self.get_xyz_in_coord(fdtype=xyz_cid0.dtype, cid=0)
 
-        #self.log.debug('icp_transform = %s' % icp_transform)
         for cp, inode in iteritems(icp_transform):
             if cp == 0:
                 continue

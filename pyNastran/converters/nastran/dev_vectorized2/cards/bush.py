@@ -193,6 +193,8 @@ class CBUSHv(BushElement):
         comment : str; default=''
             a comment for the card
         """
+        if cid is None:
+            cid = -1
         self.model.bushes.add(eid)
         self.is_current = False
         self._eid.append(eid)

@@ -126,6 +126,11 @@ class Nodes(object):
         nid_cp_cd[:nnodes, 0] = self.model.grid.nid
         nid_cp_cd[:nnodes, 1] = self.model.grid.cp
         nid_cp_cd[:nnodes, 2] = self.model.grid.cd
+
+        for nid, cp, cd in nid_cp_cd:
+            nids_cp_transform[cp].append(nid)
+            nids_cd_transform[cd].append(nid)
+
         i = nnodes
 
         if nspoints:
