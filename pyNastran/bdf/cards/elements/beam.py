@@ -159,6 +159,7 @@ class CBEAM(CBAR):
         self.ga_ref = None
         self.gb_ref = None
         self.pid_ref = None
+        self.g0_vector = None
 
     @classmethod
     def add_card(cls, card, comment=''):

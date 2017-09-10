@@ -2742,7 +2742,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
-    def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform, cid=0):
+    def transform_xyzcp_to_xyz_cid(self, xyz_cp, nids, icp_transform, cid=0):
         """
         Working on faster method for calculating node locations
         Not validated...

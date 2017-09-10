@@ -52,7 +52,7 @@ class Load(BaseCard):
             return [node.nid for node in nodes]
 
 
-class LoadCombination(Load):  # LOAD, DLOAD
+class LoadCombination(Load):
     """Common method for LOAD, DLOAD"""
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         """

@@ -290,7 +290,14 @@ class BaseCard(object):
 
     def rstrip(self):
         # type: () -> str
-        return str(self).rstrip()
+        try:
+            msg = '%s' % str(self)
+        except UnicodeEncodeError:
+            comment = self.comment
+            self.comment = ''
+            msg = '$ dropped comment due to unicode error\n%s' % str(self)
+            self.comment = comment
+        return msg.rstrip()
 
     def write_card(self, size=8, is_double=False):
         # type: (int, bool) -> str

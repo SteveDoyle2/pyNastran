@@ -1,3 +1,4 @@
+# coding: latin1
 """
 defines the command line tool test_gui
 """

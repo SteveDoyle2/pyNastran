@@ -67,10 +67,11 @@ class TestLoads(unittest.TestCase):
         mag = 42.
         xyz = [1., 1., 2.]
         moment = model.add_moment(sid, node, mag, xyz)
+        moment.M()
         moment.raw_fields()
         model.validate()
         model.pop_parse_errors()
-        assert np.array_equal(moment.M()[11], np.array([42., 42., 84.])), force.M()
+        assert np.array_equal(moment.M()[11], np.array([42., 42., 84.])), moment.M()
         model.cross_reference()
         moment.raw_fields()
 
@@ -104,8 +105,8 @@ class TestLoads(unittest.TestCase):
         model = BDF(debug=False)
         sid = 42
         N = [0., 0., 1.]
-        nodes = [10, 11]
-        scale = 3.14
+        #nodes = [10, 11]
+        #scale = 3.14
         direction = 'Z'
         locs = [11., 22., 33.]
         vals = [1., 2., 3.]
@@ -170,10 +171,10 @@ class TestLoads(unittest.TestCase):
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
-        model_b = BDF(debug=False)
-        model_b.read_bdf(bdf_filename)
-        # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
-        p0 = model_b.nodes[21].xyz
+        model = BDF(debug=False)
+        model.read_bdf(bdf_filename)
+        # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
+        p0 = model.nodes[21].xyz
         angles = [
             (23, 24), (24, 23),
             (21, 26), (26, 21),
@@ -184,13 +185,13 @@ class TestLoads(unittest.TestCase):
         ]
 
         msg = ''
-        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
+        for isubcase, subcase in sorted(iteritems(model.subcases)):
             if isubcase == 0:
                 continue
             #if isubcase != 17:
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.Load(loadcase_id, consider_load_combinations=True, consider_invalid=True)[0]
+            load = model.Load(loadcase_id, consider_load_combinations=True)[0]
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
             if load.g34_ref is None:
@@ -225,10 +226,11 @@ class TestLoads(unittest.TestCase):
                     assert array_equal(normal, array([0., 1., 0.])), 'Ny g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
                     self.assertEqual(area, 2.0, 'area=%s' % area)
 
-            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            f2, m2 = model.sum_forces_moments_elements(
+                p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
             assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
@@ -236,11 +238,14 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :3, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                model.log.errror('subcase=%-2i Fx f=%s fexpected=%s face=%s' % (
+                    isubcase, f.tolist(), fm.tolist(), face))
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                model.log.errror('subcase=%-2i Fy f=%s fexpected=%s face=%s' % (
+                    isubcase, f.tolist(), fm.tolist(), face))
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                model.log.errror('subcase=%-2i Fz f=%s fexpected=%s face=%s' % (
+                    isubcase, f.tolist(), fm.tolist(), face))
             # if not allclose(m[0], fm[3]):
                 # print('%i Mx m=%s fexpected=%s' % (isubcase, m, fm))
             # if not allclose(m[1], fm[4]):
@@ -262,20 +267,20 @@ class TestLoads(unittest.TestCase):
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
-        model_b = BDF(debug=False)
-        model_b.read_bdf(bdf_filename)
-        # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
-        p0 = model_b.nodes[21].xyz
+        model = BDF(debug=False)
+        model.read_bdf(bdf_filename)
+        # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
+        p0 = model.nodes[21].xyz
 
-        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
-            if isubcase == 0:
-                continue
-            #if isubcase != 17:
-                #continue
+        subcase_ids = [1, 2, 4, 5, 6] #  no 3, 7, 8
+        for isubcase in subcase_ids:
+            subcase = model.subcases[isubcase]
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.Load(loadcase_id, consider_load_combinations=True, consider_invalid=True)[0]
+            loads = model.get_reduced_loads(loadcase_id, consider_load_combinations=True)[0]
+            load = loads[0]
+            assert len(loads) == 1, 'subcase:\n%s\nloads=\n%s' % (subcase, loads)
             elem = load.eids_ref[0]
-            area = 0.5
+
             centroid = elem.Centroid()
             normal = elem.Normal()
 
@@ -285,10 +290,10 @@ class TestLoads(unittest.TestCase):
             assert array_equal(centroid, array([2/3., 1/3., 0.])), 'centroid=%s\n%s' % (centroid, msg)
             assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
 
-            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model_b.sum_forces_moments_elements(
+            f2, m2 = model.sum_forces_moments_elements(
                 p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
             assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
@@ -297,11 +302,14 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx f=%s fexpected=%s' % (isubcase, f, fm))
+                model.log.error('subcase=%-2i Fx f=%s fm_expected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy f=%s fexpected=%s' % (isubcase, f, fm))
+                model.log.error('subcase=%-2i Fy f=%s fm_expected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz f=%s fexpected=%s' % (isubcase, f, fm))
+                model.log.error('subcase=%-2i Fz f=%s fm_expected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
 
     def test_pload4_cquad4(self):
         """tests a PLOAD4 with a CQUAD4"""
@@ -310,24 +318,23 @@ class TestLoads(unittest.TestCase):
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
-        model_b = BDF(debug=False)
-        model_b.read_bdf(bdf_filename)
-        # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
-        p0 = model_b.nodes[21].xyz
+        model = BDF(debug=False)
+        model.read_bdf(bdf_filename)
+        # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
+        p0 = model.nodes[21].xyz
 
         eids = None
         nids = None
-        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
-            if isubcase == 0:
-                continue
-            #if isubcase != 17:
-                #continue
+        subcase_ids = [1, 2, 3, 4, 5, 6, 7, 8]
+        for isubcase in subcase_ids:
+            subcase = model.subcases[isubcase]
+
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.loads[loadcase_id]
+            load = model.Load(loadcase_id)
             loadi = load[0]
             if loadi.type == 'PLOAD4':
                 elem = loadi.eids_ref[0]
-                area = 1.0
+                #area = 1.0
                 centroid = elem.Centroid()
                 normal = elem.Normal()
                 msg = '%s%s%s\n' % (elem.nodes[0], elem.nodes[1], elem.nodes[2])
@@ -335,8 +342,8 @@ class TestLoads(unittest.TestCase):
                 assert array_equal(centroid, array([0.5, 0.5, 0.])), 'centroid=%s\n%s' % (centroid, msg)
                 assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
 
-            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            f2, m2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
             assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
@@ -344,11 +351,14 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx f=%s fexpected=%s' % (isubcase, f, fm))
+                model.log.error('subcase=%-2i Fx f=%s fm_expected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy f=%s fexpected=%s' % (isubcase, f, fm))
+                model.log.error('subcase=%-2i Fy f=%s fm_expected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz f=%s fexpected=%s' % (isubcase, f, fm))
+                model.log.error('subcase=%-2i Fz f=%s fm_expected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
 
     def test_pload4_ctetra(self):
         """tests a PLOAD4 with a CTETRA"""
@@ -357,9 +367,9 @@ class TestLoads(unittest.TestCase):
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
-        model_b = BDF(debug=False)
-        model_b.read_bdf(bdf_filename)
-        p0 = model_b.nodes[21].xyz
+        model = BDF(debug=False)
+        model.read_bdf(bdf_filename)
+        p0 = model.nodes[21].xyz
 
         nx_plus = [ # 21, 24, 23
             (21, 22), (24, 22), (23, 22), # (22, 23),
@@ -374,15 +384,15 @@ class TestLoads(unittest.TestCase):
             #(24, 21), (24, 22), (24, 23),
         ]
 
-        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
+        for isubcase, subcase in sorted(iteritems(model.subcases)):
             if isubcase == 0:
                 continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.loads[loadcase_id][0]
+            load = model.loads[loadcase_id][0]
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
 
-            # f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            # f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             # case = op2.spc_forces[isubcase]
             # fm = case.data[0, 0, :]#.ravel()
             # if f[0] != fm[0]:
@@ -422,10 +432,11 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(m[0], fm[3], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
-            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            f2, m2 = model.sum_forces_moments_elements(
+                p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
             assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
@@ -433,13 +444,13 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
+                model.log.error('subcase=%-2i Fx g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
                     isubcase, g1, g34, f, fm, face, normal))
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
+                model.log.error('subcase=%-2i Fy g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
                     isubcase, g1, g34, f, fm, face, normal))
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
+                model.log.error('subcase=%-2i Fz g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
                     isubcase, g1, g34, f, fm, face, normal))
 
     def test_pload4_chexa(self):
@@ -449,9 +460,9 @@ class TestLoads(unittest.TestCase):
         op2 = OP2(debug=False, log=log)
         op2.read_op2(op2_filename)
 
-        model_b = BDF(debug=False)
-        model_b.read_bdf(bdf_filename)
-        p0 = model_b.nodes[21].xyz
+        model = BDF(debug=False)
+        model.read_bdf(bdf_filename)
+        p0 = model.nodes[21].xyz
         nx_minus = [
             (22, 27), (27, 22),
             (23, 26), (26, 23),
@@ -481,15 +492,15 @@ class TestLoads(unittest.TestCase):
             (24, 22), (22, 24),
         ]
 
-        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
+        for isubcase, subcase in sorted(iteritems(model.subcases)):
             if isubcase == 0:
                 continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.loads[loadcase_id][0]
+            load = model.loads[loadcase_id][0]
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
 
-            # f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            # f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             # case = op2.spc_forces[isubcase]
             # fm = case.data[0, 0, :]#.ravel()
             # if f[0] != fm[0]:
@@ -538,10 +549,10 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(m[0], fm[3], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
-            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            f2, m2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
             assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
@@ -549,11 +560,14 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :4, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                model.log.error('subcase=%-2i Fx f=%s fexpected=%s face=%s' % (
+                    isubcase, f.tolist(), fm.tolist(), face))
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                model.log.error('subcase=%-2i Fy f=%s fexpected=%s face=%s' % (
+                    isubcase, f.tolist(), fm.tolist(), face))
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                model.log.error('subcase=%-2i Fz f=%s fexpected=%s face=%s' % (
+                    isubcase, f.tolist(), fm.tolist(), face))
 
     @unittest.expectedFailure
     def test_pload1_cbar(self):
@@ -562,28 +576,28 @@ class TestLoads(unittest.TestCase):
         op2 = OP2(debug=False)
         op2.read_op2(op2_filename)
 
-        model_b = BDF(debug=False)
-        model_b.read_bdf(bdf_filename)
-        # p0 = (model_b.nodes[21].xyz + model_b.nodes[22].xyz + model_b.nodes[23].xyz) / 3.
-        p0 = model_b.nodes[1].xyz
+        model = BDF(debug=False)
+        model.read_bdf(bdf_filename)
+        # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
+        p0 = model.nodes[1].xyz
 
         fail = False
-        dashes = '-' * 80
-        for isubcase, subcase in sorted(iteritems(model_b.subcases)):
+        for isubcase, subcase in sorted(iteritems(model.subcases)):
             if isubcase == 0:
                 continue
             #if isubcase != 17:
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
-            load = model_b.loads[loadcase_id][0]
+            load = model.loads[loadcase_id][0]
             elem = load.eid
 
             #msg = '%s%s\n' % (elem.nodes[0], elem.nodes[1])
 
-            f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model_b.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            f2, m2 = model.sum_forces_moments_elements(
+                p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
             assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
@@ -591,29 +605,29 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx f=%s fexpected=%s' % (isubcase, f, fm))
-                print(dashes)
+                model.log.error('subcase=%-2i Fx f=%s fexpected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
                 fail = True
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy f=%s fexpected=%s' % (isubcase, f, fm))
-                print(dashes)
+                model.log.error('subcase=%-2i Fy f=%s fexpected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
                 fail = True
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz f=%s fexpected=%s' % (isubcase, f, fm))
-                print(dashes)
+                model.log.error('subcase=%-2i Fz f=%s fexpected=%s' % (
+                    isubcase, f.tolist(), fm.tolist()))
                 fail = True
 
             if not allclose(m[0], fm[3]):
-                print('%-2i Mx m=%s fexpected=%s' % (isubcase, m, fm))
-                print(dashes)
+                model.log.error('subcase=%-2i Mx m=%s fexpected=%s' % (
+                    isubcase, m.tolist(), fm.tolist()))
                 fail = True
             if not allclose(m[1], fm[4]):
-                print('%-2i My m=%s fexpected=%s' % (isubcase, m, fm))
-                print(dashes)
+                model.log.error('subcase=%-2i My m=%s fexpected=%s' % (
+                    isubcase, m.tolist(), fm.tolist()))
                 fail = True
             if not allclose(m[2], fm[5]):
-                print('%-2i Mz m=%s fexpected=%s' % (isubcase, m, fm))
-                print(dashes)
+                model.log.error('subcase=%-2i Mz m=%s fexpected=%s' % (
+                    isubcase, m.tolist(), fm.tolist()))
                 fail = True
         if fail:
             raise RuntimeError('incorrect loads')
@@ -984,12 +998,14 @@ class TestLoads(unittest.TestCase):
         assert msg8.rstrip() == load_expected, '%r' % msg8
 
         load2_expected = 'LOAD          14      1.      .5      11      .1      10      .4      11'
-        load2 = model.add_load(sid=14, scale=1., scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10, 11])
+        load2 = model.add_load(sid=14, scale=1.,
+                               scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10, 11])
         msg8 = load2.write_card(size=8, is_double=False)
         assert msg8.rstrip() == load2_expected, '%r' % msg8
         model.validate()
 
-        load2 = model.add_load(sid=14, scale=1., scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
+        load2 = model.add_load(sid=14, scale=1.,
+                               scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
         with self.assertRaises(RuntimeError):
             model.validate()
 

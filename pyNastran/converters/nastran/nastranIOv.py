@@ -357,8 +357,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.i_transform = icd_transform
 
         #print("transform_xyzcp_to_xyz_cid")
-        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
-                                                    in_place=False)
+        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0,
+            in_place=False)
 
         nid_map = self.nid_map
         for i, nid in enumerate(nid_cp_cd[:, 0]):
@@ -381,8 +382,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.i_transform = icd_transform
 
         #print("transform_xyzcp_to_xyz_cid")
-        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0,
-                                                    in_place=False)
+        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0,
+            in_place=False)
         model.nodes.xyz_cid0 = xyz_cid0
         model.nodes.nids = nid_cp_cd[:, 0]
 
@@ -415,9 +417,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #print('done with read_bdf')
             #xref_loads = False
         xref_aero = len(model.caeros) > 0
+
+        xref_nodes = True
         model.safe_cross_reference(
             xref=True,
-            xref_nodes=True,
+            xref_nodes=xref_nodes,
             xref_elements=True,
             xref_nodes_with_elements=False,
             xref_properties=True,
@@ -429,7 +433,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             xref_aero=True,
             xref_sets=False,
         )
-        return model
+        return model, xref_nodes
 
     def load_nastran_geometry(self, bdf_filename, name='main', plot=True, **kwargs):
         """
@@ -475,7 +479,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch', '.op2')): # '.op2'
             if IS_TESTING or self.is_testing_flag:
                 self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-                self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+                #self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
         else:
@@ -618,6 +622,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         form0.append(('Node ID', icase, []))
         icase += 1
 
+        nid_res = GuiResult(subcase_id, 'iNode', 'iNode', 'node', np.arange(len(all_nids), dtype='int32'),
+                            mask_value=0,
+                            nlabels=None,
+                            labelsize=None,
+                            ncolors=None,
+                            colormap='jet',
+                            data_format=None,
+                            uname='GuiResult')
+        cases[icase] = (nid_res, (0, 'Node ID'))
+        form0.append(('iNode', icase, []))
+        icase += 1
+
         # this intentionally makes a deepcopy
         cds = np.array(nid_cp_cd[:, 2])
         if cds.max() > 0:
@@ -629,6 +645,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         eids_array = results['eid']
         eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids_array,
+                            mask_value=0,
+                            nlabels=None,
+                            labelsize=None,
+                            ncolors=None,
+                            colormap='jet',
+                            data_format=None,
+                            uname='GuiResult')
+        cases[icase] = (eid_res, (0, 'ElementID'))
+        form0.append(('ElementID', icase, []))
+        icase += 1
+
+        eids_array = results['eid']
+        eid_res = GuiResult(subcase_id, 'iElement', 'iElement', 'centroid', np.arange(len(eids_array), dtype='int32'),
                             mask_value=0,
                             nlabels=None,
                             labelsize=None,
@@ -700,18 +729,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nplies = np.zeros(nelements, dtype='int32')
 
         # materials
-        upid = np.unique(pids_array)
-        for pid in upid: # upid_old
-            if pid == 0:
+        upids = np.unique(pids_array)
+        ipids = np.zeros(len(pids_array), dtype='int32')
+        iupid = 0
+        for upid in upids: # upid_old
+            if upid == 0:
                 # elements w/o properties
                 continue
 
-            ipid = np.where(pids_array == pid)[0]
+            ipid = np.where(pids_array == upid)[0]
+            ipids[ipid] = iupid
             if len(ipid):
                 try:
-                    prop = model.properties[pid]
+                    prop = model.properties[upid]
                 except KeyError:
-                    raise KeyError('pid=%r properties=%s' % (pid, str(model.properties)))
+                    raise KeyError('pid=%r properties=%s' % (upid, str(model.properties)))
                 if prop.type == 'PSHELL':
                     nplies[ipid] = 4
                     thickness[ipid, 0] = prop.Thickness()
@@ -722,9 +754,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         thickness[ipid, iply+1] = prop.Thickness(iply)
                 #else:
                     #self.log.error('nplies\n%s' % str(prop))
+                iupid += 1
+
         if len(model.conrod):
             #mids[ieid, 0] = 42
             pass
+
+        pid_res = GuiResult(0, header='iProperty', title='iProperty',
+                            location='centroid', scalar=ipids)
+        cases[icase] = (pid_res, (0, 'iProperty'))
+        form0.append(('iProperty', icase, []))
+        icase += 1
 
         #if nplies.max() > 0:
             #nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
@@ -1433,10 +1473,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #xref_loads = False
         xref_aero = len(model.caeros) > 0
-        #model.safe_cross_reference(
+        #model.cross_reference(
             #xref=True,
             #xref_nodes=True,
-            #xref_elements=True,
+            #xref_elements=False,
             #xref_nodes_with_elements=False,
             #xref_properties=True,
             #xref_masses=True,
@@ -1444,7 +1484,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #xref_loads=xref_loads,
             #xref_constraints=False,
             #xref_optimization=False,
-            #xref_aero=True,
+            #xref_aero=False,
             #xref_sets=False,
         #)
         return model
@@ -1467,7 +1507,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.scalarBar.Modified()
 
         xref_loads = True # should be True
-        model = self._get_model_nonvectorized(bdf_filename, xref_loads=xref_loads)
+        model, xref_nodes = self._get_model_nonvectorized(bdf_filename, xref_loads=xref_loads)
 
         nnodes = len(model.nodes)
         nspoints = len(model.spoints)
@@ -1518,6 +1558,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nconm2 += model.card_count['CMASS1']
         if 'CMASS2' in model.card_count:
             nconm2 += model.card_count['CMASS2']
+        # CMASS3, CMASS4 are applied to SPOINTs
 
         if nconm2 > 0:
             self.create_alternate_vtk_grid(
@@ -1559,7 +1600,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         j = 0
         nid_to_pid_map, icase, cases, form = self.map_elements(
-            points, self.nid_map, model, j, dim_max, nid_cp_cd,
+            xyz_cid0, nid_cp_cd, points, self.nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
 
         #if 0:
@@ -1603,15 +1644,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         cs_name, cs_box_ids[cs_name],
                         box_id_to_caero_element_map, caero_points, label=aesurf.label)
 
-        if nconm2 > 0:
+        if nconm2 > 0 and xref_nodes:
             self._set_conm_grid(nconm2, dim_max, model)
 
+
         make_spc_mpc_supports = True
-        if make_spc_mpc_supports:
+        if make_spc_mpc_supports and xref_nodes:
             geometry_names = self.set_spc_mpc_suport_grid(dim_max, model, nid_to_pid_map)
         else:
             geometry_names = []
-        icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
+
+        if xref_nodes:
+            icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
         assert icase is not None
 
         #------------------------------------------------------------
@@ -1620,6 +1664,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         assert icase is not None
         nsubcases = len(model.subcases)
         for subcase_idi, subcase in sorted(iteritems(model.subcases)):
+            if not xref_nodes:
+                continue
 
             subcase_id = subcase_idi
             if subcase_id == 0 and nsubcases == 1:
@@ -3888,13 +3934,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return nid_to_pid_map, icase, cases, form
 
 
-    def map_elements(self, points, nid_map, model, j, dim_max,
-                     nid_cp_cd, plot=True, xref_loads=True):
+    def map_elements(self, xyz_cid0, nid_cp_cd, points, nid_map, model, j, dim_max,
+                     plot=True, xref_loads=True):
         """
         Creates the elements
 
-        points : ???
-            ???
+        nid_cp_cd : (nnodes, 3) int ndarray
+            the node_id and coordinate systems corresponding to xyz_cid0
+            used for setting the NodeID and CD coordinate results
+        xyz_cid0 : (nnodes, 3) float ndarray
+            the global xyz locations
+        points : vtkPoints
+            the vtkPoints to b added to the grid
         nid_map : dict[nid] : nid_index
             nid : int
                 the GRID/SPOINT/EPOINT id
@@ -3907,9 +3958,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         dim_max : float
             the max(dx, dy, dz) dimension
             use for ???
-        nid_cp_cd : (nnodes, 3) int ndarray
-            the node_id and coordinate systems corresponding to xyz_cid0
-            used for setting the NodeID and CD coordinate results
         """
         grid = self.grid
         grid.SetPoints(points)
@@ -3923,7 +3971,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #return self._map_elements2(points, nid_map, model, j, dim_max,
                                    #nid_cp_cd, plot=plot, xref_loads=xref_loads)
 
-        out = self._map_elements1(model, dim_max, nid_map, j)
+        out = self._map_elements1(model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j)
         (nid_to_pid_map, xyz_cid0, pids, nelements, material_coord,
          area, min_interior_angle, max_interior_angle, max_aspect_ratio,
          max_skew_angle, taper_ratio, dideal_theta,
@@ -4029,7 +4077,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 point_size=5, representation='wire', is_visible=True)
             self._add_nastran_lines_to_grid('plotel', lines, model)
 
-    def _map_elements1(self, model, dim_max, nid_map, j):
+    def _map_elements1(self, model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j):
         """
         Helper for map_elements
 
@@ -4131,6 +4179,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
           split in the other direction.
         """
         xyz_cid0 = self.xyz_cid0
+        nids = nid_cp_cd[:, 0]
         sphere_size = self._get_sphere_size(dim_max)
 
         # :param i: the element id in grid
@@ -4747,8 +4796,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid_to_pid_map[nid].append(pid)
 
                 # 2 points
-                min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
-                                        element.nodes_ref[1].get_position())
+                #min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
+                                        #element.nodes_ref[1].get_position())
+                n1, n2 = np.searchsorted(nids, element.nodes)
+                xyz1 = xyz_cid0[n1, :]
+                xyz2 = xyz_cid0[n2, :]
+                min_edge_lengthi = norm(xyz2 - xyz1)
                 self.eid_to_nid_map[eid] = node_ids
                 elem = vtk.vtkLine()
                 try:
@@ -4767,8 +4820,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid_to_pid_map[nid].append(pid)
 
                 # 2 points
-                min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
-                                        element.nodes_ref[1].get_position())
+                n1, n2 = np.searchsorted(nids, element.nodes)
+                xyz1 = xyz_cid0[n1, :]
+                xyz2 = xyz_cid0[n2, :]
+                #min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
+                                        #element.nodes_ref[1].get_position())
                 self.eid_to_nid_map[eid] = node_ids
 
                 g0 = element.g0 #_vector
@@ -4929,6 +4985,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         for eid, element in sorted(iteritems(model.elements)):
             etype = element.type
             if isinstance(element, ShellElement):
+                continue
                 ieid = None
                 element_dimi = 2
                 #assert element.nodes_ref is not None, element.nodes_ref

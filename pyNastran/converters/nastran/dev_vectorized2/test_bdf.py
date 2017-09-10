@@ -79,14 +79,16 @@ class TestVectorized(unittest.TestCase):
         out1 = model1.get_displacement_index_xyz_cp_cd(
             fdtype='float64', idtype='int32', sort_ids=True)
         icd_transform1, icp_transform1, xyz_cp1, nid_cp_cd1 = out1
-        xyz_cid1 = model1.transform_xyzcp_to_xyz_cid(xyz_cp1, icp_transform1, cid=0,
-                                                     in_place=False)
+        xyz_cid1 = model1.transform_xyzcp_to_xyz_cid(
+            xyz_cp1, nid_cp_cd1[:, 0], icp_transform1, cid=0,
+            in_place=False)
 
         out2 = model2.get_displacement_index_xyz_cp_cd(
             fdtype='float64', idtype='int32', sort_ids=True)
         icd_transform2, icp_transform2, xyz_cp2, nid_cp_cd2 = out2
-        xyz_cid2 = model2.transform_xyzcp_to_xyz_cid(xyz_cp2, icp_transform2, cid=0,
-                                                     in_place=False)
+        xyz_cid2 = model2.transform_xyzcp_to_xyz_cid(
+            xyz_cp2, nid_cp_cd2[:, 0], icp_transform2, cid=0,
+            in_place=False)
 
         assert np.array_equal(nid_cp_cd1, nid_cp_cd2)
         assert len(icp_transform1) == len(icp_transform2)

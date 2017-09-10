@@ -248,7 +248,7 @@ class GetMethods(BDFAttributes):
     #--------------------
     # LOADS
 
-    def Load(self, sid, consider_load_combinations, msg=''):
+    def Load(self, sid, consider_load_combinations=True, msg=''):
         """
         Gets an LOAD or FORCE/PLOAD4/etc.
 

@@ -334,13 +334,17 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0)
 
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
-        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([10, 11, 12]))
 
-        xyz_cid_10 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=10)
-        xyz_cid_11 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=11)
-        xyz_cid_12 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=12)
+        xyz_cid_10 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=10)
+        xyz_cid_11 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=11)
+        xyz_cid_12 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=12)
 
     def test_cord2_rcs_02(self):
         """
@@ -398,13 +402,17 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0)
 
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
-        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([20, 21, 22]))
 
-        xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=20)
-        xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=21)
-        xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=22)
+        xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=20)
+        xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=21)
+        xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=22)
 
 
     def test_cord2_rcs_03(self):
@@ -463,13 +471,17 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0)
 
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
-        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([30, 31, 32]))
 
-        xyz_cid_30 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=30)
-        xyz_cid_31 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=31)
-        xyz_cid_32 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=32)
+        xyz_cid_30 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=30)
+        xyz_cid_31 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=31)
+        xyz_cid_32 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=32)
 
         model2 = BDF()
         cord2r = model2.add_cord2r(30, rid=2,

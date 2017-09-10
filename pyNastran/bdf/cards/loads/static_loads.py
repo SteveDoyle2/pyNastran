@@ -33,11 +33,23 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
     integer_or_string, fields, integer_string_or_blank, integer_or_double)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, set_string8_blank_if_default
-from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16, set_string16_blank_if_default
+from pyNastran.bdf.field_writer_16 import (
+    print_card_16, print_float_16, set_string16_blank_if_default)
 from pyNastran.bdf.field_writer_double import print_card_double, print_scientific_double
 
 
 class LOAD(LoadCombination):
+    """
+    +------+-----+------+------+----+-----+----+----+----+
+    |   1  |  2  |  3   |  4   | 5  |  6  | 7  | 8  | 9  |
+    +======+=====+======+======+====+=====+====+====+====+
+    | LOAD | SID |  S   |  S1  | L1 | S2  | L2 | S3 | L3 |
+    +------+-----+------+------+----+-----+----+----+----+
+    |      | S4  |  L4  | etc. |    |     |    |    |    |
+    +------+-----+------+------+----+-----+----+----+----+
+    | LOAD | 101 | -0.5 | 1.0  | 3  | 6.2 | 4  |    |    |
+    +------+-----+------+------+----+-----+----+----+----+
+    """
     type = 'LOAD'
 
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
@@ -56,6 +68,8 @@ class LOAD(LoadCombination):
             individual load_ids (corresponds to scale_factors)
         comment : str; default=''
             a comment for the card
+
+        Note: MSC can handle self-referencing loads, NX cannot
         """
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
@@ -121,9 +135,11 @@ class LOAD(LoadCombination):
                     scale_factors.append(scale) # local
                 elif isinstance(load, LOAD):
                     if not resolve_load_card:
-                        msg = 'A LOAD card cannot reference another LOAD card\n'
-                        msg += 'current:\n%s\n' % str(self)
-                        msg += 'new:\n%s' % str(load)
+                        msg = (
+                            'A LOAD card cannot reference another LOAD card\n'
+                            'current:\n%s\n'
+                            'new:\n%s' % (str(self), str(load))
+                        )
                         raise RuntimeError(msg)
                     load_data = load.get_reduced_loads(
                         resolve_load_card=True,
@@ -151,8 +167,11 @@ class LOAD(LoadCombination):
         load_ids2 = []
         msg = ' which is required by LOAD=%s' % (self.sid)
         for load_id in self.load_ids:
-            assert load_id != self.sid, 'Type=%s sid=%s load_id=%s creates a recursion error' % (self.type, self.sid, load_id)
-            load_id2 = model.Load(load_id,consider_load_combinations=False, msg=msg)
+            if load_id == self.sid:
+                msg = 'Type=%s sid=%s load_id=%s creates a recursion error' % (
+                    self.type, self.sid, load_id)
+                raise RuntimeError(msg)
+            load_id2 = model.Load(load_id, consider_load_combinations=True, msg=msg)
             assert isinstance(load_id2, list), load_id2
             load_ids2.append(load_id2)
         self.load_ids_ref = load_ids2
@@ -162,7 +181,7 @@ class LOAD(LoadCombination):
         msg = ' which is required by LOAD=%s' % (self.sid)
         for load_id in self.load_ids:
             try:
-                load_id2 = model.Load(load_id, consider_load_combinations=False, msg=msg)
+                load_id2 = model.Load(load_id, consider_load_combinations=True, msg=msg)
             except KeyError:
                 if debug:
                     msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (
