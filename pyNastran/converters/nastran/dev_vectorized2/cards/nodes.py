@@ -163,7 +163,7 @@ class Nodes(object):
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
 
         for cp, nids in sorted(iteritems(nids_cp_transform)):
-            if cp in [0, -1]:
+            if cp in [-1]:
                 continue
             nids = np.array(nids)
             icp_transform[cp] = np.where(np.in1d(nids_all, nids))[0]

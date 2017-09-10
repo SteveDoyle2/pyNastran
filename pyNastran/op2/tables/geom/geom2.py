@@ -13,7 +13,8 @@ from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
-                                                CQUADR, CQUAD8, CQUAD,
+                                                CQUADR, CTRIAR,
+                                                CQUAD8, CQUAD,
                                                 CSHEAR)
 from pyNastran.bdf.cards.elements.rods import CROD, CTUBE, CONROD
 from pyNastran.bdf.cards.elements.bars import CBAR, CBEND
@@ -1585,7 +1586,7 @@ class GEOM2(GeomCommon):
 # CTRIA6FD
 # CTRIAP
 
-    def _read_ctriar(self, data, n):  # 98
+    def _read_ctriar(self, data, n):
         """
         CTRIAR(9200,92,385)    - the marker for Record 99
         """
@@ -1602,10 +1603,10 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIAR=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
-            elem = CTRIA3.add_op2_data(data_in)
+            elem = CTRIAR.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CTRIA3'] = nelements
+        self.card_count['CTRIAR'] = nelements
         return n
 
     def _read_ctriax(self, data, n): # 100

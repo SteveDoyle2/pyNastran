@@ -850,6 +850,9 @@ class FakeGUIMethods(GuiAttributes):
         This is not quite the same as the main one.
         It's more or less just _set_results
         """
+        #assert self.node_ids is not None
+        #assert self.element_ids is not None
+
         assert len(cases) > 0, cases
         if isinstance(cases, OrderedDict):
             self.case_keys = list(cases.keys())

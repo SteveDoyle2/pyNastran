@@ -128,7 +128,7 @@ class CONRODv(RodElement):
 
     def __init__(self, model):
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
         self.mid = np.array([], dtype='int32')
@@ -265,7 +265,7 @@ class CRODv(RodElement):
 
     def __init__(self, model):
         self.model = model
-        self.is_current = False
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')

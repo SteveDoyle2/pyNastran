@@ -382,6 +382,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.i_transform = icd_transform
 
         #print("transform_xyzcp_to_xyz_cid")
+        #model.nodes.cp = nid_cp_cd[:, 1]
         xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0,
             in_place=False)
@@ -476,10 +477,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
 
         load_geom = True
-        if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch', '.op2')): # '.op2'
+        if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             if IS_TESTING or self.is_testing_flag:
                 self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-                #self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+                self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
         else:
@@ -609,6 +610,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         icase = 0
         all_nids = nid_cp_cd[:, 0]
+        self.node_ids = all_nids
 
         nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
                             mask_value=0,
@@ -1309,7 +1311,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eid_type[izero] = cell_type_point
                 nnodes[izero] = 1
                 cell_types_array[ieid[izero]] = cell_type_point
-            nnodes_array[ieid] = nnodes
+            assert len(ieid) == len(nnodes), 'len(ieid)=%s len(nnodes)=%s' % (len(ieid), nnodes)
+            nnodes_array[ieid] = nnodes.ravel()
 
             if hasattr(elem, 'pid'):
                 pid = elem.pid
@@ -4985,7 +4988,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         for eid, element in sorted(iteritems(model.elements)):
             etype = element.type
             if isinstance(element, ShellElement):
-                continue
                 ieid = None
                 element_dimi = 2
                 #assert element.nodes_ref is not None, element.nodes_ref

@@ -208,6 +208,13 @@ class CBEAMv(BeamElement):
 
         offt/bit are MSC specific fields
         """
+        if g0 is None:
+            g0 = -1
+        else:
+            x = [np.nan, np.nan, np.nan]
+        if pin_flags is None:
+            pin_flags = [0, 0]
+
         self.model.bars.add(eid)
         self.is_current = False
         self._eid.append(eid)
@@ -219,8 +226,6 @@ class CBEAMv(BeamElement):
         self._wa_offset.append(wa)
         self._wb_offset.append(wb)
         self._sab_warping.append([sa, sb])
-        if pin_flags is None:
-            pin_flags = [0, 0]
         self._pin_flags.append(pin_flags)
         #self._offset.append(wa_offset)
         if comment:

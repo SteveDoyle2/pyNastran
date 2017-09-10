@@ -674,7 +674,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros', 'nid_map',
-            'is_vectorized',
+            'is_bdf_vectorized',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
@@ -3264,7 +3264,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
 
         for cp, nids in sorted(iteritems(nids_cp_transform)):
-            if cp in [0, -1]:
+            if cp in [-1]:
                 continue
             nids = np.array(nids)
             icp_transform[cp] = np.where(np.in1d(nids_all, nids))[0]
@@ -3300,7 +3300,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\heli112em7.dat
         """
-        if self.is_vectorized:
+        if self.is_bdf_vectorized:
             # this is used when xref=False (only for vectorized=True)
             # we now require nids, where the other approach
             # (the one with xref=True) does not
@@ -3315,6 +3315,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # requires in_place=False???
             cps_to_check = list(self.coords.keys())
         cps_to_check.sort()
+        assert 0 in cps_to_check, cps_to_check
 
 
         coord2 = self.coords[cid]
@@ -3345,8 +3346,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             if cps_to_check:
                 nids_checked.append(nids_checkedi)
-                _ncoords_to_setup, cord1s_to_update, cord2s_to_update = self._get_coords_to_update(
-                    cps_to_check, cps_checked)
+                #print("nids_checkedi =", nids_checkedi)
+                _ncoords_to_setup, cord1s_to_update, cord2s_to_update, nids_checked = self._get_coords_to_update(
+                    cps_to_check, cps_checked, nids_checked)
                 #print('CPs not handled=%s\n  cord1s_to_update=%s\n  cord2s_to_update=%s' % (
                     #cps_to_check, cord1s_to_update, cord2s_to_update))
 
@@ -3354,9 +3356,30 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     coord = self.coords[cp]
                     coord.rid_ref = self.coords[coord.rid]
                     coord.setup_no_xref(self)
-                    #coord.rid_ref = None
-                assert len(cord1s_to_update) == 0, cord1s_to_update
-                ncoords_to_setup = len(cord2s_to_update)
+
+                for cp in cord1s_to_update:
+                    coord = self.coords[cp]
+                    nid1, nid2, nid3 = coord.node_ids
+                    if self.is_bdf_vectorized or 1:
+                        i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
+                        assert nids[i1] == nid1
+                        assert nids[i2] == nid2
+                        assert nids[i3] == nid3
+                        coord.e1 = xyz_cid0[i1, :] #: the origin in the local frame
+                        coord.e2 = xyz_cid0[i2, :] #: a point on the z-axis
+                        coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
+                    else:
+                        g1_ref = model.nodes[nid1]
+                        g2_ref = model.nodes[nid2]
+                        g3_ref = model.nodes[nid3]
+                        coord.e1 = g1_ref.get_position() #: the origin in the local frame
+                        coord.e2 = g2_ref.get_position() #: a point on the z-axis
+                        coord.e3 = g3_ref.get_position() #: a point on the xz-plane
+                    coord.setup_no_xref(self)
+                    #coord.rid_ref = self.coords[coord.rid]
+                    #coord.setup_no_xref(self)
+
+                ncoords_to_setup = len(cord1s_to_update) + len(cord2s_to_update)
             #print('ncoords_next = ', ncoords_to_setup)
         #print('--------------------------------------------------------------------------')
         #print('ncoords_to_setup = ', ncoords_to_setup)
@@ -3368,9 +3391,28 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             for cp in cps_to_check:
                 coord = self.coords[cp]
                 msg += coord.rstrip() + '\n'
-                rid_ref = self.coords[coord.rid]
-                msg += rid_ref.rstrip() + '\n'
-                msg += '  rid=%r origin=%s\n\n' % (coord.rid, rid_ref.origin)
+                if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+                    rid_ref = self.coords[coord.rid]
+                    msg += rid_ref.rstrip() + '\n'
+                    msg += '  rid=%r origin=%s\n\n' % (coord.rid, rid_ref.origin)
+                else:
+                    nid1, nid2, nid3 = coord.node_ids
+                    #coord.e1 = xyz_cid0[i1, :] #: the origin in the local frame
+                    #coord.e2 = xyz_cid0[i2, :] #: a point on the z-axis
+                    #coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
+                    if self.is_bdf_vectorized:
+                        i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
+                        cp1 = self.nodes.cp[i1]
+                        cp2 = self.nodes.cp[i2]
+                        cp3 = self.nodes.cp[i3]
+                    else:
+                        cp1 = self.nodes[nid1].cp
+                        cp2 = self.nodes[nid2].cp
+                        cp3 = self.nodes[nid3].cp
+                    msg += '  g1=%s xyz=%s cp=%s\n' % (nid1, coord.e1, cp1)
+                    msg += '  g2=%s xyz=%s cp=%s\n' % (nid2, coord.e2, cp2)
+                    msg += '  g3=%s xyz=%s cp=%s\n' % (nid3, coord.e3, cp3)
+                    #break
             raise RuntimeError(msg)
 
 
@@ -3416,6 +3458,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         assert len(cps_to_check0) > 0, cps_to_check0
         for cp in cps_to_check0:
             if cp == 0:
+                if 0 in icp_transform:
+                    inode = icp_transform[cp]
+                    nids_checked.append(nids[inode])
+                    #print("  cp=%s used in a transform (CORD2R)...done" % (cp))
+                #else:
+                    #print("  cp=%s not used in a transform (CORD2R)...done" % (cp))
+                #print('***nids_checked=%s' % nids[inode])
+                #xyz_cid0[inode, :] = xyz_cp[inode, :]
                 continue
 
             coord = self.coords[cp]
@@ -3423,7 +3473,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             if origin is None:
                 # the coord has not been xref'd, so add it to cps_to_check
-                #if self.is_vectorized:
+                #if self.is_bdf_vectorized:
                     #assert in_place is False, 'in_place=%r must be False for vectorized' % in_place
                 #else:
                     #raise RuntimeError('you must cross-reference the nodes')
@@ -3432,7 +3482,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 if cp in icp_transform:
                     inode = icp_transform[cp]
                     xyz_cid0[inode, :] = np.nan
+                #print("  cp=%s used, but not done (%s)..." % (cp, coord.type))
                 continue
+
             cps_checked.append(cp)
             #is_beta = np.diagonal(beta).min() != 1.
             #is_origin = np.abs(coord.origin).max() != 0.
@@ -3440,11 +3492,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             if cp not in icp_transform:
                 # we may need coordinate system, but it's not explicitly used
                 # in the list of GRID CP coordinate systems
+                #print("  cp=%s not used in a transform (%s)...done" % (cp, coord.type))
                 continue
 
             beta = coord.beta()
             inode = icp_transform[cp]
             nids_checked.append(nids[inode])
+            #print('***nids_checked=%s' % nids[inode])
             xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
             #try:
             new = np.dot(xyzi, beta) + origin
@@ -3471,6 +3525,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #xyz_cid0[inode, :] = np.dot(xyzi, beta)
             #else:
                 #xyz_cid0[inode, :] = xyzi + coord.origin
+        #print('nids_checkedA =', nids_checked)
         if len(nids_checked) == 0:
             pass
         elif len(nids_checked) == 1:
@@ -3479,28 +3534,54 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         else:
             nids_checked = np.hstack(nids_checked)
             nids_checked.sort()
+            assert len(nids_checked) > 0, nids_checked
         cps_to_check.sort()
         return nids_checked, cps_checked, cps_to_check
 
-    def _get_coords_to_update(self, cps_to_check, cps_checked):
+    def _get_coords_to_update(self, cps_to_check, cps_checked, nids_checked):
         """helper method for ``transform_xyzcp_to_xyz_cid``"""
-        cord1s_to_update = set([])
-        cord2s_to_update = set([])
-        for cp in cps_to_check:
+        cord1s_to_update_temp = []
+        cord2s_to_update = []
+        for cp in sorted(cps_to_check):
             coord = self.coords[cp]
             if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 if coord.rid in cps_checked:
-                    cord2s_to_update.add(cp)
+                    cord2s_to_update.append(cp)
             elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
-                cord1s_to_update.add(cp)
+                cord1s_to_update_temp.append(cp)
             else:
                 raise NotImplementedError(coord.rstrip())
 
-        cord1s_to_update = list(cord1s_to_update)
-        cord1s_to_update.sort()
+        cord1s_to_update = set([])
+        if cord1s_to_update_temp:
+            if len(nids_checked) == 0:
+                raise RuntimeError('len(nids_checked)=0...this shouldnt happen.')
+            elif len(nids_checked) == 1:
+                pass
+            else:
+                nids_checked = [np.hstack(nids_checked)]
 
-        cord2s_to_update = list(cord2s_to_update)
-        cord2s_to_update.sort()
+            nids_checkedi = nids_checked[0]
+            if len(nids_checkedi) == 0:
+                #print("no cord1s to check...")
+                cord1s_to_update = []
+            else:
+                #print('nids_checked = ', nids_checkedi)
+                for cp in cord1s_to_update_temp:
+                    coord = self.coords[cp]
+                    nids = coord.node_ids
+                    #print('cp=%s nids=%s' % (cp, nids))
+                    for nid in nids:
+                        if nid not in nids_checkedi:
+                            #print('  nid=%s break...' % nid)
+                            break
+                    else:
+                        #print('  passed')
+                        # all nids passed
+                        cord1s_to_update.add(cp)
+                cord1s_to_update = list(cord1s_to_update)
+                cord1s_to_update.sort()
+
         ncoords = len(cord1s_to_update) + len(cord2s_to_update)
         #if ncoords == 0:
             #msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
@@ -3508,10 +3589,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             #for cp in (cord1s_to_update + cord2s_to_update):
                 #msg += str(cp)
             #raise RuntimeError(msg)
-        return ncoords, cord1s_to_update, cord2s_to_update
+        return ncoords, cord1s_to_update, cord2s_to_update, nids_checked
 
     @property
-    def is_vectorized(self):
+    def is_bdf_vectorized(self):
         """Returns False for the ``BDF`` class"""
         return hasattr(self, 'grid')
 

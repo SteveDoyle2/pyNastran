@@ -36,7 +36,7 @@ class OP2Geom(OP2GeomCommon, BDF):
             skip_undefined_matrices=skip_undefined_matrices,
             encoding=encoding)
         #assert len(self.elements) == 0, self.card_count
-        assert len(self.elements) == 0, self.elements
+        #assert len(self.elements) == 0, self.elements
 
     def _read_grid(self, data, n):
         """(4501,45,1) - the marker for Record 17"""
@@ -157,19 +157,15 @@ class OP2Geom(OP2GeomCommon, BDF):
         self.increase_card_count('CPENTA', nentries)
         return n
 
-    #def _read_cquad4(self, data, n):
-        #"""
-        #CQUAD4(2958,51,177)    - the marker for Record 70
-        #CQUAD4(13900,139,9989) - the marker for Record 71
-        #"""
-        #return self.run_cquad4(data, n, CQUAD4)
-
-
     def _read_ctria3(self, data, n):
         """
         CTRIA3(5959,59,282)    - the marker for Record 94
         """
         element_type = 'CTRIA3'
+        return self._read_ctria3_ctriar_helper(data, n, element_type)
+
+    def _read_ctria3_ctriar_helper(self, data, n, element_type):
+        """used by ``read_ctria3`` and ``read_ctriar``"""
         ntotal = 52
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
@@ -183,7 +179,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         # 0    1    2   3   4   5       6     7        8       9
         #(eid, pid, n1, n2, n3, theta, zoffs, blank1,  blank2, tflag,
         #            10   11  12   13
-                     #t1, t2, t3, t4) = out
+                     #t1, t2, t3) = out
 
         theta = floats[:, 5]
         zoffset = floats[:, 6]
@@ -192,6 +188,8 @@ class OP2Geom(OP2GeomCommon, BDF):
 
         if element_type == 'CTRIA3':
             elem = self.ctria3
+        elif element_type == 'CTRIAR':
+            elem = self.ctriar
         else:
             raise NotImplementedError(element_type)
         elem.eid = eid
@@ -201,8 +199,15 @@ class OP2Geom(OP2GeomCommon, BDF):
         elem.zoffset = zoffset
         elem.thickness_flag = thickness_flag
         elem.thickness = thickness
-        self.card_count['CTRIA3'] = nentries
+        self.card_count[element_type] = nentries
         return n
+
+    def _read_ctriar(self, data, n):
+        """
+        CTRIAR(9200,92,385)    - the marker for Record 99
+        """
+        element_type = 'CTRIAR'
+        return self._read_ctria3_ctriar_helper(data, n, element_type)
 
     def _read_cquad4(self, data, n):
         """
@@ -221,9 +226,16 @@ class OP2Geom(OP2GeomCommon, BDF):
         10 TFLAG I Alternate thickness flag
         11 T(4) RS Membrane thickness of element at grid points
         """
-        #print(self.show_data(data[:12]))
         element_type = 'CQUAD4'
+        return self._read_cquad4_cquadr_helper(data, n, element_type)
 
+    def _read_cquadr(self, data, n):
+        """see ``read_cquad4``"""
+        element_type = 'CQUADR'
+        return self._read_cquad4_cquadr_helper(data, n, element_type)
+
+    def _read_cquad4_cquadr_helper(self, data, n, element_type):
+        """used by ``read_cquad4`` and ``read_cquadr``"""
         ntotal = 56
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
@@ -246,6 +258,8 @@ class OP2Geom(OP2GeomCommon, BDF):
             elem = self.cquad4
         elif element_type == 'CQUAD':
             elem = self.cquad
+        elif element_type == 'CQUADR':
+            elem = self.cquadr
         else:
             raise NotImplementedError(element_type)
 
