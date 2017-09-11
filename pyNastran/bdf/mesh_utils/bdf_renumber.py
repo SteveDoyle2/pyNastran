@@ -7,7 +7,7 @@ from __future__ import print_function
 from itertools import chain
 
 import io
-from six import PY2, PY3, iteritems, string_types
+from six import PY2, PY3, iteritems, string_types, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
@@ -713,13 +713,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     _update_case_control(model, mapper)
     if bdf_filename_out is not None:
         close = True
-        #if PY2 and isinstance(bdf_filename_out, file):
-            #close = False
-        if isinstance(bdf_filename_out, io.IOBase):
+        if PY2 and isinstance(bdf_filename_out, (file, StringIO)):
             close = False
-            print('bdf_filename_out=%s for close=False' % bdf_filename_out)
-        #elif PY3 and isinstance(bdf_filename_out, io.IOBase):
-            #close = False
+        elif PY3 and isinstance(bdf_filename_out, io.IOBase):
+            close = False
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
                         interspersed=False, close=close)
     return model, mapper
