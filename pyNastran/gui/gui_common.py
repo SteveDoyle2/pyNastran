@@ -4237,7 +4237,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # fps
             # -> frames_per_second = 1/fps
             delay = int(1. / fps * 1000)
-            timerId = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
+            timer_id = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
             return
 
         return self.make_gif_helper(
