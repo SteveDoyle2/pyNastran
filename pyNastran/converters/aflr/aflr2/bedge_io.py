@@ -108,7 +108,7 @@ class BEdge_IO(object):
 
         tag_filename = base + '.tags'
 
-        cases_new = []
+        #cases_new = []
         has_tag_data = False
         results_form = []
 

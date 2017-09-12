@@ -1855,8 +1855,8 @@ class MOMENT2(Moment):
 
         self.xyz = xyz
 
-        msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
-            xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
+        #msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
+            #xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
         #print(msgi)
         self.normalize()
         #print(self.xyz)

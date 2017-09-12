@@ -71,7 +71,7 @@ class CameraWindow(PyDialog):
 
         self.table = QTableWidget()
         names_text = []
-        for iname, name in enumerate(self.names):
+        for name in self.names:
             name_text = QTableWidgetItem(str(name))
             names_text.append(name_text)
         self.create_layout(names_text)
