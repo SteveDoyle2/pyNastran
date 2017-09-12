@@ -2696,16 +2696,16 @@ class AddCards(AddMethods):
 
     def add_sload(self, sid, nids, mags, comment=''):
         """
-        Creates an SLOAD (SPOINT load)
+        Creates an SLOAD (GRID/SPOINT load)
 
         Parameters
         ----------
         sid : int
             load id
         nids : int; List[int]
-            the SPOINT ids
+            the GRID/SPOINT ids
         mags : float; List[float]
-            the SPOINT loads
+            the load magnitude
         comment : str; default=''
             a comment for the card
         """

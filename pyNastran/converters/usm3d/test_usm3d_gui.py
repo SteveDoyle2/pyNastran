@@ -5,10 +5,7 @@ import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
-#from pyNastran.converters.cart3d.cart3d import Cart3D
-#from pyNastran.converters.nastran.nastran_to_cart3d import (
-    #nastran_to_cart3d, nastran_to_cart3d_filename)
-from pyNastran.utils.log import get_logger
+#from pyNastran.utils.log import get_logger
 
 
 pkg_path = pyNastran.__path__[0]

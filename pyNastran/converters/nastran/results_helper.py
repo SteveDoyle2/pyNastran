@@ -575,7 +575,6 @@ class NastranGuiResults(NastranGuiAttributes):
         elif hasattr(case, 'dt'):
             time = case._times[itime]
             header += '; time = %g sec' % time
-            pass
         elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
             pass
             #raise RuntimeError(header)

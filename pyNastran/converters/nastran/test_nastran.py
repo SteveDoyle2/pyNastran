@@ -1,7 +1,7 @@
-from six.moves import range
 import os
-from numpy import allclose
 import unittest
+from six.moves import range
+from numpy import allclose
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf

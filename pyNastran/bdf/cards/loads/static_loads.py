@@ -1160,7 +1160,6 @@ class FORCE2(Force):
         assert self.g1 is not None, self.g1
         assert self.g2 is not None, self.g2
         assert self.g3 is not None, self.g3
-        assert self.g4 is not None, self.g4
         assert self.g1 != self.g2, 'g1=%s g2=%s' % (self.g1, self.g2)
         assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
@@ -1182,8 +1181,8 @@ class FORCE2(Force):
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
-        g4 = integer(card, 7, 'g4')
-        assert len(card) == 8, 'len(FORCE2 card) = %i\ncard=%s' % (len(card), card)
+        g4 = integer_or_blank(card, 7, 'g4')
+        assert len(card) in [7, 8], 'len(FORCE2 card) = %i\ncard=%s' % (len(card), card)
         return FORCE2(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     @classmethod
@@ -1221,33 +1220,49 @@ class FORCE2(Force):
         self.g1_ref = model.Node(self.g1, msg=msg)
         self.g2_ref = model.Node(self.g2, msg=msg)
         self.g3_ref = model.Node(self.g3, msg=msg)
-        self.g4_ref = model.Node(self.g4, msg=msg)
 
         xyz1 = self.g1_ref.get_position()
         xyz2 = self.g2_ref.get_position()
         xyz3 = self.g3_ref.get_position()
-        xyz4 = self.g4_ref.get_position()
         v21 = xyz2 - xyz1
-        v43 = xyz4 - xyz3
+
         try:
             v21 /= norm(v21)
         except FloatingPointError:
-            msg = 'v21=%s norm(v21)=%s\n' % (v21, norm(v21))
+            msg = 'v1=v21=%s norm(v21)=%s\n' % (v21, norm(v21))
             msg += 'g1.get_position()=%s\n' % xyz1
             msg += 'g2.get_position()=%s' % xyz2
             raise FloatingPointError(msg)
 
-        try:
-            v43 /= norm(v43)
-        except FloatingPointError:
-            msg = 'v43=%s norm(v43)=%s\n' % (v43, norm(v43))
-            msg += 'g3.get_position()=%s\n' % xyz3
-            msg += 'g4.get_position()=%s' % xyz4
-            raise FloatingPointError(msg)
-        self.xyz = cross(v21, v43)
+        if self.g4 is None:
+            xyz4 = None
+            v2 = xyz3 - xyz1
+            try:
+                v2 /= norm(v2)
+            except FloatingPointError:
+                msg = 'v2=v31=%s norm(v31)=%s\n' % (v2, norm(v2))
+                msg += 'g3.get_position()=%s\n' % xyz3
+                msg += 'g1.get_position()=%s' % xyz1
+                raise FloatingPointError(msg)
+            xyz = cross(v21, v31)
+        else:
+            self.g4_ref = model.Node(self.g4, msg=msg)
+            xyz4 = self.g4_ref.get_position()
+            v2 = xyz4 - xyz3
 
-        msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43=%s\nxyz=%s' % (
-            xyz1, xyz2, xyz3, xyz4, v21, v43, self.xyz)
+            try:
+                v2 /= norm(v2)
+            except FloatingPointError:
+                msg = 'v2=v43=%s norm(v43)=%s\n' % (v2, norm(v2))
+                msg += 'g3.get_position()=%s\n' % xyz3
+                msg += 'g4.get_position()=%s' % xyz4
+                raise FloatingPointError(msg)
+            xyz = cross(v21, v2)
+
+        self.xyz = xyz
+
+        msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
+            xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
         #print(msgi)
         self.normalize(msgi)
         #print(self.xyz)
@@ -1732,7 +1747,7 @@ class MOMENT2(Moment):
         assert self.g1 is not None, self.g1
         assert self.g2 is not None, self.g2
         assert self.g3 is not None, self.g3
-        assert self.g4 is not None, self.g4
+        #assert self.g4 is not None, self.g4
         assert self.g1 != self.g2, 'g1=%s g2=%s' % (self.g1, self.g2)
         assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
 
@@ -1754,9 +1769,9 @@ class MOMENT2(Moment):
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
-        g4 = integer(card, 7, 'g4')
+        g4 = integer_or_blank(card, 7, 'g4')
         xyz = None
-        assert len(card) <= 8, 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) in [7, 8], 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
         return MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz, comment=comment)
 
     @classmethod
@@ -1799,13 +1814,52 @@ class MOMENT2(Moment):
         self.g1_ref = model.Node(self.g1, msg=msg)
         self.g2_ref = model.Node(self.g2, msg=msg)
         self.g3_ref = model.Node(self.g3, msg=msg)
-        self.g4_ref = model.Node(self.g4, msg=msg)
 
-        v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
-        v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
-        v12 = v12 / norm(v12)
-        v34 = v34 / norm(v34)
-        self.xyz = cross(v12, v34)
+        xyz1 = self.g1_ref.get_position()
+        xyz2 = self.g2_ref.get_position()
+        xyz3 = self.g3_ref.get_position()
+        v21 = xyz2 - xyz1
+
+        try:
+            v21 /= norm(v21)
+        except FloatingPointError:
+            msg = 'v1=v21=%s norm(v21)=%s\n' % (v21, norm(v21))
+            msg += 'g1.get_position()=%s\n' % xyz1
+            msg += 'g2.get_position()=%s' % xyz2
+            raise FloatingPointError(msg)
+
+        if self.g4 is None:
+            xyz4 = None
+            v2 = xyz3 - xyz1
+            try:
+                v2 /= norm(v2)
+            except FloatingPointError:
+                msg = 'v2=v31=%s norm(v31)=%s\n' % (v2, norm(v2))
+                msg += 'g3.get_position()=%s\n' % xyz3
+                msg += 'g1.get_position()=%s' % xyz1
+                raise FloatingPointError(msg)
+            xyz = cross(v21, v31)
+        else:
+            self.g4_ref = model.Node(self.g4, msg=msg)
+            xyz4 = self.g4_ref.get_position()
+            v2 = xyz4 - xyz3
+
+            try:
+                v2 /= norm(v2)
+            except FloatingPointError:
+                msg = 'v2=v43=%s norm(v43)=%s\n' % (v2, norm(v2))
+                msg += 'g3.get_position()=%s\n' % xyz3
+                msg += 'g4.get_position()=%s' % xyz4
+                raise FloatingPointError(msg)
+            xyz = cross(v21, v2)
+
+        self.xyz = xyz
+
+        msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
+            xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
+        #print(msgi)
+        self.normalize()
+        #print(self.xyz)
 
     def uncross_reference(self):
         self.node = self.node_id

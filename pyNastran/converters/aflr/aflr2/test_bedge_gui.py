@@ -1,8 +1,8 @@
 from __future__ import print_function
 import os
+import warnings
 import unittest
 
-import warnings
 import numpy as np
 warnings.simplefilter('always')
 np.seterr(all='raise')

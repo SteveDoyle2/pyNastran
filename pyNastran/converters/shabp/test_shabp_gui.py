@@ -1,4 +1,5 @@
 import os
+import unittest
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.shabp.shabp_io import ShabpIO
@@ -8,7 +9,6 @@ import pyNastran
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'shabp')
 
-import unittest
 
 class ShabpGUI(ShabpIO, FakeGUIMethods):
     def __init__(self):

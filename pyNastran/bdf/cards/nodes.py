@@ -653,8 +653,10 @@ class GRDSET(BaseCard):
         """
         Verifies all methods for this object work
 
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        xref: bool
+            has this model been cross referenced
         """
         cp = self.Cp()
         seid = self.SEid()
@@ -682,10 +684,10 @@ class GRDSET(BaseCard):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
@@ -694,17 +696,17 @@ class GRDSET(BaseCard):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_card
 
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
+        Parameters
+        ----------
+        size : int
+            the size of the card (8/16)
         """
         card = self.repr_fields()
-        f.write(print_card_8(card))
+        return print_card_8(card)
 
 
 class GRIDB(BaseCard):

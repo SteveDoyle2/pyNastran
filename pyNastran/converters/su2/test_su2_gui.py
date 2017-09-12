@@ -1,6 +1,7 @@
 import os
-
 import warnings
+import unittest
+
 import numpy as np
 from pyNastran.utils.log import get_logger
 warnings.simplefilter('always')
@@ -14,7 +15,6 @@ import pyNastran
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'su2')
 
-import unittest
 
 class SU2_GUI(SU2_IO, FakeGUIMethods):
     def __init__(self):

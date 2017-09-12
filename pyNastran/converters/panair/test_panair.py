@@ -1,7 +1,7 @@
-from six.moves import range
 import os
-from numpy import array_equal, allclose
 import unittest
+from six.moves import range
+from numpy import array_equal, allclose
 
 import pyNastran
 from pyNastran.converters.panair.panair_grid import PanairGrid
@@ -9,6 +9,7 @@ from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'converters', 'panair')
+
 
 class TestPanair(unittest.TestCase):
 

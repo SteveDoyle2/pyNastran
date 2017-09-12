@@ -1,8 +1,8 @@
 from __future__ import print_function
 import os
 import unittest
-
 import warnings
+
 import numpy as np
 warnings.simplefilter('always')
 np.seterr(all='raise')
@@ -15,6 +15,7 @@ from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'converters', 'stl')
+
 
 class TestSTL(unittest.TestCase):
 

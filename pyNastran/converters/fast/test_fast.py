@@ -1,7 +1,7 @@
-from six.moves import range
 import os
-from numpy import array_equal, allclose
 import unittest
+from six.moves import range
+from numpy import array_equal, allclose
 
 import pyNastran
 from pyNastran.converters.fast.fgrid_reader import FGridReader

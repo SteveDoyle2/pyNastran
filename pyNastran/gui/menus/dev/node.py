@@ -377,7 +377,6 @@ class EditNodeProperties(QDialog):
             #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
             #self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
         else:
-            pass
             #self.opacity_edit.clicked.connect(self.on_opacity)
             #self.point_size.clicked.connect(self.on_point_size)
             #self.color_edit.clicked.connect(self.on_color)
