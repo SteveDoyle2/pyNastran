@@ -52,6 +52,37 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- ## pyNastran v0.8.0 has NOT been released (8/21/2016)   --->
 <!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
+<!--- 
+
+This should be hidden...
+
+v1.0.1-progress
+
+Sort of the same goals as v1.0.  Just trying to make it not buggy.  There are some new features though.
+
+Programmatics
+ - N/A
+
+OP2:
+ - HDF5 export support
+ - pandas support for matrices
+ - couple more results vectorized (e.g., complex strain energy, DMIG strain energy, some forces)
+
+BDF:
+ - cross-referencing is now simpler
+   - ``*_ref`` attributes are cross-referenced
+      - ``element.nodes`` is not cross-referenced
+      - ``element.nodes_ref`` is cross-referenced
+GUI:
+ - animation menu is more intuitive
+    - in gui animation
+    - wipe deformed shape button
+    - link to legend change (not done)
+    - no longer a subset of the legend menu (not done)
+ - few bug fixes leading to it not working on some computers
+
+  --->
+  
 # News
 
 ### pyNastran v1.0.0 has been released (5/25/2017)
