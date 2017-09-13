@@ -108,7 +108,7 @@ class NastranMatrix(BaseCard):
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment=''):
+                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
         """
         Creates a NastranMatrix
 
@@ -141,13 +141,13 @@ class NastranMatrix(BaseCard):
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : List[(node, dof)]???
+        GCj  : List[(node, dof)]
             the jnode, jDOFs
-        GCi  : List[(node, dof)]???
+        GCi  : List[(node, dof)]
             the inode, iDOFs
-        Real : List[float]???
+        Real : List[float]
             The real values
-        Complex : List[float]???; default=None
+        Complex : List[float]; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
@@ -181,6 +181,8 @@ class NastranMatrix(BaseCard):
             self.Complex = Complex
         assert isinstance(ifo, integer_types), 'ifo=%r type=%s' % (ifo, type(ifo))
         assert not isinstance(ifo, bool), 'ifo=%r type=%s' % (ifo, type(ifo))
+        if finalize:
+            self.finalize()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -210,14 +212,21 @@ class NastranMatrix(BaseCard):
         else:
             # technically right, but nulling this will fix bad decks
             #self.ncols = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
-            raise NotImplementedError('ifo=%s is not supported' % ifo)
+            msg = (
+                'ifo=%s is not supported on %s %r\n'
+                '  4=Lower Triangular\n'
+                '  5=Upper Triangular\n'
+                '  6=Symmetric\n'
+                '  8=Identity (m=nRows, n=m)\n' % (ifo, cls.type, name)
+            )
+            raise NotImplementedError(msg)
 
         GCj = []
         GCi = []
         Real = []
         Complex = []
         return cls(name, ifo, tin, tout, polar, ncols,
-                   GCj, GCi, Real, Complex, comment=comment)
+                   GCj, GCi, Real, Complex, comment=comment, finalize=False)
 
     @property
     def matrix_type(self):
@@ -389,7 +398,9 @@ class NastranMatrix(BaseCard):
             return True
         msg = ('Matrix %r must have a value of TIN = [1, 2, 3, 4].\n'
                'TIN defines the type (real, complex) '
-               'of the matrix.  TIN=%r.' % (self.name, self.tin))
+               'of the matrix.  TIN=%r.\n'
+               '  TIN=1,2 -> real\n'
+               '  TIN=3,4 -> complex' % (self.name, self.tin))
         raise ValueError(msg)
 
     @property
@@ -483,6 +494,12 @@ class NastranMatrix(BaseCard):
         else:
             raise RuntimeError('tin=%r must be 1, 2, 3, or 4' % self.tin)
 
+        assert isinstance(self.GCi, (list, np.ndarray)), 'type(GCi)=%s' % type(self.GCi)
+        assert isinstance(self.GCj, (list, np.ndarray)), 'type(GCj)=%s' % type(self.GCj)
+        assert isinstance(self.Real, (list, np.ndarray)), 'type(Real)=%s' % type(self.Real)
+        #assert isinstance(self.GCi[0], (list, np.ndarray)), 'type(GCi[0])=%s' % type(self.GCi[0])
+        #assert isinstance(self.GCj[0], (list, np.ndarray)), 'type(GCj[0])=%s' % type(self.GCj[0])
+
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
         list_fields = [self.type, self.name, 0, self.ifo, self.tin,
@@ -528,6 +545,14 @@ class NastranMatrix(BaseCard):
                     msg += print_card_double(list_fields)
                 else:
                     msg += print_card_16(list_fields)
+
+        #msg += '\n\nGCi[0]=%s\n' % self.GCi[0]
+        #msg += 'GCj[0]=%s\n' % self.GCj[0]
+        #msg += 'Real[0]=%s\n' % self.Real[0]
+        #assert isinstance(self.GCi[0], (list, np.ndarray)), msg
+        #assert isinstance(self.GCj[0], (list, np.ndarray)), msg
+        #assert isinstance(self.Real[0], (list, np.ndarray)), msg
+
         return msg
 
 def get_row_col_map(GCi, GCj, ifo):
@@ -974,7 +999,7 @@ class DMIG(NastranMatrix):
     type = 'DMIG'
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment=''):
+                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
         """
         Creates a DMIG card
 
@@ -1007,19 +1032,20 @@ class DMIG(NastranMatrix):
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : List[(node, dof)]???
-            the jnode, jDOFs
-        GCi  : List[(node, dof)]???
+        GCj  : List[(node, dof)]
+            the [jnode, jDOFs]
+        GCi  : List[(node, dof)]
             the inode, iDOFs
-        Real : List[float]???
+        Real : List[float]
             The real values
-        Complex : List[float]???; default=None
+        Complex : List[float]; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
         """
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
-                               GCj, GCi, Real, Complex, comment=comment)
+                               GCj, GCi, Real, Complex, comment=comment,
+                               finalize=finalize)
 
 
 class DMIAX(object):
@@ -1243,7 +1269,8 @@ class DMIJ(NastranMatrix):
     type = 'DMIJ'
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment=''):
+                 GCj, GCi, Real, Complex=None, comment='',
+                 finalize=True):
         """
         Creates a DMIJ card
 
@@ -1288,7 +1315,8 @@ class DMIJ(NastranMatrix):
             a comment for the card
         """
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
-                               GCj, GCi, Real, Complex, comment=comment)
+                               GCj, GCi, Real, Complex, comment=comment,
+                               finalize=finalize)
 
 
 class DMIJI(NastranMatrix):
@@ -1305,7 +1333,7 @@ class DMIJI(NastranMatrix):
     type = 'DMIJI'
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment=''):
+                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
         """
         Creates a DMIJI card
 
@@ -1350,7 +1378,8 @@ class DMIJI(NastranMatrix):
             a comment for the card
         """
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
-                               GCj, GCi, Real, Complex, comment=comment)
+                               GCj, GCi, Real, Complex, comment=comment,
+                               finalize=finalize)
 
 
 class DMIK(NastranMatrix):
@@ -1361,11 +1390,27 @@ class DMIK(NastranMatrix):
     WTFACT and input forces associated with AEFORCE entries. The matrix is
     described by a single header entry and one or more column entries. A column
     entry is required for each column with nonzero elements.
+
+    +------+-------+----+-----+-----+------+-------+----+------+
+    |   1  |   2   | 3  |  4  |  5  |   6  |   7   | 8  |  9   |
+    +======+=======+====+=====+=====+======+=======+====+======+
+    | DMIK | NAME  | 0  | IFO | TIN | TOUT | POLAR |    | NCOL |
+    +------+-------+----+-----+-----+------+-------+----+------+
+    | DMIK | NAME  | GJ | CJ  |     |  G1  |  C1   | A1 |  B1  |
+    +------+-------+----+-----+-----+------+-------+----+------+
+    |      |  G2   | C2 | A2  |  B2 |      |       |    |      |
+    +------+-------+----+-----+-----+------+-------+----+------+
+    | DMIK | ALPH1 | 0  |  9  |  2  |  0   |   1   |    |      |
+    +------+-------+----+-----+-----+------+-------+----+------+
+    | DMIK | ALPH1 | 1  |  1  |  1  |  1   |  1.0  |    |      |
+    +------+-------+----+-----+-----+------+-------+----+------+
+    |      |   2   | 1  | 1.0 |     |      |       |    |      |
+    +------+-------+----+-----+-----+------+-------+----+------+
     """
     type = 'DMIK'
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment=''):
+                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
         """
         Creates a DMIK card
 
@@ -1398,26 +1443,27 @@ class DMIK(NastranMatrix):
             Integer > 0 indicates amplitude, phase format
         ncols : int
             ???
-        GCj  : List[(node, dof)]???
+        GCj  : List[(node, dof)]
             the jnode, jDOFs
-        GCi  : List[(node, dof)]???
+        GCi  : List[(node, dof)]
             the inode, iDOFs
-        Real : List[float]???
+        Real : List[float]
             The real values
-        Complex : List[float]???; default=None
+        Complex : List[float]; default=None
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
         """
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
-                               GCj, GCi, Real, Complex, comment=comment)
+                               GCj, GCi, Real, Complex, comment=comment,
+                               finalize=finalize)
 
 
 class DMI(NastranMatrix):
     type = 'DMI'
 
     def __init__(self, name, form, tin, tout, nrows, ncols,
-                 GCj, GCi, Real, Complex=None, comment=''):
+                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
         """
         +------+-------+------+------+---------+----------+-----------+-----------+------+
         |  1   |   2   |  3   |   4  |    5    |    6     |     7     | 8         |  9   |
@@ -1446,6 +1492,8 @@ class DMI(NastranMatrix):
         self.Real = Real
         if self.is_complex:
             self.Complex = Complex
+        if finalize:
+            self.finalize()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1484,7 +1532,7 @@ class DMI(NastranMatrix):
         Real = []
         Complex = []
         return DMI(name, form, tin, tout, nrows, ncols,
-                   GCj, GCi, Real, Complex, comment=comment)
+                   GCj, GCi, Real, Complex, comment=comment, finalize=False)
 
     def finalize(self):
         self.GCi = np.asarray(self.GCi)

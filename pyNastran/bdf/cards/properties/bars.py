@@ -1055,15 +1055,16 @@ class PBAR(LineProperty):
         A = self.Area()
         J = self.J()
         #c = self.c
-        nsm = self.Nsm()
-        mpa = self.MassPerLength()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         assert isinstance(A, float), 'pid=%r' % A
         assert isinstance(J, float), 'cid=%r' % J
         #assert isinstance(c, float), 'c=%r' % c
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+        if xref:
+            nsm = self.Nsm()
+            mpa = self.MassPerLength()
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
+            assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
 
     def MassPerLength(self):
         r"""

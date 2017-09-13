@@ -565,6 +565,59 @@ class TestBeams(unittest.TestCase):
         pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
+        eid = 10
+        pid = 110
+        x = [0., 0., 1.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                                pa=42, pb=5, wa=None, wb=None,
+                                sa=0, sb=0, comment='CBEAM')
+
+        #pid : int
+            #property id
+        #mid : int
+            #material id
+        #xxb : List[float]
+            #The percentage locations along the beam [0., ..., 1.]
+        #so : List[str]
+            #YES, YESA, NO
+        #area : List[float]
+            #area
+        #i1, i2, i12, j : List[float]
+            #moments of inertia
+        #nsm : List[float]
+            #nonstructural mass per unit length
+        #c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
+           #the y/z locations of the stress recovery points
+           #c1 - point C.y
+           #c2 - point C.z
+        xxb = [0.]
+        so = [2.]
+        area = [3.]
+        i1 = [4.]
+        i2 = [5.]
+        i12 = [0.6]
+        j = [7.]
+        nsm = [0.08]
+
+        c1 = [0.]
+        c2 = [0.]
+        d1 = [0.]
+        d2 = [0.]
+        e1 = [0.]
+        e2 = [0.]
+        f1 = [0.]
+        f2 = [0.]
+        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                               c1, c2, d1, d2,
+                               e1, e2, f1, f2,
+                               k1=1., k2=1., s1=0., s2=0.,
+                               nsia=0., nsib=None, cwa=0., cwb=None,
+                               m1a=0., m2a=None, m1b=0., m2b=None,
+                               n1a=0., n2a=None, n1b=0., n2b=None,
+                               comment='pbeam')
+        #print(pbeam)
+        #---------------------------------------------------------------
 
         model.validate()
         model.pop_parse_errors()

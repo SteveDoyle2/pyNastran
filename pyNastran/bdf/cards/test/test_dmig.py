@@ -131,6 +131,9 @@ class TestDMIG(unittest.TestCase):
         ])
 
         a_matrix = model.dmigs['POLE']
+        #print('GCi = ', a_matrix.GCi)
+        #print('GCj = ', a_matrix.GCj)
+        #print('Real = ', a_matrix.Real)
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
@@ -140,7 +143,8 @@ class TestDMIG(unittest.TestCase):
 
         msg = '\n%s_actual\n%s\n\n----' % ('POLE', pole_actual)
         msg += '\n%s_expected\n%s\n----' % ('POLE', pole_expected)
-        msg += '\n%s_delta\n%s\n----' % ('POLE', pole_actual-pole_expected)
+        msg += '\n%s_delta\n%s\n----' % ('POLE', pole_actual - pole_expected)
+        #print(msg)
         self.assertTrue(array_equal(pole_expected, pole_actual), msg)
         a_matrix.get_matrix()
         save_load_deck(model)
@@ -386,6 +390,35 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         assert array_equal(w2gj.Real, w2gj_new.Real)
         os.remove('dmi.bdf')
         os.remove('dmi_out.bdf')
+
+    def test_dmig_12(self):
+        """tests the add card method"""
+        model = BDF(debug=False)
+        name = 'DMIG_1'
+        ifo = 6
+        tin = 1
+        tout = None
+        polar = None
+        ncols = None
+        reals = [1.0, 2.0, 3.0]
+        GCj = [[1, 1],  # grid, component
+               [2, 1],
+               [3, 1]]
+        GCi = [[1, 1],  # grid, component
+               [4, 1],
+               [5, 1]]
+        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=None,
+                              comment='dmig')
+
+        name = 'DMIK_1'
+        nrows = None
+        form = None
+        dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=None,
+                              comment='dmik')
+        save_load_deck(model)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

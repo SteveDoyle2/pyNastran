@@ -340,9 +340,30 @@ class TestBars(unittest.TestCase):
         pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBMLO', nsm=0.,
                                 comment='PBARL')
         #---------------------------------------------------------------
+        eid = 3
+        pid = 103
+        #cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
+                              #pa=42, pb=5, wa=None, wb=None,
+                              #comment='CBAR')
+        pbar = model.add_pbar(pid, mid, A=1., i1=0., i2=0., i12=0., j=0., nsm=0.1,
+                              c1=0., c2=0.,
+                              d1=0., d2=0.,
+                              e1=0., e2=0.,
+                              f1=0., f2=0.,
+                              k1=1.e8, k2=1.e8,
+                              comment='pbar')
+
+        #G = 3.0e7
+        #E = None
+        #nu = 0.3
+        #model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       #St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
+                       #comment='')
+        #---------------------------------------------------------------
         model.validate()
-        model._verify_bdf(xref=False)
         model.pop_parse_errors()
+        model._verify_bdf(xref=False)
+
         model.cross_reference()
         model.pop_xref_errors()
 

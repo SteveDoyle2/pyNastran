@@ -289,7 +289,6 @@ class PBEAM(IntegratedLineProperty):
                     self.f2[i] = self.f2[-1] + self.f2[0] * (1 - xxb)
 
 
-
         if self.cwa or self.cwb:  # if either is non-zero
             for i, xxb, j in zip(count(), self.xxb, self.j):
                 if self.j[i] < 0.:
@@ -840,8 +839,9 @@ class PBEAM(IntegratedLineProperty):
                     raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
 
             i += 1
-        #k1 = set_blank_if_default(self.k1, 1.0)
-        #k2 = set_blank_if_default(self.k2, 1.0)
+        k1 = set_blank_if_default(self.k1, 1.0)
+        k2 = set_blank_if_default(self.k2, 1.0)
+
         s1 = set_blank_if_default(self.s1, 0.0)
         s2 = set_blank_if_default(self.s2, 0.0)
         #k1 = self.k1
@@ -871,7 +871,7 @@ class PBEAM(IntegratedLineProperty):
 
         #footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
-        footer = [self.k1, self.k2, s1, s2, nsia, nsib, cwa, cwb,
+        footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
 
         list_fields += footer
