@@ -153,7 +153,7 @@ class LoadCombination(Load):
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
             'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2',
             'RFORCE', 'RFORCE1', #'RFORCE2'
-            'ACCEL', #'ACCEL1', 'SLOAD',
+            'ACCEL', 'ACCEL1', #'SLOAD',
         ]
         for loads in self.load_ids_ref:
             for load in loads:
