@@ -1,11 +1,16 @@
+"""
+defines:
+ - OpenFoamIO
+"""
 from __future__ import print_function
 import os
-from numpy import zeros, arange, amax, amin, where, unique, cross
+import numpy as np
+from numpy import zeros, arange, where, unique, cross
 from numpy.linalg import norm  # type: ignore
 
 import vtk
 #VTK_TRIANGLE = 5
-from vtk import vtkTriangle, vtkQuad, vtkHexahedron # vtkTetra,
+from vtk import vtkTriangle, vtkQuad, vtkHexahedron
 
 from pyNastran.converters.openfoam.block_mesh import BlockMesh, Boundary
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -37,45 +42,46 @@ class OpenFoamIO(object):
             None, None)
         return data
 
-    def remove_old_openfoam_geometry(self, filename):
-        self.eidMap = {}
-        self.nidMap = {}
-        if filename is None:
-            self.scalarBar.VisibilityOff()
-            skip_reading = True
-        else:
-            self.TurnTextOff()
-            self.grid.Reset()
-            self.grid2.Reset()
+    #def remove_old_openfoam_geometry(self, filename):
+        #self.eid_map = {}
+        #self.nid_map = {}
+        #if filename is None:
+            #self.scalarBar.VisibilityOff()
+            #skip_reading = True
+        #else:
+            ##self.TurnTextOff()
+            #self.grid.Reset()
 
-            self.resultCases = {}
-            self.nCases = 0
-            try:
-                del self.caseKeys
-                del self.iCase
-                del self.isubcase_name_map
-            except:
-                print("cant delete geo")
-            skip_reading = False
-        self.scalarBar.Modified()
-        return skip_reading
+            #self.resultCases = {}
+            #self.nCases = 0
+            #try:
+                #del self.caseKeys
+                #del self.iCase
+                #del self.isubcase_name_map
+            #except:
+                #print("cant delete geo")
+            #skip_reading = False
+        #self.scalarBar.Modified()
+        #return skip_reading
 
-    def load_openfoam_geometry_hex(self, openfoam_filename, plot=True):
+    def load_openfoam_geometry_hex(self, openfoam_filename, name='main', plot=True, **kwargs):
         self.load_openfoam_geometry(openfoam_filename, 'hex')
 
-    def load_openfoam_geometry_shell(self, openfoam_filename, plot=True):
+    def load_openfoam_geometry_shell(self, openfoam_filename, name='main', plot=True, **kwargs):
         self.load_openfoam_geometry(openfoam_filename, 'shell')
 
-    def load_openfoam_geometry_faces(self, openfoam_filename, plot=True):
+    def load_openfoam_geometry_faces(self, openfoam_filename, name='main', plot=True, **kwargs):
         self.load_openfoam_geometry(openfoam_filename, 'faces')
 
-    def load_openfoam_geometry(self, openfoam_filename, mesh_3d, plot=True):
+    def load_openfoam_geometry(self, openfoam_filename, mesh_3d, name='main', plot=True, **kwargs):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
+        #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
+        skip_reading = self._remove_old_geometry(openfoam_filename)
         if skip_reading:
             return
+        reset_labels = True
         #print('self.modelType=%s' % self.modelType)
         print('mesh_3d = %s' % mesh_3d)
         if mesh_3d in ['hex', 'shell']:
@@ -134,28 +140,36 @@ class OpenFoamIO(object):
         print("nnodes = %s" % self.nnodes)
         print("nelements = %s" % self.nelements)
 
-
-        self.grid.Allocate(self.nelements, 1000)
+        grid = self.grid
+        grid.Allocate(self.nelements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nelements)
-        self.grid2.Allocate(1, 1000)
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nnodes)
-        #self.gridResult.Allocate(self.nnodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
-        #elem.SetNumberOfPoints(nNodes)
+        self.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
 
-        nid = 0
-        #print("nnodes=%s" % nnodes)
-        mmax = amax(nodes, axis=0)
-        mmin = amin(nodes, axis=0)
-        dim_max = (mmax - mmin).max()
-        self.update_axes_length(dim_max)
+        #nid = 0
 
+        xmax, ymax, zmax = nodes.max(axis=0)
+        xmin, ymin, zmin = nodes.min(axis=0)
+        nodes -= np.array([xmin, ymin, zmin])
+        self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
+        self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
+        self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
+        dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
+
+        #print()
+        #dim_max = (mmax - mmin).max()
+        assert dim_max > 0
+
+
+        # breaks the model without subracting off the delta
+        #self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
+
+        #print('is_face_mesh=%s is_3d_blockmesh=%s is_surface_blockmesh=%s' % (
+            #is_face_mesh, is_3d_blockmesh, is_surface_blockmesh))
         with open('points.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -166,6 +180,9 @@ class OpenFoamIO(object):
             bdf_file.write('MAT1,1,1.0e7,,0.3\n')
 
             if is_face_mesh:
+                points = vtk.vtkPoints()
+                points.SetNumberOfPoints(self.nnodes)
+
                 unodes = unique(quads)
                 unodes.sort()
                 # should stop plotting duplicate nodes
@@ -175,47 +192,22 @@ class OpenFoamIO(object):
                             inode + 1, node[0], node[1], node[2], ))
                     points.InsertPoint(inode, node)
             else:
-                #print(nodes)
-                for inode, node in enumerate(nodes):
-                    points.InsertPoint(inode, node)
+                points = self.numpy_to_vtk_points(nodes)
 
             #elements -= 1
             normals = None
             if is_3d_blockmesh:
                 nelements = hexas.shape[0]
-                for eid, element in enumerate(hexas):
-                    #print(element)
-                    elem = vtkHexahedron()
-                    elem.GetPointIds().SetId(0, element[0])
-                    elem.GetPointIds().SetId(1, element[1])
-                    elem.GetPointIds().SetId(2, element[2])
-                    elem.GetPointIds().SetId(3, element[3])
-                    elem.GetPointIds().SetId(4, element[4])
-                    elem.GetPointIds().SetId(5, element[5])
-                    elem.GetPointIds().SetId(6, element[6])
-                    elem.GetPointIds().SetId(7, element[7])
-                    self.grid.InsertNextCell(elem.GetCellType(),
-                                             elem.GetPointIds())
+                cell_type_hexa8 = vtkHexahedron().GetCellType()
+                self.create_vtk_cells_of_constant_element_type(grid, hexas, cell_type_hexa8)
 
-                    #elem = vtkTriangle()
-                    #node_ids = elements[eid, :]
-                    #elem.GetPointIds().SetId(0, node_ids[0])
-                    #elem.GetPointIds().SetId(1, node_ids[1])
-                    #elem.GetPointIds().SetId(2, node_ids[2])
-
-                    #elem.GetCellType() = 5  # vtkTriangle
-                    #self.grid.InsertNextCell(5, elem.GetPointIds())
             elif is_surface_blockmesh:
                 nelements = quads.shape[0]
-                for eid, element in enumerate(quads):
-                    elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, element[0])
-                    elem.GetPointIds().SetId(1, element[1])
-                    elem.GetPointIds().SetId(2, element[2])
-                    elem.GetPointIds().SetId(3, element[3])
-                    self.grid.InsertNextCell(elem.GetCellType(),
-                                             elem.GetPointIds())
+                cell_type_quad4 = vtkQuad().GetCellType()
+                self.create_vtk_cells_of_constant_element_type(grid, quads, cell_type_quad4)
+
             elif is_face_mesh:
+
                 elems = quads
                 nelements = quads.shape[0]
                 nnames = len(names)
@@ -225,7 +217,6 @@ class OpenFoamIO(object):
                         nnames, nelements, names.max(), names.min())
                     raise RuntimeError(msg)
                 for eid, element in enumerate(elems):
-                    #print('element = %s' % element)
                     ineg = where(element == -1)[0]
 
                     nnodes = 4
@@ -246,8 +237,7 @@ class OpenFoamIO(object):
                         elem.GetPointIds().SetId(0, element[0])
                         elem.GetPointIds().SetId(1, element[1])
                         elem.GetPointIds().SetId(2, element[2])
-                        self.grid.InsertNextCell(elem.GetCellType(),
-                                                 elem.GetPointIds())
+                        self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                     elif nnodes == 4:
                         bdf_file.write('CQUAD4,%i,%i,%i,%i,%i,%i\n' % (
                             eid+1, pid, element[0]+1, element[1]+1, element[2]+1, element[3]+1))
@@ -261,8 +251,7 @@ class OpenFoamIO(object):
                         elem.GetPointIds().SetId(1, element[1])
                         elem.GetPointIds().SetId(2, element[2])
                         elem.GetPointIds().SetId(3, element[3])
-                        self.grid.InsertNextCell(elem.GetCellType(),
-                                                 elem.GetPointIds())
+                        self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                     else:
                         raise RuntimeError('nnodes=%s' % nnodes)
             else:
@@ -273,29 +262,17 @@ class OpenFoamIO(object):
 
         self.nelements = nelements
         self.grid.SetPoints(points)
-        #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         #print(dir(self.grid) #.SetNumberOfComponents(0))
         #self.grid.GetCellData().SetNumberOfTuples(1);
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
-        #self.grid2.Modified()
-        self.grid.Update()
-        #self.grid2.Update()
-        print("updated grid")
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
 
-        # loadCart3dResults - regions/loads
-        self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        #assert loads is not None
-        #if 'Mach' in loads:
-            #avgMach = mean(loads['Mach'])
-            #note = ':  avg(Mach)=%g' % avgMach
-        #else:
-            #note = ''
-        #self.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
         self.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
         cases = {}
         ID = 1
@@ -316,18 +293,19 @@ class OpenFoamIO(object):
             raise RuntimeError(mesh_3d)
 
         if plot:
-            self._finish_results_io2(form, cases)
+            self._finish_results_io2(form, cases, reset_labels=reset_labels)
+        else:
+            self._set_results(form, cases)
+
 
     def clear_openfoam(self):
         pass
 
-    def _load_openfoam_results(self, openfoam_filename):
-        raise NotImplementedError()
+    #def _load_openfoam_results(self, openfoam_filename):
+        #raise NotImplementedError()
 
     def _fill_openfoam_case(self, cases, ID, nodes, nelements, patches, names, normals,
                             is_surface_blockmesh):
-        #result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
-                        #'rhoU', 'rhoV', 'rhoW', 'rhoE']
         #nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
@@ -349,6 +327,7 @@ class OpenFoamIO(object):
         icase = 0
         cases[icase] = (eid_res, (0, 'ElementID'))
         cases[icase + 1] = (nid_res, (0, 'NodeID'))
+        icase += 2
 
         if is_surface_blockmesh:
             if patches is not None:

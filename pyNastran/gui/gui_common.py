@@ -848,7 +848,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         filename = os.path.basename(_fr.f_globals['__file__'])
 
         #if typ in ['GUI', 'COMMAND']:
-        msg = '   fname=%-25s lineNo=%-4s   %s\n' % (filename, n, msg)
+        msg = '   fname=%-25s:%-4s   %s\n' % (filename, n, msg)
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
@@ -882,6 +882,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """ Helper funtion: log a message msg with a 'INFO:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'INFO')
 
     def log_debug(self, msg):

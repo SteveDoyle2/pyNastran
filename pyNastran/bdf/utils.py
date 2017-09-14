@@ -950,7 +950,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             line = source_lines[di]
         except:
             break
-        msg += '  %-25s lineNo=%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
+        msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
 
     if ver_tuple > dep_ver_tuple:
         # fail

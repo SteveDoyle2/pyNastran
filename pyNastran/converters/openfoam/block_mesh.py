@@ -3,14 +3,15 @@ import os
 from copy import deepcopy
 from codecs import open
 from collections import defaultdict, OrderedDict
+from itertools import count
 from six import iteritems
 from six.moves import range, zip
 
 import numpy as np
-from numpy import array, cross, unique, where, allclose, zeros, arange, ravel, ones, argsort
+from numpy import array, cross, unique, allclose, zeros, arange, ravel, ones, argsort
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.converters.openfoam.openfoam_parser import FoamFile, convert_to_dict, write_dict
+from pyNastran.converters.openfoam.openfoam_parser import FoamFile, convert_to_dict #, write_dict
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.log import get_logger2
 from pyNastran.utils import print_bad_path
@@ -59,10 +60,10 @@ class FaceFile(object):
         line = f.readline()
         i += 1
 
-        print('nfaces = %s' % nfaces)
+        #print('nfaces = %s' % nfaces)
         #print('lineA = %r' % line)
 
-        print('building faces')
+        #print('building faces')
         assert nfaces > 0, nfaces
 
         if ifaces_to_read is None:
@@ -148,13 +149,13 @@ class PointFile(object):
         npoints = 0
         while npoints == 0:
             line = f.readline()
-            i+=1
+            i += 1
             try:
                 npoints = int(line)
             except:
                 pass
         line = f.readline()
-        i+=1
+        i += 1
 
         print('npoints = %s' % npoints)
         #print('lineA = %r' % line)
@@ -175,7 +176,8 @@ class PointFile(object):
                     print('j=%s ni=%s' % (j, ni))
                     raise
                 if j == ni_point:
-                    point = f.readline(); i+=1
+                    point = f.readline()
+                    i += 1
                     sline = point.strip('( )\n\r').split()
                     try:
                         points[ni, :] = sline
@@ -187,7 +189,8 @@ class PointFile(object):
         else:
             points = zeros((npoints, 3), dtype='float32')
             for j in range(npoints):
-                point = f.readline(); i+=1
+                point = f.readline()
+                i += 1
                 sline = point.strip('( )\n\r').split()
                 try:
                     points[j, :] = sline
@@ -212,12 +215,14 @@ class BoundaryFile(object):
         i = 0
         nboundaries = 0
         while nboundaries == 0:
-            line = f.readline(); i+=1
+            line = f.readline()
+            i += 1
             try:
                 nboundaries = int(line)
             except:
                 pass
-        line = f.readline(); i+=1
+        line = f.readline()
+        i += 1
 
         print('nboundaries = %s' % nboundaries)
         #print('lineA = %r' % line)
@@ -233,15 +238,19 @@ class BoundaryFile(object):
         for j in range(nboundaries):
             # 3(a b c) to [a, b, c]
             # 4(a b c d) to [a, b, c, d]
-            nameline = f.readline(); i+=1
+            nameline = f.readline()
+            i += 1
             name = nameline.strip()
             print('name = %r' % (basename + name))
 
-            openline = f.readline(); i+=1
-            typeline = f.readline(); i+=1
+            openline = f.readline()
+            i += 1
+            typeline = f.readline()
+            i += 1
             word, Type = typeline.strip('\n\r\t ;').split()
 
-            nfacesline = f.readline(); i+=1
+            nfacesline = f.readline()
+            i += 1
             sline = nfacesline.strip('\n\r\t ;').split()
             word = sline[0]
             if word == 'inGroups' and len(sline) == 1:
@@ -249,7 +258,8 @@ class BoundaryFile(object):
                 #nboundaries2 = int(nboundary_line)
                 #openline = f.readline(); i+=1
                 for ii in range(7):
-                    groupline = f.readline(); i+=1
+                    groupline = f.readline()
+                    i += 1
                     #print(ii, groupline)
                 sline = groupline.strip('\n\r\t ;').split()
 
@@ -257,22 +267,27 @@ class BoundaryFile(object):
                 nfaces = int(nfaces)
                 print('nfaces = %r' % nfaces)
 
-                startfacesline = f.readline(); i+=1
+                startfacesline = f.readline()
+                i += 1
                 print('startfacesline = %r' % startfacesline)
                 word, startfaces = startfacesline.strip('\n\r\t ;').split()
                 startfaces = int(startfaces)
-                closeline = f.readline(); i+=1
+                closeline = f.readline()
+                i += 1
 
                 boundary_name = basename + name
                 if boundary_name in boundaries:
-                    raise KeyError('boundary_name=%r is already defined...boundaries must have unique names' % boundary_name)
+                    msg = ('boundary_name=%r is already defined...'
+                           'boundaries must have unique names' % boundary_name)
+                    raise KeyError(msg)
                 boundaries[boundary_name] = [Type, nfaces, startfaces]
 
                 #self._read_boundaries(f, i, nboundaries2, boundaries, basename + name)
             else:
                 if word == 'inGroups' and len(sline) == 2:
                     ingroups = nfaces
-                    nfacesline = f.readline(); i+=1
+                    nfacesline = f.readline()
+                    i += 1
                     word, nfaces = nfacesline.strip('\n\r\t ;').split()
                 else:
                     word, nfaces = sline
@@ -280,16 +295,19 @@ class BoundaryFile(object):
                 nfaces = int(nfaces)
                 print('nfaces = %r' % (nfaces))
 
-                startfacesline = f.readline(); i+=1
+                startfacesline = f.readline()
+                i += 1
                 print('startfacesline = %r' % startfacesline)
                 word, startfaces = startfacesline.strip('\n\r\t ;').split()
                 startfaces = int(startfaces)
 
-                closeline = f.readline(); i+=1
+                closeline = f.readline()
+                i += 1
 
                 boundary_name = basename + name
                 if boundary_name in boundaries:
-                    raise KeyError('boundary_name=%r is already defined...boundaries must have unique names' % boundary_name)
+                    raise KeyError('boundary_name=%r is already defined...'
+                                   'boundaries must have unique names' % boundary_name)
                 boundaries[boundary_name] = [Type, nfaces, startfaces]
         f.close()
 
@@ -327,14 +345,14 @@ class Boundary(object):
         b = BoundaryFile(log=None, debug=False)
         boundaries = b.read_boundary_file(boundary_filename)
 
-        if 0:
-            b = FoamFile(boundary_filename, log=p.log)
+        #if 0:
+            #foam = FoamFile(boundary_filename, log=p.log)
 
-            print('getting lines')
-            blines = b.read_foam_file()
-            print('converting')
-            bd = convert_to_dict(b, blines, debug=True)
-            del blines
+            #print('getting lines')
+            #blines = foam.read_foam_file()
+            #print('converting')
+            #bd = convert_to_dict(foam, blines, debug=True)
+            #del blines
 
 
         print('getting npoints')
@@ -355,12 +373,15 @@ class Boundary(object):
             startface = int(boundary[2])
             nfaces2 += nfacesi
             new_faces = list(arange(nfacesi, dtype='int32') + startface)
-            #f_boundary_faces.write('boundary_faces[%s, %s] = %s\n' % (name, len(new_faces), new_faces))
+            #f_boundary_faces.write('boundary_faces[%s, %s] = %s\n' % (
+                #name, len(new_faces), new_faces))
             ifaces_to_read += new_faces
 
-        print('nfaces2 = ', nfaces2)
+        print('nfaces2 = %s' % nfaces2)
         ifaces_to_read = ravel(ifaces_to_read)
-        assert len(ifaces_to_read) == nfaces2, 'len(ifaces_to_read)=%s nfaces2=%s' % (ifaces_to_read.shape, nfaces2)
+        if len(ifaces_to_read) != nfaces2:
+            raise RuntimeError('len(ifaces_to_read)=%s nfaces2=%s' % (
+                ifaces_to_read.shape, nfaces2))
         print(ifaces_to_read)
 
         faces = f.read_face_file(face_filename, ifaces_to_read=ifaces_to_read)
@@ -370,11 +391,13 @@ class Boundary(object):
         if 0:
             # doesn't work for some reason...
             # we want to only plot a subset of faces to reduce the data set
-            # that works, but we also need to decrease the number of nodes (they take wayyy too long)
+            # that works, but we also need to decrease the number of nodes
+            # (they take wayyy too long)
 
             # so we take our faces, get the unique nodes
-            # sort them so they're consistent with the order in the file using the same block of code
-            # that works in the face reader, but it still fails for some reason...
+            # sort them so they're consistent with the order in the file
+            # using the same block of codethat works in the face reader,
+            #but it still fails for some reason...
 
             # after this step, we renumber the faces with the adjusted node ids
             ipoints_to_read = unique(faces.ravel())
@@ -430,21 +453,23 @@ class Boundary(object):
         quads = faces
 
 
-        if 0:
-            f_boundary_faces.write('\n\n---Faces----\n')
-            for iface, face in enumerate(faces):
-                pid = names[iface]
-                name = snames[pid]
-                f_boundary_faces.write('%i (%i %i %i %i) pid=%s name=%s\n' % (iface, face[0], face[1], face[2], face[3], pid, name))
+        #if 0:
+            #f_boundary_faces.write('\n\n---Faces----\n')
+            #for iface, face in enumerate(faces):
+                #pid = names[iface]
+                #name = snames[pid]
+                #f_boundary_faces.write('%i (%i %i %i %i) pid=%s name=%s\n' % (
+                    #iface, face[0], face[1], face[2], face[3], pid, name))
 
-            f_boundary_faces.write('\n\n---First Faces----\n')
-            pid_save = set([])
-            for iface, face in enumerate(faces):
-                pid = names[iface]
-                if pid not in pid_save:
-                    name = snames[pid]
-                    f_boundary_faces.write('%i (%i %i %i %i) pid=%s name=%s\n' % (iface, face[0], face[1], face[2], face[3], pid, name))
-                    pid_save.add(pid)
+            #f_boundary_faces.write('\n\n---First Faces----\n')
+            #pid_save = set([])
+            #for iface, face in enumerate(faces):
+                #pid = names[iface]
+                #if pid not in pid_save:
+                    #name = snames[pid]
+                    #f_boundary_faces.write('%i (%i %i %i %i) pid=%s name=%s\n' % (
+                        #iface, face[0], face[1], face[2], face[3], pid, name))
+                    #pid_save.add(pid)
 
         # only save the unique nodes
         # ...
@@ -467,6 +492,18 @@ class BlockMesh(object):
         #log = None
         self.log = get_logger2(log, debug=debug)
 
+        # arrays
+        self.nodes = None
+        self.hexas = None
+        self.npoints = None
+        self.grading = None
+
+        self.iname_to_quads = None
+        self.inames = None
+        self.bcs = None
+        self.iname_to_name = None
+        self.iname_to_type = None
+
     def make_hex_bar(self, bias, ncells):
         """
         bias = Llast/Lfirst
@@ -486,17 +523,18 @@ class BlockMesh(object):
         #self.grading = grading
         points = []
         line_pairs = [
-            #set1 set2 idir, face
-            (0,1, 4,5, 0, 2),
-            (3,2, 7,6, 0, 2),
-            (0,3, 1,2, 1, 1),
-            (4,7, 5,6, 1, 1),
-            (0,4, 1,5, 2, 0),
-            (3,7, 2,6, 2, 0),
+            # a set is 2 values
+            #set1  set2 idir,face
+            (0, 1, 4, 5, 0, 2),
+            (3, 2, 7, 6, 0, 2),
+            (0, 3, 1, 2, 1, 1),
+            (4, 7, 5, 6, 1, 1),
+            (0, 4, 1, 5, 2, 0),
+            (3, 7, 2, 6, 2, 0),
         ]
 
         points = []
-        for grading, hexa in zip(self.gradings, self.hexas):
+        for grading, hexa in zip(self.grading, self.hexas):
             # x = 0-1 to 4-5
             #     3-2 to 7-6
             # y = 0-3 to 1-2
@@ -540,9 +578,9 @@ class BlockMesh(object):
 
 
 
-    def read_openfoam(self, blockMesh_name='blockMeshDict'):
-        print('blockMesh_name = %r' % blockMesh_name)
-        f = FoamFile(blockMesh_name)
+    def read_openfoam(self, block_mesh_name='blockMeshDict'):
+        print('block_mesh_name = %r' % block_mesh_name)
+        f = FoamFile(block_mesh_name)
         lines = f.read_foam_file()
 
         d = convert_to_dict(self, lines, debug=True)
@@ -709,15 +747,15 @@ class BlockMesh(object):
             for face in faces:
                 stack_nodes.update(set(list(face)))
 
-        if 0:
-            print(stack_nodes, len(stack_nodes))
-            for key, value in sorted(iteritems(new_ids_map)):
-                if key not in stack_nodes:
-                    print(' #k=%s v=%s' % (key, value))
-                if key != value:
-                    print(' *k=%s v=%s' % (key, value))
-                else:
-                    print('  k=%s v=%s' % (key, value))
+        #if 0:
+            #print(stack_nodes, len(stack_nodes))
+            #for key, value in sorted(iteritems(new_ids_map)):
+                #if key not in stack_nodes:
+                    #print(' #k=%s v=%s' % (key, value))
+                #if key != value:
+                    #print(' *k=%s v=%s' % (key, value))
+                #else:
+                    #print('  k=%s v=%s' % (key, value))
 
         # map them to 0...n
         i = 0
@@ -763,7 +801,7 @@ class BlockMesh(object):
         hexas2 = []
         npoints2 = []  # don't change
         grading2 = []  # don't change
-        for ihexa, (hexa, npointsi, gradingi) in enumerate(zip(self.hexas, self.npoints, self.grading)):
+        for ihexa, hexa, npointsi, gradingi in zip(count(), self.hexas, self.npoints, self.grading):
             hexa2 = []
             for j in hexa:
                 i = new_ids_map[j]
@@ -808,22 +846,25 @@ class BlockMesh(object):
         print('writing %s' % blockMesh_name_out)
         f = open(blockMesh_name_out, 'w')
 
-        f.write('/*--------------------------------*- C++ -*----------------------------------*\\\n')
-        f.write('| =========                 |                                                 |\n')
-        f.write('| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |\n')
-        f.write('|  \\    /   O peration     | Version:  2.2.2                                 |\n')
-        f.write('|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |\n')
-        f.write('|    \\/     M anipulation  |                                                 |\n')
-        f.write('\*---------------------------------------------------------------------------*/\n')
-        f.write('FoamFile\n')
-        f.write('{\n')
-        f.write('    version     0.0508;\n')
-        f.write('    format      ascii;\n')
-        f.write('    class       dictionary;\n')
-        f.write('    object      blockMeshDict;\n')
-        f.write('}\n')
-        f.write('\n')
-        f.write('// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n')
+        header = (
+            '/*--------------------------------*- C++ -*----------------------------------*\\\n'
+            '| =========                 |                                                 |\n'
+            '| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |\n'
+            '|  \\    /   O peration     | Version:  2.2.2                                 |\n'
+            '|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |\n'
+            '|    \\/     M anipulation  |                                                 |\n'
+            '\*---------------------------------------------------------------------------*/\n'
+            'FoamFile\n'
+            '{\n'
+            '    version     0.0508;\n'
+            '    format      ascii;\n'
+            '    class       dictionary;\n'
+            '    object      blockMeshDict;\n'
+            '}\n'
+            '\n'
+            '// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n'
+        )
+        f.write(header)
 
         f.write('convertToMeters 1.0;\n')
         f.write('\n')
@@ -869,8 +910,9 @@ class BlockMesh(object):
             #gradingi = self.grading[ihexa]
             save_element = True
             if save_element:
-                voli = volume8(nodes[hexa[0], :], nodes[hexa[1], :], nodes[hexa[2], :], nodes[hexa[3], :],
-                               nodes[hexa[4], :], nodes[hexa[5], :], nodes[hexa[6], :], nodes[hexa[7], :],)
+                voli = volume8(
+                    nodes[hexa[0], :], nodes[hexa[1], :], nodes[hexa[2], :], nodes[hexa[3], :],
+                    nodes[hexa[4], :], nodes[hexa[5], :], nodes[hexa[6], :], nodes[hexa[7], :],)
                 if voli > 0:
                     shexai = hexai_fmt % tuple(hexa)
                     snpointsi = '(%s %s %s)' % tuple(npointsi)
@@ -918,7 +960,8 @@ class BlockMesh(object):
                         symmetry_faces.append(face)
                     else:
                         if y_centroid <= 0.0:
-                            f.write(facei_fmt % tuple(face) + ' // centroid=(%3g, %3g, %3g) [in]  Area=%.2f [in^2]\n' % (centroid[0], centroid[1], centroid[2], area))
+                            f.write(facei_fmt % tuple(face) + ' // centroid=(%3g, %3g, %3g) [in]  Area=%.2f [in^2]\n' % (
+                                centroid[0], centroid[1], centroid[2], area))
                         else:
                             f.write(facei_fmt % tuple(face) + '\n') #+ ' // c=(%7s, %7s, %7s)\n' % tuple(centroid)
             f.write('        );\n')
@@ -947,7 +990,8 @@ class BlockMesh(object):
 
                 y_centroid = centroid[1]
                 if y_centroid <= 0.0:
-                    f.write(facei_fmt % tuple(face) + ' // centroid=(%3g, %3g, %3g) [in]  Area=%.2f [in^2]\n' % (centroid[0], centroid[1], centroid[2], area))
+                    f.write(facei_fmt % tuple(face) + ' // centroid=(%3g, %3g, %3g) [in]  Area=%.2f [in^2]\n' % (
+                        centroid[0], centroid[1], centroid[2], area))
                 else:
                     f.write(facei_fmt % tuple(face) + '\n') #+ ' // c=(%7s, %7s, %7s)\n' % tuple(centroid)
 
@@ -969,20 +1013,20 @@ def main():
 
     import sys
     if len(sys.argv) == 1:
-        blockMesh_name = 'blockMeshDict'
+        block_mesh_name = 'blockMeshDict'
         if make_symmetry:
-            blockMesh_name_out = 'blockMeshDict_half'
+            block_mesh_name_out = 'blockMeshDict_half'
         else:
-            blockMesh_name_out = 'blockMeshDict_full'
+            block_mesh_name_out = 'blockMeshDict_full'
     else:
-        blockMesh_name = sys.argv[1]
-        blockMesh_name_out = sys.argv[2]
+        block_mesh_name = sys.argv[1]
+        block_mesh_name_out = sys.argv[2]
 
-    fi = BlockMesh()
-    nodes, hexas, quads, names, bcs = fi.read_openfoam(blockMesh_name)
+    block_mesh_model = BlockMesh()
+    nodes, hexas, quads, names, bcs = block_mesh_model.read_openfoam(block_mesh_name)
     if make_symmetry:
-        fi.adjust_nodes_to_symmetry()
-    fi.write_block_mesh(blockMesh_name_out, make_symmetry=make_symmetry)
+        block_mesh_model.adjust_nodes_to_symmetry()
+    block_mesh_model.write_block_mesh(block_mesh_name_out, make_symmetry=make_symmetry)
 
 if __name__ == '__main__':
     main()
