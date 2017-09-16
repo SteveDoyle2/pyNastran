@@ -4534,7 +4534,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #glyph_source.InvertOn()  # flip this arrow direction
         if self.vtk_version[0] == 5:
             glyphs.SetInput(grid)
-        elif self.vtk_version[0] in [6, 7]:
+        elif self.vtk_version[0] in [6, 7, 8]:
             glyphs.SetInputData(grid)
         else:
             raise NotImplementedError(vtk.VTK_VERSION)

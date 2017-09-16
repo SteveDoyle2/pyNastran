@@ -1244,7 +1244,7 @@ class FORCE2(Force):
                 msg += 'g3.get_position()=%s\n' % xyz3
                 msg += 'g1.get_position()=%s' % xyz1
                 raise FloatingPointError(msg)
-            xyz = cross(v21, v31)
+            xyz = cross(v21, v2)
         else:
             self.g4_ref = model.Node(self.g4, msg=msg)
             xyz4 = self.g4_ref.get_position()
@@ -1838,7 +1838,7 @@ class MOMENT2(Moment):
                 msg += 'g3.get_position()=%s\n' % xyz3
                 msg += 'g1.get_position()=%s' % xyz1
                 raise FloatingPointError(msg)
-            xyz = cross(v21, v31)
+            xyz = cross(v21, v2)
         else:
             self.g4_ref = model.Node(self.g4, msg=msg)
             xyz4 = self.g4_ref.get_position()
