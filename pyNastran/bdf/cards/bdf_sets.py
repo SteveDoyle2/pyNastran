@@ -861,11 +861,48 @@ class SET1(Set):
         - elements
           - ACMODL (optional)
         """
+        assert msg != ''
         msg = ' which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
             self.ids_ref = model.Nodes(self.get_ids(), msg=msg)
         elif xref_type == 'Point':
             self.ids_ref = model.Points(self.get_ids(), msg=msg)
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
+        self.xref_type = xref_type
+
+    def safe_cross_reference(self, model, xref_type, msg='', allow_empty_nodes=False):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        xref_type : str
+            {'Node'}
+        allow_empty_nodes : bool; default=False
+            do all nodes need to exist?
+
+        SPLINEx, ACMODL, PANEL, AECOMP, XYOUTPUT
+
+        - nodes
+          - SPLINEx (all nodes must exist)
+          - PANEL (all nodes must exist)
+          - XYOUTPUT (missing nodes ignored)
+          - AECOMP
+          - ACMODL (optional)
+        - elements
+          - ACMODL (optional)
+        """
+        assert msg != ''
+        msg = ' which is required by SET1 sid=%s%s nid=%%s' % (self.sid, msg)
+        if xref_type == 'Node':
+            self.ids_ref, out = model.safe_get_nodes(self.get_ids(), msg=msg)
+            if len(out):
+                model.log.warning(out)
+        elif xref_type == 'Point':
+            self.ids_ref, out = model.SafePoints(self.get_ids(), msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type

@@ -1192,7 +1192,7 @@ class AERO(Aero):
     Gives basic aerodynamic parameters for unsteady aerodynamics.
 
     +------+-------+----------+------+--------+-------+-------+
-    | 1    | 2     | 3        | 4    | 5      | 6     | 7     |
+    |   1  |   2   |    3     |   4  |   5    |   6   |   7   |
     +======+=======+==========+======+========+=======+=======+
     | AERO | ACSID | VELOCITY | REFC | RHOREF | SYMXZ | SYMXY |
     +------+-------+----------+------+--------+-------+-------+
@@ -1384,7 +1384,7 @@ class AEROS(Aero):
     Gives basic aerodynamic parameters for unsteady aerodynamics.
 
     +-------+-------+-------+------+------+-------+-------+-------+
-    | 1     | 2     | 3     | 4    | 5    | 6     |   7   |   8   |
+    |   1   |   2   |   3   |  4   |  5   |   6   |   7   |   8   |
     +=======+=======+=======+======+======+=======+=======+=======+
     | AEROS | ACSID | RCSID | REFC | REFB | REFS  | SYMXZ | SYMXY |
     +-------+-------+-------+------+------+-------+-------+-------+
@@ -5881,7 +5881,7 @@ class SPLINE1(Spline):
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node')
+        self.setg_ref.cross_reference(model, 'Node', msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -5899,7 +5899,12 @@ class SPLINE1(Spline):
 
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
-            self.setg_ref.cross_reference(model, 'Node')
+            try:
+                self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
+            except:
+                raise
+                aaa
+                raise
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
@@ -5908,7 +5913,8 @@ class SPLINE1(Spline):
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
         except KeyError:
-            pass
+            model.log.warning('failed to find SETx set_id=%s,%s; allowed_sets=%s' % (
+                self.setg, msg, np.unique(list(model.sets.keys()))))
 
     def uncross_reference(self):
         self.caero = self.CAero()

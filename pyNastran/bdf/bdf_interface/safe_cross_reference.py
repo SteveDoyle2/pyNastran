@@ -110,29 +110,6 @@ class SafeXrefMesh(XrefMesh):
         for se_suport in self.se_suport:
             se_suport.safe_cross_reference(self)
 
-    def _safe_cross_reference_elements(self):
-        """
-        Links the elements to nodes, properties (and materials depending on
-        the card).
-        """
-        for elem in itervalues(self.elements):
-            try:
-                elem.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
-                self._stored_xref_errors.append((elem, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
-                    #msg = "Couldn't cross reference Element.\n%s" % str(elem)
-                    #self.log.error(msg)
-                    #raise
-        for elem in itervalues(self.rigid_elements):
-            try:
-                elem.safe_cross_reference(self)
-            except AttributeError:
-                elem.cross_reference(self)
-
     def _safe_cross_reference_aero(self):
         # type: () -> None
         """
@@ -147,6 +124,7 @@ class SafeXrefMesh(XrefMesh):
 
         for trim in itervalues(self.trims):
             trim.safe_cross_reference(self)
+
         for csschd in itervalues(self.csschds):
             csschd.safe_cross_reference(self)
 
@@ -209,7 +187,32 @@ class SafeXrefMesh(XrefMesh):
             #'AESTAT',   ## aestats
             #'AESURF',  ## aesurfs
 
+    def _safe_cross_reference_elements(self):
+        # type: () -> None
+        """
+        Links the elements to nodes, properties (and materials depending on
+        the card).
+        """
+        for elem in itervalues(self.elements):
+            try:
+                elem.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((elem, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+                    #msg = "Couldn't cross reference Element.\n%s" % str(elem)
+                    #self.log.error(msg)
+                    #raise
+        for elem in itervalues(self.rigid_elements):
+            try:
+                elem.safe_cross_reference(self)
+            except AttributeError:
+                elem.cross_reference(self)
+
     def _safe_cross_reference_loads(self, debug=True):
+        # type: () -> None
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
@@ -232,6 +235,19 @@ class SafeXrefMesh(XrefMesh):
             darea.safe_cross_reference(self)
         for key, dphase in iteritems(self.dphases):
             dphase.safe_cross_reference(self)
+
+    def safe_get_nodes(self, nids, msg=''):
+        """safe xref version of self.Nodes(nid, msg='')"""
+        nodes = []
+        msgi = ''
+        for nid in nids:
+            try:
+                node = self.Node(nid)
+            except KeyError:
+                node = nid
+                msgi += msg % (nid)
+            nodes.append(nid)
+        return nodes, msgi
 
     def safe_get_elements(self, eids, msg=''):
         """safe xref version of self.Elements(eid, msg='')"""
