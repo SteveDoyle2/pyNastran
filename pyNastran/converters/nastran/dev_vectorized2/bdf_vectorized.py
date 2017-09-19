@@ -22,7 +22,8 @@ from pyNastran.converters.nastran.dev_vectorized2.cards.masses import (
 from pyNastran.converters.nastran.dev_vectorized2.cards.loads import (
     Loads, PLOADv, PLOAD1v, PLOAD2v, PLOAD4v,
     FORCEv, FORCE1v, FORCE2v,
-    MOMENTv, MOMENT1v, MOMENT2v)
+    MOMENTv, MOMENT1v, MOMENT2v,
+    SLOADv)
 from pyNastran.converters.nastran.dev_vectorized2.cards.bars import CBARv, Bars
 from pyNastran.converters.nastran.dev_vectorized2.cards.beams import CBEAMv, Beams
 from pyNastran.converters.nastran.dev_vectorized2.cards.shears import CSHEARv, Shears
@@ -120,7 +121,7 @@ class BDF(BDF_):
         self.elements2 = Elements(model)  # TODO: change this name
 
 
-        #self.sload = SLOADv(model)
+        self.sload = SLOADv(model)
         #self.grav = GRAVv(model)
         self.force = FORCEv(model)
         self.force1 = FORCE1v(model)
@@ -374,7 +375,7 @@ class BDF(BDF_):
         self._card_parser_prepare['CSHEAR'] = self._prepare_cshear
 
         del self._card_parser['LOAD']
-        #del self._card_parser['SLOAD']
+        del self._card_parser['SLOAD']
         #del self._card_parser['GRAV']
         del self._card_parser['PLOAD']
         del self._card_parser['PLOAD1']
@@ -387,7 +388,7 @@ class BDF(BDF_):
         del self._card_parser['MOMENT1']
         del self._card_parser['MOMENT2']
         self._card_parser_prepare['LOAD'] = self._prepare_load
-        #self._card_parser_prepare['SLOAD'] = self._prepare_sload
+        self._card_parser_prepare['SLOAD'] = self._prepare_sload
         #self._card_parser_prepare['GRAV'] = self._prepare_grav
         self._card_parser_prepare['PLOAD'] = self._prepare_pload
         self._card_parser_prepare['PLOAD1'] = self._prepare_pload1

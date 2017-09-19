@@ -313,7 +313,7 @@ class CBUSH1D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid',
     }
 
-    def __init__(self, eid, pid, nids, cid, comment=''):
+    def __init__(self, eid, pid, nids, cid=None, comment=''):
         if comment:
             self.comment = comment
         BushElement.__init__(self)
@@ -345,7 +345,7 @@ class CBUSH1D(BushElement):
         gb = integer_or_blank(card, 4, 'gb')
         cid = integer_or_blank(card, 5, 'cid')
         assert len(card) <= 6, 'len(CBUSH1D card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
+        return CBUSH1D(eid, pid, [ga, gb], cid=cid, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):

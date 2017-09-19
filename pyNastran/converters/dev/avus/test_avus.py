@@ -1,8 +1,8 @@
 """tests non-gui related Cart3d class/interface"""
-from six.moves import range
 import os
-from numpy import array_equal, allclose
 import unittest
+from six.moves import range
+from numpy import array_equal, allclose
 
 import pyNastran
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid, read_avus

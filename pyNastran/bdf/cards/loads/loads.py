@@ -153,7 +153,7 @@ class LoadCombination(Load):
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
             'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2',
             'RFORCE', 'RFORCE1', #'RFORCE2'
-            'ACCEL', #'ACCEL1', 'SLOAD',
+            'ACCEL', 'ACCEL1', #'SLOAD',
         ]
         for loads in self.load_ids_ref:
             for load in loads:
@@ -739,8 +739,15 @@ class SPCD(Load):
 class SLOAD(Load):
     """
     Static Scalar Load
-
     Defines concentrated static loads on scalar or grid points.
+
+    +-------+-----+----+-----+----+------+----+-------+
+    |   1   |  2  | 3  |  4  |  5 |  6   |  7 |   8   |
+    +=======+=====+====+=====+====+======+====+=======+
+    | SLOAD | SID | S1 | F1  | S2 |  F2  | S3 |   F3  |
+    +-------+-----+----+-----+----+------+----+-------+
+    | SLOAD | 16  | 2  | 5.9 | 17 | -6.3 | 14 | -2.93 |
+    +-------+-----+----+-----+----+------+----+-------+
 
     .. note:: Can be used in statics OR dynamics.
 
@@ -751,16 +758,16 @@ class SLOAD(Load):
 
     def __init__(self, sid, nodes, mags, comment=''):
         """
-        Creates an SLOAD (SPOINT load)
+        Creates an SLOAD (GRID/SPOINT load)
 
         Parameters
         ----------
         sid : int
             load id
         nodes : int; List[int]
-            the SPOINT ids
+            the GRID/SPOINT ids
         mags : float; List[float]
-            the SPOINT loads
+            the load magnitude
         comment : str; default=''
             a comment for the card
         """

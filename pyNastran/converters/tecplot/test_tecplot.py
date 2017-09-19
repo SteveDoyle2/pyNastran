@@ -1,4 +1,5 @@
 import os
+import unittest
 
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
@@ -10,7 +11,6 @@ pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'tecplot', 'models')
 nastran_path = os.path.join(pkg_path, '..', 'models')
 
-import unittest
 
 class TestTecplot(unittest.TestCase):
 

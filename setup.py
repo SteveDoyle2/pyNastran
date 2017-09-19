@@ -44,7 +44,6 @@ if sys.version_info <= (3,) or not is_dev:
     py2_packages += [
         #'vtk >= 5.10.1',
         ##'dill'
-        ##'wx >= 2.8.12.0',
     ]
 
 #    try:
@@ -60,7 +59,6 @@ if sys.version_info <= (3,) or not is_dev:
         #'vtk >= 5.10.0',
         #'pillow >= 2.7.0',
         ##'dill'
-        ##'wx >= 2.8.12.0',
     ]
 
 py_packages = []
@@ -90,11 +88,11 @@ except ImportError:
 try:
     import six
     sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
-    if sver < [1, 9, 0]:
-        print("six.__version__ = %r < '1.9.0'" % six.__version__)
-        py_packages.append('six >= 1.9.0')
+    if sver < [1, 10, 0]:
+        print("six.__version__ = %r < '1.10.0'" % six.__version__)
+        py_packages.append('six >= 1.10.0')
 except ImportError:
-    py_packages.append('six >= 1.9.0')
+    py_packages.append('six >= 1.10.0')
 
 try:
     import matplotlib

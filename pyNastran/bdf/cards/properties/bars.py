@@ -1,4 +1,3 @@
-# pylint: disable=C0103,R0902,R0904,R0914
 """
 All bar properties are defined in this file.  This includes:
  *   PBAR
@@ -21,7 +20,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank, string, string_or_blank,
-    blank, integer_or_double, integer_or_blank)
+    blank, integer_or_double, #integer_or_blank,
+)
 from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -438,7 +438,7 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         b = dim1 - 0.5 * t2
         h = dim2 - 0.5 * t1
         h2 = dim2 - t1
-        b1 = dim1 - t2
+        #b1 = dim1 - t2
         A = (b + 0.5 * t2) * t1 + h2 * t2
         #yc = t2*h2 * (h2 + t1) / (2 * A)
         #zc = t1*b1 * (b1 + t2) / (2 * A)
@@ -1055,15 +1055,16 @@ class PBAR(LineProperty):
         A = self.Area()
         J = self.J()
         #c = self.c
-        nsm = self.Nsm()
-        mpa = self.MassPerLength()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         assert isinstance(A, float), 'pid=%r' % A
         assert isinstance(J, float), 'cid=%r' % J
         #assert isinstance(c, float), 'c=%r' % c
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+        if xref:
+            nsm = self.Nsm()
+            mpa = self.MassPerLength()
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
+            assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
 
     def MassPerLength(self):
         r"""
@@ -1769,12 +1770,12 @@ class PBRSECT(LineProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        pid = data[0]
-        mid = data[1]
-        group = data[2].strip()
-        beam_type = data[3].strip()
-        dim = list(data[4:-1])
-        nsm = data[-1]
+        #pid = data[0]
+        #mid = data[1]
+        #group = data[2].strip()
+        #beam_type = data[3].strip()
+        #dim = list(data[4:-1])
+        #nsm = data[-1]
         #print("group = %r" % self.group)
         #print("beam_type  = %r" % self.beam_type)
         #print("dim = ",self.dim)
@@ -2080,14 +2081,14 @@ class PBEND(LineProperty):
         p = None
 
         # NX option B
-        sacl = None
-        alpha = None
-        flange = None
-        kx = None
-        ky = None
-        kz = None
-        sy = None
-        sz = None
+        #sacl = None
+        #alpha = None
+        #flange = None
+        #kx = None
+        #ky = None
+        #kz = None
+        #sy = None
+        #sz = None
         if isinstance(value3, float):
             fsi = 0
             beam_type = 1
@@ -2160,14 +2161,14 @@ class PBEND(LineProperty):
                 rc = double_or_blank(card, 12, 'rc', 0.)
                 zc = double_or_blank(card, 13, 'zc', 0.)
 
-                sacl = double_or_blank(card, 9, 'sacl')
-                alpha = double_or_blank(card, 10, 'alpha', 0.)
-                flange = integer_or_blank(card, 15, 'flange', 0)
-                kx = double_or_blank(card, 18, 'kx', 1.0)
-                ky = double_or_blank(card, 19, 'ky', 1.0)
-                kz = double_or_blank(card, 20, 'kz', 1.0)
-                sy = double_or_blank(card, 22, 'sy', 1.0)
-                sz = double_or_blank(card, 23, 'sz', 1.0)
+                #sacl = double_or_blank(card, 9, 'sacl')
+                #alpha = double_or_blank(card, 10, 'alpha', 0.)
+                #flange = integer_or_blank(card, 15, 'flange', 0)
+                #kx = double_or_blank(card, 18, 'kx', 1.0)
+                #ky = double_or_blank(card, 19, 'ky', 1.0)
+                #kz = double_or_blank(card, 20, 'kz', 1.0)
+                #sy = double_or_blank(card, 22, 'sy', 1.0)
+                #sz = double_or_blank(card, 23, 'sz', 1.0)
             else:
                 assert fsi in [1, 2, 3, 4, 5, 6], 'pid=%s fsi=%s\ncard:%s' % (pid, fsi, card)
         else:

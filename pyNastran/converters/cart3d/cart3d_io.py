@@ -9,9 +9,6 @@ from six.moves import range
 from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
 
-import vtk
-from vtk import vtkTriangle
-
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.cart3d.cart3d import read_cart3d
@@ -101,13 +98,13 @@ class Cart3dIO(object):
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
 
-        if 0:
-            fraction = 1. / self.nnodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                self.grid_result.InsertNextValue(nid * fraction)
+        #if 0:
+            #fraction = 1. / self.nnodes  # so you can color the nodes by ID
+            #for nid, node in sorted(iteritems(nodes)):
+                #self.grid_result.InsertNextValue(nid * fraction)
 
         assert nodes is not None
-        nnodes = nodes.shape[0]
+        #nnodes = nodes.shape[0]
 
         mmax = nodes.max(axis=0)
         mmin = nodes.min(axis=0)

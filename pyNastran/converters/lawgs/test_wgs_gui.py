@@ -19,14 +19,11 @@ class TestLawgsGUI(unittest.TestCase):
 
     def test_tmx_geometry(self):
         geometry_filename = os.path.join(model_path, 'tmx1242.wgs')
-
         test = LaWGS_GUI()
-        #test.load_nastran_geometry(geometry_filename)
         test.load_lawgs_geometry(geometry_filename)
 
     def test_tmd_geometry(self):
         geometry_filename = os.path.join(model_path, 'tnd6480.wgs')
-
         test = LaWGS_GUI()
         test.load_lawgs_geometry(geometry_filename)
 

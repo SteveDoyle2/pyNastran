@@ -88,7 +88,6 @@ def cmd_line_equivalence():  # pragma: no cover
     #}
     data = docopt(msg, version=ver)
     print(data)
-    size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:

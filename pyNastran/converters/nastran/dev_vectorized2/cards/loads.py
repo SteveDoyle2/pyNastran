@@ -59,6 +59,7 @@ class Loads(object):
             (Currently **not** handled in the non-vectorized BDF)
         """
         self.model = model
+        self.sload = model.sload
         self.pload = model.pload
         self.pload1 = model.pload1
         self.pload2 = model.pload2
@@ -73,6 +74,8 @@ class Loads(object):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
+        if len(self.sload):
+            self.sload.write_card(size, is_double, bdf_file)
         if len(self.pload):
             self.pload.write_card(size, is_double, bdf_file)
         if len(self.pload1):
@@ -106,7 +109,7 @@ class Loads(object):
     def groups(self):
         """gets the sub-load groups"""
         groups = [
-            #self.sload,
+            self.sload,
             self.pload, self.pload1, self.pload2, self.pload4,
             self.force, self.force1, self.force2,
             self.moment, self.moment1, self.moment2,
@@ -126,8 +129,8 @@ class Loads(object):
         return sum([len(group) for group in self.groups])
 
     def repr_indent(self, indent='  '):
-        msg = '%s<Loads> : nelements=%s\n' % (indent, len(self))
-        #msg += '%s  SLOAD :  %s\n' % (indent, len(self.sload))
+        msg = '%s<Loads> : nloads=%s\n' % (indent, len(self))
+        msg += '%s  SLOAD :  %s\n' % (indent, len(self.sload))
         msg += '%s  PLOAD :  %s\n' % (indent, len(self.pload4))
         msg += '%s  PLOAD1:  %s\n' % (indent, len(self.pload1))
         msg += '%s  PLOAD2:  %s\n' % (indent, len(self.pload4))
@@ -264,7 +267,6 @@ class PLOADv(BaseLoad):
             list_fields = ['PLOAD', sid, pressure] + node_ids.tolist()
             msgi = print_card_8(list_fields)
             msg += self.comment[i] + msgi
-            msg += msgi
         bdf_file.write(msg)
         return msg
 
@@ -372,7 +374,6 @@ class PLOAD2v(BaseLoad):
             list_fields = ['PLOAD2', sid, pressure, eid]
             msgi = print_card_8(list_fields)
             msg += self.comment[i] + msgi
-            msg += msgi
         bdf_file.write(msg)
         return msg
 
@@ -512,7 +513,6 @@ class PLOAD1v(BaseLoad):
                            x12[0], p12[0], x12[1], p12[1]]
             msgi = print_card_8(list_fields)
             msg += self.comment[i] + msgi
-            msg += msgi
         bdf_file.write(msg)
         return msg
 
@@ -1135,8 +1135,8 @@ class FORCE2v(BaseLoad):
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
-        g4 = integer(card, 7, 'g4')
-        assert len(card) == 8, 'len(FORCE2 card) = %i\ncard=%s' % (len(card), card)
+        g4 = integer_or_blank(card, 7, 'g4', 0)
+        assert len(card) in [7, 8], 'len(FORCE2 card) = %i\ncard=%s' % (len(card), card)
         self.add(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -1145,6 +1145,8 @@ class FORCE2v(BaseLoad):
         msg = ''
         for i, sid, node_id, mag, g1234 in zip(count(), self.sid, self.nid, self.mag, self.g1234):
             nid1, nid2, nid3, nid4 = g1234
+            if nid4 == 0:
+                nid4 = None
             list_fields = ['FORCE2', sid, node_id, mag, nid1, nid2, nid3, nid4]
             msgi = print_card_8(list_fields)
             #if size == 8:
@@ -1407,7 +1409,6 @@ class MOMENT1v(BaseLoad):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        sss
         self.make_current()
         msg = ''
         for i, sid, node_id, mag, g12 in zip(count(), self.sid, self.nid, self.mag, self.g12):
@@ -1527,8 +1528,8 @@ class MOMENT2v(BaseLoad):
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
-        g4 = integer(card, 7, 'g4')
-        assert len(card) == 8, 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
+        g4 = integer_or_blank(card, 7, 'g4', 0)
+        assert len(card) in [7, 8], 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
         self.add(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -1537,6 +1538,8 @@ class MOMENT2v(BaseLoad):
         msg = ''
         for i, sid, node_id, mag, g1234 in zip(count(), self.sid, self.nid, self.mag, self.g1234):
             nid1, nid2, nid3, nid4 = g1234
+            if nid4 == 0:
+                nid4 = None
             list_fields = ['MOMENT2', sid, node_id, mag, nid1, nid2, nid3, nid4]
             msgi = print_card_8(list_fields)
             #if size == 8:
@@ -1584,5 +1587,121 @@ class MOMENT2v(BaseLoad):
 
     def repr_indent(self, indent=''):
         msg = '%sMOMENT2v:\n' % indent
+        msg += '%s  sid = %s\n' % self.sid
+        return msg
+
+class SLOADv(BaseLoad):
+    """
+    Static Scalar Load
+    Defines concentrated static loads on scalar or grid points.
+
+    +-------+-----+----+-----+----+------+----+-------+
+    |   1   |  2  | 3  |  4  |  5 |  6   |  7 |   8   |
+    +=======+=====+====+=====+====+======+====+=======+
+    | SLOAD | SID | S1 | F1  | S2 |  F2  | S3 |   F3  |
+    +-------+-----+----+-----+----+------+----+-------+
+    | SLOAD | 16  | 2  | 5.9 | 17 | -6.3 | 14 | -2.93 |
+    +-------+-----+----+-----+----+------+----+-------+
+
+    .. note:: Can be used in statics OR dynamics.
+
+    If Si refers to a grid point, the load is applied to component T1 of the
+    displacement coordinate system (see the CD field on the GRID entry).
+    """
+    card_name = 'SLOAD'
+
+    def __init__(self, model):
+        BaseLoad.__init__(self, model)
+        self.nid = np.array([], dtype='int32')
+        self.mag = np.array([], dtype='float64')
+
+        self._nid = []
+        self._mag = []
+        self.comment = defaultdict(str)
+
+    def add(self, sid, nid, mag, comment=''):
+        """
+        Creates a SLOAD card, which applies a load to DOF=1 of the GRID/SPOINT
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        nid : int
+            the GRID/SPOINT id
+        mag : float
+            load magnitude
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment[len(self)] = _format_comment(comment)
+        self.is_current = False
+        self._sid.append(sid)
+        self._nid.append(nid)
+        self._mag.append(mag)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a SLOAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+
+        nfields = len(card) - 2
+        ngroups = nfields // 2
+        if nfields % 2 == 1:
+            ngroups += 1
+            msg = 'Missing last magnitude on SLOAD card=%s' % card.fields()
+            raise RuntimeError(msg)
+
+        nodes = []
+        mags = []
+        for i in range(ngroups):
+            j = 2 * i + 2
+            nodes.append(integer(card, j, 'nid' + str(i)))
+            mags.append(double(card, j + 1, 'mag' + str(i)))
+
+        for nid, mag in zip(nodes, mags):
+            self.add(sid, nid, mag, comment=comment)
+            comment = ''
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for i, sid, nid, mag in zip(count(), self.sid, self.nid, self.mag):
+            list_fields = ['SLOAD', sid, nid, mag]
+            msgi = print_card_8(list_fields)
+            msg += self.comment[i] + msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.sid) > 0: # there are already elements in self.eid
+                self.sid = np.hstack([self.sid, self._sid])
+                self.nid = np.vstack([self.nid, self._nid])
+                self.mag = np.vstack([self.mag, self._mag])
+                # TODO: need to handle comments
+            else:
+                self.sid = np.array(self._sid, dtype='int32')
+                self.nid = np.array(self._nid, dtype='int32')
+                self.mag = np.array(self._mag, dtype='float64')
+
+            self._sid = []
+            self._nid = []
+            self._mag = []
+            self.is_current = True
+
+    def repr_indent(self, indent=''):
+        msg = '%sSLOADv:\n' % indent
         msg += '%s  sid = %s\n' % self.sid
         return msg

@@ -1,6 +1,7 @@
 import os
-
 import warnings
+import unittest
+
 import numpy as np
 warnings.simplefilter('always')
 np.seterr(all='raise')
@@ -13,7 +14,6 @@ import pyNastran
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'stl')
 
-import unittest
 
 class STL_GUI(STL_IO, FakeGUIMethods):
     def __init__(self):

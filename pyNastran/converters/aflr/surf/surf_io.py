@@ -84,7 +84,7 @@ class SurfIO(object):
             nfailed = len(ifailed)
             failed_grid = self.alt_grids['failed_nodes']
             failed_grid.Allocate(nfailed, 1000)
-            grid2 = failed_grid
+            #grid2 = failed_grid
             points2 = vtk.vtkPoints()
             points2.SetNumberOfPoints(nfailed)
 

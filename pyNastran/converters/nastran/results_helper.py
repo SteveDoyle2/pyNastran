@@ -28,7 +28,7 @@ class NastranGuiResults(NastranGuiAttributes):
         """
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
-        new_cases = True
+        #new_cases = True
         nnodes = self.nnodes
         displacement_like = [
             # slot, name, deflects
@@ -575,7 +575,6 @@ class NastranGuiResults(NastranGuiAttributes):
         elif hasattr(case, 'dt'):
             time = case._times[itime]
             header += '; time = %g sec' % time
-            pass
         elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
             pass
             #raise RuntimeError(header)
@@ -1653,9 +1652,9 @@ class NastranGuiResults(NastranGuiAttributes):
             model.genel_strain_energy, model.cshear_strain_energy,
         ]
 
-        result_groups = [
-            displacement_like, temperature_like, stress, strain, strain_energy,
-        ]
+        #result_groups = [
+            #displacement_like, temperature_like, stress, strain, strain_energy,
+        #]
 
         nids = self.node_ids
         eids = self.element_ids

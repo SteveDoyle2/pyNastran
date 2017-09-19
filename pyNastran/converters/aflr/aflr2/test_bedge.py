@@ -1,8 +1,8 @@
 from __future__ import print_function
 import os
+import warnings
 import unittest
 
-import warnings
 import numpy as np
 warnings.simplefilter('always')
 np.seterr(all='raise')
@@ -10,20 +10,23 @@ np.seterr(all='raise')
 import pyNastran
 from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge, export_to_bedge
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
+from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
 TEST_PATH = os.path.join(pkg_path, 'converters', 'aflr', 'aflr2')
 
 class TestBEdge(unittest.TestCase):
     """tests the bedge file format"""
+
     def test_bedge_1(self):
         """tests the m3 model"""
+        log = get_logger(level='warning')
         bedge_filename = os.path.join(TEST_PATH, 'm3.bedge')
         bdf_filename = os.path.join(TEST_PATH, 'm3.bdf')
         fixed_points_filename = os.path.join(TEST_PATH, 'm3.xyz')
 
-        model = read_bedge(bedge_filename, beta_reverse=179.7, log=None, debug=False)
-        model2 = read_bedge(bedge_filename, beta_reverse=179.7, log=None, debug=False)
+        model = read_bedge(bedge_filename, beta_reverse=179.7, log=log, debug=False)
+        model2 = read_bedge(bedge_filename, beta_reverse=179.7, log=log, debug=False)
         assert len(model.nodes) == 858, 'nodes=%s' % len(model.nodes)
         assert len(model.bars) == 858, 'nbars=%s' % len(model.bars)
 
@@ -42,6 +45,7 @@ class TestBEdge(unittest.TestCase):
 
     def test_ugrid2d(self):
         """simple UGRID2D model"""
+        log = get_logger(level='warning')
         ugrid_filename = os.path.join(TEST_PATH, 'quad_tri.ugrid')
         #if not os.path.exists(ugrid_filename):
         msg = (
@@ -56,11 +60,9 @@ class TestBEdge(unittest.TestCase):
             '1 2 3 4\n'
         )
         with open(ugrid_filename, 'w') as ugrid_file:
-            #print('msg = %r' % msg)
-            #print('----------------')
             ugrid_file.write(msg)
 
-        model = UGRID2D_Reader(log=None, debug=True)
+        model = UGRID2D_Reader(log=log, debug=True)
         model.read_ugrid(ugrid_filename)
 
 

@@ -339,7 +339,7 @@ class OEF(OP2Common):
         #is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
 
-        flag = 'element_id'
+        #flag = 'element_id'
         if self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
             # 1-CROD
             # 2-CBEAM

@@ -522,7 +522,8 @@ class MinorTables(OP2Common):
             ndata = len(data)
             assert ndata == 108, ndata
             n = 8 + 56 + 20 + 12 + 12
-            aero, name, comps, cp, bi, c, d, coeff, word, e, f, g = unpack(b('8s 56s 5i 4s 8s 3i'), data[:n])
+            (aero, name, comps, cp, bi, c, d, coeff, word,
+             e, f, g) = unpack(b('8s 56s 5i 4s 8s 3i'), data[:n])
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
@@ -584,7 +585,8 @@ class MinorTables(OP2Common):
         if self.read_mode == 2:
             ndata = len(data)
             assert ndata == 108, ndata
-            aero, name, comps, cp, x, y, z, coeff, word, column, cd, ind_dof = unpack(b'8s 56s 2i 3f 4s 8s 3i', data[:108])
+            (aero, name, comps, cp, x, y, z, coeff, word, column, cd,
+             ind_dof) = unpack(b'8s 56s 2i 3f 4s 8s 3i', data[:108])
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
@@ -981,7 +983,7 @@ class MinorTables(OP2Common):
         self.read_markers([-3, 1, 0])
         data = self._read_record()
 
-        nvalues = len(data) // 4
+        #nvalues = len(data) // 4
         assert len(data) % 4 == 0, len(data) / 4.
 
         header = unpack('3i 8s 7i', data[:48]) # 48=4*12
@@ -1037,7 +1039,7 @@ class MinorTables(OP2Common):
             raise RuntimeError(msg)
 
         is_symmetric = matrix_shape == 6
-        is_phase_flag = is_phase > 0
+        #is_phase_flag = is_phase > 0
 
         if tout in [1, 3]:
             # works for float32, complex64
@@ -1438,9 +1440,9 @@ class MinorTables(OP2Common):
                         self.binary_debug.write('  reals/imags = %s\n' % str(values))
                 assert len(GCi) == len(GCj), 'nGCi=%s nGCj=%s' % (len(GCi), len(GCj))
                 if tout in [1, 2]:
-                    assert len(GCi) == len(reals), 'tout=%s nGCi=%s nReals=%s' % (tout, len(GCi), len(reals))
+                    assert len(GCi) == len(reals), 'tout=%s nGCi=%s nreals=%s' % (tout, len(GCi), len(reals))
                 else:
-                    assert len(GCi)*2 == len(reals), 'tout=%s nGCi=%s nReals=%s' % (tout, len(GCi)*2, len(reals))
+                    assert len(GCi)*2 == len(reals), 'tout=%s nGCi=%s nreals=%s' % (tout, len(GCi)*2, len(reals))
                 jj += 1
             else:
                 nvalues = self.get_marker1(rewind=False)

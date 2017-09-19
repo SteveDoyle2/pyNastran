@@ -46,6 +46,10 @@ class CodeAsterConverter(BDF):
         self.language = language
         assert self.language in ['english']
         BDF.__init__(self)
+        self.max_nid_len = 0
+        self.max_eid_len = 0
+        self.max_pid_len = 0
+        self.max_mid_len = 0
 
     def get_elements_by_pid(self):
         """
@@ -88,29 +92,29 @@ class CodeAsterConverter(BDF):
             #elems[eid] = []
         for eid, element in iteritems(self.elements):
             if element.type == 'CTRIA3':
-                Type = 'TRIA3'
+                element_type = 'TRIA3'
             elif element.type == 'CTRIA6':
-                Type = 'TRIA6'
+                element_type = 'TRIA6'
             elif element.type == 'CQUAD4':
-                Type = 'QUAD4'
+                element_type = 'QUAD4'
             elif element.type == 'CQUAD8':
-                Type = 'QUAD8'
+                element_type = 'QUAD8'
 
             elif element.type == 'CTETRA':
-                Type = 'TETRA4'
+                element_type = 'TETRA4'
             elif element.type == 'CPENTA':
-                Type = 'PENTA6'
+                element_type = 'PENTA6'
             elif element.type == 'CHEXA':
-                Type = 'HEXA8'
+                element_type = 'HEXA8'
             elif element.type == 'CPYRAM':
-                Type = 'CPYRAM5'
+                element_type = 'CPYRAM5'
             else:
                 print('rejecting: %s' % element.type)
                 continue
-            if Type not in elems:
-                elems[Type] = []
+            if element_type not in elems:
+                elems[element_type] = []
 
-            elems[Type].append(eid)
+            elems[element_type].append(eid)
             #mid = element.Mid()
             #mats[mid].append(eid)
         return elems
@@ -156,19 +160,19 @@ class CodeAsterConverter(BDF):
         elif self.sol == 129:  # [M][\ddot U] + [C][\dot U] + [K] [U] = [F]
             pass
 
-        k = ("#Calculate data for the stiffness Matrix\n"
-             "StiffMtx = CALC_MATR_ELEM(OPTION='RIGI_MECA',\n"
-             "                          MODELE=ModelDef, \n"
-             "                          CHAM_MATER=MtrlFld);\n\n")
-        m = ("#Calculate data for the Mass Matrix\n"
-             "MassMtx = CALC_MATR_ELEM(OPTION='MASS_MECA',\n"
-             "                         MODELE=ModelDef,"
-             "                         CHAM_MATER=MtrlFld);\n\n")
+        k_msg = ("#Calculate data for the stiffness Matrix\n"
+                 "StiffMtx = CALC_MATR_ELEM(OPTION='RIGI_MECA',\n"
+                 "                          MODELE=ModelDef, \n"
+                 "                          CHAM_MATER=MtrlFld);\n\n")
+        mat_msg = ("#Calculate data for the Mass Matrix\n"
+                   "MassMtx = CALC_MATR_ELEM(OPTION='MASS_MECA',\n"
+                   "                         MODELE=ModelDef,"
+                   "                         CHAM_MATER=MtrlFld);\n\n")
 
-        k = "#Assign the Stiffness Matrix to the DOFs to be solved\n"
-        k += "K = ASSE_MATRICE(MATR_ELEM=StiffMtx, NUME_DDL=NDOFs);\n\n"
-        m = "#Assign the Mass Matrix to the DOFs to be solved\n"
-        m += "M = ASSE_MATRICE(MATR_ELEM=MassMtx, NUME_DDL=NDOFs);\n"
+        k_msg = "#Assign the Stiffness Matrix to the DOFs to be solved\n"
+        k_msg += "K = ASSE_MATRICE(MATR_ELEM=StiffMtx, NUME_DDL=NDOFs);\n\n"
+        mat_msg = "#Assign the Mass Matrix to the DOFs to be solved\n"
+        mat_msg += "M = ASSE_MATRICE(MATR_ELEM=MassMtx, NUME_DDL=NDOFs);\n"
         return comm
 
     def ca_nodes(self, grid_word='grid'):
@@ -184,8 +188,8 @@ class CodeAsterConverter(BDF):
         form = '    %s%-' + str(self.max_nid_len) + 's %8s %8s %8s\n'
 
         for nid, node in sorted(iteritems(self.nodes)):
-            p = node.get_position()
-            mail += form % (grid_word, nid, p[0], p[1], p[2])
+            xyz = node.get_position()
+            mail += form % (grid_word, nid, xyz[0], xyz[1], xyz[2])
         mail += 'FINSF\n\n'
         mail += self.breaker()
         return mail
@@ -345,15 +349,15 @@ class CodeAsterConverter(BDF):
                     raise ValueError('unsupported value of c1=%s' % self.c1)
 
             elif ptype == 'PSHELL':
-                """
-                * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
-                * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
-
-                The angle_rep is a direction angle, use either angle(a,b) or
-                vecteur(x,y,z)
-                coque_ncou is the number of gauss nodes along the thickness, for
-                linear analysis one node is sufficient.
-                """
+                #
+                # * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
+                # * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
+                #
+                # The angle_rep is a direction angle, use either angle(a,b) or
+                # vecteur(x,y,z)
+                # coque_ncou is the number of gauss nodes along the thickness, for
+                # linear analysis one node is sufficient.
+                #
                 msg = "    COQUE=_F(GROUP_MA='P%s', # COQUE=PSHELL\n" % prop.pid
                 msg += "              EPAIS=%g, # EPAIS=thickness\n" % prop.t
                 msg += "              ANGL_REP=(0.,90.),  # ???\n"  #: .. todo:: what is this?

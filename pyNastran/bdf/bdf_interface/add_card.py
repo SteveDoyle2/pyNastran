@@ -1120,14 +1120,40 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbush(self, pid, k, b, ge, rcv, mass_fields=None, comment=''):
+    def add_pbush(self, pid, k, b, ge, rcv=None, mass_fields=None, comment=''):
+        """
+        Creates a PBUSH card, which defines a property for a CBUSH
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        k : List[float]
+            Nominal stiffness values in directions 1 through 6.
+            len(k) = 6
+        b : List[float]
+            Nominal damping coefficients in direction 1 through 6 in units of
+            force per unit velocity
+            len(b) = 6
+        ge : List[float]
+            Nominal structural damping constant in directions 1 through 6.
+            len(ge) = 6
+        rcv : List[float]; default=None -> (None, None, None, None)
+            [sa, st, ea, et] = rcv
+            length(mass_fields) = 4
+        mass_fields : List[float]; default=None
+            length(mass_fields) = 1
+            This is an MSC only parameter.
+        comment : str; default=''
+            a comment for the card
+        """
         prop = PBUSH(pid, k, b, ge, rcv, mass_fields, comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_cbush1d(self, eid, pid, nids, cid, comment=''):
+    def add_cbush1d(self, eid, pid, nids, cid=None, comment=''):
         # type: (int, int, List[int], int, str) -> CBUSH1D
-        elem = CBUSH1D(eid, pid, nids, cid, comment=comment)
+        elem = CBUSH1D(eid, pid, nids, cid=cid, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -1137,8 +1163,10 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbush1d(self, pid, k, c, m, sa, se, optional_vars, comment=''):
-        prop = PBUSH1D(pid, k, c, m, sa, se, optional_vars, comment=comment)
+    def add_pbush1d(self, pid, k=0., c=0., m=0., sa=0., se=0.,
+                    optional_vars=None, comment=''):
+        prop = PBUSH1D(pid, k=k, c=c, m=m, sa=sa, se=se,
+                       optional_vars=optional_vars, comment=comment)
         self._add_property_object(prop)
         return prop
 
@@ -2696,16 +2724,16 @@ class AddCards(AddMethods):
 
     def add_sload(self, sid, nids, mags, comment=''):
         """
-        Creates an SLOAD (SPOINT load)
+        Creates an SLOAD (GRID/SPOINT load)
 
         Parameters
         ----------
         sid : int
             load id
         nids : int; List[int]
-            the SPOINT ids
+            the GRID/SPOINT ids
         mags : float; List[float]
-            the SPOINT loads
+            the load magnitude
         comment : str; default=''
             a comment for the card
         """
@@ -6051,6 +6079,49 @@ class AddCards(AddMethods):
 
     def add_dmig(self, name, ifo, tin, tout, polar, ncols, GCj, GCi,
                  Real, Complex=None, comment=''):
+        """
+        Creates a DMIG card
+
+        Parameters
+        ----------
+        name : str
+            the name of the matrix
+        ifo : int
+            matrix shape
+            4=Lower Triangular
+            5=Upper Triangular
+            6=Symmetric
+            8=Identity (m=nRows, n=m)
+        tin : int
+            matrix input precision
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        tout : int
+            matrix output precision
+            0=same as tin
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        polar : int; default=0
+            Input format of Ai, Bi
+            Integer=blank or 0 indicates real, imaginary format
+            Integer > 0 indicates amplitude, phase format
+        ncols : int
+            ???
+        GCj  : List[(node, dof)]
+            the [jnode, jDOFs]
+        GCi  : List[(node, dof)]
+            the inode, iDOFs
+        Real : List[float]
+            The real values
+        Complex : List[float]; default=None
+            The complex values (if the matrix is complex)
+        comment : str; default=''
+            a comment for the card
+        """
         dmig = DMIG(name, ifo, tin, tout, polar, ncols, GCj, GCi,
                     Real, Complex, comment=comment)
         self._add_dmig_object(dmig)
@@ -6077,10 +6148,53 @@ class AddCards(AddMethods):
         self._add_dmiji_object(dmiji)
         return dmiji
 
-    def add_dmik(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
-                 Real, Complex=None, comment=''):
-        dmik = DMIK(name, form, tin, tout, nrows, ncols, GCj, GCi,
-                    Real, Complex, comment=comment)
+    def add_dmik(self, name, ifo, tin, tout, polar, ncols,
+                 GCj, GCi, Real, Complex=None, comment=''):
+        """
+        Creates a DMIK card
+
+        Parameters
+        ----------
+        name : str
+            the name of the matrix
+        ifo : int
+            matrix shape
+            4=Lower Triangular
+            5=Upper Triangular
+            6=Symmetric
+            8=Identity (m=nRows, n=m)
+        tin : int
+            matrix input precision
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        tout : int
+            matrix output precision
+            0=same as tin
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        polar : int; default=0
+            Input format of Ai, Bi
+            Integer=blank or 0 indicates real, imaginary format
+            Integer > 0 indicates amplitude, phase format
+        ncols : int
+            ???
+        GCj  : List[(node, dof)]
+            the jnode, jDOFs
+        GCi  : List[(node, dof)]
+            the inode, iDOFs
+        Real : List[float]
+            The real values
+        Complex : List[float]; default=None
+            The complex values (if the matrix is complex)
+        comment : str; default=''
+            a comment for the card
+        """
+        dmik = DMIK(name, ifo, tin, tout, polar, ncols,
+                    GCj, GCi, Real, Complex, comment=comment)
         self._add_dmik_object(dmik)
         return dmik
 
