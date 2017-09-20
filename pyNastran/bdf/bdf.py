@@ -2087,18 +2087,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'RFORCE' : (RFORCE, self._add_load_object),
             'RFORCE1' : (RFORCE1, self._add_load_object),
             'SLOAD' : (SLOAD, self._add_load_object),
-            'RANDPS' : (RANDPS, self._add_load_object),
             'GMLOAD' : (GMLOAD, self._add_load_object),
             'SPCD' : (SPCD, self._add_load_object),  # enforced displacement
             'QVOL' : (QVOL, self._add_load_object),  # thermal
             'PRESAX' : (PRESAX, self._add_load_object),  # axisymmetric
 
             'DLOAD' : (DLOAD, self._add_dload_object),
+
             'ACSRCE' : (ACSRCE, self._add_dload_entry),
             'TLOAD1' : (TLOAD1, self._add_dload_entry),
             'TLOAD2' : (TLOAD2, self._add_dload_entry),
             'RLOAD1' : (RLOAD1, self._add_dload_entry),
             'RLOAD2' : (RLOAD2, self._add_dload_entry),
+            'RANDPS' : (RANDPS, self._add_dload_entry),
             'QVECT' : (QVECT, self._add_dload_entry),
 
             'FREQ' : (FREQ, self._add_freq_object),

@@ -622,7 +622,6 @@ class BDFAttributes(object):
             # loads
             'load_combinations' : ['LOAD', 'LSEQ'],
             'loads' : [
-                'RANDPS',
                 'FORCE', 'FORCE1', 'FORCE2',
                 'MOMENT', 'MOMENT1', 'MOMENT2',
                 'GRAV', 'ACCEL', 'ACCEL1',
@@ -637,7 +636,7 @@ class BDFAttributes(object):
             'dloads' : ['DLOAD', ],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
             'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-                               'QVECT',],
+                               'QVECT', 'RANDPS'],
 
             # aero cards
             'aero' : ['AERO'],
