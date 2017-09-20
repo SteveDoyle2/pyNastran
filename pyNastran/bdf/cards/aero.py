@@ -1080,22 +1080,22 @@ class AESURFS(BaseCard):  # not integrated
         """
         msg = ' which is required by AESURFS aesid=%s' % self.aesid
         self.list1_ref = model.Set(self.list1, msg)
-        self.list1_ref.cross_reference(model, 'Node')
+        self.list1_ref.cross_reference(model, 'Node', msg)
 
         self.list2_ref = model.Set(self.list1, msg=msg)
-        self.list2_ref.cross_reference(model, 'Node')
+        self.list2_ref.cross_reference(model, 'Node', msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by AESURFS aesid=%s' % self.aesid
         try:
             self.list1_ref = model.Set(self.list1, msg=msg)
-            self.list1_ref.cross_reference(model, 'Node')
+            self.list1_ref.cross_reference(model, 'Node', msg)
         except KeyError:
             pass
 
         try:
             self.list2_ref = model.Set(self.list1, msg=msg)
-            self.list2_ref.cross_reference(model, 'Node')
+            self.list2_ref.cross_reference(model, 'Node', msg)
         except KeyError:
             pass
 
@@ -6548,7 +6548,7 @@ class SPLINE4(Spline):
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node')
+        self.setg_ref.cross_reference(model, 'Node', msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -6720,7 +6720,7 @@ class SPLINE5(Spline):
         self.cid_ref = model.Coord(self.cid, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node')
+        self.setg_ref.cross_reference(model, 'Node', msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
 
         nnodes = len(self.setg_ref.ids)
@@ -6753,7 +6753,7 @@ class SPLINE5(Spline):
             pass
 
         try:
-            self.setg_ref.cross_reference(model, 'Node')
+            self.setg_ref.cross_reference(model, 'Node', msg)
             self.aelist_ref = model.AEList(self.aelist, msg=msg)
         except KeyError:
             pass

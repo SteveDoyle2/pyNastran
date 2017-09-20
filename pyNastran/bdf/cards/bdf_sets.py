@@ -861,7 +861,6 @@ class SET1(Set):
         - elements
           - ACMODL (optional)
         """
-        assert msg != ''
         msg = ' which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
             self.ids_ref = model.Nodes(self.get_ids(), msg=msg)
