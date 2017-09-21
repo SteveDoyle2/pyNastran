@@ -49,7 +49,7 @@ class TestLoads(unittest.TestCase):
         force.raw_fields()
         model.validate()
         model.pop_parse_errors()
-        assert np.array_equal(force.scaled_vector, np.array([42., 42., 84.])), force.F()
+        assert np.array_equal(force.scaled_vector, np.array([42., 42., 84.])), force.scaled_vector
         model.cross_reference()
         force.raw_fields()
 
@@ -77,7 +77,7 @@ class TestLoads(unittest.TestCase):
         moment.raw_fields()
         model.validate()
         model.pop_parse_errors()
-        assert np.array_equal(moment.scaled_vector, np.array([42., 42., 84.])), moment.M()
+        assert np.array_equal(moment.scaled_vector, np.array([42., 42., 84.])), moment.scaled_vector
         model.cross_reference()
         moment.raw_fields()
 
@@ -192,6 +192,80 @@ class TestLoads(unittest.TestCase):
         card.write_card(size, 'dummy')
         card.raw_fields()
 
+    def test_grav(self):
+        """tests a GRAV"""
+        model = BDF(debug=False)
+        sid = 1
+        scale = 1.0
+        N = [1., 2., 3.]
+        grav = model.add_grav(sid, scale, N, cid=0, mb=0, comment='grav')
+        grav.raw_fields()
+        grav.write_card(size=8)
+        grav.write_card(size=16)
+        grav.write_card(size=16, is_double=True)
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        eid = 4
+        pid = 4
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
+                         tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment='')
+
+        mid = 10
+        # mass = (rho*t + nsm)*A = (0.2*0.5 + 0.3) * 0.5 = 0.4 * 0.5 = 0.2
+        model.add_pshell(pid, mid1=None, t=0.5, mid2=mid, twelveIt3=1.0,
+                         mid3=None, tst=0.833333,
+                         nsm=0.3, z1=None, z2=None,
+                         mid4=None, comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.2, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
+                       comment='')
+
+        model.validate()
+        model.cross_reference()
+
+        eids = [4]
+        p0 = [0., 0., 0.]
+        loadcase_id = sid
+        forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
+                                                     include_grav=False, xyz_cid0=None)
+        forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                              include_grav=False, xyz_cid0=None)
+        assert np.array_equal(forces1, forces2)
+        assert np.array_equal(moments1, moments2)
+
+        forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
+                                                     include_grav=True, xyz_cid0=None)
+        forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                              include_grav=True, xyz_cid0=None)
+        assert np.array_equal(forces1, forces2)
+        assert np.array_equal(moments1, moments2)
+        save_load_deck(model)
+
+    def test_gmload(self):
+        model = BDF(debug=False)
+        sid = 1
+        normal = [1., 2., 3.]
+        entity = 'cat'
+        entity_id = 37
+        method = 'frog'
+        load_magnitudes = [31.]
+        gmload = model.add_gmload(sid, normal, entity, entity_id, method,
+                                  load_magnitudes, cid=0,
+                                  comment='gmload')
+        gmload.raw_fields()
+        model.validate()
+        model.cross_reference()
+        save_load_deck(model)
+
     def test_pload4_01(self):
         """tests a PLOAD4"""
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']
@@ -276,39 +350,39 @@ class TestLoads(unittest.TestCase):
                     assert array_equal(normal, array([0., 1., 0.])), 'Ny g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
                     self.assertEqual(area, 2.0, 'area=%s' % area)
 
-            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model.sum_forces_moments_elements(
+            forces2, moments2 = model.sum_forces_moments_elements(
                 p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
-            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
+            assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
+            assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :3, :].sum(axis=0)
             assert len(fm) == 6, fm
-            if not allclose(f[0], fm[0]):
+            if not allclose(forces1[0], fm[0]):
                 model.log.errror('subcase=%-2i Fx f=%s fexpected=%s face=%s' % (
-                    isubcase, f.tolist(), fm.tolist(), face))
-            if not allclose(f[1], fm[1]):
+                    isubcase, forces1.tolist(), fm.tolist(), face))
+            if not allclose(forces1[1], fm[1]):
                 model.log.errror('subcase=%-2i Fy f=%s fexpected=%s face=%s' % (
-                    isubcase, f.tolist(), fm.tolist(), face))
-            if not allclose(f[2], fm[2]):
+                    isubcase, forces1.tolist(), fm.tolist(), face))
+            if not allclose(forces1[2], fm[2]):
                 model.log.errror('subcase=%-2i Fz f=%s fexpected=%s face=%s' % (
-                    isubcase, f.tolist(), fm.tolist(), face))
-            # if not allclose(m[0], fm[3]):
-                # print('%i Mx m=%s fexpected=%s' % (isubcase, m, fm))
-            # if not allclose(m[1], fm[4]):
-                # print('%i My m=%s fexpected=%s' % (isubcase, m, fm))
-            # if not allclose(m[2], fm[5]):
-                # print('%i Mz m=%s fexpected=%s' % (isubcase, m, fm))
+                    isubcase, forces1.tolist(), fm.tolist(), face))
+            # if not allclose(moments1[0], fm[3]):
+                # print('%i Mx m=%s fexpected=%s' % (isubcase, moments1, fm))
+            # if not allclose(moments1[1], fm[4]):
+                # print('%i My m=%s fexpected=%s' % (isubcase, moments1, fm))
+            # if not allclose(moments1[2], fm[5]):
+                # print('%i Mz m=%s fexpected=%s' % (isubcase, moments1, fm))
 
-            #self.assertEqual(f[0], fm[0], 'f=%s fexpected=%s' % (f, fm[:3]))
-            #self.assertEqual(f[1], fm[1], 'f=%s fexpected=%s' % (f, fm[:3]))
-            #self.assertEqual(f[2], fm[2], 'f=%s fexpected=%s' % (f, fm[:3]))
-            #self.assertEqual(m[0], fm[3], 'm=%s mexpected=%s' % (m, fm[3:]))
-            #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
-            #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
+            #self.assertEqual(forces1[0], fm[0], 'f=%s fexpected=%s' % (forces1, fm[:3]))
+            #self.assertEqual(forces1[1], fm[1], 'f=%s fexpected=%s' % (forces1, fm[:3]))
+            #self.assertEqual(forces1[2], fm[2], 'f=%s fexpected=%s' % (forces1, fm[:3]))
+            #self.assertEqual(moments1[0], fm[3], 'm=%s mexpected=%s' % (moments1, fm[3:]))
+            #self.assertEqual(moments1[1], fm[4], 'm=%s mexpected=%s' % (moments1, fm[3:]))
+            #self.assertEqual(moments1[2], fm[5], 'm=%s mexpected=%s' % (moments1, fm[3:]))
 
     def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""
@@ -340,26 +414,26 @@ class TestLoads(unittest.TestCase):
             assert array_equal(centroid, array([2/3., 1/3., 0.])), 'centroid=%s\n%s' % (centroid, msg)
             assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
 
-            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model.sum_forces_moments_elements(
+            forces2, moments2 = model.sum_forces_moments_elements(
                 p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
-            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
+            assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
+            assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
-            if not allclose(f[0], fm[0]):
+            if not allclose(forces1[0], fm[0]):
                 model.log.error('subcase=%-2i Fx f=%s fm_expected=%s' % (
-                    isubcase, f.tolist(), fm.tolist()))
-            if not allclose(f[1], fm[1]):
+                    isubcase, forces1.tolist(), fm.tolist()))
+            if not allclose(forces1[1], fm[1]):
                 model.log.error('subcase=%-2i Fy f=%s fm_expected=%s' % (
-                    isubcase, f.tolist(), fm.tolist()))
-            if not allclose(f[2], fm[2]):
+                    isubcase, forces1.tolist(), fm.tolist()))
+            if not allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz f=%s fm_expected=%s' % (
-                    isubcase, f.tolist(), fm.tolist()))
+                    isubcase, forces1.tolist(), fm.tolist()))
 
     def test_pload4_cquad4(self):
         """tests a PLOAD4 with a CQUAD4"""
@@ -486,26 +560,26 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(m[0], fm[3], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
-            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model.sum_forces_moments_elements(
+            forces2, moments2 = model.sum_forces_moments_elements(
                 p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
-            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
+            assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
+            assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
-            if not allclose(f[0], fm[0]):
-                model.log.error('subcase=%-2i Fx g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
-                    isubcase, g1, g34, f, fm, face, normal))
-            if not allclose(f[1], fm[1]):
-                model.log.error('subcase=%-2i Fy g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
-                    isubcase, g1, g34, f, fm, face, normal))
-            if not allclose(f[2], fm[2]):
-                model.log.error('subcase=%-2i Fz g=(%s,%s) f=%s fexpected=%s face=%s normal=%s' % (
-                    isubcase, g1, g34, f, fm, face, normal))
+            if not allclose(forces1[0], fm[0]):
+                model.log.error('subcase=%-2i Fx g=(%s,%s) forces1=%s fexpected=%s face=%s normal=%s' % (
+                    isubcase, g1, g34, forces1, fm, face, normal))
+            if not allclose(forces1[1], fm[1]):
+                model.log.error('subcase=%-2i Fy g=(%s,%s) forces1=%s fexpected=%s face=%s normal=%s' % (
+                    isubcase, g1, g34, forces1, fm, face, normal))
+            if not allclose(forces1[2], fm[2]):
+                model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s face=%s normal=%s' % (
+                    isubcase, g1, g34, forces1, fm, face, normal))
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""
@@ -597,31 +671,31 @@ class TestLoads(unittest.TestCase):
             else:
                 msg = '??? g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
                 raise RuntimeError(msg)
-            #self.assertEqual(f[0], fm[0], 'f=%s fexpected=%s' % (f, fm[:3]))
-            #self.assertEqual(f[1], fm[1], 'f=%s fexpected=%s' % (f, fm[:3]))
-            #self.assertEqual(f[2], fm[2], 'f=%s fexpected=%s' % (f, fm[:3]))
-            #self.assertEqual(m[0], fm[3], 'm=%s mexpected=%s' % (m, fm[3:]))
-            #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
-            #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
-            f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            #self.assertEqual(forces1[0], fm[0], 'forces1=%s fexpected=%s' % (forces1, fm[:3]))
+            #self.assertEqual(forces1[1], fm[1], 'forces1=%s fexpected=%s' % (forces1, fm[:3]))
+            #self.assertEqual(forces1[2], fm[2], 'forces1=%s fexpected=%s' % (forces1, fm[:3]))
+            #self.assertEqual(moments1[0], fm[3], 'moments1=%s mexpected=%s' % (moments1, fm[3:]))
+            #self.assertEqual(moments1[1], fm[4], 'moments1=%s mexpected=%s' % (moments1, fm[3:]))
+            #self.assertEqual(moments1[2], fm[5], 'moments1=%s mexpected=%s' % (moments1, fm[3:]))
+            forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            f2, m2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
-            assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
-            assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
+            forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
+            assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
             case = op2.spc_forces[isubcase]
             fm = -case.data[0, :4, :].sum(axis=0)
             assert len(fm) == 6, fm
-            if not allclose(f[0], fm[0]):
-                model.log.error('subcase=%-2i Fx f=%s fexpected=%s face=%s' % (
-                    isubcase, f.tolist(), fm.tolist(), face))
-            if not allclose(f[1], fm[1]):
-                model.log.error('subcase=%-2i Fy f=%s fexpected=%s face=%s' % (
-                    isubcase, f.tolist(), fm.tolist(), face))
-            if not allclose(f[2], fm[2]):
-                model.log.error('subcase=%-2i Fz f=%s fexpected=%s face=%s' % (
-                    isubcase, f.tolist(), fm.tolist(), face))
+            if not allclose(forces1[0], fm[0]):
+                model.log.error('subcase=%-2i Fx forces1=%s fexpected=%s face=%s' % (
+                    isubcase, forces1.tolist(), fm.tolist(), face))
+            if not allclose(forces1[1], fm[1]):
+                model.log.error('subcase=%-2i Fy forces1=%s fexpected=%s face=%s' % (
+                    isubcase, forces1.tolist(), fm.tolist(), face))
+            if not allclose(forces1[2], fm[2]):
+                model.log.error('subcase=%-2i Fz forces1=%s fexpected=%s face=%s' % (
+                    isubcase, forces1.tolist(), fm.tolist(), face))
 
     #@unittest.expectedFailure
     #def test_pload1_cbar(self):
@@ -687,7 +761,7 @@ class TestLoads(unittest.TestCase):
             #raise RuntimeError('incorrect loads')
 
     def test_ploadx1(self):
-        """tests a PLOADX1"""
+        """tests a CTRIAX, PLPLANE, MATHP, and PLOADX1"""
         model = BDF(debug=False)
         sid = 10
         eid1 = 11
@@ -942,8 +1016,13 @@ class TestLoads(unittest.TestCase):
         str(model.spoints)
 
         sid = 14
-        nids = 11
+        nids = 11 # SPOINT
         mags = 20.
+        sload = model.add_sload(sid, nids, mags, comment='an sload')
+
+        sid = 14
+        nids = [11, 12] # SPOINT, GRID
+        mags = [20., 30.]
         sload = model.add_sload(sid, nids, mags, comment='an sload')
 
         sid = 12
@@ -984,8 +1063,8 @@ class TestLoads(unittest.TestCase):
         spc = model.add_spc(conid, gids, components, enforced, comment='spc')
         conid = 43
         nodes = [1, 2]
-        components = '123456'
-        spc1 = model.add_spc1(conid, components, nodes, comment='spc1')
+        components2 = '123456'
+        spc1 = model.add_spc1(conid, components2, nodes, comment='spc1')
         conid = 44
         sets = [42, 43]
         spcadd = model.add_spcadd(conid, sets, comment='spcadd')
@@ -1026,16 +1105,26 @@ class TestLoads(unittest.TestCase):
         nids = list(model.nodes.keys())
         p0 = [0., 0., 0.]
         loadcase_id = 120
-        F1, M1 = model2.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                    include_grav=False, xyz_cid0=None)
-        F2, M2 = model2.sum_forces_moments(p0, loadcase_id, include_grav=False,
-                                           xyz_cid0=None)
-        assert allclose(F1, F2), 'F1=%s F2=%s' % (F1, F2)
-        assert allclose(M1, M2), 'M1=%s M2=%s' % (M1, M2)
+        forces1, moments1 = model2.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                               include_grav=False, xyz_cid0=None)
+        forces2, moments2 = model2.sum_forces_moments(p0, loadcase_id, include_grav=False,
+                                                      xyz_cid0=None)
+        assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
+        assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
         model2.get_area_breakdown()
         model2.get_volume_breakdown()
         model2.get_mass_breakdown()
+
+        eids = list(model.elements.keys())
+        p0 = [0., 0., 0.]
+        forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
+                                                     include_grav=True, xyz_cid0=None)
+        forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                              include_grav=True, xyz_cid0=None)
+        assert np.array_equal(forces1, forces2)
+        assert np.array_equal(moments1, moments2)
+
 
         model2.write_skin_solid_faces('skin.bdf', write_solids=False,
                                       write_shells=True)

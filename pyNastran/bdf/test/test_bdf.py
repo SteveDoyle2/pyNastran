@@ -553,9 +553,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 #fem1.get_dependent_nid_to_components()
 
                 #fem1.uncross_reference()
-                print('safe_xref =', safe_xref)
                 if safe_xref:
-                    print('keeep summer safe')
                     fem1.safe_cross_reference()
                 else:
                     fem1.cross_reference()

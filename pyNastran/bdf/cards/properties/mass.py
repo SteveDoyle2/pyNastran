@@ -10,7 +10,7 @@ All mass properties are PointProperty and Property objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from pyNastran.bdf.cards.base_card import _node_ids, expand_thru
+from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.cards.base_card import BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank, string)
@@ -32,7 +32,7 @@ class NSMx(Property):
         'ELEMENT',
     ]
 
-    def __init__(self, sid, nsm_type, id, value, comment=''):
+    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
         """
         Creates an NSM/NSM1 card
 
@@ -47,7 +47,7 @@ class NSMx(Property):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        id : int
+        pid_eid : int
             property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
@@ -59,7 +59,7 @@ class NSMx(Property):
             self.comment = comment
         self.sid = sid
         self.nsm_type = nsm_type
-        self.id = id
+        self.id = pid_eid
         self.value = value
         if self.nsm_type not in self.valid_properties:
             raise TypeError('nsm_type=%r must be in [%s]' % (
@@ -82,9 +82,9 @@ class NSMx(Property):
         noffset = 2 * icard
         sid = integer(card, 1, 'sid')
         nsm_type = string(card, 2, 'Type')
-        id = integer(card, 3 + noffset, 'id')
+        pid_eid = integer(card, 3 + noffset, 'pid/eid')
         value = double(card, 4 + noffset, 'value')
-        return cls(sid, nsm_type, id, value, comment=comment)
+        return cls(sid, nsm_type, pid_eid, value, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -103,9 +103,9 @@ class NSMx(Property):
         #sid=10 prop_set=PDUM ID=538976312 value=2.80259692865e-45
         #sid=10 prop_set=ELEM ID=542395973 value=0.0
         nsm_type = data[1]
-        id = data[2]
+        pid_eid = data[2]
         value = data[3]
-        return cls(sid, nsm_type, id, value, comment=comment)
+        return cls(sid, nsm_type, pid_eid, value, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -239,9 +239,9 @@ class NSM1(NSM1x):
     +------+-----+------+-------+-----+----+----+----+----+
     """
     type = 'NSM1'
-    def __init__(self, sid, nsm_type, id, value, comment=''):
+    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
         """See ``NSM1x``"""
-        NSM1x.__init__(self, sid, nsm_type, id, value, comment='')
+        NSM1x.__init__(self, sid, nsm_type, pid_eid, value, comment='')
 
 
 class NSM(NSMx):
@@ -255,9 +255,9 @@ class NSM(NSMx):
     +-----+-----+------+----+-------+----+-------+----+-------+
     """
     type = 'NSM'
-    def __init__(self, sid, nsm_type, id, value, comment=''):
+    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
         """See ``NSMx``"""
-        NSMx.__init__(self, sid, nsm_type, id, value, comment='')
+        NSMx.__init__(self, sid, nsm_type, pid_eid, value, comment='')
 
 
 class NSML(NSMx):
@@ -271,7 +271,7 @@ class NSML(NSMx):
     +------+-----+------+----+-------+----+-------+----+-------+
     """
     type = 'NSML'
-    def __init__(self, sid, nsm_type, id, value, comment=''):
+    def __init__(self, sid, nsm_type, pid_eid, value, comment=''):
         """
         Creates an NSML card, which defines lumped non-structural mass
 
@@ -286,14 +286,14 @@ class NSML(NSMx):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        id : int
+        pid_eid : int
             property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        NSMx.__init__(self, sid, nsm_type, id, value, comment=comment)
+        NSMx.__init__(self, sid, nsm_type, pid_eid, value, comment=comment)
 
 
 class NSML1(NSM1x):
@@ -426,7 +426,7 @@ class NSMADD(BaseCard):
         """
         msg = ', which is required by NSMADD=%s' % self.sid
         nsms = []
-        for i, nsm in enumerate(self.sets):
+        for nsm in self.sets:
             nsms.append(model.NSM(nsm, msg=msg))
         self.sets_ref = nsms
 

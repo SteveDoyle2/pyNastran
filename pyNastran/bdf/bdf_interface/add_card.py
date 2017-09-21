@@ -497,7 +497,7 @@ class AddCards(AddMethods):
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_nsm(self, sid, nsm_type, id, value, comment=''):
+    def add_nsm(self, sid, nsm_type, pid_eid, value, comment=''):
         # type: (int, str, int, float, str) -> NSM
         """
         Creates an NSM card
@@ -513,14 +513,14 @@ class AddCards(AddMethods):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        id : int
+        pid_eid : int
             property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSM(sid, nsm_type, id, value, comment=comment)
+        nsm = NSM(sid, nsm_type, pid_eid, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
@@ -551,7 +551,7 @@ class AddCards(AddMethods):
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsml(self, sid, nsm_type, id, value, comment=''):
+    def add_nsml(self, sid, nsm_type, pid_eid, value, comment=''):
         # type: (int, str, int, float, str) -> NSML
         """
         Creates an NSML card, which defines lumped non-structural mass
@@ -567,14 +567,14 @@ class AddCards(AddMethods):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        id : int
+        pid_eid : int
             property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSML(sid, nsm_type, id, value, comment=comment)
+        nsm = NSML(sid, nsm_type, pid_eid, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
@@ -3175,8 +3175,9 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        load = GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
-        self._add_load_object(load)
+        grav = GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
+        self._add_load_object(grav)
+        return grav
 
     def add_pload(self, sid, pressure, nodes, comment=''):
         """
@@ -3318,6 +3319,14 @@ class AddCards(AddMethods):
             a comment for the card
         """
         load = PLOADX1(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_gmload(self, sid, normal, entity, entity_id, method, load_magnitudes,
+                   cid=0, comment=''):
+        """Creates a GMLOAD object"""
+        load = GMLOAD(sid, normal, entity, entity_id, method, load_magnitudes,
+                      cid=cid, comment=comment)
         self._add_load_object(load)
         return load
 
@@ -4649,6 +4658,25 @@ class AddCards(AddMethods):
         return dtable
 
     def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+        """
+        Creates a TABLED1, which is a dynamic load card that is applied
+        by the DAREA card
+
+        Parameters
+        ----------
+        tid : int
+            table id
+        x : List[float]
+            nvalues
+        y : List[float]
+            nvalues
+        xaxis : str
+            LINEAR, LOG
+        yaxis : str
+            LINEAR, LOG
+        comment : str; default=''
+            a comment for the card
+        """
         table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
         self._add_tabled_object(table)
         return table

@@ -17,6 +17,7 @@ def save_load_deck(model):
     model2 = BDF(log=model.log)
     model2.read_bdf(bdf_file, punch=True)
     model2.pop_parse_errors()
+    model2.get_bdf_stats()
 
     model2.save(obj_filename='model.obj', unxref=True)
     model3 = BDF(debug=False, log=None, mode='msc')

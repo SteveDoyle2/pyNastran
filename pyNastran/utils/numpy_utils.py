@@ -3,11 +3,14 @@ defines:
  - loadtxt_nice
 """
 from __future__ import print_function
+import sys
 from codecs import open as codec_open
 from itertools import count
 
 from six import StringIO
 import numpy as np
+#from numpy._iotools import _is_string_like
+from numpy.compat import asstr, asbytes
 
 from pyNastran.utils import is_file_obj, _filename
 
@@ -169,7 +172,8 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
     #print(data)
     allowed_dtypes = ['float32', 'float64', 'float128', np.float64, 'int32', 'int64', 'int128']
     if dtype in allowed_dtypes:
-        assert dtype in allowed_dtypes, 'dtype=%r allowed_dtypes=[%s]' % (dtype, ', '.join(allowed_dtypes))
+        if dtype not in allowed_dtypes:
+            raise RuntimeError('dtype=%r allowed_dtypes=[%s]' % (dtype, ', '.join(allowed_dtypes)))
         X = np.array(data, dtype=dtype)
     elif isinstance(dtype, dict):
         a = np.array(data, dtype=object)
@@ -179,14 +183,17 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
         nnames = len(names)
         assert len(set(names)) == nnames, 'non-unique headers in %s' % str(names)
         for icol, name, dtypei in zip(count(), dtype['names'], dtype['formats']):
-            assert dtypei in allowed_dtypes, 'dtype=%r allowed_dtypes=[%s]' % (dtypei, ', '.join(allowed_dtypes))
+            if dtypei not in allowed_dtypes:
+                raise RuntimeError('dtype=%r allowed_dtypes=[%s]' % (
+                    dtypei, ', '.join(allowed_dtypes)))
             try:
                 X[name] = np.asarray(a[:, icol], dtype=dtypei)
             except IndexError:
                 # the number of columns in A is not consistent
                 ncols = [len(datai) for datai in data]
                 ucols = np.unique(ncols)
-                msg = 'The number of columns is not consistent; expected=%s; actual=%s' % (nnames, ucols)
+                msg = 'The number of columns is not consistent; expected=%s; actual=%s' % (
+                    nnames, ucols)
                 raise IndexError(msg)
             except ValueError:
                 print(a)
@@ -196,15 +203,17 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
                     for irow, val in zip(count(), a[:, icol]):
                         try:
                             float(val)
-                        except:
-                            msg += 'for name=%r, row=%s -> val=%r (expected float)\n' % (name, irow, val)
+                        except ValueError:
+                            msg += 'for name=%r, row=%s -> val=%r (expected float)\n' % (
+                                name, irow, val)
                             is_failed = True
                 elif dtypei in ['int32', 'int64', 'int128']:
                     for irow, val in zip(count(), a[:, icol]):
                         try:
                             int(val)
-                        except:
-                            msg += 'for name=%r, row=%s -> val=%r (expected int)\n' % (name, irow, val)
+                        except ValueError:
+                            msg += 'for name=%r, row=%s -> val=%r (expected int)\n' % (
+                                name, irow, val)
                             is_failed = True
                 else:
                     raise NotImplementedError(dtype)
@@ -258,7 +267,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comment='#', dtype=np.flo
 
 
 def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
-            footer='', comments='# '):
+                 footer='', comments='# '):
     """
     Reimplmenentation of numpy's savetxt that doesn't complain about
     bytes when saving to unicode files in Python 3.
@@ -373,7 +382,6 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
     >>> np.savetxt('test.out', x, fmt='%1.4e')   # use exponential notation
 
     """
-
     # Py3 conversions first
     if isinstance(fmt, bytes):
         fmt = asstr(fmt)
@@ -415,7 +423,7 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         # `fmt` can be a string with multiple insertion points or a
         # list of formats.  E.g. '%10.5f\t%10d' or ('%10.5f', '$10d')
         print("type(fmt) = %s" % type(fmt))
-        if type(fmt) in (list, tuple):
+        if isinstance(fmt, (list, tuple)):
             if len(fmt) != ncol:
                 raise AttributeError('fmt has wrong shape.  %s' % str(fmt))
             format = asstr(delimiter).join(map(asstr, fmt))
