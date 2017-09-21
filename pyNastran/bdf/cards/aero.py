@@ -3243,9 +3243,9 @@ class CAERO4(BaseCard):
         self.cp = cp
         self.nspan = nspan
         self.lspan = lspan
-        self.p1 = p1
+        self.p1 = np.asarray(p1)
         self.x12 = x12
-        self.p4 = p4
+        self.p4 = np.asarray(p4)
         self.x43 = x43
         self.pid_ref = None
         self.cp_ref = None
@@ -4157,6 +4157,10 @@ class FLFACT(BaseCard):
             )
         self.factors = np.asarray(factors)
 
+    def validate(self):
+        if len(self.factors) == 0:
+            raise ValueError('FLFACT sid=%s is empty; factors=%s' % (self.sid, str(self.factors)))
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -4243,7 +4247,7 @@ class FLUTTER(BaseCard):
     """
     type = 'FLUTTER'
     _field_map = {
-        1: 'sid', 2:'method', 3:'density', 4:'mach', 5:'rfreq_vel', 6:'imethod',
+        1: 'sid', 2:'method', 3:'density', 4:'mach', 5:'reduced_freq_velocity', 6:'imethod',
         8:'epsilon',
     }
     def _get_field_helper(self, n):
@@ -4269,7 +4273,7 @@ class FLUTTER(BaseCard):
                 value = self.nvalue
             return value
         else:
-            raise KeyError('Field %r=%r is an invalid FLUTTER entry.' % (n, value))
+            raise KeyError('Field %r is an invalid FLUTTER entry.' % (n))
 
     def _update_field_helper(self, n, value):
         """
@@ -4503,7 +4507,7 @@ class FLUTTER(BaseCard):
         else:
             return(self.imethod, self.nvalue)
 
-    def _repr_nvalue_omax(self):
+    def _get_repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             imethod = set_blank_if_default(self.imethod, 'L')
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethods
@@ -4527,11 +4531,12 @@ class FLUTTER(BaseCard):
                        self.get_mach(), self.get_rfreq_vel(), imethod, nvalue, self.epsilon]
         return list_fields
 
-    #def repr_fields(self):
-        #(imethod, nvalue) = self._get_raw_nvalue_omax()
-        #list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
-        #          self.get_rfreq_vel(), imethod, nvalue, self.epsilon]
-        #return list_fields
+    def repr_fields(self):
+        (imethod, nvalue) = self._get_repr_nvalue_omax()
+        epsilon = set_blank_if_default(self.epsilon, 0.001)
+        list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
+                 self.get_rfreq_vel(), imethod, nvalue, epsilon]
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -4873,6 +4878,12 @@ class MKAERO2(BaseCard):
                 nvalues = 0
         if nvalues:
             cards.append(print_card_8(list_fields))
+        else:
+            if len(self.machs) != len(self.reduced_freqs) or len(self.machs) == 0:
+                msg = 'MKAERO2: len(machs)=%s len(reduced_freqs)=%s' % (
+                    len(self.machs), len(self.reduced_freqs))
+                raise ValueError(msg)
+
         return self.comment + ''.join(cards)
 
     def __repr__(self):
@@ -6555,7 +6566,7 @@ class SPLINE4(Spline):
             msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
             msg += str(self)
             msg += str(self.setg_ref)
-            raise RuntimeError(msg)
+            raise ValueError(msg)
 
     def uncross_reference(self):
         self.caero = self.CAero()
@@ -6837,7 +6848,7 @@ class TRIM(BaseCard):
             if i == 1:
                 #list_fields += [self.aeqr]
                 ni += 1
-        raise KeyError('Field %r=%r is an invalid TRIM entry.' % (n, value))
+        raise KeyError('Field %r is an invalid TRIM entry.' % n)
 
     def _update_field_helper(self, n, value):
         """
