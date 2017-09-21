@@ -1193,48 +1193,48 @@ class OEF(OP2Common):
             self._results._found_result(result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
                 raise RuntimeError('is this used?')
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, RealCBeamForceArray)
-                if auto_return:
-                    return nelements * self.num_wide * 4
+                #auto_return, is_vectorized = self._create_oes_object4(
+                    #nelements, result_name, slot, RealCBeamForceArray)
+                #if auto_return:
+                    #return nelements * self.num_wide * 4
 
-                obj = self.obj
-                #is_vectorized = False
-                if self.use_vector and is_vectorized:
-                    n = nelements * 4 * self.num_wide
-                    itotal = obj.itotal
-                    itotal2 = obj.itotal + nelements
-                    ielement2 = obj.ielement + nelements
+                #obj = self.obj
+                ##is_vectorized = False
+                #if self.use_vector and is_vectorized:
+                    #n = nelements * 4 * self.num_wide
+                    #itotal = obj.itotal
+                    #itotal2 = obj.itotal + nelements
+                    #ielement2 = obj.ielement + nelements
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 9)[:, 1:]
-                    obj._times[obj.itime] = dt
-                    if obj.itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 9)
-                        eids = ints[:, 0] // 10
-                        assert eids.min() > 0, eids.min()
-                        assert 0 not in eids, eids
+                    #floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 9)[:, 1:]
+                    #obj._times[obj.itime] = dt
+                    #if obj.itime == 0:
+                        #ints = fromstring(data, dtype=self.idtype).reshape(nelements, 9)
+                        #eids = ints[:, 0] // 10
+                        #assert eids.min() > 0, eids.min()
+                        #assert 0 not in eids, eids
 
-                        obj.element[itotal:itotal2] = eids
-                        obj.element_node[itotal:itotal2, 0] = eids
-                        #obj.element_node[itotal:itotal2, 1] = nids
+                        #obj.element[itotal:itotal2] = eids
+                        #obj.element_node[itotal:itotal2, 0] = eids
+                        ##obj.element_node[itotal:itotal2, 1] = nids
 
-                    #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-                    obj.data[obj.itime, itotal:itotal2, :] = floats
-                    obj.itotal = itotal2
-                    obj.ielement = ielement2
-                else:
-                    s = Struct(b(self._endian + 'i8f'))  # 36
-                    ntotal = 36
-                    nelements = ndata // ntotal
-                    obj = self.obj
-                    for i in range(nelements):
-                        edata = data[n:n+36]
-                        out = s.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-                        (eid_device, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-                        eid = eid_device // 10
-                        n += 36
+                    ##[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+                    #obj.data[obj.itime, itotal:itotal2, :] = floats
+                    #obj.itotal = itotal2
+                    #obj.ielement = ielement2
+                #else:
+                    #s = Struct(b(self._endian + 'i8f'))  # 36
+                    #ntotal = 36
+                    #nelements = ndata // ntotal
+                    #obj = self.obj
+                    #for i in range(nelements):
+                        #edata = data[n:n+36]
+                        #out = s.unpack(edata)
+                        #if self.is_debug_file:
+                            #self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
+                        #(eid_device, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
+                        #eid = eid_device // 10
+                        #n += 36
 
             elif self.format_code in [1, 2] and self.num_wide == 100:  # real/random
                 # real - format_code == 1
@@ -2249,12 +2249,12 @@ class OEF(OP2Common):
                 return ndata
             #self._results._found_result('solid_forces')
             raise RuntimeError(self.code_information())
-            if self.format_code == 1 and self.num_wide == 0:  # real
-                #self.create_transient_object(self.solidForces, RealCSolidForce)
-                raise RuntimeError(self.code_information())
-            else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+            #if self.format_code == 1 and self.num_wide == 0:  # real
+                ##self.create_transient_object(self.solidForces, RealCSolidForce)
+                #raise RuntimeError(self.code_information())
+            #else:
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 53:  # ctriax6
             # 53-CTRIAX6
@@ -3093,7 +3093,6 @@ class OEF(OP2Common):
                         obj.add(nnodes, dt, data_in)
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
-                #aasdfasdfasdf
                 if 0:
                     #if self.element_type == 64: # CQUAD8
                         #result_name = 'cquad8_force'

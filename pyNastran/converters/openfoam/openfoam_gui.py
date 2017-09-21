@@ -5,7 +5,16 @@ import sys
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from PyQt4 import QtGui
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4.QtGui import QMessageBox, QApplication
+elif qt_version == 5:
+    from PyQt5.QtGui import QMessageBox
+    from PyQt5.QtWidgets import QApplication
+elif qt_version == 'pyside':
+    from PySide.QtGui import QMessageBox, QApplication
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 import pyNastran
 from pyNastran.gui.gui_common import GuiCommon2
@@ -99,7 +108,7 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
             '',
             'Reload Model:  using the same filename reload the model',
         ]
-        QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
+        QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
 
     def on_reload(self):

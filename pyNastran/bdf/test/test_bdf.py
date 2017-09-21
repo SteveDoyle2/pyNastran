@@ -21,7 +21,8 @@ np.seterr(all='raise')
 
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import (
-    CrossReferenceError, CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
+    #CrossReferenceError,
+    CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
 from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
@@ -537,7 +538,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 skin_filename = 'skin_file.bdf'
                 fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
                 if os.path.exists(skin_filename):
-                    model = read_bdf(skin_filename, log=fem1.log)
+                    read_bdf(skin_filename, log=fem1.log)
                     os.remove(skin_filename)
             if xref:
                 if run_extract_bodies:
@@ -576,8 +577,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
 
                 fem1._xref = True
-                spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding,
-                                     debug=fem1.debug, log=fem1.log)
+                read_bdf(fem1.bdf_filename, encoding=encoding,
+                         debug=fem1.debug, log=fem1.log)
 
                 remake = pickle_obj
                 if remake:
@@ -628,8 +629,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     fem1._get_maps()
     #remove_unused_materials(fem1)
     #remove_unused(fem1)
-    units_to = ['m', 'kg', 's']
-    units_from = ['m', 'kg', 's']
+    #units_to = ['m', 'kg', 's']
+    #units_from = ['m', 'kg', 's']
     #convert(fem1, units_to, units=units_from)
     if xref:
         try:
@@ -768,7 +769,7 @@ def check_for_flag_in_subcases(fem2, subcase, parameters):
     """
     if not any(subcase.has_parameter(*parameters)):
         subcases = fem2.subcases
-        subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
+        #subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
         has_flag = False
         for isubcase, subcasei in iteritems(fem2.subcases):
             if any(subcasei.has_parameter(*parameters)):
@@ -827,17 +828,17 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 105: # buckling
         _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD', 'METHOD'), 'sol=%s\n%s' % (sol, subcase)
-        if 0:  # pragma: no cover
-            if 'METHOD' not in subcase:
-                subcases = fem2.subcases
-                subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
-                assert len(subcases) == 2, 'METHOD not in subcase and not 2 subcases\n%s' % subcase
-                subcase_id = subcase.subcase_id
-                if subcase_id == 1 and 'METHOD' in subcases[2]:
-                    pass
-                else:
-                    msg = 'METHOD not in subcase and not 2 subcases\n%s' % subcase
-                    raise RuntimeError(msg)
+        #if 0:  # pragma: no cover
+            #if 'METHOD' not in subcase:
+                #subcases = fem2.subcases
+                #subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
+                #assert len(subcases) == 2, 'METHOD not in subcase and not 2 subcases\n%s' % subcase
+                #subcase_id = subcase.subcase_id
+                #if subcase_id == 1 and 'METHOD' in subcases[2]:
+                    #pass
+                #else:
+                    #msg = 'METHOD not in subcase and not 2 subcases\n%s' % subcase
+                    #raise RuntimeError(msg)
 
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 106: # freq
@@ -933,11 +934,11 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         # 1 DESOBJ is required
         assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
-        analysis, options = subcase.get_parameter('ANALYSIS')
+        analysis = subcase.get_parameter('ANALYSIS')[0]
         if analysis != 'STATICS':
             # BUCKLING
             if 'DESOBJ' in subcase:
-                value, options = subcase.get_parameter('DESOBJ')
+                value = subcase.get_parameter('DESOBJ')[0]
                 assert value in fem2.dresps, 'value=%s not in dresps' % value
             else:
                 fem2.log.warning('no DESOBJ in this subcase; is this a buckling preload case?')
@@ -1149,6 +1150,10 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
         fem2.get_reduced_mpcs(mpc_id, stop_on_failure=False)
         fem2.get_MPCx_node_ids_c1(mpc_id, stop_on_failure=False)
         fem2.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
+
+    if 'NSM' in subcase:
+        nsm_id = subcase.get_parameter('NSM')[0]
+        fem2.get_reduced_nsms(nsm_id, stop_on_failure=False)
 
     if 'SDAMPING' in subcase:
         sdamping_id = subcase.get_parameter('SDAMPING')[0]

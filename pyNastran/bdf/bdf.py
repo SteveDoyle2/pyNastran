@@ -23,7 +23,7 @@ from six.moves.cPickle import load, dump  # type: ignore
 import numpy as np  # type: ignore
 
 from pyNastran.utils import object_attributes, print_bad_path, _filename
-from pyNastran.utils.log import get_logger2, SimpleLogger
+from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck, parse_patran_syntax)
@@ -2982,26 +2982,25 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ])
 
         ## TODO: why are some of these ignored?
-        ignored_types2 = set([
-            'case_control_deck', 'caseControlDeck',
+        #ignored_types2 = set([
+            #'case_control_deck', 'caseControlDeck',
 
-            # done
-            'sol', 'loads', 'mkaeros',
-            'rejects', 'reject_cards',
+            ## done
+            #'sol', 'loads', 'mkaeros',
+            #'rejects', 'reject_cards',
 
-            # not cards
-            'debug', 'executive_control_lines',
-            'case_control_lines', 'cards_to_read', 'card_count',
-            'is_structured', 'uniqueBulkDataCards',
-            'model_type', 'include_dir',
-            'sol_method', 'log',
-            'sol_iline',
-            'reject_count', '_relpath',
-            #'foundEndData',
-            'special_cards',])
+            ## not cards
+            #'debug', 'executive_control_lines',
+            #'case_control_lines', 'cards_to_read', 'card_count',
+            #'is_structured', 'uniqueBulkDataCards',
+            #'model_type', 'include_dir',
+            #'sol_method', 'log',
+            #'sol_iline',
+            #'reject_count', '_relpath',
+            #'special_cards',])
 
-        unsupported_types = ignored_types.union(ignored_types2)
-        all_params = object_attributes(self, keys_to_skip=unsupported_types)
+        #unsupported_types = ignored_types.union(ignored_types2)
+        #all_params = object_attributes(self, keys_to_skip=unsupported_types)
 
         msg = ['---BDF Statistics---']
         # sol

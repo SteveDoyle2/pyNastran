@@ -2357,7 +2357,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_presax(sid, pressure, rid1, rid2, phi1=0., phi2=360., comment=''):
+    def add_presax(self, sid, pressure, rid1, rid2, phi1=0., phi2=360., comment=''):
         load = PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
         self._add_load_object(load)
         return load
@@ -3100,7 +3100,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        load = MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz=None, comment=comment)
+        load = MOMENT2(sid, node, mag, g1, g2, g3, g4, comment=comment)
         self._add_load_object(load)
         return load
 

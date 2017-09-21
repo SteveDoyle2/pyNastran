@@ -93,7 +93,7 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
             masses = [mass for eid, mass in model.masses.items() if eid in mass_ids]
     return elements, masses
 
-def _mass_properties(model, elements, masses, reference_point):
+def _mass_properties(model, elements, masses, reference_point, nsm_id=None):
     """
     Caclulates mass properties in the global system about the
     reference point.
@@ -175,9 +175,60 @@ def _mass_properties(model, elements, masses, reference_point):
                     raise
                 model.log.warning("could not get the inertia for element/property\n%s%s" % (
                     element, element.pid_ref))
-
                 continue
 
+    if model.nsms and 0:
+        bar_props = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP', 'PROD', 'PBEND', 'PTUBE', ]
+        shell_props = ['PSHELL', 'PCOMP',  'PSHEAR', 'PRAC2D',]
+        #nsm_properties = [
+            #'CONROD', 'ELEMENT', 'PCONEAX',
+        #]
+        bars = ['CBAR', 'CBEAM', 'CBEND', 'CROD', 'CTUBE', 'CONROD']
+        shells = ['CQUAD4', 'CQUAD8', 'CQUADR', 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CSHEAR','CRAC2D']
+        length_pids_to_consider = []
+        length_eids_to_consider = []
+        area_pids_to_consider = []
+        area_eids_to_consider = []
+        nsm_id = 1
+        nsms = model.get_reduced_nsms(nsm_id, consider_nsmadd=True)
+        for prop in nsms:
+            if prop.type in ['NSM', 'NSM1']:
+                model.log.warning(prop.rstrip())
+
+            elif prop.type in ['NSML', 'NSML1']:
+                if prop.nsm_type in bar_props:
+                    length_pids_to_consider.append(prop.ids)
+                    length_mass_to_consider = [prop.value] * len(prop.ids)
+                elif prop.nsm_type in shell_props:
+                    area_pids_to_consider.append(prop.ids)
+                    area_mass_to_consider = [prop.value] * len(prop.ids)
+
+                elif prop.nsm_type == 'CONROD':
+                    length_eids_to_consider.append(prop.ids)
+                    length_mass_to_consider = [prop.value] * len(prop.ids)
+                elif prop.nsm_type == 'ELEMENT':
+                    # line element - CBAR, CBEAM, CBEND, CROD, CTUBE, and CONROD
+                    # area element - CQUAD4, CQUAD8, CQUADR, CTRIA3, CTRIA6, CTRIAR, CSHEAR, and CRAC2D
+                    pid0 = prop.ids[0]
+                    prop = model.properties[pid0]
+                    if prop.type in bars:
+                        length_pids_to_consider.append(prop.ids)
+                    elif prop.type in shells:
+                        area_pids_to_consider.append(prop.ids)
+                    else:
+                        model.log.warning(prop.rstrip())
+                        continue
+                    mass_to_consider =  [prop.value] * len(prop.ids)
+
+                prop.ids = ids
+                prop.value = value
+                asd
+            else:
+                # NSMADD - this shouldn't happen since we supposedly merged things
+                model.log.warning(prop.rstrip())
+
+        for prop in model.properties:
+            pass
     if mass:
         cg /= mass
     return (mass, cg, I)

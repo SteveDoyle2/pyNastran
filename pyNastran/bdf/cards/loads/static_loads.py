@@ -28,7 +28,9 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.utils import integer_types, float_types
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by, range
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by, _node_ids, range
+from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
     integer_or_string, fields, integer_string_or_blank, integer_or_double)
@@ -528,6 +530,7 @@ class ACCEL(BaseCard):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+
 class ACCEL1(BaseCard):
     """
     Acceleration Load
@@ -667,7 +670,7 @@ class ACCEL1(BaseCard):
         list_fields = [
             'ACCEL1', self.sid, self.Cid(), self.scale,
             self.N[0], self.N[1], self.N[2], None, None
-            ] + self.node_ids
+            ] + collapse_thru_by(self.node_ids)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -686,27 +689,6 @@ class Force(Load):
     def __init__(self):
         Load.__init__(self)
 
-    def normalize(self, msg=''):
-        """
-        adjust the vector to a unit length
-        scale up the magnitude of the vector
-        """
-        assert abs(self.mag) > 0, 'mag=%s\n%s' % (self.mag, self)
-        if abs(self.mag) != 0.0:  # enforced displacement
-            norm_xyz = norm(self.xyz)
-            if norm_xyz == 0.0:
-                raise RuntimeError('xyz=%s norm_xyz=%s' % (self.xyz, norm_xyz))
-            #mag = self.mag * norm_xyz
-            self.mag *= norm_xyz
-            try:
-                self.xyz = self.xyz / norm_xyz
-            except FloatingPointError:
-                msgi = 'xyz = %s\n' % self.xyz
-                msgi += 'norm_xyz = %s\n' % norm_xyz
-                msgi += 'card =\n%s' % str(self)
-                msgi += msg
-                raise FloatingPointError(msgi)
-
     def transform_load(self):
         xyz = self.cid_ref.transform_node_to_global(self.xyz)
         if self.mag > 0.:
@@ -716,8 +698,8 @@ class Force(Load):
     def get_loads(self):
         return [self]
 
-    def F(self):
-        return self.xyz * self.mag
+    #def F(self):
+        #return self.xyz * self.mag
 
     def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
         scale_factors = [1.]
@@ -740,17 +722,6 @@ class Moment(Load):
     def __init__(self):
         Load.__init__(self)
 
-    def normalize(self):
-        """
-        adjust the vector to a unit length
-        scale up the magnitude of the vector
-        """
-        if self.mag != 0.0:  # enforced displacement
-            norm_xyz = norm(self.xyz)
-            #mag = self.mag*norm_xyz
-            self.mag *= norm_xyz
-            self.xyz /= norm_xyz
-
     def transform_load(self):
         #print("self.xyz = ",self.xyz)
         xyz = self.cid_ref.transform_node_to_global(self.xyz)
@@ -768,9 +739,6 @@ class Moment(Load):
             self.node: self.M()
         }
         return(scale_factors, loads)
-
-    def M(self):
-        return {self.node_id : self.xyz * self.mag}
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
@@ -853,7 +821,7 @@ class FORCE(Force):
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(FORCE card) = %i\ncard=%s' % (len(card), card)
-        return FORCE(sid, node, mag, xyz, cid=cid, comment=comment)
+        return cls(sid, node, mag, xyz, cid=cid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -872,24 +840,7 @@ class FORCE(Force):
         cid = data[2]
         mag = data[3]
         xyz = array(data[4:7])
-        return FORCE(sid, node, mag, xyz, cid=cid, comment=comment)
-
-    @property
-    def node_id(self):
-        if self.node_ref is not None:
-            return self.node_ref.nid
-        return self.node
-
-    def Cid(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
-
-    def F(self):
-        return {self.node_id : self.mag * self.xyz}
-
-    #def node_id(self):
-        #return self.node
+        return cls(sid, node, mag, xyz, cid=cid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -903,16 +854,31 @@ class FORCE(Force):
         msg = ' which is required by FORCE sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def uncross_reference(self):
-        self.cid = self.Cid()
-        self.cid_ref = None
-
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by FORCE sid=%s' % self.sid
         # try:
         self.cid_ref = model.Coord(self.cid, msg=msg)
         # except KeyError:
             # pass
+
+    def uncross_reference(self):
+        self.cid = self.Cid()
+        self.cid_ref = None
+
+    @property
+    def node_id(self):
+        if self.node_ref is not None:
+            return self.node_ref.nid
+        return self.node
+
+    def Cid(self):
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
+
+    @property
+    def scaled_vector(self):
+        return self.xyz * self.mag
 
     def raw_fields(self):
         list_fields = ['FORCE', self.sid, self.node_id, self.Cid(),
@@ -951,7 +917,155 @@ class FORCE(Force):
         return self.comment + msg
 
 
-class FORCE1(Force):
+class Load1(BaseCard):
+    def __init__(self, sid, node, mag, g1, g2, comment=''):
+        """
+        Creates a FORCE1/MOMENT1 card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        node : int
+            the node to apply the load to
+        mag : float
+            the load's magnitude
+        n1 / n2 : int / int
+            defines the load direction
+            n = n2 - n1
+        comment : str; default=''
+            a comment for the card
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.node = node
+        self.mag = mag
+        self.g1 = g1
+        self.g2 = g2
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
+        self.xyz = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a FORCE1/MOMENT1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+        node = integer(card, 2, 'node')
+        mag = double(card, 3, 'mag')
+        g1 = integer(card, 4, 'g1')
+        g2 = integer(card, 5, 'g2')
+        assert len(card) == 6, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
+        return cls(sid, node, mag, g1, g2, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a FORCE1/MOMENT1 card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = data[0]
+        node = data[1]
+        mag = data[2]
+        g1 = data[3]
+        g2 = data[4]
+        return cls(sid, node, mag, g1, g2, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by %s sid=%s' % (self.type, self.sid)
+        self.node_ref = model.Node(self.node, msg=msg)
+        self.g1_ref = model.Node(self.g1, msg=msg)
+        self.g2_ref = model.Node(self.g2, msg=msg)
+
+        self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
+        normalize(self)
+
+    def uncross_reference(self):
+        self.node = self.node_id
+        self.g1 = self.G1()
+        self.g2 = self.G2()
+        self.node_ref = None
+        self.g1_ref = None
+        self.g2_ref = None
+
+    def safe_cross_reference(self, model, debug=True):
+        """
+        .. todo:: cross reference and fix repr function
+        """
+        return self.cross_reference(model)
+        #msg = ' which is required by FORCE1 sid=%s' % self.sid
+        #self.node_ref = model.Node(self.node, msg=msg)
+        #self.g1_ref = model.Node(self.g1, msg=msg)
+        #self.g2_ref = model.Node(self.g2, msg=msg)
+        #self.xyz = self.g2.get_position() - self.g1.get_position()
+        #normalize(self)
+
+    @property
+    def scaled_vector(self):
+        return self.xyz * self.mag
+
+    @property
+    def node_ids(self):
+        return [self.node_id, self.G1(), self.G2()]
+
+    def G1(self):
+        if self.g1_ref is not None:
+            return self.g1_ref.nid
+        return self.g1
+
+    def G2(self):
+        if self.g2_ref is not None:
+            return self.g2_ref.nid
+        return self.g2
+
+    @property
+    def node_id(self):
+        if self.node_ref is not None:
+            return self.node_ref.nid
+        return self.node
+
+    def raw_fields(self):
+        list_fields = [self.type, self.sid, self.node_id, self.mag, self.G1(), self.G2()]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+
+class FORCE1(Load1):
     """
     Defines a static concentrated force at a grid point by specification of a
     magnitude and two grid points that determine the direction.
@@ -984,146 +1098,15 @@ class FORCE1(Force):
         comment : str; default=''
             a comment for the card
         """
-        Force.__init__(self)
-        if comment:
-            self.comment = comment
-        self.sid = sid
-        self.node = node
-        self.mag = mag
-        self.g1 = g1
-        self.g2 = g2
-        self.node_ref = None
-        self.g1_ref = None
-        self.g2_ref = None
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        """
-        Adds a FORCE1 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        sid = integer(card, 1, 'sid')
-        node = integer(card, 2, 'node')
-        mag = double(card, 3, 'mag')
-        g1 = integer(card, 4, 'g1')
-        g2 = integer(card, 5, 'g2')
-        assert len(card) == 6, 'len(FORCE1 card) = %i\ncard=%s' % (len(card), card)
-        return FORCE1(sid, node, mag, g1, g2, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        """
-        Adds a FORCE1 card from the OP2
-
-        Parameters
-        ----------
-        data : List[varies]
-            a list of fields defined in OP2 format
-        comment : str; default=''
-            a comment for the card
-        """
-        sid = data[0]
-        node = data[1]
-        mag = data[2]
-        g1 = data[3]
-        g2 = data[4]
-        return FORCE1(sid, node, mag, g1, g2, comment=comment)
-
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        msg = ' which is required by FORCE1 sid=%s' % self.sid
-        self.node_ref = model.Node(self.node, msg=msg)
-        self.g1_ref = model.Node(self.g1, msg=msg)
-        self.g2_ref = model.Node(self.g2, msg=msg)
-
-        self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
-        self.normalize()
-
-    def uncross_reference(self):
-        self.node = self.node_id
-        self.g1 = self.G1()
-        self.g2 = self.G2()
-        self.node_ref = None
-        self.g1_ref = None
-        self.g2_ref = None
-
-    def safe_cross_reference(self, model, debug=True):
-        """
-        .. todo:: cross reference and fix repr function
-        """
-        return self.cross_reference(model)
-        #msg = ' which is required by FORCE1 sid=%s' % self.sid
-        #self.node_ref = model.Node(self.node, msg=msg)
-        #self.g1_ref = model.Node(self.g1, msg=msg)
-        #self.g2_ref = model.Node(self.g2, msg=msg)
-        #self.xyz = self.g2.get_position() - self.g1.get_position()
-        #self.normalize()
-
-    @property
-    def node_ids(self):
-        return [self.node_id, self.G1(), self.G2()]
-
-    def G1(self):
-        if self.g1_ref is not None:
-            return self.g1_ref.nid
-        return self.g1
-
-    def G2(self):
-        if self.g2_ref is not None:
-            return self.g2_ref.nid
-        return self.g2
-
-    @property
-    def node_id(self):
-        if self.node_ref is not None:
-            return self.node_ref.nid
-        return self.node
-
-    def raw_fields(self):
-        list_fields = ['FORCE1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
-        return list_fields
-
-    def repr_fields(self):
-        return self.raw_fields()
-
-    def write_card(self, size=8, is_double=False):
-        card = self.raw_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        if is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+        Load1.__init__(self, sid, node, mag, g1, g2, comment)
+        #Force.__init__(self)
 
 
-class FORCE2(Force):
-    """
-    Defines a static concentrated force at a grid point by specification of a
-    magnitude and four grid points that determine the direction.
-
-    +--------+-----+---+---+----+----+----+----+
-    |   1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
-    +========+=====+===+===+====+====+====+====+
-    | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
-    +--------+-----+---+---+----+----+----+----+
-    """
-    type = 'FORCE2'
-
+class Load2(BaseCard):
+    """common class for FORCE2, MOMENT2"""
     def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
         """
-        Creates a FORCE2 card
+        Creates a FORCE2/MOMENT2 card
 
         Parameters
         ----------
@@ -1139,7 +1122,6 @@ class FORCE2(Force):
         comment : str; default=''
             a comment for the card
         """
-        Force.__init__(self)
         if comment:
             self.comment = comment
         self.sid = sid
@@ -1166,7 +1148,7 @@ class FORCE2(Force):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a FORCE2 card from ``BDF.add_card(...)``
+        Adds a FORCE2/MOMENT2 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -1182,13 +1164,13 @@ class FORCE2(Force):
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
         g4 = integer_or_blank(card, 7, 'g4')
-        assert len(card) in [7, 8], 'len(FORCE2 card) = %i\ncard=%s' % (len(card), card)
-        return FORCE2(sid, node, mag, g1, g2, g3, g4, comment=comment)
+        assert len(card) in [7, 8], 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
+        return cls(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         """
-        Adds a FORCE2 card from the OP2
+        Adds a FORCE2/MOMENT2 card from the OP2
 
         Parameters
         ----------
@@ -1204,7 +1186,7 @@ class FORCE2(Force):
         g2 = data[4]
         g3 = data[5]
         g4 = data[6]
-        return FORCE2(sid, node, mag, g1, g2, g3, g4, comment=comment)
+        return cls(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1215,7 +1197,7 @@ class FORCE2(Force):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by FORCE2 sid=%s' % self.sid
+        msg = ' which is required by %s sid=%s' % (self.type, self.sid)
         self.node_ref = model.Node(self.node, msg=msg)
         self.g1_ref = model.Node(self.g1, msg=msg)
         self.g2_ref = model.Node(self.g2, msg=msg)
@@ -1244,7 +1226,7 @@ class FORCE2(Force):
                 msg += 'g3.get_position()=%s\n' % xyz3
                 msg += 'g1.get_position()=%s' % xyz1
                 raise FloatingPointError(msg)
-            xyz = cross(v21, v31)
+            xyz = cross(v21, v2)
         else:
             self.g4_ref = model.Node(self.g4, msg=msg)
             xyz4 = self.g4_ref.get_position()
@@ -1263,44 +1245,82 @@ class FORCE2(Force):
 
         msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
             xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
-        #print(msgi)
-        self.normalize(msgi)
-        #print(self.xyz)
+        normalize(self, msgi)
 
     def safe_cross_reference(self, model, debug=True):
         """
         .. todo:: cross reference and fix repr function
         """
-        msg = ' which is required by FORCE2 sid=%s' % self.sid
-        self.node_ref = model.Node(self.node, msg=msg)
-        self.g1_ref = model.Node(self.g1, msg=msg)
-        self.g2_ref = model.Node(self.g2, msg=msg)
-        self.g3_ref = model.Node(self.g3, msg=msg)
-        self.g4_ref = model.Node(self.g4, msg=msg)
-
-        xyz1 = self.g1_ref.get_position()
-        xyz2 = self.g2_ref.get_position()
-        xyz3 = self.g3_ref.get_position()
-        xyz4 = self.g4_ref.get_position()
-        v21 = xyz2 - xyz1
-        v43 = xyz4 - xyz3
+        msg = ' which is required by %s sid=%s' % (self.type, self.sid)
+        is_failed = False
         try:
-            v21 /= norm(v21)
-        except FloatingPointError:
-            msg = 'v21=%s norm(v21)=%s\n' % (v21, norm(v21))
-            msg += 'g1.get_position()=%s\n' % xyz1
-            msg += 'g2.get_position()=%s' % xyz2
-            raise FloatingPointError(msg)
+            self.node_ref = model.Node(self.node, msg=msg)
+        except KeyError:
+            is_failed = True
+            model.log.warning('failed to cross-reference NODE=%i,%s' % (self.node, msg))
 
         try:
-            v43 /= norm(v43)
-        except FloatingPointError:
-            msg = 'v43=%s norm(v43)=%s\n' % (v43, norm(v43))
-            msg += 'g3.get_position()=%s\n' % xyz3
-            msg += 'g4.get_position()=%s' % xyz4
-            raise FloatingPointError(msg)
-        self.xyz = cross(v21, v43)
-        self.normalize()
+            self.g1_ref = model.Node(self.g1, msg=msg)
+            xyz1 = self.g1_ref.get_position()
+        except KeyError:
+            is_failed = True
+            model.log.warning('failed to cross-reference G1=%i,%s' % (self.g1, msg))
+
+        try:
+            self.g2_ref = model.Node(self.g2, msg=msg)
+            xyz2 = self.g2_ref.get_position()
+        except KeyError:
+            is_failed = True
+            model.log.warning('failed to cross-reference G2=%i,%s' % (self.g2, msg))
+
+        try:
+            self.g3_ref = model.Node(self.g3, msg=msg)
+            xyz3 = self.g3_ref.get_position()
+        except KeyError:
+            is_failed = True
+            model.log.warning('failed to cross-reference G3=%i,%s' % (self.g3, msg))
+
+        if not is_failed:
+            v21 = xyz2 - xyz1
+
+        if self.g4 is not None:
+            try:
+                self.g4_ref = model.Node(self.g4, msg=msg)
+            except KeyError:
+                is_failed = True
+            if not is_failed:
+                xyz4 = self.g4_ref.get_position()
+                model.log.warning('failed to cross-reference G4=%i,%s' % (self.g4, msg))
+        else:
+            xyz3, xyz4 = xyz1, xyz3
+
+        if not is_failed:
+            v43 = xyz4 - xyz3
+            v2 = v43
+            try:
+                v21 /= norm(v21)
+            except FloatingPointError:
+                msg = 'v21=%s norm(v21)=%s\n' % (v21, norm(v21))
+                msg += 'g1.get_position()=%s\n' % xyz1
+                msg += 'g2.get_position()=%s' % xyz2
+                raise FloatingPointError(msg)
+
+            try:
+                v43 /= norm(v43)
+            except FloatingPointError:
+                msg = 'v43=%s norm(v43)=%s\n' % (v43, norm(v43))
+                msg += 'g3.get_position()=%s\n' % xyz3
+                msg += 'g4.get_position()=%s' % xyz4
+                raise FloatingPointError(msg)
+            self.xyz = cross(v21, v43)
+
+            msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
+                xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
+            normalize(self, msg)
+
+    @property
+    def scaled_vector(self):
+        return self.xyz * self.mag
 
     def uncross_reference(self):
         self.node = self.node_id
@@ -1344,9 +1364,18 @@ class FORCE2(Force):
     def node_ids(self):
         return [self.node_id, self.G1(), self.G2(), self.G3(), self.G4()]
 
+    def _node_ids(self, nodes=None):
+        """returns nodeIDs for repr functions"""
+        if not nodes:
+            nodes = self.nodes
+        if isinstance(nodes[0], integer_types):
+            return [node for node in nodes]
+        else:
+            return [node.nid for node in nodes]
+
     def raw_fields(self):
         (node, g1, g2, g3, g4) = self._node_ids([self.node, self.g1, self.g2, self.g3, self.g4])
-        list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
+        list_fields = [self.type, self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 
     def repr_fields(self):
@@ -1359,6 +1388,37 @@ class FORCE2(Force):
         if is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
+
+    def transform_load(self):
+        xyz = self.cid_ref.transform_node_to_global(self.xyz)
+        if self.mag > 0.:
+            return (True, self.node, self.mag * xyz)  # load
+        return (False, self.node, xyz)  # enforced displacement
+
+    def get_loads(self):
+        return [self]
+
+    #def get_reduced_loads(self, resolve_load_card=False, filter_zero_scale_factors=False):
+        #scale_factors = [1.]
+        #loads = self.F()
+        #return(scale_factors, loads)
+
+
+class FORCE2(Load2):
+    """
+    Defines a static concentrated force at a grid point by specification of a
+    magnitude and four grid points that determine the direction.
+
+    +--------+-----+---+---+----+----+----+----+
+    |   1    |  2  | 3 | 4 |  5 |  6 |  7 |  8 |
+    +========+=====+===+===+====+====+====+====+
+    | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
+    +--------+-----+---+---+----+----+----+----+
+    """
+    type = 'FORCE2'
+    def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
+        Load2.__init__(self,sid, node, mag, g1, g2, g3, g4, comment)
+
 
 
 class MOMENT(Moment):
@@ -1428,7 +1488,7 @@ class MOMENT(Moment):
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(MOMENT card) = %i\ncard=%s' % (len(card), card)
-        return MOMENT(sid, node, mag, xyz, cid=cid, comment=comment)
+        return cls(sid, node, mag, xyz, cid=cid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1447,7 +1507,11 @@ class MOMENT(Moment):
         cid = data[2]
         mag = data[3]
         xyz = data[4:7]
-        return MOMENT(sid, node, mag, xyz, cid=cid, comment=comment)
+        return cls(sid, node, mag, xyz, cid=cid, comment=comment)
+
+    @property
+    def scaled_vector(self):
+        return self.xyz * self.mag
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -1526,7 +1590,7 @@ class MOMENT(Moment):
         return self.comment + msg
 
 
-class MOMENT1(Moment):
+class MOMENT1(Load1):
     """
     Defines a static concentrated moment at a grid point by specifying a
     magnitude and two grid points that determine the direction.
@@ -1559,142 +1623,11 @@ class MOMENT1(Moment):
         comment : str; default=''
             a comment for the card
         """
-        Moment.__init__(self)
-        if comment:
-            self.comment = comment
-        self.xyz = None
-        self.sid = sid
-        self.node = node
-        self.mag = mag
-        self.g1 = g1
-        self.g2 = g2
-        self.node_ref = None
-        self.g1_ref = None
-        self.g2_ref = None
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        """
-        Adds a MOMENT1 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        sid = integer(card, 1, 'sid')
-        node = integer(card, 2, 'node')
-        mag = double(card, 3, 'mag')
-        g1 = integer(card, 4, 'g1')
-        g2 = integer(card, 5, 'g2')
-        assert len(card) == 6, 'len(MOMENT1 card) = %i\ncard=%s' % (len(card), card)
-        return MOMENT1(sid, node, mag, g1, g2, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        """
-        Adds a MOMENT1 card from the OP2
-
-        Parameters
-        ----------
-        data : List[varies]
-            a list of fields defined in OP2 format
-        comment : str; default=''
-            a comment for the card
-        """
-        sid = data[0]
-        node = data[1]
-        mag = data[2]
-        g1 = data[3]
-        g2 = data[4]
-        return MOMENT1(sid, node, mag, g1, g2, comment=comment)
-
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        msg = ' which is required by MOMENT1 sid=%s' % self.sid
-        self.node_ref = model.Node(self.node, msg=msg)
-        self.g1_ref = model.Node(self.g1, msg=msg)
-        self.g2_ref = model.Node(self.g2, msg=msg)
-
-        self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
-        self.normalize()
-
-    def uncross_reference(self):
-        self.node = self.node_id
-        self.g1 = self.G1()
-        self.g2 = self.G2()
-        self.node_ref = None
-        self.g1_ref = None
-        self.g2_ref = None
-
-    def safe_cross_reference(self, model, debug=True):
-        """
-        .. todo:: cross reference and fix repr function
-        """
-        msg = ' which is required by MOMENT1 sid=%s' % self.sid
-        self.node_ref = model.Node(self.node, msg=msg)
-        self.g1_ref = model.Node(self.g1, msg=msg)
-        self.g2_ref = model.Node(self.g2, msg=msg)
-
-        self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
-        self.normalize()
-
-    @property
-    def node_ids(self):
-        """all the nodes referenced by the load"""
-        return [self.node_id, self.G1(), self.G2()]
-
-    @property
-    def node_id(self):
-        if self.node_ref is not None:
-            return self.node_ref.nid
-        return self.node
-
-    def G1(self):
-        if self.g1_ref is not None:
-            return self.g1_ref.nid
-        return self.g1
-
-    def G2(self):
-        if self.g2_ref is not None:
-            return self.g2_ref.nid
-        return self.g2
-
-    def raw_fields(self):
-        list_fields = ['MOMENT1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
-        return list_fields
-
-    def repr_fields(self):
-        return self.raw_fields()
-
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
-        """
-        The writer method used by BDF.write_card()
-
-        Parameters
-        -----------
-        size : int; default=8
-            the size of the card (8/16)
-        """
-        card = self.raw_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        if is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+        Load1.__init__(self, sid, node, mag, g1, g2, comment)
+        #Moment.__init__(self)
 
 
-class MOMENT2(Moment):
+class MOMENT2(Load2):
     """
     Defines a static concentrated moment at a grid point by specification
     of a magnitude and four grid points that determine the direction.
@@ -1706,246 +1639,8 @@ class MOMENT2(Moment):
     +---------+-----+---+---+----+----+----+----+
     """
     type = 'MOMENT2'
-
-    def __init__(self, sid, node, mag, g1, g2, g3, g4, xyz=None, comment=''):
-        """
-        Creates a MOMENT2 card
-
-        Parameters
-        ----------
-        sid : int
-            load id
-        node : int
-            the node to apply the load to
-        mag : float
-            the load's magnitude
-        g1 / g2 / g3 / g4 : int / int / int / int
-            defines the load direction
-            n = (g2 - g1) x (g4 - g3)
-        comment : str; default=''
-            a comment for the card
-        """
-        Moment.__init__(self)
-        if comment:
-            self.comment = comment
-        self.sid = sid
-        self.node = node
-        self.mag = mag
-        self.g1 = g1
-        self.g2 = g2
-        self.g3 = g3
-        self.g4 = g4
-        self.xyz = xyz
-        self.node_ref = None
-        self.g1_ref = None
-        self.g2_ref = None
-        self.g3_ref = None
-        self.g4_ref = None
-
-    def validate(self):
-        assert isinstance(self.sid, integer_types), str(self)
-        assert self.g1 is not None, self.g1
-        assert self.g2 is not None, self.g2
-        assert self.g3 is not None, self.g3
-        #assert self.g4 is not None, self.g4
-        assert self.g1 != self.g2, 'g1=%s g2=%s' % (self.g1, self.g2)
-        assert self.g3 != self.g4, 'g3=%s g4=%s' % (self.g3, self.g4)
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        """
-        Adds a MOMENT2 card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-        """
-        sid = integer(card, 1, 'sid')
-        node = integer(card, 2, 'node')
-        mag = double(card, 3, 'mag')
-        g1 = integer(card, 4, 'g1')
-        g2 = integer(card, 5, 'g2')
-        g3 = integer(card, 6, 'g3')
-        g4 = integer_or_blank(card, 7, 'g4')
-        xyz = None
-        assert len(card) in [7, 8], 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
-        return MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        """
-        Adds a MOMENT2 card from the OP2
-
-        Parameters
-        ----------
-        data : List[varies]
-            a list of fields defined in OP2 format
-        comment : str; default=''
-            a comment for the card
-        """
-        sid = data[0]
-        node = data[1]
-        mag = data[2]
-        g1 = data[3]
-        g2 = data[4]
-        g3 = data[5]
-        g4 = data[6]
-        assert len(data) == 7, data
-        #xyz = array(data[7:10])
-        #print('data =', data)
-        #assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-        xyz = None
-        return MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz, comment=comment)
-
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        msg = ' which is required by MOMENT2 sid=%s' % self.sid
-        self.node_ref = model.Node(self.node, msg=msg)
-        self.g1_ref = model.Node(self.g1, msg=msg)
-        self.g2_ref = model.Node(self.g2, msg=msg)
-        self.g3_ref = model.Node(self.g3, msg=msg)
-
-        xyz1 = self.g1_ref.get_position()
-        xyz2 = self.g2_ref.get_position()
-        xyz3 = self.g3_ref.get_position()
-        v21 = xyz2 - xyz1
-
-        try:
-            v21 /= norm(v21)
-        except FloatingPointError:
-            msg = 'v1=v21=%s norm(v21)=%s\n' % (v21, norm(v21))
-            msg += 'g1.get_position()=%s\n' % xyz1
-            msg += 'g2.get_position()=%s' % xyz2
-            raise FloatingPointError(msg)
-
-        if self.g4 is None:
-            xyz4 = None
-            v2 = xyz3 - xyz1
-            try:
-                v2 /= norm(v2)
-            except FloatingPointError:
-                msg = 'v2=v31=%s norm(v31)=%s\n' % (v2, norm(v2))
-                msg += 'g3.get_position()=%s\n' % xyz3
-                msg += 'g1.get_position()=%s' % xyz1
-                raise FloatingPointError(msg)
-            xyz = cross(v21, v31)
-        else:
-            self.g4_ref = model.Node(self.g4, msg=msg)
-            xyz4 = self.g4_ref.get_position()
-            v2 = xyz4 - xyz3
-
-            try:
-                v2 /= norm(v2)
-            except FloatingPointError:
-                msg = 'v2=v43=%s norm(v43)=%s\n' % (v2, norm(v2))
-                msg += 'g3.get_position()=%s\n' % xyz3
-                msg += 'g4.get_position()=%s' % xyz4
-                raise FloatingPointError(msg)
-            xyz = cross(v21, v2)
-
-        self.xyz = xyz
-
-        #msgi = 'xyz1=%s xyz2=%s xyz3=%s xyz4=%s\nv21=%s v43 (or v31)=%s\nxyz=%s' % (
-            #xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
-        #print(msgi)
-        self.normalize()
-        #print(self.xyz)
-
-    def uncross_reference(self):
-        self.node = self.node_id
-        self.g1 = self.G1()
-        self.g2 = self.G2()
-        self.g3 = self.G3()
-        self.g4 = self.G4()
-        self.node_ref = None
-        self.g1_ref = None
-        self.g2_ref = None
-        self.g3_ref = None
-        self.g4_ref = None
-
-    def safe_cross_reference(self, model, debug=True):
-        """
-        .. todo:: cross reference and fix repr function
-        """
-        msg = ' which is required by MOMENT2 sid=%s' % self.sid
-        self.node_ref = model.Node(self.node, msg=msg)
-        self.g1_ref = model.Node(self.g1, msg=msg)
-        self.g2_ref = model.Node(self.g2, msg=msg)
-        self.g3_ref = model.Node(self.g3, msg=msg)
-        self.g4_ref = model.Node(self.g4, msg=msg)
-
-        v12 = self.g2_ref.get_position() - self.g1_ref.get_position()
-        v34 = self.g4_ref.get_position() - self.g3_ref.get_position()
-        v12 = v12 / norm(v12)
-        v34 = v34 / norm(v34)
-        self.xyz = cross(v12, v34)
-
-    @property
-    def node_id(self):
-        if self.node_ref is not None:
-            return self.node_ref.nid
-        return self.node
-
-    def G1(self):
-        if self.g1_ref is not None:
-            return self.g1_ref.nid
-        return self.g1
-
-    def G2(self):
-        if self.g2_ref is not None:
-            return self.g2_ref.nid
-        return self.g2
-
-    def G3(self):
-        if self.g3_ref is not None:
-            return self.g3_ref.nid
-        return self.g3
-
-    def G4(self):
-        if self.g4_ref is not None:
-            return self.g4_ref.nid
-        return self.g4
-
-    @property
-    def node_ids(self):
-        """all the nodes referenced by the load"""
-        return [self.node_id, self.G1(), self.G2(), self.G3(), self.G4()]
-
-    def raw_fields(self):
-        list_fields = [
-            'MOMENT2', self.sid, self.node_id, self.mag,
-            self.G1(), self.G2(), self.G3(), self.G4()]
-        return list_fields
-
-    def repr_fields(self):
-        return self.raw_fields()
-
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
-        """
-        The writer method used by BDF.write_card()
-
-        Parameters
-        -----------
-        size : int; default=8
-            the size of the card (8/16)
-        """
-        card = self.raw_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        if is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+    def __init__(self, sid, node, mag, g1, g2, g3, g4, comment=''):
+        Load2.__init__(self, sid, node, mag, g1, g2, g3, g4, comment)
 
 
 class GMLOAD(Load):
@@ -2020,7 +1715,7 @@ class GMLOAD(Load):
         #self.g1 = model.Node(self.g1, msg=msg)
         #self.g2 = model.Node(self.g2, msg=msg)
         #self.xyz = self.g2.get_position() - self.g1.get_position()
-        #self.normalize()
+        #normalize(self, msg)
 
     def safe_cross_reference(self, model):
         return self.cross_reference(model)
@@ -3263,3 +2958,37 @@ class PLOADX1(Load):
         if is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
+
+
+def normalize(self, msg=''):
+    """
+    adjust the vector to a unit length
+    scale up the magnitude of the vector
+    """
+    assert abs(self.mag) > 0, 'mag=%s\n%s' % (self.mag, self)
+    if abs(self.mag) != 0.0:  # enforced displacement
+        norm_xyz = norm(self.xyz)
+        if norm_xyz == 0.0:
+            raise RuntimeError('xyz=%s norm_xyz=%s' % (self.xyz, norm_xyz))
+        #mag = self.mag * norm_xyz
+        self.mag *= norm_xyz
+        try:
+            self.xyz = self.xyz / norm_xyz
+        except FloatingPointError:
+            msgi = 'xyz = %s\n' % self.xyz
+            msgi += 'norm_xyz = %s\n' % norm_xyz
+            msgi += 'card =\n%s' % str(self)
+            msgi += msg
+            raise FloatingPointError(msgi)
+
+
+#def normalize(self):
+    #"""
+    #adjust the vector to a unit length
+    #scale up the magnitude of the vector
+    #"""
+    #if self.mag != 0.0:  # enforced displacement
+        #norm_xyz = norm(self.xyz)
+        ##mag = self.mag*norm_xyz
+        #self.mag *= norm_xyz
+        #self.xyz /= norm_xyz

@@ -79,24 +79,23 @@ def main():
     quads = fe.read_faces()
     quads += 1
 
-    f = open('points_faces.bdf', 'wb')
-    f.write('CEND\n')
-    f.write('BEGIN BULK\n')
+    with open('points_faces.bdf', 'wb') as bdf_file:
+        bdf_file.write('CEND\n')
+        bdf_file.write('BEGIN BULK\n')
 
-    for inode, node in enumerate(nodes):
-        card = ['GRID', inode + 1, None] + list(node)
-        f.write(print_card_8(card))
+        for inode, node in enumerate(nodes):
+            card = ['GRID', inode + 1, None] + list(node)
+            bdf_file.write(print_card_8(card))
 
-    ielement = 1
-    pid = 1
-    for quad in quads:
-        card = ['CQUAD4', ielement, pid] + list(quad)
-        f.write(print_card_8(card))
-        ielement += 1
-    f.write('PSHELL, 1, 1, 0.1\n')
-    f.write('MAT1, 1, 1.0,,0.3\n')
-    f.write('ENDDATA\n')
-    f.close()
+        ielement = 1
+        pid = 1
+        for quad in quads:
+            card = ['CQUAD4', ielement, pid] + list(quad)
+            bdf_file.write(print_card_8(card))
+            ielement += 1
+        bdf_file.write('PSHELL, 1, 1, 0.1\n')
+        bdf_file.write('MAT1, 1, 1.0,,0.3\n')
+        bdf_file.write('ENDDATA\n')
 
 if __name__ == '__main__':
     main()

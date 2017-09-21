@@ -1,7 +1,15 @@
+"""
+defines the LAMA class to read:
+ - RealEigenvalues
+ - ComplexEigenvalues
+ - BucklingEigenvalues
+
+from the OP2
+"""
 from __future__ import print_function
+from struct import Struct
 from six import b
 from six.moves import range
-from struct import Struct
 
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
@@ -16,12 +24,12 @@ class LAMA(OP2Common):
         """parses the Complex Eigenvalues Table 3 Data"""
         #raise NotImplementedError(self.table_name)
         self.words = [
-            'aCode',       'tCode',    '???', 'isubcase',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
+            'aCode', 'tCode', '???', 'isubcase',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
             '???', '???', '???', '???']
         #self.show_data(data)
 
@@ -35,22 +43,22 @@ class LAMA(OP2Common):
         #self._read_title_helper(data)
 
         self.words = [
-            'aCode',       'tCode',    '???', 'isubcase',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
+            'aCode', 'tCode', '???', 'isubcase',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
             '???', '???', '???', '???']
         #self.show_data(data)
 
         three = self.parse_approach_code(data)
 
         self.seven = self.add_data_parameter(data, 'seven', 'i', 10, False)  # seven
-        ## residual vector augmentation flag
-        self.resFlag = self.add_data_parameter(data, 'resFlag', 'i', 11, False)
-        ## fluid modes Flag
-        self.fldFlag = self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
+        #: residual vector augmentation flag
+        self.residual_flag = self.add_data_parameter(data, 'residual_flag', 'i', 11, False)
+        #: fluid modes flag
+        self.fluid_flag = self.add_data_parameter(data, 'fluid_flag', 'i', 12, False)
 
         self._read_title(data)
 
@@ -63,19 +71,19 @@ class LAMA(OP2Common):
         nmodes = ndata // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
-        clama = ComplexEigenvalues(11)
+        clama = ComplexEigenvalues(self.title, nmodes)
         self.eigenvalues[self.title] = clama
         #self.eigenvalues[self.isubcase] = lama
-        s = Struct(b(self._endian + 'ii4f'))
+        structi = Struct(b(self._endian + 'ii4f'))
         for i in range(nmodes):
             edata = data[n:n+ntotal]
-            out = s.unpack(edata)
+            out = structi.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
-            (imode, order, eigr, eigc, freq, damping) = out # CLAMA
+            #(imode, order, eigr, eigc, freq, damping) = out # CLAMA
             #print('imode=%s order=%s eigr=%s eigc=%s freq=%s damping=%s' %
                   #(imode, order, eigr, eigc, freq, damping))
-            clama.add_f06_line(out)
+            clama.add_f06_line(out, i)
             n += ntotal
         assert n == ndata, 'clama length error'
         return n
@@ -92,31 +100,31 @@ class LAMA(OP2Common):
         nmodes = ndata // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
-        blama = BucklingEigenvalues(11)
+        blama = BucklingEigenvalues(self.title, nmodes)
         self.eigenvalues[self.title] = blama
         #self.eigenvalues[self.isubcase] = lama
-        s = Struct(b(self._endian + 'ii5f'))
+        structi = Struct(b(self._endian + 'ii5f'))
         for i in range(nmodes):
             edata = data[n:n+ntotal]
-            out = s.unpack(edata)
+            out = structi.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
-            (imode, order, eigen, omega, freq, mass, stiff) = out # BLAMA??
-            #(modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = line  # LAMA
-            #(rootNum, extractOrder, eigr, eigi, cycle, damping) = data  # CLAMA
-            blama.add_f06_line(out)
+            #(imode, order, eigen, omega, freq, mass, stiff) = out # BLAMA??
+            #(mode_num, extract_order, eigenvalue, radian, cycle, genM, genK) = line  # LAMA
+            #(root_num, extract_order, eigr, eigi, cycle, damping) = data  # CLAMA
+            blama.add_f06_line(out, i)
             n += ntotal
         return n
 
     def _read_real_eigenvalue_3(self, data, ndata):
         """parses the Real Eigenvalues Table 3 Data"""
         self.words = [
-            'aCode',       'tCode',    '???', 'isubcase',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
-            '???',         '???',      '???',          '???',
+            'aCode', 'tCode', '???', 'isubcase',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
             '???', '???', '???', '???']
         #self.show_data(data)
 
@@ -124,20 +132,24 @@ class LAMA(OP2Common):
 
         self.seven = self.add_data_parameter(data, 'seven', 'i', 10, False)  # seven
         ## residual vector augmentation flag
-        self.resFlag = self.add_data_parameter(data, 'resFlag', 'i', 11, False)
-        ## fluid modes Flag
-        self.fldFlag = self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
+        self.residual_flag = self.add_data_parameter(data, 'residual_flag', 'i', 11, False)
+        ## fluid modes flag
+        self.fluid_flag = self.add_data_parameter(data, 'fluid_flag', 'i', 12, False)
         self.title = None
 
         #print(self.data_code)
         #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code
-        #self.add_data_parameter(data,'num_wide',     'i',10,False)  ## number of words per entry in record; .. note:: is this needed for this table ???
+
+        #: number of words per entry in record;
+        #.. todo:: is this needed for this table ???
+        #self.add_data_parameter(data,'num_wide',     'i',10,False)
 
         #if self.analysis_code == 2: # sort2
             #self.lsdvmn = self.get_values(data,'i',5)
 
         #print("*isubcase=%s" % self.isubcase)
-        #print("analysis_code=%s table_code=%s thermal=%s" % (self.analysis_code, self.table_code, self.thermal))
+        #print("analysis_code=%s table_code=%s thermal=%s" % (
+            #self.analysis_code, self.table_code, self.thermal))
 
         #self.print_block(data)
         self._read_title(data)
@@ -147,20 +159,19 @@ class LAMA(OP2Common):
         if self.read_mode == 1:
             return ndata
         #self.show_data(data)
-        nModes = ndata // 28
+        nmodes = ndata // 28
         n = 0
         ntotal = 28
         #assert self.isubcase != 0, self.isubcase
-        lama = RealEigenvalues(self.title)
+        lama = RealEigenvalues(self.title, nmodes=nmodes)
         self.eigenvalues[self.title] = lama
-        s = Struct('ii5f')
-        for i in range(nModes):
+        structi = Struct('ii5f')
+        for i in range(nmodes):
             edata = data[n:n+28]
-            out = s.unpack(edata)
+            out = structi.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
-            #(imode, order, eigen, omega, freq, mass, stiff) = out
-            (imode, extract_order, eigenvalue, radian, cycle, genM, genK) = out
-            lama.add_f06_line(out)
+            #(imode, extract_order, eigenvalue, radian, cycle, gen_mass, gen_stiffness) = out
+            lama.add_f06_line(out, i)
             n += ntotal
         return n

@@ -272,14 +272,17 @@ def build_thru(packs, max_dv=None, nthru=None):
                 fields.append('THRU')
                 fields.append(last_val)
             elif last_val - first_val == 2:
+                # no point in writing 'A THRU A+2'
                 fields.append(first_val)
                 fields.append(first_val + 1)
                 fields.append(last_val)
             else:
+                # no point in writing 'A THRU A+1'
                 fields.append(first_val)
                 fields.append(last_val)
         else:
             if max_dv is None:
+                # no point in writing 'A THRU B BY C'
                 if last_val - first_val > 4 * dv:
                     fields.append(first_val)
                     fields.append('THRU')

@@ -145,6 +145,7 @@ def run_docopt():
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
+        'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
         None,
     ]
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format

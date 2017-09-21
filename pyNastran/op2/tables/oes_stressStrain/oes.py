@@ -951,7 +951,7 @@ class OES(OP2Common):
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
 
-        flag = 'element_id'
+        #flag = 'element_id'
         if self.is_stress():
             result_name = 'stress'
             stress_name = 'STRESS'
@@ -1323,8 +1323,8 @@ class OES(OP2Common):
                         n += ntotal
             elif self.format_code == 1 and self.num_wide == 3: # random
                 raise RuntimeError(self.code_information())
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
 
@@ -1934,28 +1934,29 @@ class OES(OP2Common):
                 if self.read_mode == 1:
                     return ndata
                 return ndata
-                print('numwide=%s numwide_random=%s attempt2=%s subcase=%s' % (self.num_wide, numwide_random, num_wide_random, self.isubcase))
-                #msg = self.code_information()
-                ntotal = 130
-                nelements = ndata // ntotal
+                #print('numwide=%s numwide_random=%s attempt2=%s subcase=%s' % (
+                    #self.num_wide, numwide_random, num_wide_random, self.isubcase))
+                ##msg = self.code_information()
+                #ntotal = 130
+                #nelements = ndata // ntotal
 
-                # cid, coord_type, nactive_pnts,
-                #      nid, oxx, oyy, ozz, txy, tyz, txz
-                struct1 = Struct(b('2i 4s'))
-                struct2 = Struct(b('i6f'))
-                for i in range(nelements):
-                    edata = data[n:n+12]
-                    out = struct1.unpack(edata)
-                    (eid_device, cid, abcd) = out
-                    eid = eid_device // 10
-                    if self.is_debug_file:
-                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
-                    n += 12
-                    for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
-                        out = struct2.unpack(data[n:n + 28]) # 4*7 = 28
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
-                        (grid_device, sxx, syy, sz, txy, tyz, txz) = out
+                ## cid, coord_type, nactive_pnts,
+                ##      nid, oxx, oyy, ozz, txy, tyz, txz
+                #struct1 = Struct(b('2i 4s'))
+                #struct2 = Struct(b('i6f'))
+                #for i in range(nelements):
+                    #edata = data[n:n+12]
+                    #out = struct1.unpack(edata)
+                    #(eid_device, cid, abcd) = out
+                    #eid = eid_device // 10
+                    #if self.is_debug_file:
+                        #self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+                    #n += 12
+                    #for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
+                        #out = struct2.unpack(data[n:n + 28]) # 4*7 = 28
+                        #if self.is_debug_file:
+                            #self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+                        #(grid_device, sxx, syy, sz, txy, tyz, txz) = out
                 #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                     #self.num_wide, numwide_real, numwide_imag, numwide_random)
                 #return self._not_implemented_or_skip(data, ndata, msg)
@@ -4150,77 +4151,77 @@ class OES(OP2Common):
             # 278-CPLSTS8
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)
-            if self.element_type == 276:
-                result_name = 'cplsts4'
-                nnodes = 5  # 4 + 1
-                ntotal = 4 * 32
-            elif self.element_type == 277:
-                result_name = 'cplsts6'
-                nnodes = 4
-                ntotal = 4 * 26
-            elif self.element_type == 278:
-                result_name = 'cplsts8'
-                nnodes = 5
-                ntotal = 4 * 32
-            else:
-                raise RuntimeError(self.code_information())
+            #if self.element_type == 276:
+                #result_name = 'cplsts4'
+                #nnodes = 5  # 4 + 1
+                #ntotal = 4 * 32
+            #elif self.element_type == 277:
+                #result_name = 'cplsts6'
+                #nnodes = 4
+                #ntotal = 4 * 26
+            #elif self.element_type == 278:
+                #result_name = 'cplsts8'
+                #nnodes = 5
+                #ntotal = 4 * 32
+            #else:
+                #raise RuntimeError(self.code_information())
 
-            if self.is_stress():
-                obj_vector_real = RealCPLSTRNPlateStressArray
-                result_name += '_stress'
-            else:
-                obj_vector_real = RealCPLSTRNPlateStrainArray
-                result_name += '_strain'
+            #if self.is_stress():
+                #obj_vector_real = RealCPLSTRNPlateStressArray
+                #result_name += '_stress'
+            #else:
+                #obj_vector_real = RealCPLSTRNPlateStrainArray
+                #result_name += '_strain'
 
-            numwide_real = 2 + 6 * (nnodes)
-            assert ntotal // 4 == numwide_real, 'notal/4=%s numwide_real=%s\n%s' % (
-                ntotal // 4, numwide_real, self.code_information())
+            #numwide_real = 2 + 6 * (nnodes)
+            #assert ntotal // 4 == numwide_real, 'notal/4=%s numwide_real=%s\n%s' % (
+                #ntotal // 4, numwide_real, self.code_information())
 
-            ntotal = numwide_real * 4
-            if self.format_code == 1 and self.num_wide == numwide_real:
-                nelements = ndata // ntotal
+            #ntotal = numwide_real * 4
+            #if self.format_code == 1 and self.num_wide == numwide_real:
+                #nelements = ndata // ntotal
 
-                #self._data_factor = 10  # TODO: why is this 10?
-                if self.is_stress():
-                    obj_vector_real = RealCPLSTRNPlateStressArray
-                    #result_name = 'cplstn3_stress'
-                else:
-                    obj_vector_real = RealCPLSTRNPlateStressArray
-                    #result_name = 'cplstn3_strain'
-                slot = getattr(self, result_name)
+                ##self._data_factor = 10  # TODO: why is this 10?
+                #if self.is_stress():
+                    #obj_vector_real = RealCPLSTRNPlateStressArray
+                    ##result_name = 'cplstn3_stress'
+                #else:
+                    #obj_vector_real = RealCPLSTRNPlateStressArray
+                    ##result_name = 'cplstn3_strain'
+                #slot = getattr(self, result_name)
 
-                nlayers = nelements * nnodes
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nlayers, result_name, slot, obj_vector_real)
-                if auto_return:
-                    self._data_factor = nnodes
-                    return nelements * self.num_wide * 4
+                #nlayers = nelements * nnodes
+                #auto_return, is_vectorized = self._create_oes_object4(
+                    #nlayers, result_name, slot, obj_vector_real)
+                #if auto_return:
+                    #self._data_factor = nnodes
+                    #return nelements * self.num_wide * 4
 
-                obj = self.obj
-                #if self.use_vector and is_vectorized:
-                n = nlayers * self.num_wide * 4
+                #obj = self.obj
+                ##if self.use_vector and is_vectorized:
+                #n = nlayers * self.num_wide * 4
 
-                istart = obj.itotal
-                iend = istart + nlayers
-                obj._times[obj.itime] = dt
+                #istart = obj.itotal
+                #iend = istart + nlayers
+                #obj._times[obj.itime] = dt
 
-                if obj.itime == 0:
-                    print(fromstring(data, dtype=self.idtype).size)
-                    print('nelements=%s numwide=%s' % (nelements, numwide_real))
-                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
-                    eids = ints[:, 0] // 10
-                    #obj.element[istart:iend] = eids
+                #if obj.itime == 0:
+                    #print(fromstring(data, dtype=self.idtype).size)
+                    #print('nelements=%s numwide=%s' % (nelements, numwide_real))
+                    #ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    #eids = ints[:, 0] // 10
+                    ##obj.element[istart:iend] = eids
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
-                print('floats[:, 2:].shape', floats[:, 2:].shape)
-                print('nnelements=%s nnodes=%s numwide//nodes=%s' % (nelements, nnodes, (numwide_real-2) / nnodes))
-                results = floats[:, 2:].reshape(nelements, nnodes * 6)
+                #floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                #print('floats[:, 2:].shape', floats[:, 2:].shape)
+                #print('nnelements=%s nnodes=%s numwide//nodes=%s' % (nelements, nnodes, (numwide_real-2) / nnodes))
+                #results = floats[:, 2:].reshape(nelements, nnodes * 6)
 
-                #[oxx, oyy, ozz, txy, ovm]
-                obj.data[obj.itime, istart:iend, :] = results
-            else:
-                msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                return self._not_implemented_or_skip(data, ndata, msg)
+                ##[oxx, oyy, ozz, txy, ovm]
+                #obj.data[obj.itime, istart:iend, :] = results
+            #else:
+                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                #return self._not_implemented_or_skip(data, ndata, msg)
         else:
             msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             return self._not_implemented_or_skip(data, ndata, msg)
@@ -4241,7 +4242,7 @@ class OES(OP2Common):
         n = 0
         struct1 = Struct(b(self._endian + 'i8si3fi4s'))
         nelements = ndata // ntotal
-        obj = self.obj
+        #obj = self.obj
         for i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct1.unpack(edata)  # num_wide=9
