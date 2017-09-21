@@ -11,31 +11,14 @@ from six import iteritems
 
 from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.gui_interface.common import PyDialog
-if qt_version == 4:
-    from PyQt4.QtCore import Qt
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
-        QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup, QColorDialog, QAbstractItemView,
-    )
-elif qt_version == 5:
-    from PyQt5.QtCore import Qt
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
-        QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup, QColorDialog, QAbstractItemView,
-    )
-elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
-    from PySide.QtGui import (
-        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
-        QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-        QButtonGroup, QColorDialog, QAbstractItemView,
-    )
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+
+from qtpy.QtCore import Qt
+from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
+    QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
+    QButtonGroup, QColorDialog, QAbstractItemView,
+)
 
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry

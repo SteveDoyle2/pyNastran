@@ -1,16 +1,10 @@
 import webbrowser
 
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import (
-        QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
-    )
-elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import (
-        QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
-    )
+from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
+)
 
 if qt_version == 4:
     class ClickableQLabel(QLabel):

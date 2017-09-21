@@ -6,19 +6,15 @@ from numpy import array, arange
 
 
 from pyNastran.gui.qt_version import qt_version
+from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QDialog, QPushButton, QApplication,
+    QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
+)
+
 if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import (
-        QDialog, QPushButton, QApplication,
-        QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
-    )
     QString = QtCore.QString
 elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import (
-        QDialog, QPushButton, QApplication,
-        QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
-    )
     from six import text_type as QString
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)

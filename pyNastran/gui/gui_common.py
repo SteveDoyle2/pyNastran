@@ -20,23 +20,18 @@ from six.moves import range
 import numpy as np
 
 from pyNastran.gui.qt_version import qt_version
+
+from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QMessageBox, QWidget,
+    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
+
 if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import (
-        QMessageBox, QWidget,
-        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from PyQt4.QtCore import QString
 elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import (
-        QMessageBox, QWidget,
-        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from six import text_type as QString
 elif qt_version == 'pyside':
     from PySide import QtCore, QtGui
-    from PySide.QtGui import (
-        QMessageBox, QWidget,
-        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from six import text_type as QString
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)

@@ -7,23 +7,10 @@ import os
 from collections import OrderedDict
 
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4.QtGui import (
-        QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
-        QCheckBox, QGroupBox, QComboBox)
-elif qt_version == 5:
-    from PyQt5.QtWidgets import (
-        QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
-        QCheckBox, QGroupBox, QComboBox)
-elif qt_version == 'pyside':
-    from PySide.QtGui import (
-        QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
-        QCheckBox, QGroupBox, QComboBox)
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+from qtpy.QtWidgets import (
+    QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
+    QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
+    QCheckBox, QGroupBox, QComboBox)
 
 from pyNastran.gui.gui_interface.common import PyDialog
 from pyNastran.gui.gui_utils.dialogs import open_directory_dialog, open_file_dialog

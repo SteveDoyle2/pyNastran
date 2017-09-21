@@ -5,18 +5,11 @@ import sys
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4.QtGui import QMessageBox, QApplication
-elif qt_version == 5:
-    from PyQt5.QtGui import QMessageBox
-    from PyQt5.QtWidgets import QApplication
-elif qt_version == 'pyside':
-    from PySide.QtGui import QMessageBox, QApplication
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+from qtpy.QtGui import QMessageBox
+from qtpy.QtWidgets import QApplication
 
 import pyNastran
+from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.gui_common import GuiCommon2
 from pyNastran.gui.arg_handling import get_inputs
 #from pyNastran.gui.qt_files.gui_qt_common import GuiCommon

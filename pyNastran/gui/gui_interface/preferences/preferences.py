@@ -10,27 +10,11 @@ The preferences menu handles:
 """
 from __future__ import print_function
 from math import log10, ceil
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    #from PyQt4 import QtCore, QtGui
-    from PyQt4 import QtGui
-    from PyQt4.QtGui import (
-        QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
-elif qt_version == 5:
-    #from PyQt5 import QtCore, QtGui
-    from PyQt5 import QtGui
-    from PyQt5.QtWidgets import (
-        QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
-elif qt_version == 'pyside':
-    #from PySide import QtCore, QtGui
-    from PySide import QtGui
-    from PySide.QtGui import (
-        QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+
+from qtpy import QtGui
+from qtpy.QtWidgets import (
+    QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
+    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
 
 from pyNastran.gui.gui_interface.common import PyDialog, QPushButtonColor
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string

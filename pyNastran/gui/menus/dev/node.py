@@ -12,30 +12,12 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
 from pyNastran.gui.qt_version import qt_version
 
-if qt_version == 4:
-    from PyQt4 import QtCore#, QtGui
-    #from PyQt4 import QtGui
-    from PyQt4.QtGui import (
-        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QCheckBox, QRadioButton, QButtonGroup, QDoubleSpinBox, QLineEdit,
-        QColorDialog, QHeaderView,
-        QColor, QPalette)
-elif qt_version == 5:
-    from PyQt5 import QtCore#, QtGui
-    from PyQt5.QtGui import QColor, QPalette
-    from PyQt5.QtWidgets import (
-        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QCheckBox, QRadioButton, QButtonGroup, QDoubleSpinBox, QLineEdit,
-        QColorDialog, QHeaderView)
-elif qt_version == 'pyside':
-    from PySide import QtCore #, QtGui
-    #from PySide import QtGui
-    from PySide.QtGui import (
-        QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-        QSpinBox, QCheckBox, QRadioButton, QButtonGroup, QDoubleSpinBox, QLineEdit,
-        QColorDialog, QColor, QPalette, QHeaderView)
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+from qtpy import QtCore#, QtGui
+from qtpy.QtGui import QColor, QPalette
+from qtpy.QtWidgets import (
+    QDialog, QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
+    QSpinBox, QCheckBox, QRadioButton, QButtonGroup, QDoubleSpinBox, QLineEdit,
+    QColorDialog, QHeaderView)
 
 
 class EditNodeProperties(QDialog):

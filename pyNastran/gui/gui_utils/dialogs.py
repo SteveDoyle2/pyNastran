@@ -1,9 +1,6 @@
 from pyNastran.gui.qt_version import qt_version
 
-if qt_version == 4:
-    from PyQt4.QtGui import QFileDialog
-elif qt_version == 5:
-    from PyQt5.QtWidgets import QFileDialog
+from qtpy.QtWidgets import QFileDialog
 
 
 def save_file_dialog(self, title, default_filename,
