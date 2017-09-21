@@ -552,9 +552,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 #fem1.get_dependent_nid_to_components()
 
                 #fem1.uncross_reference()
-                print('safe_xref =', safe_xref)
                 if safe_xref:
-                    print('keeep summer safe')
                     fem1.safe_cross_reference()
                 else:
                     fem1.cross_reference()
@@ -863,15 +861,12 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 114:
-        assert 'LOAD' in subcase, 'sol=%s\n%s' % (sol, subcase)
-        assert 'HARMONICS' in subcase, 'sol=%s\n%s' % (sol, subcase)
+        soltype = 'CYCSTATX'
+        require_cards(['LOAD', 'HARMONICS'], log, soltype, sol, subcase)
         _assert_has_spc(subcase, fem2)
     elif sol == 118:
-        assert 'LOAD' in subcase, 'sol=%s\n%s' % (sol, subcase)
-        assert 'HARMONICS' in subcase, 'sol=%s\n%s' % (sol, subcase)
-        assert 'SDAMPING' in subcase, 'sol=%s\n%s' % (sol, subcase)
-        assert 'FREQUENCY' in subcase, 'sol=%s\n%s' % (sol, subcase)
-        assert 'DLOAD' in subcase, 'sol=%s\n%s' % (sol, subcase)
+        soltype = 'CYCFREQ'
+        require_cards(['LOAD', 'HARMONICS', 'SDAMPING', 'FREQUENCY'], log, soltype, sol, subcase)
         _assert_has_spc(subcase, fem2)
 
     elif sol == 129:  # nonlinear transient
@@ -880,17 +875,19 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
 
     elif sol == 144:
-        assert any(subcase.has_parameter('TRIM', 'DIVERG')), subcase
+        if not any(subcase.has_parameter('TRIM', 'DIVERG')):
+            log.error('A TRIM or DIVERG card is required for STATIC AERO - SOL %i\n%s' % (sol, subcase))
         if fem2.aeros is None:
             log.error('An AEROS card is required for STATIC AERO - SOL %i; %s' % (sol, fem2.aeros))
 
     elif sol == 145:
         if fem2.aero is None:
             log.error('An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero))
-        if 'METHOD' not in subcase:  # EIGRL
-            log.error('A METHOD card is required for FLUTTER - SOL %i\n%s' % (sol, subcase))
-        if 'FMETHOD' not in subcase:  # FLUTTER
-            log.error('An FMETHOD card is required for FLUTTER - SOL %i\n%s' % (sol, subcase))
+
+        soltype = 'FLUTTER'
+        # METHOD - EIGRL
+        # FMETHOD - FLUTTER
+        require_cards(['METHOD', 'FMETHOD'], log, soltype, sol, subcase)
 
     elif sol == 146:
         if 'METHOD' not in subcase:  # EIGRL
@@ -1006,6 +1003,14 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         msg += str(subcase)
         raise NotImplementedError(msg)
     _check_case_parameters(subcase, fem2, p0, isubcase, sol)
+
+def require_cards(card_names, log, soltype, sol, subcase):
+    nerrors = 0
+    for card_name in card_names:
+        if card_name not in subcase:
+            log.error('A %s card is required for %s - SOL %i\n%s' % (card_name, soltype, sol, subcase))
+            nerrors += 1
+    return nerrors
 
 def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
     """helper method for ``check_case``"""
