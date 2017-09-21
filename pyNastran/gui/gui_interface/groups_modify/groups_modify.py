@@ -8,8 +8,6 @@ from six import iteritems
 
 from numpy import setdiff1d, unique, hstack
 
-from pyNastran.gui.qt_version import qt_version
-
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QApplication,

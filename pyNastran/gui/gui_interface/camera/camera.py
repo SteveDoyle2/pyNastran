@@ -2,7 +2,7 @@ from copy import deepcopy
 
 #from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
-    QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+    QApplication, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
     QHBoxLayout, QVBoxLayout, QGridLayout)
 
 from pyNastran.gui.qt_version import qt_version

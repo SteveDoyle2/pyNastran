@@ -9,7 +9,6 @@ from qtpy.QtWidgets import (
     QColorDialog, QLabel,
 )
 
-from pyNastran.gui.qt_version import qt_version
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 

@@ -1,5 +1,3 @@
-from six import string_types
-
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import (

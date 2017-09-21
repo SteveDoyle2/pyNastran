@@ -17,8 +17,8 @@ from six.moves import range
 
 
 from pyNastran.gui.qt_version import qt_version
-from qtpy import QtCore, QtGui
-from qtpy.QtWidgets import QApplication, QMessageBox, qApp
+from qtpy import QtCore
+from qtpy.QtWidgets import QMessageBox, qApp
 
 # 3rd party
 import vtk

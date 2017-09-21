@@ -6,7 +6,6 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 
-from pyNastran.gui.qt_version import qt_version
 from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,

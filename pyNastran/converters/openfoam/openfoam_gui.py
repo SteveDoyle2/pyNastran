@@ -9,7 +9,6 @@ from qtpy.QtGui import QMessageBox
 from qtpy.QtWidgets import QApplication
 
 import pyNastran
-from pyNastran.gui.qt_version import qt_version
 from pyNastran.gui.gui_common import GuiCommon2
 from pyNastran.gui.arg_handling import get_inputs
 #from pyNastran.gui.qt_files.gui_qt_common import GuiCommon

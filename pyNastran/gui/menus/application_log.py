@@ -1,8 +1,7 @@
 from __future__ import print_function
 from pyNastran.gui.qt_version import qt_version, is_pygments
 
-from qtpy.QtCore import Qt
-#from qtpy import QtCore, QtGui
+#from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QFontMetrics, QColor
 from qtpy import QtCore
 #from qtpy.QtCore import QSci

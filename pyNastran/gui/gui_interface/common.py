@@ -2,7 +2,6 @@ from __future__ import print_function
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict, write_patran_syntax_dict)
 
-from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore, QtGui
 from qtpy.QtGui import QFocusEvent, QFont
 from qtpy.QtWidgets import QDialog, QLineEdit, QPushButton

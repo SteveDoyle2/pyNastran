@@ -8,7 +8,6 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from six import string_types
 
-from pyNastran.gui.qt_version import qt_version
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,

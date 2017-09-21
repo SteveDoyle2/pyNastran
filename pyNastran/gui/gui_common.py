@@ -24,14 +24,13 @@ from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
-    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
+    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QFileDialog)
 
 if qt_version == 4:
     from PyQt4.QtCore import QString
 elif qt_version == 5:
     from six import text_type as QString
 elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
     from six import text_type as QString
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
