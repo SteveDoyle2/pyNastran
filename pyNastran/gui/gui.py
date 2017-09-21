@@ -19,7 +19,7 @@ get_inputs()
 
 
 import pyNastran
-from pyNastran.gui.main_window import QApplication, MainWindow
+from pyNastran.gui.main_window import MainWindow
 
 
 
@@ -30,9 +30,16 @@ def cmd_line():
         myappid = 'pynastran.pynastrangui.%s' % (pyNastran.__version__) # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
+    #from qtpy import
+    from qtpy.QtWidgets import QApplication
     app = QApplication(sys.argv)
 
     try:
+        import qtmodern.styles
+    except ImportError:
+        pass
+    else:
+        qtmodern.styles.dark(app)
 
     QApplication.setOrganizationName("pyNastran")
     QApplication.setOrganizationDomain(pyNastran.__website__)
