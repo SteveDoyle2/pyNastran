@@ -87,7 +87,7 @@ class CHBDYE(ThermalElement):
         'CQUAD4': [1, 2, 3, 4],
     }
 
-    pid = 0
+    #pid = 0
     def __init__(self, eid, eid2, side, iview_front=0, ivew_back=0,
                  rad_mid_front=0, rad_mid_back=0, comment=''):
         """

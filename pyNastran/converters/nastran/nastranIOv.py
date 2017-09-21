@@ -2903,7 +2903,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 nnodes = 4
                 dim = 2
 
-            elif etype in ['CTRIA6']:
+            elif etype == 'CTRIA6':
                 nids = elem.nodes
                 pid = elem.pid
                 if None in nids:
@@ -2926,7 +2926,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     mcid_array[ieid] = elem.theta_mcid
                 dim = 2
-            elif etype in ['CQUAD8']:
+            elif etype == 'CQUAD8':
                 nids = elem.nodes
                 pid = elem.pid
                 if None in nids:
@@ -2951,7 +2951,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 nnodes = 4
                 dim = 2
 
-            elif etype in ['CSHEAR']:
+            elif etype == 'CSHEAR':
                 nids = elem.nodes
                 pid = elem.pid
                 cell_type = cell_type_quad4 #9
@@ -3365,7 +3365,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #max_normal = np.nanmax(normal_mag[i_not_nan])
             #is_shell = np.abs(max_normal) > 0.
             is_shell = True
-        is_solid = np.any(np.isfinite(max_interior_angle)) and np.nanmax(np.abs(max_interior_angle)) > 0.
+        is_solid = np.any(np.isfinite(max_interior_angle)) and abs(np.nanmax(max_interior_angle)) > 0.
         #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
         if is_shell:
             nx_res = GuiResult(
@@ -4542,7 +4542,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     print(str(node).rstrip())
                 max_thetai = 2 * np.pi
             #print(eid, min_thetai, max_thetai, '\n', element)
-            #asdf
+
             min_interior_angle[i] = min_thetai
             max_interior_angle[i] = max_thetai
             dideal_theta[i] = dideal_thetai
@@ -4795,8 +4795,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
 
         is_shell = np.abs(normals).max() > 0.
-        is_solid = np.any(np.isfinite(max_interior_angle)) and np.nanmax(np.abs(max_interior_angle)) > 0.
+
+        # we have to add the 2nd/3rd lines to make sure bars are getting into this check
+        is_solid = np.any(np.isfinite(max_interior_angle)) and (
+            (np.any(np.isfinite(min_interior_angle)) and abs(np.nanmax(min_interior_angle)) > 0.) and
+            (np.any(np.isfinite(max_interior_angle)) and abs(np.nanmax(max_interior_angle)) > 0.)
+        )
         #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
+        #print("  np.any(np.isfinite(min_interior_angle)) =", np.any(np.isfinite(min_interior_angle)))
+        #print("  np.any(np.isfinite(max_interior_angle)) =", np.any(np.isfinite(max_interior_angle)))
+        #print("  abs(np.nanmax(max_interior_angle)) > 0. =", abs(np.nanmax(max_interior_angle)) > 0.)
         if is_shell:
             nx_res = GuiResult(
                 0, header='NormalX', title='NormalX',

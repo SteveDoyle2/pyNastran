@@ -12,6 +12,121 @@ try:
 except ImportError:
     pass
 
+class ComplexTriaxStressArray(OES_Object):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
+        self.element_node = None
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        #self.itime = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            pass
+        else:
+            raise NotImplementedError('SORT2')
+
+    def is_real(self):
+        return False
+
+    def is_complex(self):
+        return True
+
+    def build(self):
+        """sizes the vectorized attributes of the ComplexPlateArray"""
+        #print('data_code = %s' % self.data_code)
+        if not hasattr(self, 'subtitle'):
+            self.subtitle = self.data_code['subtitle']
+        if self.is_built:
+            return
+        nnodes = self.get_nnodes()
+
+        #self.names = []
+        #self.nelements //= nnodes
+        self.nelements //= self.ntimes
+        #print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
+            #self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
+
+        self.ntotal = self.nelements * nnodes * 2
+        #self.ntotal
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        self.is_built = True
+        #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        self._times = zeros(self.ntimes, 'float32')
+        #self.ntotal = self.nelements * nnodes
+
+        # TODO: could be more efficient by using nelements for cid
+        self.element_node = zeros((self.ntotal, 2), 'int32')
+        #self.element_cid = zeros((self.nelements, 2), 'int32')
+
+        # the number is messed up because of the offset for the element's properties
+
+        if not self.nelements * nnodes * 2 == self.ntotal:
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
+                                                                           self.nelements, nnodes,
+                                                                           self.nelements * nnodes,
+                                                                           self.ntotal)
+            raise RuntimeError(msg)
+
+        self.fiber_curvature = zeros(self.ntotal, 'float32')
+        # [oxx, oyy, txy]
+        self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
+
+    def get_stats(self, short=False):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        nnodes = self.element_node.shape[0]
+        #ntotal = self.ntotal
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements, nnodes))
+        else:
+            msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
+        msg.append('  eType, cid\n')
+        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self._get_headers())))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def add_new_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
+        self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
+
+    def add_sort1(self, dt, eid, loc, rs, azs, As, ss):
+        """unvectorized method for adding SORT1 transient data"""
+        self.add_eid_sort1(dt, eid, loc, rs, azs, As, ss)
+
+    def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
+        self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
+
+    def add_eid_sort1(self, dt, eid, loc, rs, azs, As, ss):
+        self._times[self.itime] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
+
+        # dt, eid, loc, rs, azs, As, ss
+
+        assert isinstance(node_id, int), node_id
+        #self.data[self.itime, self.itotal] = [oxx, oyy, txy]
+        #self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
+        #self.fiber_curvature[self.itotal] = fdr
+        #self.ielement += 1
+        self.itotal += 1
 
 class ComplexPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
