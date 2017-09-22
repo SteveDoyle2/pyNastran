@@ -3,7 +3,7 @@ from six import iteritems, itervalues
 from six.moves import zip
 from numpy import (array, searchsorted, zeros, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
-                   cos, sin, arccos, hstack, eye, ndarray, arange, sqrt, unique,
+                   cos, sin, arccos, hstack, eye, ndarray, sqrt, unique,
                    transpose, asarray, isnan, array_equal)
 from numpy.linalg import norm  # type: ignore
 

@@ -4,10 +4,10 @@ import os
 import unittest
 import numpy as np
 
-from six import iteritems, StringIO
+from six import StringIO
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 #from pyNastran.op2.op2 import OP2, read_op2
 #from pyNastran.f06.test.f06_unit_tests import run_model

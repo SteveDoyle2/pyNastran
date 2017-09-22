@@ -179,6 +179,25 @@ class TABLED1(Table):
     type = 'TABLED1'
     #def __init__(self, tid, xaxis, yaxis, xy, comment=''):
     def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+        """
+        Creates a TABLED1, which is a dynamic load card that is applied
+        by the DAREA card
+
+        Parameters
+        ----------
+        tid : int
+            table id
+        x : List[float]
+            nvalues
+        y : List[float]
+            nvalues
+        xaxis : str
+            LINEAR, LOG
+        yaxis : str
+            LINEAR, LOG
+        comment : str; default=''
+            a comment for the card
+        """
         Table.__init__(self)
         if comment:
             self.comment = comment

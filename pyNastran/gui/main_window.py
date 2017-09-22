@@ -146,6 +146,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
 
         self.setup_gui()
         self.setup_post(inputs)
+
         self._check_for_latest_version(inputs['no_update'])
 
     def _check_for_latest_version(self, check=True):

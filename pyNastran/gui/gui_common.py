@@ -21,19 +21,11 @@ import numpy as np
 
 from pyNastran.gui.qt_version import qt_version
 
-from qtpy import QtCore, QtGui
+from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QFileDialog)
 
-if qt_version == 4:
-    from PyQt4.QtCore import QString
-elif qt_version == 5:
-    from six import text_type as QString
-elif qt_version == 'pyside':
-    from six import text_type as QString
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
 
 import vtk
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -3117,12 +3109,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         main_window_geometry = settings.value("mainWindowGeometry")
         if main_window_geometry is not None:
-            if PY2 and qt_version == 4:
-                self.restoreGeometry(main_window_geometry.toByteArray())
-            elif qt_version == 5:  # tested on PY2
-                self.restoreGeometry(main_window_geometry)
-            else:
-                raise NotImplementedError('PY2=%s PY3=%s qt_version=%s' % (PY2, PY3, qt_version))
+            self.restoreGeometry(main_window_geometry)
 
         self.reset_settings = False
         #if self.reset_settings or qt_version in [5, 'pyside']:
@@ -3136,9 +3123,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.init_cell_picker()
 
         main_window_state = settings.value("mainWindowState")
-        if main_window_state is not None:
-            if PY2 and qt_version == 4:
-                self.restoreState(main_window_state.toByteArray())
         self.create_corner_axis()
         #-------------
         # loading
@@ -3168,38 +3152,33 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         setting_keys = [str(key) for key in settings.childKeys()]
         try:
-            if qt_version == 4:
-                self.font_size = settings.value("font_size", font_size).toPyObject()
-            elif qt_version == 4:
-                self.font_size = settings.value("font_size", font_size)
-            else:
-                self.font_size = 8
+            self.font_size = settings.value("font_size", font_size)
         except (TypeError, AttributeError):
             self.font_size = 8
 
         try:
-            self.background_color = settings.value("backgroundColor", grey).toPyObject()
+            self.background_color = settings.value("backgroundColor", grey)
         except (TypeError, AttributeError):
             self.background_color = grey
 
         try:
-            self.label_color = settings.value("labelColor", black).toPyObject()
+            self.label_color = settings.value("labelColor", black)
         except (TypeError, AttributeError):
             self.label_color = black
 
         try:
-            self.text_color = settings.value("textColor", black).toPyObject()
+            self.text_color = settings.value("textColor", black)
         except (TypeError, AttributeError):
             self.text_color = black
 
         try:
-            screen_shape = settings.value("screen_shape", screen_shape_default).toPyObject()
+            screen_shape = settings.value("screen_shape", screen_shape_default)
         except (TypeError, AttributeError):
             screen_shape = screen_shape_default
 
         #if 'recent_files' in setting_keys:
         try:
-            self.recent_files = settings.value("recent_files", self.recent_files).toPyObject()
+            self.recent_files = settings.value("recent_files", self.recent_files)
         except (TypeError, AttributeError):
             pass
 
@@ -3214,7 +3193,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.setFont(font)
 
         if 0 and PY3:
-            pos = settings.value("pos", pos_default).toPyObject()
+            pos_default = 0, 0
+            pos = settings.value("pos", pos_default)
             x_pos, y_pos = pos
             #print(pos)
             #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
@@ -3893,7 +3873,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             int : resolution increase factor
         """
         if fname is None or fname is False:
-            filt = QString()
+            filt = ''
             default_filename = ''
 
             title = ''

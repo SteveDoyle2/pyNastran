@@ -1,9 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from math import isnan
-from collections import OrderedDict
-from six import itervalues, integer_types
-from numpy import zeros, empty
+from six import integer_types
+from numpy import zeros
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -314,20 +312,19 @@ class RealStrainEnergyArray(ScalarObject):
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        """
-        '      EIGENVALUE =  2.005177E+05'
-        '      CYCLES =  7.126832E+01'
-        '                                           E L E M E N T   S T R A I N   E N E R G I E S'
-        ' '
-        '                ELEMENT-TYPE = TETRA               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   1.002589E+05'
-        '                   MODE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   1.002589E+05'
-        '0'
-        '                                    ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY'
-        '                                             4          3.247409E+00                 0.0032              1.948445E+01'
-        '                                             5          3.977916E+00                 0.0040              2.386749E+01'
-        ''
-        '                        TYPE = TETRA    SUBTOTAL        7.225325E+00                 0.0072'
-        """
+        # '      EIGENVALUE =  2.005177E+05'
+        # '      CYCLES =  7.126832E+01'
+        # '                                           E L E M E N T   S T R A I N   E N E R G I E S'
+        # ' '
+        # '                ELEMENT-TYPE = TETRA               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   1.002589E+05'
+        # '                   MODE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   1.002589E+05'
+        # '0'
+        # '                                    ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY'
+        # '                                             4          3.247409E+00                 0.0032              1.948445E+01'
+        # '                                             5          3.977916E+00                 0.0040              2.386749E+01'
+        # ''
+        # '                        TYPE = TETRA    SUBTOTAL        7.225325E+00                 0.0072'
+
         msg_temp = (
             '                                           E L E M E N T   S T R A I N   E N E R G I E S\n'
             ' \n'

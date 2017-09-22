@@ -22,7 +22,6 @@ import pyNastran
 from pyNastran.gui.main_window import MainWindow
 
 
-
 def cmd_line():
     """the setup.py entry point for ``pyNastranGUI``"""
     # this fixes the icon shown in the windows taskbar to be the custom one (not the python one)
@@ -30,7 +29,6 @@ def cmd_line():
         myappid = 'pynastran.pynastrangui.%s' % (pyNastran.__version__) # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-    #from qtpy import
     from qtpy.QtWidgets import QApplication
     app = QApplication(sys.argv)
 
