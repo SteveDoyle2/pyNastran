@@ -11,6 +11,7 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 import sys
 
+from qtpy.QtWidgets import QApplication
 
 # yes we're intentionally putting this here to validate the imports
 # before doing lots of work
@@ -19,8 +20,7 @@ get_inputs()
 
 
 import pyNastran
-from pyNastran.gui.main_window import QApplication, MainWindow
-
+from pyNastran.gui.main_window import MainWindow
 
 
 def cmd_line():
@@ -32,7 +32,7 @@ def cmd_line():
 
     app = QApplication(sys.argv)
 
-    try:
+    #try:
 
     QApplication.setOrganizationName("pyNastran")
     QApplication.setOrganizationDomain(pyNastran.__website__)
