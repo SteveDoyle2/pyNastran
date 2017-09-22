@@ -6169,9 +6169,12 @@ class AddCards(AddMethods):
         self._add_dmij_object(dmij)
         return dmij
 
-    def add_dmiji(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
+    def add_dmiji(self, name, ifo, tin, tout, nrows, ncols, GCj, GCi,
                   Real, Complex=None, comment=''):
-        dmiji = DMIJI(name, form, tin, tout, nrows, ncols, GCj, GCi,
+        """
+        | DMIJI | NAME | 0 | IFO | TIN | TOUT POLAR | | NCOL |
+        """
+        dmiji = DMIJI(name, ifo, tin, tout, nrows, ncols, GCj, GCi,
                       Real, Complex, comment=comment)
         self._add_dmiji_object(dmiji)
         return dmiji

@@ -235,7 +235,7 @@ class TestShells(unittest.TestCase):
         n4 = 4
         n5 = 5
         n6 = 6
-        A = 2.
+        #A = 2.
         t = rho = nsm = E = G = nu = 0.1
         mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
 

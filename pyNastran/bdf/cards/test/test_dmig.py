@@ -392,10 +392,10 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         os.remove('dmi_out.bdf')
 
     def test_dmig_12(self):
-        """tests the add card method"""
+        """tests the add card methodwith a real DMIG"""
         model = BDF(debug=False)
         name = 'DMIG_1'
-        ifo = 6
+        matrix_form = 6
         tin = 1
         tout = None
         polar = None
@@ -407,18 +407,114 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         GCi = [[1, 1],  # grid, component
                [4, 1],
                [5, 1]]
-        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+        dmig = model.add_dmig(name, matrix_form, tin, tout, polar, ncols, GCj, GCi,
                               Real=reals, Complex=None,
                               comment='dmig')
+        assert dmig.is_real is True, dmig.is_real
+        assert dmig.is_complex is False, dmig.is_complex
+        assert dmig.is_polar is False, dmig.is_polar
+        dmig.get_matrix()
+
+        name = 'DMIK_1'
+        nrows = None
+        dmik = model.add_dmik(name, matrix_form, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=None,
+                              comment='dmik')
+        dmik.get_matrix()
+
+        dmiji = model.add_dmiji(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi,
+                               reals, Complex=None, comment='dmiji')
+        dmiji.get_matrix()
+
+        #dmi = model.add_dmi(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi,
+                            #reals, Complex=None, comment='dmi')
+
+        save_load_deck(model)
+
+    def test_dmig_13(self):
+        """tests the add card method with a complex DMIG"""
+        model = BDF(debug=False)
+        name = 'DMIG_1'
+        ifo = 6
+        tin = 3
+        tout = None
+        polar = None
+        ncols = None
+        reals = [1.0, 2.0, 3.0]
+        #complexs = reals
+        GCj = [[1, 1],  # grid, component
+               [2, 1],
+               [3, 1]]
+        GCi = [[1, 1],  # grid, component
+               [4, 1],
+               [5, 1]]
+        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=reals,
+                              comment='dmig')
+        model.pop_parse_errors()
+        assert dmig.is_real is False, dmig.is_real
+        assert dmig.is_complex is True, dmig.is_complex
+        assert dmig.is_polar is False, dmig.is_polar
+        dmig.get_matrix()
 
         name = 'DMIK_1'
         nrows = None
         form = None
         dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                              Real=reals, Complex=None,
+                              Real=reals, Complex=reals,
                               comment='dmik')
+        dmik.get_matrix()
         save_load_deck(model)
 
+    def test_dmig_14(self):
+        """tests the add card method with a complex polar DMIG"""
+        model = BDF(debug=False)
+        name = 'DMIG_1'
+        ifo = 6
+        tin = 3
+        tout = None
+        polar = True
+        ncols = None
+        reals = [1.0, 2.0, 3.0]
+        #complexs = reals
+        GCj = [[1, 1],  # grid, component
+               [2, 1],
+               [3, 1]]
+        GCi = [[1, 1],  # grid, component
+               [4, 1],
+               [5, 1]]
+        dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=reals,
+                              comment='dmig')
+        model.pop_parse_errors()
+        assert dmig.is_real is False, dmig.is_real
+        assert dmig.is_complex is True, dmig.is_complex
+        assert dmig.is_polar is True, dmig.is_polar
+        dmig.get_matrix()
+
+        name = 'DMIK_1'
+        nrows = None
+        form = None
+        dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
+                              Real=reals, Complex=reals,
+                              comment='dmik')
+        dmik.get_matrix()
+        save_load_deck(model)
+
+    def test_dti_units(self):
+        """tests DTI,UNITS"""
+        model = BDF(debug=False)
+        fields = {
+            'mass' : 'mass',
+            'length' : 'length',
+            'force' : 'force',
+            'time' : 'time',
+            'temp_stress' : 'temp_str',
+        }
+        dti = model.add_dti('UNITS', fields, comment='dti,units')
+        dti.raw_fields()
+        #print(dti.write_card())
+        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -1,5 +1,5 @@
 from six.moves import range
-from numpy import unique, array, ndarray
+from numpy import array, ndarray
 from pyNastran.utils.mathematics import unique2d
 
 def slice_to_iter(ids):
