@@ -1,13 +1,17 @@
 from __future__ import print_function
 from pyNastran.gui.qt_version import qt_version, is_pygments
 
+#from qtpy.QtCore import Qt
+from qtpy.QtGui import QFont, QFontMetrics, QColor
+from qtpy import QtCore
+#from qtpy.QtCore import QSci
+#import QScintilla
+from qtpy.QtWidgets import (
+    QPushButton, QTextEdit, QDockWidget,
+    QVBoxLayout, QHBoxLayout, QWidget, qApp, QMenu)
+#import qtpy.Qsci as Qsci
 
 if qt_version == 4:
-    from PyQt4.QtCore import Qt
-    from PyQt4 import QtCore
-    from PyQt4.QtGui import (
-        QPushButton, QTextEdit, QDockWidget,
-        QVBoxLayout, QHBoxLayout, QWidget, QFont, qApp, QMenu, QFontMetrics, QColor)
     try:
         import PyQt4.Qsci as Qsci
         is_scintilla = True
@@ -15,16 +19,6 @@ if qt_version == 4:
         is_scintilla = False
 
 elif qt_version == 5:
-    from PyQt5.QtCore import Qt
-    #from PyQt5 import QtCore, QtGui
-    from PyQt5.QtGui import QFont, QFontMetrics, QColor
-    from PyQt5 import QtCore
-    #from PyQt5.QtCore import QSci
-    #import QScintilla
-    from PyQt5.QtWidgets import (
-        QPushButton, QTextEdit, QDockWidget,
-        QVBoxLayout, QHBoxLayout, QWidget, qApp, QMenu)
-
     try:
         import PyQt5.Qsci as Qsci
         is_scintilla = True
@@ -32,10 +26,6 @@ elif qt_version == 5:
         is_scintilla = False
     #import PyQt5.qsci
 elif qt_version == 'pyside':
-    from PySide import QtCore
-    from PySide.QtGui import (
-        QPushButton, QTextEdit, QDockWidget,
-        QVBoxLayout, QHBoxLayout, QWidget, QFont, qApp, QMenu, QFontMetrics, QColor)
     is_scintilla = False
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
@@ -245,12 +235,7 @@ def main():  # pragma: no cover
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    from pyNastran.gui.qt_version import qt_version
-    if qt_version == 4:
-        #from PyQt4 import QtCore, QtGui
-        from PyQt4.QtGui import QApplication
-    elif qt_version == 5:
-        from PyQt5.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication
 
     import sys
     import pyNastran

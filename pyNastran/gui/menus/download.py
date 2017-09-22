@@ -1,23 +1,17 @@
 import webbrowser
 
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import (
-        QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
-    )
-elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import (
-        QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
-    )
+from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
+)
 
 if qt_version == 4:
     class ClickableQLabel(QLabel):
         def __init(self, parent):
             QLabel.__init__(self, parent)
 
-        def mouseReleaseEvent(self, ev):
+        def mouseReleaseEvent(self, event):
             if qt_version == 4:
                 self.emit(QtCore.SIGNAL('clicked()'))
             else:
@@ -25,9 +19,9 @@ if qt_version == 4:
                 pass
 elif qt_version == 5:
     class ClickableQLabel(QPushButton):
-            def __init(self, text):
-                QPushButton.__init__(self, text)
-                self.setFlat(True)
+        def __init(self, text):
+            QPushButton.__init__(self, text)
+            self.setFlat(True)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 

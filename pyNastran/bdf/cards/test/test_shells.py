@@ -11,6 +11,12 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
 class TestShells(unittest.TestCase):
+    def test_pshell(self):
+        model = BDF()
+        pid = 10
+        pshell = model.add_pshell(pid, mid1=1, mid2=2, mid3=3, mid4=4, tst=3.14)
+        assert ' 3.14' in pshell.rstrip(), pshell.rstrip()
+
     def _make_cquad4(self, model, rho, nu, G, E, t, nsm):
         eid = 10
         pid = 20

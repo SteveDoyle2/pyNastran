@@ -17,19 +17,8 @@ from six.moves import range
 
 
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import QApplication, QMessageBox, qApp
-    print("Using PyQt4")
-elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import QApplication, QMessageBox, qApp
-    print("Using PyQt5")
-elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
-    from PySide.QtGui import QApplication, QMessageBox, qApp
-else:
-    raise NotImplementedError(qt_version)
+from qtpy import QtCore
+from qtpy.QtWidgets import QMessageBox, qApp
 
 # 3rd party
 import vtk

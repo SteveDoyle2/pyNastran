@@ -1885,7 +1885,7 @@ class PSHELL(ShellProperty):
         twelveIt3 = set_blank_if_default(self.twelveIt3, 1.0)
         tst = set_blank_if_default(self.tst, 0.833333)
         tst2 = set_blank_if_default(self.tst, 0.83333)
-        if tst or tst2 is None:
+        if tst is None or tst2 is None:
             tst = None
         nsm = set_blank_if_default(self.nsm, 0.0)
         if self.t is not None:

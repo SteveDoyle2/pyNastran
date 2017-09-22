@@ -31,6 +31,9 @@ def cmd_line():
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     app = QApplication(sys.argv)
+
+    try:
+
     QApplication.setOrganizationName("pyNastran")
     QApplication.setOrganizationDomain(pyNastran.__website__)
     QApplication.setApplicationName("pyNastran")
