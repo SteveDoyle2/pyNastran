@@ -5,6 +5,7 @@ defines:
 from __future__ import print_function
 import os
 
+from qtpy import QtCore
 from qtpy.QtGui import QFont
 from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,

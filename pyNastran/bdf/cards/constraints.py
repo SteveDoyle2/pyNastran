@@ -808,6 +808,11 @@ class GMSPC(Constraint):
         #msg = ', which is required by GMSPC=%s' % (self.conid)
         pass
 
+    def safe_cross_reference(self, model):
+        """TODO: xref"""
+        #msg = ', which is required by GMSPC=%s' % (self.conid)
+        pass
+
     def uncross_reference(self):
         pass
 

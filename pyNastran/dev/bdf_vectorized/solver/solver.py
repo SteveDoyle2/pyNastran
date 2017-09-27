@@ -16,7 +16,7 @@ from six.moves import zip
 
 # 3rd party
 import numpy as np
-from numpy import (array, zeros, ones, dot, arange,
+from numpy import (array, zeros, ones, arange,
                    eye, searchsorted, array_equal, diag, fill_diagonal,
                    nan, nan_to_num)
 from numpy.linalg import solve, eigh, eig  # type: ignore
@@ -1250,7 +1250,7 @@ class Solver(OP2):
         analysis_code = 1
         #transient = False
         is_sort1 = False
-        dt = None
+        #dt = None
         format_code = 1  # ???
         s_code = None
 

@@ -4,7 +4,7 @@ from six import StringIO
 from pyNastran.bdf.bdf import BDF
 
 
-def save_load_deck(model):
+def save_load_deck(model, punch=True):
     """writes and re-reads a deck"""
     bdf_file = StringIO()
     model.write_bdf(bdf_file, size=8, close=False)
@@ -15,7 +15,7 @@ def save_load_deck(model):
     bdf_file.seek(0)
 
     model2 = BDF(log=model.log)
-    model2.read_bdf(bdf_file, punch=True)
+    model2.read_bdf(bdf_file, punch=punch)
     model2.pop_parse_errors()
     model2.get_bdf_stats()
 

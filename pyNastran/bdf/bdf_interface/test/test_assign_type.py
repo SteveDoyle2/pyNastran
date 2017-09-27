@@ -5,7 +5,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     string, string_or_blank, double_or_string, double_string_or_blank,
     integer_or_string, integer_string_or_blank, integer_double_or_string,
     blank, parse_components, components_or_blank, integer_double_string_or_blank,
-    _get_dtype, interpret_value)
+    _get_dtype, interpret_value, modal_components)
 
 class ExtendedTestCase(unittest.TestCase):
     def assertRaisesWithMessage(self, msg, func, *args, **kwargs):
@@ -141,6 +141,12 @@ class TestAssignType(ExtendedTestCase):
         with self.assertRaises(SyntaxError):
             double(BDFCard([None]), 0, 'field')
 
+
+        with self.assertRaises(SyntaxError):
+            double(BDFCard(['.']), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            double(BDFCard(['4']), 0, 'field')
+
         card = [1.0, '2.0', '3.', 'C', None, '']
         exact = [1.0, 2.0, 3.0, SyntaxError, SyntaxError, SyntaxError]
         self.run_function(double, card, exact)
@@ -174,6 +180,12 @@ class TestAssignType(ExtendedTestCase):
         with self.assertRaises(SyntaxError):
             integer(BDFCard([None]), 0, 'field')
 
+        with self.assertRaises(SyntaxError):
+            integer(BDFCard(['7.0']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            integer(BDFCard(['1+2']), 0, 'field')
+
         card = [1, '2', '3.', 'C', None, '']
         exact = [1, 2, SyntaxError, SyntaxError, SyntaxError, SyntaxError]
         self.run_function(integer, card, exact)
@@ -204,9 +216,30 @@ class TestAssignType(ExtendedTestCase):
         with self.assertRaises(SyntaxError):
             string(BDFCard([None]), 0, 'field')
 
+        with self.assertRaises(SyntaxError):
+            string(BDFCard(['cat dog']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            string(BDFCard(['1+2']), 0, 'field')
+
         card = ['a', 'b1', '3.', 'C', None, '', 'frog']
         exact = ['A', 'B1', SyntaxError, 'C', SyntaxError, SyntaxError, 'FROG']
         self.run_function(string, card, exact)
+
+    def test_string_or_blank(self):
+        with self.assertRaises(SyntaxError):
+            string_or_blank(BDFCard(['1+2']), 0, 'field')
+
+        self.assertEqual('CAT', string_or_blank(BDFCard(['cat']), 0, 'field'))
+        self.assertEqual(None, string_or_blank(BDFCard(['  ']), 0, 'field'))
+
+        with self.assertRaises(SyntaxError):
+            self.assertEqual(100, string_or_blank(BDFCard(['100']), 0, 'field'))
+
+        with self.assertRaises(SyntaxError):
+            string_or_blank(BDFCard(['1 2']), 0, 'field')
+        with self.assertRaises(SyntaxError):
+            string_or_blank(BDFCard(['c a']), 0, 'field')
 
     #-------------------------------------------------------
     def test_integer_or_blank(self):
@@ -232,6 +265,8 @@ class TestAssignType(ExtendedTestCase):
         self.assertEqual('a', integer_or_blank(BDFCard(['']), 0, 'field', 'a'))
         self.assertEqual('b', integer_or_blank(BDFCard([None]), 0, 'field', 'b'))
 
+        with self.assertRaises(SyntaxError):
+            integer_or_blank(BDFCard(['1+2']), 0, 'field')
 
         card = [1, '2', '3.', 'C', None, '']
         exact = [1, 2, SyntaxError, SyntaxError, None, None]
@@ -286,8 +321,9 @@ class TestAssignType(ExtendedTestCase):
             double_or_blank(BDFCard(['1b']), 0, 'field')
 
         # blank
-        double_or_blank(BDFCard(['   ']), 0, 'field')
-        double_or_blank(BDFCard([None]), 0, 'field')
+        double_or_blank(BDFCard(['   ']), 0, 'field') is None
+        double_or_blank(BDFCard([None]), 0, 'field') is None
+        assert double_or_blank(BDFCard(['.']), 0, 'field') == 0.
 
     def test_double_or_string(self):
         # out of range
@@ -313,10 +349,26 @@ class TestAssignType(ExtendedTestCase):
         self.assertEqual(1.e-9, integer_or_double(BDFCard(['1-9']), 0, 'field'))
         self.assertEqual(1.e+9, integer_or_double(BDFCard(['1+9']), 0, 'field'))
 
+        with self.assertRaises(SyntaxError):
+            integer_or_double(BDFCard(['cat']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            integer_or_double(BDFCard(['.']), 0, 'field')
+
+        self.assertEqual(100., integer_or_double(BDFCard(['1+2']), 0, 'field'))
+
     def test_integer_or_string(self):
         # out of range
         with self.assertRaises(SyntaxError):
             integer_or_string(BDFCard([1.]), 1, 'field')
+
+        self.assertEqual(1000, integer_or_string(BDFCard([1000]), 0, 'field'))
+        self.assertEqual(1000, integer_or_string(BDFCard(['1000']), 0, 'field'))
+        self.assertEqual('CAT', integer_or_string(BDFCard(['cat']), 0, 'field'))
+
+        with self.assertRaises(SyntaxError):
+            integer_or_string(BDFCard(['1+2']), 0, 'field')
+
 
     def test_integer_double_or_blank(self):
         """
@@ -344,6 +396,8 @@ class TestAssignType(ExtendedTestCase):
         self.assertEqual(1.e-9, double_or_blank(BDFCard(['1-9']), 0, 'field'))
         self.assertEqual(1.e+9, double_or_blank(BDFCard(['1+9']), 0, 'field'))
 
+        self.assertEqual(1000, integer_double_or_blank(BDFCard(['1000']), 0, 'field'))
+
         #card    = [1,    2.0, '3.0', '4.', 'C',        None, None,          '', None, 'cat']
         #exact   = [1,    2.0,  3.0,   4.0, SyntaxError,None, 2.0,  SyntaxError, 1.0, SyntaxError]
         #default = [None, None, None, None, None,       None, 2.0,         None, 1.0, 1.0]
@@ -365,6 +419,7 @@ class TestAssignType(ExtendedTestCase):
 
         # string
         self.assertEqual('LOAD', integer_string_or_blank(BDFCard(['load']), 0, 'field'))
+        self.assertEqual(1000, integer_or_string(BDFCard([1000]), 0, 'field'))
 
         # blank
         integer_string_or_blank(BDFCard(['   ']), 0, 'field')
@@ -387,6 +442,8 @@ class TestAssignType(ExtendedTestCase):
         # string
         self.assertEqual('LOAD', integer_double_or_string(BDFCard(['load']), 0, 'field'))
         self.assertEqual('MN-MM', integer_double_string_or_blank(BDFCard(['MN-MM']), 0, 'field'))
+
+        self.assertEqual(1000, integer_double_string_or_blank(BDFCard([1000]), 0, 'field'))
 
     def test_components(self):
         # single ints
@@ -549,6 +606,7 @@ class TestAssignType(ExtendedTestCase):
         val = components_or_blank(BDFCard([321]), 0, 'field', 'default')
         self.assertEqual(val, '123')
 
+
         # embedded whiteshape
         with self.assertRaises(SyntaxError):
             val = components_or_blank(BDFCard(['12 3']), 0, 'field', 'default')
@@ -600,6 +658,32 @@ class TestAssignType(ExtendedTestCase):
         val = interpret_value('1.000000000D+00')
         #print "val = ", val
 
+    def test_double_string_or_blank(self):
+        """tests the double_string_or_blank function"""
+        with self.assertRaises(SyntaxError):
+            double_string_or_blank(BDFCard(['10']), 0, 'field')
+
+        self.assertEqual(double_string_or_blank(BDFCard(['-1.0']), 0, 'field'), -1)
+        self.assertEqual(double_string_or_blank(BDFCard(['cat']), 0, 'field'), 'CAT')
+        self.assertEqual(double_string_or_blank(BDFCard(['  ']), 0, 'field'), None)
+
+    def test_modal_components(self):
+        """modal components """
+        card = BDFCard(['42'])
+
+        with self.assertRaises(SyntaxError):
+            modal_components(card, 0, 'field')
+
+        self.assertEqual(modal_components(BDFCard(['-1']), 0, 'field'), -1)
+        self.assertEqual(modal_components(BDFCard(['0']), 0, 'field'), 0)
+        self.assertEqual(modal_components(BDFCard(['1']), 0, 'field'), 1)
+        self.assertEqual(modal_components(BDFCard(['2']), 0, 'field'), 2)
+        self.assertEqual(modal_components(BDFCard(['3']), 0, 'field'), 3)
+        self.assertEqual(modal_components(BDFCard(['4']), 0, 'field'), 4)
+        self.assertEqual(modal_components(BDFCard(['5']), 0, 'field'), 5)
+        self.assertEqual(modal_components(BDFCard(['6']), 0, 'field'), 6)
+        with self.assertRaises(SyntaxError):
+            self.assertEqual(modal_components(BDFCard(['7']), 0, 'field'), 7)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

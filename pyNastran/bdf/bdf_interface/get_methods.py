@@ -344,7 +344,7 @@ class GetMethods(BDFAttributes):
             mpc_ids = list(self.mpcs.keys())
             mpcadd_ids = list(self.mpcadds.keys())
             raise KeyError('cannot find MPC ID=%r%s.\nAllowed MPCs=%s; MPCADDs=%s' % (
-                spc_id, msg, np.unique(mpc_ids), np.unique(mpcadd_ids)))
+                mpc_id, msg, np.unique(mpc_ids), np.unique(mpcadd_ids)))
         return constraint
 
     def SPC(self, spc_id, consider_spcadd=True, msg=''):

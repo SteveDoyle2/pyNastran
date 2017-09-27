@@ -12,7 +12,12 @@ class TestThermal(unittest.TestCase):
         """tests various thermal cards"""
         model = BDF(debug=False)
         model.sol = 101
-        lines = []
+        lines = [
+            'SUBCASE 1',
+            '  DISP(PLOT) = ALL',
+            '  ANALYSIS = HEAT',
+            'BEGIN BULK',
+        ]
         model.case_control_deck = CaseControlDeck(lines, log=None)
 
         model.add_grid(11, [0., 0., 0.])
@@ -195,8 +200,9 @@ class TestThermal(unittest.TestCase):
         #print(bdf_filename.getvalue())
 
         bdf_filename2.seek(0)
-        model2 = read_bdf(bdf_filename2, xref=False, debug=True)
+        model2 = read_bdf(bdf_filename2, xref=False, debug=False)
         model2.safe_cross_reference()
+        save_load_deck(model, punch=False)
 
 
 if __name__ == '__main__':

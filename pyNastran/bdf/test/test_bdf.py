@@ -485,8 +485,8 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
-             run_extract_bodies=False, encoding=None, crash_cards=None, safe_xref=True, pickle_obj=False,
-             stop=False):
+             run_extract_bodies=False, encoding=None, crash_cards=None, safe_xref=True,
+             pickle_obj=False, stop=False):
     """
     Reads/writes the BDF
 
@@ -824,7 +824,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)', 'P2G'), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 103:
-        assert True in subcase.has_parameter('METHOD', 'RSMETHOD', 'RIGID'), 'sol=%s\n%s' % (sol, subcase)
+        assert True in subcase.has_parameter('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID'), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 105: # buckling
         _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD', 'METHOD'), 'sol=%s\n%s' % (sol, subcase)
@@ -877,7 +877,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
 
     elif sol == 144:
         if not any(subcase.has_parameter('TRIM', 'DIVERG')):
-            log.error('A TRIM or DIVERG card is required for STATIC AERO - SOL %i\n%s' % (sol, subcase))
+            log.error('A TRIM or DIVERG card is required for STATIC AERO - SOL %i\n%s' % (
+                sol, subcase))
         if fem2.aeros is None:
             log.error('An AEROS card is required for STATIC AERO - SOL %i; %s' % (sol, fem2.aeros))
 
@@ -887,8 +888,21 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
 
         soltype = 'FLUTTER'
         # METHOD - EIGRL
+        # CMETHOD - EIGC
         # FMETHOD - FLUTTER
-        require_cards(['METHOD', 'FMETHOD'], log, soltype, sol, subcase)
+        require_cards(['FMETHOD'], log, soltype, sol, subcase)
+        flutter_id = subcase.get_parameter('FMETHOD')[0]
+        flutter = fem2.Flutter(flutter_id, msg=', which is required by test_bdf')
+
+        #valid methods = [K, KE,
+                         #PKS, PKNLS, PKNL, PKE]
+        #if flutter.method in ['PK', 'PKNL']: # not supported in SOL 200
+        if flutter.method == 'K':
+            # EIGC
+            require_cards(['CMETHOD'], log, soltype, sol, subcase)
+        else:
+            # EIGRL
+            require_cards(['METHOD'], log, soltype, sol, subcase)
 
     elif sol == 146:
         if 'METHOD' not in subcase:  # EIGRL
@@ -921,79 +935,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             assert any(subcase.has_parameter('TEMPERATURE(LOAD)', 'TEMPERATURE(INITIAL)')), 'sol=%s\n%s' % (sol, subcase)
 
     elif sol == 200:
-        # local level
-        # DESSUB - Set constraints (DCONSTR, DCONADD) applied for subcase
-        #          (e.g. STRESS, STRAIN, DAMP)
-        #          optional locally
-        # DESGLB - Set constraints (DCONSTR, DCONADD) applied globally
-        #          (e.g. WEIGHT, VOLUME, WMPID, FRMASS)
-        #          optional locally
-        # DESOBJ - The objective function (DRESP1, DRESP2, DRESP3)
-        #          required globally
-        # 1 or more DESSUB/DESGLB are required globally
-        # 1 DESOBJ is required
-        assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
-
-        analysis = subcase.get_parameter('ANALYSIS')[0]
-        if analysis != 'STATICS':
-            # BUCKLING
-            if 'DESOBJ' in subcase:
-                value = subcase.get_parameter('DESOBJ')[0]
-                assert value in fem2.dresps, 'value=%s not in dresps' % value
-            else:
-                fem2.log.warning('no DESOBJ in this subcase; is this a buckling preload case?')
-                fem2.log.warning('\n%s' % subcase)
-
-            if 'DESSUB' not in subcase and 'DESGLB' not in subcase:
-                fem2.log.warning('no DESSUB/DESGLB in this subcase;'
-                                 ' is this a buckling preload case?')
-                log.warning('\n%s' % subcase)
-
-            #assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
-        if 'DESSUB' in subcase:
-            value, options = subcase.get_parameter('DESSUB')
-            if value not in fem2.dconstrs:
-                msg = 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (
-                    value, np.unique(list(fem2.dconstrs.keys())))
-                raise RuntimeError(msg)
-
-        if analysis in ['STATIC', 'STATICS']:
-            sol = 101
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis in ['MODE', 'MODES']:
-            sol = 103
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis in ['BUCK', 'BUCKLING']:
-            sol = 105
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis == 'DFREQ':
-            sol = 108
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis == 'MFREQ':
-            if subcase.has_parameter('GUST'):
-                sol = 146
-            else:
-                sol = 111
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis == 'MTRAN':
-            sol = 112
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis in ['SAERO', 'DIVERG', 'DIVERGE']:
-            sol = 144
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis == 'FLUTTER':
-            sol = 145
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        elif analysis == 'DCEIG': # direct complex eigenvalues
-            sol = 107
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        #elif analysis == 'MCEIG': # modal direct complex eigenvalues
-        elif analysis == 'HEAT': # heat transfer analysis
-            sol = 159
-            check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        else:
-            msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
-            raise NotImplementedError(msg)
+        _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log)
     elif sol in [114, 115, 116, 118]:
         # cyclic statics, modes, buckling, frequency
         pass
@@ -1005,11 +947,91 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         raise NotImplementedError(msg)
     _check_case_parameters(subcase, fem2, p0, isubcase, sol)
 
+def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
+    """
+    helper method for ``check_case``
+
+    local level
+    DESSUB - Set constraints (DCONSTR, DCONADD) applied for subcase
+             (e.g. STRESS, STRAIN, DAMP)
+             optional locally
+    DESGLB - Set constraints (DCONSTR, DCONADD) applied globally
+             (e.g. WEIGHT, VOLUME, WMPID, FRMASS)
+             optional locally
+    DESOBJ - The objective function (DRESP1, DRESP2, DRESP3)
+             required globally
+    1 or more DESSUB/DESGLB are required globally
+    1 DESOBJ is required
+    """
+    assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
+
+    analysis = subcase.get_parameter('ANALYSIS')[0]
+    if analysis != 'STATICS':
+        # BUCKLING
+        if 'DESOBJ' in subcase:
+            value = subcase.get_parameter('DESOBJ')[0]
+            assert value in fem2.dresps, 'value=%s not in dresps' % value
+        else:
+            fem2.log.warning('no DESOBJ in this subcase; is this a buckling preload case?')
+            fem2.log.warning('\n%s' % subcase)
+
+        if 'DESSUB' not in subcase and 'DESGLB' not in subcase:
+            fem2.log.warning('no DESSUB/DESGLB in this subcase;'
+                             ' is this a buckling preload case?')
+            log.warning('\n%s' % subcase)
+
+        #assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
+    if 'DESSUB' in subcase:
+        value, options = subcase.get_parameter('DESSUB')
+        if value not in fem2.dconstrs:
+            msg = 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (
+                value, np.unique(list(fem2.dconstrs.keys())))
+            raise RuntimeError(msg)
+
+    if analysis in ['STATIC', 'STATICS']:
+        solution = 101
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis in ['MODE', 'MODES']:
+        solution = 103
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis in ['BUCK', 'BUCKLING']:
+        solution = 105
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis == 'DFREQ':
+        solution = 108
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis == 'MFREQ':
+        if subcase.has_parameter('GUST'):
+            solution = 146
+        else:
+            solution = 111
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis == 'MTRAN':
+        solution = 112
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis in ['SAERO', 'DIVERG', 'DIVERGE']:
+        solution = 144
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis == 'FLUTTER':
+        solution = 145
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    elif analysis == 'DCEIG': # direct complex eigenvalues
+        solution = 107
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    #elif analysis == 'MCEIG': # modal direct complex eigenvalues
+    elif analysis == 'HEAT': # heat transfer analysis
+        solution = 159
+        check_case(solution, subcase, fem2, p0, isubcase, subcases)
+    else:
+        msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
+        raise NotImplementedError(msg)
+
 def require_cards(card_names, log, soltype, sol, subcase):
     nerrors = 0
     for card_name in card_names:
         if card_name not in subcase:
-            log.error('A %s card is required for %s - SOL %i\n%s' % (card_name, soltype, sol, subcase))
+            log.error('A %s card is required for %s - SOL %i\n%s' % (
+                card_name, soltype, sol, subcase))
             nerrors += 1
     return nerrors
 
@@ -1161,7 +1183,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
 
     if 'LOADSET' in subcase:
         loadset_id = subcase.get_parameter('LOADSET')[0]
-        lseq = fem2.Loads(loadset_id)
+        lseq = fem2.Load(loadset_id)
         fem2.get_reduced_loads(loadset_id)
 
     if 'DLOAD' in subcase:
@@ -1193,7 +1215,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
                 if sol in [109, 129, 601, 701]:
                     raise NotImplementedError('IC & DLOAD; sol=%s -> TIC\n%s' % (sol, subcase))
                 elif sol == 159:
-                    fem2.Loads(ic_val)
+                    fem2.Load(ic_val)
                 else:
                     raise NotImplementedError('IC & DLOAD; sol=%s -> TIC\n%s' % (sol, subcase))
 
