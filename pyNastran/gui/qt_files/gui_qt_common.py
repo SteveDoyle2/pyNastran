@@ -13,6 +13,7 @@ from vtk.util.numpy_support import numpy_to_vtk
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.testing_methods import GuiAttributes
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 class GuiCommon(GuiAttributes):
@@ -657,7 +658,7 @@ class GuiCommon(GuiAttributes):
         #inan = np.where(nodes.ravel() == np.nan)[0]
         #if len(inan) > 0:
             #raise RuntimeError('nan in nodes...')
-        self.numpy_to_vtk_points(nodes, points=points, dtype='<f', deep=1)
+        numpy_to_vtk_points(nodes, points=points, dtype='<f', deep=1)
         grid.Modified()
         self.grid_selected.Modified()
         self._update_follower_grids(nodes)

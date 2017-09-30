@@ -11,6 +11,7 @@ from vtk import vtkTriangle, vtkQuad
 
 from pyNastran.converters.su2.su2_reader import SU2Reader as SU2
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 class SU2_IO(object):
@@ -76,7 +77,7 @@ class SU2_IO(object):
         #else:
             # ndim=3
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
 
 
         #nelements = 0

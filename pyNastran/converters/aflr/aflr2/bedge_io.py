@@ -6,6 +6,8 @@ import vtk
 
 from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class BEdge_IO(object):
@@ -50,7 +52,7 @@ class BEdge_IO(object):
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
 
         mmax = np.amax(nodes, axis=0)
         mmin = np.amin(nodes, axis=0)
@@ -63,7 +65,7 @@ class BEdge_IO(object):
         etype = 1  # vtk.vtkVertex().GetCellType()
         #elements = np.arange(0, len(nodes), dtype='int32')
         #assert len(elements) == len(nodes)
-        #self.create_vtk_cells_of_constant_element_type(alt_grid, elements, etype)
+        #create_vtk_cells_of_constant_element_type(alt_grid, elements, etype)
         for inode, node in enumerate(nodes):
             elem = vtk.vtkVertex()
             elem.GetPointIds().SetId(0, inode)
@@ -72,7 +74,7 @@ class BEdge_IO(object):
         bars = model.bars
 
         etype = 3  # vtkLine().GetCellType()
-        self.create_vtk_cells_of_constant_element_type(grid, bars, etype)
+        create_vtk_cells_of_constant_element_type(grid, bars, etype)
 
         self.nelements = nelements
         alt_grid.SetPoints(points)

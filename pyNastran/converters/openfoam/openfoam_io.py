@@ -15,6 +15,8 @@ from vtk import vtkTriangle, vtkQuad, vtkHexahedron
 from pyNastran.converters.openfoam.block_mesh import BlockMesh, Boundary
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.utils import print_bad_path
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class OpenFoamIO(object):
@@ -192,19 +194,19 @@ class OpenFoamIO(object):
                             inode + 1, node[0], node[1], node[2], ))
                     points.InsertPoint(inode, node)
             else:
-                points = self.numpy_to_vtk_points(nodes)
+                points = numpy_to_vtk_points(nodes)
 
             #elements -= 1
             normals = None
             if is_3d_blockmesh:
                 nelements = hexas.shape[0]
                 cell_type_hexa8 = vtkHexahedron().GetCellType()
-                self.create_vtk_cells_of_constant_element_type(grid, hexas, cell_type_hexa8)
+                create_vtk_cells_of_constant_element_type(grid, hexas, cell_type_hexa8)
 
             elif is_surface_blockmesh:
                 nelements = quads.shape[0]
                 cell_type_quad4 = vtkQuad().GetCellType()
-                self.create_vtk_cells_of_constant_element_type(grid, quads, cell_type_quad4)
+                create_vtk_cells_of_constant_element_type(grid, quads, cell_type_quad4)
 
             elif is_face_mesh:
 

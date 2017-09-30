@@ -25,6 +25,7 @@ from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QFileDialog)
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 import vtk
@@ -2953,19 +2954,26 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _load_deflection(self, out_filename):
         """loads a deflection file"""
+        self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
+
+
+    def _load_deflection(self, out_filename):
+        """loads a force file"""
+        self._load_deflection_force(out_filename, is_deflection=False, is_force=True)
+
+    def _load_deflection_force(self, out_filename, is_deflection=False, is_force=False):
         out_filename_short = os.path.basename(out_filename)
         A, fmt_dict, headers = load_deflection_csv(out_filename)
         #nrows, ncols, fmts
         header0 = headers[0]
-        print('headers=%s' % headers)
-        print('A.keys()=%s' % A.keys())
         result0 = A[header0]
         nrows = result0.shape[0]
 
         assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
         result_type2 = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
-                                out_filename_short, update=True)
+                                out_filename_short, update=True, is_scalar=False,
+                                is_deflection=is_deflection, is_force=is_deflection)
 
     def _load_csv(self, result_type, out_filename):
         """
@@ -3009,7 +3017,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #iids = np.searchsorted(ids, )
             #A = A2
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
-                                out_filename_short, update=True)
+                                out_filename_short, update=True, is_scalar=True)
 
     def on_load_results(self, out_filename=None):
         """
@@ -3326,7 +3334,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.alt_grids[geom_name].Allocate(npoints, 1000)
 
         # set points
-        points = self.numpy_to_vtk_points(xyz, dtype='<f')
+        points = numpy_to_vtk_points(xyz, dtype='<f')
 
         if nelements > 0:
             geom_grid = self.alt_grids[geom_name]

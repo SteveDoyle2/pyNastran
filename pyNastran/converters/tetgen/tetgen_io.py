@@ -11,6 +11,8 @@ from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.tetgen.tetgen import Tetgen
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class TetgenIO(object):
@@ -64,16 +66,16 @@ class TetgenIO(object):
         #self.gridResult.SetNumberOfComponents(self.nelements)
 
         assert nodes is not None
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         self.nid_map = {}
 
         #elements -= 1
         if dimension_flag == 2:
             etype = 5  # vtkTriangle().GetCellType()
-            self.create_vtk_cells_of_constant_element_type(grid, tris, etype)
+            create_vtk_cells_of_constant_element_type(grid, tris, etype)
         elif dimension_flag == 3:
             etype = 10  # vtkTetra().GetCellType()
-            self.create_vtk_cells_of_constant_element_type(grid, tets, etype)
+            create_vtk_cells_of_constant_element_type(grid, tets, etype)
         else:
             raise RuntimeError('dimension_flag=%r; expected=[2, 3]' % dimension_flag)
 
