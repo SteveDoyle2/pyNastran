@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+#import re
 import sys
 import traceback
 from codecs import open as codec_open
@@ -9,6 +10,8 @@ import numpy as np
 import pyNastran
 from pyNastran.utils import _filename
 from pyNastran.utils.numpy_utils import loadtxt_nice
+from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.converters.nastran.displacements import DisplacementResults
 
 
 def check_for_newer_version():
@@ -83,6 +86,85 @@ def check_for_newer_version():
     #print('*pyNastran %s is now availible; current=%s' % (version_latest, version_current))
     return version_latest, version_current, is_newer
 
+def create_res_obj(islot, headers, A, fmt_dict, result_type,
+                   dim_max=None, xyz_cid0=None):
+    """
+    Parameters
+    ----------
+    islot : int
+        ???
+    A : dict[key] = (n, m) array
+        the numpy arrays
+        key : str
+            the name
+        n : int
+            number of nodes/elements
+        m : int
+            secondary dimension
+            N/A : 1D array
+            3 : deflection
+    headers : List[str]???
+        the titles???
+    fmt_dict : dict[header] = fmt
+        the format of the arrays
+        header : str
+            the name
+        fmt : str
+            '%i', '%f'
+    result_type : str
+        'node', 'centroid'
+    out_filename_short : str
+        the display name
+
+    islot, headers, A, fmt_dict
+    dim_max : float
+        required for forces/displacements
+    xyz_cid0 : (nnodes, 3)
+        the points
+    """
+    for header in headers:
+        datai = A[header]
+        fmti = fmt_dict[header]
+        title = header
+        location = result_type
+
+        dimension = len(datai.shape)
+        if dimension == 1:
+            vector_size = 1
+        elif dimension == 2:
+            vector_size = datai.shape[1]
+        else:
+            raise RuntimeError('dimension=%s' % (dimension))
+
+        if vector_size == 1:
+            res_obj = GuiResult(
+                islot, header, title, location, datai,
+                nlabels=None, labelsize=None, ncolors=None,
+                colormap='jet', data_format=fmti,
+            )
+        elif vector_size == 3:
+            # title is 3 values
+            # header is 3 values
+            # scale is 3 values
+            titles = [header]
+            headers = header
+
+            norm_max = np.linalg.norm(datai, axis=1).max()
+            scales = [dim_max / norm_max * 0.25]
+            data_formats = [fmti] * 3
+            scalar = None
+            dxyz = datai
+            xyz = xyz_cid0
+            res_obj = DisplacementResults(
+                islot, titles, headers,
+                xyz, dxyz, scalar, scales, data_formats=data_formats,
+                nlabels=None, labelsize=None, ncolors=None,
+                colormap='jet',
+                set_max_min=True, deflects=True)
+        else:
+            raise RuntimeError('vector_size=%s' % (vector_size))
+    return res_obj, title, header
+
 def load_deflection_csv(out_filename, encoding='latin1'):
     """
     The GUI deflection CSV loading function.
@@ -96,8 +178,7 @@ def load_deflection_csv(out_filename, encoding='latin1'):
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
     with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
-        names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
-        nnames = len(names)
+        names, _fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
 
         try:
             #A = np.loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
@@ -108,21 +189,27 @@ def load_deflection_csv(out_filename, encoding='latin1'):
                 ext, len(names), delimiter, dtype)
             raise RuntimeError(msg)
 
-        try:
-            nrows, ncols = A.shape
-        except ValueError:
-            msg = 'A should be (nnodes, 3); A.shape=%s nnames*3=%s names=%s' % (
-                str(A.shape), nnames*3, names)
-            raise ValueError(msg)
+    names_without_index = names[1:]
+    nnames_without_index = len(names_without_index)
+    nexpected_results = 1 + 3 * nnames_without_index
 
-        if ncols != (nnames * 3):
-            msg = 'A.shape=%s ncols=%s nnames*3=%s names=%s' % (
-                str(A.shape), ncols, nnames*3, names)
-            raise RuntimeError(msg)
+    try:
+        _nrows, ncols = A.shape
+    except ValueError:
+        msg = ('A should be (nnodes, 1+ndeflection_results); '
+               'A.shape=%s nexpected_results=%s names=%s' % (
+                   str(A.shape), nexpected_results, names))
+        raise ValueError(msg)
+
+    if ncols != nexpected_results:
+        msg = 'A.shape=%s ncols=%s nexpected_results=%s names=%s nnames_without_index=%s' % (
+            str(A.shape), ncols, nexpected_results, names, nnames_without_index)
+        raise ValueError(msg)
+
     B = {}
-    for i, name in enumerate(names):
+    for i, name in enumerate(names_without_index):
         B[name] = A[:, 3*i:3*i+3]
-    return B, fmt_dict, names
+    return B
 
 def load_csv(out_filename, encoding='latin1'):
     """
@@ -138,6 +225,7 @@ def load_csv(out_filename, encoding='latin1'):
 
     with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
+
         try:
             #A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
             A = loadtxt_nice(file_obj, dtype=dtype, delimiter=delimiter)
@@ -153,21 +241,21 @@ def _load_format_header(file_obj, ext, force_float=False):
     if not header_line.startswith('#'):
         msg = 'Expected file of the form:\n'
         if ext in ['.dat', '.txt']:
-            msg += '# var1 var2\n'
-            msg += '1 2\n'
-            msg += '3 4\n'
+            msg += '# nodeid var1 var2\n'
+            msg += '1 1 2\n'
+            msg += '2 3 4\n'
             msg += '\nor:\n'
-            msg += '# var1(%i) var2(%f)\n'
-            msg += '1 2.1\n'
-            msg += '3 4.2\n'
+            msg += '# nodeid, var1(%i) var2(%f)\n'
+            msg += '1 1 2.1\n'
+            msg += '2 3 4.2\n'
         elif ext == '.csv':
-            msg += '# var1, var2\n'
-            msg += '1, 2\n'
-            msg += '3, 4\n'
+            msg += '# nodeid, var1, var2\n'
+            msg += '1, 1, 2\n'
+            msg += '2, 3, 4\n'
             msg += '\nor:\n'
-            msg += '# var1(%i), var2(%f)\n'
-            msg += '1, 2.1\n'
-            msg += '3, 4.2\n'
+            msg += '# nodeid, var1(%i), var2(%f)\n'
+            msg += '1, 1, 2.1\n'
+            msg += '2, 3, 4.2\n'
         else:
             msg = 'extension=%r is not supported (use .dat, .txt, or .csv)' % ext
             raise NotImplementedError(msg)
@@ -193,10 +281,23 @@ def _load_format_header(file_obj, ext, force_float=False):
         dtype_fmt = 'float'
 
         str_fmt = '%.3f'
-        if header2.endswith(')') and '%' in header2:
+        header2_temp = None
+        if iheader == 0:
+            # the first column must be an integer
+            if '(' in header2:
+                header2_temp, fmt_temp = header2[:-1].rsplit('(', 1)
+                header2_temp = header2_temp.strip()
+                fmt = fmt_temp.strip()
+                assert 'i' in fmt, 'header=%r must be an integer; fmt=%r' % (header2, fmt)
+            header2_temp = 'index'
+            dtype_fmt = 'int32'
+            str_fmt = '%i'
+
+        elif header2.endswith(')') and '%' in header2:
             header2_temp, fmt_temp = header2[:-1].rsplit('(', 1)
             header2_temp = header2_temp.strip()
             fmt = fmt_temp.strip()
+
             #('S1', 'i4', 'f4')
             if '%' in fmt:
                 #fmt_temp = fmt_temp.replace('%', '%%')
@@ -221,6 +322,7 @@ def _load_format_header(file_obj, ext, force_float=False):
             dtype_fmt = 'float32'
             header2_temp = header2
 
+        assert header2_temp is not None
         names.append(header2_temp)
         dtype_fmts.append(dtype_fmt)
         fmt_dict[header2_temp] = str_fmt
@@ -311,22 +413,22 @@ def load_user_geom(fname, encoding='latin1'):
     bars = np.array(bars, dtype='int32')
     return grid_ids, xyz, bars, tris, quads
 
-import re
+#def natural_sort(l):
+    #convert = lambda text: int(text) if text.isdigit() else text.lower()
+    #alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    #return sorted(l, key=alphanum_key)
 
-def natural_sort(l):
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
-    return sorted(l, key = alphanum_key)
+#def num_sort():
+    #"""
+    #in_values  = ['anti_main', 'main', 'Family 4', 'Family 3', 'Family 1',
+                  #'Patch 119', 'Patch 118', 'Patch 19', 'Patch 18']
+    #out_values = ['anti_main', 'main', 'Family 1', 'Family 3', 'Family 4',
+                  #'Patch 118', 'Patch 119', 'Patch 18', 'Patch 19']
 
-def num_sort():
-    """
-    in_values  = ['anti_main', 'main', 'Family 4', 'Family 3', 'Family 1', 'Patch 119', 'Patch 118', 'Patch 19', 'Patch 18']
-    out_values = ['anti_main', 'main', 'Family 1', 'Family 3', 'Family 4', 'Patch 118', 'Patch 119', 'Patch 18', 'Patch 19']
-
-    'Patch 19 cat 20' not handled
-    """
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+    #'Patch 19 cat 20' not handled
+    #"""
+    #convert = lambda text: int(text) if text.isdigit() else text.lower()
+    #alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
 
 if __name__ == '__main__':  # pragma: no cover
     check_for_newer_version()
