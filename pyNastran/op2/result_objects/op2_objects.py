@@ -102,6 +102,22 @@ class BaseScalarObject(Op2Codes):
     def class_name(self):
         return self.__class__.__name__
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if 'add' in state:
+            del state['add']
+        if 'add_new_eid' in state:
+            del state['add_new_eid']
+        if 'class_name' in state:
+            del state['class_name']
+        if 'nnodes_per_element' in state:
+            del state['nnodes_per_element']
+        if 'add_node' in state:
+            del state['add_node']
+        if 'add_eid' in state:
+            del state['add_eid']
+        return state
+
     def get_headers(self):
         raise RuntimeError()
 
@@ -298,6 +314,12 @@ class ScalarObject(BaseScalarObject):
     def dataframe(self):
         """alternate way to get the dataframe"""
         return self.data_frame
+
+    def __getstate__(self):
+        state = BaseScalarObject.__getstate__(self)
+        if 'dataframe' in state:
+            del state['dataframe']
+        return state
 
     def apply_data_code(self):
         if self.table_name is not None and self.table_name != self.data_code['table_name']:
