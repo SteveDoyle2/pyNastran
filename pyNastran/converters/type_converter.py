@@ -19,7 +19,7 @@ def process_nastran(bdf_filename, fmt2, fname2, data=None, debug=True):
     if fmt2 == 'ugrid':
         xref = False
     model = BDF(debug=debug)
-    model.read_bdf(bdf_filename, xref=xref)
+    model.read_bdf(bdf_filename, validate=False, xref=xref)
 
     if data['--scale'] != 1.0:
         scale = data['--scale']

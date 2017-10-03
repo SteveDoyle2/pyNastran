@@ -623,7 +623,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         # method to avoid modifying the original state.
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
-        #del state['spcObject'], state['mpcObject'],
         del state['_card_parser'], state['log']
         if hasattr(self, '_card_parser_b'):
             del state['_card_parser_b']

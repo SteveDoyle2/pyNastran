@@ -32,7 +32,7 @@ def stl_to_nastran(stl_filename, bdf_filename,
     cid = None
     load_id = 10
 
-    nodal_normals = model.get_normals_at_nodes(model.elements)
+    #nodal_normals = model.get_normals_at_nodes(model.elements)
 
     if size == 8:
         print_card = print_card_8
