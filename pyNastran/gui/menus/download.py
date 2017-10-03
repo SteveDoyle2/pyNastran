@@ -18,10 +18,11 @@ if qt_version == 4:
                 # ????
                 pass
 elif qt_version == 5:
-    class ClickableQLabel(QPushButton):
-        def __init(self, text):
-            QPushButton.__init__(self, text)
-            self.setFlat(True)
+    pass
+    #class ClickableQLabel(QPushButton):
+        #def __init(self, text):
+            #QPushButton.__init__(self, text)
+            #self.setFlat(True)
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
@@ -56,7 +57,7 @@ class DownloadWindow(QDialog):
         self.version = version
 
         QDialog.__init__(self, win_parent)
-        self.setWindowTitle('pyNastran update ')
+        self.setWindowTitle('pyNastran Update')
         self.create_widgets()
         self.create_layout()
         self.set_connections()

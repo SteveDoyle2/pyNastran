@@ -126,6 +126,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         fmt_order = kwds['fmt_order']
         inputs = kwds['inputs']
 
+        #self.app = inputs['app']
+        #del inputs['app']
+
+
         if inputs['log'] is not None:
             html_logging = False
         else:
@@ -3190,6 +3194,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         font = QtGui.QFont()
         font.setPointSize(self.font_size)
+        #self.app.setFont(font)
         self.setFont(font)
 
         if 0 and PY3:
@@ -3680,7 +3685,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
 
         #self.convert_units(icase, result_value, x, y, z)
-        if 1:
+
+        if self.vtk_version[0] >= 7: # should check for 7.1
+            text_actor = vtk.vtkBillboardTextActor3D()
+            label = text
+            text_actor.SetPosition(x, y, z)
+            text_actor.SetInput(label)
+            text_actor.PickableOff()
+            text_actor.DragableOff()
+
+            #text_actor.SetPosition(actor.GetPosition())
+            text_prop = text_actor.GetTextProperty()
+            text_prop.SetFontSize(15)
+            text_prop.SetFontFamilyToArial()
+            text_prop.BoldOn()
+            text_prop.ShadowOn()
+
+            text_prop.SetColor(self.label_color)
+            text_prop.SetJustificationToCentered()
+            follower = text_actor
+
+        else:  # vector text
             source = vtk.vtkVectorText()
             source.SetText(str(text))
 
@@ -3700,30 +3725,31 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             prop = follower.GetProperty()
             prop.SetColor(self.label_color)
-            #prop.SetOpacity( 0.3 );
+            #prop.SetOpacity(0.3)
 
             # we need to make sure the text rotates when the camera is changed
             camera = self.rend.GetActiveCamera()
             follower.SetCamera(camera)
-        else:
+        #else:
             # Create a text mapper and actor to display the results of picking.
-            text_mapper = vtk.vtkTextMapper()
-            text_mapper.SetInput(text)
+            # this wasn't quite done...forget how
+            #text_mapper = vtk.vtkTextMapper()
+            #text_mapper.SetInput(text)
 
-            tprop = text_mapper.GetTextProperty()
-            tprop.SetFontFamilyToArial()
-            tprop.SetFontSize(10)
-            tprop.BoldOn()
-            tprop.ShadowOn()
-            tprop.SetColor(self.label_color)
+            #text_prop = text_mapper.GetTextProperty()
+            #text_prop.SetFontFamilyToArial()
+            #text_prop.SetFontSize(10)
+            #text_prop.BoldOn()
+            #text_prop.ShadowOn()
+            #text_prop.SetColor(self.label_color)
 
-            text_actor = vtk.vtkActor2D()
-            text_actor.PickableOff()
-            text_actor.DragableOff()
-            text_actor.GetPositionCoordinate().SetCoordinateSystemToWorld()
-            #text_actor.SetPosition(world_position[:2])
-            text_actor.SetMapper(text_mapper)
-            follower = text_actor
+            #text_actor = vtk.vtkActor2D()
+            #text_actor.PickableOff()
+            #text_actor.DragableOff()
+            #text_actor.GetPositionCoordinate().SetCoordinateSystemToWorld()
+            ##text_actor.SetPosition(world_position[:2])
+            #text_actor.SetMapper(text_mapper)
+            #follower = text_actor
 
         # finish adding the actor
         self.rend.AddActor(follower)
@@ -5401,10 +5427,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """Updates the size of all the labels"""
         assert size >= 0., size
         self.label_text_size = size
-        for icase, follower_actors in iteritems(self.label_actors):
-            for follower_actor in follower_actors:
-                follower_actor.SetScale(size)
-                follower_actor.Modified()
+
+        USE_LABEL_INT = int(vtk.VTK_VERSION[0]) >= 7
+        if USE_LABEL_INT:
+            for icase, follower_actors in iteritems(self.label_actors):
+                int_size = int(size)
+                assert int_size > 0, size
+                for follower_actor in follower_actors:
+                    follower_actor.GetTextProperty().SetFontSize(int_size)
+                    follower_actor.Modified()
+        else:
+            for icase, follower_actors in iteritems(self.label_actors):
+                for follower_actor in follower_actors:
+                    follower_actor.SetScale(size)
+                    follower_actor.Modified()
         if render:
             self.vtk_interactor.GetRenderWindow().Render()
             self.log_command('set_labelsize(%s)' % size)

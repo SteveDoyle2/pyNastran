@@ -15,10 +15,12 @@ from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
+import vtk
 
 from pyNastran.gui.gui_interface.common import PyDialog, QPushButtonColor
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
+USE_LABEL_INT = int(vtk.VTK_VERSION[0]) >= 7
 
 class PreferencesWindow(PyDialog):
     """
@@ -48,10 +50,14 @@ class PreferencesWindow(PyDialog):
         self._default_clipping_min = data['clipping_min']
         self._default_clipping_max = data['clipping_max']
 
-        #label_color_float = data['label_color']
-        self._label_size = data['label_size']
-        #self.out_data = data
         self.dim_max = data['dim_max']
+        if USE_LABEL_INT:
+            self._default_label_size_int = data['label_size_int']
+        else:
+            #self._default_label_size_float = data['label_size_float']
+            self._default_label_size_float = data['label_size_float']
+
+        #self.out_data = data
         self._picker_size = data['picker_size'] * 100.
 
         self.label_color_float, self.label_color_int = _check_color(data['label_color'])
@@ -91,17 +97,23 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Label Size
-        self.label_size = QLabel("Label Size (3D Text):")
-        self.label_size_edit = QDoubleSpinBox(self)
-        self.label_size_edit.setRange(0.0, self.dim_max)
+        if USE_LABEL_INT:
+            self.label_size = QLabel("Annotation Size:")
+            self.label_size_edit = QSpinBox(self)
+            self.label_size_edit.setRange(1, 500)
+            self.label_size_edit.setValue(self._default_label_size_int)
+        else:
+            self.label_size = QLabel("Annotation Size:")
+            self.label_size_edit = QDoubleSpinBox(self)
+            self.label_size_edit.setRange(0.0, self.dim_max)
 
-        log_dim = log10(self.dim_max)
-        decimals = int(ceil(abs(log_dim)))
-        decimals = max(6, decimals)
-        self.label_size_edit.setDecimals(decimals)
-        #self.label_size_edit.setSingleStep(self.dim_max / 100.)
-        self.label_size_edit.setSingleStep(self.dim_max / 1000.)
-        self.label_size_edit.setValue(self._label_size)
+            log_dim = log10(self.dim_max)
+            decimals = int(ceil(abs(log_dim)))
+            decimals = max(6, decimals)
+            self.label_size_edit.setDecimals(decimals)
+            #self.label_size_edit.setSingleStep(self.dim_max / 100.)
+            self.label_size_edit.setSingleStep(self.dim_max / 1000.)
+            self.label_size_edit.setValue(self._default_label_size_float)
 
         #-----------------------------------------------------------------------
         # Picker Size
@@ -374,7 +386,8 @@ def main():
         'text_color' : (0., 1., 0.), # green
 
         'label_color' : (1., 0., 0.), # red
-        'label_size' : 10.,
+        'label_size_float' : 10.,
+        'label_size_int' : 11,
         'picker_size' : 10.,
 
         'clipping_min' : 0.,
