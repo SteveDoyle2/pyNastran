@@ -2,7 +2,7 @@ from __future__ import print_function
 import vtk
 from pyNastran.gui.gui_interface.preferences.preferences import PreferencesWindow
 
-USE_LABEL_INT = int(vtk.VTK_VERSION[0]) >= 7
+USE_ANNOTATION_INT = int(vtk.VTK_VERSION[0]) >= 7
 
 def set_preferences_menu(self):
     """
@@ -20,9 +20,9 @@ def set_preferences_menu(self):
     min_clip, max_clip = camera.GetClippingRange()
     data = {
         'font_size' : self.font_size,
-        'label_size_float' : self.label_text_size,
-        'label_size_int' : 10,
-        'label_color' : self.label_color,
+        'annotation_size_float' : self.annotation_text_size,
+        'annotation_size_int' : self.annotation_size_int,
+        'annotation_color' : self.annotation_color,
         'background_color' : self.background_color,
         'text_color' : self.text_color,
 
