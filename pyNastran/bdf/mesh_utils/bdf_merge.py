@@ -84,7 +84,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     model = BDF(debug=False, log=log)
     model.disable_cards(cards_to_skip)
     bdf_filename0 = bdf_filenames[0]
-    model.read_bdf(bdf_filename0, encoding=encoding)
+    model.read_bdf(bdf_filename0, encoding=encoding, validate=False)
     if skip_case_control_deck:
         model.case_control_deck = CaseControlDeck([], log=None)
     model.log.info('primary=%s' % bdf_filename0)

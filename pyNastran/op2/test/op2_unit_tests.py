@@ -174,14 +174,29 @@ class TestOP2(Tester):
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
-        run_op2(op2_filename, make_geom=True, write_bdf=True,
-                write_f06=True, write_op2=False,
-                write_xlsx=False, is_mag_phase=False,
-                is_sort2=False, is_nx=None, delete_f06=True,
-                subcases=None, exclude=None, short_stats=False,
-                compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
-                stop_on_failure=True, dev=False)
+
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True,
+            write_f06=True, write_op2=False,
+            write_xlsx=False, is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True, check_memory=False,
+            stop_on_failure=True, dev=False)
+        with self.assertRaises(NotImplementedError):
+            op2.save()
+
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False,
+            write_f06=True, write_op2=False,
+            write_xlsx=False, is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True, check_memory=False,
+            stop_on_failure=True, dev=False)
+        op2.save()
 
     def test_bdf_op2_elements_02(self):
         """tests a large number of elements and results in SOL 103-modes"""

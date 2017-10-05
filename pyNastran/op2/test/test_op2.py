@@ -342,6 +342,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         if compare:
             op2_nv.read_op2(op2_filename)
         op2.read_op2(op2_filename)
+        #if not make_geom:  # TODO: enable this...
+            #op2.save()
 
         #op2a.get_op2_stats()
         op2.get_op2_stats()

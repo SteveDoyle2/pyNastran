@@ -1,5 +1,6 @@
+from __future__ import print_function
 from six import iteritems
-from numpy import zeros, array
+import numpy as np
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.converters.stl.stl import STL
 
@@ -7,7 +8,7 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, is_binary=False, log=Non
     """Converts a Nastran model to an STL"""
     return nastran_to_stl(bdf_filename, stl_filename, is_binary=is_binary)
 
-def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None):
+def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_on_failure=False):
     """
     Converts a Nastran model to an STL
 
@@ -22,6 +23,8 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None):
         should the output file be binary
     log : Logger()
         a Python logging object
+    stop_on_failure : bool; default=False
+        should the code stop if an error is encountered
     """
     if isinstance(bdf_filename, str):
         model = read_bdf(bdf_filename, log=log)
@@ -31,17 +34,22 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None):
     #log.info('card_count = %s' % model.card_count)
 
     nnodes = len(model.nodes)
-    nodes = zeros((nnodes, 3), dtype='float64')
+    nodes = np.zeros((nnodes, 3), dtype='float64')
     elements = []
 
     i = 0
     nodeid_to_i_map = {}
+    offset = False
+    if offset:
+        nid = list(model.nodes.keys())[0]
+        xyz0 = model.nodes[nid].get_position()
+    else:
+        xyz0 = np.zeros(3, dtype='float64')
     for node_id, node in sorted(iteritems(model.nodes)):
         xyz = node.get_position()
-        nodes[i, :] = xyz
+        nodes[i, :] = xyz - xyz0
         nodeid_to_i_map[node_id] = i
         i += 1
-
     assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
     for eid, element in sorted(iteritems(model.elements)):
         if element.type in ['CQUADR']:
@@ -58,16 +66,21 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None):
             elements.append([i1, i2, i3])
             elements.append([i3, i4, i1])
         elif element.type in ['CTRIA3', 'CTRIAR']:
-            n1, n2, n3 = element.node_ids
+            nids = element.node_ids
+            unids = np.unique(nids)
+            if len(unids) == 2:
+                continue
+            n1, n2, n3 = nids
             i1, i2, i3 = nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3]
             elements.append([i1, i2, i3])
         else:
             print(element.type)
-    elements = array(elements, dtype='int32')
+    elements = np.array(elements, dtype='int32')
     stl = STL(log=model.log)
     stl.nodes = nodes
+    #stl.nodes -= nodes[0, :]
     stl.elements = elements
-    stl.write_stl(stl_filename, is_binary=is_binary)
+    stl.write_stl(stl_filename, is_binary=is_binary, stop_on_failure=stop_on_failure)
     return stl
 
 
