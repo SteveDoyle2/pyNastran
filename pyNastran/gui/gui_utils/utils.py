@@ -86,7 +86,7 @@ def check_for_newer_version():
     #print('*pyNastran %s is now availible; current=%s' % (version_latest, version_current))
     return version_latest, version_current, is_newer
 
-def create_res_obj(islot, headers, A, fmt_dict, result_type,
+def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
                    dim_max=None, xyz_cid0=None):
     """
     Parameters
@@ -113,57 +113,53 @@ def create_res_obj(islot, headers, A, fmt_dict, result_type,
             '%i', '%f'
     result_type : str
         'node', 'centroid'
-    out_filename_short : str
-        the display name
-
-    islot, headers, A, fmt_dict
     dim_max : float
         required for forces/displacements
     xyz_cid0 : (nnodes, 3)
         the points
     """
-    for header in headers:
-        datai = A[header]
-        fmti = fmt_dict[header]
-        title = header
-        location = result_type
+    #print('create_res_object, header=%r' % header)
+    datai = A[header]
+    fmti = fmt_dict[header]
+    title = header
+    location = result_type
 
-        dimension = len(datai.shape)
-        if dimension == 1:
-            vector_size = 1
-        elif dimension == 2:
-            vector_size = datai.shape[1]
-        else:
-            raise RuntimeError('dimension=%s' % (dimension))
+    dimension = len(datai.shape)
+    if dimension == 1:
+        vector_size = 1
+    elif dimension == 2:
+        vector_size = datai.shape[1]
+    else:
+        raise RuntimeError('dimension=%s' % (dimension))
 
-        if vector_size == 1:
-            res_obj = GuiResult(
-                islot, header, title, location, datai,
-                nlabels=None, labelsize=None, ncolors=None,
-                colormap='jet', data_format=fmti,
-            )
-        elif vector_size == 3:
-            # title is 3 values
-            # header is 3 values
-            # scale is 3 values
-            titles = [header]
-            headers = header
+    if vector_size == 1:
+        res_obj = GuiResult(
+            islot, header, title, location, datai,
+            nlabels=None, labelsize=None, ncolors=None,
+            colormap='jet', data_format=fmti,
+        )
+    elif vector_size == 3:
+        # title is 3 values
+        # header is 3 values
+        # scale is 3 values
+        titles = [header]
+        headers = header
 
-            norm_max = np.linalg.norm(datai, axis=1).max()
-            scales = [dim_max / norm_max * 0.25]
-            data_formats = [fmti] * 3
-            scalar = None
-            dxyz = datai
-            xyz = xyz_cid0
-            res_obj = DisplacementResults(
-                islot, titles, headers,
-                xyz, dxyz, scalar, scales, data_formats=data_formats,
-                nlabels=None, labelsize=None, ncolors=None,
-                colormap='jet',
-                set_max_min=True, deflects=True)
-        else:
-            raise RuntimeError('vector_size=%s' % (vector_size))
-    return res_obj, title, header
+        norm_max = np.linalg.norm(datai, axis=1).max()
+        scales = [dim_max / norm_max * 0.25]
+        data_formats = [fmti] * 3
+        scalar = None
+        dxyz = datai
+        xyz = xyz_cid0
+        res_obj = DisplacementResults(
+            islot, titles, headers,
+            xyz, dxyz, scalar, scales, data_formats=data_formats,
+            nlabels=None, labelsize=None, ncolors=None,
+            colormap='jet',
+            set_max_min=True, deflects=True)
+    else:
+        raise RuntimeError('vector_size=%s' % (vector_size))
+    return res_obj, title
 
 def load_deflection_csv(out_filename, encoding='latin1'):
     """

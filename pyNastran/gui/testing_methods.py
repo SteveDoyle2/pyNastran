@@ -340,10 +340,13 @@ class GuiAttributes(object):
                 islot = case_key[0]
                 break
 
+        #assert len(headers) > 0, 'headers=%s' % (headers)
+        #assert len(headers) < 50, 'headers=%s' % (headers)
+        for header in headers:
             if is_scalar:
-                out = create_res_obj(islot, headers, A, fmt_dict, result_type)
+                out = create_res_obj(islot, headers, header, A, fmt_dict, result_type)
             else:
-                out = create_res_obj(islot, headers, A, fmt_dict, result_type,
+                out = create_res_obj(islot, headers, header, A, fmt_dict, result_type,
                                      self.dim_max, self.xyz_cid0)
             res_obj, title, header = out
 
