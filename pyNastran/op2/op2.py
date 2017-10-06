@@ -22,9 +22,10 @@ Defines the main OP2 class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iterkeys, iteritems, string_types, itervalues, b
 import os
 import sys
+from six import iterkeys, iteritems, string_types, itervalues, b
+from six.moves.cPickle import load, dump
 
 import numpy as np
 
@@ -261,6 +262,78 @@ class OP2(OP2_Scalar):
             self.set_as_nx()
         else:
             raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
+
+    def saves(self):
+        """Saves a pickled string"""
+        return dumps(self)
+
+    def __getstate__(self):
+        """clears out a few variables in order to pickle the object"""
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        del state['log']
+        #if hasattr(self, '_card_parser_b'):
+            #del state['_card_parser_b']
+        #if hasattr(self, '_card_parser_prepare'):
+            #del state['_card_parser_prepare']
+
+        #i = 0
+        #for key, value in sorted(state.items()):
+            #if isinstance(value, dict) and len(value) == 0:
+                #continue
+            #if not isinstance(value, (str, int, float)):
+            #if i > 200: # 72
+                #del state[key]
+            #else:
+                #print(key, type(value), value)
+                #break
+            #i += 1
+        return state
+
+    def save(self, obj_filename='model.obj', unxref=True):
+        # type: (str, bool) -> None
+        """Saves a pickleable object"""
+        #del self.log
+        #del self._card_parser, self._card_parser_prepare
+
+        #print(object_attributes(self, mode="all", keys_to_skip=[]))
+        with open(obj_filename, 'wb') as obj_file:
+            dump(self, obj_file)
+
+    def load(self, obj_filename='model.obj'):
+        # type: (str) -> None
+        """Loads a pickleable object"""
+        with open(obj_filename, 'rb') as obj_file:
+            obj = load(obj_file)
+
+        keys_to_skip = [
+            'total_effective_mass_matrix',
+            'effective_mass_matrix',
+            'rigid_body_mass_matrix',
+            'modal_effective_mass_fraction',
+            'modal_participation_factors',
+            'modal_effective_mass',
+            'modal_effective_weight',
+        ]
+        for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
+            if key.startswith('__') and key.endswith('__'):
+                continue
+
+            val = getattr(obj, key)
+            print(key)
+            #if isinstance(val, types.FunctionType):
+                #continue
+            try:
+                setattr(self, key, val)
+            except AttributeError:
+                print('key=%r val=%s' % (key, val))
+                raise
+
+        #self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
+        self.log.debug('done loading!')
 
     #def _set_ask_vectorized(self, ask=False):
         #"""

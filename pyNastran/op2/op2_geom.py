@@ -285,6 +285,16 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS):
 
         }
 
+    def save(self, obj_filename='model.obj', unxref=True):
+        # type: (str, bool) -> None
+        """Saves a pickleable object"""
+        #del self.log
+        #del self._card_parser, self._card_parser_prepare
+
+        #print(object_attributes(self, mode="all", keys_to_skip=[]))
+        with open(obj_filename, 'wb') as obj_file:
+            dump(self, obj_file)
+
     def _get_table_mapper(self):
         table_mapper = OP2._get_table_mapper(self)
 
@@ -385,3 +395,40 @@ class OP2Geom(BDF, OP2GeomCommon):
         BDF.__init__(self, debug=debug, log=log)
         OP2GeomCommon.__init__(self, make_geom=make_geom,
                                debug=debug, log=log, debug_file=debug_file, mode=mode)
+
+    def __getstate__(self):
+        """clears out a few variables in order to pickle the object"""
+        raise NotImplementedError()
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        #adfasd
+        state = BDF.__getstate__(self)
+        #print(state)
+        #state = self.__dict__.copy()
+
+        # Remove the unpicklable entries.
+        i = 0
+        for key, value in sorted(state.items()):
+            if isinstance(value, dict) and len(value) == 0:
+                continue
+            #if not isinstance(value, (str, int, float)):
+            if i > 5: # 72
+                del state[key]
+            else:
+                print(key, type(value), value)
+                break
+            i += 1
+
+        #i = 0
+        #for key, value in sorted(state.items()):
+            #if isinstance(value, dict) and len(value) == 0:
+                #continue
+            #if not isinstance(value, (str, int, float)):
+            #if i > 200: # 72
+                #del state[key]
+            #else:
+                #print(key, type(value), value)
+                #break
+            #i += 1
+        return state
