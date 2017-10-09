@@ -3175,7 +3175,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         
         # this is the text in the lower left corner
         self._set_setting(settings, setting_keys, ['text_color', 'textColor'], black)
-        screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'], screen_shape_default, save=False)
+        screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'], 
+                                         screen_shape_default, save=False)
 
         #try:
             #screen_shape = settings.value("screen_shape", screen_shape_default)
@@ -5458,9 +5459,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if USE_ANNOTATION_INT:
             for icase, follower_actors in iteritems(self.label_actors):
                 size = int(size)
-                assert int_size > 0, size
+                assert size > 0, size
                 for follower_actor in follower_actors:
-                    follower_actor.GetTextProperty().SetFontSize(int_size)
+                    follower_actor.GetTextProperty().SetFontSize(size)
                     follower_actor.Modified()
         else:
             for icase, follower_actors in iteritems(self.label_actors):
