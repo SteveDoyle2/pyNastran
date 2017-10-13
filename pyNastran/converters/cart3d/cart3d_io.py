@@ -71,7 +71,7 @@ class Cart3dIO(object):
 
         Parameters
         ----------
-        bdf_filename : str
+        cart3d_filename : str
             the cart3d filename to load
         name : str
             the name of the "main" actor for the GUI
