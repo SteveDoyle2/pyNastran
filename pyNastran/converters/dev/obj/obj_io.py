@@ -11,7 +11,7 @@ import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.converters.obj.obj import read_obj
+from pyNastran.converters.dev.obj.obj import read_obj
 
 
 class ObjIO(object):
@@ -76,18 +76,18 @@ class ObjIO(object):
             should the model be generated or should we wait until
             after the results are loaded
         """
-        skip_reading = self._remove_old_cart3d_geometry(cart3d_filename)
+        skip_reading = self._remove_old_obj_geometry(obj_filename)
         if skip_reading:
             return
 
         self.eid_maps[name] = {}
         self.nid_maps[name] = {}
-        model = read_cart3d(cart3d_filename, log=self.log, debug=False)
+        model = read_obj(obj_filename, log=self.log, debug=False)
         self.model_type = 'obj'
         nodes = model.nodes
         elements = model.tri_faces #elements
 
-        self.nnodes = model.npoints
+        self.nnodes = model.nnodes
         self.nelements = model.nelements
 
         grid = self.grid
@@ -132,11 +132,12 @@ class ObjIO(object):
         cases = {}
         ID = 1
         form, cases, icase = self._fill_obj_geometry_objects(
-            cases, ID, nodes, elements, regions, model)
+            cases, ID, nodes, elements, model)
         self._finish_results_io2(form, cases)
 
     def _create_obj_free_edges(self, model, nodes, elements):
         """creates the free edges to help identify unclosed models"""
+        return
         free_edges_array = model.get_free_edges(elements)
         nfree_edges = len(free_edges_array)
 
@@ -172,50 +173,47 @@ class ObjIO(object):
     def clear_obj(self):
         pass
 
-    def _fill_obj_geometry_objects(self, cases, ID, nodes, elements, regions, model):
+    def _fill_obj_geometry_objects(self, cases, ID, nodes, elements, model):
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
-        area = model.get_area()
-        cnormals = model.get_normals()
-        cnnodes = cnormals.shape[0]
-        assert cnnodes == nelements, len(cnnodes)
+        #area = model.get_area()
+        #cnormals = model.get_normals()
+        #cnnodes = cnormals.shape[0]
+        #assert cnnodes == nelements, len(cnnodes)
 
         #print('nnodes =', nnodes)
         #print('nelements =', nelements)
         #print('regions.shape =', regions.shape)
         subcase_id = 0
-        labels = ['NodeID', 'ElementID', 'Region', 'Area',
+        labels = ['NodeID', 'ElementID', 'Area',
                   'Normal X', 'Normal Y', 'Normal Z']
-        cart3d_geo = Cart3dGeometry(subcase_id, labels,
-                                    nids, eids, regions, area, cnormals,
-                                    uname='Cart3dGeometry')
+        nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', nids)
+        eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids)
+        #area_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'centroid', area)
 
         cases = {
-            0 : (cart3d_geo, (0, 'NodeID')),
-            1 : (cart3d_geo, (0, 'ElementID')),
-            2 : (cart3d_geo, (0, 'Region')),
-            3 : (cart3d_geo, (0, 'Area')),
-            4 : (cart3d_geo, (0, 'NormalX')),
-            5 : (cart3d_geo, (0, 'NormalY')),
-            6 : (cart3d_geo, (0, 'NormalZ')),
+            0 : (nid_res, (0, 'NodeID')),
+            1 : (eid_res, (0, 'ElementID')),
+            #2 : (area_res, (0, 'Area')),
+            #4 : (cart3d_geo, (0, 'NormalX')),
+            #5 : (cart3d_geo, (0, 'NormalY')),
+            #6 : (cart3d_geo, (0, 'NormalZ')),
         }
         geometry_form = [
             ('NodeID', 0, []),
             ('ElementID', 1, []),
-            ('Region', 2, []),
-            ('Area', 3, []),
-            ('Normal X', 4, []),
-            ('Normal Y', 5, []),
-            ('Normal Z', 6, []),
+            #('Area', 2, []),
+            #('Normal X', 4, []),
+            #('Normal Y', 5, []),
+            #('Normal Z', 6, []),
         ]
+
         form = [
             ('Geometry', None, geometry_form),
         ]
-        icase = 7
+        icase = 2
         return form, cases, icase
-        #cnormals = model.get_normals(nodes, elements)
-        #nnormals = model.get_normals_at_nodes(nodes, elements, cnormals)
 

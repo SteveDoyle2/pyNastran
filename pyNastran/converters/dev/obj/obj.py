@@ -8,18 +8,25 @@ from __future__ import print_function
 from codecs import open
 from numpy import array, unique, hstack, zeros
 
-def read_obj(obj_filename, log=None, debug=False, result_names=None):
+def read_obj(obj_filename, log=None, debug=False):
     """loads a OBJ file"""
     model = OBJ(log=log, debug=debug)
-    model.read_obj(obj_filename, result_names)
+    model.read_obj(obj_filename)
     return model
 
 class OBJ(object):
-    def __init__(self):
+    def __init__(self, log=None, debug=False):
         self.nodes = []
         self.lines = []
         self.tri_faces = []
         self.quad_faces = []
+
+    @property
+    def nnodes(self):
+        return self.nodes.shape[0]
+    @property
+    def nelements(self):
+        return self.tri_faces.shape[0]
 
     def read_obj(self, obj_filename):
         """

@@ -13,7 +13,7 @@ pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'dev', 'obj') #, 'models')
 
 
-class ObjGUI(Cart3dIO, FakeGUIMethods):
+class ObjGUI(ObjIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         ObjIO.__init__(self)
