@@ -8,12 +8,14 @@ from six.moves import range
 
 from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
+import vtk
 
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 from pyNastran.converters.dev.obj.obj import read_obj
 
-import vtk
+
 class ObjIO(object):
     """
     Defines the GUI class for OBJ.
@@ -110,7 +112,7 @@ class ObjIO(object):
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         self.create_global_axes(dim_max)
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
 
         #assert elements.min() == 0, elements.min()
 

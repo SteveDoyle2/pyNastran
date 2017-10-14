@@ -10,7 +10,8 @@ import vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.aflr.surf.surf_reader import SurfReader, TagReader
-from pyNastran.gui.gui_utils.vtk_utils import create_vtk_cells_of_constant_element_types
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 
 
 class SurfIO(object):
@@ -56,7 +57,7 @@ class SurfIO(object):
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         tris = model.tris - 1
         quads = model.quads - 1
 
