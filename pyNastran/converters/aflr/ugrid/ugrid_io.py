@@ -29,6 +29,19 @@ class UGRID_IO(object):
         return data
 
     def load_ugrid_geometry(self, ugrid_filename, name='main', plot=True):
+        """
+        The entry point for UGRID geometry loading.
+
+        Parameters
+        ----------
+        ugrid_filename : str
+            the ugrid filename to load
+        name : str
+            the name of the "main" actor for the GUI
+        plot : bool; default=True
+            should the model be generated or should we wait until
+            after the results are loaded
+        """
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return

@@ -21,7 +21,8 @@ FORMAT_TO_EXTENSION = {
     'usm3d' : ['.front'],  # .cogsg
     'bedge' : ['.bedge'],
     'su2' : ['.su2'],
-    'tetgen' : ['.smesh', '*.ele'],  # TODO: why does this have a *?
+    'tetgen' : ['.smesh', '.ele'],
+    'obj' : ['.obj'],
     #'abaqus' : []
 
     # no duplicates are allowed
@@ -41,7 +42,7 @@ def determine_format(input_filename, allowed_formats=None):
             'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
             #'plot3d',
             'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
-            'usm3d', 'bedge', 'su2', 'tetgen',
+            'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
         ]
 
     ext = os.path.splitext(input_filename)[1].lower()
@@ -145,7 +146,7 @@ def run_docopt():
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
-        'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
+        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',
         None,
     ]
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format

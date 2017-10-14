@@ -247,3 +247,14 @@ except ImportError:
             #pass
     #is_su2 = False
     #raise
+
+try:
+    from pyNastran.converters.dev.obj.obj_io import ObjIO
+    is_obj = True
+except ImportError:
+    class ObjIO(object):
+        """dummy SU2 gui class"""
+        def __init__(self):
+            """dummy gui init"""
+            pass
+    is_obj = False

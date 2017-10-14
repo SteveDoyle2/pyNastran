@@ -26,7 +26,7 @@ class OBJ(object):
         return self.nodes.shape[0]
     @property
     def nelements(self):
-        return self.tri_faces.shape[0]
+        return self.tri_faces.shape[0] + self.quad_faces.shape[0]
 
     def read_obj(self, obj_filename):
         """
@@ -88,7 +88,7 @@ class OBJ(object):
             #self.make_elements_from_lines()
         if len(tri_faces):
             self.tri_faces = array(tri_faces, dtype='int32') - 1
-        elif len(quad_faces):
+        if len(quad_faces):
             self.quad_faces = array(quad_faces, dtype='int32') - 1
 
     def make_elements_from_lines(self):

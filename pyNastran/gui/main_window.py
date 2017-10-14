@@ -32,7 +32,7 @@ from pyNastran.gui.gui_utils.utils import check_for_newer_version
 from pyNastran.gui.formats import (
     NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, ShabpIO, ADB_IO, FastIO, # Plot3d_io,
-    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO, OpenFoamIO,
+    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO, OpenFoamIO, ObjIO,
 )
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -57,7 +57,7 @@ except:
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
                  LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, ADB_IO, # Plot3d_io,
                  FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
-                 OpenFoamIO,
+                 OpenFoamIO, ObjIO,
                  ):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
@@ -105,7 +105,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             'bedge', 'su2', 'tetgen', 'avus', 'abaqus',
 
             # openfoam
-            'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
+            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
@@ -136,6 +136,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             AbaqusIO.__init__(self)
             SU2_IO.__init__(self)
             OpenFoamIO.__init__(self)
+            ObjIO.__init__(self)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 

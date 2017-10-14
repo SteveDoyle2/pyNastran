@@ -13,7 +13,7 @@ from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.dev.obj.obj import read_obj
 
-
+import vtk
 class ObjIO(object):
     """
     Defines the GUI class for OBJ.
@@ -27,7 +27,7 @@ class ObjIO(object):
         """
         data = ('OBJ',
                 'OBJ (*.obj)', self.load_obj_geometry,
-                None)
+                None, None)
         return data
 
     def _remove_old_obj_geometry(self, filename):
@@ -85,10 +85,10 @@ class ObjIO(object):
         model = read_obj(obj_filename, log=self.log, debug=False)
         self.model_type = 'obj'
         nodes = model.nodes
-        elements = model.tri_faces #elements
+        nelements = model.nelements
 
         self.nnodes = model.nnodes
-        self.nelements = model.nelements
+        self.nelements = nelements
 
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
@@ -114,17 +114,34 @@ class ObjIO(object):
 
         #assert elements.min() == 0, elements.min()
 
-        etype = 5 # vtkTriangle().GetCellType()
-        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
+        tri_etype = 5 # vtkTriangle().GetCellType()
+        #self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
+        quad_etype = 9 # vtk.vtkQuad().GetCellType()
+
+        tris = model.tri_faces
+        quads = model.quad_faces
+        if len(tris):
+            for eid, element in enumerate(tris):
+                elem = vtk.vtkTriangle()
+                elem.GetPointIds().SetId(0, element[0])
+                elem.GetPointIds().SetId(1, element[1])
+                elem.GetPointIds().SetId(2, element[2])
+                self.grid.InsertNextCell(tri_etype, elem.GetPointIds())
+        if len(quads):
+            for eid, element in enumerate(quads):
+                elem = vtk.vtkQuad()
+                elem.GetPointIds().SetId(0, element[0])
+                elem.GetPointIds().SetId(1, element[1])
+                elem.GetPointIds().SetId(2, element[2])
+                elem.GetPointIds().SetId(3, element[3])
+                self.grid.InsertNextCell(quad_etype, elem.GetPointIds())
 
         grid.SetPoints(points)
         grid.Modified()
         if hasattr(grid, 'Update'):
             grid.Update()
-        self._create_obj_free_edges(model, nodes, elements)
 
 
-        # loadCart3dResults - regions/loads
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
@@ -132,67 +149,22 @@ class ObjIO(object):
         cases = {}
         ID = 1
         form, cases, icase = self._fill_obj_geometry_objects(
-            cases, ID, nodes, elements, model)
+            cases, ID, nodes, nelements, model)
         self._finish_results_io2(form, cases)
-
-    def _create_obj_free_edges(self, model, nodes, elements):
-        """creates the free edges to help identify unclosed models"""
-        return
-        free_edges_array = model.get_free_edges(elements)
-        nfree_edges = len(free_edges_array)
-
-        if nfree_edges:
-            # yellow = (1., 1., 0.)
-            pink = (0.98, 0.4, 0.93)
-            npoints = 2 * nfree_edges
-            if 'free_edges' not in self.alt_grids:
-                self.create_alternate_vtk_grid(
-                    'free_edges', color=pink, line_width=3, opacity=1.0,
-                    representation='surface')
-
-            alt_grid = self.alt_grids['free_edges']
-            etype = 3  # vtk.vtkLine().GetCellType()
-            elements2 = np.arange(0, npoints, dtype='int32').reshape(nfree_edges, 2)
-            self.create_vtk_cells_of_constant_element_type(alt_grid, elements2, etype)
-
-            #alt_grid.Allocate(nfree_edges, 1000)
-            free_edge_nodes = nodes[free_edges_array.ravel(), :]
-            points = self.numpy_to_vtk_points(free_edge_nodes)
-            alt_grid.SetPoints(points)
-
-        else:
-            # TODO: clear free edges
-            pass
-
-        if 'free_edges' in self.alt_grids:
-            self._add_alt_actors(self.alt_grids)
-            self.geometry_actors['free_edges'].Modified()
-            if hasattr(self.geometry_actors['free_edges'], 'Update'):
-                self.geometry_actors['free_edges'].Update()
 
     def clear_obj(self):
         pass
 
-    def _fill_obj_geometry_objects(self, cases, ID, nodes, elements, model):
-        nelements = elements.shape[0]
+    def _fill_obj_geometry_objects(self, cases, ID, nodes, nelements, model):
+        #nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
-        #area = model.get_area()
-        #cnormals = model.get_normals()
-        #cnnodes = cnormals.shape[0]
-        #assert cnnodes == nelements, len(cnnodes)
 
-        #print('nnodes =', nnodes)
-        #print('nelements =', nelements)
-        #print('regions.shape =', regions.shape)
         subcase_id = 0
-        labels = ['NodeID', 'ElementID', 'Area',
-                  'Normal X', 'Normal Y', 'Normal Z']
         nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', nids)
         eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids)
-        #area_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'centroid', area)
 
         cases = {
             0 : (nid_res, (0, 'NodeID')),
