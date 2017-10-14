@@ -3,8 +3,8 @@ The preferences menu handles:
  - Font Size
  - Background Color
  - Text Color
- - Label Color
- - Label Size
+ - Annotation Color
+ - Annotation Size
  - Clipping Min
  - Clipping Max
 """
@@ -20,22 +20,22 @@ import vtk
 from pyNastran.gui.gui_interface.common import PyDialog, QPushButtonColor
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
-USE_LABEL_INT = int(vtk.VTK_VERSION[0]) >= 7
+USE_ANNOTATION_INT = int(vtk.VTK_VERSION[0]) >= 7
 
 class PreferencesWindow(PyDialog):
     """
     +-------------+
     | Preferences |
-    +------------------------------+
-    | Text Size     ______ Default |
-    | Label Color   ______         |
-    | Label Size    ______         |
-    | Picker Size   ______         |
-    | Back Color    ______         |
-    | Text Color    ______         |
-    |                              |
-    |       Apply OK Cancel        |
-    +------------------------------+
+    +---------------------------------+
+    | Text Size        ______ Default |
+    | Annotation Color ______         |
+    | Annotation Size  ______         |
+    | Picker Size      ______         |
+    | Back Color       ______         |
+    | Text Color       ______         |
+    |                                 |
+    |        Apply OK Cancel          |
+    +---------------------------------+
     """
     def __init__(self, data, win_parent=None):
         """
@@ -47,20 +47,20 @@ class PreferencesWindow(PyDialog):
         self._updated_preference = False
 
         self._default_font_size = data['font_size']
+        self._default_annotation_size = 18
         self._default_clipping_min = data['clipping_min']
         self._default_clipping_max = data['clipping_max']
 
         self.dim_max = data['dim_max']
-        if USE_LABEL_INT:
-            self._default_label_size_int = data['label_size_int']
+        if USE_ANNOTATION_INT:
+            self._default_annotation_size_int = data['annotation_size_int']
         else:
-            #self._default_label_size_float = data['label_size_float']
-            self._default_label_size_float = data['label_size_float']
+            self._default_annotation_size_float = data['annotation_size_float']
 
         #self.out_data = data
         self._picker_size = data['picker_size'] * 100.
 
-        self.label_color_float, self.label_color_int = _check_color(data['label_color'])
+        self.annotation_color_float, self.annotation_color_int = _check_color(data['annotation_color'])
         self.background_color_float, self.background_color_int = _check_color(
             data['background_color'])
         self.text_color_float, self.text_color_int = _check_color(data['text_color'])
@@ -84,36 +84,37 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Annotation Color
-        self.label_color = QLabel("Label Color:")
-        self.label_color_edit = QPushButtonColor(self.label_color_int)
+        self.annotation_color = QLabel("Annotation Color:")
+        self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
 
         # Background Color
         self.background_color = QLabel("Background Color:")
         self.background_color_edit = QPushButtonColor(self.background_color_int)
 
-        # Label Color
+        # Text Color
         self.text_color = QLabel("Text Color:")
         self.text_color_edit = QPushButtonColor(self.text_color_int)
 
         #-----------------------------------------------------------------------
-        # Label Size
-        if USE_LABEL_INT:
-            self.label_size = QLabel("Annotation Size:")
-            self.label_size_edit = QSpinBox(self)
-            self.label_size_edit.setRange(1, 500)
-            self.label_size_edit.setValue(self._default_label_size_int)
+        # Annotation Size
+        if USE_ANNOTATION_INT:
+            self.annotation_size = QLabel("Annotation Size:")
+            self.annotation_size_edit = QSpinBox(self)
+            self.annotation_size_edit.setRange(1, 500)
+            self.annotation_size_edit.setValue(self._default_annotation_size_int)
+            self.annotation_size_button = QPushButton("Default")
         else:
-            self.label_size = QLabel("Annotation Size:")
-            self.label_size_edit = QDoubleSpinBox(self)
-            self.label_size_edit.setRange(0.0, self.dim_max)
+            self.annotation_size = QLabel("Annotation Size:")
+            self.annotation_size_edit = QDoubleSpinBox(self)
+            self.annotation_size_edit.setRange(0.0, self.dim_max)
 
             log_dim = log10(self.dim_max)
             decimals = int(ceil(abs(log_dim)))
             decimals = max(6, decimals)
-            self.label_size_edit.setDecimals(decimals)
-            #self.label_size_edit.setSingleStep(self.dim_max / 100.)
-            self.label_size_edit.setSingleStep(self.dim_max / 1000.)
-            self.label_size_edit.setValue(self._default_label_size_float)
+            self.annotation_size_edit.setDecimals(decimals)
+            #self.annotation_size_edit.setSingleStep(self.dim_max / 100.)
+            self.annotation_size_edit.setSingleStep(self.dim_max / 1000.)
+            self.annotation_size_edit.setValue(self._default_annotation_size_float)
 
         #-----------------------------------------------------------------------
         # Picker Size
@@ -159,11 +160,13 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.text_color, 2, 0)
         grid.addWidget(self.text_color_edit, 2, 1)
 
-        grid.addWidget(self.label_color, 3, 0)
-        grid.addWidget(self.label_color_edit, 3, 1)
+        grid.addWidget(self.annotation_color, 3, 0)
+        grid.addWidget(self.annotation_color_edit, 3, 1)
 
-        grid.addWidget(self.label_size, 4, 0)
-        grid.addWidget(self.label_size_edit, 4, 1)
+        grid.addWidget(self.annotation_size, 4, 0)
+        grid.addWidget(self.annotation_size_edit, 4, 1)
+        if USE_ANNOTATION_INT:
+            grid.addWidget(self.annotation_size_button, 4, 2)
 
         grid.addWidget(self.picker_size, 5, 0)
         grid.addWidget(self.picker_size_edit, 5, 1)
@@ -192,9 +195,11 @@ class PreferencesWindow(PyDialog):
         self.font_size_button.clicked.connect(self.on_default_font_size)
         self.font_size_edit.valueChanged.connect(self.on_set_font)
 
-        self.label_size_edit.editingFinished.connect(self.on_label_size)
-        self.label_size_edit.valueChanged.connect(self.on_label_size)
-        self.label_color_edit.clicked.connect(self.on_label_color)
+        if USE_ANNOTATION_INT:
+            self.annotation_size_button.clicked.connect(self.on_default_annotation_size)
+        self.annotation_size_edit.editingFinished.connect(self.on_set_annotation_size)
+        self.annotation_size_edit.valueChanged.connect(self.on_set_annotation_size)
+        self.annotation_color_edit.clicked.connect(self.on_annotation_color)
 
         self.background_color_edit.clicked.connect(self.on_background_color)
         self.text_color_edit.clicked.connect(self.on_text_color)
@@ -219,19 +224,29 @@ class PreferencesWindow(PyDialog):
         font.setPointSize(value)
         self.setFont(font)
 
-    def update_label_size_color(self):
+    def on_set_annotation_size(self, value=None):
+        """update the annotation size"""
+        if value is None:
+            value = float(self.annotation_size_edit.text())
+        self._annotation_size = value
+        #self.on_apply(force=True)
+        #self.min_edit.setText(str(self._default_min))
+        #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.update_annotation_size_color()
+    
+    def update_annotation_size_color(self):
         if self.win_parent is not None:
-            self.win_parent.set_labelsize_color(self._label_size, self.label_color_float)
+            self.win_parent.set_annotation_size_color(self._annotation_size, self.annotation_color_float)
 
-    def on_label_color(self):
-        rgb_color_ints = self.label_color_int
-        title = "Choose a label color"
+    def on_annotation_color(self):
+        rgb_color_ints = self.annotation_color_int
+        title = "Choose an annotation color"
         passed, rgb_color_ints, rgb_color_floats = self.on_color(
-            self.label_color_edit, rgb_color_ints, title)
+            self.annotation_color_edit, rgb_color_ints, title)
         if passed:
-            self.label_color_int = rgb_color_ints
-            self.label_color_float = rgb_color_floats
-            self.update_label_size_color()
+            self.annotation_color_int = rgb_color_ints
+            self.annotation_color_float = rgb_color_floats
+            self.update_annotation_size_color()
 
     def on_background_color(self):
         """ Choose a background color """
@@ -277,13 +292,6 @@ class PreferencesWindow(PyDialog):
             "}")
         return True, color_int, color_float
 
-    def on_label_size(self):
-        self._label_size = float(self.label_size_edit.text())
-        #self.on_apply(force=True)
-        #self.min_edit.setText(str(self._default_min))
-        #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
-        self.update_label_size_color()
-
     def on_picker_size(self):
         self._picker_size = float(self.picker_size_edit.text())
         if self.win_parent is not None:
@@ -293,6 +301,10 @@ class PreferencesWindow(PyDialog):
     def on_default_font_size(self):
         self.font_size_edit.setValue(self._default_font_size)
         self.on_set_font(self._default_font_size)
+
+    def on_default_annotation_size(self):
+        self.annotation_size_edit.setValue(self._default_annotation_size)
+        self.on_set_annotation_size(self._default_annotation_size)
 
     def on_default_clipping_min(self):
         self.clipping_min_edit.setText(str(self._default_clipping_min))
@@ -321,16 +333,16 @@ class PreferencesWindow(PyDialog):
 
     def on_validate(self):
         font_size_value, flag0 = self.check_float(self.font_size_edit)
-        label_size_value, flag1 = self.check_float(self.label_size_edit)
-        assert isinstance(self.label_color_float[0], float), self.label_color_float
-        assert isinstance(self.label_color_int[0], int), self.label_color_int
+        annotation_size_value, flag1 = self.check_float(self.annotation_size_edit)
+        assert isinstance(self.annotation_color_float[0], float), self.annotation_color_float
+        assert isinstance(self.annotation_color_int[0], int), self.annotation_color_int
         picker_size_value, flag2 = self.check_float(self.picker_size_edit)
 
         clipping_min_value, flag3 = self.check_label_float(self.clipping_min_edit)
         clipping_max_value, flag4 = self.check_label_float(self.clipping_max_edit)
 
         if all([flag0, flag1, flag2, flag3, flag4]):
-            self._label_size = label_size_value
+            self._annotation_size = annotation_size_value
             self._picker_size = picker_size_value
 
             self.out_data['font_size'] = int(font_size_value)
@@ -345,7 +357,7 @@ class PreferencesWindow(PyDialog):
         if (passed or force) and self.win_parent is not None:
             self.win_parent.on_set_font_size(self.out_data['font_size'])
 
-            #self.win_parent.set_labelsize_color(self._label_size, self.label_color_float)
+            #self.win_parent.set_annotation_size_color(self._annotation_size, self.annotation_color_float)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
             self.win_parent._apply_clipping(self.out_data)
@@ -385,9 +397,9 @@ def main():
         'background_color' : (0., 0., 0.), # black
         'text_color' : (0., 1., 0.), # green
 
-        'label_color' : (1., 0., 0.), # red
-        'label_size_float' : 10.,
-        'label_size_int' : 11,
+        'annotation_color' : (1., 0., 0.), # red
+        'annotation_size_float' : 10.,
+        'annotation_size_int' : 11,
         'picker_size' : 10.,
 
         'clipping_min' : 0.,

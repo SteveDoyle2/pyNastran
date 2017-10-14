@@ -9,12 +9,12 @@ from __future__ import print_function
 
 from pyNastran.gui.qt_version import qt_version
 
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QVariant
 from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
-    QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
+    QLabel, QLineEdit, QPushButton, QTableView, QApplication,
     QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-    QButtonGroup, QColorDialog, QAbstractItemView,
+    QButtonGroup, QColorDialog, QAbstractItemView, QHeaderView,
 )
 
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
@@ -122,43 +122,20 @@ class Model(QtCore.QAbstractTableModel):
     def columnCount(self, parent=QtCore.QModelIndex()):
         return 1
 
-    def change_data(self, items):
-        raise RuntimeError('is this used?')
-        #self.emit(SIGNAL("LayoutAboutToBeChanged()"))
-        self.items = items
-        #self.emit(SIGNAL("LayoutChanged()"))
-        #self.select()  # old
-
-        if 1:
-            self.reset()
-            #self.beginInsertRows()
-            for i, item in enumerate(items):
-                self.insertRow(i, parent=QtCore.QModelIndex())
-            #self.endInsertRows()
-        else:
-            self.removeRows(int)
-            for i, item in enumerate(items):
-                self.setItem(i, j, QtGui.QStandardItem(item))
-
-        #self.dataChanged.emit(self.createIndex(0, 0),
-                              #self.createIndex(self.rowCount(0),
-                                               #self.columnCount(0)))
-        #self.emit(SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
-                  #self.createIndex(0, 0),
-                  #self.createIndex(self.rowCount(0),
-                                   #self.columnCount(0)))
-
     def data(self, index, role):
         if not index.isValid():
-            return QtCore.QVariant()
+            #return QVariant()  # TODO: is this right?
+            return
         elif role != QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
+            #return QVariant()  # TODO: is this right?
+            return
 
         row = index.row()
         if row < len(self.items):
-            return QtCore.QVariant(self.items[row])
+            return str(self.items[row])  # TODO: is this right?
         else:
-            return QtCore.QVariant()
+            #return QVariant()  # TODO: is this right?
+            return
 
     def flags(self, index):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable #| QtCore.Qt.ItemIsEditable
@@ -209,17 +186,17 @@ class EditGeometryProperties(PyDialog):
         self.keys = sorted(data.keys())
         self.keys = data.keys()
         keys = self.keys
-        nrows = len(keys)
-        self.active_key = 'main'#keys[0]
+        #nrows = len(keys)
+        self.active_key = 'main'
 
-        items = keys
+        items = list(keys)
 
         header_labels = ['Groups']
         table_model = Model(items, header_labels, self)
         view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
         if qt_version == 4:
-            view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+            view.horizontalHeader().setResizeMode(QHeaderView.Stretch)
 
         self.table = view
         #self.opacity_edit.valueChanged.connect(self.on_opacity)
@@ -443,10 +420,7 @@ class EditGeometryProperties(PyDialog):
         obj : CoordProperties, AltGeometry
             the storage object for things like line_width, point_size, etc.
         """
-        if qt_version == 4:
-            name = str(index.data().toString())
-        else:
-            name = str(index.data())
+        name = str(index.data())
             #print('name = %r' % name)
         #i = self.keys.index(self.active_key)
         self.update_active_name(name)
@@ -481,14 +455,14 @@ class EditGeometryProperties(PyDialog):
         else:
             raise NotImplementedError(obj)
 
-        allowed_representations = [
-            'main', 'surface', 'coord', 'toggle', 'wire', 'point', 'bar']
+        #allowed_representations = [
+            #'main', 'surface', 'coord', 'toggle', 'wire', 'point', 'bar']
 
         if self.representation != representation:
             self.representation = representation
-            if representation not in allowed_representations:
-                msg = 'name=%r; representation=%r is invalid\nrepresentations=%r' % (
-                    name, representation, allowed_representations)
+            #if representation not in allowed_representations:
+                #msg = 'name=%r; representation=%r is invalid\nrepresentations=%r' % (
+                    #name, representation, allowed_representations)
 
             if self.representation == 'coord':
                 self.color.setVisible(False)
@@ -648,14 +622,14 @@ class EditGeometryProperties(PyDialog):
         vbox.addWidget(self.table)
         vbox.addLayout(grid)
 
-        if 0:
-            vbox.addWidget(self.checkbox_show)
-            vbox.addWidget(self.checkbox_hide)
-        else:
-            vbox1 = QVBoxLayout()
-            vbox1.addWidget(self.checkbox_show)
-            vbox1.addWidget(self.checkbox_hide)
-            vbox.addLayout(vbox1)
+        #if 0:
+            #vbox.addWidget(self.checkbox_show)
+            #vbox.addWidget(self.checkbox_hide)
+        #else:
+        vbox1 = QVBoxLayout()
+        vbox1.addWidget(self.checkbox_show)
+        vbox1.addWidget(self.checkbox_hide)
+        vbox.addLayout(vbox1)
 
         vbox.addStretch()
         #vbox.addWidget(self.check_apply)
@@ -764,7 +738,7 @@ class EditGeometryProperties(PyDialog):
     def on_point_size_slider(self):
         """increases/decreases the point size"""
         self.is_point_size_edit_slider_active = True
-        name = self.active_key
+        #name = self.active_key
         point_size = self.point_size_slider_edit.value()
         if not self.is_point_size_edit_active:
             self.point_size_edit.setValue(point_size)
@@ -780,7 +754,7 @@ class EditGeometryProperties(PyDialog):
         float_bar_scale = self.bar_scale_edit.value()
         self.out_data[name].bar_scale = float_bar_scale
         if not self.is_bar_scale_edit_slider_active:
-            int_bar_scale = int(round(float_bar_scale * 20, 0))
+            #int_bar_scale = int(round(float_bar_scale * 20, 0))
             #if self.use_slider:
                 #self.bar_scale_slider_edit.setValue(int_bar_scale)
             self.is_bar_scale_edit_active = False
@@ -793,7 +767,7 @@ class EditGeometryProperties(PyDialog):
         Increases/decreases the length scale factor.
         """
         self.is_bar_scale_edit_slider_active = True
-        name = self.active_key
+        #name = self.active_key
         int_bar_scale = self.bar_scale_slider_edit.value()
         if not self.is_bar_scale_edit_active:
             float_bar_scale = int_bar_scale / 20.
@@ -823,7 +797,7 @@ class EditGeometryProperties(PyDialog):
             opacity = 0.0 (invisible)
             """
         self.is_opacity_edit_slider_active = True
-        name = self.active_key
+        #name = self.active_key
         int_opacity = self.opacity_slider_edit.value()
         if not self.is_opacity_edit_active:
             float_opacity = int_opacity / 10.
@@ -931,14 +905,14 @@ def main():  # pragma: no cover
     blue = (0, 0, 255)
     green = (0, 255, 0)
     purple = (255, 0, 255)
-    d = {
+    data = {
         'font_size' : 8,
         'caero1' : AltGeometry(parent, 'caero', color=green, line_width=3, opacity=0.2),
         'caero2' : AltGeometry(parent, 'caero', color=purple, line_width=4, opacity=0.3),
         'caero' : AltGeometry(parent, 'caero', color=blue, line_width=2, opacity=0.1, bar_scale=1.0),
         'main' : AltGeometry(parent, 'main', color=red, line_width=1, opacity=0.0, bar_scale=1.0),
     }
-    main_window = EditGeometryProperties(d, win_parent=None)
+    main_window = EditGeometryProperties(data, win_parent=None)
     main_window.show()
     # Enter the main loop
     app.exec_()

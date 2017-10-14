@@ -10,6 +10,8 @@ from vtk import vtkTriangle, vtkQuad
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.aflr.ugrid.surf_reader import SurfReader, TagReader
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 
 
 class SurfIO(object):
@@ -55,7 +57,7 @@ class SurfIO(object):
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         tris = model.tris - 1
         quads = model.quads - 1
 
@@ -70,7 +72,7 @@ class SurfIO(object):
         if nquads:
             elements.append(quads)
             etypes.append(9) # vtkQuad().GetCellType()
-        self.create_vtk_cells_of_constant_element_types(grid, elements, etypes)
+        create_vtk_cells_of_constant_element_types(grid, elements, etypes)
 
 
         model.read_surf_failnode(surf_filename)

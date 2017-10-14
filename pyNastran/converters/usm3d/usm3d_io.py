@@ -11,6 +11,8 @@ from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 from pyNastran.converters.usm3d.time_accurate_results import get_n_list
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class Usm3dIO(object):
@@ -166,11 +168,11 @@ class Usm3dIO(object):
         assert nodes is not None
         nnodes = nodes.shape[0]
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         if ntris:
             self.element_ids = np.arange(1, ntris + 1, dtype='int32')
             etype = 5  # vtkTriangle().GetCellType()
-            self.create_vtk_cells_of_constant_element_type(grid, tris, etype)
+            create_vtk_cells_of_constant_element_type(grid, tris, etype)
             #for (n0, n1, n2) in tris:
                 #elem = vtkTriangle()
                 #elem.GetPointIds().SetId(0, n0)

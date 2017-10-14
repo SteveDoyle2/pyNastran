@@ -11,6 +11,7 @@ import vtk
 from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.fast.fgrid_reader import FGridReader
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 class FastIO(object):
@@ -70,7 +71,7 @@ class FastIO(object):
         grid.Allocate(self.nelements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nelements)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         self.nid_map = {}
         if 0:
             fraction = 1. / self.nnodes  # so you can color the nodes by ID

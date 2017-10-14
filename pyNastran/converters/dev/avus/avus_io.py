@@ -7,7 +7,7 @@ from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 class AvusIO(object):
     def __init__(self):
@@ -89,7 +89,7 @@ class AvusIO(object):
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.create_global_axes(dim_max)
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
 
         #elements = model.elements
         quads = model.quad_elements

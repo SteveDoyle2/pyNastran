@@ -66,6 +66,8 @@ from pyNastran.bdf.cards.elements.solid import (
     CPYRAM5, CPYRAM13,
 )
 
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 from pyNastran.gui.errors import NoGeometry
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (
@@ -574,7 +576,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # nodes/coords
         #print('get_xyz_in_coord')
         xyz_cid0, nid_cp_cd = self.get_xyz_in_coord_vectorized(model, cid=0, fdtype='float32')
-        points = self.numpy_to_vtk_points(xyz_cid0)
+        points = numpy_to_vtk_points(xyz_cid0)
         #self.grid.SetPoints(points)
         self.xyz_cid0 = xyz_cid0
 
@@ -1590,7 +1592,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #print('get_xyz_in_coord')
         xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
-        points = self.numpy_to_vtk_points(xyz_cid0)
+        points = numpy_to_vtk_points(xyz_cid0)
         self.xyz_cid0 = xyz_cid0
 
         maxi = xyz_cid0.max(axis=0)
@@ -2484,11 +2486,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.bar_lines[name] = bar_lines
 
         nodes = bar_lines.reshape(nlines * 2, 3)
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         elements = np.arange(0, nnodes, dtype='int32').reshape(nlines, 2)
 
         etype = 3 # vtk.vtkLine().GetCellType()
-        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
+        create_vtk_cells_of_constant_element_type(grid, elements, etype)
         grid.SetPoints(points)
 
     def _fill_dependent_independent(self, mpc_id, dim_max, model, lines, nid_to_pid_map):
@@ -2545,7 +2547,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
         self.follower_nodes[name] = node_ids
 
-        #self.numpy_to_vtk_points(nodes)
+        #numpy_to_vtk_points(nodes)
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 

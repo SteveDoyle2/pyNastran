@@ -226,16 +226,16 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(nod_filename)
 
-def test_bottle():  # pragma: no cover
-    """
-    Tests Nastran GUI loading
-    """
-    test = NastranGUI()
-    test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
-    test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
+#def test_bottle():  # pragma: no cover
+    #"""
+    #Tests Nastran GUI loading
+    #"""
+    #test = NastranGUI()
+    #test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
+    #test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
 
-    keys = test.result_cases.keys()
-    assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
+    #keys = test.result_cases.keys()
+    #assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
 
 if __name__ == '__main__':  # pragma: no cover
     #test_solid_shell_bar_01()

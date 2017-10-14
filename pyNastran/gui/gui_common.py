@@ -25,6 +25,7 @@ from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QFileDialog)
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 import vtk
@@ -2957,19 +2958,26 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _load_deflection(self, out_filename):
         """loads a deflection file"""
+        self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
+
+
+    def _load_deflection(self, out_filename):
+        """loads a force file"""
+        self._load_deflection_force(out_filename, is_deflection=False, is_force=True)
+
+    def _load_deflection_force(self, out_filename, is_deflection=False, is_force=False):
         out_filename_short = os.path.basename(out_filename)
         A, fmt_dict, headers = load_deflection_csv(out_filename)
         #nrows, ncols, fmts
         header0 = headers[0]
-        print('headers=%s' % headers)
-        print('A.keys()=%s' % A.keys())
         result0 = A[header0]
         nrows = result0.shape[0]
 
         assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
         result_type2 = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
-                                out_filename_short, update=True)
+                                out_filename_short, update=True, is_scalar=False,
+                                is_deflection=is_deflection, is_force=is_deflection)
 
     def _load_csv(self, result_type, out_filename):
         """
@@ -3013,7 +3021,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #iids = np.searchsorted(ids, )
             #A = A2
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
-                                out_filename_short, update=True)
+                                out_filename_short, update=True, is_scalar=True)
 
     def on_load_results(self, out_filename=None):
         """
@@ -3134,14 +3142,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _reset_settings(self):
         """helper method for ``setup_gui``"""
-        #white = (1.0, 1.0, 1.0)
         black = (0.0, 0.0, 0.0)
-        #red = (1.0, 0.0, 0.0)
         grey = (119/255., 136/255., 153/255.)
-        #screen_shape_default = (1100, 700)
 
+        self.font_size = 8
         self.background_color = grey
-        self.label_color = black
+        self.annotation_color = black
+        self.annotation_size_int = 18
         self.text_color = black
         self.resize(1100, 700)
 
@@ -3155,30 +3162,26 @@ class GuiCommon2(QMainWindow, GuiCommon):
         font_size = 8
 
         setting_keys = [str(key) for key in settings.childKeys()]
-        try:
-            self.font_size = settings.value("font_size", font_size)
-        except (TypeError, AttributeError):
-            self.font_size = 8
 
-        try:
-            self.background_color = settings.value("backgroundColor", grey)
-        except (TypeError, AttributeError):
-            self.background_color = grey
+        # this is the gui font
+        self._set_setting(settings, setting_keys, ['font_size'], grey)
+        
+        # the vtk panel background color
+        self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'], grey)
+        
+        # this is for the 3d annotation
+        self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'], black)
+        self._set_setting(settings, setting_keys, ['annotation_size_int'], 18)
+        
+        # this is the text in the lower left corner
+        self._set_setting(settings, setting_keys, ['text_color', 'textColor'], black)
+        screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'], 
+                                         screen_shape_default, save=False)
 
-        try:
-            self.label_color = settings.value("labelColor", black)
-        except (TypeError, AttributeError):
-            self.label_color = black
-
-        try:
-            self.text_color = settings.value("textColor", black)
-        except (TypeError, AttributeError):
-            self.text_color = black
-
-        try:
-            screen_shape = settings.value("screen_shape", screen_shape_default)
-        except (TypeError, AttributeError):
-            screen_shape = screen_shape_default
+        #try:
+            #screen_shape = settings.value("screen_shape", screen_shape_default)
+        #except (TypeError, AttributeError):
+            #screen_shape = screen_shape_default
 
         #if 'recent_files' in setting_keys:
         try:
@@ -3207,6 +3210,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.setGeometry(x_pos, y_pos, width, height)
         #except TypeError:
             #self.resize(1100, 700)
+
+    def _set_setting(self, settings, setting_keys, setting_names, default, save=True):
+        """
+        helper method for ``_reapply_settings``
+
+        does this, but for a variable number of input names, but one output name:
+            screen_shape = settings.value("screen_shape", screen_shape_default)
+        
+        If the registry key is not defined, the default is used.
+        """
+        set_name = setting_names[0]
+        pull_name = None
+        for key in setting_names:
+            if key in setting_keys:
+                pull_name = key
+                break
+        if pull_name is None:
+            value = default
+        else:
+            value = settings.value(pull_name, default)
+        if save:
+            setattr(self, set_name, value)
+        return value
 
     def setup_post(self, inputs):
         """interface for user defined post-scripts"""
@@ -3331,7 +3357,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.alt_grids[geom_name].Allocate(npoints, 1000)
 
         # set points
-        points = self.numpy_to_vtk_points(xyz, dtype='<f')
+        points = numpy_to_vtk_points(xyz, dtype='<f')
 
         if nelements > 0:
             geom_grid = self.alt_grids[geom_name]
@@ -3696,12 +3722,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             #text_actor.SetPosition(actor.GetPosition())
             text_prop = text_actor.GetTextProperty()
-            text_prop.SetFontSize(15)
+            text_prop.SetFontSize(self.annotation_size_int)
             text_prop.SetFontFamilyToArial()
             text_prop.BoldOn()
             text_prop.ShadowOn()
 
-            text_prop.SetColor(self.label_color)
+            text_prop.SetColor(self.annotation_color)
             text_prop.SetJustificationToCentered()
             follower = text_actor
 
@@ -3723,9 +3749,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #follower.SetScale(0.5)
             follower.SetScale(self.dim_max * 0.02 * self.label_scale)
 
-            prop = follower.GetProperty()
-            prop.SetColor(self.label_color)
-            #prop.SetOpacity(0.3)
+            text_prop = follower.GetProperty()
+            text_prop.SetColor(self.annotation_color)
+            #text_prop.SetJustificationToCentered()  # doesn't work
+            #text_prop.SetOpacity(0.3)
 
             # we need to make sure the text rotates when the camera is changed
             camera = self.rend.GetActiveCamera()
@@ -3741,7 +3768,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #text_prop.SetFontSize(10)
             #text_prop.BoldOn()
             #text_prop.ShadowOn()
-            #text_prop.SetColor(self.label_color)
+            #text_prop.SetColor(self.annotation_color)
 
             #text_actor = vtk.vtkActor2D()
             #text_actor.PickableOff()
@@ -5394,47 +5421,47 @@ class GuiCommon2(QMainWindow, GuiCommon):
                    clip_range, parallel_scale, parallel_proj, distance))
 
     #---------------------------------------------------------------------------------------
-    # LABEL SIZE/COLOR
-    def set_labelsize_color(self, size=None, color=None):
+    # ANNOTATION SIZE/COLOR
+    def set_annotation_size_color(self, size=None, color=None):
         """
         Parameters
         ----------
         size : float
-            label size
+            annotation size
         color : (float, float, float)
             RGB values
         """
         if size is not None:
             assert isinstance(size, (int, float)), 'size=%r' % size
-            self.set_labelsize(size)
+            self.set_annotation_size(size)
         if color is not None:
             assert len(color) == 3, color
             assert isinstance(color[0], float), 'color=%r' % color
-            self.set_label_color(color)
+            self.set_annotation_color(color)
 
     @property
-    def label_text_size(self):
+    def annotation_text_size(self):
         return self.dim_max * 0.02 * self.label_scale
 
-    @label_text_size.setter
-    def label_text_size(self, label_text_size):
-        #self.label_text_size = self.dim_max * 0.02 * self.label_scale
+    @annotation_text_size.setter
+    def annotation_text_size(self, annotation_text_size):
+        #self.annotation_text_size = self.dim_max * 0.02 * self.label_scale
         #a = b * c * d
         #d = a / bc
-        self.label_scale = label_text_size / (self.dim_max * 0.02)
+        self.annotation_scale = annotation_text_size / (self.dim_max * 0.02)
 
-    def set_labelsize(self, size, render=True):
-        """Updates the size of all the labels"""
+    def set_annotation_size(self, size, render=True):
+        """Updates the size of all the annotations"""
         assert size >= 0., size
-        self.label_text_size = size
+        self.annotation_text_size = size
 
-        USE_LABEL_INT = int(vtk.VTK_VERSION[0]) >= 7
-        if USE_LABEL_INT:
+        USE_ANNOTATION_INT = int(vtk.VTK_VERSION[0]) >= 7
+        if USE_ANNOTATION_INT:
             for icase, follower_actors in iteritems(self.label_actors):
-                int_size = int(size)
-                assert int_size > 0, size
+                size = int(size)
+                assert size > 0, size
                 for follower_actor in follower_actors:
-                    follower_actor.GetTextProperty().SetFontSize(int_size)
+                    follower_actor.GetTextProperty().SetFontSize(size)
                     follower_actor.Modified()
         else:
             for icase, follower_actors in iteritems(self.label_actors):
@@ -5443,20 +5470,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     follower_actor.Modified()
         if render:
             self.vtk_interactor.GetRenderWindow().Render()
-            self.log_command('set_labelsize(%s)' % size)
+            self.log_command('set_annotation_size(%s)' % size)
 
-    def set_label_color(self, color, render=True):
+    def set_annotation_color(self, color, render=True):
         """
-        Set the label color
+        Set the annotation color
 
         Parameters
         ----------
         color : (float, float, float)
             RGB values as floats
         """
-        if np.allclose(self.label_color, color):
+        if np.allclose(self.annotation_color, color):
             return
-        self.label_color = color
+        self.annotation_color = color
         for follower_actors in itervalues(self.label_actors):
             for follower_actor in follower_actors:
                 prop = follower_actor.GetProperty()
@@ -5464,7 +5491,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         if render:
             self.vtk_interactor.GetRenderWindow().Render()
-            self.log_command('set_label_color(%s, %s, %s)' % color)
+            self.log_command('set_annotation_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------------------
     # PICKER

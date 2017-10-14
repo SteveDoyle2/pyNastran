@@ -479,10 +479,18 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         #is_passed = True
     #except DeviceCodeError:  # this block should be commented
         #is_passed = True
+
     #except AssertionError:  # this block should be commented
         #is_passed = True
     #except RuntimeError: #invalid analysis code; this block should be commented
         #is_passed = True
+    #except ValueError:  # this block should be commented
+        #is_passed = True
+    #except NotImplementedError:  # this block should be commented
+        #is_passed = True
+    #except FortranMarkerError:  # this block should be commented
+        #is_passed = True
+
     except SystemExit:
         #print_exc(file=sys.stdout)
         #sys.exit('stopping on sys.exit')

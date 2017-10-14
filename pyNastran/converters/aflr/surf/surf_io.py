@@ -10,6 +10,7 @@ import vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.aflr.surf.surf_reader import SurfReader, TagReader
+from pyNastran.gui.gui_utils.vtk_utils import create_vtk_cells_of_constant_element_types
 
 
 class SurfIO(object):
@@ -70,7 +71,7 @@ class SurfIO(object):
         if nquads:
             elements.append(quads)
             etypes.append(9) # vtkQuad().GetCellType()
-        self.create_vtk_cells_of_constant_element_types(grid, elements, etypes)
+        create_vtk_cells_of_constant_element_types(grid, elements, etypes)
 
 
         model.read_surf_failnode(surf_filename)
