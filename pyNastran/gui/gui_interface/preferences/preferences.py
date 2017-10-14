@@ -236,7 +236,8 @@ class PreferencesWindow(PyDialog):
     
     def update_annotation_size_color(self):
         if self.win_parent is not None:
-            self.win_parent.set_annotation_size_color(self._annotation_size, self.annotation_color_float)
+            self.win_parent.settings.set_annotation_size_color(
+                self._annotation_size, self.annotation_color_float)
 
     def on_annotation_color(self):
         rgb_color_ints = self.annotation_color_int
@@ -258,7 +259,7 @@ class PreferencesWindow(PyDialog):
             self.background_color_int = rgb_color_ints
             self.background_color_float = rgb_color_floats
             if self.win_parent is not None:
-                self.win_parent.set_background_color(rgb_color_floats)
+                self.win_parent.settings.set_background_color(rgb_color_floats)
 
     def on_text_color(self):
         """ Choose a text color """
@@ -270,7 +271,7 @@ class PreferencesWindow(PyDialog):
             self.text_color_int = rgb_color_ints
             self.text_color_float = rgb_color_floats
             if self.win_parent is not None:
-                self.win_parent.set_text_color(rgb_color_floats)
+                self.win_parent.settings.set_text_color(rgb_color_floats)
 
     def on_color(self, color_edit, rgb_color_ints, title):
         """pops a color dialog"""
@@ -355,9 +356,10 @@ class PreferencesWindow(PyDialog):
     def on_apply(self, force=False):
         passed = self.on_validate()
         if (passed or force) and self.win_parent is not None:
-            self.win_parent.on_set_font_size(self.out_data['font_size'])
+            self.win_parent.settings.on_set_font_size(self.out_data['font_size'])
 
-            #self.win_parent.set_annotation_size_color(self._annotation_size, self.annotation_color_float)
+            #self.win_parent.settings.set_annotation_size_color(
+                #self._annotation_size, self.annotation_color_float)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
             self.win_parent._apply_clipping(self.out_data)

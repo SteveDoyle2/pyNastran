@@ -45,7 +45,7 @@ def set_preferences_menu(self):
 
     if data['close']:
         if not self._preferences_window._updated_preference:
-            self.on_set_font_size(data['font_size'])
+            self.settings.on_set_font_size(data['font_size'])
         del self._preferences_window
         self._preferences_window_shown = False
     else:

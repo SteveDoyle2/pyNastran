@@ -497,8 +497,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
-                ('text_size_increase', 'Increase Text Size', 'text_up.png', 'Ctrl+Plus', 'Increase Text Size', self.on_increase_text_size),
-                ('text_size_decrease', 'Decrease Text Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Text Size', self.on_decrease_text_size),
                 ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set Text Size', self.set_preferences_menu),
 
                 # picking
@@ -515,12 +513,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
         self.tools = tools
         self.checkables = checkables
-
-    def on_increase_text_size(self):
-        self.on_set_font_size(self.font_size + 1)
-
-    def on_decrease_text_size(self):
-        self.on_set_font_size(self.font_size - 1)
 
     def on_set_font_size(self, font_size, show_command=True):
         """changes the font size"""
@@ -556,7 +548,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self._preferences_window.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
-        self.log_command('on_set_font_size(%s)' % font_size)
+        self.parent.log_command('settings.on_set_font_size(%s)' % font_size)
 
         return False
 
@@ -903,35 +895,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'WARNING')
-
-    def set_background_color(self, color):
-        """
-        Set the background color
-
-        Parameters
-        ----------
-        color : (float, float, float)
-            RGB values as floats
-        """
-        self.background_color = color
-        self.rend.SetBackground(*color)
-        self.vtk_interactor.Render()
-        self.log_command('set_background_color(%s, %s, %s)' % color)
-
-    def set_text_color(self, color):
-        """
-        Set the text color
-
-        Parameters
-        ----------
-        color : (float, float, float)
-            RGB values as floats
-        """
-        self.text_color = color
-        for text_actor in itervalues(self.text_actors):
-            text_actor.GetTextProperty().SetColor(color)
-        self.vtk_interactor.Render()
-        self.log_command('set_text_color(%s, %s, %s)' % color)
 
     def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
                                  Type='xyz'):
@@ -1406,79 +1369,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
         camera.OrthogonalizeViewUp()
         self.vtk_interactor.Render()
-
-    #def _rotation_center_node_picker(self, obj, event):
-        #"""reset the rotation center"""
-        #self.log_command('_rotation_center_node_picker()')
-        #picker = self.node_picker
-
-        #print('picker.object_methods =', object_methods(picker))
-        #point_id = picker.GetPointId()
-        #if point_id < 0:
-            ##self.picker_textActor.VisibilityOff()
-            #print('picker.point_id =', point_id)
-        #else:
-            #self.log_command('_rotation_center_node_picker()')
-            #camera = self.rend.GetActiveCamera()
-
-            #world_position = picker.GetPickPosition()
-            #focal_point = world_position
-            #point_id = picker.GetPointId()
-            ##ds = picker.GetDataSet()
-            #select_point = picker.GetSelectionPoint()
-
-            #self.log_command("_rotation_center_node_picker()")
-            #self.log_info('focal_point = %s' % str(focal_point))
-            ##self.log_info('point_id = %s' % point_id)
-            ##self.log_info('data_set = %s' % ds)
-            ##self.log_info('select_point = %s' % str(select_point))
-
-            ##self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
-            ##self.picker_textActor.SetPosition(select_point[:2])
-            ##self.picker_textActor.VisibilityOn()
-            #self.setup_mouse_buttons(mode='default')
-
-            ## now we can actually modify the camera
-            #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            #camera.OrthogonalizeViewUp()
-            #rotation_center_button = self.actions['rotation_center']
-            #rotation_center_button.setChecked(False)
-
-            ##self.set_cell_picker()
-        ##if self.revert:
-            ##self.setup_mouse_buttons(mode='default')
-
-    #def _rotation_center_cell_picker(self, obj, event):
-        #"""reset the rotation center"""
-        #picker = self.cell_picker
-        #pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        #picker.Pick(pixel_x, pixel_y, 0, self.rend)
-
-        #cell_id = picker.GetCellId()
-        ##print('_rotation_center_cell_picker', cell_id)
-
-        #if cell_id < 0:
-            #print('picker.cell_id =', cell_id)
-            ##self.picker_textActor.VisibilityOff()
-            #pass
-        #else:
-            #camera = self.rend.GetActiveCamera()
-            #world_position = picker.GetPickPosition()
-            #focal_point = self._get_closest_node_xyz(cell_id, world_position)
-
-            ##ds = picker.GetDataSet()
-            ##select_point = picker.GetSelectionPoint()
-            #self.log_command("_rotation_center_cell_picker()")
-            #self.log_info('focal_point = %s' % str(focal_point))
-            #self.setup_mouse_buttons(mode='default')
-
-            ## now we can actually modify the camera
-            #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            #camera.OrthogonalizeViewUp()
-            #rotation_center_button = self.actions['rotation_center']
-            #rotation_center_button.setChecked(False)
-        ##if self.revert:
-            ##self.setup_mouse_buttons(mode='default')
 
     def revert_pressed(self, active_name):
         if active_name != 'probe_result':
@@ -2189,8 +2079,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # works
             flip_flag = True is self._show_flag
             assert self._show_flag is True, self._show_flag
-            self._update_ids_mask_showTrue(ids_to_show, flip_flag, render=False)
-            self._update_ids_mask_showTrue(ids_to_show, False, render=True)
+            self._update_ids_mask_show_true(ids_to_show, flip_flag, render=False)
+            self._update_ids_mask_show_true(ids_to_show, False, render=True)
             self._show_flag = True
         else:  # pragma: no cover
             # old; works; slow
@@ -2279,7 +2169,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
         return vtk_ids
 
-    def _update_ids_mask_showFalse(self, ids_to_show, flip_flag=True, render=True):
+    def _update_ids_mask_show_false(self, ids_to_show, flip_flag=True, render=True):
         ids = self.numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
@@ -2327,8 +2217,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #render_window = self.vtk_interactor.GetRenderWindow()
             #render_window.Render()
 
-    def _update_ids_mask_showTrue(self, ids_to_show,
-                                  flip_flag=True, render=True):  # pragma: no cover
+    def _update_ids_mask_show_true(self, ids_to_show,
+                                   flip_flag=True, render=True):  # pragma: no cover
         ids = self.numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
@@ -2507,7 +2397,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
 
     def create_text(self, position, label, text_size=18):
-        """creates a text actor"""
+        """creates the lower left text actors"""
         text_actor = vtk.vtkTextActor()
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
@@ -3116,6 +3006,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # build GUI and restore saved application state
         #nice_blue = (0.1, 0.2, 0.4)
+        from pyNastran.gui.settings import Settings
+        self.settings = Settings(self)
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
 
@@ -3125,9 +3017,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         self.reset_settings = False
         #if self.reset_settings or qt_version in [5, 'pyside']:
-            #self._reset_settings()
+            #self.settings.reset_settings()
         #else:
-        self._reapply_settings(settings)
+        self.settings.reapply_settings(settings)
 
         self.init_ui()
         if self.reset_settings:
@@ -3139,100 +3031,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #-------------
         # loading
         self.show()
-
-    def _reset_settings(self):
-        """helper method for ``setup_gui``"""
-        black = (0.0, 0.0, 0.0)
-        grey = (119/255., 136/255., 153/255.)
-
-        self.font_size = 8
-        self.background_color = grey
-        self.annotation_color = black
-        self.annotation_size_int = 18
-        self.text_color = black
-        self.resize(1100, 700)
-
-    def _reapply_settings(self, settings):
-        """helper method for ``setup_gui``"""
-        #white = (1.0, 1.0, 1.0)
-        black = (0.0, 0.0, 0.0)
-        #red = (1.0, 0.0, 0.0)
-        grey = (119/255., 136/255., 153/255.)
-        screen_shape_default = (1100, 700)
-        font_size = 8
-
-        setting_keys = [str(key) for key in settings.childKeys()]
-
-        # this is the gui font
-        self._set_setting(settings, setting_keys, ['font_size'], grey)
-        
-        # the vtk panel background color
-        self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'], grey)
-        
-        # this is for the 3d annotation
-        self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'], black)
-        self._set_setting(settings, setting_keys, ['annotation_size_int'], 18)
-        
-        # this is the text in the lower left corner
-        self._set_setting(settings, setting_keys, ['text_color', 'textColor'], black)
-        screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'], 
-                                         screen_shape_default, save=False)
-
-        #try:
-            #screen_shape = settings.value("screen_shape", screen_shape_default)
-        #except (TypeError, AttributeError):
-            #screen_shape = screen_shape_default
-
-        #if 'recent_files' in setting_keys:
-        try:
-            self.recent_files = settings.value("recent_files", self.recent_files)
-        except (TypeError, AttributeError):
-            pass
-
-        #w = screen_shape.width()
-        #h = screen_shape.height()
-        #try:
-        self.resize(screen_shape[0], screen_shape[1])
-        width, height = screen_shape
-
-        font = QtGui.QFont()
-        font.setPointSize(self.font_size)
-        #self.app.setFont(font)
-        self.setFont(font)
-
-        if 0 and PY3:
-            pos_default = 0, 0
-            pos = settings.value("pos", pos_default)
-            x_pos, y_pos = pos
-            #print(pos)
-            #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
-            y_pos = pos_default[0]
-            self.setGeometry(x_pos, y_pos, width, height)
-        #except TypeError:
-            #self.resize(1100, 700)
-
-    def _set_setting(self, settings, setting_keys, setting_names, default, save=True):
-        """
-        helper method for ``_reapply_settings``
-
-        does this, but for a variable number of input names, but one output name:
-            screen_shape = settings.value("screen_shape", screen_shape_default)
-        
-        If the registry key is not defined, the default is used.
-        """
-        set_name = setting_names[0]
-        pull_name = None
-        for key in setting_names:
-            if key in setting_keys:
-                pull_name = key
-                break
-        if pull_name is None:
-            value = default
-        else:
-            value = settings.value(pull_name, default)
-        if save:
-            setattr(self, set_name, value)
-        return value
 
     def setup_post(self, inputs):
         """interface for user defined post-scripts"""
@@ -3886,7 +3684,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         self.hide_axes()
         self.hide_legend()
-        #self.set_background_color_to_white()
+        #self.settings.set_background_color_to_white()
 
     def hide_axes(self, cids=None):
         """
@@ -3905,12 +3703,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         for axis in self.axes.itervalues():
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
-
-    def set_background_color_to_white(self):
-        """sets the background color to white; used by gif writing?"""
-        white = (1., 1., 1.)
-        self.set_background_color(white)
-
 
     def on_take_screenshot(self, fname=None, magnify=None):
         """
@@ -3980,7 +3772,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if not isinstance(magnify, integer_types):
                 msg = 'magnify=%r type=%s' % (magnify, type(magnify))
                 raise TypeError(msg)
-            self._update_text_size(magnify=magnify)
+            self.settings.update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
 
             # multiply linewidth by magnify
@@ -4030,7 +3822,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             #self.log_info("Saved screenshot: " + fname)
             self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
-            self._update_text_size(magnify=1.0)
+            self.settings.update_text_size(magnify=1.0)
 
             # show corner axes
             axes_actor.SetVisibility(True)
@@ -4430,14 +4222,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          onesided=onesided,
                          nrepeat=nrepeat, delete_images=delete_images,
                          make_gif=make_gif)
-
-    def _update_text_size(self, magnify=1.0):
-        """Internal method for updating the bottom-left text when we go to take a picture"""
-        text_size = int(14 * magnify)
-        for text_actor in itervalues(self.text_actors):
-            text_prop = text_actor.GetTextProperty()
-            text_prop.SetFontSize(text_size)
-        self.itext += 1  # TODO: why is this here?
 
     def add_geometry(self):
         """
@@ -5419,79 +5203,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
                 % (position, focal_point, view_angle, view_up,
                    clip_range, parallel_scale, parallel_proj, distance))
-
-    #---------------------------------------------------------------------------------------
-    # ANNOTATION SIZE/COLOR
-    def set_annotation_size_color(self, size=None, color=None):
-        """
-        Parameters
-        ----------
-        size : float
-            annotation size
-        color : (float, float, float)
-            RGB values
-        """
-        if size is not None:
-            assert isinstance(size, (int, float)), 'size=%r' % size
-            self.set_annotation_size(size)
-        if color is not None:
-            assert len(color) == 3, color
-            assert isinstance(color[0], float), 'color=%r' % color
-            self.set_annotation_color(color)
-
-    @property
-    def annotation_text_size(self):
-        return self.dim_max * 0.02 * self.label_scale
-
-    @annotation_text_size.setter
-    def annotation_text_size(self, annotation_text_size):
-        #self.annotation_text_size = self.dim_max * 0.02 * self.label_scale
-        #a = b * c * d
-        #d = a / bc
-        self.annotation_scale = annotation_text_size / (self.dim_max * 0.02)
-
-    def set_annotation_size(self, size, render=True):
-        """Updates the size of all the annotations"""
-        assert size >= 0., size
-        self.annotation_text_size = size
-
-        USE_ANNOTATION_INT = int(vtk.VTK_VERSION[0]) >= 7
-        if USE_ANNOTATION_INT:
-            for icase, follower_actors in iteritems(self.label_actors):
-                size = int(size)
-                assert size > 0, size
-                for follower_actor in follower_actors:
-                    follower_actor.GetTextProperty().SetFontSize(size)
-                    follower_actor.Modified()
-        else:
-            for icase, follower_actors in iteritems(self.label_actors):
-                for follower_actor in follower_actors:
-                    follower_actor.SetScale(size)
-                    follower_actor.Modified()
-        if render:
-            self.vtk_interactor.GetRenderWindow().Render()
-            self.log_command('set_annotation_size(%s)' % size)
-
-    def set_annotation_color(self, color, render=True):
-        """
-        Set the annotation color
-
-        Parameters
-        ----------
-        color : (float, float, float)
-            RGB values as floats
-        """
-        if np.allclose(self.annotation_color, color):
-            return
-        self.annotation_color = color
-        for follower_actors in itervalues(self.label_actors):
-            for follower_actor in follower_actors:
-                prop = follower_actor.GetProperty()
-                prop.SetColor(*color)
-
-        if render:
-            self.vtk_interactor.GetRenderWindow().Render()
-            self.log_command('set_annotation_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------------------
     # PICKER
