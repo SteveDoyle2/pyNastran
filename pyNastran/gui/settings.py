@@ -10,29 +10,59 @@ GREY = (119/255., 136/255., 153/255.)
 USE_ANNOTATION_INT = int(vtk.VTK_VERSION[0]) >= 7
 
 class Settings(object):
+    """storage class for various settings"""
     def __init__(self, parent):
+        """
+        Creates the Settings object
+
+        Parameters
+        ----------
+        parent : MainWindow()
+            used by the class to access the MainWindow
+        """
         self.parent = parent
-        self.text_color = BLACK
-        self.annotation_color = BLACK
+
+        # rgb tuple
         self.background_color = GREY
+        self.annotation_color = BLACK
+        self.text_color = BLACK
+
+        # int
+        self.annotation_size_int = 18
         self.font_size = 8
+
+        # not stored
+        self.dim_max = 1.0
 
     def reset_settings(self):
         """helper method for ``setup_gui``"""
-
+        # rgb tuple
         self.background_color = GREY
         self.annotation_color = BLACK
-        self.annotation_size_int = 18
         self.text_color = BLACK
+
+        # int
+        self.annotation_size_int = 18
+        self.font_size = 8
+
         self.parent.resize(1100, 700)
 
-    def reapply_settings(self, settings):
+        # not stored
+        self.dim_max = 1.0
+
+    def load(self, settings):
         """helper method for ``setup_gui``"""
-        #white = (1.0, 1.0, 1.0)
         #red = (1.0, 0.0, 0.0)
         screen_shape_default = (1100, 700)
 
         setting_keys = [str(key) for key in settings.childKeys()]
+        print('setting_keys =', setting_keys)
+
+        # sets the window size/position
+        main_window_geometry = self._get_setting(
+            settings, setting_keys, ['main_window_geometry', 'mainWindowGeometry'], None)
+        if main_window_geometry is not None:
+            self.parent.restoreGeometry(main_window_geometry)
 
         # this is the gui font
         self._set_setting(settings, setting_keys, ['font_size'], self.font_size)
@@ -82,7 +112,7 @@ class Settings(object):
         #except TypeError:
             #self.resize(1100, 700)
 
-    def _set_setting(self, settings, setting_keys, setting_names, default, save=True):
+    def _get_setting(self, settings, setting_keys, setting_names, default):
         """
         helper method for ``reapply_settings``
 
@@ -101,11 +131,34 @@ class Settings(object):
             value = default
         else:
             value = settings.value(pull_name, default)
+        return value
+
+    def _set_setting(self, settings, setting_keys, setting_names, default, save=True):
+        """
+        helper method for ``reapply_settings``
+        """
+        set_name = setting_names[0]
+        value = self._get_setting(settings, setting_keys, setting_names, default)
         if save:
             setattr(self.parent, set_name, value)
         return value
 
+    def save(self, settings):
+        """saves the settings"""
+        settings.setValue('main_window_geometry', self.parent.saveGeometry())
+        settings.setValue('mainWindowState', self.parent.saveState())
+
+        # rgb tuple
+        settings.setValue('background_color', self.background_color)
+        settings.setValue('annotation_color', self.annotation_color)
+        settings.setValue('text_color', self.text_color)
+
+        # int
+        settings.setValue('font_size', self.font_size)
+        settings.setValue('annotation_size_int', self.annotation_size_int)
+
     #---------------------------------------------------------------------------
+    # FONT SIZE
     def on_increase_text_size(self):
         self.on_set_font_size(self.font_size + 1)
 
@@ -140,7 +193,7 @@ class Settings(object):
 
     @annotation_text_size.setter
     def annotation_text_size(self, annotation_text_size):
-        #self.annotation_text_size = self.dim_max * 0.02 * self.annotation_scale
+        # annotation_text_size = dim_max * 0.02 * annotation_scale
         #a = b * c * d
         #d = a / bc
         self.annotation_scale = annotation_text_size / (self.dim_max * 0.02)
@@ -231,4 +284,10 @@ class Settings(object):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
 
-    #---------------------------------------------------------------------------
+def repr_settings(settings):
+    """works on a QSettings, not a Settings"""
+    msg = 'QSettings:\n'
+    for key in sorted(settings.allKeys()):
+        value = settings.value(key)
+        msg += '    %r : %r\n' % (key, value)
+    return msg

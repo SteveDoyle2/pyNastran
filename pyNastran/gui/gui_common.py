@@ -459,7 +459,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
                 ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
-                #('flip_pick', 'Flip Pick', '', 'CTRL+K', 'Flips the pick state from centroidal to nodal', self.on_flip_picker),
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
@@ -497,13 +496,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
+                ('text_size_increase', 'Increase Text Size', 'text_up.png', 'Ctrl+Plus', 'Increase Text Size', self.on_increase_text_size),
+                ('text_size_decrease', 'Decrease Text Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Text Size', self.on_decrease_text_size),
                 ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set Text Size', self.set_preferences_menu),
 
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.on_area_pick),
             ]
-        # print('version =', vtk.VTK_VERSION, self.vtk_version)
-        #if self.vtk_version[0] < 6
 
         if 'nastran' in self.fmts:
             tools += [
@@ -513,6 +512,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
         self.tools = tools
         self.checkables = checkables
+
+    def on_increase_text_size(self):
+        """used by the hidden_tools for Ctrl +"""
+        self.on_set_font_size(self.font_size + 1)
+
+    def on_decrease_text_size(self):
+        """used by the hidden_tools for Ctrl -"""
+        self.on_set_font_size(self.font_size - 1)
 
     def on_set_font_size(self, font_size, show_command=True):
         """changes the font size"""
@@ -549,19 +556,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #self.menu_scripts.setFont(font)
         self.parent.log_command('settings.on_set_font_size(%s)' % font_size)
-
         return False
-
-    def on_flip_picker(self):
-        return
-        # if self.pick_state == 'centroidal':
-            # self.pick_state = 'nodal'
-
-        # elif self.pick_state == 'nodal':
-            # self.pick_state = 'centroidal'
-        # else:
-            # raise RuntimeError(self.pick_state)
-        # self.log_command("on_flip_pick() # pick_state='%s'" % self.pick_state)
 
     def _create_menu_items(self, actions=None, create_menu_bar=True):
         if actions is None:
@@ -924,7 +919,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
         """
         coord_id = self.coord_id
-        self.dim_max = dim_max
+        self.settings.dim_max = dim_max
         scale = 0.05 * dim_max
 
         transform = vtk.vtkTransform()
@@ -2424,9 +2419,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             text.VisibilityOn()
 
     def build_lookup_table(self):
-        """TODO: add support for NanColors"""
         scalar_range = self.grid_selected.GetScalarRange()
-        #print('min = %s\nmax = %s' % scalar_range)
         self.grid_mapper.SetScalarRange(scalar_range)
         self.grid_mapper.SetLookupTable(self.color_function)
         self.rend.AddActor(self.scalarBar)
@@ -3006,20 +2999,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # build GUI and restore saved application state
         #nice_blue = (0.1, 0.2, 0.4)
-        from pyNastran.gui.settings import Settings
-        self.settings = Settings(self)
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
-
-        main_window_geometry = settings.value("mainWindowGeometry")
-        if main_window_geometry is not None:
-            self.restoreGeometry(main_window_geometry)
 
         self.reset_settings = False
         #if self.reset_settings or qt_version in [5, 'pyside']:
             #self.settings.reset_settings()
         #else:
-        self.settings.reapply_settings(settings)
+        self.settings.load(settings)
 
         self.init_ui()
         if self.reset_settings:
@@ -3510,7 +3497,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #self.convert_units(icase, result_value, x, y, z)
 
-        if self.vtk_version[0] >= 7: # should check for 7.1
+        if self.vtk_version[0] >= 7: # TODO: should check for 7.1
             text_actor = vtk.vtkBillboardTextActor3D()
             label = text
             text_actor.SetPosition(x, y, z)
@@ -3545,7 +3532,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # 1 point = 1/72"
             # SetScale works on model scale size
             #follower.SetScale(0.5)
-            follower.SetScale(self.dim_max * 0.02 * self.label_scale)
+            follower.SetScale(self.settings.dim_max * 0.02 * self.label_scale)
 
             text_prop = follower.GetProperty()
             text_prop.SetColor(self.annotation_color)
@@ -5155,6 +5142,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_set_camera_data(self, camera_data, show_log=True):
         """
+        Sets the current camera
+
+        Parameters
+        ----------
         position : (float, float, float)
             where am I is xyz space
         focal_point : (float, float, float)
@@ -5169,8 +5160,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ???
         parallel_projection : bool (0/1)
             flag?
+            TODO: not used
         distance : float
-            distance to ???
+            distance to the camera
 
         i_vector = focal_point - position
         j'_vector = view_up
@@ -5280,7 +5272,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         renwin.SetMultiSamples(scale)
         self.vtk_interactor.Render()
         self.log_command('on_set_anti_aliasing(%r)' % (scale))
-
 
     #---------------------------------------------------------------------------------------
     # LEGEND MENU

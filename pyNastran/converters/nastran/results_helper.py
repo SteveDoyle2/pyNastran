@@ -149,9 +149,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     #else:
                         #scale = self.displacement_scale_factor / tnorm_abs_max
 
-                    scale = self.dim_max
+                    scale = self.settings.dim_max
                     if tnorm_abs_max > 0.0:
-                        scale = self.dim_max / tnorm_abs_max * 0.25
+                        scale = self.settings.dim_max / tnorm_abs_max * 0.25
                     scales.append(scale)
                     titles.append(title1)
                     headers.append(header)
@@ -183,9 +183,9 @@ class NastranGuiResults(NastranGuiAttributes):
                         #scale = self.displacement_scale_factor / tnorm_abs_max
 
                     # TODO: what to do with the scale factor?
-                    #scale = self.dim_max
+                    #scale = self.settings.dim_max
                     #if tnorm_abs_max > 0.0:
-                        #scale = self.dim_max / tnorm_abs_max * 0.25
+                        #scale = self.settings.dim_max / tnorm_abs_max * 0.25
                     scale = 1.
                     scales.append(scale)
                     titles.append(title1)

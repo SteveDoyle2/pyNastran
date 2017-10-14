@@ -19,15 +19,15 @@ def set_preferences_menu(self):
     camera = self.GetCamera()
     min_clip, max_clip = camera.GetClippingRange()
     data = {
-        'font_size' : self.font_size,
-        'annotation_size_float' : self.annotation_text_size,
-        'annotation_size_int' : self.annotation_size_int,
-        'annotation_color' : self.annotation_color,
-        'background_color' : self.background_color,
-        'text_color' : self.text_color,
+        'font_size' : self.settings.font_size,
+        'annotation_size_float' : self.settings.annotation_text_size,
+        'annotation_size_int' : self.settings.annotation_size_int,
+        'annotation_color' : self.settings.annotation_color,
+        'background_color' : self.settings.background_color,
+        'text_color' : self.settings.text_color,
 
         'picker_size' : self.element_picker_size,
-        'dim_max' : self.dim_max,
+        'dim_max' : self.settings.dim_max,
 
         'clipping_min' : min_clip,
         'clipping_max' : max_clip,

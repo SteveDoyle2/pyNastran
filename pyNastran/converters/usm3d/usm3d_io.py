@@ -1,7 +1,11 @@
-from six import iteritems
-from six.moves import range
+"""
+Defines the GUI IO file for Usm3d.
+"""
+from __future__ import print_function
 import os
 from collections import defaultdict
+from six import iteritems
+from six.moves import range
 
 import numpy as np
 import vtk
@@ -25,7 +29,11 @@ class Usm3dIO(object):
                 'Usm3d (*.flo)', self.load_usm3d_results)
         return data
 
-    def step_results_usm3d(self):
+    def on_reload_usm3d(self):
+        """
+        For USM3D, we dynamically load the latest CFD results time step,
+        hich is really handy when you're running a job.
+        """
         # minimum is 1
         nstep = 100
 
@@ -58,7 +66,7 @@ class Usm3dIO(object):
         self.load_usm3d_results(flo_filename)
         self.out_filename = os.path.join(dirname, flo_filename)
 
-        print("done stepping...")
+        #print("done stepping...")
 
     #def _get_next_n(self, base):
         #n = int(n)
@@ -78,7 +86,6 @@ class Usm3dIO(object):
 
     def load_usm3d_results(self, flo_filename):
         model = Usm3d(log=self.log, debug=False)
-        #self.result_cases = {}
         npoints = self.nnodes
         node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
 
@@ -173,12 +180,6 @@ class Usm3dIO(object):
             self.element_ids = np.arange(1, ntris + 1, dtype='int32')
             etype = 5  # vtkTriangle().GetCellType()
             create_vtk_cells_of_constant_element_type(grid, tris, etype)
-            #for (n0, n1, n2) in tris:
-                #elem = vtkTriangle()
-                #elem.GetPointIds().SetId(0, n0)
-                #elem.GetPointIds().SetId(1, n1)
-                #elem.GetPointIds().SetId(2, n2)
-                #grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         else:
             ntets = tets.shape[0]
             self.element_ids = np.arange(1, ntets + 1, dtype='int32')
@@ -187,14 +188,17 @@ class Usm3dIO(object):
             pass
         elif dimension_flag == 3:
             if ntets:
-                for (n0, n1, n2, n3) in tets:
-                    elem = vtkTetra()
-                    #assert elem.GetCellType() == 10, elem.GetCellType()
-                    elem.GetPointIds().SetId(0, n0)
-                    elem.GetPointIds().SetId(1, n1)
-                    elem.GetPointIds().SetId(2, n2)
-                    elem.GetPointIds().SetId(3, n3)
-                    grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                etype = 10 # vtkTetra().GetCellType()
+                assert tets.max() > 0, tets.min()
+                create_vtk_cells_of_constant_element_type(grid, tets, etype)
+                #for (n0, n1, n2, n3) in tets:
+                    #elem = vtkTetra()
+                    ##assert elem.GetCellType() == 10, elem.GetCellType()
+                    #elem.GetPointIds().SetId(0, n0)
+                    #elem.GetPointIds().SetId(1, n1)
+                    #elem.GetPointIds().SetId(2, n2)
+                    #elem.GetPointIds().SetId(3, n3)
+                    #grid.InsertNextCell(10, elem.GetPointIds())
         else:
             raise RuntimeError('dimension_flag=%r' % dimension_flag)
 

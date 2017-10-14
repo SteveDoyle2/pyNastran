@@ -250,16 +250,18 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         """
         Runs the reload button.
 
-        Reload allows you to edit the input model and "reload" the data without
-        having to go to the pulldown menu.  For USM3D, we dynamically load the
-        latest CFD results time step, which is really handy when you're running
-        a job.
+        Reload allows you to edit the input model and "reload" the data
+        without having to go to the pulldown menu.  If you don't like
+        this behavior, implement the self.on_reload_nastran() or similar
+        method for a given format.
         """
         camera = self.get_camera_data()
         Title = self.title
         case = self.icase
-        if self.format == 'usm3d':
-            self.step_results_usm3d()
+
+        on_reload_name = 'on_reload_%s' % self.format
+        if hasattr(self, on_reload_name) or 1:
+            getattr(self, on_reload_name)()
         else:
             self.on_load_geometry(self.infile_name, self.format)
 
@@ -278,12 +280,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         being closed.
         """
         settings = QtCore.QSettings()
-        settings.setValue("mainWindowGeometry", self.saveGeometry())
-        settings.setValue("mainWindowState", self.saveState())
-        settings.setValue("backgroundColor", self.background_color)
-        settings.setValue("textColor", self.text_color)
-        settings.setValue("annotation_color", self.annotation_color)
-        settings.setValue("font_size", self.font_size)
+        settings.clear()
+        self.settings.save(settings)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.window()

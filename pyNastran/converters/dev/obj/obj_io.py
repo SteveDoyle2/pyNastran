@@ -95,11 +95,6 @@ class ObjIO(object):
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
 
-        #if 0:
-            #fraction = 1. / self.nnodes  # so you can color the nodes by ID
-            #for nid, node in sorted(iteritems(nodes)):
-                #self.grid_result.InsertNextValue(nid * fraction)
-
         assert nodes is not None
         #nnodes = nodes.shape[0]
 
@@ -158,7 +153,6 @@ class ObjIO(object):
         pass
 
     def _fill_obj_geometry_objects(self, cases, ID, nodes, nelements, model):
-        #nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
         eids = arange(1, nelements + 1)

@@ -7,7 +7,9 @@ import numpy as np
 
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+
 from pyNastran.utils.log import get_logger
+from pyNastran.gui.settings import Settings
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 #from pyNastran.gui.gui_objects.gui_result import GuiResult
 #from pyNastran.converters.nastran.displacements import DisplacementResults
@@ -28,6 +30,7 @@ class GuiAttributes(object):
         inputs = kwds['inputs']
         res_widget = kwds['res_widget']
         self.dev = False
+        self.settings = Settings(self)
 
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
@@ -142,7 +145,6 @@ class GuiAttributes(object):
         self._xyz_nominal = None
 
         self.nvalues = 9
-        self.dim_max = 1.0
         self.nid_maps = {}
         self.eid_maps = {}
         self.name = 'main'
@@ -347,8 +349,8 @@ class GuiAttributes(object):
                 out = create_res_obj(islot, headers, header, A, fmt_dict, result_type)
             else:
                 out = create_res_obj(islot, headers, header, A, fmt_dict, result_type,
-                                     self.dim_max, self.xyz_cid0)
-            res_obj, title, header = out
+                                     self.settings.dim_max, self.xyz_cid0)
+            res_obj, title = out
 
             #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
             #form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
@@ -451,8 +453,8 @@ class GuiAttributes(object):
 
         scale = self.displacement_scale_factor / tnorm_abs_max
         """
-        #scale = self.dim_max / tnorm_abs_max * 0.25
-        scale = self.dim_max * 0.25
+        #scale = dim_max / tnorm_abs_max * 0.25
+        scale = self.settings.dim_max * 0.25
         return scale
 
     def set_script_path(self, script_path):
@@ -753,7 +755,7 @@ class FakeGUIMethods(GuiAttributes):
         pass
 
     def update_axes_length(self, value):
-        self.dim_max = value
+        self.settings.dim_max = value
 
     def passer(self):
         """fake method"""
@@ -769,7 +771,7 @@ class FakeGUIMethods(GuiAttributes):
 
     @property
     def displacement_scale_factor(self):
-        return 1 * self.dim_max
+        return 1 * self.settings.dim_max
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=None,
                                   opacity=None, point_size=None, bar_scale=None,

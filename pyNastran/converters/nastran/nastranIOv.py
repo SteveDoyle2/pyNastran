@@ -89,6 +89,14 @@ RED = (1., 0., 0.)
 YELLOW = (1., 1., 0.)
 PURPLE = (1., 0., 1.)
 
+NO_THETA = [
+    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+    'CBAR', 'CBEAM', 'CBEAM3',
+    'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC',
+    'CONROD', 'CROD', 'PLOTEL',
+]
+
 IS_TESTING = 'test' in sys.argv[0]
 class NastranIO(NastranGuiResults, NastranGeometryHelper):
     """
@@ -4537,11 +4545,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             else:
                 pids[i] = pid
                 pids_dict[eid] = pid
-            if np.isnan(max_thetai):
+
+            if np.isnan(max_thetai) and etype not in NO_THETA:
                 print('eid=%s theta=%s...setting to 360. deg' % (eid, max_thetai))
                 print(str(element).rstrip())
-                for node in element.nodes:
-                    print(str(node).rstrip())
+                if isinstance(element.nodes[0], integer_types):
+                    print('  nodes = %s' % element.nodes)
+                else:
+                    for node in element.nodes:
+                        print(str(node).rstrip())
                 max_thetai = 2 * np.pi
             #print(eid, min_thetai, max_thetai, '\n', element)
 
@@ -4600,6 +4612,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         zoffset = np.full(nelements, np.nan, dtype='float32')
         element_dim = np.full(nelements, -1, dtype='int32')
         nnodes_array = np.full(nelements, np.nan, dtype='int32')
+
         for eid, element in sorted(iteritems(model.elements)):
             etype = element.type
             if isinstance(element, ShellElement):

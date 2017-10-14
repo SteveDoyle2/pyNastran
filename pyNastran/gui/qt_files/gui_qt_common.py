@@ -39,7 +39,7 @@ class GuiCommon(GuiAttributes):
           - coordinate systems
           - label size
         """
-        self.dim_max = dim_max
+        self.settings.dim_max = dim_max
         dim = self.dim * 0.10
         self.on_set_axes_length(dim)
 
@@ -48,7 +48,7 @@ class GuiCommon(GuiAttributes):
         scale coordinate system based on model length
         """
         if dim is None:
-            dim = self.dim_max * 0.10
+            dim = self.settings.dim_max * 0.10
         if hasattr(self, 'axes'):
             for axes in itervalues(self.axes):
                 axes.SetTotalLength(dim, dim, dim)

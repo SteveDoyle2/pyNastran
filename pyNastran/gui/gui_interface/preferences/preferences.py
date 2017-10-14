@@ -233,7 +233,7 @@ class PreferencesWindow(PyDialog):
         #self.min_edit.setText(str(self._default_min))
         #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
         self.update_annotation_size_color()
-    
+
     def update_annotation_size_color(self):
         if self.win_parent is not None:
             self.win_parent.settings.set_annotation_size_color(

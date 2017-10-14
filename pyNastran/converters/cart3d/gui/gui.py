@@ -150,9 +150,7 @@ class MainWindow(GuiCommon2, Cart3dIO):
         settings = QtCore.QSettings()
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
-        settings.setValue("backgroundColor", self.background_color)
-        settings.setValue("textColor", self.text_color)
-        settings.setValue("annotation_color", self.annotation_color)
+        self.settings.save(settings)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.window()
