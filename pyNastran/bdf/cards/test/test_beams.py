@@ -1,3 +1,8 @@
+"""
+tests:
+  - CBEAM, PBEAM, PBEAML, PBCOMP, PBMSECT
+  - CBEAM3, PBEAM3
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
@@ -19,6 +24,7 @@ class TestBeams(unittest.TestCase):
       - CBEAM3, PBEAM3
     """
     def test_pbeam_01(self):
+        """tests a nasty PBEAM"""
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
             '     ,  , ,2.0,-4.0',
@@ -58,6 +64,7 @@ class TestBeams(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
     def test_pbeam_02(self):
+        """tests a nasty PBEAM"""
         bdf = BDF(debug=False)
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
@@ -92,6 +99,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_03(self):
+        """tests a nasty PBEAM"""
         bdf = BDF(debug=False)
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
@@ -118,6 +126,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_04(self):
+        """tests a nasty PBEAM"""
         bdf = BDF(debug=False)
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
@@ -139,6 +148,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_05(self):
+        """tests a nasty PBEAM"""
         bdf = BDF(debug=False)
         lines = [
             'PBEAM,39,6,2.9,3.5,5.97',
@@ -150,7 +160,7 @@ class TestBeams(unittest.TestCase):
         cardi = BDFCard(card)
         card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
-        msg = print_card_8(fields)
+        #msg = print_card_8(fields)
 
         lines_expected = [
             'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
@@ -161,6 +171,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_06(self):
+        """tests a nasty PBEAM"""
         bdf = BDF(debug=False)
         lines = [
             'PBEAM   1       1       1.      60.     1.                              PBEAM1',
@@ -186,6 +197,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def test_pbeam_07(self):
+        """tests a nasty PBEAM"""
         bdf = BDF(debug=False)
         lines = [
             'PBEAM   100     100     1.00    10.     1.0                             +Z1',
@@ -194,7 +206,7 @@ class TestBeams(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM.add_card(cardi)
+        PBEAM.add_card(cardi)
 
         #if 0:
             #fields = card2.raw_fields()
@@ -210,6 +222,7 @@ class TestBeams(unittest.TestCase):
                 #self.assertEqual(actual, expected, msg)
 
     def test_pbeam_08(self):
+        """tests a nasty PBEAM"""
         bdf = BDF(debug=False)
         lines = [
             'PBEAM*   4570049         4570010        .12             2.56-4          *    HRY',
@@ -258,6 +271,7 @@ class TestBeams(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
     def test_pbeam_09(self):
+        """tests a nasty PBEAM"""
         bdf = BDF(debug=False)
         fields = [
             u'PBEAM', 4570049, 4570010, 0.12, 0.000256, 0.005625, None, 0.0008889, 6.4444e-07,
@@ -277,7 +291,7 @@ class TestBeams(unittest.TestCase):
         cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
         pbeam = PBEAM.add_card(cardi)
-        fields2 = pbeam.repr_fields()
+        pbeam.repr_fields()
         assert fields == fields
 
     def test_pbeam_10(self):
@@ -368,6 +382,7 @@ class TestBeams(unittest.TestCase):
         model.add_card(lines, 'PBEAM', is_list=False)
 
     def test_pbeam_11(self):
+        """tests a nasty PBEAM"""
         model = BDF(debug=False)
         lines = [
             #'PBEAM         1       1    1.e8    1.e8    1.e8              10.      1.',
@@ -398,7 +413,7 @@ class TestBeams(unittest.TestCase):
         model = BDF(debug=False)
         lines = ['PBEAM,3,6,2.9,3.5,5.97,0.4,3.14',
                  '     , , ,2.0,-4.0',]
-        card = model.add_card(lines, 'PBEAM', is_list=False)
+        model.add_card(lines, 'PBEAM', is_list=False)
 
         lines = ['CBEAM         10       3      1       2      0.01.000000     0.0']
         model.add_card(lines, 'CBEAM', is_list=False)
@@ -424,7 +439,7 @@ class TestBeams(unittest.TestCase):
         #print("I11 = ", cbeam.I1())
         #print("I22 = ", cbeam.I2())
         #print("I12 = ", cbeam.I12())
-        #print("J = ", cbeam.J())
+        print("J = ", cbeam.J())
         node_ids = cbeam.node_ids
         assert node_ids == [1, 2], node_ids
         self.assertEqual(cbeam.Area(), 2.9)
@@ -455,10 +470,10 @@ class TestBeams(unittest.TestCase):
         cbeam1 = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                  pa=0, pb=0, wa=None, wb=None,
                                  sa=0, sb=0, comment='CBEAM')
-        Type = 'BOX'
+        beam_type = 'BOX'
         xxb = [0.]
         dims = [[1., 2., 0.1, 0.1], [1., 2., 0.1, 0.1]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 2
@@ -468,10 +483,10 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
-        Type = 'BOX'
+        beam_type = 'BOX'
         xxb = [0.]
         dims = [[1., 2., 0.1, 0.1]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 3
@@ -481,10 +496,10 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
-        Type = 'BAR'
+        beam_type = 'BAR'
         xxb = [0.]
         dims = [[2., 3.]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 4
@@ -494,10 +509,10 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
-        Type = 'ROD'
+        beam_type = 'ROD'
         xxb = [0.]
         dims = [[2.]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 5
@@ -507,10 +522,10 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
-        Type = 'TUBE'
+        beam_type = 'TUBE'
         xxb = [0.]
         dims = [[2., 1.]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 6
@@ -520,10 +535,10 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
-        Type = 'L'
+        beam_type = 'L'
         xxb = [0.]
         dims = [[2., 2., 0.1, 0.1]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 7
@@ -533,10 +548,10 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
-        Type = 'T'
+        beam_type = 'T'
         xxb = [0.]
         dims = [[1., 2., 0.1, 0.2]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 8
@@ -546,10 +561,10 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
-        Type = 'T1'
+        beam_type = 'T1'
         xxb = [0.]
         dims = [[1., 2., 0.2, 0.1]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 9
@@ -559,10 +574,10 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
-        Type = 'T2'
+        beam_type = 'T2'
         xxb = [0.]
         dims = [[1., 2., 0.2, 0.1]]
-        pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, nsm=None,
                                   so=None, comment='PBEAML')
         #---------------------------------------------------------------
         eid = 10
@@ -608,14 +623,15 @@ class TestBeams(unittest.TestCase):
         e2 = [0.]
         f1 = [0.]
         f2 = [0.]
-        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                               c1, c2, d1, d2,
-                               e1, e2, f1, f2,
-                               k1=1., k2=1., s1=0., s2=0.,
-                               nsia=0., nsib=None, cwa=0., cwb=None,
-                               m1a=0., m2a=None, m1b=0., m2b=None,
-                               n1a=0., n2a=None, n1b=0., n2b=None,
-                               comment='pbeam')
+        pbeam = model.add_pbeam(
+            pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+            c1, c2, d1, d2,
+            e1, e2, f1, f2,
+            k1=1., k2=1., s1=0., s2=0.,
+            nsia=0., nsib=None, cwa=0., cwb=None,
+            m1a=0., m2a=None, m1b=0., m2b=None,
+            n1a=0., n2a=None, n1b=0., n2b=None,
+            comment='pbeam')
         #print(pbeam)
         #---------------------------------------------------------------
 
@@ -651,7 +667,7 @@ class TestBeams(unittest.TestCase):
         spc = ['SPC1', 123456, 123456, 1]
         grid1 = ['GRID', 1, None, 0., 0., 0.]
         grid2 = ['GRID', 2, None, 1., 0., 0.]
-        grid3 = ['GRID', 3, None, 1., 0., 0.]
+        #grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
 
         pid = 11
@@ -670,14 +686,17 @@ class TestBeams(unittest.TestCase):
         nu = 0.3
         pbeam = ([
             'PBEAM', pid, mid,
-                        area1, 2.1, 1.2, 1.3, None, nsm_a,
+            area1, 2.1, 1.2, 1.3, None, nsm_a,
             None, None, None, None, None, None, None, None,
 
             'YES', 1.0, area2, 2.1, 1.2, 1.3, None, nsm_b,
             None, None, None, None, None, None, None, None,
 
-            k1, k2, None, None, 100., 100., None, None] +  # 100s are the NSIa, NSIb (moment of inertia per unit length)
-            nsm_offset_a + nsm_offset_b + [None, None, None, None]) # Nones are neutral axis offset
+            # 100s are the NSIa, NSIb (moment of inertia per unit length)
+            k1, k2, None, None, 100., 100., None, None] +
+
+                 # Nones are neutral axis offset
+                 nsm_offset_a + nsm_offset_b + [None, None, None, None])
         #print('\n' + print_card_8(pbeam))
 
         mat1 = ['MAT1', 12, 3.0e7, None, nu, rho]
@@ -761,8 +780,6 @@ class TestBeams(unittest.TestCase):
         model = BDF(debug=False)
         pid = 100
         mid = 101
-        form = 'cat'
-        options = {}
         y = [0., 1.]
         z = [0., 1.]
         c = [0., 1.]

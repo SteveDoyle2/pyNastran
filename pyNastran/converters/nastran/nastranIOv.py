@@ -1400,7 +1400,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             try:
                 inids = nodes.get_node_index(nids, allow0=allow0)
             except:
-                from six import StringIO
                 bdf_file = StringIO()
                 model_obj.write_card(bdf_file=bdf_file)
                 print(bdf_file.getvalue())

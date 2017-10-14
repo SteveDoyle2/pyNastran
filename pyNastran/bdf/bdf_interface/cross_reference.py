@@ -223,7 +223,7 @@ class XrefMesh(BDFAttributes):
         for coord in itervalues(self.coords):
             coord.setup()
 
-    def _cross_reference_aero(self):
+    def _cross_reference_aero(self, check_caero_element_ids=False):
         # type: () -> None
         """
         Links up all the aero cards
@@ -270,7 +270,7 @@ class XrefMesh(BDFAttributes):
         if self.aeros:
             self.aeros.cross_reference(self)
 
-        if 0:  # only support CAERO1
+        if check_caero_element_ids:  # only support CAERO1
             ncaeros = len(self.caeros)
             if ncaeros > 1:
                 # we don't need to check the ncaeros=1 case
@@ -365,15 +365,15 @@ class XrefMesh(BDFAttributes):
             #if element.type in ['CONM2']:
             #    pass
             #else:
-                if element.nodes is not None:
-                    for nid in element.node_ids:
-                        if nid is None:
-                            continue
-                        nodes[nid].append(element)
-                        #except AttributeError:
-                            #print(element)
-                            #print('node = %s' % str(node))
-                            #raise
+            if element.nodes is not None:
+                for nid in element.node_ids:
+                    if nid is None:
+                        continue
+                    nodes[nid].append(element)
+                    #except AttributeError:
+                        #print(element)
+                        #print('node = %s' % str(node))
+                        #raise
         for node in itervalues(self.nodes):
             node.elements_ref = nodes[node.nid]
 

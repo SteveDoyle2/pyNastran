@@ -1,11 +1,11 @@
 from six.moves import zip, StringIO
 
-from numpy import zeros, unique, where
+from numpy import zeros, unique
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.dev.bdf_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
 
@@ -126,14 +126,14 @@ class FORCE(VectorizedLoad):
                 #bdf_file.write(print_card_16(card))
         #for lid in unique(load_id):
             #i = where(self.load_id == lid)[0]
-            for (lid, nid, cid, mag, xyz) in zip(
-                 self.load_id[i], self.node_id[i], self.coord_id[i], self.mag[i], self.xyz[i]):
+        for (lid, nid, cid, mag, xyz) in zip(
+             self.load_id[i], self.node_id[i], self.coord_id[i], self.mag[i], self.xyz[i]):
 
-                card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
-                if size == 8:
-                    bdf_file.write(print_card_8(card))
-                else:
-                    bdf_file.write(print_card_16(card))
+            card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
+            if size == 8:
+                bdf_file.write(print_card_8(card))
+            else:
+                bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

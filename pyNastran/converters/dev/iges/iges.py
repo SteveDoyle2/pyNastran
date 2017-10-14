@@ -1,10 +1,10 @@
-from six import iteritems
-import pyNastran
+from __future__ import print_function
 from collections import defaultdict
 from docopt import docopt
+import pyNastran
 
 class IGES(object):
-    supported  = [106, 110, 112, 114, 124, 126, 128, 142, 144,]
+    supported = [106, 110, 112, 114, 124, 126, 128, 142, 144,]
     maybe_supported = [100]
     def __init__(self):
         """
@@ -53,66 +53,67 @@ class IGES(object):
         pass
 
     def read_iges(self, igs_name):
-        with open(igs_name) as f:
-            lines = f.readlines()
+        with open(igs_name, 'r') as iges_file:
+            lines = iges_file.readlines()
 
-        'SolidWorks IGES file using analytic representation for surfaces         S      1'
-        Start1 = []
-        Global1 = []
-        Directory1 = []
-        Parameter1 = []
-        Terminate1 = []
+        # 'SolidWorks IGES file using analytic representation for surfaces         S      1'
+        start1 = []
+        global1 = []
+        directory1 = []
+        parameter1 = []
+        terminate1 = []
         for line in lines:
-            SGDPT = line[72:73]
-            if SGDPT in 'S':
-                Start1.append(line)
-            elif SGDPT in 'G':
+            sgdpt = line[72:73]
+            if sgdpt in 'S':
+                start1.append(line)
+            elif sgdpt in 'G':
                 #print('%r' % line[:72])
-                Global1.append(line[:72])
-            elif SGDPT in 'D':
-                Directory1.append(line)
-            elif SGDPT in 'P':
-                Parameter1.append(line)
-            elif SGDPT in 'T':
-                Terminate1.append(line)
+                global1.append(line[:72])
+            elif sgdpt in 'D':
+                directory1.append(line)
+            elif sgdpt in 'P':
+                parameter1.append(line)
+            elif sgdpt in 'T':
+                terminate1.append(line)
             else:
-                raise NotImplementedError(SGDPT)
+                raise NotImplementedError(sgdpt)
             #print('%r' % line[72:73])
         del lines
         #print(S1)
         #for
-        G_global = ''.join(Global1)
-        print("G =", G_global.split(','))
+        g_global = ''.join(global1)
+        print("G =", g_global.split(','))
         print("----P----")
-        P_parameter_data = self.combine(Parameter1, True)
-        #for key, line in sorted(iteritems(P_parameter_data)):
+        p_parameter_data = self.combine(parameter1, True)
+        #for key, line in sorted(iteritems(p_parameter_data)):
             #print(key, line)
 
         print("----D----")
-        for line in Directory1:
+        for line in directory1:
             dline = line[0:72].split()
             print('%r' % dline)
-            dType = int(dline[0])
-            assert dType in self.supported+self.maybe_supported, '%i is not supported' % dType
+            dtype = int(dline[0])
+            assert dtype in self.supported+self.maybe_supported, '%i is not supported' % dtype
 
         #D_directory_entry = self.combine(Directory1)
         #for key, line in sorted(iteritems(D_directory_entry)):
             #print('***', key, line)
 
-    def combine(self, P1, debug=False):
-        P = defaultdict(str)
-        for pline in P1:
+    def combine(self, input_dict, debug=False):
+        combined_dict = defaultdict(str)
+        for pline in input_dict:
             i = pline[63:72].lstrip()
             #if debug:
                 #print("i = %s" % i)
             #print('%r' % pline[63:72].lstrip())
-            P[i] += pline[:70]
-        return P
+            combined_dict[i] += pline[:70]
+        return combined_dict
+
     def write_iges(self, fname):
         pass
 
 def run_arg_parse():
-    msg  = "Usage:\n"
+    msg = "Usage:\n"
     msg += "  iges (IGS_FILENAME)"
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)

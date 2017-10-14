@@ -65,7 +65,8 @@ def run_model(bdf_name=None, op2_name=None, f06_name=None,
         outputs.append(op4)
 
     assert len(outputs) > 0
-    if len(outputs) == 1: return outputs[0]
+    if len(outputs) == 1:
+        return outputs[0]
     return outputs
 
 class TestF06(unittest.TestCase):

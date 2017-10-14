@@ -3,11 +3,6 @@ Defines the GUI IO file for Tetegen.
 """
 from __future__ import print_function
 import os
-#from six import iteritems
-from six.moves import range
-
-import vtk
-from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.tetgen.tetgen import Tetgen
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -34,11 +29,12 @@ class TetgenIO(object):
         model = Tetgen(log=self.log, debug=False)
 
         base_filename, ext = os.path.splitext(smesh_filename)
+        ext = ext.lower()
         node_filename = base_filename + '.node'
         ele_filename = base_filename + '.ele'
-        if '.smesh' == ext:
+        if ext == '.smesh':
             dimension_flag = 2
-        elif '.ele' == ext:
+        elif ext == '.ele':
             dimension_flag = 3
         else:
             raise RuntimeError('unsupported extension.  Use "smesh" or "ele".')

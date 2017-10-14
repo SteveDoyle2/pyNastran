@@ -940,21 +940,21 @@ class PBEAML(IntegratedLineProperty):
         mid : int
             material id
         beam_type : str
-            ???
+            the section profile
         xxb : List[float]
             The percentage locations along the beam [0., ..., 1.]
         dims : List[dim]
             dim : List[float]
                 The dimensions for each section
-        group : str; default='MSCBML0'
-            this parameter can lead to a very broken deck with a very
-            bad error message; don't touch it!
         so : List[str]; default=None
             YES, YESA, NO
             None : [0.] * len(xxb)
         nsm : List[float]; default=None
             nonstructural mass per unit length
             None : [0.] * len(xxb)
+        group : str; default='MSCBML0'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
         comment : str; default=''
             a comment for the card
         """

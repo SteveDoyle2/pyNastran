@@ -56,7 +56,6 @@ class Settings(object):
         screen_shape_default = (1100, 700)
 
         setting_keys = [str(key) for key in settings.childKeys()]
-        print('setting_keys =', setting_keys)
 
         # sets the window size/position
         main_window_geometry = self._get_setting(
@@ -156,6 +155,16 @@ class Settings(object):
         # int
         settings.setValue('font_size', self.font_size)
         settings.setValue('annotation_size_int', self.annotation_size_int)
+
+        #screen_shape = QtGui.QDesktopWidget().screenGeometry()
+        main_window = self.parent.window()
+        width = main_window.frameGeometry().width()
+        height = main_window.frameGeometry().height()
+        settings.setValue('screen_shape', (width, height))
+
+        qpos = self.parent.pos()
+        pos = qpos.x(), qpos.y()
+        settings.setValue('pos', pos)
 
     #---------------------------------------------------------------------------
     # FONT SIZE

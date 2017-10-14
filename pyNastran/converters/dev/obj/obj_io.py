@@ -2,15 +2,10 @@
 Defines the GUI IO file for OBJ.
 """
 from __future__ import print_function
-import os
-from six import iteritems
-from six.moves import range
 
-from numpy import arange, mean, vstack, unique, where, sqrt
-import numpy as np
+from numpy import arange
 import vtk
 
-from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 from pyNastran.converters.dev.obj.obj import read_obj

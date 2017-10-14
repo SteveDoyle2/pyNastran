@@ -5,11 +5,8 @@ from __future__ import print_function
 import os
 from collections import defaultdict
 from six import iteritems
-from six.moves import range
 
 import numpy as np
-import vtk
-from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 from pyNastran.converters.usm3d.time_accurate_results import get_n_list
@@ -60,7 +57,9 @@ class Usm3dIO(object):
             #print("inn=%r nnew=%r" % (inn, nnew))
             flo_filename = model_name + '_%s.flo' % nnew
         else:
-            msg = 'The current file is must have the format of xxx_%%i.flo, not %r' % self.out_filename
+            msg = (
+                'The current file is must have the format of '
+                'xxx_%%i.flo, not %r' % self.out_filename)
             raise RuntimeError(msg)
         #print("loading %r" % flo_filename)
         self.load_usm3d_results(flo_filename)
@@ -111,9 +110,9 @@ class Usm3dIO(object):
         base_filename, ext = os.path.splitext(cogsg_filename)
         #node_filename = base_filename + '.node'
         #ele_filename = base_filename + '.ele'
-        if '.cogsg' == ext:
+        if ext == '.cogsg':
             dimension_flag = 3
-        #elif '.ele' == ext:
+        #elif ext == '.ele':
             #dimension_flag = 3
         else:
             raise RuntimeError('unsupported extension.  Use "cogsg" or "front".')
