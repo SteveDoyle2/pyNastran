@@ -12,6 +12,7 @@ htmlcov
 # Other
 *.pyc
 *.pyd
+*.whl
 *.dll
 *.log
 *.rar
@@ -21,6 +22,7 @@ htmlcov
 *.zip
 *.csv
 *.pdf
+*.h5
 
 # C extensions
 *.so
