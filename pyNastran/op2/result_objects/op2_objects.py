@@ -89,8 +89,14 @@ class BaseScalarObject(Op2Codes):
 
         if hasattr(self, 'element_node'):
             if not np.array_equal(self.element_node, table.element_node):
-                assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
+                if self.element_node.shape != table.element_node.shape:
+                    msg = 'self.element_node.shape=%s table.element_node.shape=%s' % (
                     self.element_node.shape, table.element_node.shape)
+
+                    print(self.element_node.tolist())
+                    print(table.element_node.tolist())
+                    raise ValueError(msg)
+
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
                 for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):

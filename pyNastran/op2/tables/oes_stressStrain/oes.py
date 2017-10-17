@@ -1169,7 +1169,6 @@ class OES(OP2Common):
                         obj.add_sort1(dt, eid, out)
             elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
                 # definitely complex results for MSC Nastran 2016.1
-                # TODO: vectorize
 
                 ntotal = 444 # 44 + 10*40  (11 nodes)
                 nelements = ndata // ntotal
@@ -1188,52 +1187,60 @@ class OES(OP2Common):
 
                 obj = self.obj
 
-                #if self.use_vector and is_vectorized:
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
-                n1 = 44
-                n2 = 40
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.itotal
+                    itotal2 = itotal + nelements * 11
 
-                obj = self.obj
-                s1 = Struct(b(self._endian + 'ii9f'))
-                s2 = Struct(b(self._endian + 'i9f'))
+                    # chop off eid
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 111)[:, 1:]
+                    floats2 = floats.reshape(nelements * 11, 10)
 
-                nelements = ndata // ntotal
-                for i in range(nelements):
-                    edata = data[n:n+n1]
-                    n += n1
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 111)
+                        eids = ints[:, 0] // 10
+                        eids2 = array([eids] * 11, dtype='int32').T.ravel()
 
-                    out1 = s1.unpack(edata)
-                    eid_device = out1[0]
-                    eid = eid_device // 10
-                    if self.is_debug_file:
-                        self.binary_debug.write('CBEAM-2 - eid=%i out1=%s\n' % (eid, str(out1)))
+                        ints2 = ints[:, 1:].reshape(nelements * 11, 10)
 
-                    (grid, sd,
-                     excr, exdr, exer, exfr,
-                     exci, exdi, exei, exfi) = out1[1:]
+                        nids = ints2[:, 0]
+                        assert eids.min() > 0, eids.min()
+                        #assert nids.min() > 0, nids.min()
+                        obj.element_node[itotal:itotal2, 0] = eids2
+                        obj.element_node[itotal:itotal2, 1] = nids
 
-                    if is_magnitude_phase:
-                        exc = polar_to_real_imag(excr, exci)
-                        exd = polar_to_real_imag(exdr, exdi)
-                        exe = polar_to_real_imag(exer, exei)
-                        exf = polar_to_real_imag(exfr, exfi)
-                    else:
-                        exc = complex(excr, exci)
-                        exd = complex(exdr, exdi)
-                        exe = complex(exer, exei)
-                        exf = complex(exfr, exfi)
+                    #  0    1   2  3  4  5  6   7   8   9
+                    # grid, sd, c, d, e, f, c2, d2, e2, f2
+                    real_imag = apply_mag_phase(floats2, is_magnitude_phase, [2, 3, 4, 5], [6, 7, 8, 9])
+                    obj.data[obj.itime, itotal:itotal2, :] = real_imag
+                    obj.sd[itotal:itotal2] = floats2[:, 1]
 
-                    obj.add_sort1(dt, eid, grid, sd,
-                                  exc, exd, exe, exf)
+                    obj.itotal = itotal2
+                    #obj.ielement = ielement2
+                else:
+                    itotal = obj.itotal
+                    n1 = 44
+                    n2 = 40
 
-                    for inode in range(nnodes):
-                        edata = data[n:n+n2]
-                        n += n2
-                        out2 = s2.unpack(edata)
+                    s1 = Struct(b(self._endian + 'ii9f'))
+                    s2 = Struct(b(self._endian + 'i9f'))
+
+                    for i in range(nelements):
+                        edata = data[n:n+n1]
+                        n += n1
+
+                        out1 = s1.unpack(edata)
+                        eid_device = out1[0]
+                        eid = eid_device // 10
+                        if self.is_debug_file:
+                            self.binary_debug.write('CBEAM-2 - eid=%i out1=%s\n' % (eid, str(out1)))
+
                         (grid, sd,
                          excr, exdr, exer, exfr,
-                         exci, exdi, exei, exfi) = out2
+                         exci, exdi, exei, exfi) = out1[1:]
 
                         if is_magnitude_phase:
                             exc = polar_to_real_imag(excr, exci)
@@ -1248,10 +1255,31 @@ class OES(OP2Common):
 
                         obj.add_sort1(dt, eid, grid, sd,
                                       exc, exd, exe, exf)
-                        if self.is_debug_file:
-                            self.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
 
-                return ndata
+                        for inode in range(nnodes):
+                            edata = data[n:n+n2]
+                            n += n2
+                            out2 = s2.unpack(edata)
+                            (grid, sd,
+                             excr, exdr, exer, exfr,
+                             exci, exdi, exei, exfi) = out2
+
+                            if is_magnitude_phase:
+                                exc = polar_to_real_imag(excr, exci)
+                                exd = polar_to_real_imag(exdr, exdi)
+                                exe = polar_to_real_imag(exer, exei)
+                                exf = polar_to_real_imag(exfr, exfi)
+                            else:
+                                exc = complex(excr, exci)
+                                exd = complex(exdr, exdi)
+                                exe = complex(exer, exei)
+                                exf = complex(exfr, exfi)
+
+                            obj.add_sort1(dt, eid, grid, sd,
+                                          exc, exd, exe, exf)
+                            if self.is_debug_file:
+                                self.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
+
             elif self.format_code == 1 and self.num_wide == 67: # random
                 raise RuntimeError(self.code_information())
                 #msg = self.code_information()
