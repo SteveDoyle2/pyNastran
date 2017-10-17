@@ -1168,6 +1168,7 @@ class OES(OP2Common):
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                         obj.add_sort1(dt, eid, out)
             elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
+                # definitely complex results for MSC Nastran 2016.1
                 # TODO: vectorize
 
                 ntotal = 444 # 44 + 10*40  (11 nodes)
