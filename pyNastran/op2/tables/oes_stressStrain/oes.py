@@ -37,7 +37,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import (ComplexCBushStressArray, ComplexCBushStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (
+    ComplexPlateStressArray, ComplexPlateStrainArray, ComplexTriaxStressArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
@@ -48,7 +49,7 @@ from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
 
-ComplexTriaxStressArray = None
+
 class OES(OP2Common):
     """
     Defines  the OES class that is used to read stress/strain data
@@ -3019,23 +3020,37 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 37: # imag
                 # TODO: vectorize object
                 #return ndata
-                obj_vector_complex = None
+
                 if self.is_stress():
-                    raise NotImplementedError('ComplexTriaxStressArray')
-                    #obj_vector_complex = ComplexTriaxStressArray
+                    #print('self.element_type', self.element_type)
+                    #print('self.element_name', self.element_name)
+                    #raise NotImplementedError('ComplexTriaxStressArray')
+                    obj_vector_complex = ComplexTriaxStressArray
                 else:
                     raise NotImplementedError('ComplexTriaxStrainArray')
                     #obj_vector_complex = ComplexTriaxStrainArray
 
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_vector_complex)
+                num_wide = 1 + 4 * 9
+                ntotal = num_wide * 4
+                assert num_wide == self.num_wide, num_wide
+                nelements = ndata // ntotal  # (1+8*4)*4 = 33*4 = 132
+                leftover = ndata % ntotal
+                assert leftover == 0, 'ntotal=%s nelements=%s leftover=%s' % (ntotal, nelements, leftover)
+
+                #auto_return, is_vectorized = self._create_oes_object4(
+                    #nelements, result_name, slot, obj_vector_complex)
+
+                if data is None:
+                    return ndata
+                auto_return = False
+                is_vectorized = False
                 if auto_return:
-                    self._data_factor = 4
+                    #self._data_factor = 4
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
                 nnodes_all = 4
-                if self.use_vector and is_vectorized:
+                if self.use_vector and is_vectorized and 0:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
                     itotal2 = itotal + nelements * nnodes_all
@@ -3066,13 +3081,9 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + 'ii8f'))
-                    s2 = Struct(b(self._endian + 'i8f'))
+                    s1 = Struct(b(self._endian + 'ii8f')) # 10*4 = 40
+                    s2 = Struct(b(self._endian + 'i8f'))  #  9*4 = 36
 
-                    num_wide = 1 + 4 * 9
-                    ntotal = num_wide * 4
-                    assert num_wide == self.num_wide, num_wide
-                    nelements = ndata // ntotal  # (1+8*4)*4 = 33*4 = 132
 
                     for i in range(nelements):
                         out = s1.unpack(data[n:n + 40])
@@ -3080,6 +3091,7 @@ class OES(OP2Common):
                         eid = eid_device // 10
                         if self.is_debug_file:
                             self.binary_debug.write('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
+                        print('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
 
                         if is_magnitude_phase:
                             rs = polar_to_real_imag(rsr, rsi)
@@ -3099,8 +3111,8 @@ class OES(OP2Common):
                             (loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                             if self.is_debug_file:
                                 self.binary_debug.write('    %s\n' % (str(out)))
-                            #print("eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (
-                                #id, loc, rs, azs, As, ss))
+                            print("eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (
+                                eid, loc, rs, azs, As, ss))
 
                             if is_magnitude_phase:
                                 rs = polar_to_real_imag(rsr, rsi)
@@ -3112,7 +3124,7 @@ class OES(OP2Common):
                                 azs = complex(azsr, azsi)
                                 As = complex(Asr, Asi)
                                 ss = complex(ssr, ssi)
-                            #obj.add(dt, eid, loc, rs, azs, As, ss)
+                            #obj.add_sort1(dt, eid, loc, rs, azs, As, ss)
                             n += 36  # 4*8
             else:
                 msg = self.code_information()

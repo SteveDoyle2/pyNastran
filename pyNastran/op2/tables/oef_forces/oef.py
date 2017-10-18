@@ -336,6 +336,7 @@ class OEF(OP2Common):
         if self._results.is_not_saved('element_forces'):
             return ndata
         n = 0
+        #thermal
         #is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
 
