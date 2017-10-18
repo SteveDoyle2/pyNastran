@@ -23,6 +23,7 @@ htmlcov
 *.csv
 *.pdf
 *.h5
+*.gz
 
 # C extensions
 *.so
