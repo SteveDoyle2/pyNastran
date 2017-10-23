@@ -578,7 +578,7 @@ class TestF06(unittest.TestCase):
         cen = 0 # 'CEN/4'
         for (loadcase, stress) in iteritems(f06.cquad4_stress):
             # stress is a PlateStressObject
-            if stress.is_von_mises():
+            if stress.is_von_mises:
                 #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'VM_Stress'))
                 #vonMises = 'VON MISES'
                 for eid, ovm in sorted(iteritems(stress.ovmShear)):
@@ -606,11 +606,11 @@ class TestF06(unittest.TestCase):
         assert list(f06.cquad4_stress.keys()) == [1], list(f06.cquad4_stress.keys())
         self.assertEqual(op2.cquad4_stress[1].ovmShear[25][cen][0], 276.8023376464844)
         self.assertEqual(f06.cquad4_stress[1].ovmShear[25][cen][0], 276.8023)
-        self.assertTrue(op2.cquad4_stress[1].is_von_mises())
-        #self.assertTrue(f06.cquad4_stress[1].is_von_mises())
+        self.assertTrue(op2.cquad4_stress[1].is_von_mises)
+        #self.assertTrue(f06.cquad4_stress[1].is_von_mises)
 
-        self.assertTrue(op2.cquad4_stress[1].is_fiber_distance())
-        #self.assertTrue(f06.cquad4_stress[1].is_fiber_distance())
+        self.assertTrue(op2.cquad4_stress[1].is_fiber_distance)
+        #self.assertTrue(f06.cquad4_stress[1].is_fiber_distance)
         #f06.print_stats()
         #op2.print_stats()
 

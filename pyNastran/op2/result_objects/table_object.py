@@ -121,7 +121,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def combine(self, result, is_sort1=True):
         #print("combine; result=%s" % result)
-        assert self.is_sort1 != result.is_sort1()
+        assert self.is_sort1 != result.is_sort1
         assert self.nonlinear_factor is not None
         assert result.nonlinear_factor is not None
         # self.ntimes += result.ntimes

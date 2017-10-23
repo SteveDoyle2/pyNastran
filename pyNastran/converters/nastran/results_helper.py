@@ -61,7 +61,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if not hasattr(case, 'data'):
                 print('str(%s) has no data...' % case.__class.__name__)
                 continue
-            #if not case.is_real():
+            #if not case.is_real:
                 #print('complex results not supported...')
                 #continue
             # transient
@@ -71,10 +71,10 @@ class NastranGuiResults(NastranGuiAttributes):
             else:
                 has_cycle = False
                 code_name = None
-            if not case.is_sort1():
+            if not case.is_sort1:
                 self.log.warning('Skipping because SORT2\n' + str(case))
                 continue
-            assert case.is_sort1(), case.is_sort1()
+            assert case.is_sort1, case.is_sort1
 
             itime0 = 0
             t1 = case.data[itime0, :, 0]
@@ -204,10 +204,10 @@ class NastranGuiResults(NastranGuiAttributes):
             if not hasattr(case, 'data'):
                 continue
 
-            if not case.is_sort1():
+            if not case.is_sort1:
                 self.log.warning('Skipping because SORT2\n' + str(case))
                 continue
-            assert case.is_sort1(), case.is_sort1()
+            assert case.is_sort1, case.is_sort1
 
             ntimes = case.ntimes
             for itime in range(ntimes):
@@ -248,7 +248,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #if not hasattr(case, 'data'):
                 #print('str(%s) has no data...' % case.__class.__name__)
                 #continue
-            ##if not case.is_real():
+            ##if not case.is_real:
                 ##print('complex results not supported...')
                 ##continue
             ## transient
@@ -258,7 +258,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #else:
                 #has_cycle = False
                 #code_name = None
-            #assert case.is_sort1(), case.is_sort1()
+            #assert case.is_sort1, case.is_sort1
 
             #itime0 = 0
             #t1 = case.data[itime0, :, 0]
@@ -401,7 +401,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 is_data = True
                 case = table[isubcase]
                 #print(case)
-                is_real = case.is_real()
+                is_real = case.is_real
                 if case.nonlinear_factor is not None:
                     times = case._times
                     is_static = False
@@ -428,7 +428,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if isubcase in table:
                 is_data = True
                 case = table[isubcase]
-                is_real = case.is_real()
+                is_real = case.is_real
                 if case.nonlinear_factor is not None:
                     times = case._times
                     is_static = False
@@ -661,7 +661,7 @@ class NastranGuiResults(NastranGuiAttributes):
             case = resdict[key]
             keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
-            if case.is_complex():
+            if case.is_complex:
                 continue
             itotal = np.where(case.element[itime, :] == 100000000)[0][0]
             #print('itotal = ', itotal)
@@ -744,7 +744,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if key in res_type:
                 found_force = True
                 case = res_type[key]
-                if case.is_complex():
+                if case.is_complex:
                     continue
                 keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
                 data = case.data
@@ -773,7 +773,7 @@ class NastranGuiResults(NastranGuiAttributes):
             found_force = True
             ## CBAR-34
             case = model.cbar_force[key]
-            if case.is_real():
+            if case.is_real:
                 eids = case.element
                 i = np.searchsorted(self.element_ids, eids)
                 is_element_on[i] = 1.
@@ -1025,7 +1025,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 continue
 
             case = result[key]
-            if case.is_complex():
+            if case.is_complex:
                 continue
             eidsi = case.element
             i = np.searchsorted(eids, eidsi)
@@ -1063,7 +1063,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in bars:
             case = bars[key]
-            if case.is_complex():
+            if case.is_complex:
                 pass
             else:
                 dt = case._times[itime]
@@ -1124,7 +1124,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in bars2:
             case = bars2[key]
-            if case.is_complex():
+            if case.is_complex:
                 pass
             else:
                 dt = case._times[itime]
@@ -1175,7 +1175,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in beams:
             case = beams[key]
-            if case.is_complex():
+            if case.is_complex:
                 pass
             else:
                 eidsi = case.element_node[:, 0]
@@ -1238,10 +1238,10 @@ class NastranGuiResults(NastranGuiAttributes):
             if key not in result:
                 continue
             case = result[key]
-            if case.is_complex():
+            if case.is_complex:
                 continue
 
-            if case.is_von_mises():
+            if case.is_von_mises:
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1323,10 +1323,10 @@ class NastranGuiResults(NastranGuiAttributes):
             if key not in result:
                 continue
             case = result[key]
-            if case.is_complex():
+            if case.is_complex:
                 continue
 
-            if case.is_von_mises():
+            if case.is_von_mises:
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1404,10 +1404,10 @@ class NastranGuiResults(NastranGuiAttributes):
             if key not in result:
                 continue
             case = result[key]
-            if case.is_complex():
+            if case.is_complex:
                 continue
 
-            if case.is_von_mises():
+            if case.is_von_mises:
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
