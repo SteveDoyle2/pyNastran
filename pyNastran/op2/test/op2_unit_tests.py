@@ -649,8 +649,8 @@ class TestOP2(Tester):
         cquad4_stress = op2.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements # TODO: should this be 4; yes by actual count...
         assert cquad4_stress.data.shape == (1, 20, 8), cquad4_stress.data.shape
-        assert cquad4_stress.is_fiber_distance(), cquad4_stress
-        assert cquad4_stress.is_von_mises(), cquad4_stress
+        assert cquad4_stress.is_fiber_distance, cquad4_stress
+        assert cquad4_stress.is_von_mises, cquad4_stress
 
         ctria3_force = op2.ctria3_force[isubcase]
         assert ctria3_force.nelements == 8, ctria3_force.nelements
@@ -659,23 +659,23 @@ class TestOP2(Tester):
         ctria3_stress = op2.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
-        assert ctria3_stress.is_fiber_distance(), ctria3_stress
-        assert ctria3_stress.is_von_mises(), ctria3_stress
+        assert ctria3_stress.is_fiber_distance, ctria3_stress
+        assert ctria3_stress.is_von_mises, ctria3_stress
 
         ctetra_stress = op2.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 10, 10), ctetra_stress.data.shape
-        assert ctetra_stress.is_von_mises(), ctetra_stress
+        assert ctetra_stress.is_von_mises, ctetra_stress
 
         cpenta_stress = op2.cpenta_stress[isubcase]
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (1, 14, 10), cpenta_stress.data.shape
-        assert cpenta_stress.is_von_mises(), cpenta_stress
+        assert cpenta_stress.is_von_mises, cpenta_stress
 
         chexa_stress = op2.chexa_stress[isubcase]
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (1, 9, 10), chexa_stress.data.shape
-        assert chexa_stress.is_von_mises(), chexa_stress
+        assert chexa_stress.is_von_mises, chexa_stress
 
         if is_pandas:
             rod_force.build_dataframe()
@@ -727,28 +727,28 @@ class TestOP2(Tester):
         ctria3_stress = op2.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
-        assert ctria3_stress.is_fiber_distance(), ctria3_stress
-        assert ctria3_stress.is_von_mises(), ctria3_stress
+        assert ctria3_stress.is_fiber_distance, ctria3_stress
+        assert ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = op2.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
-        assert cquad4_stress.is_fiber_distance(), cquad4_stress
-        assert cquad4_stress.is_von_mises(), cquad4_stress
+        assert cquad4_stress.is_fiber_distance, cquad4_stress
+        assert cquad4_stress.is_von_mises, cquad4_stress
 
         ctria3_strain = op2.ctria3_strain[isubcase]
         sword = get_scode_word(ctria3_strain.s_code, ctria3_strain.stress_bits)
         assert ctria3_strain.nelements == 8, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
-        assert not ctria3_strain.is_fiber_distance(), '%s\n%s' % (ctria3_strain, sword)
-        assert ctria3_strain.is_von_mises(), '%s\n%s' % (ctria3_strain, sword)
+        assert not ctria3_strain.is_fiber_distance, '%s\n%s' % (ctria3_strain, sword)
+        assert ctria3_strain.is_von_mises, '%s\n%s' % (ctria3_strain, sword)
 
         cquad4_strain = op2.cquad4_strain[isubcase]
         sword = get_scode_word(cquad4_strain.s_code, cquad4_strain.stress_bits)
         assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
-        assert not cquad4_strain.is_fiber_distance(), cquad4_strain
-        assert cquad4_strain.is_von_mises(), cquad4_strain
+        assert not cquad4_strain.is_fiber_distance, cquad4_strain
+        assert cquad4_strain.is_von_mises, cquad4_strain
 
     def test_op2_solid_shell_bar_01_fiberdistance(self):
         """tests sol_101_elements/static_solid_shell_bar_fiberdist.op2"""
@@ -774,27 +774,27 @@ class TestOP2(Tester):
         ctria3_stress = op2.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
-        assert ctria3_stress.is_fiber_distance(), ctria3_stress
-        assert ctria3_stress.is_von_mises(), ctria3_stress
+        assert ctria3_stress.is_fiber_distance, ctria3_stress
+        assert ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = op2.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2?
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
-        assert cquad4_stress.is_fiber_distance(), cquad4_stress
-        assert cquad4_stress.is_von_mises(), cquad4_stress
+        assert cquad4_stress.is_fiber_distance, cquad4_stress
+        assert cquad4_stress.is_von_mises, cquad4_stress
 
         ctria3_strain = op2.ctria3_stress[isubcase]
         assert ctria3_strain.nelements == 8, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
-        assert ctria3_strain.is_fiber_distance(), ctria3_strain
-        assert ctria3_strain.is_von_mises(), ctria3_strain
+        assert ctria3_strain.is_fiber_distance, ctria3_strain
+        assert ctria3_strain.is_von_mises, ctria3_strain
 
         cquad4_strain = op2.cquad4_stress[isubcase]
         sword = get_scode_word(cquad4_strain.s_code, cquad4_strain.stress_bits)
         assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2?
         assert cquad4_strain.data.shape == (1, 4, 8), '%s\n%s' % (cquad4_strain.data.shape, sword)
-        assert cquad4_strain.is_fiber_distance(), '%s\n%s' % (cquad4_strain, sword)
-        assert cquad4_strain.is_von_mises(), '%s\n%s' % (cquad4_strain, sword)
+        assert cquad4_strain.is_fiber_distance, '%s\n%s' % (cquad4_strain, sword)
+        assert cquad4_strain.is_von_mises, '%s\n%s' % (cquad4_strain, sword)
 
     def test_op2_solid_shell_bar_01_straincurvature_shear(self):
         """tests sol_101_elements/static_solid_shell_bar_straincurve_shear.op2"""
@@ -820,26 +820,26 @@ class TestOP2(Tester):
         ctria3_stress = op2.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
-        assert ctria3_stress.is_fiber_distance(), ctria3_stress
-        assert not ctria3_stress.is_von_mises(), ctria3_stress
+        assert ctria3_stress.is_fiber_distance, ctria3_stress
+        assert not ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = op2.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2?
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
-        assert cquad4_stress.is_fiber_distance(), cquad4_stress
-        assert not cquad4_stress.is_von_mises(), cquad4_stress
+        assert cquad4_stress.is_fiber_distance, cquad4_stress
+        assert not cquad4_stress.is_von_mises, cquad4_stress
 
         ctria3_strain = op2.ctria3_strain[isubcase]
         assert ctria3_strain.nelements == 8, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
-        assert not ctria3_strain.is_fiber_distance(), ctria3_strain
-        assert not ctria3_strain.is_von_mises(), ctria3_strain
+        assert not ctria3_strain.is_fiber_distance, ctria3_strain
+        assert not ctria3_strain.is_von_mises, ctria3_strain
 
         cquad4_strain = op2.cquad4_strain[isubcase]
         assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2?
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
-        assert not cquad4_strain.is_fiber_distance(), cquad4_strain
-        assert not cquad4_strain.is_von_mises(), cquad4_strain
+        assert not cquad4_strain.is_fiber_distance, cquad4_strain
+        assert not cquad4_strain.is_von_mises, cquad4_strain
 
     def test_op2_solid_shell_bar_01_fiberdistance_shear(self):
         """tests sol_101_elements/static_solid_shell_bar_fiberdist_shear.op2"""
@@ -865,26 +865,26 @@ class TestOP2(Tester):
         ctria3_stress = op2.ctria3_stress[isubcase]
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
-        assert ctria3_stress.is_fiber_distance(), ctria3_stress
-        assert ctria3_stress.is_von_mises() is False, ctria3_stress
+        assert ctria3_stress.is_fiber_distance, ctria3_stress
+        assert ctria3_stress.is_von_mises is False, ctria3_stress
 
         cquad4_stress = op2.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: this should be 2
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
-        assert cquad4_stress.is_fiber_distance(), cquad4_stress
-        assert cquad4_stress.is_von_mises() is False, cquad4_stress
+        assert cquad4_stress.is_fiber_distance, cquad4_stress
+        assert cquad4_stress.is_von_mises is False, cquad4_stress
 
         ctria3_strain = op2.ctria3_stress[isubcase]
         assert ctria3_strain.nelements == 8, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
-        assert ctria3_strain.is_fiber_distance(), ctria3_strain
-        assert ctria3_strain.is_von_mises() is False, ctria3_strain
+        assert ctria3_strain.is_fiber_distance, ctria3_strain
+        assert ctria3_strain.is_von_mises is False, ctria3_strain
 
         cquad4_strain = op2.cquad4_stress[isubcase]
         assert cquad4_strain.nelements == 4, cquad4_strain.nelements # TODO: this should be 2
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
-        assert cquad4_strain.is_fiber_distance(), cquad4_strain
-        assert cquad4_strain.is_von_mises() is False, cquad4_strain
+        assert cquad4_strain.is_fiber_distance, cquad4_strain
+        assert cquad4_strain.is_von_mises is False, cquad4_strain
 
     def test_op2_solid_shell_bar_mode(self):
         """tests sol_101_elements/mode_solid_shell_bar.op2"""

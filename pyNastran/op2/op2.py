@@ -524,7 +524,7 @@ class OP2(OP2_Scalar):
                         self.log.error('build_dataframe is broken for %s' % class_name)
                         raise
                     continue
-                if obj.is_sort2():
+                if obj.is_sort2:
                     #self.log.warning(obj)
                     self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
                     continue

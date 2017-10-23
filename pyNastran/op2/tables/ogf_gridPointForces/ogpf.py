@@ -197,18 +197,6 @@ class OGPF(OP2Common):
                         n += ntotal
             else:
                 raise NotImplementedError(self.code_information())
-                #msg = self.code_information()
-                #return self._not_implemented_or_skip(data, ndata, msg)
-
-            #complex_obj = complexGridPointForcesObject
-
-            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
-        #elif self.thermal == 1:
-            #result_name = 'thermal_load_vectors'
-            #storage_obj = self.thermal_load_vectors
-            #real_obj = ThermalLoadVectorObject
-            #complex_obj = None
-            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.code_information())
             #msg = self.code_information()

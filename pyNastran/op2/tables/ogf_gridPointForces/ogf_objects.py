@@ -38,9 +38,11 @@ class RealGridPointForcesArray(ScalarObject):
         #self.nelements = 0  # result specific
         #self.nnodes = None
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -184,7 +186,7 @@ class RealGridPointForcesArray(ScalarObject):
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
             assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
             assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)
@@ -909,9 +911,11 @@ class ComplexGridPointForcesArray(ScalarObject):
         #self.nelements = 0  # result specific
         #self.nnodes = None
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -1057,7 +1061,7 @@ class ComplexGridPointForcesArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
             assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
             assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)

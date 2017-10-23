@@ -4,13 +4,13 @@ from six.moves import range
 
 import numpy as np
 from numpy import zeros
-
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
 class ComplexTriaxStressArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -28,9 +28,11 @@ class ComplexTriaxStressArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -144,9 +146,11 @@ class ComplexPlateArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -210,7 +214,7 @@ class ComplexPlateArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
@@ -227,7 +231,7 @@ class ComplexPlateArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, (eid, nid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
@@ -262,7 +266,7 @@ class ComplexPlateArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -406,13 +410,13 @@ class ComplexPlateArray(OES_Object):
             ilayer0 = not ilayer0
 
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
-    #if self.is_von_mises():
+    #if self.is_von_mises:
         #von_mises = 'VON MISES'
     #else:
         #von_mises = 'MAX SHEAR'
 
-    if self.is_stress():
-        if self.is_fiber_distance():
+    if self.is_stress:
+        if self.is_fiber_distance:
             grid_msg_temp = ['    ELEMENT              FIBER                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                              '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
             fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
@@ -423,7 +427,7 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
             fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                               '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
     else:
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             grid_msg_temp = ['    ELEMENT              FIBER                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
                              '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
             fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
@@ -441,7 +445,7 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
         mag_real = ['                                                          (REAL/IMAGINARY)\n', ' \n']
 
     ## TODO: validation on header formatting...
-    if self.is_stress():
+    if self.is_stress:
         cquad4_bilinear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
         cquad4_linear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
         cquad8 = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
@@ -513,7 +517,7 @@ class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
-        assert self.is_strain(), self.stress_bits
+        assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
         return ['exx', 'eyy', 'exy']

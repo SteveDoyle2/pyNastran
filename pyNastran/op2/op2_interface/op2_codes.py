@@ -738,7 +738,7 @@ class Op2Codes(object):
         s_word = ''
         stress_word = ''
         if hasattr(self, 'stress_bits'):
-            if self.is_stress():
+            if self.is_stress:
                 stress_word = 'Stress'
             else:
                 stress_word = 'Strain'
@@ -1037,8 +1037,9 @@ class Op2Codes(object):
         return False
 
 
+    @property
     def is_sort1(self):
-        #is_sort1_table = self.is_sort1()
+        #is_sort1_table = self.is_sort1
         try:
             sort_method, is_real, is_random = self._table_specs()
             return True if sort_method == 1 else False
@@ -1047,8 +1048,9 @@ class Op2Codes(object):
             is_sort1_table = int(table_name[-1]) == 1
             return is_sort1_table
 
+    @property
     def is_sort2(self):
-        #return not self.is_sort1()
+        #return not self.is_sort1
         try:
             sort_method, is_real, is_random = self._table_specs()
             return True if sort_method == 2 else False

@@ -50,8 +50,8 @@ class TableArray(ScalarObject):  # displacement style table
         self.approach_code = None
         self.analysis_code = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
-        self.is_sort1()
-        self.is_sort2()
+        self.is_sort1
+        self.is_sort2
         #self.dt = dt
 
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -65,7 +65,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_gridtype, table.node_gridtype):
             assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -82,7 +82,7 @@ class TableArray(ScalarObject):  # displacement style table
             i = 0
             atols = []
             rtols = []
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     msg += '(nid, gridtype); itime=%s\n' % itime
                     msg += '(tx, ty, tz, rx, ry, rz)\n'
@@ -111,7 +111,7 @@ class TableArray(ScalarObject):  # displacement style table
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 msg += 'atol.max() = %s\n' % max(atols)
                 msg += 'rtol.max() = %s\n' % max(rtols)
@@ -121,7 +121,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def combine(self, result, is_sort1=True):
         #print("combine; result=%s" % result)
-        assert self.is_sort1() != result.is_sort1()
+        assert self.is_sort1 != result.is_sort1()
         assert self.nonlinear_factor is not None
         assert result.nonlinear_factor is not None
         # self.ntimes += result.ntimes
@@ -157,7 +157,7 @@ class TableArray(ScalarObject):  # displacement style table
 
         nmajor = self.ntimes
         nminor = self.ntotal
-        if self.is_sort1():
+        if self.is_sort1:
             assert nmajor == ntimes, 'ntimes=%s expected=%s' % (nmajor, ntimes)
             assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, nnodes)
         else:
@@ -200,7 +200,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def build(self):
         """sizes the vectorized attributes of the TableArray"""
-        #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1(),
+        #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1,
                                                                           #self.ntotal, self._nnodes // self.ntimes))
         if self.is_built:
             #print("resetting...")
@@ -228,14 +228,14 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal = 0
         self.is_built = True
 
-        if self.is_sort1():
+        if self.is_sort1:
             ntimes = self.ntimes
             nnodes = self.ntotal
             ntotal = self.ntotal
             nx = ntimes
             ny = nnodes
             #print("ntimes=%s nnodes=%s" % (ntimes, nnodes))
-        elif self.is_sort2():
+        elif self.is_sort2:
             nnodes = self.ntimes
             ntimes = self.ntotal
             ntotal = self.ntotal
@@ -361,7 +361,7 @@ class TableArray(ScalarObject):  # displacement style table
         Range(sheet, 'A2').value = ['Node', 'GridType'] + self.headers
         Range(sheet, 'A3').value = self.node_gridtype
 
-        if self.is_real():
+        if self.is_real:
             Range(sheet, 'C3').value = self.data[0, :, :]
         else:
             pass
@@ -446,9 +446,11 @@ class RealTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -773,7 +775,7 @@ class RealTableArray(TableArray):  # displacement style table
             header.append('')
 
         is_sort2 = not is_sort1
-        if self.is_sort1() or self.nonlinear_factor is None:
+        if self.is_sort1 or self.nonlinear_factor is None:
             if is_sort2 and self.nonlinear_factor is not None:
                 page_num = self._write_sort1_as_sort2(f, page_num, page_stamp, header, words)
             else:
@@ -831,9 +833,11 @@ class ComplexTableArray(TableArray):  # displacement style table
         else:
             raise RuntimeError()
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -853,7 +857,7 @@ class ComplexTableArray(TableArray):  # displacement style table
         if not len(header) >= 3:
             header.append('')
 
-        #is_sort1_table = self.is_sort1()
+        #is_sort1_table = self.is_sort1
         is_sort1_table = self.table_name[-1] == '1'
         if is_sort1_table:
             if is_sort1:

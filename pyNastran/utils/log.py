@@ -55,7 +55,7 @@ def make_log(display=False):
     if display:
         print(msg)
 
-    with open('pyNastran.log', 'wb') as fil:
+    with open('pyNastran.log', 'w') as fil:
         fil.write(msg)
 
 

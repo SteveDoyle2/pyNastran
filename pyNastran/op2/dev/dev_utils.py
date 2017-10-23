@@ -67,7 +67,7 @@ def get_centroid_max_min_principal_stress(bdf, op2, subcase, eids):
             for obj in data:
                 eids = obj.element_node[:, 0]
                 nids = obj.element_node[:, 1]
-                assert obj.is_fiber_distance() is True, obj.code_information()
+                assert obj.is_fiber_distance is True, obj.code_information()
                 if eid in obj.element:
                     i = np.where(obj.element == eid)[0]
                     print('eid=%s i=%s eid=%s nids=%s' % (eid, i, eids[i], nids[i]))
@@ -98,7 +98,7 @@ def get_centroid_max_min_principal_stress(bdf, op2, subcase, eids):
                     for obj in data:
                         eids = obj.element_node[:, 0]
                         nids = obj.element_node[:, 1]
-                        assert obj.is_fiber_distance() is True, obj.code_information()
+                        assert obj.is_fiber_distance is True, obj.code_information()
                         if eid in obj.element:
                             i = np.where(obj.element == eid)[0]
                             print('eid=%s i=%s eid=%s nids=%s' % (eid, i, eids[i], nids[i]))

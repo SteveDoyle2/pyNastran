@@ -1,8 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 import numpy as np
-from numpy import concatenate, zeros
+from numpy import zeros
 try:
     import pandas as pd  # type: ignore
 except ImportError:
@@ -35,9 +34,11 @@ class ComplexBeamArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -81,7 +82,9 @@ class ComplexBeamArray(OES_Object):
         #enode_sum = self.element_node.sum(axis=1)
         eids = self.element_node[:, 0]
         ueids = np.unique(eids)
-        #assert len(enode_sum) == self.nelements, 'self.element_node.shape=%s len(enode_sum)=%s' % (str(self.element_node.shape), len(enode_sum))
+        #if len(enode_sum) != self.nelements:
+            #msg = 'self.element_node.shape=%s len(enode_sum)=%s' % (str(self.element_node.shape), len(enode_sum))
+            #raise RuntimeError(msg)
 
         #ielem_nonzero = np.where(enode_sum != 0)[0]
         ielem_sdzero = np.searchsorted(eids, ueids)
@@ -103,7 +106,7 @@ class ComplexBeamArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -111,7 +114,7 @@ class ComplexBeamArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, (eid, grid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
@@ -133,7 +136,7 @@ class ComplexBeamArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -170,17 +173,24 @@ class ComplexBeamArray(OES_Object):
                        % (self.__class__.__name__, ntimes, nelements))
         else:
             msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
-        msg.append('  eType\n')
-        msg.append('  data: [ntimes, nnodes, 4] where 4=[%s]\n' % str(', '.join(self.get_headers())))
-        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        msg.append('  sd.shape = %s\n' % str(self.sd.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(
+            '  eType\n'
+            '  data: [ntimes, nnodes, 4] where 4=[%s]\n'
+            '  element_node.shape = %s\n'
+            '  sd.shape = %s\n'
+            '  data.shape = %s\n' % (
+                str(', '.join(self.get_headers())),
+                str(self.element_node.shape).replace('L', ''),
+                str(self.sd.shape).replace('L', ''),
+                str(self.data.shape).replace('L', ''),
+        ))
 
         msg.append('  CBEAM\n  ')
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
+                  is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
 
@@ -190,7 +200,7 @@ class ComplexBeamArray(OES_Object):
             mag_phase = '                                                          (REAL/IMAGINARY)'
 
         name = self.data_code['name']
-        if self.is_sort1():
+        if self.is_sort1:
             line1 = '                    STAT DIST/     LOCATION         LOCATION         LOCATION         LOCATION'
             line2 = '   ELEMENT-ID  GRID   LENGTH          C                D                E                F\n'
         else:
@@ -202,7 +212,7 @@ class ComplexBeamArray(OES_Object):
                 #msg = 'name=%r\n\n%s' % (name, self.code_information())
                 #raise RuntimeError(msg)
 
-        if self.is_stress():
+        if self.is_stress:
             stress_strain = '                         C O M P L E X   S T R E S S E S   I N   B E A M   E L E M E N T S   ( C B E A M )'
         else:
             stress_strain = '                         C O M P L E X    S T R A I N S    I N   B E A M   E L E M E N T S   ( C B E A M )'
@@ -213,8 +223,8 @@ class ComplexBeamArray(OES_Object):
             line1,
             line2,
         ]
-        if self.is_sort1():
-            self._write_sort1_as_sort1(f, name, header, page_stamp, msg_temp, page_num,
+        if self.is_sort1:
+            self._write_sort1_as_sort1(f06_file, name, header, page_stamp, msg_temp, page_num,
                                        is_mag_phase=is_mag_phase)
         else:
             raise NotImplementedError()

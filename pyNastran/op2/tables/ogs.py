@@ -50,7 +50,7 @@ class OGS(OP2Common):
         self.normal = self.add_data_parameter(data, 'normal', 'i', 14, False)
 
         self.fix_format_code()
-        if not self.is_sort1():
+        if not self.is_sort1:
             raise NotImplementedError('OGS sort2...')
 
         ## assuming tCode=1
@@ -160,7 +160,7 @@ class OGS(OP2Common):
 
     def _read_ogs1_table27(self, data, ndata):
         """OGS1 - grid point stresses - volume direct"""
-        #is_sort1 = self.is_sort1()
+        #is_sort1 = self.is_sort1
         if self.num_wide == 9:  # real/random
             result_name = 'grid_point_volume_stresses'
             #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolume)

@@ -117,7 +117,7 @@ class HyperelasticQuadArray(OES_Object):
         #headers = self.get_headers()
 
         #nelements = self.element_node.shape[0] // 2
-        #if self.is_fiber_distance():
+        #if self.is_fiber_distance:
             #fiber_distance = ['Top', 'Bottom'] * nelements
         #else:
             #fiber_distance = ['Mean', 'Curvature'] * nelements
@@ -140,7 +140,7 @@ class HyperelasticQuadArray(OES_Object):
         #print(self.data_frame)
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)

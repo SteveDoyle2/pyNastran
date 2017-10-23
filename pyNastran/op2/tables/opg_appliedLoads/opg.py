@@ -52,7 +52,7 @@ class OPG(OP2Common):
         self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
 
         #print "dLoadID(8)=%s format_code(9)=%s num_wide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.format_code,self.num_wide,self.oCode,self.thermal)
-        if not self.is_sort1():
+        if not self.is_sort1:
             raise NotImplementedError('sort2...')
         #assert self.isThermal()==False,self.thermal
 
@@ -182,10 +182,6 @@ class OPG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            #n = self._read_table(data, ndata, result_name, storage_obj,
-                                 #RealThermalLoadVector, ComplexThermalLoadVectorVector,
-                                 #RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
-                                 #'node', random_code=self.random_code)
             n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                                    RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
                                                    'node', random_code=self.random_code)
@@ -206,10 +202,6 @@ class OPG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            #n = self._read_table(data, ndata, result_name, storage_obj,
-                                 #RealForceVector, ComplexForceVector,
-                                 #RealForceVectorArray, ComplexForceVectorArray,
-                                 #'node', random_code=self.random_code)
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealForceVectorArray, ComplexForceVectorArray,
                                             'node', random_code=self.random_code)

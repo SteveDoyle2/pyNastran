@@ -42,6 +42,8 @@ class Usm3dIO(object):
         basename = os.path.basename(flo_filename)
         base = os.path.splitext(basename)[0]
 
+
+        # box.flo -> box_100.flo
         if '_' in base:
             model_name, n = base.rsplit('_', 1)
             #print("model_name=%r n=%r" % (model_name, n))
@@ -57,10 +59,11 @@ class Usm3dIO(object):
             #print("inn=%r nnew=%r" % (inn, nnew))
             flo_filename = model_name + '_%s.flo' % nnew
         else:
-            msg = (
-                'The current file is must have the format of '
-                'xxx_%%i.flo, not %r' % self.out_filename)
-            raise RuntimeError(msg)
+            flo_filename = self.out_filename
+            #msg = (
+                #'The current file is must have the format of '
+                #'xxx_%%i.flo, not %r' % self.out_filename)
+            #raise RuntimeError(msg)
         #print("loading %r" % flo_filename)
         self.load_usm3d_results(flo_filename)
         self.out_filename = os.path.join(dirname, flo_filename)
@@ -154,22 +157,9 @@ class Usm3dIO(object):
 
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         self.nid_map = {}
         self.eid_map = {}
-        #elem.SetNumberOfPoints(nnodes)
-        #if 0:
-            #fraction = 1. / self.nnodes  # so you can color the nodes by ID
-            #for nid, node in sorted(iteritems(nodes)):
-                #points.InsertPoint(nid - 1, *node)
-                #self.gridResult.InsertNextValue(nid * fraction)
-                #print(str(element))
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -190,14 +180,6 @@ class Usm3dIO(object):
                 etype = 10 # vtkTetra().GetCellType()
                 assert tets.max() > 0, tets.min()
                 create_vtk_cells_of_constant_element_type(grid, tets, etype)
-                #for (n0, n1, n2, n3) in tets:
-                    #elem = vtkTetra()
-                    ##assert elem.GetCellType() == 10, elem.GetCellType()
-                    #elem.GetPointIds().SetId(0, n0)
-                    #elem.GetPointIds().SetId(1, n1)
-                    #elem.GetPointIds().SetId(2, n2)
-                    #elem.GetPointIds().SetId(3, n3)
-                    #grid.InsertNextCell(10, elem.GetPointIds())
         else:
             raise RuntimeError('dimension_flag=%r' % dimension_flag)
 

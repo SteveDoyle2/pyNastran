@@ -42,9 +42,11 @@ class RealEigenvalues(BaseScalarObject):
                    'cycles, generalized_mass, generalized_stiffness\n')
         return msg
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -160,9 +162,11 @@ class ComplexEigenvalues(BaseScalarObject):
                    'cycles, damping\n')
         return msg
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -261,9 +265,11 @@ class BucklingEigenvalues(BaseScalarObject):
                    'radians, cycles, generalized_mass, generalized_stiffness\n')
         return msg
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return False
 

@@ -29,9 +29,11 @@ class RealForceObject(ScalarObject):
         self._times = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -152,7 +154,7 @@ class FailureIndices(RealForceObject):
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         NotImplementedError(self.code_information())
         #asd
-        #if self.is_sort1():
+        #if self.is_sort1:
             #page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
         #else:
             #raise NotImplementedError(self.code_information())
@@ -227,7 +229,7 @@ class RealSpringDamperForceArray(RealForceObject):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
@@ -249,7 +251,7 @@ class RealSpringDamperForceArray(RealForceObject):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, inid, :]
@@ -267,7 +269,7 @@ class RealSpringDamperForceArray(RealForceObject):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -321,7 +323,7 @@ class RealSpringDamperForceArray(RealForceObject):
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-        if self.is_sort1():
+        if self.is_sort1:
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
         else:
             raise NotImplementedError(self.code_information())
@@ -596,7 +598,7 @@ class RealRodForceArray(RealForceObject):
         return page_num - 1
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
@@ -659,9 +661,11 @@ class RealCBeamForceArray(ScalarObject):
         self.itotal = 0
         self.ielement = 0
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -733,7 +737,7 @@ class RealCBeamForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
 
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -741,7 +745,7 @@ class RealCBeamForceArray(ScalarObject):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, inid, :]
@@ -759,7 +763,7 @@ class RealCBeamForceArray(ScalarObject):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -798,7 +802,7 @@ class RealCBeamForceArray(ScalarObject):
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
         msg.append('  CBEAM\n  ')
         msg += self.get_data_code()
         return msg
@@ -820,14 +824,14 @@ class RealCBeamForceArray(ScalarObject):
         #else:
             #raise NotImplementedError('CBEAM-SORT2')
 
-        if self.is_sort1():
-            #assert self.is_sort1() is True, str(self)
+        if self.is_sort1:
+            #assert self.is_sort1 is True, str(self)
             #if is_sort1:
             page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, msg_temp)
             #else:
                 #self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp)
         else:
-            assert self.is_sort1() is True, str(self)
+            assert self.is_sort1 is True, str(self)
         return page_num - 1
 
     def get_headers(self):
@@ -864,7 +868,7 @@ class RealCBeamForceArray(ScalarObject):
             f06_file.write(''.join(msg))
 
             #sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq
-            assert self.is_sort1() is True, str(self)
+            assert self.is_sort1 is True, str(self)
             sd = self.data[itime, :, 0]
             bm1 = self.data[itime, :, 1]
             bm2 = self.data[itime, :, 2]
@@ -971,7 +975,7 @@ class RealCShearForceArray(ScalarObject):
             self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
@@ -1291,7 +1295,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         return page_num - 1
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
@@ -1394,7 +1398,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
 
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
@@ -1617,7 +1621,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
 
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -1840,9 +1844,11 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         self.itotal = 0
         self.ielement = 0
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -1986,7 +1992,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
 
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -2090,7 +2096,7 @@ class RealConeAxForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
 
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -2385,7 +2391,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -2482,7 +2488,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -2761,7 +2767,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -2864,7 +2870,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -2938,7 +2944,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         #(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         #(ntimes, ntotal, two) = self.data.shape
 
-        if self.is_sort1():
+        if self.is_sort1:
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06)
         else:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
@@ -3120,7 +3126,7 @@ class RealCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
             self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
@@ -3142,7 +3148,7 @@ class RealCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -3160,7 +3166,7 @@ class RealCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -3347,7 +3353,7 @@ class RealCBushForceArray(ScalarObject):
             self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
@@ -3369,7 +3375,7 @@ class RealCBushForceArray(ScalarObject):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -3387,7 +3393,7 @@ class RealCBushForceArray(ScalarObject):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -3556,7 +3562,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         #self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
 
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):

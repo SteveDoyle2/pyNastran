@@ -14,8 +14,9 @@ class OES_Object(ScalarObject):
         #self.log.debug("starting OES...element_name=%-6s isubcase=%s" % (self.element_name, self.isubcase))
         #print self.data_code
 
+    @property
     def is_curvature(self):
-        if self.is_stress():
+        if self.is_stress:
             curvature_flag = False
         else:
             # strain only
@@ -26,21 +27,30 @@ class OES_Object(ScalarObject):
         assert not curvature_flag, curvature_flag
         return False
 
+    @property
     def is_fiber_distance(self):
-        return not self.is_curvature()
+        return not self.is_curvature
 
+    @property
     def is_von_mises(self):
-        return not self.is_max_shear()
+        return not self.is_max_shear
 
+    @property
     def is_max_shear(self):
         return True if self.stress_bits[4] == 0 else False
 
+    def _get_headers(self):
+        raise NotImplementedError('overwrite this')
+
+    @property
+    def is_stress(self):
+        raise NotImplementedError('overwrite this')
 
 class StressObject(OES_Object):
     def __init__(self, data_code, isubcase):
         OES_Object.__init__(self, data_code, isubcase)
-        assert self.is_stress(), self.code_information()
-        assert not self.is_strain(), self.code_information()
+        assert self.is_stress, self.code_information()
+        assert not self.is_strain, self.code_information()
 
     def update_dt(self, data_code, dt):
         self.data_code = data_code
@@ -53,12 +63,14 @@ class StressObject(OES_Object):
             self.dt = dt
             self.add_new_transient(dt)
 
+    @property
     def is_strain(self):
         class_name = self.__class__.__name__
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
         assert self.stress_bits[1] == 0, 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
         return False
 
+    @property
     def is_stress(self):
         class_name = self.__class__.__name__
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
@@ -69,8 +81,8 @@ class StressObject(OES_Object):
 class StrainObject(OES_Object):
     def __init__(self, data_code, isubcase):
         OES_Object.__init__(self, data_code, isubcase)
-        assert self.is_strain(), self.code_information()
-        assert not self.is_stress(), self.code_information()
+        assert self.is_strain, self.code_information()
+        assert not self.is_stress, self.code_information()
 
     def update_dt(self, data_code, dt):
         self.data_code = data_code
@@ -82,12 +94,14 @@ class StrainObject(OES_Object):
             self.dt = dt
             self.add_new_transient(dt)
 
+    @property
     def is_strain(self):
         class_name = self.__class__.__name__
         assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s; table_name+%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         assert self.stress_bits[1] == 1, 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         return True
 
+    @property
     def is_stress(self):
         class_name = self.__class__.__name__
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name+%r' % (class_name, self.s_code, self.stress_bits, self.table_name)

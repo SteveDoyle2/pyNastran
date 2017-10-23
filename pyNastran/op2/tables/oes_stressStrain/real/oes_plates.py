@@ -35,9 +35,11 @@ class RealPlateArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -110,7 +112,7 @@ class RealPlateArray(OES_Object):
         headers = self.get_headers()
 
         nelements = self.element_node.shape[0] // 2
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             fiber_distance = ['Top', 'Bottom'] * nelements
         else:
             fiber_distance = ['Mean', 'Curvature'] * nelements
@@ -135,7 +137,7 @@ class RealPlateArray(OES_Object):
         #print(self.data_frame)
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -345,12 +347,12 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             fiber_dist = 'fiber_distance'
         else:
             fiber_dist = 'fiber_curvature'
 
-        if self.is_von_mises():
+        if self.is_von_mises:
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -369,12 +371,12 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             fiber_dist = 'fiber_distance'
         else:
             fiber_dist = 'fiber_curvature'
 
-        if self.is_von_mises():
+        if self.is_von_mises:
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -383,13 +385,13 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
 
 
 def _get_plate_msg(self):
-    if self.is_von_mises():
+    if self.is_von_mises:
         von_mises = 'VON MISES'
     else:
         von_mises = 'MAX SHEAR'
 
-    if self.is_stress():
-        if self.is_fiber_distance():
+    if self.is_stress:
+        if self.is_fiber_distance:
             quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)               \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
@@ -415,7 +417,7 @@ def _get_plate_msg(self):
         ctria6_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
         ctriar_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
     else:
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             quad_msg_temp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             tri_msg_temp = ['  ELEMENT      FIBER                STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',

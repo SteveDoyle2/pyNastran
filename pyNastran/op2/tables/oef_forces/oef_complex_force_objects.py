@@ -37,9 +37,11 @@ class ComplexRodForceArray(ScalarObject):
         headers = ['axial_force', 'torque']
         return headers
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -85,7 +87,7 @@ class ComplexRodForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -302,7 +304,7 @@ class ComplexCShearForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -553,7 +555,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -768,7 +770,7 @@ class ComplexViscForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -973,7 +975,7 @@ class ComplexPlateForceArray(ScalarObject):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -1212,7 +1214,7 @@ class ComplexPlate2ForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1415,9 +1417,11 @@ class ComplexCBarForceArray(ScalarObject):
         self.itotal = 0
         self.ielement = 0
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -1462,7 +1466,7 @@ class ComplexCBarForceArray(ScalarObject):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -1470,7 +1474,7 @@ class ComplexCBarForceArray(ScalarObject):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -1491,7 +1495,7 @@ class ComplexCBarForceArray(ScalarObject):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -1524,7 +1528,7 @@ class ComplexCBarForceArray(ScalarObject):
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
         msg.append('  CBAR\n  ')
         msg += self.get_data_code()
         return msg
@@ -1563,14 +1567,14 @@ class ComplexCBarForceArray(ScalarObject):
             line1,
             line2,
         ]
-        if self.is_sort1():
-            assert self.is_sort1() == True, str(self)
+        if self.is_sort1:
+            assert self.is_sort1 == True, str(self)
             if is_sort1:
                 page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
             else:
                 self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
         else:
-            assert self.is_sort1() == True, str(self)
+            assert self.is_sort1 == True, str(self)
         return page_num - 1
 
     def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
@@ -1585,7 +1589,7 @@ class ComplexCBarForceArray(ScalarObject):
             f06_file.write(''.join(msg))
 
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
-            assert self.is_sort1() == True, str(self)
+            assert self.is_sort1 == True, str(self)
             bm1a = self.data[itime, :, 0]
             bm2a = self.data[itime, :, 1]
             bm1b = self.data[itime, :, 2]
@@ -1671,9 +1675,11 @@ class ComplexCBeamForceArray(ScalarObject):
         self.itotal = 0
         self.ielement = 0
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -1733,7 +1739,7 @@ class ComplexCBeamForceArray(ScalarObject):
         #print(self.data_frame)
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -1741,7 +1747,7 @@ class ComplexCBeamForceArray(ScalarObject):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -1779,7 +1785,7 @@ class ComplexCBeamForceArray(ScalarObject):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -1816,7 +1822,7 @@ class ComplexCBeamForceArray(ScalarObject):
         #msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
         msg.append('  CBEAM\n  ')
         msg += self.get_data_code()
         return msg
@@ -1867,14 +1873,14 @@ class ComplexCBeamForceArray(ScalarObject):
             line1,
             line2,
         ]
-        if self.is_sort1():
-            assert self.is_sort1() == True, str(self)
+        if self.is_sort1:
+            assert self.is_sort1 == True, str(self)
             #if is_sort1:
             page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
             #else:
                 #self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
         else:
-            assert self.is_sort1() == True, str(self)
+            assert self.is_sort1 == True, str(self)
         return page_num - 1
 
     def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
@@ -1889,7 +1895,7 @@ class ComplexCBeamForceArray(ScalarObject):
             f.write(''.join(msg))
 
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
-            assert self.is_sort1() == True, str(self)
+            assert self.is_sort1 == True, str(self)
             #sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq
             sd = self.data[itime, :, 0]
             bm1 = self.data[itime, :, 1]
@@ -1981,7 +1987,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_nodes.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -2236,7 +2242,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -2455,14 +2461,14 @@ class ComplexCBushForceArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -2483,7 +2489,7 @@ class ComplexCBushForceArray(ScalarObject):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -2518,7 +2524,7 @@ class ComplexCBushForceArray(ScalarObject):
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nelements, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        # msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        # msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
         msg.append('  CBUSH\n  ')
         msg += self.get_data_code()
         return msg
@@ -2557,13 +2563,13 @@ class ComplexCBushForceArray(ScalarObject):
             # line1,
             line2,
         ]
-        if self.is_sort1():
+        if self.is_sort1:
             if is_sort1:
                 page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
             else:
                 page_num = self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
         else:
-            assert self.is_sort1() == True, str(self)
+            assert self.is_sort1 == True, str(self)
         return page_num - 1
 
     def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
@@ -2577,7 +2583,7 @@ class ComplexCBushForceArray(ScalarObject):
             f06_file.write(''.join(msg))
 
             #fx, fy, fz, mx, my, mz
-            if self.is_sort1():
+            if self.is_sort1:
                 fx = self.data[itime, :, 0]
                 fy = self.data[itime, :, 1]
                 fz = self.data[itime, :, 2]
@@ -2615,7 +2621,7 @@ class ComplexCBushForceArray(ScalarObject):
             msg = header + msg_temp
             f06_file.write(''.join(msg))
 
-            if self.is_sort1():
+            if self.is_sort1:
                 fx = self.data[:, ieid, 0]
                 fy = self.data[:, ieid, 1]
                 fz = self.data[:, ieid, 2]
@@ -2690,9 +2696,11 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -2746,7 +2754,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         #headers = self.get_headers()
 
         #nelements = self.element_node.shape[0] // 2
-        #if self.is_fiber_distance():
+        #if self.is_fiber_distance:
             #fiber_distance = ['Top', 'Bottom'] * nelements
         #else:
             #fiber_distance = ['Mean', 'Curvature'] * nelements
@@ -2769,7 +2777,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         #print(self.data_frame)
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)

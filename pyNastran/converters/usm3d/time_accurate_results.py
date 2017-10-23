@@ -7,6 +7,10 @@ from numpy import savetxt, arange, zeros
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 
 def get_n_list(dirname, model_name):
+    """
+    gets files of the form:
+     - modelname + '_xxx.flo'
+    """
     flo_filenames = os.listdir(dirname)
 
     n_list = []

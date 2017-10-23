@@ -92,7 +92,7 @@ class ONR(OP2Common):
         #: Energy Threshold - NX
         self.thresh = self.add_data_parameter(data, 'thresh', 'f', 17)
 
-        if not self.is_sort1():
+        if not self.is_sort1:
             raise NotImplementedError('sort2...')
 
         if self.analysis_code == 1:   # statics / displacement / heat flux
