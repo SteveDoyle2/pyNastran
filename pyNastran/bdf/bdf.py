@@ -1092,6 +1092,47 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 dvgrid.validate()
         #------------------------------------------------
 
+    def include_zip(self, bdf_filename=None, punch=False,
+                    read_includes=True, encoding=None):
+        """
+        Read a bdf without perform any other operation, except (optionally)
+        insert the INCLUDE files in the bdf
+
+        Parameters
+        ----------
+        bdf_filename : str / None
+            the input bdf (default=None; popup a dialog)
+        punch : bool; default=False
+            indicates whether the file is a punch file
+        read_includes : bool; default=True
+            indicates whether INCLUDE files should be read
+        encoding : str; default=None -> system default
+            the unicode encoding
+
+        Returns
+        -------
+        system_lines : List[str]
+            the system control lines (typically empty; used for alters)
+        executive_control_lines : List[str]
+            the executive control lines (stores SOL 101)
+        case_control_lines : List[str]
+            the case control lines (stores subcases)
+        bulk_data_lines : List[str]
+            the bulk data lines (stores geometry, boundary conditions, loads, etc.)
+        """
+        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
+        self._parse_primary_file_header(bdf_filename)
+
+        system_lines, executive_control_lines, case_control_lines, \
+            bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+
+        #main_lines = self._get_main_lines(self.bdf_filename, self.punch)
+        #all_lines, i = self._lines_to_deck_lines(main_lines, punch=punch)
+        #out = _lines_to_decks(all_lines, i, punch)
+        #system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+
+        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
+
     def read_bdf(self, bdf_filename=None,
                  validate=True, xref=True, punch=False, read_includes=True, encoding=None):
         """
@@ -1128,13 +1169,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           bdf.elements = 10
           etc.
         """
-        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
-
-        self._parse_primary_file_header(bdf_filename)
-
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-        system_lines, executive_control_lines, case_control_lines, \
-            bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+        out = self.include_zip(bdf_filename=bdf_filename,
+                               punch=punch, read_includes=read_includes, encoding=encoding)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
 
         self.system_command_lines = system_lines
         self.executive_control_lines = executive_control_lines
@@ -1646,7 +1684,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
           >>> bdf = BDF()
           >>> bdf.set_dynamic_syntax(dict_of_vars)
-          >>> bdf,read_bdf(bdf_filename, xref=True)
+          >>> bdf.read_bdf(bdf_filename, xref=True)
 
         .. note:: Case sensitivity is supported.
         .. note:: Variables should be 7 characters or less to fit in an
@@ -3725,6 +3763,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 lines.append(line)
 
     def _get_lines(self, bdf_filename, punch=False):
+        """Opens the bdf and extracts the lines"""
+        main_lines = self._get_main_lines(self.bdf_filename, self.punch)
+        all_lines, i = self._lines_to_deck_lines(main_lines, punch=punch)
+        out = _lines_to_decks(all_lines, i, punch)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
+
+    def _get_main_lines(self, bdf_filename, punch=False):
         # type: (Union[str, StringIO], bool) -> List[str]
         """
         Opens the bdf and extracts the lines
@@ -3740,20 +3786,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         Returns
         -------
-        system_lines : list[str]
-            the Nastran SYSTEM lines
-        executive_control_lines : list[str]
-            the executive control deck lines
-        case_control_lines : list[str]
-            the case control deck lines
-        bulk_data_lines : list[str]
-            the bulk data deck lines
+        lines : List[str]
+            all the lines packed into a single line stream
         """
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             bdf_filename = cast(StringIO, bdf_filename)
             lines = bdf_filename.readlines()
             assert len(lines) > 0, lines
-            return self._lines_to_deck_lines(lines, punch=punch)
+            return lines
 
         bdf_filename = cast(str, bdf_filename)
 
@@ -3765,25 +3805,28 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 lines = bdf_file.readlines()
             except:
                 self._show_bad_file(bdf_filename)
-        return self._lines_to_deck_lines(lines, punch=punch)
+        return lines
 
     def _lines_to_deck_lines(self, lines, punch=False):
-        # type: (List[str], bool) -> List[str]
+        # type: (List[str], bool) -> List[str], int
         """
-        Splits the BDF lines into:
-         - system lines
-         - executive control deck
-         - case control deck
-         - bulk data deck
+        Merges the includes into the main deck.
 
         Parameters
         ----------
         lines : List[str]
-            the lines
+            the lines from the main BDF
         punch : bool; default=False
             is this a punch file
             True : no executive/case control decks
             False : executive/case control decks exist
+
+        Returns
+        -------
+        active_lines : List[str]
+            all the active lines in the deck
+        i : int
+            the line number
         """
         nlines = len(lines)
 
@@ -3845,7 +3888,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
-        return _lines_to_decks(lines, i, punch)
+        return lines, i
 
     def _get_include_lines(self, lines, line, i, nlines):
         """
@@ -4393,7 +4436,32 @@ def _clean_comment_bulk(comment):
 
 def _lines_to_decks(lines, i, punch):
     """
-    Splits the lines into their deck.
+    Splits the BDF lines into:
+     - system lines
+     - executive control deck
+     - case control deck
+     - bulk data deck
+
+    Parameters
+    ----------
+    lines : List[str]
+        all the active lines in the deck
+    i : int
+        the index of the ENDDATA / total number of lines
+    punch : bool
+        True : starts from the bulk data deck
+        False : read the entire deck
+
+    Returns
+    -------
+    system_lines : List[str]
+        the system control lines (typically empty; used for alters)
+    executive_control_lines : List[str]
+        the executive control lines (stores SOL 101)
+    case_control_lines : List[str]
+        the case control lines (stores subcases)
+    bulk_data_lines : List[str]
+        the bulk data lines (stores geometry, boundary conditions, loads, etc.)
     """
     executive_control_lines = []
     case_control_lines = []
