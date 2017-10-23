@@ -688,7 +688,7 @@ class CaseControlDeck(object):
             param_type = 'STRESS-type'
             options = []
             #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
-            if value == 'LAGR':
+            if value in ['LAGR', 'LAGRAN']:
                 value = 'LAGRANGE'
             elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR']:
                 pass
