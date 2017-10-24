@@ -135,7 +135,7 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
         t = 0.1
         E = 1e7
         nu = 0.3
-        f.write('$Properties\n')
+        bdf_file.write('$Properties\n')
         for pid in unique(regions):
             mid = pid
             card = print_card_8(['PSHELL', pid, mid, t])

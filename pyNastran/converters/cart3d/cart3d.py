@@ -330,7 +330,7 @@ class Cart3dIO(object):
         regions = np.zeros(nelements, dtype='int32')
         iregion = 0
         data = []
-        while r < nelements:
+        while iregion < nelements:
             data = self.infile.readline().strip().split()
             ndata = len(data)
             regions[iregion : iregion + ndata] = data
