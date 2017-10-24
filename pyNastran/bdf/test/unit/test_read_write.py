@@ -44,9 +44,7 @@ class TestReadWrite(unittest.TestCase):
         os.remove(os.path.join(mesh_utils_path, 'test_mass2b.out'))
 
     def test_punch_1(self):
-        """
-        Tests punch file reading
-        """
+        """Tests punch file reading"""
         model = BDF(log=log, debug=False)
         bdf_name = os.path.join(test_path, 'include_dir', 'include_alt.inc')
         model.read_bdf(bdf_name, xref=False, punch=True)
@@ -81,7 +79,6 @@ class TestReadWrite(unittest.TestCase):
         #print(bdf_filename)
         model.read_bdf(bdf_filename, xref=True, punch=False)
         #model.write_bdf('junk.bdf')
-
 
     def test_enddata_1(self):
         """There is an ENDDATA is in the baseline BDF, so None -> ENDDATA"""
@@ -194,12 +191,17 @@ class TestReadWrite(unittest.TestCase):
         model.read_bdf('a.bdf')
         model.write_bdf('a.out.bdf')
 
+        self.assertEqual(len(model.nodes), 3)
+        self.assertEqual(model.nnodes, 3, 'nnodes=%s' % model.nnodes)
+
+        model = BDF(log=log, debug=False)
+        lines = model.include_zip(bdf_filename='a.bdf', encoding=None)
+        assert len(lines) == 11, len(lines)
+
         os.remove('a.bdf')
         os.remove('b.bdf')
         os.remove('c.bdf')
         os.remove('a.out.bdf')
-        self.assertEqual(len(model.nodes), 3)
-        self.assertEqual(model.nnodes, 3, 'nnodes=%s' % model.nnodes)
 
     def test_include_end_02(self):
         """tests multiple levels of includes"""

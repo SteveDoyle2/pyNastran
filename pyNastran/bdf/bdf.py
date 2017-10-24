@@ -1092,8 +1092,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 dvgrid.validate()
         #------------------------------------------------
 
-    def include_zip(self, bdf_filename=None, punch=False,
-                    read_includes=True, encoding=None):
+    def include_zip(self, bdf_filename=None, encoding=None):
         """
         Read a bdf without perform any other operation, except (optionally)
         insert the INCLUDE files in the bdf
@@ -1102,36 +1101,26 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ----------
         bdf_filename : str / None
             the input bdf (default=None; popup a dialog)
-        punch : bool; default=False
-            indicates whether the file is a punch file
-        read_includes : bool; default=True
-            indicates whether INCLUDE files should be read
         encoding : str; default=None -> system default
             the unicode encoding
 
         Returns
         -------
-        system_lines : List[str]
-            the system control lines (typically empty; used for alters)
-        executive_control_lines : List[str]
-            the executive control lines (stores SOL 101)
-        case_control_lines : List[str]
-            the case control lines (stores subcases)
-        bulk_data_lines : List[str]
-            the bulk data lines (stores geometry, boundary conditions, loads, etc.)
+        all_lines : List[str]
+            all the lines packed into a single line stream
+
+        .. note::  Setting read_includes to False is kind of pointless if
+                   called directly; it's useful for ``read_bdf``
         """
+        punch = False #  doesn't really matter
+        read_includes = True
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self._parse_primary_file_header(bdf_filename)
 
-        system_lines, executive_control_lines, case_control_lines, \
-            bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+        main_lines = self._get_main_lines(self.bdf_filename, self.punch)
+        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
 
-        #main_lines = self._get_main_lines(self.bdf_filename, self.punch)
-        #all_lines, i = self._lines_to_deck_lines(main_lines, punch=punch)
-        #out = _lines_to_decks(all_lines, i, punch)
-        #system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
-
-        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
+        return all_lines
 
     def read_bdf(self, bdf_filename=None,
                  validate=True, xref=True, punch=False, read_includes=True, encoding=None):
@@ -1170,8 +1159,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           etc.
         """
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-        out = self.include_zip(bdf_filename=bdf_filename,
-                               punch=punch, read_includes=read_includes, encoding=encoding)
+        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
+        self._parse_primary_file_header(bdf_filename)
+        out = self._get_lines(bdf_filename)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
 
         self.system_command_lines = system_lines
@@ -1181,22 +1171,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
         self.update_solution(sol, method, sol_iline)
 
-        self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
+        self.case_control_deck = CaseControlDeck(case_control_lines, self.log)
         self.case_control_deck.solmap_to_value = self._solmap_to_value
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
         #self._is_cards_dict = True
         if self._is_cards_dict:
             cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
-            if 0:
-                with open('dump.bdf', 'w') as bdf_file_obj:
-                    bdf_file_obj.write('\n'.join(self.executive_control_lines))
-                    bdf_file_obj.write(str(self.case_control_deck))
-                    for cardname, cards in iteritems(cards):
-                        for (comment, cardlines) in cards:
-                            #bdf_file_obj.write(comment + '\n')
-                            bdf_file_obj.write('\n'.join(cardlines) + '\n')
-                        bdf_file_obj.write('\n')
+            #if 0:
+                #with open('dump.bdf', 'w') as bdf_file_obj:
+                    #bdf_file_obj.write('\n'.join(executive_control_lines))
+                    #bdf_file_obj.write(str(case_control_deck))
+                    #for cardname, cards in iteritems(cards):
+                        #for (comment, cardlines) in cards:
+                            ##bdf_file_obj.write(comment + '\n')
+                            #bdf_file_obj.write('\n'.join(cardlines) + '\n')
+                        #bdf_file_obj.write('\n')
         else:
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
             #for card in cards:
@@ -3726,47 +3716,33 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             raise CardParseSyntaxError(msg)
         return card_name.upper()
 
-    def _show_bad_file(self, bdf_filename):
-        # type: (Union[str, StringIO]) -> None
+    def _get_lines(self, bdf_filename):
         """
-        Prints the 10 lines before the UnicodeDecodeError occurred.
+        Opens the bdf and extracts the lines by group
 
         Parameters
         ----------
         bdf_filename : str
-            the filename to print the lines of
+            the main bdf_filename
+        punch : bool; default=False
+            is this a punch file
+            True : no executive/case control decks
+            False : executive/case control decks exist
+
+        Returns
+        -------
+        system_lines : List[str]
+            the system control lines (typically empty; used for alters)
+        executive_control_lines : List[str]
+            the executive control lines (stores SOL 101)
+        case_control_lines : List[str]
+            the case control lines (stores subcases)
+        bulk_data_lines : List[str]
+            the bulk data lines (stores geometry, boundary conditions, loads, etc.)
         """
-        lines = []  # type: List[str]
-        print('ENCODING - show_bad_file=%r' % self._encoding)
-
-        with codec_open(_filename(bdf_filename), 'r', encoding=self._encoding) as bdf_file:
-            iline = 0
-            nblank = 0
-            while 1:
-                try:
-                    line = bdf_file.readline().rstrip()
-                except UnicodeDecodeError:
-                    iline0 = max([iline - 10, 0])
-                    self.log.error('filename=%s' % self.bdf_filename)
-                    for iline1, line in enumerate(lines[iline0:iline]):
-                        self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
-                    msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
-                        self._encoding, iline, bdf_filename, self._encoding)
-                    raise RuntimeError(msg)
-                if line:
-                    nblank = 0
-                else:
-                    nblank += 1
-                if nblank == 20:
-                    raise RuntimeError('20 blank lines')
-                iline += 1
-                lines.append(line)
-
-    def _get_lines(self, bdf_filename, punch=False):
-        """Opens the bdf and extracts the lines"""
         main_lines = self._get_main_lines(self.bdf_filename, self.punch)
-        all_lines, i = self._lines_to_deck_lines(main_lines, punch=punch)
-        out = _lines_to_decks(all_lines, i, punch)
+        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
+        out = _lines_to_decks(all_lines, self.punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
 
@@ -3804,7 +3780,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             try:
                 lines = bdf_file.readlines()
             except:
-                self._show_bad_file(bdf_filename)
+                _show_bad_file(bdf_filename, encoding=self._encoding)
         return lines
 
     def _lines_to_deck_lines(self, lines, punch=False):
@@ -3825,8 +3801,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         -------
         active_lines : List[str]
             all the active lines in the deck
-        i : int
-            the line number
         """
         nlines = len(lines)
 
@@ -3888,7 +3862,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
-        return lines, i
+        return lines
 
     def _get_include_lines(self, lines, line, i, nlines):
         """
@@ -4434,7 +4408,7 @@ def _clean_comment_bulk(comment):
     return comment
 
 
-def _lines_to_decks(lines, i, punch):
+def _lines_to_decks(lines, punch):
     """
     Splits the BDF lines into:
      - system lines
@@ -4446,8 +4420,6 @@ def _lines_to_decks(lines, i, punch):
     ----------
     lines : List[str]
         all the active lines in the deck
-    i : int
-        the index of the ENDDATA / total number of lines
     punch : bool
         True : starts from the bulk data deck
         False : read the entire deck
@@ -4472,7 +4444,7 @@ def _lines_to_decks(lines, i, punch):
     else:
         flag = 1
         for i, line in enumerate(lines):
-            #print(line)
+            #print(flag, line.rstrip())
             if flag == 1:
                 #line = line.upper()
                 if line.upper().startswith('CEND'):
@@ -4575,6 +4547,46 @@ def _check_valid_deck(flag):
         msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
         msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
         raise MissingDeckSections(msg)
+
+def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
+    # type: (Union[str, StringIO]) -> None
+    """
+    Prints the 10 lines before the UnicodeDecodeError occurred.
+
+    Parameters
+    ----------
+    bdf_filename : str
+        the filename to print the lines of
+    encoding : str
+        the file encoding
+    nlines_previous : int; default=10
+        the number of lines to show
+    """
+    lines = []  # type: List[str]
+    print('ENCODING - show_bad_file=%r' % encoding)
+
+    with codec_open(_filename(bdf_filename), 'r', encoding=encoding) as bdf_file:
+        iline = 0
+        nblank = 0
+        while 1:
+            try:
+                line = bdf_file.readline().rstrip()
+            except UnicodeDecodeError:
+                iline0 = max([iline - nlines_previous, 0])
+                self.log.error('filename=%s' % self.bdf_filename)
+                for iline1, line in enumerate(lines[iline0:iline]):
+                    self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
+                msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
+                    encoding, iline, bdf_filename, self._encoding)
+                raise RuntimeError(msg)
+            if line:
+                nblank = 0
+            else:
+                nblank += 1
+            if nblank == 20:
+                raise RuntimeError('20 blank lines')
+            iline += 1
+            lines.append(line)
 
 def main():  # pragma: no cover
     """

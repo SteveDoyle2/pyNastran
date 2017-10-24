@@ -13,7 +13,6 @@ from pyNastran.bdf.write_path import write_include, _split_path
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'bdf', 'test')
-#print("testPath = %s" % testPath)
 from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder
 
 
