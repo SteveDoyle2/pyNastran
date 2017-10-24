@@ -6,7 +6,6 @@ from numpy import allclose
 
 import pyNastran
 from pyNastran.converters.fast.fgrid_reader import FGridReader
-#from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'converters', 'fast')

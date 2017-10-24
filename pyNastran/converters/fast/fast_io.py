@@ -117,12 +117,6 @@ class FastIO(object):
 
     def _fill_fast_results(self, cases, model, results=False):
         note = ''
-        if 0:
-            if 'Mach' in loads:
-                avg_mach = loads['Mach'].mean()
-                note = ':  avg(Mach)=%g' % avg_mach
-            else:
-                note = ''
 
         self.isubcase_name_map = {
             1: ['Fast%s' % note, ''],

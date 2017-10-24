@@ -161,4 +161,3 @@ class LaWGS_IO(object):
         cases[icase + 7] = (ny_res, (ID, 'NormalY'))
         cases[icase + 8] = (nz_res, (ID, 'NormalZ'))
         return geometry_form, cases
-

@@ -83,9 +83,3 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
     stl.elements = elements
     stl.write_stl(stl_filename, is_binary=is_binary, stop_on_failure=stop_on_failure)
     return stl
-
-
-if __name__ == '__main__':  # pragma: no cover
-    bdf_filename = 'threePlugs.bdf'
-    stl_filename = 'threePlugs.stl'
-    nastran_to_stl(bdf_filename, stl_filename)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import unittest
 from six.moves import range
@@ -7,16 +8,16 @@ import pyNastran
 from pyNastran.converters.panair.panair_grid import PanairGrid
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'panair')
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'converters', 'panair')
 
 
 class TestPanair(unittest.TestCase):
 
     def test_panair_io_01(self):
         log = get_logger(level='warning')
-        in_filename = os.path.join(test_path, 'M100', 'M100.inp')
-        out_filename = os.path.join(test_path, 'M100', 'M100_out.inp')
+        in_filename = os.path.join(TEST_PATH, 'M100', 'M100.inp')
+        out_filename = os.path.join(TEST_PATH, 'M100', 'M100_out.inp')
         #with open(infile_name, 'w') as f:
             #f.write(lines)
 

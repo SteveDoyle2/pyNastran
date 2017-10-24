@@ -312,28 +312,29 @@ class Cart3dIO(object):
         assert nelements > 0, 'npoints=%s nelements=%s' % (self.npoints, nelements)
         elements = np.zeros((nelements, 3), dtype='int32')
 
-        e = 0
+        ieid = 0
         data = []
-        while e < nelements:
+        while ieid < nelements:
             data += self.infile.readline().strip().split()
             while len(data) > 2:
                 n1 = int(data.pop(0))
                 n2 = int(data.pop(0))
                 n3 = int(data.pop(0))
-                elements[e] = [n1, n2, n3]
-                e += 1
+                elements[ieid] = [n1, n2, n3]
+                ieid += 1
         assert elements.min() == 1, elements.min()
         return elements - 1
 
     def _read_regions_ascii(self, nelements):
+        """reads the region section"""
         regions = np.zeros(nelements, dtype='int32')
-        r = 0
+        iregion = 0
         data = []
         while r < nelements:
             data = self.infile.readline().strip().split()
             ndata = len(data)
-            regions[r : r + ndata] = data
-            r += ndata
+            regions[iregion : iregion + ndata] = data
+            iregion += ndata
         return regions
 
     def _read_header_binary(self):

@@ -111,25 +111,25 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     #bdf.elements = cart3d.elements
     #bdf.write_bdf(bdf_filename)
     #return
-    with codec_open(bdf_filename, 'w') as f:
-        f.write('CEND\n')
-        f.write('BEGIN BULK\n')
-        f.write('$Nodes\n')
+    with codec_open(bdf_filename, 'w') as bdf_file:
+        bdf_file.write('CEND\n')
+        bdf_file.write('BEGIN BULK\n')
+        bdf_file.write('$Nodes\n')
 
         i = 0
         nid = 1
         cid = 0
         for node in nodes:
             card = print_card_16(['GRID', nid, cid] + list(node))
-            f.write(card)
+            bdf_file.write(card)
             nid += 1
 
         eid = 1
-        f.write('$Elements\n')
+        bdf_file.write('$Elements\n')
         assert 0 not in elements
         for (n1, n2, n3), pid in zip(elements, regions):
             card = print_card_8(['CTRIA3', eid, pid, n1, n2, n3])
-            f.write(card)
+            bdf_file.write(card)
             eid += 1
 
         t = 0.1
@@ -139,7 +139,7 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
         for pid in unique(regions):
             mid = pid
             card = print_card_8(['PSHELL', pid, mid, t])
-            f.write(card)
+            bdf_file.write(card)
             card = print_card_8(['MAT1', mid, E, None, nu])
-            f.write(card)
-        f.write('ENDDATA\n')
+            bdf_file.write(card)
+        bdf_file.write('ENDDATA\n')

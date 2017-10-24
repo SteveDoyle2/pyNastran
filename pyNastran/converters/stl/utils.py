@@ -62,4 +62,3 @@ def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=Fa
     if stl_out_filename is not None:
         model.write_stl(stl_out_filename, is_binary=is_binary, float_fmt=float_fmt)
     return model
-

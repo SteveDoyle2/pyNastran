@@ -59,17 +59,6 @@ class PanairIO(object):
         #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #elem.SetNumberOfPoints(nnodes)
-        if 0:
-            fraction = 1. / nnodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *point)
-                self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert len(nodes) > 0
         mmax = amax(nodes, axis=0)

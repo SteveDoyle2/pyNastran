@@ -4,8 +4,6 @@ import unittest
 import warnings
 
 import numpy as np
-warnings.simplefilter('always')
-np.seterr(all='raise')
 
 import pyNastran
 from pyNastran.converters.stl.stl import read_stl
@@ -13,8 +11,11 @@ from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran, stl_to_nastr
 from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'stl')
+warnings.simplefilter('always')
+np.seterr(all='raise')
+
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'converters', 'stl')
 
 
 class TestSTL(unittest.TestCase):
@@ -39,7 +40,7 @@ class TestSTL(unittest.TestCase):
             'endsolid\n'
         )
         log = get_logger(level='warning')
-        stl_filename = os.path.join(test_path, 'tris.stl')
+        stl_filename = os.path.join(TEST_PATH, 'tris.stl')
         with open(stl_filename, 'w') as stl_file:
             stl_file.write(lines)
 
@@ -70,9 +71,9 @@ class TestSTL(unittest.TestCase):
             'endsolid\n'
         )
         log = get_logger(level='warning')
-        stl_filename = os.path.join(test_path, 'tris.stl')
-        stl_out_filename = os.path.join(test_path, 'tris_out.stl')
-        stl_bin_filename = os.path.join(test_path, 'tris_bin.stl')
+        stl_filename = os.path.join(TEST_PATH, 'tris.stl')
+        stl_out_filename = os.path.join(TEST_PATH, 'tris_out.stl')
+        stl_bin_filename = os.path.join(TEST_PATH, 'tris_bin.stl')
         with open(stl_filename, 'w') as stl_file:
             stl_file.write(lines)
 
@@ -90,16 +91,16 @@ class TestSTL(unittest.TestCase):
         os.remove(stl_out_filename)
         #os.remove(stl_bin_filename)
 
-        #outfile_name = os.path.join(test_path, 'flat.bin.tri')
+        #outfile_name = os.path.join(TEST_PATH, 'flat.bin.tri')
         #cnormals = stl.get_normals()
         #nnormals = stl.get_normals_at_nodes(cnormals)
 
     def test_stl_to_nastran_01(self):
         log = get_logger(level='warning')
-        stl_filename = os.path.join(test_path, 'sphere.stl')
-        bdf_filename_8 = os.path.join(test_path, 'sphere_8.bdf')
-        bdf_filename_16 = os.path.join(test_path, 'sphere_16.bdf')
-        bdf_filename_double = os.path.join(test_path, 'sphere_double.bdf')
+        stl_filename = os.path.join(TEST_PATH, 'sphere.stl')
+        bdf_filename_8 = os.path.join(TEST_PATH, 'sphere_8.bdf')
+        bdf_filename_16 = os.path.join(TEST_PATH, 'sphere_16.bdf')
+        bdf_filename_double = os.path.join(TEST_PATH, 'sphere_double.bdf')
         stl_to_nastran_filename(stl_filename, bdf_filename_8, log=log)
         stl_to_nastran(stl_filename, bdf_filename_16, size=16, log=log)
         stl_to_nastran(stl_filename, bdf_filename_double, size=16, is_double=True, log=log)
@@ -109,8 +110,8 @@ class TestSTL(unittest.TestCase):
 
     def test_stl_to_cart3d_01(self):
         log = get_logger(level='warning')
-        stl_filename = os.path.join(test_path, 'sphere.stl')
-        cart3d_filename = os.path.join(test_path, 'sphere.tri')
+        stl_filename = os.path.join(TEST_PATH, 'sphere.stl')
+        cart3d_filename = os.path.join(TEST_PATH, 'sphere.tri')
         stl_to_cart3d(stl_filename, cart3d_filename, log=log)
         os.remove(cart3d_filename)
 
