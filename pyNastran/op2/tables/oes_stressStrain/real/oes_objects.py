@@ -96,13 +96,13 @@ class StrainObject(OES_Object):
     @property
     def is_strain(self):
         class_name = self.__class__.__name__
-        assert self.stress_bits[1] == self.stress_bits[3], 'scode=%s stress_bits=%s; table_name+%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
+        assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         assert self.stress_bits[1] == 1, 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         return True
 
     @property
     def is_stress(self):
         class_name = self.__class__.__name__
-        assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name+%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
+        assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         assert self.stress_bits[1] == 1, 'class_name=%s is_stress=False scode=%s stress_bits=%s; element_type=%s element_name=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.element_type, self.element_name, self.table_name)
         return False

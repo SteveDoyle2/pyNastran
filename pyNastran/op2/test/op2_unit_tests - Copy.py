@@ -339,11 +339,11 @@ class TestOP2(Tester):
                 eids, nids, cid, summation_point)
             msg = '%s\ntotal_force_local_expected=%s total_force_local=%s' % (
                 case, total_force_local_expected, total_force_local)
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.005), msg), msg
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.005), msg)
 
             msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s' % (
                 case, total_moment_local_expected, total_moment_local)
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg)
 
     def test_op2_solid_shell_bar_01_gpforce_xyz(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
@@ -593,7 +593,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -738,7 +738,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
@@ -840,7 +840,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=debug)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
@@ -930,7 +930,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=debug)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
@@ -972,14 +972,14 @@ class TestOP2(Tester):
         debug = False
         op2file = os.path.join(folder, op2_filename)
         read_op2(op2file)
-        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, quiet=True)
 
         make_geom = False
         write_bdf = False
         write_f06 = True
-        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, quiet=True)
 
@@ -992,7 +992,7 @@ class TestOP2(Tester):
         debug = False
         op2file = os.path.join(folder, op2_filename)
         read_op2(op2file)
-        op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                   write_f06=write_f06,
                                   debug=debug, stop_on_failure=True,
                                   quiet=True)
@@ -1017,7 +1017,7 @@ class TestOP2(Tester):
         #make_geom = False
         #write_bdf = False
         #write_f06 = True
-        #run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        #run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 #write_f06=write_f06,
                 #debug=debug, stopOnFailure=True)
 
@@ -1094,7 +1094,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1

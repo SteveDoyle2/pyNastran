@@ -50,18 +50,18 @@ class RealEigenvalues(BaseScalarObject):
     def is_complex(self):
         return False
 
-    def add_f06_line(self, data, i):
+    def add_f06_line(self, data, imode):
         (mode_num, extract_order, eigenvalue, radian, cycle, gen_mass, gen_stiffness) = data
-        self.mode[i] = mode_num
-        self.extraction_order[i] = extract_order
-        self.eigenvalues[i] = eigenvalue
-        self.radians[i] = radian
+        self.mode[imode] = mode_num
+        self.extraction_order[imode] = extract_order
+        self.eigenvalues[imode] = eigenvalue
+        self.radians[imode] = radian
         #cyclei = sqrt(abs(eigenvalue)) / (2. * pi)
         #if not allclose(cycle, cyclei):
             #print('cycle=%s cyclei=%s' % (cycle, cyclei))
-        self.cycles[i] = cycle
-        self.generalized_mass[i] = gen_mass
-        self.generalized_stiffness[i] = gen_stiffness
+        self.cycles[imode] = cycle
+        self.generalized_mass[imode] = gen_mass
+        self.generalized_stiffness[imode] = gen_stiffness
 
     def get_headers(self):
         headers = ['eigenvalue', 'radians', 'cycle', 'generalized_mass', 'generalized_stiffness']
@@ -179,8 +179,8 @@ class ComplexEigenvalues(BaseScalarObject):
         self.damping[i] = damping
 
     def add_f06_data(self, data):
-        for line in data:
-            self.add_f06_line(line)
+        for imode, line in enumerate(data):
+            self.add_f06_line(line, imode)
 
     def get_headers(self):
         headers = ['eigenvalue', 'frequency', 'damping']
