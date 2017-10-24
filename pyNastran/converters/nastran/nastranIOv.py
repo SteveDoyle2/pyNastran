@@ -1469,14 +1469,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         self.model_type = 'nastran'
         if ext == '.op2':
-            from pyNastran.converters.nastran.dev_vectorized2.op2_geom_vectorized import (
+            from pyNastran.dev.bdf_vectorized2.op2_geom_vectorized import (
                 OP2Geom as OP2Geom_)
             model = OP2Geom_(make_geom=True, debug=False, log=self.log,
                              debug_file=None)
             model.clear_results()
             model.read_op2(op2_filename=bdf_filename)
         else:  # read the bdf/punch
-            from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import BDF as BDF_
+            from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDF_
             model = BDF_(log=self.log, debug=True)
 
             # static_elements.bdf

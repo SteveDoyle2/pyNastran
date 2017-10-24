@@ -3,10 +3,10 @@ from itertools import count
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, SUPORT, SUPORT1, MPC
 
-bdf = BDF(debug=False)
 class TestConstraints(unittest.TestCase):
     def test_support_01(self):
         lines = ['SUPORT, 1,      126']
+        bdf = BDF(debug=False)
         card = bdf.process_card(lines)
         card = BDFCard(card)
 
@@ -64,6 +64,7 @@ class TestConstraints(unittest.TestCase):
 
     def test_support1_01(self):
         lines = ['SUPORT1, 1,      126']
+        bdf = BDF(debug=False)
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
 
@@ -74,30 +75,30 @@ class TestConstraints(unittest.TestCase):
 
     def test_suport1_02(self):
         card = ['SUPORT1', '1']
-        card = BDFCard(card)
+        card_obj = BDFCard(card)
         with self.assertRaises(AssertionError):  # too short
-            SUPORT1.add_card(card)
+            SUPORT1.add_card(card_obj)
 
         card = ['SUPORT1', '1', '2']
-        cardi = BDFCard(card)
-        con = SUPORT1.add_card(cardi) # default
+        card_obj = BDFCard(card)
+        con = SUPORT1.add_card(card_obj) # default
         self.assertEqual(con.nodes[0], 2)
         self.assertEqual(con.Cs[0], '0')
 
         card = ['SUPORT1', '1', '2', '432']
-        cardi = BDFCard(card)
-        con = SUPORT1.add_card(cardi) # default
+        card_obj = BDFCard(card)
+        con = SUPORT1.add_card(card_obj) # default
         self.assertEqual(con.nodes[0], 2)
         self.assertEqual(con.Cs[0], '234')
 
         card = ['SUPORT1', '1', '2', '432', 3]
-        cardi = BDFCard(card)
-        con = SUPORT1.add_card(cardi) # default
+        card_obj = BDFCard(card)
+        con = SUPORT1.add_card(card_obj) # default
         self.assertEqual(con.nodes[1], 3)
 
         card = ['SUPORT1', '1', '2', None, 3]
-        cardi = BDFCard(card)
-        con = SUPORT1.add_card(cardi) # default
+        card_obj = BDFCard(card)
+        con = SUPORT1.add_card(card_obj) # default
         self.assertEqual(con.nodes[0], 2)
         self.assertEqual(con.nodes[1], 3)
         self.assertEqual(con.Cs[0], '0')

@@ -8,8 +8,8 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf, DMI, DMIG
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
-root_path = pyNastran.__path__[0]
-test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'cards', 'test')
 
 class TestDMIG(unittest.TestCase):
 
@@ -18,7 +18,7 @@ class TestDMIG(unittest.TestCase):
         Tests DMIG reading
         """
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'dmig.bdf')
+        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['REALS'].get_matrix(is_sparse=False)
 
@@ -39,7 +39,7 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_2(self):
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'dmig.bdf')
+        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['REAL'].get_matrix(is_sparse=False)
@@ -58,12 +58,12 @@ class TestDMIG(unittest.TestCase):
         a_matrix.get_matrix()
 
         #model2 = BDF(debug=False)
-        #bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
+        #bdf_name = os.path.join(TEST_PATH, 'include_dir', 'include.inc')
         #model2.read_bdf(bdf_name, xref=False, punch=True)
 
     def test_dmig_3(self):
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'dmig.bdf')
+        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['IMAG'].get_matrix(is_sparse=False)
 
@@ -89,7 +89,7 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_4(self):
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'dmig.bdf')
+        bdf_name = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['IMAGS'].get_matrix(is_sparse=False)
@@ -118,7 +118,7 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_5(self):
         model = BDF(debug=False)
-        bdf_filename = os.path.join(test_path, 'dmig.bdf')
+        bdf_filename = os.path.join(TEST_PATH, 'dmig.bdf')
         model.read_bdf(bdf_filename, xref=False, punch=True)
         out = model.dmigs['POLE'].get_matrix(is_sparse=False)
 
@@ -231,7 +231,7 @@ class TestDMIG(unittest.TestCase):
         a_matrix.get_matrix()
 
     def test_dmig_11(self):
-        pch_filename = os.path.join(test_path, 'dmig.pch')
+        pch_filename = os.path.join(TEST_PATH, 'dmig.pch')
         model = read_bdf(pch_filename, debug=False, punch=True)
         vax = model.dmigs['VAX']
         vax_array, vax_dict_row, vax_dict_col = vax.get_matrix()
@@ -423,7 +423,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         dmik.get_matrix()
 
         dmiji = model.add_dmiji(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi,
-                               reals, Complex=None, comment='dmiji')
+                                reals, Complex=None, comment='dmiji')
         dmiji.get_matrix()
 
         #dmi = model.add_dmi(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi,

@@ -1,7 +1,7 @@
 import unittest
 
 from pyNastran.converters.nastran.test_nastran import TestNastran
-from pyNastran.converters.nastran.dev_vectorized2.test_bdf import TestVectorized
+from pyNastran.dev.bdf_vectorized2.test_bdf import TestVectorized
 
 from pyNastran.converters.cart3d.test_cart3d import TestCart3d
 from pyNastran.converters.fast.test_fast import TestFast

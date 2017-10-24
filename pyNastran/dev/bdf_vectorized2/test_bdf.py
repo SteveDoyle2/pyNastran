@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
-from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import read_bdf as read_bdfv
+from pyNastran.dev.bdf_vectorized2.bdf_vectorized import read_bdf as read_bdfv
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '../', 'models')
