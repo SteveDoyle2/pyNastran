@@ -116,9 +116,9 @@ class TestSTL(unittest.TestCase):
 
 def main():  # pragma: no cover
     import time
-    t0 = time.time()
+    time0 = time.time()
     unittest.main()
-    print("dt = %s" % (time.time() - t0))
+    print("dt = %s" % (time.time() - time0))
 
 if __name__ == '__main__':  # pragma: no cover
     main()

@@ -131,7 +131,7 @@ class BDF(BDF_):
         self.pload2 = PLOAD2v(model)
         self.pload4 = PLOAD4v(model)
 
-        self.moment =  MOMENTv(model)
+        self.moment = MOMENTv(model)
         self.moment1 = MOMENT1v(model)
         self.moment2 = MOMENT2v(model)
 

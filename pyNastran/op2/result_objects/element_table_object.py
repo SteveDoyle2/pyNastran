@@ -8,7 +8,7 @@ from numpy import array, zeros, angle, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
+from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
 
 
 class ElementTableArray(ScalarObject):  # displacement style table

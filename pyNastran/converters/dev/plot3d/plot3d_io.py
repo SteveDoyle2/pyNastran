@@ -148,7 +148,7 @@ class Plot3d_io(object):  # pragma: no cover
 
         region_res = GuiResult(ID, header='Region', title='Region',
                                location='centroid', scalar=regions)
-        cases[icase] =region_res(nid_res, (itime, 'Region'))
+        cases[icase] = region_res(nid_res, (itime, 'Region'))
         icase += 1
 
         # centroidal

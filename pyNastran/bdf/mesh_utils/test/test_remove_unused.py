@@ -5,9 +5,6 @@ import unittest
 import numpy as np
 
 
-#root_path = pyNastran.__path__[0]
-#test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
-from pyNastran.bdf.cards.elements.mass import CONM2
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
 import pyNastran

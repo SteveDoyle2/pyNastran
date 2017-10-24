@@ -1,5 +1,5 @@
-from six import iteritems
 from collections import OrderedDict
+from six import iteritems
 from pyNastran.utils.log import get_logger2
 
 
@@ -128,7 +128,7 @@ class InputCntlReader(object):
                     zsline = [int(val) for val in zline.split()[2:]]
                 else:
                     raise RuntimeError(sline)
-                assert xyz_found[xyzi] == False, xyz_found
+                assert xyz_found[xyzi] is False, xyz_found
                 xyz_found[xyzi] = True
             elif bc_type == 'SurfBC':
                 bc_id = int(sline[1])
@@ -142,7 +142,7 @@ class InputCntlReader(object):
                 surf_bcs[bc_id] = values
             else:
                 raise NotImplementedError(sline)
-        assert all(xyz_found) == True, xyz_found
+        assert all(xyz_found) is True, xyz_found
 
         bcs = (xsline[0], xsline[1],
                ysline[0], ysline[1],

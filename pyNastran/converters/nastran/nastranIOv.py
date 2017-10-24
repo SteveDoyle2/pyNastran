@@ -355,9 +355,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return skip_reading
 
     def get_xyz_in_coord(self, model, cid=0, fdtype='float32'):
-        """Creates the grid points efficiently"""
+        """
+        Creates the grid points efficiently
+
+        Used by ``load_nastran_geometry_unvectorized``
+        """
         #import time
-        #t0 = time.time()
+        #time0 = time.time()
 
         # t=.578
         #print("get_displacement_index_xyz_cp_cd")
@@ -376,13 +380,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nid_map[nid] = i
 
         self._add_nastran_spoints_to_grid(model)
-        #print('dt_nastran_xyz =', time.time() - t0)
+        #print('dt_nastran_xyz =', time.time() - time0)
         return xyz_cid0, nid_cp_cd
 
     def get_xyz_in_coord_vectorized(self, model, cid=0, fdtype='float32'):
-        """Creates the grid points efficiently"""
+        """
+        Creates the grid points efficiently
+
+        Used by ``load_nastran_geometry_vectorized``
+        """
         #import time
-        #t0 = time.time()
+        #time0 = time.time()
 
         # t=.578
         #print("get_displacement_index_xyz_cp_cd")
@@ -404,7 +412,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nid_map[nid] = i
 
         self._add_nastran_spoints_to_grid(model)
-        #print('dt_nastran_xyz =', time.time() - t0)
+        #print('dt_nastran_xyz =', time.time() - time0)
         return xyz_cid0, nid_cp_cd
 
     def _get_model_nonvectorized(self, bdf_filename, xref_loads=True):

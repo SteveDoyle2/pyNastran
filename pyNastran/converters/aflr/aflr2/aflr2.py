@@ -504,5 +504,3 @@ def export_to_bedge(bedge_filename,
             else:
                 raise RuntimeError(axis)
         #initial_normal_spacing = '112*1.0e-3'
-
-

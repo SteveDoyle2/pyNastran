@@ -2,9 +2,9 @@
 Defines how the GUI reads Abaqus files
 """
 from __future__ import print_function
+import os
 from six import iteritems
 
-import os
 import numpy as np
 
 import vtk
@@ -22,10 +22,11 @@ class AbaqusIO(object):
 
     def get_abaqus_wildcard_geometry_results_functions(self):
         """dynamic named method for loading abaqus input files"""
-        data = ('Abaqus',
-                'Abaqus (*.inp)', self.load_abaqus_geometry,
-                None, None
-                )
+        data = (
+            'Abaqus',
+            'Abaqus (*.inp)', self.load_abaqus_geometry,
+            None, None
+        )
         return data
 
     def load_abaqus_geometry(self, abaqus_filename, name='main', plot=True):

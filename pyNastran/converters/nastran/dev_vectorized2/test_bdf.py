@@ -100,9 +100,11 @@ class TestVectorized(unittest.TestCase):
             assert np.array_equal(icd_transform1[icd1], icd_transform2[icd2])
         assert len(model1.nodes) == len(model2.nodes)
         for nid in model1.nodes:
-            #assert np.array_equal(model1.nodes[nid].xyz, model2.nodes[nid].xyz), 'nid=%s xyz1=%s xyz2=%s' % (nid, model1.nodes[nid].xyz, model2.nodes[nid].xyz)
+
             if not np.allclose(model1.nodes[nid].xyz, model2.nodes[nid].xyz):
-                print('nid=%s xyz1=%s xyz2=%s' % (nid, model1.nodes[nid].xyz, model2.nodes[nid].xyz))
+                msg = 'nid=%s xyz1=%s xyz2=%s' % (nid, model1.nodes[nid].xyz, model2.nodes[nid].xyz)
+                print(msg)
+                #raise RuntimeError(msg)
         #assert np.array_equal(xyz_cp1, xyz_cp2)
         #assert np.array_equal(xyz_cid1, xyz_cid2)
         for nid, xyz1, xyz2 in zip(nid_cp_cd1[:, 0], xyz_cid1, xyz_cid2):

@@ -9,6 +9,11 @@ from __future__ import division, unicode_literals, print_function
 import sys
 import os.path
 
+# kills the program when you hit Cntl+C from the command line
+# doesn't save the current state as presumably there's been an error
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
 
 from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
@@ -23,12 +28,6 @@ from pyNastran.gui.formats import Cart3dIO, is_cart3d
 from pyNastran.gui.arg_handling import get_inputs
 #from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.gui_common import GuiCommon2
-
-
-# kills the program when you hit Cntl+C from the command line
-# doesn't save the current state as presumably there's been an error
-import signal
-signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 if not is_cart3d:

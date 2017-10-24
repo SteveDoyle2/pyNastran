@@ -566,7 +566,7 @@ def main():
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time
-    t0 = time.time()
+    time0 = time.time()
 
     is_double = False
     if data['--double']:
@@ -594,7 +594,7 @@ def main():
             run_extract_bodies=False,
             #sum_load=data['--loads'],
     )
-    print("total time:  %.2f sec" % (time.time() - t0))
+    print("total time:  %.2f sec" % (time.time() - time0))
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -1,19 +1,20 @@
 """tests non-gui related Cart3d class/interface"""
+from __future__ import print_function
 import os
 import unittest
 from six.moves import range
 from numpy import array_equal, allclose
 
 import pyNastran
-from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d
+from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
 
 class TestCart3d(unittest.TestCase):
 
@@ -40,8 +41,8 @@ class TestCart3d(unittest.TestCase):
             "2\n"
             "4\n"
             "6\n"
-        )
-        infile_name = os.path.join(test_path, 'flat_full.tri')
+        )test_path
+        infile_name = os.path.join(TEST_PATH, 'flat_full.tri')
         with open(infile_name, 'w') as f:
             f.write(lines)
 
@@ -79,7 +80,7 @@ class TestCart3d(unittest.TestCase):
             "5.\n"
             "5. 5. 5. 5. 5.\n"
         )
-        cart3d_filename = os.path.join(test_path, 'flat.tri')
+        cart3d_filename = os.path.join(TEST_PATH, 'flat.tri')
         with open(cart3d_filename, 'w') as f:
             f.write(lines)
 
@@ -94,7 +95,7 @@ class TestCart3d(unittest.TestCase):
         assert len(cart3d.loads) == 14, 'nloads=%s' % len(cart3d.loads)  # was 10
         assert len(cart3d.loads['Cp']) == 5, 'nCp=%s' % len(cart3d.loads['Cp'])
 
-        outfile_name = os.path.join(test_path, 'flat.bin.tri')
+        outfile_name = os.path.join(TEST_PATH, 'flat.bin.tri')
         cart3d.loads = None
         cart3d.write_cart3d(outfile_name, is_binary=True)
         cnormals = cart3d.get_normals()
@@ -105,10 +106,10 @@ class TestCart3d(unittest.TestCase):
     def test_cart3d_io_03(self):
         """read/write geometry in ascii/binary"""
         log = get_logger(level='warning', encoding='utf-8')
-        infile_name = os.path.join(test_path, 'threePlugs.bin.tri')
-        outfile_name = os.path.join(test_path, 'threePlugs_out.tri')
-        outfile_name_bin = os.path.join(test_path, 'threePlugs_bin2.tri')
-        outfile_name_bin_out = os.path.join(test_path, 'threePlugs_bin_out.tri')
+        infile_name = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
+        outfile_name = os.path.join(TEST_PATH, 'threePlugs_out.tri')
+        outfile_name_bin = os.path.join(TEST_PATH, 'threePlugs_bin2.tri')
+        outfile_name_bin_out = os.path.join(TEST_PATH, 'threePlugs_bin_out.tri')
 
         cart3d = read_cart3d(infile_name, log=log, debug=False)
         cart3d.write_cart3d(outfile_name, is_binary=False)
@@ -135,8 +136,8 @@ class TestCart3d(unittest.TestCase):
     def test_cart3d_to_stl(self):
         """convert to stl"""
         log = get_logger(level='warning', encoding='utf-8')
-        cart3d_filename = os.path.join(test_path, 'threePlugs.bin.tri')
-        stl_filename = os.path.join(test_path, 'threePlugs.stl')
+        cart3d_filename = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
+        stl_filename = os.path.join(TEST_PATH, 'threePlugs.stl')
         cart3d_to_stl_filename(cart3d_filename, stl_filename, log=log)
         #os.remove(stl_filename)
 
@@ -204,6 +205,6 @@ def check_array(points, points2):
 
 if __name__ == '__main__':  # pragma: no cover
     import time
-    t0 = time.time()
+    time0 = time.time()
     unittest.main()
-    print("dt = %s" % (time.time() - t0))
+    print("dt = %s" % (time.time() - time0))

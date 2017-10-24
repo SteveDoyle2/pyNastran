@@ -249,7 +249,7 @@ def main():
     test_gui = FakeGUI(formati)
     test_gui.log = log
     stop_on_failure = ntotal == 1
-    t0 = time.time()
+    time0 = time.time()
     for input_filename, output_filename in zip(input_filenames, output_filenames):
         input_filename = os.path.abspath(input_filename)
         #output_filename =
@@ -302,7 +302,7 @@ def main():
 
         if not stop_on_failure:
             print('-' * 80)
-    dt = time.time() - t0
+    dt = time.time() - time0
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
     time_msg = 'dt = %.0f sec = %.1f min' % (dt, dt/60.)

@@ -4,16 +4,17 @@ import warnings
 import unittest
 
 import numpy as np
-warnings.simplefilter('always')
-np.seterr(all='raise')
 
 import pyNastran
 from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge, export_to_bedge
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-TEST_PATH = os.path.join(pkg_path, 'converters', 'aflr', 'aflr2')
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'aflr2')
+warnings.simplefilter('always')
+np.seterr(all='raise')
+
 
 class TestBEdge(unittest.TestCase):
     """tests the bedge file format"""

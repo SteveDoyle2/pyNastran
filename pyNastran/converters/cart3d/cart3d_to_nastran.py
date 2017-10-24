@@ -1,8 +1,8 @@
 from __future__ import print_function, unicode_literals
+from codecs import open as codec_open
 from six.moves import zip
 from numpy import unique
 
-from codecs import open as codec_open
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d
 from pyNastran.bdf.field_writer_8 import print_card_8
