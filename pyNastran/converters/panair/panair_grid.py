@@ -40,7 +40,7 @@ class PanairGrid(object):
         self.lines = []
 
         self.alphas = [0.]
-        self.ncases = None
+        self.ncases = 0
         self.betas = [0.]
         self.alpha_compressibility = 0.
         self.beta_compressibility = 0.
@@ -168,6 +168,7 @@ class PanairGrid(object):
         """
         reduces confusion by only printing cases that will run
         """
+        assert self.ncases > -1, 'ncases=%s' % self.ncases
         if len(self.alphas) > self.ncases:
             self.alphas = self.alphas[:self.ncases]
         if len(self.betas) > self.ncases:
