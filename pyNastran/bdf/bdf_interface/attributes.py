@@ -138,6 +138,7 @@ class BDFAttributes(object):
         self.bdf_filename = None
         self.punch = None
         self._encoding = None
+        self.force_echo_off = True
 
         #: list of Nastran SYSTEM commands
         self.system_command_lines = []  # type: List[str]

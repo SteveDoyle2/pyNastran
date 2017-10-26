@@ -1158,8 +1158,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           bdf.elements = 10
           etc.
         """
-        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
+        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         self._parse_primary_file_header(bdf_filename)
         out = self._get_lines(bdf_filename)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
@@ -1411,6 +1411,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         old_card_name = None
         backup_comment = ''
         nlines = len(bulk_data_lines)
+
         for i, line in enumerate(bulk_data_lines):
             #print('    backup=%r' % backup_comment)
             comment = ''
@@ -1419,7 +1420,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
-                    if self.echo:
+                    if self.echo and not self.force_echo_off:
                         self.log.info('Reading %s:\n' %
                                       old_card_name + full_comment + ''.join(card_lines))
 
@@ -1469,7 +1470,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #backup_comment += '$' + comment + '\n'
 
         if card_lines:
-            if self.echo:
+            if self.echo and not self.force_echo_off:
                 self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
             #print('end_add %s' % card_lines)
 
@@ -1481,6 +1482,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #print('backup_comment + full_comment = ', backup_comment + full_comment)
             cards.append([old_card_name, _prep_comment(backup_comment + full_comment), card_lines])
             card_count[old_card_name] += 1
+        self.echo = False
         return cards, card_count
 
     def get_bdf_cards_dict(self, bulk_data_lines):
@@ -1500,7 +1502,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
-                    if self.echo:
+                    if self.echo and not self.force_echo_off:
                         self.log.info('Reading %s:\n' %
                                       old_card_name + full_comment + ''.join(card_lines))
 
@@ -1548,7 +1550,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #backup_comment += comment + '\n'
 
         if card_lines:
-            if self.echo:
+            if self.echo and not self.force_echo_off:
                 self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
             #print('end_add %s' % card_lines)
 
@@ -2873,7 +2875,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.echo = False
             return
 
-        if self.echo:
+        if self.echo and not self.force_echo_off:
             try:
                 print(print_card_8(card_obj).rstrip())
             except:
@@ -4063,6 +4065,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
 
+        self.echo = False
         if isinstance(cards, dict): # self._is_cards_dict = True
             for card_name, card in sorted(iteritems(cards)):
                 if self.is_reject(card_name):
