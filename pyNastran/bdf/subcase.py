@@ -72,6 +72,33 @@ class Subcase(object):
         self.sol = None
         self.log = None
         #print("\n***adding subcase %s***" % self.id)
+        
+    def __deepcopy__(self, memo):
+        _copy = self.__class__()
+        _copy.id = self.id
+        _copy.sol = self.sol
+        _copy.log = self.log
+
+        def _deepcopy(lst):
+            _cpy = list(lst)
+
+            for i in range(len(_cpy)):
+                _ = _cpy[i]
+                if isinstance(_, list):
+                    _cpy[i] = _deepcopy(_)
+
+            return _cpy
+
+        params = _copy.params
+
+        for key, val in iteritems(self.params):
+            if isinstance(val, list):
+                val = _deepcopy(val)
+            params[key] = val
+
+        memo[id(self)] = _copy
+
+        return _copy
 
     def deprecated(self, old_name, new_name, deprecated_version):
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
