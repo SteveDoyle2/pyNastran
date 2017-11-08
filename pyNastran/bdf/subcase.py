@@ -74,6 +74,10 @@ class Subcase(object):
         #print("\n***adding subcase %s***" % self.id)
         
     def __deepcopy__(self, memo):
+        # custom method for copy.deepcopy to improve speed by more than 2x (tested with timeit)
+        # default method is a bit slow for a list of lists and can take a long time to read a bdf with many subcases
+        # this method removes some of the overhead
+        
         _copy = self.__class__()
         _copy.id = self.id
         _copy.sol = self.sol
