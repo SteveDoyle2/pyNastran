@@ -373,6 +373,39 @@ class CaseControlTest(unittest.TestCase):
         #print('%s' % deck_msg)
         deck_lines = deck_msg.split('\n')
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
+        
+    def test_case_control_13(self):
+        # this test checks that subcase 3 uses its local definition of set 100 and subcase 4 uses the default definition
+        lines = [
+            'SET 100 = 100',
+            'DISP = 100',
+            'SUBCASE 1',
+            '     SPC = 1',
+            '     LOAD = 1',
+            'SUBCASE 2',
+            '     SPC = 2',
+            '     LOAD = 2',
+            '     DISP = ALL',
+            'SUBCASE 3',
+            '     SET 100 = 100, 101',
+            '     SPC = 3',
+            '     LOAD = 3',
+            '     DISP = 100',
+            'SUBCASE 4',
+            '     SPC = 3',
+            '     LOAD = 3',
+            '     DISP = 100',
+        ]
+
+        deck = CaseControlDeck(lines)
+
+        default = deck.subcases[0]
+        sc3 = deck.subcases[3]
+        sc4 = deck.subcases[4]
+
+        assert default.params['SET 100'] == [[100], 100, 'SET-type']
+        assert sc3.params['SET 100'] == [[100, 101], 100, 'SET-type']
+        assert sc4.params['SET 100'] == [[100], 100, 'SET-type']
 
 def compare_lines(self, lines, lines_expected, has_endline):
     i = 0
