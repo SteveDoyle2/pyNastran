@@ -3,7 +3,7 @@ from six.moves import range
 from numpy import arange, amax, amin, zeros, hstack
 
 import vtk
-from vtk import vtkTriangle, vtkLine #, vtkParametricSpline
+from vtk import vtkTriangle, vtkLine
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.openvsp.adb_reader import ADB_Reader
@@ -62,7 +62,6 @@ class ADB_IO(object):  # pragma: no cover
 
         if 0:
             plot_wakes = False
-            #plot_wakes = False  # does this work right?
         else:
             plot_wakes = True # doesn't work perfectly
 
@@ -144,7 +143,7 @@ class ADB_IO(object):  # pragma: no cover
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-        self.log_info("updated grid")
+        #self.log_info("updated grid")
 
         # load results - regions/loads
         self.scalarBar.VisibilityOn()
