@@ -1,9 +1,16 @@
+"""
+defines:
+ - Cart3dGeometry
+"""
 from __future__ import print_function
 from copy import deepcopy
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
 class Cart3dGeometry(GuiResultCommon):
+    """
+    Stores the cart3d results.
+    """
     def __init__(self, subcase_id, labels,
                  nodes, elements, regions, area, cnormals,
                  uname='Cart3dGeometry'):
@@ -90,20 +97,22 @@ class Cart3dGeometry(GuiResultCommon):
 
     def get_result(self, i, name):
         if name == 'NodeID':
-            return self.nodes
+            res = self.nodes
         elif name == 'ElementID':
-            return self.elements
+            res = self.elements
         elif name == 'Region':
-            return self.regions
+            res = self.regions
         elif name == 'Area':
-            return self.area
+            res = self.area
         elif name == 'NormalX':
-            return self.centroid_normals[:, 0]
+            res = self.centroid_normals[:, 0]
         elif name == 'NormalY':
-            return self.centroid_normals[:, 1]
+            res = self.centroid_normals[:, 1]
         elif name == 'NormalZ':
-            return self.centroid_normals[:, 2]
-        raise NotImplementedError('i=%s' % str(i))
+            res = self.centroid_normals[:, 2]
+        else:
+            raise NotImplementedError('i=%s' % str(i))
+        return res
 
     #----------------------------------------------------
     # colormap
@@ -300,5 +309,3 @@ class Cart3dResult(GuiResultCommon):
         msg += '  4 | RhoE\n'
         msg += '----+----------\n'
         return msg
-
-

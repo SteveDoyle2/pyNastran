@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, PY2
+from six import iteritems
 
 import os
 import sys
@@ -21,7 +21,7 @@ def run_lots_of_files(files, debug=True, save_cases=True, skip_files=None,
     nfailed = 0
     ntotal = 0
     npassed = 0
-    t0 = time.time()
+    time0 = time.time()
     for i, f06file in enumerate(files[nstart:nstop], nstart):  # 149
         base_name = os.path.basename(f06file)
         #if baseName not in skip_files and not base_name.startswith('acms') and i not in nSkip:
@@ -45,7 +45,7 @@ def run_lots_of_files(files, debug=True, save_cases=True, skip_files=None,
         with open('failed_cases.in', 'wb') as failed_cases_file:
             for f06file in failed_cases:
                 failed_cases_file.write('%s\n' % (f06file))
-    print("dt = %s seconds" % (time.time() - t0))
+    print("dt = %s seconds" % (time.time() - time0))
 
     sys.exit('-----done with all models %s/%s=%.2f%%  nfailed=%s-----' % (
         npassed, ntotal, 100. * npassed / float(ntotal), ntotal - npassed))

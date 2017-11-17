@@ -3080,7 +3080,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
-        return _lines_to_decks(lines, i, punch)
+        return _lines_to_decks(lines, punch)
 
     def _dump_file(self, bdf_dump_filename, lines, i):
         """
@@ -3847,7 +3847,7 @@ def _clean_comment(comment):
         #print(comment)
     return comment
 
-def _lines_to_decks(lines, i, punch):
+def _lines_to_decks(lines, punch):
     """
     Splits the lines into their deck.
     """

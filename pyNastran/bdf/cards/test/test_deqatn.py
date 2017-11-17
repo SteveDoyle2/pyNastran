@@ -152,8 +152,8 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        with open('junk.bdf', 'w') as f:
-            model.write_bdf(f, close=False)
+        with open('junk.bdf', 'w') as bdf_file:
+            model.write_bdf(bdf_file, close=False)
             #s.getvalue()
         os.remove('junk.bdf')
 
@@ -402,8 +402,8 @@ class TestDEQATN(unittest.TestCase):
                 'desvar,100,101,102',
             ],
             #[
-                #'dresp2,11,respB,F(A,B)=A+B**2*SIN(A*B)'
-                #',desvar,100,101',
+            #'dresp2,11,respB,F(A,B)=A+B**2*SIN(A*B)'
+            #',desvar,100,101',
             #],
         ]
         desvar_cards = [

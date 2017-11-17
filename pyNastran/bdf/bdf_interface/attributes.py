@@ -139,6 +139,9 @@ class BDFAttributes(object):
         self.punch = None
         self._encoding = None
 
+        #: ignore any ECHOON flags
+        self.force_echo_off = True
+
         #: list of Nastran SYSTEM commands
         self.system_command_lines = []  # type: List[str]
 

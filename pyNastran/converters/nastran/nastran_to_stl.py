@@ -62,7 +62,8 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
             continue
         elif element.type in ['CQUAD4']:
             n1, n2, n3, n4 = element.node_ids
-            i1, i2, i3, i4 = nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4]
+            i1, i2, i3, i4 = (nodeid_to_i_map[n1], nodeid_to_i_map[n2],
+                              nodeid_to_i_map[n3], nodeid_to_i_map[n4])
             elements.append([i1, i2, i3])
             elements.append([i3, i4, i1])
         elif element.type in ['CTRIA3', 'CTRIAR']:
@@ -82,9 +83,3 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
     stl.elements = elements
     stl.write_stl(stl_filename, is_binary=is_binary, stop_on_failure=stop_on_failure)
     return stl
-
-
-if __name__ == '__main__':  # pragma: no cover
-    bdf_filename = 'threePlugs.bdf'
-    stl_filename = 'threePlugs.stl'
-    nastran_to_stl(bdf_filename, stl_filename)

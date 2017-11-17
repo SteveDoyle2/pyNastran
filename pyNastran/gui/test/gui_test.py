@@ -109,7 +109,7 @@ def run_lots_of_files(files, debug=debug,encoding='latin1', dev=True):
     nfailed = 0
     ntotal = 0
     npassed = 0
-    t0 = time.time()
+    #time0 = time.time()
     failed_files = []
     for filename in files:
         try:

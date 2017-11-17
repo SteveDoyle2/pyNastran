@@ -9,6 +9,7 @@ from pyNastran.bdf.utils import (
 
 class TestBdfUtils(unittest.TestCase):
     def test_bdf_utils_01(self):
+        """tests parse_patran_syntax"""
         msg = '1:10  14:20:2  50:40:-1'
         output = parse_patran_syntax(msg, pound=None)
         expected = np.array(
@@ -39,6 +40,7 @@ class TestBdfUtils(unittest.TestCase):
         output = parse_patran_syntax(msg, pound='5')
 
     def test_bdf_utils_02(self):
+        """tests parse_patran_syntax_dict"""
         msg = 'n 1:10  14:20:2  50:40:-1 e 10 20'
         expected_nodes = np.array(
             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -90,6 +92,7 @@ class TestBdfUtils(unittest.TestCase):
         assert len(out) == 0, 'out=%s' % out
 
     def test_bdf_utils_03(self):
+        """tests parse_patran_syntax_dict"""
         node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
         type_map = {
             'n' : 'Node',

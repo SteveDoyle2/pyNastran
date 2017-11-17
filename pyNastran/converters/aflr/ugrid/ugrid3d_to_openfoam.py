@@ -53,22 +53,24 @@ def _write_points(ugrid, points_filename):
     with open(points_filename, 'wb') as points_file:
         nnodes = ugrid.nodes.shape[0]
 
-        points_file.write('/*--------------------------------*- C++ -*----------------------------------*\\\n')
-        points_file.write('| =========                 |                                                 |\n')
-        points_file.write('| \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |\n')
-        points_file.write('|  \\\\    /   O peration     | Version:  1.7.1                                 |\n')
-        points_file.write('|   \\\\  /    A nd           | Web:      www.OpenFOAM.com                      |\n')
-        points_file.write('|    \\\\/     M anipulation  |                                                 |\n')
-        points_file.write('\\*---------------------------------------------------------------------------*/\n')
-        points_file.write('FoamFile\n')
-        points_file.write('{\n')
-        points_file.write('    version     2.0;\n')
-        points_file.write('    format      ascii;\n')
-        points_file.write('    class       vectorField;\n')
-        points_file.write('    location    "constant/polyMesh";\n')
-        points_file.write('    object      points;\n')
-        points_file.write('}\n')
-        points_file.write('// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /\n')
+        points_file.write(
+            '/*--------------------------------*- C++ -*----------------------------------*\\\n'
+            '| =========                 |                                                 |\n'
+            '| \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |\n'
+            '|  \\\\    /   O peration     | Version:  1.7.1                                 |\n'
+            '|   \\\\  /    A nd           | Web:      www.OpenFOAM.com                      |\n'
+            '|    \\\\/     M anipulation  |                                                 |\n'
+            '\\*---------------------------------------------------------------------------*/\n'
+            'FoamFile\n'
+            '{\n'
+            '    version     2.0;\n'
+            '    format      ascii;\n'
+            '    class       vectorField;\n'
+            '    location    "constant/polyMesh";\n'
+            '    object      points;\n'
+            '}\n'
+            '// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /\n'
+        )
 
 
         points_file.write('\n\n')

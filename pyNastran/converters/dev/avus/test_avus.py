@@ -1,15 +1,11 @@
-"""tests non-gui related Cart3d class/interface"""
+"""tests non-gui related Avus class/interface"""
+from __future__ import print_function
 import os
 import unittest
-from six.moves import range
-from numpy import array_equal, allclose
+from numpy import array_equal
 
 import pyNastran
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid, read_avus
-#from pyNastran.converters.avus.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
-#from pyNastran.converters.avus.cart3d_to_stl import cart3d_to_stl_filename
-#from pyNastran.converters.avus.cart3d_to_tecplot import cart3d_to_tecplot
-#from pyNastran.converters.avus.input_c3d_reader import read_input_c3d
 from pyNastran.utils.log import get_logger
 
 pkg_path = pyNastran.__path__[0]
@@ -105,6 +101,6 @@ class TestAvus(unittest.TestCase):
 
 if __name__ == '__main__':  # pragma: no cover
     import time
-    t0 = time.time()
+    time0 = time.time()
     unittest.main()
-    print("dt = %s" % (time.time() - t0))
+    print("dt = %s" % (time.time() - time0))

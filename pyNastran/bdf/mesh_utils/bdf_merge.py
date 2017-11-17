@@ -4,9 +4,7 @@ defines:
              is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False)
 """
 from __future__ import print_function
-import os
 from six.moves import StringIO
-import numpy as np
 from six import string_types, iteritems
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.bdf import BDF, read_bdf
@@ -130,7 +128,6 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         model2 = BDF(debug=False)
         model2.disable_cards(cards_to_skip)
         model2.read_bdf(bdf_dump)
-        #os.remove(bdf_dump)
 
         #model.log.info('model2.node_ids = %s' % np.array(model2.node_ids))
         for data_member in data_members:

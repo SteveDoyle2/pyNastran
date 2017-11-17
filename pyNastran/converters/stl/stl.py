@@ -787,4 +787,3 @@ def _rotate_model(stl):  # pragma: no cover
 if __name__ == '__main__':  # pragma: no cover
     from pyNastran.converters.stl.stl_reshape import main
     main()
-

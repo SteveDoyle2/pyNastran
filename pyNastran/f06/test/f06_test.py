@@ -102,10 +102,10 @@ def main():
     print("nfiles = %s" % len(files))
     #print(files)
     import time
-    t0 = time.time()
+    time0 = time.time()
     run_lots_of_files(files, debug, save_cases, skip_files,
                       stop_on_failure, nstart, nstop)
-    print("dt = %f" % (time.time() - t0))
+    print("dt = %f" % (time.time() - time0))
     sys.exit('final stop...')
 
 if __name__ == '__main__':  # pragma: no cover

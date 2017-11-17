@@ -1092,6 +1092,36 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 dvgrid.validate()
         #------------------------------------------------
 
+    def include_zip(self, bdf_filename=None, encoding=None):
+        """
+        Read a bdf without perform any other operation, except (optionally)
+        insert the INCLUDE files in the bdf
+
+        Parameters
+        ----------
+        bdf_filename : str / None
+            the input bdf (default=None; popup a dialog)
+        encoding : str; default=None -> system default
+            the unicode encoding
+
+        Returns
+        -------
+        all_lines : List[str]
+            all the lines packed into a single line stream
+
+        .. note::  Setting read_includes to False is kind of pointless if
+                   called directly; it's useful for ``read_bdf``
+        """
+        punch = False #  doesn't really matter
+        read_includes = True
+        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
+        self._parse_primary_file_header(bdf_filename)
+
+        main_lines = self._get_main_lines(self.bdf_filename, self.punch)
+        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
+
+        return all_lines
+
     def read_bdf(self, bdf_filename=None,
                  validate=True, xref=True, punch=False, read_includes=True, encoding=None):
         """
@@ -1129,12 +1159,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           etc.
         """
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
-
-        self._parse_primary_file_header(bdf_filename)
-
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-        system_lines, executive_control_lines, case_control_lines, \
-            bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+        self._parse_primary_file_header(bdf_filename)
+        out = self._get_lines(bdf_filename)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
 
         self.system_command_lines = system_lines
         self.executive_control_lines = executive_control_lines
@@ -1143,22 +1171,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
         self.update_solution(sol, method, sol_iline)
 
-        self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
+        self.case_control_deck = CaseControlDeck(case_control_lines, self.log)
         self.case_control_deck.solmap_to_value = self._solmap_to_value
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
         #self._is_cards_dict = True
         if self._is_cards_dict:
             cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
-            if 0:
-                with open('dump.bdf', 'w') as bdf_file_obj:
-                    bdf_file_obj.write('\n'.join(self.executive_control_lines))
-                    bdf_file_obj.write(str(self.case_control_deck))
-                    for cardname, cards in iteritems(cards):
-                        for (comment, cardlines) in cards:
-                            #bdf_file_obj.write(comment + '\n')
-                            bdf_file_obj.write('\n'.join(cardlines) + '\n')
-                        bdf_file_obj.write('\n')
+            #if 0:
+                #with open('dump.bdf', 'w') as bdf_file_obj:
+                    #bdf_file_obj.write('\n'.join(executive_control_lines))
+                    #bdf_file_obj.write(str(case_control_deck))
+                    #for cardname, cards in iteritems(cards):
+                        #for (comment, cardlines) in cards:
+                            ##bdf_file_obj.write(comment + '\n')
+                            #bdf_file_obj.write('\n'.join(cardlines) + '\n')
+                        #bdf_file_obj.write('\n')
         else:
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
             #for card in cards:
@@ -1383,6 +1411,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         old_card_name = None
         backup_comment = ''
         nlines = len(bulk_data_lines)
+
         for i, line in enumerate(bulk_data_lines):
             #print('    backup=%r' % backup_comment)
             comment = ''
@@ -1391,7 +1420,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
-                    if self.echo:
+                    if self.echo and not self.force_echo_off:
                         self.log.info('Reading %s:\n' %
                                       old_card_name + full_comment + ''.join(card_lines))
 
@@ -1441,7 +1470,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #backup_comment += '$' + comment + '\n'
 
         if card_lines:
-            if self.echo:
+            if self.echo and not self.force_echo_off:
                 self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
             #print('end_add %s' % card_lines)
 
@@ -1453,6 +1482,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #print('backup_comment + full_comment = ', backup_comment + full_comment)
             cards.append([old_card_name, _prep_comment(backup_comment + full_comment), card_lines])
             card_count[old_card_name] += 1
+        self.echo = False
         return cards, card_count
 
     def get_bdf_cards_dict(self, bulk_data_lines):
@@ -1472,7 +1502,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
             if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
-                    if self.echo:
+                    if self.echo and not self.force_echo_off:
                         self.log.info('Reading %s:\n' %
                                       old_card_name + full_comment + ''.join(card_lines))
 
@@ -1520,7 +1550,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #backup_comment += comment + '\n'
 
         if card_lines:
-            if self.echo:
+            if self.echo and not self.force_echo_off:
                 self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
             #print('end_add %s' % card_lines)
 
@@ -1646,7 +1676,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
           >>> bdf = BDF()
           >>> bdf.set_dynamic_syntax(dict_of_vars)
-          >>> bdf,read_bdf(bdf_filename, xref=True)
+          >>> bdf.read_bdf(bdf_filename, xref=True)
 
         .. note:: Case sensitivity is supported.
         .. note:: Variables should be 7 characters or less to fit in an
@@ -2845,7 +2875,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.echo = False
             return
 
-        if self.echo:
+        if self.echo and not self.force_echo_off:
             try:
                 print(print_card_8(card_obj).rstrip())
             except:
@@ -3688,43 +3718,37 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             raise CardParseSyntaxError(msg)
         return card_name.upper()
 
-    def _show_bad_file(self, bdf_filename):
-        # type: (Union[str, StringIO]) -> None
+    def _get_lines(self, bdf_filename):
         """
-        Prints the 10 lines before the UnicodeDecodeError occurred.
+        Opens the bdf and extracts the lines by group
 
         Parameters
         ----------
         bdf_filename : str
-            the filename to print the lines of
+            the main bdf_filename
+        punch : bool; default=False
+            is this a punch file
+            True : no executive/case control decks
+            False : executive/case control decks exist
+
+        Returns
+        -------
+        system_lines : List[str]
+            the system control lines (typically empty; used for alters)
+        executive_control_lines : List[str]
+            the executive control lines (stores SOL 101)
+        case_control_lines : List[str]
+            the case control lines (stores subcases)
+        bulk_data_lines : List[str]
+            the bulk data lines (stores geometry, boundary conditions, loads, etc.)
         """
-        lines = []  # type: List[str]
-        print('ENCODING - show_bad_file=%r' % self._encoding)
+        main_lines = self._get_main_lines(self.bdf_filename, self.punch)
+        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
+        out = _lines_to_decks(all_lines, self.punch)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
 
-        with codec_open(_filename(bdf_filename), 'r', encoding=self._encoding) as bdf_file:
-            iline = 0
-            nblank = 0
-            while 1:
-                try:
-                    line = bdf_file.readline().rstrip()
-                except UnicodeDecodeError:
-                    iline0 = max([iline - 10, 0])
-                    self.log.error('filename=%s' % self.bdf_filename)
-                    for iline1, line in enumerate(lines[iline0:iline]):
-                        self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
-                    msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
-                        self._encoding, iline, bdf_filename, self._encoding)
-                    raise RuntimeError(msg)
-                if line:
-                    nblank = 0
-                else:
-                    nblank += 1
-                if nblank == 20:
-                    raise RuntimeError('20 blank lines')
-                iline += 1
-                lines.append(line)
-
-    def _get_lines(self, bdf_filename, punch=False):
+    def _get_main_lines(self, bdf_filename, punch=False):
         # type: (Union[str, StringIO], bool) -> List[str]
         """
         Opens the bdf and extracts the lines
@@ -3740,20 +3764,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         Returns
         -------
-        system_lines : list[str]
-            the Nastran SYSTEM lines
-        executive_control_lines : list[str]
-            the executive control deck lines
-        case_control_lines : list[str]
-            the case control deck lines
-        bulk_data_lines : list[str]
-            the bulk data deck lines
+        lines : List[str]
+            all the lines packed into a single line stream
         """
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             bdf_filename = cast(StringIO, bdf_filename)
             lines = bdf_filename.readlines()
             assert len(lines) > 0, lines
-            return self._lines_to_deck_lines(lines, punch=punch)
+            return lines
 
         bdf_filename = cast(str, bdf_filename)
 
@@ -3764,26 +3782,27 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             try:
                 lines = bdf_file.readlines()
             except:
-                self._show_bad_file(bdf_filename)
-        return self._lines_to_deck_lines(lines, punch=punch)
+                _show_bad_file(bdf_filename, encoding=self._encoding)
+        return lines
 
     def _lines_to_deck_lines(self, lines, punch=False):
-        # type: (List[str], bool) -> List[str]
+        # type: (List[str], bool) -> List[str], int
         """
-        Splits the BDF lines into:
-         - system lines
-         - executive control deck
-         - case control deck
-         - bulk data deck
+        Merges the includes into the main deck.
 
         Parameters
         ----------
         lines : List[str]
-            the lines
+            the lines from the main BDF
         punch : bool; default=False
             is this a punch file
             True : no executive/case control decks
             False : executive/case control decks exist
+
+        Returns
+        -------
+        active_lines : List[str]
+            all the active lines in the deck
         """
         nlines = len(lines)
 
@@ -3845,7 +3864,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
-        return _lines_to_decks(lines, i, punch)
+        return lines
 
     def _get_include_lines(self, lines, line, i, nlines):
         """
@@ -4046,6 +4065,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
 
+        self.echo = False
         if isinstance(cards, dict): # self._is_cards_dict = True
             for card_name, card in sorted(iteritems(cards)):
                 if self.is_reject(card_name):
@@ -4391,9 +4411,32 @@ def _clean_comment_bulk(comment):
     return comment
 
 
-def _lines_to_decks(lines, i, punch):
+def _lines_to_decks(lines, punch):
     """
-    Splits the lines into their deck.
+    Splits the BDF lines into:
+     - system lines
+     - executive control deck
+     - case control deck
+     - bulk data deck
+
+    Parameters
+    ----------
+    lines : List[str]
+        all the active lines in the deck
+    punch : bool
+        True : starts from the bulk data deck
+        False : read the entire deck
+
+    Returns
+    -------
+    system_lines : List[str]
+        the system control lines (typically empty; used for alters)
+    executive_control_lines : List[str]
+        the executive control lines (stores SOL 101)
+    case_control_lines : List[str]
+        the case control lines (stores subcases)
+    bulk_data_lines : List[str]
+        the bulk data lines (stores geometry, boundary conditions, loads, etc.)
     """
     executive_control_lines = []
     case_control_lines = []
@@ -4404,7 +4447,7 @@ def _lines_to_decks(lines, i, punch):
     else:
         flag = 1
         for i, line in enumerate(lines):
-            #print(line)
+            #print(flag, line.rstrip())
             if flag == 1:
                 #line = line.upper()
                 if line.upper().startswith('CEND'):
@@ -4507,6 +4550,46 @@ def _check_valid_deck(flag):
         msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
         msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
         raise MissingDeckSections(msg)
+
+def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
+    # type: (Union[str, StringIO]) -> None
+    """
+    Prints the 10 lines before the UnicodeDecodeError occurred.
+
+    Parameters
+    ----------
+    bdf_filename : str
+        the filename to print the lines of
+    encoding : str
+        the file encoding
+    nlines_previous : int; default=10
+        the number of lines to show
+    """
+    lines = []  # type: List[str]
+    print('ENCODING - show_bad_file=%r' % encoding)
+
+    with codec_open(_filename(bdf_filename), 'r', encoding=encoding) as bdf_file:
+        iline = 0
+        nblank = 0
+        while 1:
+            try:
+                line = bdf_file.readline().rstrip()
+            except UnicodeDecodeError:
+                iline0 = max([iline - nlines_previous, 0])
+                self.log.error('filename=%s' % self.bdf_filename)
+                for iline1, line in enumerate(lines[iline0:iline]):
+                    self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
+                msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
+                    encoding, iline, bdf_filename, self._encoding)
+                raise RuntimeError(msg)
+            if line:
+                nblank = 0
+            else:
+                nblank += 1
+            if nblank == 20:
+                raise RuntimeError('20 blank lines')
+            iline += 1
+            lines.append(line)
 
 def main():  # pragma: no cover
     """

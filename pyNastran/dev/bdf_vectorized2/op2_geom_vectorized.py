@@ -3,7 +3,7 @@ import struct
 from six import b
 import numpy as np
 from pyNastran.op2.op2_geom import OP2GeomCommon
-from pyNastran.converters.nastran.dev_vectorized2.bdf_vectorized import BDF
+from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF
 
 class OP2Geom(OP2GeomCommon, BDF):
     """creates an vectorized interface for the OP2 and BDF classes"""

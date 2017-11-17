@@ -106,5 +106,3 @@ class UGRID2D_Reader(object):
         self.nodes = nodes
         self.tris = tris - 1
         self.quads = quads - 1
-
-

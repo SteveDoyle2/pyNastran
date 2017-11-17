@@ -82,7 +82,6 @@ class Matrix(object):
         """exports the object to pandas format"""
         matrix = self.data
         if isinstance(matrix, coo_matrix):
-            pass
             print('HDF5: skipping sparse_coo_matrix')
             #sparse_coo_matrix
         else:

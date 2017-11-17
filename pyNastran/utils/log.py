@@ -9,15 +9,15 @@ import os
 from six import PY2, string_types
 
 IS_TERMINAL = False
-if sys.stdout.isatty():
-    IS_TERMINAL = True
+if hasattr(sys.stdout, 'isatty'):  # pyInstaller <= 3.1 doesn't have this
+    IS_TERMINAL = sys.stdout.isatty()
+
 # You're running in a real terminal
 
 try:
     from colorama import init as colorinit, Fore  # type: ignore
     colorinit(autoreset=True)
     IS_COLORAMA = True
-    IS_TERMINAL = True
 except ImportError:
     IS_COLORAMA = False
 USE_COLORAMA = IS_COLORAMA and IS_TERMINAL

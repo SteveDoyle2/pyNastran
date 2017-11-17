@@ -108,9 +108,9 @@ class TestDampers(unittest.TestCase):
         g0 = None
         cgap = model.add_cgap(eid, pid, nids, x, g0, cid=None, comment='cgap')
         pgap = model.add_pgap(pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
-                             kt=None, mu2=None,
-                             tmax=0., mar=100., trmin=0.001,
-                             comment='pgap')
+                              kt=None, mu2=None,
+                              tmax=0., mar=100., trmin=0.001,
+                              comment='pgap')
 
         eid = 8
         pid = 8

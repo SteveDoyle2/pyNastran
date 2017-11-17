@@ -115,18 +115,18 @@ def double(svalue, ifield=-1, fieldname='NA'):
         return svalue
     elif isinstance(svalue, integer_types):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
-                           % (fieldname, svalue, ifield, dtype))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n' % (
+            fieldname, svalue, ifield, dtype))
     elif svalue is None or len(svalue) == 0:  ## None
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
-                           % (fieldname, svalue, ifield, dtype))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'  % (
+            fieldname, svalue, ifield, dtype))
 
     if svalue.isdigit():
         # if only int
         dtype = _get_dtype(int(svalue))
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
-                          % (fieldname, svalue, ifield, dtype))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n' % (
+            fieldname, svalue, ifield, dtype))
 
     #svalue = svalue.strip()
     try:
@@ -134,8 +134,8 @@ def double(svalue, ifield=-1, fieldname='NA'):
         value = float(svalue)
     except TypeError:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
-                          % (fieldname, svalue, ifield, dtype))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n' % (
+            fieldname, svalue, ifield, dtype))
     except ValueError:
         # 1D+3, 1D-3, 1-3
         try:
@@ -158,8 +158,8 @@ def double(svalue, ifield=-1, fieldname='NA'):
             value = float(svalue)
         except ValueError:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
-                              % (fieldname, svalue, ifield, dtype))
+            raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n' % (
+                fieldname, svalue, ifield, dtype))
     return value
 
 def _get_dtype(svalue):

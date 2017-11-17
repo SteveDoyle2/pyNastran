@@ -2634,9 +2634,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #args, varargs, keywords, defaults = inspect.getargspec(load_function)
             #if args[-1] == 'plot':
             try:
-                t0 = time.time()
+                time0 = time.time()
                 has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
-                dt = time.time() - t0
+                dt = time.time() - time0
                 print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
                 #else:
                     #name = load_function.__name__

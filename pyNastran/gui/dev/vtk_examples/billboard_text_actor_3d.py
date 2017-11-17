@@ -14,8 +14,9 @@ def ActorCallback(caller, eventId_unuseD, clientData, callData_unused):
     text_actor = vtk.vtkBillboardTextActor3D(clientData)
     #actor = vtkActor *(caller)
 
-    label = '.3f, %.3f, %.3f' % (actor.GetPosition()[0], actor.GetPosition()[1], actor.GetPosition()[2])
-    text_actor.SetPosition(actor.GetPosition())
+    xyz = actor.GetPosition()
+    label = '.3f, %.3f, %.3f' % (xyz[0], xyz[1], xyz[2])
+    text_actor.SetPosition(xyz)
     text_actor.SetInput(label)
 
 def make_billboard(renderer, xyz):

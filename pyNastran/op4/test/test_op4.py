@@ -176,13 +176,13 @@ def main():
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
-    t0 = time.time()
+    time0 = time.time()
     run_op4(
         data['OP4_FILENAME'],
         write_op4=data['--write_op4'],
         debug=data['--debug'],
     )
-    print("dt = %f" % (time.time() - t0))
+    print("dt = %f" % (time.time() - time0))
 
 
 if __name__ == '__main__':  # op4

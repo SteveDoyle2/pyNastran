@@ -154,7 +154,8 @@ class TransientElementResults(object):
     def get_nlabels_labelsize_ncolors_colormap(self, i, name):
         return self.nlabels, self.labelsize, self.ncolors, self.colormap
 
-    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize, ncolors, colormap):
+    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+                                               ncolors, colormap):
         self.nlabels = nlabels
         self.labelsize = labelsize
         self.ncolors = ncolors

@@ -62,7 +62,9 @@ def stl_to_nastran(stl_filename, bdf_filename,
             nid2 += 1
 
         eid = nelements_offset + 1
-        for (n1, n2, n3) in (model.elements + (nnodes_offset + 1)):
+
+        elements = model.elements + (nnodes_offset + 1)
+        for (n1, n2, n3) in elements:
             card = ['CTRIA3', eid, pid, n1, n2, n3]
             bdf.write(print_card_8(card))
             eid += 1

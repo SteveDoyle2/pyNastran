@@ -697,8 +697,8 @@ class NastranGuiResults(NastranGuiAttributes):
                             title='Strain Energy', data_format='%.3e',
                             location='centroid', scalar=ese)
         percent_res = GuiResult(subcase_id, header='Percent of Total',
-                            title='Percent of Total', data_format='%.3f',
-                            location='centroid', scalar=percent)
+                                title='Percent of Total', data_format='%.3f',
+                                location='centroid', scalar=percent)
         sed_res = GuiResult(subcase_id, header='Strain Energy Density',
                             title='Strain Energy Density', data_format='%.3e',
                             location='centroid', scalar=strain_energy_density)
