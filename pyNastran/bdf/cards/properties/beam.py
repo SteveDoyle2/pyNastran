@@ -209,6 +209,7 @@ class PBEAM(IntegratedLineProperty):
         #: z coordinate of neutral axis for end B.
         self.n2b = n2b
 
+        nxxb = len(xxb)
         # sort xxb
         ixxb = argsort(xxb)
         self.so = array(so, dtype='|U8')[ixxb]
@@ -216,12 +217,29 @@ class PBEAM(IntegratedLineProperty):
         #print('ixxb = %s' % ixxb)
         #print('i12 = %s' % i12)
 
+        assert len(area) == nxxb, 'pid=%s len(xxb)=%s len(A =)=%s' % (pid, nxxb, len(area))
+        assert len(i1) == nxxb, 'pid=%s len(xxb)=%s len(i1 )=%s' % (pid, nxxb, len(i1))
+        assert len(i2) == nxxb, 'pid=%s len(xxb)=%s len(i2 )=%s' % (pid, nxxb, len(i2))
+        assert len(i12) == nxxb, 'pid=%s len(xxb)=%s len(i12)=%s' % (pid, nxxb, len(i12))
+        assert len(j) == nxxb, 'pid=%s len(xxb)=%s len(j =)=%s' % (pid, nxxb, len(j))
+        assert len(nsm) == nxxb, 'pid=%s len(xxb)=%s len(nsm)=%s' % (pid, nxxb, len(nsm))
+
         self.A = array(area, dtype='float64')[ixxb]
         self.i1 = array(i1, dtype='float64')[ixxb]
         self.i2 = array(i2, dtype='float64')[ixxb]
         self.i12 = array(i12, dtype='float64')[ixxb]
         self.j = array(j, dtype='float64')[ixxb]
         self.nsm = array(nsm, dtype='float64')[ixxb]
+
+        #assert len(area) == nxxb, 'pid=%s len(xxb)=%s len(area)=%s' % (nxxb, len(area))
+        assert len(c1) == nxxb, 'pid=%s len(xxb)=%s len(c1)=%s' % (pid, nxxb, len(c1))
+        assert len(c2) == nxxb, 'pid=%s len(xxb)=%s len(c2)=%s' % (pid, nxxb, len(c2))
+        assert len(d1) == nxxb, 'pid=%s len(xxb)=%s len(d1)=%s' % (pid, nxxb, len(d1))
+        assert len(d2) == nxxb, 'pid=%s len(xxb)=%s len(d2)=%s' % (pid, nxxb, len(d2))
+        assert len(e1) == nxxb, 'pid=%s len(xxb)=%s len(e1)=%s' % (pid, nxxb, len(e1))
+        assert len(e2) == nxxb, 'pid=%s len(xxb)=%s len(e2)=%s' % (pid, nxxb, len(e2))
+        assert len(f1) == nxxb, 'pid=%s len(xxb)=%s len(f1)=%s' % (pid, nxxb, len(f1))
+        assert len(f2) == nxxb, 'pid=%s len(xxb)=%s len(f2)=%s' % (pid, nxxb, len(f2))
 
         self.c1 = array(c1, dtype='float64')[ixxb]
         self.c2 = array(c2, dtype='float64')[ixxb]
@@ -973,8 +991,16 @@ class PBEAML(IntegratedLineProperty):
         nxxb = len(xxb)
         if nsm is None:
             nsm = [0.] * nxxb
+        elif not isinstance(nsm, (list, tuple, ndarray)):
+            msg = 'pid=%s; nsm=%s and must be a list/tuple/ndarray; type=%s' % (
+                pid, nsm, type(nsm))
+            raise TypeError(msg)
         if so is None:
             so = ['YES'] * nxxb
+        elif not isinstance(so, (list, tuple, ndarray)):
+            msg = 'pid=%s; so=%s and must be a list/tuple/ndarray; type=%s' % (
+                pid, so, type(so))
+            raise TypeError(msg)
 
         self.dim = dims
         for xxbi, dim in zip(xxb, dims):

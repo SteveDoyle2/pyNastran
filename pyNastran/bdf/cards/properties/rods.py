@@ -137,6 +137,17 @@ class PROD(Property):
             raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.Rho()
 
+    def MassPerLength(self):
+        r"""
+            Gets the mass per length :math:`\frac{m}{L}` of the CBEAM.
+
+            .. math:: \frac{m}{L} = A \rho + nsm
+            """
+        rho = self.Rho()
+        area = self.A
+        nsm = self.nsm
+        return area * rho + nsm
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -211,6 +222,11 @@ class PTUBE(Property):
         self.t = t
         self.nsm = nsm
         self.mid_ref = None
+
+    def validate(self):
+        assert self.OD1 >= 0., 'PTUBE: pid=%s OD1=%s' % (self.pid, self.OD1)
+        assert self.OD2 >= 0., 'PTUBE: pid=%s OD2=%s' % (self.pid, self.OD2)
+        assert self.t >= 0., 'PTUBE: pid=%s t=%s' % (self.pid, self.t)
 
     @classmethod
     def add_card(cls, card, comment=''):

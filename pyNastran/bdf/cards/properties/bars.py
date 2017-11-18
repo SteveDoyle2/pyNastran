@@ -1303,7 +1303,7 @@ class PBARL(LineProperty):
         assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
-        nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
+        nsm = double_or_blank(card, 9 + ndim, 'nsm', 0.0)
         return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
     @classmethod
