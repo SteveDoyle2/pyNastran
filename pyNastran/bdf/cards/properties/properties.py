@@ -197,6 +197,9 @@ class PGAP(Property):
         1: 'pid', 2:'u0', 3:'f0', 4:'ka', 5:'kb', 6:'kt', 7:'mu1',
         8:'mu2', 9:'tmax', 10:'mar', 11:'trmin',
     }
+    pname_fid_map = {
+        #5 : 't', 'T' : 't',
+    }
 
     def __init__(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0., kt=None, mu2=None,
                  tmax=0., mar=100., trmin=0.001, comment=''):

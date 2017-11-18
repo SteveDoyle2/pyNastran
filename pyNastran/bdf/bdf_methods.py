@@ -15,9 +15,8 @@ reading/writing/accessing of BDF data.  Such methods include:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
-from copy import deepcopy
 
-from six import iteritems, PY2
+from six import iteritems
 from typing import List, Tuple, Any, Union, Dict
 import numpy as np
 
@@ -69,7 +68,7 @@ class BDFMethods(BDFAttributes):
         #skip_elems = []
 
         pid_eids = self.get_element_ids_dict_with_pids(
-            property_ids,  msg=' which is required by get_area_breakdown')
+            property_ids, msg=' which is required by get_area_breakdown')
         pids_to_area = {}
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
@@ -655,3 +654,67 @@ class BDFMethods(BDFAttributes):
             self, skin_filename,
             write_solids=write_solids, write_shells=write_shells,
             size=size, is_double=is_double, encoding=encoding)
+
+    def update_model_by_desvars(self):
+        """doesn't require cross referenceing"""
+        ## these are the nominal values of the desvars
+        desvar_init = {key : desvar.value
+                       for key, desvar in self.desvars.items()}
+
+        ## these are the current values of the desvars
+        desvar_values = {key : min(max(desvar.value + 0.1, desvar.xlb), desvar.xub)
+                         for key, desvar in self.desvars.items()}
+        desvar_delta = {key : (desvar_init[key] - desvar_values[key])
+                        for key in self.desvars}
+        #min(max(self.xinit, self.xlb), self.xub)
+
+        # DVxREL1
+        dvxrel2s = {}
+        for dvid, dvprel in iteritems(self.dvprels):
+            if dvprel.type == 'DVPREL2':
+                dvxrel2s[('DVPREL2', dvid)] = dvprel
+                continue
+            dvprel.update_model(self, desvar_values)
+
+        for dvid, dvmrel in iteritems(self.dvmrels):
+            if dvprel.type == 'DVPREL2':
+                dvxrel2s[('DVMREL2', dvid)] = dvmrel
+                continue
+            dvmrel.update_model(self, desvar_values)
+
+        for dvid, dvcrel in iteritems(self.dvcrels):
+            if dvprel.type == 'DVPREL2':
+                dvxrel2s[('DVMREL2', dvid)] = dvcrel
+                continue
+            dvcrel.update_model(self, desvar_values)
+
+        #+--------+------+-----+-----+-------+----+----+----+
+        #|    1   |   2  |  3  |  4  |   5   |  6 |  7 |  8 |
+        #+========+======+=====+=====+=======+====+====+====+
+        #| DVGRID | DVID | GID | CID | COEFF | N1 | N2 | N3 |
+        #+--------+------+-----+-----+-------+----+----+----+
+
+        # grid_i - grid_i0 = sum(coeffj * (x_desvar_j - x0_desvar_j)) * {Nxyz_f}
+        dxyzs = defaultdict(list)
+        for dvid, dvgrids in iteritems(self.dvgrids):
+            for dvgrid in dvgrids:
+                dxyz_cid = dvgrid.coeff * desvar_delta[dvid] * dvgrid.dxyz
+                dxyzs[(dvgrid.nid, dvgrid.cid)].append(dxyz_cid)
+
+        # TODO: could be vectorized
+        for (nid, cid), dxyz in iteritems(dxyzs):
+            dxyz2 = np.linalg.norm(dxyz, axis=0)
+            assert len(dxyz2) == 3, len(dxyz2)
+            grid = self.nodes[nid]
+            coord_from = self.coords[cid]
+            coord_to = self.coords[grid.cp]
+            grid.xyz += coord_from.transform_node_from_local_to_local(
+                coord_to, dxyz2)
+
+        for key, dvxrel2 in iteritems(dvxrel2s):
+            dvxrel2.update_model(self, desvar_values, dvxrel2s)
+        #self.nid = nid
+        #self.cid = cid
+        #self.coeff = coeff
+        #self.dxyz = np.asarray(dxyz)
+        #dvgrid.dxyz

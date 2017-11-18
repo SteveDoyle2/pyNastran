@@ -43,6 +43,116 @@ class TestOpt(unittest.TestCase):
                 #print(dresp)
                 #dresp.calculate(op2, subcase_id)
 
+    def test_opt_2(self):
+        """tests updating model based on DESVARs"""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        eid = 1
+        pid_pshell = 1
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(eid, pid_pshell, nids)
+
+        mid = 1
+        E = 1.0
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        c1 = 0.5
+        e1 = 110.
+        model.add_desvar(1, 'E1', e1)
+        mat_type = 'MAT1'
+        mp_name = 'E'
+        coeffs = [c1]
+        desvars = [1]
+        c0m = 100.
+        # 100 + 0.5 * 110 = 100 + 55 = 155
+        enew = c0m + c1 * e1
+        model.add_dvmrel1(2, mat_type, mid, mp_name, desvars, coeffs,
+                          mp_min=None, mp_max=1e20,
+                          c0=c0m, validate=True,
+                          comment='')
+
+        model.add_pshell(pid_pshell, mid1=1, t=0.1)
+        c2 = 0.5
+        t2 = 1.0
+        model.add_desvar(2, 'T2', t2)
+        prop_type = 'PSHELL'
+        pname_fid = 'T'
+        desvars = [2] # desvar
+        coeffs = [c2]
+        c0p = 0.1
+        tnew = c0p + c2 * t2
+        model.add_dvprel1(1, prop_type, pid_pshell, pname_fid, desvars, coeffs,
+                         p_min=None, p_max=1e20,
+                         c0=c0p, validate=True,
+                         comment='')
+
+        eid_conm2 = 2
+        nid = 1
+        mass = 0.1
+        model.add_conm2(eid_conm2, nid, mass, cid=0, X=None, I=None, comment='')
+        c3 = 1.0
+        mass3 = 12.
+        model.add_desvar(3, 'MASS', mass3)
+        connectivity_type = 'CONM2'
+        cp_name = 'M'
+        coeffs = [c3]
+        desvars = [3]
+        mass0 = 0.
+        # ???
+        mass_new = mass0 + c3 * mass3
+        model.add_dvcrel1(3, connectivity_type, eid_conm2, cp_name, desvars, coeffs, cp_min=None,
+                         cp_max=1e20, c0=mass0,
+                         validate=True, comment='')
+
+        x14 = 37.
+        model.add_desvar(4, 'X1', x14)
+        connectivity_type = 'CONM2'
+        cp_name = 'X1'
+        c4 = 1.
+        x10 = 0.
+        coeffs = [c4]
+        desvars = [4]
+        x1_new = x10 + c4 * x14
+        model.add_dvcrel1(4, connectivity_type, eid_conm2, cp_name, desvars, coeffs, cp_min=None,
+                          cp_max=1e20, c0=x10,
+                          validate=True, comment='')
+
+
+
+        pid_pcomp = 2
+        mids = [1]
+        thicknesses = [1.]
+        model.add_pcomp(pid_pcomp, mids, thicknesses, thetas=None, souts=None,
+                        nsm=0., sb=0., ft=None,
+                        tref=0., ge=0., lam=None,
+                        z0=None, comment='')
+        t5 = 5.
+        model.add_desvar(5, 'T5', t5)
+        prop_type = 'PCOMP'
+        pname_fid = 'T1'
+        desvars = [5] # desvar
+        coeffs = [1.0]
+        tpcomp_new = t5
+        model.add_dvprel1(5, prop_type, pid_pcomp, pname_fid, desvars, coeffs,
+                          p_min=None, p_max=1e20,
+                          c0=0., validate=True,
+                          comment='')
+
+        model.validate()
+        model.cross_reference()
+        model.update_model_by_desvars()
+
+        assert model.properties[pid_pshell].t == tnew, 't=%s tnew=%s' % (model.properties[pid_pshell].t, tnew)
+        assert model.materials[mid].E == enew, 'E=%s enew=%s' % (model.materials[mid].E, enew)
+        assert model.Mass(eid_conm2).mass == mass_new, 'mass=%s mass_new=%s' % (model.Mass(eid_conm2).mass, mass_new)
+        assert model.Mass(eid_conm2).X[0] == x1_new, 'X1=%s x1_new=%s' % (model.Mass(eid_conm2).mass, x1_new)
+        assert model.properties[pid_pcomp].thicknesses[0] == tpcomp_new, 't=%s tnew=%s' % (model.properties[pid_pcomp].thicknesses[0], tpcomp_new)
+
     def test_ddval(self):
         """tests a DDVAL"""
         model = BDF(debug=False)

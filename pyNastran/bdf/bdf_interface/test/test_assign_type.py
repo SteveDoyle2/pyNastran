@@ -220,6 +220,11 @@ class TestAssignType(unittest.TestCase):
 
         card = ['a', 'b1', '3.', 'C', None, '', 'frog']
         exact = ['A', 'B1', SyntaxError, 'C', SyntaxError, SyntaxError, 'FROG']
+
+        self.assertEqual('VONE-MIS', string(BDFCard(['VONE-MIS']), 0, 'field'))
+        self.assertEqual('VONE-MIS', string_or_blank(BDFCard(['VONE-MIS']), 0, 'field'))
+        self.assertEqual('VONE_MIS', string(BDFCard(['VONE_MIS']), 0, 'field'))
+        self.assertEqual('VONE_MIS', string_or_blank(BDFCard(['VONE_MIS']), 0, 'field'))
         self.run_function(string, card, exact)
 
     def test_string_or_blank(self):
@@ -262,6 +267,7 @@ class TestAssignType(unittest.TestCase):
         # blank
         self.assertEqual('a', integer_or_blank(BDFCard(['']), 0, 'field', 'a'))
         self.assertEqual('b', integer_or_blank(BDFCard([None]), 0, 'field', 'b'))
+        self.assertEqual(-1, integer_or_blank(BDFCard(['-1']), 0, 'field'))
 
         with self.assertRaises(SyntaxError):
             integer_or_blank(BDFCard(['1+2']), 0, 'field')
@@ -276,6 +282,7 @@ class TestAssignType(unittest.TestCase):
         # integer
         self.assertEqual(1, method(BDFCard([1]), 0, 'field'))
         self.assertEqual(2, method(BDFCard(['2']), 0, 'field'))
+        self.assertEqual(-1, method(BDFCard(['-1']), 0, 'field'))
 
     def check_double(self, method):
         # float
@@ -355,6 +362,7 @@ class TestAssignType(unittest.TestCase):
             integer_or_double(BDFCard([1.]), 1, 'field')
         self.assertEqual(1.e-9, integer_or_double(BDFCard(['1-9']), 0, 'field'))
         self.assertEqual(1.e+9, integer_or_double(BDFCard(['1+9']), 0, 'field'))
+        self.assertEqual(-1, integer_or_double(BDFCard(['-1']), 0, 'field'))
 
         with self.assertRaises(SyntaxError):
             integer_or_double(BDFCard(['cat']), 0, 'field')
@@ -370,6 +378,7 @@ class TestAssignType(unittest.TestCase):
             integer_or_string(BDFCard([1.]), 1, 'field')
 
         self.assertEqual(1000, integer_or_string(BDFCard([1000]), 0, 'field'))
+        self.assertEqual(-1, integer_or_string(BDFCard(['-1']), 0, 'field'))
         self.assertEqual(1000, integer_or_string(BDFCard(['1000']), 0, 'field'))
         self.assertEqual('CAT', integer_or_string(BDFCard(['cat']), 0, 'field'))
         self.assertEqual('CAT', integer_or_string(BDFCard([' cat ']), 0, 'field'))
@@ -391,6 +400,7 @@ class TestAssignType(unittest.TestCase):
         self.check_double(integer_double_or_blank)
         self.assertEqual(1.e-9, integer_double_or_blank(BDFCard(['1-9']), 0, 'field'))
         self.assertEqual(1.e+9, integer_double_or_blank(BDFCard(['1+9']), 0, 'field'))
+        self.assertEqual(-1, integer_double_or_blank(BDFCard(['-1']), 0, 'field'))
 
         # error - string
         with self.assertRaises(SyntaxError):
@@ -431,7 +441,8 @@ class TestAssignType(unittest.TestCase):
 
         # string
         self.assertEqual('LOAD', integer_string_or_blank(BDFCard(['load']), 0, 'field'))
-        self.assertEqual(1000, integer_or_string(BDFCard([1000]), 0, 'field'))
+        self.assertEqual(1000, integer_string_or_blank(BDFCard([1000]), 0, 'field'))
+        self.assertEqual(-1, integer_string_or_blank(BDFCard(['-1']), 0, 'field'))
 
         # blank
         integer_string_or_blank(BDFCard(['   ']), 0, 'field')
@@ -456,7 +467,7 @@ class TestAssignType(unittest.TestCase):
         # string
         self.assertEqual('LOAD', integer_double_or_string(BDFCard(['load']), 0, 'field'))
         self.assertEqual('MN-MM', integer_double_string_or_blank(BDFCard(['MN-MM']), 0, 'field'))
-
+        #self.assertEqual(-1, integer_double_string_or_blank(BDFCard(['-1']), 0, 'field'))
         self.assertEqual(1000, integer_double_string_or_blank(BDFCard([1000]), 0, 'field'))
 
     def test_components(self):

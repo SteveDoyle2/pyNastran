@@ -741,6 +741,26 @@ class Coord(BaseCard):
         beta = self.beta()
         return self._transform_node_to_local_array(xyz, beta)
 
+    def transform_node_from_local_to_local(self, coord_to, xyz):
+        """
+        Converts an xyz coordinate in an arbitrary system to a different one
+        """
+        if self.cid == coord_to.cid:
+            return xyz
+        xyz_global = self.transform_node_to_global(xyz)
+        xyz_local = coord_to.transform_node_to_local(xyz_global)
+        return xyz_local
+
+    def transform_node_from_local_to_local_array(self, coord_to, xyz):
+        """
+        Converts an xyz coordinate array in an arbitrary system to a different one
+        """
+        if self.cid == coord_to.cid:
+            return xyz
+        xyz_global = self.transform_node_to_global_array(xyz)
+        xyz_local = coord_to.transform_node_to_local_array(xyz_global)
+        return xyz_local
+
     def transform_vector_to_local(self, xyz):
         """
         see transform_node_to_local, but set the origin to <0, 0, 0>

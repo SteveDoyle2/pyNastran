@@ -891,6 +891,13 @@ class PBAR(LineProperty):
         do a check for mid -> MAT4/MAT5 for thermal
     """
     type = 'PBAR'
+    pname_fid_map = {
+        4 : 'A', 'A' : 'A',
+        5 : 'i1', 'I1' : 'i1',
+        6 : 'i2', 'I2' : 'i2',
+        7 : 'i12', 'I12' : 'i12',
+        5 : 'j', 'J' : 'j',
+    }
 
     def __init__(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
                  c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,

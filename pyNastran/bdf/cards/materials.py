@@ -217,6 +217,18 @@ class MAT1(IsotropicMaterial):
         1: 'mid', 2:'e', 3:'g', 4:'nu', 5: 'rho', 6:'a', 7:'tref', 8:'ge',
         9: 'St', 10:'Sc', 11:'Ss', 12:'mcsid',
     }
+    mp_name_map = {
+        'E' : 'e', #3 : 'e',
+        'G' : 'g', #4 : 'g',
+        'NU' : 'nu', #5: 'nu',
+        'RHO' : 'rho', #6 : 'rho',
+        'A' : 'a', #7 : 'a',
+        'TREF' : 'tref', #8 : 'tref',
+        'GE' : 'ge', #9 : 'ge',
+        'ST' : 'st', #10 : 'st',
+        'SC' : 'sc', #11 : 'sc',
+        'SS' : 'ss', #12 : 'ss',
+    }
 
     def __init__(self, mid, E, G, nu,
                  rho=0.0, a=0.0, tref=0.0, ge=0.0,
@@ -1568,6 +1580,38 @@ class MAT9(AnisotropicMaterial):
     type = 'MAT9'
     _field_map = {
         1: 'mid',
+    }
+    mp_name_map = {
+        'G11' : 'G11',
+        'G12' : 'G12',
+        'G13' : 'G13',
+        'G14' : 'G14',
+        'G15' : 'G15',
+        'G16' : 'G16',
+        'G22' : 'G22',
+        'G23' : 'G23',
+        'G24' : 'G24',
+        'G25' : 'G25',
+        'G26' : 'G26',
+        'G33' : 'G33',
+        'G34' : 'G34',
+        'G35' : 'G35',
+        'G36' : 'G36',
+        'G44' : 'G44',
+        'G45' : 'G45',
+        'G46' : 'G46',
+        'G55' : 'G55',
+        'G56' : 'G56',
+        'G66' : 'G66',
+        # rho
+        # a1
+        # a2
+        # a3
+        # a4
+        # a5
+        # a6
+        'TREF' : 'tref', #8 : 'tref',
+        'GE' : 'ge', #9 : 'ge',
     }
 
     def __init__(self, mid,

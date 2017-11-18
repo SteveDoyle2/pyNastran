@@ -26,15 +26,95 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
 
 class PBEAM(IntegratedLineProperty):
+    """
+    Defines the properties of a beam element (CBEAM entry). This element may be
+    used to model tapered beams.
+
+
+    +-------+-------+-------+-------+-------+-------+--------+-------+--------+
+    | PBEAM |  PID  |  MID  | A(A)  | I1(A) | I2(A) | I12(A) | J(A)  | NSM(A) |
+    +-------+-------+-------+-------+-------+-------+--------+-------+--------+
+    |       | C1(A) | C2(A) | D1(A) | D2(A) | E1(A) | E2(A)  | F1(A) | F2(A)  |
+    +-------+-------+-------+-------+-------+-------+--------+-------+--------+
+
+    The next two continuations are repeated for each intermediate station as
+    described in Remark 5. and SO and X/XB must be specified.
+    +----+------+----+----+----+-----+----+-----+
+    | SO | X/XB | A  | I1 | I2 | I12 | J  | NSM |
+    +----+------+----+----+----+-----+----+-----+
+    | C1 |  C2  | D1 | D2 | E1 | E2  | F1 | F2  |
+    +----+------+----+----+----+-----+----+-----+
+
+    The last two continuations are:
+    +-------+-------+-------+-------+--------+--------+-------+-------+
+    |   K1  |   K2  |   S1  |   S2  | NSI(A) | NSI(B) | CW(A) | CW(B) |
+    +-------+-------+-------+-------+--------+--------+-------+-------+
+    | M1(A) | M2(A) | M1(B) | M2(B) | N1(A)  | N2(A)  | N1(B) | N2(B) |
+    +-------+-------+-------+-------+--------+--------+-------+-------+
+    """
     type = 'PBEAM'
 
     #_opt_map = {
         #'I1(B)' : 'i1',
         #'I1(B)',
     #}
+    def update_by_pname_fid(self, pname_fid, value):
+        if isinstance(pname_fid, int):
+            if pname_fid < 0:
+                # shift to divisible by 16
+                if not (-167 <= pname_fid <= -6):
+                    raise NotImplementedError('A-property_type=%r has not implemented %r in pname_map' % (
+                        self.type, pname_fid))
+                ioffset = -pname_fid - 6
+                istation = ioffset // 16
+                iterm = ioffset % 16
+                print('istation=%s iterm=%s' % (istation, iterm))
+
+                # 0    1   2   3   4   5   6   7    8  9
+                #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                #
+                 #10  11  12  13  14  15
+                 #d1, d2, e1, e2, f1, f2) = pack
+                assert istation == 0, istation
+                if iterm == 2:
+                    self.A[istation] = value
+                elif iterm == 3:
+                    self.i1[istation] = value
+                elif iterm == 4:
+                    self.i2[istation] = value
+                elif iterm == 5:
+                    self.i12[istation] = value
+                elif iterm == 6:
+                    self.j[istation] = value
+                else:
+                    raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
+                        self.type, pname_fid, istation, iterm))
+            else:
+                raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                    self.type, pname_fid))
+
+        #elif pname_fid.startswith('DIM'):
+            #word, num = break_word_by_trailing_integer(pname_fid)
+            #ndim = len(self.dim[0])
+
+            #num = int(num) - 1
+            #idim = num % ndim
+            #istation = num // ndim
+            #try:
+                #dim_station = self.dim[istation]
+                #dim_station[idim] = value
+            #except:
+                #print('pname_fid=%r num=%r ndim=%r' % (pname_fid, num, ndim))
+                #print('istation=%r idim=%r' % (istation, idim))
+                #print(self)
+                #raise
+        else:
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, pname_fid))
 
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
                  c1, c2, d1, d2, e1, e2, f1, f2,
@@ -945,6 +1025,28 @@ class PBEAML(IntegratedLineProperty):
         "HAT1": 5,
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
+    def update_by_pname_fid(self, pname_fid, value):
+        if isinstance(pname_fid, int):
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, pname_fid))
+        elif pname_fid.startswith('DIM'):
+            word, num = break_word_by_trailing_integer(pname_fid)
+            ndim = len(self.dim[0])
+
+            num = int(num) - 1
+            idim = num % ndim
+            istation = num // ndim
+            try:
+                dim_station = self.dim[istation]
+                dim_station[idim] = value
+            except:
+                print('pname_fid=%r num=%r ndim=%r' % (pname_fid, num, ndim))
+                print('istation=%r idim=%r' % (istation, idim))
+                print(self)
+                raise
+        else:
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, pname_fid))
 
     def __init__(self, pid, mid, beam_type, xxb, dims, so=None, nsm=None,
                  group='MSCBML0', comment=''):

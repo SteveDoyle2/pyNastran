@@ -32,11 +32,23 @@ class DamperProperty(Property):
 
 
 class PDAMP(DamperProperty):
+    """
+    +-------+------+-----+------+----+------+----+------+----+
+    |   1   |  2   |  3  |   4  | 5  |  6   |  7 |   8  |  9 |
+    +=======+======+=====+======+====+======+====+======+====+
+    | PDAMP | PID1 | B1  | PID2 | B2 | PID3 | B3 | PID4 | B4 |
+    +-------+------+-----+------+----+------+----+------+----+
+    | PDAMP |  1   | 2.0 |      |    |      |    |      |    |
+    +-------+------+-----+------+----+------+----+------+----+
+    """
     type = 'PDAMP'
     _field_map = {
         1: 'pid', 2:'b',
     }
-
+    pname_fid_map = {
+        #3 : 'b', 'B' : 'b',
+        'B1' : 'b',
+    }
     def __init__(self, pid, b, comment=''):
         DamperProperty.__init__(self)
         if comment:
@@ -312,6 +324,8 @@ class PVISC(DamperProperty):
     type = 'PVISC'
     _field_map = {
         1: 'pid', 2:'ce', 3:'cr',
+    }
+    pname_fid_map = {
     }
 
     def __init__(self, pid, ce, cr, comment=''):
