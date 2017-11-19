@@ -90,6 +90,8 @@ class PBEAM(IntegratedLineProperty):
                     self.i12[istation] = value
                 elif iterm == 6:
                     self.j[istation] = value
+                elif iterm == 8:
+                    self.c1[istation] = value
                 else:
                     raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
                         self.type, pname_fid, istation, iterm))

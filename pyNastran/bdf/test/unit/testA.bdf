@@ -12,10 +12,60 @@ BEGIN BULK
 GRID,1,
 $SPOINTS
 SPOINT,11
+SPOINT,3,6,7,12,13,44,61,102,
+,1002,5,8,10,14,15,16
+AERO,,,1.0,1.0
+GRID,4
+GRID,40
+GRID,41
+GRID,50
+GRID,60
+GRID,120
+GRID,121
+GRID,200
+GRID,1000
+GRID,1003
+GRID,1004
+GRID,1005
+GRID,1006
+GRID,1008
+GRID,1009
+GRID,1010
+GRID,1011
+GRID,1012
+GRID,2573
+GRID,2574
+GRID,2575
+GRID,2576
+GRID,16411
+GRID,16412
+GRID,16413
+GRID,16414
+GRID,16415
+GRID,16416
+GRID,16417
+GRID,16418
+GRID,16419
+GRID,10006
+GRID,10106
+GRID,10206
+GRID,10306
+GRID,10406
+GRID,10506
+GRID,10606
+GRID,10706
+GRID,10806
+GRID,12043
+GRID,31201
+CBEAM,2100001,101,1,2,0.,1.,2.
+CBEAM,2100002,101,1,2,0.,1.,2.
+CBEAM,2100003,101,1,2,0.,1.,2.
+PSHELL,16411,1,0.1
 $ELEMENTS_WITH_PROPERTIES
 pbeaml	101	2		box
 	6.0	1.0	0.1	0.1
 CELAS1  1007    101     61      3
+PELAS,80,1.0
 $ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)
 CHBDYG         2           AREA6
                1      13      11       7      12       6
@@ -25,6 +75,7 @@ celas3  20      80      1       2
 CELAS4  30      1.      3
 CMASS2  111     1.3447  102     3
 CMASS1  120     120     200     5
+PMASS,120,0.1
 CMASS2      2005    5.-8      44       5
 CELAS2  7001    1.0+6                   1002    1
 JUNK    asdf    345634
@@ -131,6 +182,15 @@ PBARL    6666    10              BAR
 $MATERIALS
 MAT1    1           1.+7                      .1
           25000.  25000.
+MAT1    765       3.+7
+MAT1    770       3.+7
+MAT1    795       3.+7
+MAT1    796       3.+7
+MAT1    769       3.+7
+MAT1    7         3.+7
+MAT1    8         3.+7
+MAT1    10        3.+7
+MAT1    200       3.+7
 MAT1    2         3.+7
 MAT1    3       8.5977+63.2554+6        0.097464                        ALUMINUM
 MAT2     4      2.0+11  1.427+9 0.      1.33+11 0.0     3.577+9   0.2
@@ -179,10 +239,11 @@ RBE1        1001    1000  123456
 RBE3       12225           12043  123456      1.     123    2573    2574
             2575    2576
 $LOADS
-PLOAD4         1    1001  -4005.
+$	$	$	$	$
+PLOAD4         1    1001 -400510
 DLOAD          3      1.      1.      10      0.      10
 QHBDY   10      AREA4   70.             30000   31000   31100   30100
-PLOAD2        13      1. 2100001    THRU 2100100
+PLOAD2        13      1. 2100001    THRU 2100003
 PLOAD   20      -1.0    1       2       3
 QBDY3   33      20.0            1       thru    8
 QBDY3         34     20.               1    THRU       7      BY       2
@@ -238,6 +299,9 @@ DRESP2,1,LBUCK,5,3
 ,DVMREL2,601,602,603
 ,DVPREL1,101,102
 ,DVPREL2,401,402
+DESVAR,3,PBAR_val,0.1
+DESVAR,30,Evalue,0.1
+DTABLE,X3INIT,1.0,I1INIT,1.0
 DRESP2  16      SUMFORC 1
         DRESP1  14      15
 DVMREL1        1    MAT1       1       E
@@ -266,6 +330,7 @@ CONM1          1      11
           17400.                          4.37+7
                   4.35+9
 DEQATN  2       F(A,B)=B*A*A*A/12.0
+DEQATN  101     F(A,B,C)=B*A*A*A/12.0+C
 DSCREEN STRESS  -100.   100
 DSCREEN LAMA    -100.0
 INCLUDE 'testC.pch'

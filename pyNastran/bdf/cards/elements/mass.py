@@ -250,6 +250,9 @@ class CMASS2(PointMassElement):
     _field_map = {
         1: 'eid', 2:'mass', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
     }
+    cp_name_map = {
+        'M' : 'mass',
+    }
 
     def __init__(self, eid, mass, nids, c1, c2, comment=''):
         """

@@ -47,9 +47,9 @@ def extract_bodies(bdf_filename, mpc_id=0):
     nspoints = 0
     nepoints = 0
     if model.spoints:
-        nspoints = len(model.spoints.points)
+        nspoints = len(model.spoints)
     if model.epoints:
-        nepoints = len(model.epoints.points)
+        nepoints = len(model.epoints)
     npoints = nnodes + nspoints + nepoints
     nelements = len(model.elements) + len(model.rigid_elements) + len(model.masses)
     if npoints == 0 or nelements == 0:

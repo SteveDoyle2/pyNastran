@@ -326,6 +326,7 @@ class PVISC(DamperProperty):
         1: 'pid', 2:'ce', 3:'cr',
     }
     pname_fid_map = {
+        'CE1' : 'ce',
     }
 
     def __init__(self, pid, ce, cr, comment=''):

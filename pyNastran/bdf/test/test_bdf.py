@@ -356,7 +356,7 @@ def run_and_compare_fems(
                              print_stats=print_stats, quiet=quiet)
         test_get_cards_by_card_types(fem2)
 
-        fem2.update_model_by_desvars()
+        fem2.update_model_by_desvars(xref)
         #except:
             #return 1, 2, 3
 

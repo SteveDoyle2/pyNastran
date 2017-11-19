@@ -404,6 +404,11 @@ class CTRIA3(TriShell):
     _field_map = {
         1: 'eid', 2:'pid', 6:'theta_mcid', 7:'zoffset', 10:'tflag',
         11:'T1', 12:'T2', 13:'T3'}
+    cp_name_map = {
+        'T1' : 'T1',
+        'T2' : 'T2',
+        'T3' : 'T3',
+    }
 
     def _update_field_helper(self, n, value):
         # (int, Any) -> None
@@ -1802,6 +1807,12 @@ class CQUAD4(QuadShell):
     +--------+-------+-------+----+----+----+----+------------+---------+
     """
     type = 'CQUAD4'
+    cp_name_map = {
+        'T1' : 'T1',
+        'T2' : 'T2',
+        'T3' : 'T3',
+        'T4' : 'T4',
+    }
     _field_map = {1: 'eid', 2:'pid', 7:'theta_mcid', 8:'zoffset',
                   10:'tflag', 11:'T1', 12:'T2', 13:'T3'}
 

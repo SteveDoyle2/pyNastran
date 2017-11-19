@@ -134,7 +134,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
     elif prop_type == 'PBAR':
         assert pname_fid in [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J'], msg
     elif prop_type == 'PBARL':
-        assert pname_fid in [12, 13, 14, 15, 16, 17, 'DIM1', 'DIM2', 'DIM3', 'DIM4'], msg
+        assert pname_fid in [12, 13, 14, 15, 16, 17,
+                             'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10'], msg
 
     #elif prop_type == 'CBEAM':
         #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
@@ -145,7 +146,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
                              -168, -169, -170, -174, -175, -176, -177, -178, -179,
                              -180, -181,], msg
     elif prop_type == 'PBEAML':
-        assert pname_fid in ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6',
+        assert pname_fid in ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10',
                              'DIM1(A)',
                              'DIM1(B)', 'DIM2(B)', 'I1(B)', 'I2(B)',
                              'NSM'], msg # 'DIM(B)'
@@ -172,6 +173,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
                 word, num = break_word_by_trailing_integer(pname_fid)
                 if word not in ['T', 'THETA']:
                     raise RuntimeError('word=%r\n%s' % (word, msg))
+                int(num)
         else:
             assert pname_fid in [3, #3-z0
                                  #'Z0',
@@ -1635,16 +1637,16 @@ class DRESP2(OptConstraint):
         self.dequation = dequation
         self.region = region
         self.method = method
-        if validate:
-            self._validate()
-            #atta, attb, atti = validate_dresp1(
-                #property_type, response_type, atta, attb, atti)
         self.c1 = c1
         self.c2 = c2
         self.c3 = c3
         self.params = params
         self.params_ref = None
         self.dequation_ref = None
+        if validate:
+            self._validate()
+            #atta, attb, atti = validate_dresp1(
+                #property_type, response_type, atta, attb, atti)
 
     def _validate(self):
         assert isinstance(self.params, dict), self.params
@@ -3440,7 +3442,7 @@ class DVPREL1(OptConstraint):
 
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
-        value = get_dvxrel1_coeffs(self, model, desvar_values)
+        value = get_dvxrel1_coeffs(self, model, desvar_values, debug=False)
         assert isinstance(self.pid, int), type(self.pid)
         prop = model.properties[self.pid]
         try:
@@ -3897,25 +3899,37 @@ class DVPREL2(OptConstraint):
     def get_deqatn_value(self, model, desvar_values):
         values = []
         for desvar_id in self.dvids:
-            valuei = desvar_values[desvar_id]
-            assert isinstance(valuei, float), valuei
+            valuei = _get_desvar(desvar_values, desvar_id, self)
             values.append(valuei)
 
+        def _get_dtable_value(dtable, labels, dvxrel):
+            values = []
+            if not labels:
+                return values
+            if dtable is None:
+                raise KeyError('DTABLE is None and must contain %s' % str(labels))
+            for label in labels:
+                value = dtable[label]
+                values.append(value)
+            return values
+
         if self.labels:
+            values += _get_dtable_value(model.dtable, self.labels, self)
             dtable = model.dtable
-            for label in self.labels:
-                values.append(dtable[label])
 
         deqatn = model.DEQATN(self.dequation)
         #print(deqatn.func_str)
         #from six import exec_
         #exec_(deqatn.func_str)
         func = deqatn.func
+        if func is None:
+            msg = 'func is None...DEQATN=%s\n%s\n%s' % (self.dequation, self, deqatn)
+            raise RuntimeError(msg)
         #print(func)
         value = func(*values)
         return value
 
-    def update_model(self, model, desvar_values, dvxrels):
+    def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
         value = self.get_deqatn_value(model, desvar_values)
         assert isinstance(self.pid, int), type(self.pid)
@@ -4243,15 +4257,34 @@ def _get_dresp23_table_values(name, values_list, inline=False):
     return out
 
 
-def get_dvxrel1_coeffs(dvxrel, model, desvar_values):
+def get_dvxrel1_coeffs(dvxrel, model, desvar_values, debug=False):
     """
     Used by DVPREL1/2, DVMREL1/2, DVCREL1/2, and DVGRID to determine
     the value for the new property/material/etc. value
     """
     value = dvxrel.c0
+    if debug:
+        print('value_init=%s' % (value))
     for coeff, desvar_id in zip(dvxrel.coeffs, dvxrel.desvar_ids):
         #desvar = model.desvars[desvar_id]
         #valuei = desvar.value
-        valuei = desvar_values[desvar_id]
+        valuei = _get_desvar(desvar_values, desvar_id, dvxrel)
+        if debug:
+            print('  desvar_id=%s coeff=%s valuei=%s' % (desvar_id, coeff, valuei))
         value += coeff * valuei
+
+    if debug:
+        print('value_final=%s' % (value))
+    return value
+
+def _get_desvar(desvar_values, desvar_id, dvxrel):
+    try:
+        value = desvar_values[desvar_id]
+    except KeyError:
+        msg = 'Cannot find desvar_id=%r in:\n%s\ndesvar_ids=%s' % (
+            desvar_id, dvxrel, list(desvar_values.keys())
+        )
+        raise KeyError(msg)
+    assert isinstance(value, float), value
+    #print('value = %s' % value)
     return value

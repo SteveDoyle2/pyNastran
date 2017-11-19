@@ -655,7 +655,7 @@ class BDFMethods(BDFAttributes):
             write_solids=write_solids, write_shells=write_shells,
             size=size, is_double=is_double, encoding=encoding)
 
-    def update_model_by_desvars(self):
+    def update_model_by_desvars(self, xref=True):
         """doesn't require cross referenceing"""
         ## these are the nominal values of the desvars
         desvar_init = {key : desvar.value
@@ -711,8 +711,9 @@ class BDFMethods(BDFAttributes):
             grid.xyz += coord_from.transform_node_from_local_to_local(
                 coord_to, dxyz2)
 
-        for key, dvxrel2 in iteritems(dvxrel2s):
-            dvxrel2.update_model(self, desvar_values, dvxrel2s)
+        if xref:
+            for key, dvxrel2 in iteritems(dvxrel2s):
+                dvxrel2.update_model(self, desvar_values)
         #self.nid = nid
         #self.cid = cid
         #self.coeff = coeff
