@@ -51,7 +51,7 @@ def main():
         # option 2
         model.params['POST'].update_values(value1=-1, value2=None)
 
-    model.write_bdf(out_bdf, size=16, is_double=True)
+    model.write_bdf(out_bdf, size=16, is_double=False)
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf)
 
     if is_f06:
