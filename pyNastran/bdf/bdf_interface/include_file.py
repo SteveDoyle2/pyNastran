@@ -223,7 +223,9 @@ def split_tokens(tokens, is_windows):
                         environment_variables = list(os.environ.keys())
                         environment_variables.sort()
                         raise SyntaxError("Cant find environment variable=%r"
-                                          '\nenviron=%s' % (env_var, environment_variables))
+                                          '\nenviron=%s\n'
+                                          'which is required for %r' % (
+                                              env_var, environment_variables, tokens))
 
                     env_vari = os.path.expandvars('$' + env_var.strip('%'))
                     if '$' in env_vari:

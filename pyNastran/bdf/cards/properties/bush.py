@@ -96,7 +96,7 @@ class PBUSH(BushingProperty):
             self.Mi[5]
         else:
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
-                self.type, pname_fid))
+                self.type, name))
     #pname_fid_map = {
         #4 : 'A', 'A' : 'A',
         #5 : 'i1', 'I1' : 'i1',
