@@ -143,15 +143,24 @@ class PBUSH(BushingProperty):
         # K parameter
         self.Ki = k
         if k:
+            nk = len(k)
+            if nk < 6:
+                k.extend([0.] * (6 - nk))
             self.vars.append('K')
         # B parameter
         self.Bi = b
         if b:
+            nb = len(b)
+            if nb < 6:
+                b.extend([0.] * (6 - nb))
             self.vars.append('B')
 
         # GE parameter
         self.GEi = ge
         if ge:
+            nge = len(ge)
+            if nge < 6:
+                ge.extend([0.] * (6 - nge))
             self.vars.append('GE')
 
         # RCV parameters
@@ -347,7 +356,9 @@ class PBUSH1D(BushingProperty):
     """
     type = 'PBUSH1D'
     pname_fid_map = {
-        'K1' : 'k',
+        'K' : 'k',
+        'C' : 'c',
+        'M' : 'm',
     }
     def __init__(self, pid, k=0., c=0., m=0., sa=0., se=0.,
                  optional_vars=None, comment=''):

@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import count, cycle
+from itertools import cycle
 from six import iteritems, string_types
 from six.moves import zip, range
 import numpy as np
@@ -108,7 +108,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pname_fid = 'GE1'
         else:
             raise NotImplementedError('PELAST pname_fid=%r is invalid' % pname_fid)
-        #assert pname_fid in [3, 4, 'K1', 'GE1'], msg
+
     elif prop_type == 'PELAST':
         if pname_fid in ['TKID', 3]:
             pname_fid = 'TKID'
@@ -126,30 +126,41 @@ def validate_dvprel(prop_type, pname_fid, validate):
         else:
             raise NotImplementedError('PROD pname_fid=%r is invalid' % pname_fid)
         assert pname_fid in [4, 'A', 5, 'J', 'NSM'], msg
+
     elif prop_type == 'PTUBE':
-        assert pname_fid in [4, 5], msg
+        options = [4, 5, 'T']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBAR':
         #assert pname_fid in ['X1', 'X2'], msg
     elif prop_type == 'PBAR':
-        assert pname_fid in [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J'], msg
+        options = [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J']
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBARL':
-        assert pname_fid in [12, 13, 14, 15, 16, 17,
-                             'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10'], msg
+        options = [
+            12, 13, 14, 15, 16, 17,
+            'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBEAM':
         #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
     elif prop_type == 'PBEAM':
-        assert pname_fid in ['I1', 'I2', 'A', 'J',
-                             'I1(A)', 'I1(B)', 'I2(B)',
-                             -8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
-                             -168, -169, -170, -174, -175, -176, -177, -178, -179,
-                             -180, -181,], msg
+        options = [
+            'I1', 'I2', 'A', 'J',
+            'I1(A)', 'I1(B)', 'I2(B)',
+            -8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
+            -168, -169, -170, -174, -175, -176, -177, -178, -179,
+            -180, -181,]
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBEAML':
-        assert pname_fid in ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10',
-                             'DIM1(A)',
-                             'DIM1(B)', 'DIM2(B)', 'I1(B)', 'I2(B)',
-                             'NSM'], msg # 'DIM(B)'
+        options = [
+            'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10',
+            'DIM1(A)',
+            'DIM1(B)', 'DIM2(B)', 'I1(B)', 'I2(B)',
+            'NSM'] # 'DIM(B)'
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CQUAD4':
         #assert pname_fid in ['T1', 'T2', 'T3', 'T4'], msg
@@ -161,13 +172,17 @@ def validate_dvprel(prop_type, pname_fid, validate):
         elif pname_fid in [8]:  # TS/T doesn't support strings?
             pass
         else:
-            raise NotImplementedError('PSHELL pname_fid=%r is invalid' % pname_fid)
+            allowed = ("['T', 4, \n"
+                       "6 # 12I/T^3, \n"
+                       "8 # TS/T]\n")
+            msg = 'PSHELL pname_fid=%r is invalid\nmust be in:\n%s' % (pname_fid, str(allowed))
+            raise NotImplementedError(msg)
         #if cp_name in '12I/T**3':
             #cp_name =
         #assert pname_fid in ['T', 4, 6], msg
     elif prop_type == 'PCOMP':
-        if isinstance(pname_fid, str):
-            if pname_fid in ['Z0', 'SB']:
+        if isinstance(pname_fid, string_types):
+            if pname_fid in ['Z0', 'SB', 'TREF', 'GE']:
                 pass
             else:
                 word, num = break_word_by_trailing_integer(pname_fid)
@@ -190,40 +205,50 @@ def validate_dvprel(prop_type, pname_fid, validate):
         #else:
             #raise NotImplementedError('PSHELL pname_fid=%r is invalid' % pname_fid)
         #if cp_name in '12I/T**3':
-        assert pname_fid in ['Z0', 'SB',
-                             14, 24, 34, 44,
-                             15, 25, 75, 85], msg
+        options = ['Z0', 'SB',
+                   14, 24, 34, 44,
+                   15, 25, 75, 85]
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBUSH':
         #assert pname_fid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
     elif prop_type == 'PBUSH':
-        assert pname_fid in [18,
-                             'K1', 'K2', 'K3', 'K4', 'K5', 'K6',
-                             'B2',
-                             'GE1', 'GE3', 'GE4', 'GE5', 'GE6',
-                             -13], msg
+        options = [18,
+                   'K1', 'K2', 'K3', 'K4', 'K5', 'K6',
+                   'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
+                   'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
+                   'GE1', 'GE3', 'GE4', 'GE5', 'GE6',
+                   -13]
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBUSH1D':
-        assert pname_fid in ['K', 'C'], msg
+        options = ['K', 'C', 'M']
+        _check_dvprel_options(pname_fid, prop_type, options)
     elif prop_type == 'PBUSHT':
-        assert pname_fid in ['TBID1', 'TGEID1', 'TGEID2'], msg
+        options = ['TBID1', 'TGEID1', 'TGEID2']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     # CGAP
     elif prop_type == 'PGAP':
-        assert pname_fid in [5], msg
+        options = [5]
+        _check_dvprel_options(pname_fid, prop_type, options)
     elif prop_type == 'PVISC':
-        assert pname_fid in ['CE1'], msg
+        options = ['CE1']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CDAMP2':
         #assert pname_fid in ['B'], msg
     elif prop_type == 'PDAMP':
-        assert pname_fid in [3, 'B1'], msg
+        options = [3, 'B1']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CMASS2':
         #assert pname_fid in ['M'], msg
     #elif prop_type == 'CMASS4':
         #assert pname_fid in ['M'], msg
     elif prop_type == 'PMASS':
-        assert pname_fid in [3], msg
+        options = [3]
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CONM2':
         #assert pname_fid in ['M', 'X1', 'X2', 'I11', 'I22'], msg
@@ -235,17 +260,30 @@ def validate_dvprel(prop_type, pname_fid, validate):
             raise NotImplementedError('PSHEAR pname_fid=%r is invalid' % pname_fid)
 
     elif prop_type == 'PWELD':
-        assert pname_fid in ['D'], msg
+        options = ['D']
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PFAST':
-        assert pname_fid in ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS'], msg
+        options = ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS']
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBMSECT':
-        assert pname_fid in ['T', 'W', 'H'], msg
+        options = ['T', 'W', 'H']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBEND':
         raise RuntimeError('Nastran does not support the PBEND')
     else:
         raise NotImplementedError(msg)
     return pname_fid
+
+def _check_dvprel_options(pname_fid, prop_type, options):
+    if pname_fid not in options:
+        soptions = [str(val) for val in options]
+        msg = (
+            '%r is an invalid option for %s\n'
+            'valid: [%s]' % (pname_fid, prop_type, ', '.join(soptions)))
+        raise ValueError(msg)
 
 
 class OptConstraint(BaseCard):
@@ -1368,8 +1406,8 @@ class DRESP1(OptConstraint):
                     model.FLFACT(self.atti[2], msg=msg),
                     model.FLFACT(self.atti[3], msg=msg),
                 ]
-                msgi = 'max density=%s mach=%s velocity=%s' % (
-                    self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
+                #msgi = 'max density=%s mach=%s velocity=%s' % (
+                    #self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
                 #print(msgi)
                 self.atti_ref = self.atti
             elif self.property_type is None:
@@ -2131,23 +2169,23 @@ class DRESP3(OptConstraint):
             iorder, name = key
             if name in ['DRESP1', 'DRESP2']:
                 params[key] = []
-                for i, val in enumerate(vals):
+                for val in vals:
                     params[key].append(model.DResp(val, msg))
             elif name in ['DVMREL1', 'DVMREL2']:
                 params[key] = []
-                for i, val in enumerate(vals):
+                for val in vals:
                     params[key].append(model.DVmrel(val, msg))
             elif name in ['DVPREL1', 'DVPREL2']:
                 params[key] = []
-                for i, val in enumerate(vals):
+                for val in vals:
                     params[key].append(model.DVprel(val, msg))
             elif name == 'DESVAR':
                 params[key] = []
-                for i, val in enumerate(vals):
+                for val in vals:
                     params[key].append(model.Desvar(val, msg))
             elif name == 'DTABLE':
                 self.dtable = model.dtable
-                for i, val in enumerate(vals):
+                for val in vals:
                     default_values[val] = self.dtable[val]
             elif name == 'DNODE':
                 params[key] = [[], []]
@@ -3464,8 +3502,20 @@ class DVPREL1(OptConstraint):
             try:
                 key = pname_fid_map[self.pname_fid]
             except KeyError:
-                raise NotImplementedError('prop_type=%r has not implemented %r for in pname_fid_map/update_by_pname_fid' % (
-                    self.prop_type, self.pname_fid))
+                valid = list(pname_fid_map.keys())
+                if len(valid) == 0:
+                    msg = ('prop_type=%r has not implemented %r for in '
+                           'pname_fid_map/update_by_pname_fid\n'
+                           'valid: []' % (
+                               self.prop_type, self.pname_fid))
+                    raise NotImplementedError(msg)
+                svalid = [str(val) for val in valid]
+
+                msg = ('prop_type=%r has not implemented %r for in '
+                       'pname_fid_map/update_by_pname_fid\n'
+                       'valid: [%s]' % (
+                           self.prop_type, self.pname_fid, ', '.join(svalid)))
+                raise NotImplementedError(msg)
             setattr(prop, key, value)
 
     def validate(self):
@@ -3838,7 +3888,7 @@ class DVPREL2(OptConstraint):
     def calculate(self, op2_model, subcase_id):
         """
         this should really make a call the the DEQATN;
-        see the PBEAM for an example of get/set_opt_value
+        see the PBEAM for an example of get/set_optimization_value
         """
         try:
             get = self.pid_ref.get_optimization_value(self.pname_fid)
@@ -3896,46 +3946,13 @@ class DVPREL2(OptConstraint):
         self.pid_ref = None
         del self.dequation_ref
 
-    def get_deqatn_value(self, model, desvar_values):
-        values = []
-        for desvar_id in self.dvids:
-            valuei = _get_desvar(desvar_values, desvar_id, self)
-            values.append(valuei)
-
-        def _get_dtable_value(dtable, labels, dvxrel):
-            values = []
-            if not labels:
-                return values
-            if dtable is None:
-                raise KeyError('DTABLE is None and must contain %s' % str(labels))
-            for label in labels:
-                value = dtable[label]
-                values.append(value)
-            return values
-
-        if self.labels:
-            values += _get_dtable_value(model.dtable, self.labels, self)
-            dtable = model.dtable
-
-        deqatn = model.DEQATN(self.dequation)
-        #print(deqatn.func_str)
-        #from six import exec_
-        #exec_(deqatn.func_str)
-        func = deqatn.func
-        if func is None:
-            msg = 'func is None...DEQATN=%s\n%s\n%s' % (self.dequation, self, deqatn)
-            raise RuntimeError(msg)
-        #print(func)
-        value = func(*values)
-        return value
-
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
-        value = self.get_deqatn_value(model, desvar_values)
+        values = get_deqatn_value(self, model, desvar_values)
         assert isinstance(self.pid, int), type(self.pid)
         prop = model.properties[self.pid]
         try:
-            self._update_by_dvprel(prop, value)
+            self._update_by_dvprel(prop, values)
         except AttributeError:
             raise
             #raise NotImplementedError('prop_type=%r is not supported in update_model' % self.prop_type)
@@ -4196,34 +4213,34 @@ def _get_dresp23_table_values(name, values_list, inline=False):
     """
     out = []
     if name in ['DRESP1', 'DRESP2']:
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
                 out.append(val.OptID())
 
     elif name in ['DVCREL1', 'DVCREL2']:
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
                 out.append(val.OptID())
 
     elif name in ['DVMREL1', 'DVMREL2']:
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
                 out.append(val.OptID())
 
     elif name in ['DVPREL1', 'DVPREL2']:
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
                 out.append(val.OptID())
     elif name == 'DESVAR':
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
@@ -4232,7 +4249,7 @@ def _get_dresp23_table_values(name, values_list, inline=False):
     elif name == 'DNODE':
         nids_list, components_list = values_list
         if inline:
-            for i, nid, component in zip(count(), nids_list, components_list):
+            for nid, component in zip(nids_list, components_list):
                 if isinstance(nid, integer_types):
                     out.append(nid)
                 else:
@@ -4242,7 +4259,7 @@ def _get_dresp23_table_values(name, values_list, inline=False):
             out1 = []
             out2 = []
             out = [out1, out2]
-            for i, nid, component in zip(count(), nids_list, components_list):
+            for nid, component in zip(nids_list, components_list):
                 if isinstance(nid, integer_types):
                     out1.append(nid)
                 else:
@@ -4288,3 +4305,41 @@ def _get_desvar(desvar_values, desvar_id, dvxrel):
     assert isinstance(value, float), value
     #print('value = %s' % value)
     return value
+
+def _get_dtable_value(dtable, labels, dvxrel):
+    values = []
+    if not labels:
+        return values
+    if dtable is None:
+        raise KeyError('DTABLE is None and must contain %s\n%s' % (
+            str(labels), str(dvxrel)))
+    for label in labels:
+        value = dtable[label]
+        values.append(value)
+    return values
+
+def get_deqatn_args(dvxrel2, model, desvar_values):
+    """gets the arguments for the DEQATN for the DVxREL2"""
+    values = []
+    for desvar_id in dvxrel2.dvids:
+        valuei = _get_desvar(desvar_values, desvar_id, dvxrel2)
+        values.append(valuei)
+
+    if dvxrel2.labels:
+        values += _get_dtable_value(model.dtable, dvxrel2.labels, dvxrel2)
+    return values
+
+def get_deqatn_value(dvxrel2, model, desvar_values):
+    values = get_deqatn_args(dvxrel2, model, desvar_values)
+    deqatn = model.DEQATN(dvxrel2.dequation)
+    #print(deqatn.func_str)
+    #from six import exec_
+    #exec_(deqatn.func_str)
+    func = deqatn.func
+    if func is None:
+        msg = 'func is None...DEQATN=%s\n%s\n%s' % (dvxrel2.dequation, dvxrel2, deqatn)
+        raise RuntimeError(msg)
+    #print(func)
+    value = func(*values)
+    return value
+

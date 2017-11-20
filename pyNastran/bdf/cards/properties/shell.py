@@ -1394,6 +1394,10 @@ class PSHEAR(ShellProperty):
     """
     type = 'PSHEAR'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'f1', 6:'f2'}
+    pname_fid_map = {
+        # 1 based
+        4 : 't', 'T' : 't',
+    }
 
     def __init__(self, pid, mid, t, nsm=0., f1=0., f2=0., comment=''):
         """
@@ -1558,10 +1562,10 @@ class PSHELL(ShellProperty):
         7: 'tst', 8:'nsm', 9:'z1', 10:'z2',
     }
     pname_fid_map = {
-        3 : 't', 'T' : 't',
-        5 : 'twelveIt3', # no option
-        7 : 'tst', 'T' : 't',
-
+        # 1 based
+        4 : 't', 'T' : 't',
+        6 : 'twelveIt3', # no option
+        8 : 'tst', #'T' : 't',
     }
 
     def __init__(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,

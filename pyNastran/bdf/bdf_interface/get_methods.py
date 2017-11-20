@@ -713,7 +713,6 @@ class GetMethods(BDFAttributes):
 
     def DEQATN(self, equation_id, msg=''):
         """gets a DEQATN"""
-        print(self.dequations)
         try:
             return self.dequations[equation_id]
         except KeyError:
