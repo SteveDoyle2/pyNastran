@@ -3742,7 +3742,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         bulk_data_lines : List[str]
             the bulk data lines (stores geometry, boundary conditions, loads, etc.)
         """
-        main_lines = self._get_main_lines(self.bdf_filename, self.punch)
+        main_lines = self._get_main_lines(bdf_filename, self.punch)
         all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
         out = _lines_to_decks(all_lines, self.punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
@@ -3767,6 +3767,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         lines : List[str]
             all the lines packed into a single line stream
         """
+        print('bdf_filename_main =', bdf_filename)
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             bdf_filename = cast(StringIO, bdf_filename)
             lines = bdf_filename.readlines()
