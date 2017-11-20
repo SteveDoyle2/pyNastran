@@ -1120,7 +1120,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbush(self, pid, k, b, ge, rcv=None, mass_fields=None, comment=''):
+    def add_pbush(self, pid, k, b, ge, rcv=None, mass=None, comment=''):
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -1140,14 +1140,14 @@ class AddCards(AddMethods):
             len(ge) = 6
         rcv : List[float]; default=None -> (None, None, None, None)
             [sa, st, ea, et] = rcv
-            length(mass_fields) = 4
-        mass_fields : List[float]; default=None
-            length(mass_fields) = 1
+            length(rcv) = 4
+        mass : float; default=None
+            lumped mass of the CBUSH
             This is an MSC only parameter.
         comment : str; default=''
             a comment for the card
         """
-        prop = PBUSH(pid, k, b, ge, rcv, mass_fields, comment=comment)
+        prop = PBUSH(pid, k, b, ge, rcv=rcv, mass=mass, comment=comment)
         self._add_property_object(prop)
         return prop
 
