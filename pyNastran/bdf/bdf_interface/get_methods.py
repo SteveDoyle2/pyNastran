@@ -80,8 +80,23 @@ class GetMethods(BDFAttributes):
         Returns a series of node objects given a list of IDs
         """
         nodes = []
+        bad_nids = []
         for nid in nids:
-            nodes.append(self.EmptyNode(nid, msg=msg))
+            try:
+                nodes.append(self.EmptyNode(nid, msg=msg))
+            except KeyError:
+                bad_nids.append(nid)
+
+        if bad_nids:
+            nid_list = np.unique(list(self.nodes.keys()))
+            msg = 'nids=%s are not a GRID, SPOINT, or EPOINT%s\n' % (bad_nids, msg)
+            msg += 'nids=%s\n' % nid_list
+            if self.spoints:
+                msg += 'spoints=%s\n' % np.unique(list(self.spoints.keys()))
+            if self.epoints:
+                msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
+            raise KeyError(msg)
+
         return nodes
 
     def Nodes(self, nids, msg=''):
@@ -125,8 +140,16 @@ class GetMethods(BDFAttributes):
 
     def Elements(self, eids, msg=''):
         elements = []
+        bad_eids = []
         for eid in eids:
-            elements.append(self.Element(eid, msg))
+            try:
+                elements.append(self.Element(eid, msg))
+            except KeyError:
+                bad_eids.append(eid)
+        if bad_eids:
+            msg = 'eids=%s not found%s.  Allowed elements=%s' % (
+                bad_eids, msg, np.unique(list(self.elements.keys())))
+            raise KeyError(msg)
         return elements
 
     def Mass(self, eid, msg=''):
@@ -690,6 +713,7 @@ class GetMethods(BDFAttributes):
 
     def DEQATN(self, equation_id, msg=''):
         """gets a DEQATN"""
+        print(self.dequations)
         try:
             return self.dequations[equation_id]
         except KeyError:

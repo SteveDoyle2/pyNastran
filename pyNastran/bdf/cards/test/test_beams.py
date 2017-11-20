@@ -439,7 +439,7 @@ class TestBeams(unittest.TestCase):
         #print("I11 = ", cbeam.I1())
         #print("I22 = ", cbeam.I2())
         #print("I12 = ", cbeam.I12())
-        print("J = ", cbeam.J())
+        #print("J = ", cbeam.J())
         node_ids = cbeam.node_ids
         assert node_ids == [1, 2], node_ids
         self.assertEqual(cbeam.Area(), 2.9)
@@ -774,6 +774,95 @@ class TestBeams(unittest.TestCase):
 
             cg = array([0.5, 0., 0.], dtype='float32')
             print('cg =', op2_cg)
+
+    def test_pbeam_nsm(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        nsm = [1., 1.]
+        xxb = [0., 1.]
+        so = ['YES', 'YES']
+
+        area = [2.0, 2.0]
+        i1 = i2 = i12 = j = [0., 0.]
+        c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = [0., 0.]
+        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                               c1, c2, d1, d2,
+                               e1, e2, f1, f2,
+                               k1=1., k2=1.,
+                               s1=0., s2=0.,
+                               nsia=0., nsib=None,
+                               cwa=0., cwb=None,
+                               m1a=0., m2a=None,
+                               m1b=0., m2b=None,
+                               n1a=0., n2a=None,
+                               n1b=0., n2b=None, comment='')
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+        #----------------
+        card_lines = [
+            'PBEAM          2       1             BAR',
+            '              1.      2.      1.',
+        ]
+        model.add_card(card_lines, 'PBEAML', comment='', is_list=False,
+                       has_none=True)
+        model.pop_parse_errors()
+        pbeam2 = model.properties[2]
+        #------------------
+        model.cross_reference()
+
+        assert pbeam.Nsm() == 1.0
+        assert pbeam.Area() == 2.0
+
+        # mass/L = area*rho + nsm
+        assert pbeam.MassPerLength() == 1.0
+
+        # area = 2.0
+        mat1.rho = 10.0
+        assert pbeam.MassPerLength() == 21.0, pbeam.MassPerLength()
+        assert pbeam2.MassPerLength() == 21.0, pbeam2.MassPerLength()
+
+    def test_pbeaml_nsm(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        beam_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        xxb = [0., 1.]
+        dims = [dim, dim]
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
+                                 nsm=[1.0],
+                                 group='MSCBML0',
+                                 comment='')
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+        #----------------
+        card_lines = [
+            'PBEAML         2       1             BAR',
+            '              1.      2.      1.',
+        ]
+        model.add_card(card_lines, 'PBEAML', comment='', is_list=False,
+                       has_none=True)
+        model.pop_parse_errors()
+        pbeaml2 = model.properties[2]
+        #------------------
+        model.cross_reference()
+
+        assert pbeaml.Nsm() == 1.0
+        assert pbeaml.Area() == 2.0
+
+        # mass/L = area*rho + nsm
+        assert pbeaml.MassPerLength() == 1.0
+
+        # area = 2.0
+        mat1.rho = 10.0
+        assert pbeaml.MassPerLength() == 21.0, pbeaml.MassPerLength()
+        assert pbeaml2.MassPerLength() == 21.0, pbeaml2.MassPerLength()
 
     def test_pbcomp(self):
         """tests a PBCOMP"""

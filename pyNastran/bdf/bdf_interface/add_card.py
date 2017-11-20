@@ -4659,7 +4659,7 @@ class AddCards(AddMethods):
         self._add_dtable_object(dtable)
         return dtable
 
-    def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+    def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment=''):
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -4676,10 +4676,15 @@ class AddCards(AddMethods):
             LINEAR, LOG
         yaxis : str
             LINEAR, LOG
+        extrap : int; default=0
+            Extrapolation method:
+                0 : linear
+                1 : constant
+            .. note:: this is NX specific
         comment : str; default=''
             a comment for the card
         """
-        table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
         self._add_tabled_object(table)
         return table
 
@@ -4698,18 +4703,18 @@ class AddCards(AddMethods):
         self._add_tabled_object(table)
         return table
 
-    def add_tablem1(self, tid, x, y, comment=''):
-        table = TABLEM1(tid, x, y, comment=comment)
+    def add_tablem1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+        table = TABLEM1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
         self._add_tablem_object(table)
         return table
 
-    def add_tablem2(self, tid, x1, x, y, comment=''):
-        table = TABLEM2(tid, x1, x, y, comment=comment)
+    def add_tablem2(self, tid, x1, x, y, extrap=0, comment=''):
+        table = TABLEM2(tid, x1, x, y, extrap=extrap, comment=comment)
         self._add_tablem_object(table)
         return table
 
-    def add_tablem3(self, tid, x1, x2, x, y, comment=''):
-        table = TABLEM3(tid, x1, x2, x, y, comment=comment)
+    def add_tablem3(self, tid, x1, x2, x, y, extrap=0, comment=''):
+        table = TABLEM3(tid, x1, x2, x, y, extrap=extrap, comment=comment)
         self._add_tablem_object(table)
         return table
 
@@ -5239,7 +5244,7 @@ class AddCards(AddMethods):
         }
         """
         dresp = DRESP2(dresp_id, label, dequation, region, params,
-                       method=method, c1=c1, c2=c2, c3=c3, comment=comment)
+                       method=method, c1=c1, c2=c2, c3=c3, comment=comment, validate=validate)
         self._add_dresp_object(dresp)
         return dresp
 

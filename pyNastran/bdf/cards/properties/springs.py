@@ -36,6 +36,13 @@ class PELAS(SpringProperty):
     _field_map = {
         1: 'pid', 2:'k', 3:'ge', 4:'s',
     }
+    pname_fid_map = {
+        #2 : 'k', 'K' : 'k',
+        #3 : 'ge', 'GE' : 'ge',
+        #4 : 's', 'S' : 's',
+        'K1' : 'k',
+        'GE1' : 'ge',
+    }
 
     def __init__(self, pid, k, ge=0., s=0., comment=''):
         """

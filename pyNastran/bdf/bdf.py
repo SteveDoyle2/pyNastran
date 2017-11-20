@@ -3783,7 +3783,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             try:
                 lines = bdf_file.readlines()
             except:
-                _show_bad_file(bdf_filename, encoding=self._encoding)
+                _show_bad_file(self, bdf_filename, encoding=self._encoding)
         return lines
 
     def _lines_to_deck_lines(self, lines, punch=False):

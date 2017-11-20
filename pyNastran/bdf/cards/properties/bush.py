@@ -34,10 +34,76 @@ class BushingProperty(Property):
 
 
 class PBUSH(BushingProperty):
+    """
+    Generalized Spring-and-Damper Property
+    Defines the nominal property values for a generalized spring-and-damper
+    structural element.
+
+    +-------+-----+-----+-----+-----+-----+-----+-----+----+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  | 9  |
+    +=======+=====+=====+=====+=====+=====+=====+=====+====+
+    | PBUSH | PID |  K  |  K1 |  K2 |  K3 |  K4 |  K5 | K6 |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----+
+    |       |  B  | B1  |  B2 |  B3 |  B4 |  B5 |  B6 |    |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----+
+    |       | GE  | GE1 | GE2 | GE3 | GE4 | GE5 | GE6 |    |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----+
+    |       | RCV | SA  |  ST |  EA |  ET |     |     |    |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----+
+    """
     type = 'PBUSH'
     _field_map = {
         1: 'pid',
     }
+    def update_by_pname_fid(self, name, value):
+        if name == 'B1':
+            self.Bi[0]
+        elif name == 'B2':
+            self.Bi[1]
+        elif name == 'B3':
+            self.Bi[2]
+        elif name == 'B4':
+            self.Bi[3]
+        elif name == 'B5':
+            self.Bi[4]
+        elif name == 'B6':
+            self.Bi[5]
+
+        elif name == 'K1':
+            self.Ki[0]
+        elif name == 'K2':
+            self.Ki[1]
+        elif name == 'K3':
+            self.Ki[2]
+        elif name == 'K4':
+            self.Ki[3]
+        elif name == 'K5':
+            self.Ki[4]
+        elif name == 'K6':
+            self.Ki[5]
+
+        elif name == 'M1':
+            self.Mi[0]
+        elif name == 'M2':
+            self.Mi[1]
+        elif name == 'M3':
+            self.Mi[2]
+        elif name == 'M4':
+            self.Mi[3]
+        elif name == 'M5':
+            self.Mi[4]
+        elif name == 'M6':
+            self.Mi[5]
+        else:
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, name))
+    #pname_fid_map = {
+        #4 : 'A', 'A' : 'A',
+        #5 : 'i1', 'I1' : 'i1',
+        #6 : 'i2', 'I2' : 'i2',
+        #7 : 'i12', 'I12' : 'i12',
+        #5 : 'j', 'J' : 'j',
+    #}
 
     def __init__(self, pid, k, b, ge, rcv=None, mass_fields=None, comment=''):
         """
@@ -262,8 +328,27 @@ class PBUSH(BushingProperty):
 
 
 class PBUSH1D(BushingProperty):
+    """
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |   1     |    2   |   3   |    4   |    5   |   6   |   7   |   8   |
+    +=========+========+=======+========+========+=======+=======+=======+
+    | PBUSH1D |   PID  |   K   |    C   |    M   |   SA  |  SE   |       |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | SHOCKA | TYPE  |   CVT  |   CVC  | EXPVT | EXPVC |  IDTS |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | IDETS  | IDECS | IDETSD | IDECSD |       |       |       |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | SPRING |  TYPE |   IDT  |   IDC  | IDTDU | IDCDU |       |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | DAMPER |  TYPE |   IDT  |   IDC  | IDTDV | IDCDV |       |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | GENER  |  IDT  |   IDC  |  IDTDU | IDCDU | IDTDV | IDCDV |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    """
     type = 'PBUSH1D'
-
+    pname_fid_map = {
+        'K1' : 'k',
+    }
     def __init__(self, pid, k=0., c=0., m=0., sa=0., se=0.,
                  optional_vars=None, comment=''):
         """

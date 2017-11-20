@@ -21,7 +21,21 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 class PROD(Property):
+    """
+    +------+-----+-----+-----+-----+-----+-----+
+    |  1   |  2  |  3  |  4  |  5  |  6  |  7  |
+    +======+=====+=====+=====+=====+=====+=====+
+    | PROD | PID | MID |  A  |  J  |  C  | NSM |
+    +------+-----+-----+-----+-----+-----+-----+
+    | PROD |  1  |  2  | 2.0 | 3.0 | 0.5 | 1.0 |
+    +------+-----+-----+-----+-----+-----+-----+
+    """
     type = 'PROD'
+    pname_fid_map = {
+        4 : 'A', 'A' : 'A',
+        5 : 'J', 'J' : 'j',
+        6 : 'C', 'C' : 'c',
+    }
 
     def __init__(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
         """
@@ -137,6 +151,17 @@ class PROD(Property):
             raise RuntimeError('Material mid=%i has not been cross referenced.\n%s' % (self.mid, str(self)))
         return self.mid_ref.Rho()
 
+    def MassPerLength(self):
+        r"""
+            Gets the mass per length :math:`\frac{m}{L}` of the CBEAM.
+
+            .. math:: \frac{m}{L} = A \rho + nsm
+            """
+        rho = self.Rho()
+        area = self.A
+        nsm = self.nsm
+        return area * rho + nsm
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -174,7 +199,19 @@ class PROD(Property):
 
 
 class PTUBE(Property):
+    """
+    +-------+------+-----+------+------+------+-----+
+    |   1   |  2   |  3  |   4  |  5   |  6   |  7  |
+    +=======+======+=====+======+======+======+=====+
+    | PTUBE | PID  | MID |  OD  |   T  |  NSM | OD2 |
+    +-------+------+-----+------+------+------+-----+
+    | PTUBE |  2   |  6  | 6.29 | 0.25 |      |     |
+    +-------+------+-----+------+------+------+-----+
+    """
     type = 'PTUBE'
+    pname_fid_map = {
+        5 : 't', 'T' : 't',
+    }
 
     def __init__(self, pid, mid, OD1, t=None, nsm=0., OD2=None, comment=''):
         """
@@ -211,6 +248,11 @@ class PTUBE(Property):
         self.t = t
         self.nsm = nsm
         self.mid_ref = None
+
+    def validate(self):
+        assert self.OD1 >= 0., 'PTUBE: pid=%s OD1=%s' % (self.pid, self.OD1)
+        assert self.OD2 >= 0., 'PTUBE: pid=%s OD2=%s' % (self.pid, self.OD2)
+        assert self.t >= 0., 'PTUBE: pid=%s t=%s' % (self.pid, self.t)
 
     @classmethod
     def add_card(cls, card, comment=''):

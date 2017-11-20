@@ -250,6 +250,9 @@ class CMASS2(PointMassElement):
     _field_map = {
         1: 'eid', 2:'mass', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
     }
+    cp_name_map = {
+        'M' : 'mass',
+    }
 
     def __init__(self, eid, mass, nids, c1, c2, comment=''):
         """
@@ -947,6 +950,19 @@ class CONM2(PointMassElement):
     _field_map = {
         1: 'eid', 2:'nid', 3:'cid', 4:'mass',
     }
+    def update_by_cp_name(self, name, value):
+        if name == 'M':
+            self.mass = value
+        elif name == 'X1':
+            self.X[0] = value
+        elif name == 'X2':
+            self.X[2] = value
+        elif name == 'X3':
+            self.X[3] = value
+        else:
+            raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
+                self.type, name))
+
     def _update_field_helper(self, n, value):
         if n == 5:
             self.X[0] = value

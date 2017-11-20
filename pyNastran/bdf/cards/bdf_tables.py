@@ -33,7 +33,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 #from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
-    double_or_string, double_or_blank)
+    double_or_string, double_or_blank, integer_or_string)
 
 def make_xy(table_id, table_type, xy):
     try:
@@ -164,21 +164,27 @@ class DTABLE(BaseCard):
 
 class TABLED1(Table):
     """
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |    1    |   2  |   3   |   4   |  5  |  6  |  7  |  8   |   9  |
-    +=========+======+=======+=======+=====+=====+=====+======+======+
-    | TABLED1 |  TID | XAXIS | YAXIS |     |     |     |      |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |         |  x1  |  y1   |   x2  | y2  | x3  | y3  | etc. | ENDT |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    | TABLED1 |  32  |       |       |     |     |     |      |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |         | -3.0 |  6.9  |  2.0  | 5.6 | 3.0 | 5.6 | ENDT |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
+    Dynamic Load Tabular Function, Form 1
+    Defines a tabular function for use in generating frequency-dependent and
+    time-dependent dynamic loads.
+
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |    1    |   2  |   3   |   4   |    5   |  6  |  7  |  8   |   9  |
+    +=========+======+=======+=======+========+=====+=====+======+======+
+    | TABLED1 |  TID | XAXIS | YAXIS | EXTRAP |     |     |      |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  | y3  | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    | TABLED1 |  32  |       |       |        |     |     |      |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |         | -3.0 |  6.9  |  2.0  |   5.6  | 3.0 | 5.6 | ENDT |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+
+    ..note:: EXTRAP is NX specific
     """
     type = 'TABLED1'
     #def __init__(self, tid, xaxis, yaxis, xy, comment=''):
-    def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+    def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment=''):
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -195,6 +201,11 @@ class TABLED1(Table):
             LINEAR, LOG
         yaxis : str
             LINEAR, LOG
+        extrap : int; default=0
+            Extrapolation method:
+                0 : linear
+                1 : constant
+            .. note:: this is NX specific
         comment : str; default=''
             a comment for the card
         """
@@ -202,6 +213,7 @@ class TABLED1(Table):
         if comment:
             self.comment = comment
         self.tid = tid
+        self.extrap = extrap
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
         self.xaxis = xaxis
@@ -224,6 +236,7 @@ class TABLED1(Table):
         tid = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
+        extrap = integer_or_blank(card, 4, 'yaxis', 0)
 
         nfields = len(card) - 1
         nterms = (nfields - 9) // 2
@@ -241,7 +254,7 @@ class TABLED1(Table):
             xy.append([xi, yi])
         string(card, nfields, 'ENDT')
         x, y = make_xy(tid, 'TABLED1', xy)
-        return TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+        return TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -259,14 +272,18 @@ class TABLED1(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, None,
+        list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, self.extrap,
                        None, None, None, None] + xy + ['ENDT']
         return list_fields
 
     def repr_fields(self):
-        #xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
-        #yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
-        return self.raw_fields()
+        extrap = set_blank_if_default(self.extrap, 0)
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+        list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, extrap,
+                       None, None, None, None] + xy + ['ENDT']
+        return list_fields
 
     def interpolate(self, x):
         if isinstance(x, float):
@@ -312,12 +329,19 @@ class TABLED1(Table):
             raise NotImplementedError('xaxis=%r yaxis=%r' % (self.xaxis, self.yaxis))
         return y
 
+
 class TABLED2(Table):
-    """Dynamic Load Table, Type 2"""
+    """
+    Dynamic Load Tabular Function, Form 2
+    Defines a tabular function for use in generating frequency-dependent and
+    time-dependent dynamic loads. Also contains parametric data for use with the
+    table.
+    """
     type = 'TABLED2'
-    def __init__(self, tid, x1, x, y, comment=''):
+    def __init__(self, tid, x1, x, y, extrap=0, comment=''):
         """
         Parameters
+        ----------
         tid : int
             table id
         x1 : float
@@ -326,12 +350,20 @@ class TABLED2(Table):
             the x values
         y : List[float]
             the y values
+        extrap : int; default=0
+            Extrapolation method:
+                0 : linear
+                1 : constant
+            .. note:: this is NX specific
+        comment : str; default=''
+            a comment for the card
         """
         Table.__init__(self)
         if comment:
             self.comment = comment
         self.tid = tid
         self.x1 = x1
+        self.extrap = extrap
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
 
@@ -349,6 +381,7 @@ class TABLED2(Table):
         """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
+        extrap = integer_or_blank(card, 3, 'extrap', default=0)
 
         nfields = len(card) - 1
         nterms = (nfields - 9) // 2
@@ -366,7 +399,7 @@ class TABLED2(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
         x, y = make_xy(tid, 'TABLED2', xy)
-        return TABLED2(tid, x1, x, y, comment=comment)
+        return TABLED2(tid, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -412,23 +445,55 @@ class TABLED2(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLED2', self.tid, self.x1, None, None, None,
+        list_fields = ['TABLED2', self.tid, self.x1, self.extrap, None, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 
     def repr_fields(self):
-        return self.raw_fields()
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+        extrap = set_blank_if_default(self.extrap, 0)
+        list_fields = ['TABLED2', self.tid, self.x1, extrap, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
 
 
 class TABLED3(Table):
+    """
+    Dynamic Load Tabular Function, Form 3
+    Defines a tabular function for use in generating frequency-dependent and
+    time-dependent dynamic loads. Also contains parametric data for use with the
+    table.
+    """
     type = 'TABLED3'
-    def __init__(self, tid, x1, x2, x, y, comment=''):
+    def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
+        """
+        Parameters
+        ----------
+        tid : int
+            table id
+        x1 : float
+            y = yT(x - x1)
+        x : List[float]
+            the x values
+        y : List[float]
+            the y values
+        extrap : int; default=0
+            Extrapolation method:
+                0 : linear
+                1 : constant
+            .. note:: this is NX specific
+        comment : str; default=''
+            a comment for the card
+        """
         Table.__init__(self)
         if comment:
             self.comment = comment
         self.tid = tid
         self.x1 = x1
         self.x2 = x2
+        self.extrap = extrap
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
         assert self.x2 != 0.0
@@ -448,6 +513,7 @@ class TABLED3(Table):
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
+        extrap = integer_or_blank(card, 4, 'extrap', default=0)
 
         nfields = len(card) - 1
         nterms = (nfields - 9) // 2
@@ -465,7 +531,7 @@ class TABLED3(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
         x, y = make_xy(tid, 'TABLED3', xy)
-        return TABLED3(tid, x1, x2, x, y, comment=comment)
+        return TABLED3(tid, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -483,15 +549,27 @@ class TABLED3(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLED3', self.tid, self.x1, self.x2, None,
+        list_fields = ['TABLED3', self.tid, self.x1, self.x2, self.extrap,
                        None, None, None, None] + xy + ['ENDT']
         return list_fields
 
     def repr_fields(self):
-        return self.raw_fields()
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+        extrap = set_blank_if_default(self.extrap, 0)
+        list_fields = ['TABLED3', self.tid, self.x1, self.x2, extrap,
+                       None, None, None, None] + xy + ['ENDT']
+        return list_fields
 
 
 class TABLED4(Table):
+    """
+    Dynamic Load Tabular Function, Form 4
+    Defines the coefficients of a power series for use in generating
+    frequency-dependent and time-dependent dynamic loads. Also contains
+    parametric data for use with the table.
+    """
     type = 'TABLED4'
     def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
         Table.__init__(self)
@@ -581,6 +659,104 @@ class TABLED4(Table):
         yi = self.a * ((x - x1) / x2) ** n
         return yi.sum()
 
+class TABLED5(Table):
+    """
+    Dynamic Load Tabular Function, Form 5
+    Defines a value as a function of two variables for use in generating
+    frequency-dependent and time-dependent dynamic loads.
+    """
+    type = 'TABLED5'
+    def __init__(self, tid, xs, table_ids, comment=''):
+        Table.__init__(self)
+        if comment:
+            self.comment = comment
+        self.tid = tid
+        self.xs = xs
+        self.table_ids = table_ids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a TABLED5 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        tid = integer(card, 1, 'tid')
+
+        nfields = len(card) - 1
+        nterms = nfields - 9
+        if nterms < 0:
+            raise SyntaxError('%r card is too short' % cls.type)
+
+        nfields = len(card) - 1
+        nterms = (nfields - 9) // 2
+        if nterms < 0:
+            raise SyntaxError('%r card is too short' % cls.type)
+        xs = []
+        table_ids = []
+        for i in range(nterms):
+            n = 9 + i * 2
+            if card.field(n) == 'ENDT':
+                break
+            x = double_or_string(card, n, 'x' + str(i + 1))
+            table_id = integer_or_string(card, n + 1, 'table_id' + str(i + 1))
+            if x == 'SKIP' or table_id == 'SKIP':
+                continue
+            xs.append(x)
+            table_ids.append(table_id)
+        string(card, nfields, 'ENDT')
+        return TABLED5(tid, xs, table_ids, comment=comment)
+
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #tid = data[0]
+        #x1 = data[1]
+        #x2 = data[2]
+        #x3 = data[3]
+        #x4 = data[4]
+        #a = data[5:]
+        #return TABLED4(tid, x1, x2, x3, x4, a, comment=comment)
+
+    def raw_fields(self):
+        x_table = []
+        for xi, tablei in zip(self.xs, self.table_ids):
+            x_table.extend([xi, tablei])
+        list_fields = ['TABLED5', self.tid, None, None, None, None,
+                       None, None, None] + x_table + ['ENDT']
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    #def interpolate(self, x):
+        #"""
+        #y = sum_{i=0}^N Ai * ((x-x1)/x2))^i
+        #"""
+        #if isinstance(x, float):
+            #x = [x]
+        #x = np.asarray(x)
+        #nx = x.size
+
+        #na = self.a.size
+        #n = np.arange(0., na)
+
+        #x1 = np.ones(nx) * self.x1
+        #x2 = np.ones(nx) * self.x2
+
+        #i = np.where(x < self.x3)[0]
+        #x[i] = self.x3
+
+        #j = np.where(x > self.x4)[0]
+        #x[j] = self.x4
+
+        #yi = self.a * ((x - x1) / x2) ** n
+        #return yi.sum()
+
 
 class TABDMP1(Table):
     type = 'TABDMP1'
@@ -653,24 +829,40 @@ class TABDMP1(Table):
 
 class TABLEM1(Table):
     """
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |    1    |   2  |   3   |   4   |  5  |  6  |  7  |  8   |   9  |
-    +=========+======+=======+=======+=====+=====+=====+======+======+
-    | TABLEM1 |  TID |       |       |     |     |     |      |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |         |  x1  |  y1   |   x2  | y2  | x3  | y3  | etc. | ENDT |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    | TABLEM1 |  32  |       |       |     |     |     |      |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |         | -3.0 |  6.9  |  2.0  | 5.6 | 3.0 | 5.6 | ENDT |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
+    MSC
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |    1    |   2  |   3   |   4   |   5    |  6  |  7  |  8   |   9  |
+    +=========+======+=======+=======+========+=====+=====+======+======+
+    | TABLEM1 |  TID |       |       |        |     |     |      |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  | y3  | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    | TABLEM1 |  32  |       |       |        |     |     |      |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |         | -3.0 |  6.9  |  2.0  |  5.6   | 3.0 | 5.6 | ENDT |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+
+    NX
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |    1    |   2  |   3   |   4   |   5    |  6  |  7  |  8   |   9  |
+    +=========+======+=======+=======+========+=====+=====+======+======+
+    | TABLEM1 |  TID | XAXIS | YAXIS | EXTRAP |     |     |      |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  | y3  | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    | TABLEM1 |  32  |       |       |        |     |     |      |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |         | -3.0 |  6.9  |  2.0  |  5.6   | 3.0 | 5.6 | ENDT |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
     """
     type = 'TABLEM1'
-    def __init__(self, tid, x, y, comment=''):
+    def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
         self.tid = tid
+        self.xaxis = xaxis # linear/log
+        self.yaxis = yaxis # linear/log
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
 
@@ -687,6 +879,8 @@ class TABLEM1(Table):
             a comment for the card
         """
         tid = integer(card, 1, 'tid')
+        xaxis = string_or_blank(card, 2, 'xaxis', 'LINEAR')
+        yaxis = string_or_blank(card, 3, 'yaxis', 'LINEAR')
 
         nfields = len(card) - 1
         nterms = (nfields - 9) // 2
@@ -704,7 +898,7 @@ class TABLEM1(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
         x, y = make_xy(tid, 'TABLEM1', xy)
-        return TABLEM1(tid, x, y, comment=comment)
+        return TABLEM1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -721,32 +915,45 @@ class TABLEM1(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLEM1', self.tid, None, None, None, None,
+        list_fields = ['TABLEM1', self.tid, self.xaxis, self.yaxis, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
+
+    def repr_fields(self):
+        xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
+        yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+        list_fields = ['TABLEM1', self.tid, xaxis, yaxis, None, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 
 
 class TABLEM2(Table):
     """
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |    1    |   2  |   3   |   4   |  5  |  6  |  7  |  8   |   9  |
-    +=========+======+=======+=======+=====+=====+=====+======+======+
-    | TABLEM2 |  TID |   X1  |       |     |     |     |      |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |         |  x1  |  y1   |   x2  | y2  | x3  | y3  | etc. | ENDT |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    | TABLEM2 |  32  | -10.5 |       |     |     |     |      |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |         | -3.0 |  6.9  |  2.0  | 5.6 | 3.0 | 5.6 | ENDT |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
+    +---------+------+-------+--------+-----+-----+-----+------+------+
+    |    1    |   2  |   3   |   4    |  5  |  6  |  7  |  8   |   9  |
+    +=========+======+=======+========+=====+=====+=====+======+======+
+    | TABLEM2 |  TID |   X1  | EXTRAP |     |     |     |      |      |
+    +---------+------+-------+--------+-----+-----+-----+------+------+
+    |         |  x1  |  y1   |   x2   | y2  | x3  | y3  | etc. | ENDT |
+    +---------+------+-------+--------+-----+-----+-----+------+------+
+    | TABLEM2 |  32  | -10.5 |        |     |     |     |      |      |
+    +---------+------+-------+--------+-----+-----+-----+------+------+
+    |         | -3.0 |  6.9  |  2.0   | 5.6 | 3.0 | 5.6 | ENDT |      |
+    +---------+------+-------+--------+-----+-----+-----+------+------+
+
+    ..note:: EXTRAP is NX specific
     """
     type = 'TABLEM2'
-    def __init__(self, tid, x1, x, y, comment=''):
+    def __init__(self, tid, x1, x, y, extrap=0, comment=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
         self.tid = tid
         self.x1 = x1
+        self.extrap = extrap
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
 
@@ -764,6 +971,7 @@ class TABLEM2(Table):
         """
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
+        extrap = integer_or_blank(card, 3, 'EXTRAP', default=0)
 
         nfields = len(card) - 1
         nterms = (nfields - 9) // 2
@@ -781,7 +989,7 @@ class TABLEM2(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
         x, y = make_xy(tid, 'TABLEM2', xy)
-        return TABLEM2(tid, x1, x, y, comment=comment)
+        return TABLEM2(tid, x1, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -798,36 +1006,45 @@ class TABLEM2(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLEM2', self.tid, self.x1, None, None, None,
+        list_fields = ['TABLEM2', self.tid, self.x1, self.extrap, None, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 
     def repr_fields(self):
-        return self.raw_fields()
+        extrap = set_blank_if_default(self.extrap, 0)
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+        list_fields = ['TABLEM2', self.tid, self.x1, extrap, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
 
 
 class TABLEM3(Table):
     """
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |    1    |   2  |   3   |   4   |  5  |  6  |  7  |  8   |   9  |
-    +=========+======+=======+=======+=====+=====+=====+======+======+
-    | TABLEM3 |  TID |   X1  |   X2  |     |     |     |      |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |         |  x1  |  y1   |   x2  | y2  | x3  | y3  | etc. | ENDT |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    | TABLEM3 |  32  | 126.9 | 30.0  |     |     |     |      |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
-    |         | -3.0 |  6.9  |  2.0  | 5.6 | 3.0 | 5.6 | ENDT |      |
-    +---------+------+-------+-------+-----+-----+-----+------+------+
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |    1    |   2  |   3   |   4   |    5   |  6  |  7  |  8   |   9  |
+    +=========+======+=======+=======+========+=====+=====+======+======+
+    | TABLEM3 |  TID |   X1  |   X2  | EXTRAP |     |     |      |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  | y3  | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    | TABLEM3 |  32  | 126.9 | 30.0  |        |     |     |      |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+    |         | -3.0 |  6.9  |  2.0  |   5.6  | 3.0 | 5.6 | ENDT |      |
+    +---------+------+-------+-------+--------+-----+-----+------+------+
+
+    ..note:: EXTRAP is NX specific
     """
     type = 'TABLEM3'
-    def __init__(self, tid, x1, x2, x, y, comment=''):
+    def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
         Table.__init__(self)
         if comment:
             self.comment = comment
         self.tid = tid
         self.x1 = x1
         self.x2 = x2
+        self.extrap = extrap
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
         assert self.x2 != 0.0
@@ -847,6 +1064,7 @@ class TABLEM3(Table):
         tid = integer(card, 1, 'tid')
         x1 = double(card, 2, 'x1')
         x2 = double(card, 3, 'x2')
+        extrap = integer_or_blank(card, 4, 'extrap', default=0)
 
         nfields = len(card) - 1
         nterms = (nfields - 9) // 2
@@ -864,7 +1082,7 @@ class TABLEM3(Table):
             xy.append([x, y])
         string(card, nfields, 'ENDT')
         x, y = make_xy(tid, 'TABLEM3', xy)
-        return TABLEM3(tid, x1, x2, x, y, comment=comment)
+        return TABLEM3(tid, x1, x2, x, y, extrap=extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -882,12 +1100,18 @@ class TABLEM3(Table):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLEM3', self.tid, self.x1, self.x2, None,
+        list_fields = ['TABLEM3', self.tid, self.x1, self.x2, self.extrap,
                        None, None, None, None] + xy + ['ENDT']
         return list_fields
 
     def repr_fields(self):
-        return self.raw_fields()
+        xy = []
+        extrap = set_blank_if_default(self.extrap, 0)
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+        list_fields = ['TABLEM3', self.tid, self.x1, self.x2, extrap,
+                       None, None, None, None] + xy + ['ENDT']
+        return list_fields
 
 
 class TABLEM4(Table):

@@ -370,6 +370,84 @@ class TestBars(unittest.TestCase):
         model._verify_bdf(xref=True)
         model.uncross_reference()
 
+    def test_pbar_nsm(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        nsm = 1.
+        area = 2.0
+        pbar = model.add_pbar(pid, mid, A=area, i1=0., i2=0., i12=0., j=0.,
+                             nsm=nsm,
+                             c1=0., c2=0., d1=0., d2=0.,
+                             e1=0., e2=0., f1=0., f2=0.,
+                             k1=1.e8,
+                             k2=1.e8,
+                             comment='')
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        #----------------
+        card_lines = [
+            'PBAR           2       1      2.                              1.',
+        ]
+        model.add_card(card_lines, 'PBAR', comment='', is_list=False,
+                       has_none=True)
+        pbar2 = model.properties[2]
+        #------------------
+        model.cross_reference()
+
+        assert pbar.Nsm() == 1.0
+        assert pbar.Area() == 2.0
+
+        # mass/L = area*rho + nsm
+        assert pbar.MassPerLength() == 1.0
+
+        # area = 2.0
+        mat1.rho = 10.0
+        assert pbar.MassPerLength() == 21.0, pbar.MassPerLength()
+        assert pbar2.MassPerLength() == 21.0, pbar2.MassPerLength()
+
+    def test_pbarl_nsm(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        bar_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBMLO', nsm=1.,
+                               comment='')
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        #----------------
+        card_lines = [
+            'PBARL   2       1               BAR',
+            '        1.0     2.0      1.0',
+        ]
+        model.add_card(card_lines, 'PBARL', comment='', is_list=False,
+                       has_none=True)
+        pbarl2 = model.properties[2]
+        #------------------
+        model.cross_reference()
+
+        assert pbarl.Nsm() == 1.0
+        assert pbarl.Area() == 2.0
+
+        # mass/L = area*rho + nsm
+        assert pbarl.MassPerLength() == 1.0
+
+        # area = 2.0
+        mat1.rho = 10.0
+        assert pbarl.MassPerLength() == 21.0, pbarl.MassPerLength()
+        assert pbarl2.MassPerLength() == 21.0, pbarl2.MassPerLength()
+
+
     def test_pbrsect(self):
         """tests a PBRSECT"""
         model = BDF(debug=False)

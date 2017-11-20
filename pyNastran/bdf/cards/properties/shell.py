@@ -20,6 +20,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
+from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -503,22 +504,48 @@ class PCOMP(CompositeShellProperty):
         1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref',
         7: 'ge', 8:'lam',
     }
+    def update_by_pname_fid(self, pname_fid, value):
+        if isinstance(pname_fid, int):
+            self._update_field_helper(pname_fid, value)
+        elif pname_fid == 'Z0':
+            self.z0 = value
+        elif pname_fid == 'SB':
+            self.sb = value
+        elif pname_fid == 'TREF':
+            self.tref = value
+        elif pname_fid == 'GE':
+            self.ge = value
+        elif pname_fid.startswith(('T', 'THETA')):
+            word, num = break_word_by_trailing_integer(pname_fid)
+            num = int(num)
+            if word == 'T':
+                self.thicknesses[num - 1] = value
+            elif word == 'THETA':
+                self.thetas[num - 1] = value
+            else:
+                raise RuntimeError('pid=%s pname_fid=%r word=%s\n' % (self.pid, pname_fid, word))
+        else:
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, pname_fid))
 
     def _update_field_helper(self, n, value):
+        assert n > 0, 'PCOMP pid=%s; negative indicies are not supported (pname_fid=%r)' % (self.pid, n)
         nnew = n - 9
         if nnew <= 0:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
         ilayer = nnew // 4
+        slot = nnew % 4
+        #print(self.plies)
         try:
             ply = self.plies[ilayer]
         except IndexError:
-            msg = ('On PCOMP pid=%r, ply %i is not defined.  '
+            msg = 'PCOMP pid=%s; n=%s nnew=%s ilayer=%s slot=%r\n' % (self.pid, n, nnew, ilayer, slot)
+            msg += ('On PCOMP pid=%r, ply %i is not defined.  '
                    'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
             raise IndexError(msg)
 
         # ply = [mid, t, theta, sout]
-        slot = nnew % 4
         ply[slot] = value
 
     def __init__(self, pid,
@@ -1529,6 +1556,12 @@ class PSHELL(ShellProperty):
     _field_map = {
         1: 'pid', 2:'mid1', 3:'t', 4:'mid2', 5:'twelveIt3', 6:'mid3',
         7: 'tst', 8:'nsm', 9:'z1', 10:'z2',
+    }
+    pname_fid_map = {
+        3 : 't', 'T' : 't',
+        5 : 'twelveIt3', # no option
+        7 : 'tst', 'T' : 't',
+
     }
 
     def __init__(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,

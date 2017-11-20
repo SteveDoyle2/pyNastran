@@ -891,6 +891,21 @@ class PBAR(LineProperty):
         do a check for mid -> MAT4/MAT5 for thermal
     """
     type = 'PBAR'
+    pname_fid_map = {
+        4 : 'A', 'A' : 'A',
+        5 : 'i1', 'I1' : 'i1',
+        6 : 'i2', 'I2' : 'i2',
+        7 : 'i12', 'I12' : 'i12',
+        5 : 'j', 'J' : 'j',
+        10 : 'c1',
+        11 : 'c2',
+        12 : 'd1',
+        13 : 'd2',
+        14 : 'e1',
+        15 : 'e2',
+        16 : 'f1',
+        17 : 'f2',
+    }
 
     def __init__(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
                  c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
@@ -1303,7 +1318,7 @@ class PBARL(LineProperty):
         assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
-        nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
+        nsm = double_or_blank(card, 9 + ndim, 'nsm', 0.0)
         return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
     @classmethod
