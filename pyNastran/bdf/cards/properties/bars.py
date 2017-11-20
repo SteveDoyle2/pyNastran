@@ -892,6 +892,7 @@ class PBAR(LineProperty):
     """
     type = 'PBAR'
     pname_fid_map = {
+        # 1-based
         4 : 'A', 'A' : 'A',
         5 : 'i1', 'I1' : 'i1',
         6 : 'i2', 'I2' : 'i2',
@@ -905,6 +906,9 @@ class PBAR(LineProperty):
         15 : 'e2',
         16 : 'f1',
         17 : 'f2',
+        18 : 'k1',
+        19 : 'k1',
+        20 : 'i12',
     }
 
     def __init__(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,

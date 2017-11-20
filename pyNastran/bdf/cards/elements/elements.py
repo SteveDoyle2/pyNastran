@@ -19,6 +19,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, integer_double_or_blank,
     double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
 
 class CFAST(Element):
@@ -26,6 +27,8 @@ class CFAST(Element):
     _field_map = {
         1: 'eid', 2:'pid', 3:'Type', 4:'ida', 5:'idb', 6:'gs', 7:'ga', 8:'gb',
         9:'xs', 10:'ys', 11:'zs',
+    }
+    cp_name_map = {
     }
 
     def __init__(self, eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,
@@ -195,6 +198,30 @@ class CGAP(Element):
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
     }
+    def update_by_cp_name(self, cp_name, value):
+        if isinstance(cp_name, int):
+            #self._update_field_helper(cp_name, value)
+            raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
+                self.type, cp_name))
+        #elif cp_name == 'Z0':
+            #self.z0 = value
+        #elif cp_name == 'SB':
+            #self.sb = value
+        #elif cp_name == 'TREF':
+            #self.tref = value
+        #elif cp_name == 'GE':
+            #self.ge = value
+        elif cp_name.startswith('X'):
+            word, num = break_word_by_trailing_integer(cp_name)
+            num = int(num)
+            if word == 'X':
+                self.x[num - 1] = value
+            else:
+                raise RuntimeError('eid=%s cp_name=%r word=%s\n' % (self.eid, cp_name, word))
+        else:
+            raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
+                self.type, cp_name))
+
 
     def __init__(self, eid, pid, nids, x, g0, cid=None, comment=''):
         """

@@ -4509,6 +4509,8 @@ def _break_system_lines(executive_control_lines):
     INIT Creates a temporary or permanent DBset.
     NASTRAN Specifies values for system cells.
     PROJ Defines the current or default project identifier.
+
+    F:\\Program Files\\Siemens\\NXNastran\\nxn10p1\\nxn10p1\\nast\\tpl\\mdb01.dat
     """
     file_management = (
         'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
@@ -4516,15 +4518,53 @@ def _break_system_lines(executive_control_lines):
         'DBUPDATE ', 'ENDJOB ', 'EXPAND ', 'INCLUDE ', 'INIT ', 'NASTRAN ',
         'PROJ ',
     )
-    system_lines = []
     j = None
+    sol_line = None
+    isol_line = None
+    system_lines = []
+    executive_control_lines2 = []
+
+    # add all the lines before and including the file management section
+    # to the system lines
+    #
+    # add the other lines (and the SOL 101) to the executive control lines
     for i, line in enumerate(executive_control_lines):
-        if line.strip().upper().startswith(file_management):
-            j = i
-    if j is not None:
-        system_lines = executive_control_lines[:j+1]
-        executive_control_lines = executive_control_lines[j+1:]
-    return system_lines, executive_control_lines
+        line_upper = line.strip().upper()
+        if line_upper.startswith('SOL '):
+            isol_line = i+1
+            sol_line = line
+        if line_upper.startswith(file_management):
+            system_lines += executive_control_lines[j:i+1]
+            j = i+1
+
+    # remove SOL 101 from the system lines if it's there
+    system_lines2 = [
+        line for line in system_lines
+        if not line.upper().strip().startswith('SOL ') and
+        not line.upper().strip().startswith('CEND')
+    ]
+
+    if j is None:
+        # no system lines
+        executive_control_lines2 = executive_control_lines
+    else:
+        # append SOL 101 to the executive lines if we found it
+        # inside the system section
+        append_sol_line = isol_line is not None and j is not None and isol_line < j
+        if append_sol_line:
+            executive_control_lines2.append(sol_line)
+
+        # add the rest of the executive control cards
+        for iline in range(j, len(executive_control_lines)):
+            executive_control_lines2.append(executive_control_lines[iline])
+
+    #for line in executive_control_lines:
+        #print('eline = %r' % line)
+    #for line in system_lines2:
+        #print('sline2 = %r' % line)
+    #for line in executive_control_lines2:
+        #print('eline2 = %r' % line)
+    return system_lines2, executive_control_lines2
 
 def _check_valid_deck(flag):
     """Crashes if the flag is set wrong"""

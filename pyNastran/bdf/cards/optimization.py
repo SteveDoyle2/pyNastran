@@ -2534,7 +2534,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             try:
                 cp_name_map = element.cp_name_map
             except AttributeError:
-                raise NotImplementedError('element_type=%r cp_name=%r has not implemented cp_name_map' % (
+                raise NotImplementedError('element_type=%r cp_name=%r has not implemented cp_name_map/update_by_cp_name' % (
                     self.element_type, self.cp_name))
 
             try:
@@ -3482,7 +3482,7 @@ class DVPREL1(OptConstraint):
         """doesn't require cross-referencing"""
         value = get_dvxrel1_coeffs(self, model, desvar_values, debug=False)
         assert isinstance(self.pid, int), type(self.pid)
-        prop = model.properties[self.pid]
+        prop = self._get_property(model, self.pid)
         try:
             self._update_by_dvprel(prop, value)
         except AttributeError:
@@ -3589,21 +3589,27 @@ class DVPREL1(OptConstraint):
             the BDF object
         """
         msg = ', which is required by DVPREL1 name=%r' % self.type
+        self.pid_ref = self._get_property(model, self.pid, msg=msg)
+        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+
+    def _get_property(self, model, pid, msg=''):
+        assert isinstance(self.pid, int), type(self.pid)
         if self.prop_type in self.allowed_properties:
-            self.pid_ref = model.Property(self.pid, msg=msg)
+            pid_ref = model.Property(pid, msg=msg)
         #elif self.prop_type in self.allowed_elements:
-            #self.pid_ref = model.Element(self.pid, msg=msg)
+            #pid_ref = model.Element(pid, msg=msg)
         #elif self.prop_type in self.allowed_masses:
-            #self.pid_ref = model.masses[self.pid]
+            #pid_ref = model.masses[pid]
         elif self.prop_type in self.allowed_properties_mass:
-            self.pid_ref = model.properties_mass[self.pid]
+            pid_ref = model.properties_mass[pid]
         elif self.prop_type == 'PBUSHT':
-            self.pid_ref = model.pbusht[self.pid]
+            pid_ref = model.pbusht[pid]
         elif self.prop_type == 'PELAST':
-            self.pid_ref = model.pelast[self.pid]
+            pid_ref = model.pelast[pid]
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
-        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+        assert pid_ref.type not in ['PBEND'], pid_ref
+        return pid_ref
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -3698,7 +3704,7 @@ class DVPREL2(OptConstraint):
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
-    def __init__(self, oid, Type, pid, pname_fid, deqation,
+    def __init__(self, oid, prop_type, pid, pname_fid, deqation,
                  dvids=None, labels=None, p_min=None, p_max=1e20,
                  validate=False, comment=''):
         """
@@ -3757,7 +3763,7 @@ class DVPREL2(OptConstraint):
         self.oid = oid
 
         #: Name of a property entry, such as PBAR, PBEAM, etc
-        self.Type = Type
+        self.prop_type = prop_type
 
         #: Property entry identification number
         self.pid = pid
@@ -3783,13 +3789,13 @@ class DVPREL2(OptConstraint):
         self.dvids = dvids
         self.labels = labels
 
-        pname_fid = validate_dvprel(Type, pname_fid, validate)
+        pname_fid = validate_dvprel(prop_type, pname_fid, validate)
         self.pname_fid = pname_fid
         self.pid_ref = None
 
     def validate(self):
         assert len(self.dvids) > 0 or len(self.labels) > 0
-        self.pname_fid = validate_dvprel(self.Type, self.pname_fid, validate=True)
+        self.pname_fid = validate_dvprel(self.prop_type, self.pname_fid, validate=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3804,7 +3810,7 @@ class DVPREL2(OptConstraint):
             a comment for the card
         """
         oid = integer(card, 1, 'oid')
-        Type = string(card, 2, 'Type')
+        prop_type = string(card, 2, 'prop_type')
         pid = integer(card, 3, 'pid')
         pname_fid = integer_or_string(card, 4, 'pName_FID')
         p_min = double_or_blank(card, 5, 'pMin', None)
@@ -3856,7 +3862,7 @@ class DVPREL2(OptConstraint):
                     assert label is not 'DTABLE'
                     labels.append(label)
 
-        dvprel = DVPREL2(oid, Type, pid, pname_fid, dequation, dvids, labels,
+        dvprel = DVPREL2(oid, prop_type, pid, pname_fid, dequation, dvids, labels,
                          p_min=p_min, p_max=p_max, comment=comment)
         if len(dvids) and len(labels) and idtable < idesvar:
             raise SyntaxError('DESVARs must be defined before DTABLE\n%s' % str(dvprel))
@@ -3865,19 +3871,27 @@ class DVPREL2(OptConstraint):
     def OptID(self):
         return self.oid
 
+    @property
+    def Type(self):
+        return self.prop_type
+
+    @Type.setter
+    def Type(self, prop_type):
+        self.prop_type = prop_type
+
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        if self.Type in self.allowed_properties:
+        if self.prop_type in self.allowed_properties:
             pid = self.pid_ref.pid
-        elif self.Type in self.allowed_elements:
+        elif self.prop_type in self.allowed_elements:
             pid = self.pid_ref.eid
-        elif self.Type in self.allowed_masses:
+        elif self.prop_type in self.allowed_masses:
             pid = self.pid_ref.eid
-        elif self.Type in self.allowed_properties_mass:
+        elif self.prop_type in self.allowed_properties_mass:
             pid = self.pid_ref.pid
         else:
-            raise NotImplementedError('Type=%r is not supported' % self.Type)
+            raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
         return pid
 
     def DEquation(self):
@@ -3926,19 +3940,27 @@ class DVPREL2(OptConstraint):
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
         msg = ', which is required by DVPREL2 name=%r' % self.type
-        if self.Type in self.allowed_properties:
-            self.pid_ref = model.Property(self.pid, msg=msg)
-        elif self.Type in self.allowed_elements:
-            self.pid_ref = model.Element(self.pid, msg=msg)
-        elif self.Type in self.allowed_masses:
-            self.pid_ref = model.masses[self.pid]
-        elif self.Type in self.allowed_properties_mass:
-            self.pid_ref = model.properties_mass[self.pid]
-        else:
-            raise NotImplementedError('Type=%r is not supported' % self.Type)
-
+        self.pid_ref = self._get_property(model, self.pid, msg=msg)
         self.dequation_ref = model.DEQATN(self.dequation)
-        assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
+
+    def _get_property(self, model, pid, msg=''):
+        assert isinstance(self.pid, int), type(self.pid)
+        if self.prop_type in self.allowed_properties:
+            pid_ref = model.Property(pid, msg=msg)
+        #elif self.prop_type in self.allowed_elements:
+            #pid_ref = model.Element(pid, msg=msg)
+        #elif self.prop_type in self.allowed_masses:
+            #pid_ref = model.masses[pid]
+        elif self.prop_type in self.allowed_properties_mass:
+            pid_ref = model.properties_mass[pid]
+        elif self.prop_type == 'PBUSHT':
+            pid_ref = model.pbusht[pid]
+        elif self.prop_type == 'PELAST':
+            pid_ref = model.pelast[pid]
+        else:
+            raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
+        assert pid_ref.type not in ['PBEND'], pid_ref
+        return pid_ref
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -3949,8 +3971,7 @@ class DVPREL2(OptConstraint):
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
         values = get_deqatn_value(self, model, desvar_values)
-        assert isinstance(self.pid, int), type(self.pid)
-        prop = model.properties[self.pid]
+        prop = self._get_property(model, self.pid)
         try:
             self._update_by_dvprel(prop, values)
         except AttributeError:
@@ -3989,7 +4010,7 @@ class DVPREL2(OptConstraint):
         #self.pid_ref.OptValue(self.pname_fid)
 
     def raw_fields(self):
-        list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
+        list_fields = ['DVPREL2', self.oid, self.prop_type, self.Pid(),
                        self.pname_fid, self.p_min, self.p_max, self.DEquation(), None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids

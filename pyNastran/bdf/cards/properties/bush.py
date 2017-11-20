@@ -209,7 +209,7 @@ class PBUSH(BushingProperty):
 
                 #: Nominal stiffness values in directions 1 through 6.
                 #: See Remarks 2 and 3. (Real; Default = 0.0)
-                k_fields = cls._read_var(card, istart, 'Ki')
+                k_fields = cls._read_var(card, 'Ki', istart + 1, istart + 7)
 
             elif pname == 'B':
                 # Flag indicating that the next 1 to 6 fields are force-per-velocity
