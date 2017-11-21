@@ -1069,8 +1069,11 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
             trim._verify(fem2.suport, suport1, fem2.aestats, fem2.aeparams,
                          fem2.aelinks, fem2.aesurf, xref=True)
         except RuntimeError as e:
-            traceback.print_stack()
+            exc_info = sys.exc_info()
+            traceback.print_exception(*exc_info)
+            #traceback.print_stack()
             #fem2.log.error(e.msg)
+            #raise
         assert 'DIVERG' not in subcase, subcase
 
     if 'DIVERG' in subcase:

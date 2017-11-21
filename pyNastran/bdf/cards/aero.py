@@ -5917,8 +5917,6 @@ class SPLINE1(Spline):
                 self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
             except:
                 raise
-                aaa
-                raise
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
