@@ -25,7 +25,7 @@ try:
     ver = np.lib.NumpyVersion(np.__version__)
     if ver < '1.11.0':
         print("np.__version__ = %r < '1.11.0'" % np.__version__)
-    py_packages.append('numpy >= 1.11.0,<1.13.0')
+        py_packages.append('numpy >= 1.11.0,<1.13.0')
 except ImportError:
     py_packages.append('numpy >= 1.11.0,<1.13.0')
 
