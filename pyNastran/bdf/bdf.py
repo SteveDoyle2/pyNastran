@@ -3767,7 +3767,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         lines : List[str]
             all the lines packed into a single line stream
         """
-        print('bdf_filename_main =', bdf_filename)
+        #print('bdf_filename_main =', bdf_filename)
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             bdf_filename = cast(StringIO, bdf_filename)
             lines = bdf_filename.readlines()

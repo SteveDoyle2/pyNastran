@@ -1103,6 +1103,19 @@ class TestShells(unittest.TestCase):
         model.pop_xref_errors()
         save_load_deck(model)
 
+def make_dvcrel_optimization(model, params, element_type, eid, i=1):
+    j = i
+    for ii, (name, desvar_value) in enumerate(params):
+        j = i + ii
+        dvids = [j]
+        coeffs = [1.0]
+        model.add_dvcrel1(j, element_type, eid, name, dvids, coeffs,
+                          cp_min=None, cp_max=1e20,
+                          c0=0.0, validate=True,
+                          comment='')
+        model.add_desvar(j, 'v%s' % name, desvar_value)
+    return j + 1
+
 def make_dvprel_optimization(model, params, prop_type, pid, i=1):
     j = i
     for ii, (name, desvar_value) in enumerate(params):
@@ -1111,6 +1124,19 @@ def make_dvprel_optimization(model, params, prop_type, pid, i=1):
         coeffs = [1.0]
         model.add_dvprel1(j, prop_type, pid, name, dvids, coeffs,
                           p_min=None, p_max=1e20,
+                          c0=0.0, validate=True,
+                          comment='')
+        model.add_desvar(j, 'v%s' % name, desvar_value)
+    return j + 1
+
+def make_dvmrel_optimization(model, params, material_type, mid, i=1):
+    j = i
+    for ii, (name, desvar_value) in enumerate(params):
+        j = i + ii
+        dvids = [j]
+        coeffs = [1.0]
+        model.add_dvmrel1(j, material_type, eid, name, dvids, coeffs,
+                          mp_min=None, mp_max=1e20,
                           c0=0.0, validate=True,
                           comment='')
         model.add_desvar(j, 'v%s' % name, desvar_value)

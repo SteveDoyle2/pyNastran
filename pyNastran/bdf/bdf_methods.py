@@ -669,8 +669,8 @@ class BDFMethods(BDFAttributes):
         # Relates one design variable to one or more other design variables.
         for desvar_id, dlink in iteritems(self.dlinks):
             value = dlink.c0
-            desvar = model.desvars[desvar_id]
-            for coeff, desvar_idi in zip(dlink.coeff, dlink.dvids):
+            desvar = self.desvars[desvar_id]
+            for coeff, desvar_idi in zip(dlink.coeffs, dlink.IDv):
                 valuei = desvar_values[desvar_idi]
                 value += coeff * valuei
             value2 = min(max(value + 0.1, desvar.xlb))

@@ -4,7 +4,10 @@ from six.moves import StringIO
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, read_bdf#, get_logger2
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.cards.test.test_shells import make_dvprel_optimization
+from pyNastran.bdf.cards.test.test_shells import (
+    make_dvprel_optimization, make_dvcrel_optimization,
+    make_dvmrel_optimization,
+)
 
 
 class TestDampers(unittest.TestCase):
@@ -120,7 +123,7 @@ class TestDampers(unittest.TestCase):
         ge = [0.01]
         cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
                                 ocid=-1, si=None, comment='cbush')
-        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass_fields=None,
+        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
                                 comment='pbush')
 
         eid = 9
@@ -203,6 +206,21 @@ class TestDampers(unittest.TestCase):
 
         params = [('B1', 1.0), (3, 1.0)]
         i = make_dvprel_optimization(model, params, 'PDAMP', pdamp.pid, i)
+
+        #-----------------------------------------
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CVISC', cvisc.eid, i)
+
+        params = [('X1', 1.0), ('X2', 2.0), ('X3', 3.0),
+                  ('S1', 1.0), ('S2', 2.0), ('S3', 3.0),
+                  ('S', 1.0), ]
+        i = make_dvcrel_optimization(model, params, 'CBUSH', cbush.eid, i)
+
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CBUSH1D', cbush.eid, i)
+
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CGAP', cgap.eid, i)
 
         spoints.write_card()
 

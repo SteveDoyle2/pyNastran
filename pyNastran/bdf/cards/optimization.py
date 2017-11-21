@@ -35,19 +35,35 @@ def validate_dvcrel(validate, element_type, cp_name):
         return
     msg = 'DVCRELx: element_type=%r cp_name=%r is invalid' % (element_type, cp_name)
     if element_type in ['CQUAD4']:
-        assert cp_name in ['T1', 'T2', 'T3', 'T4'], msg # 'ZOFFS',
-    elif element_type in ['CTRIA3']:
-        assert cp_name in [], msg
-    elif element_type in ['CONM2']:
-        assert cp_name in ['M', 'X1', 'X2', 'X3'], msg
-    elif element_type in ['CBAR']:
-        assert cp_name in ['X1', 'X2', 'X3'], msg
-    elif element_type in ['CBEAM']:
-        assert cp_name in ['X1', 'X2', 'X3'], msg
+        options = ['T1', 'T2', 'T3', 'T4'] # 'ZOFFS',
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CTRIA3':
+        options = ['T1', 'T2', 'T3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CONM2':
+        options = ['M', 'X1', 'X2', 'X3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CBAR':
+        options = ['X1', 'X2', 'X3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CBEAM':
+        options = ['X1', 'X2', 'X3']
+        _check_dvcrel_options(cp_name, element_type, options)
     elif element_type in ['CELAS1']:
-        assert cp_name in [], msg
+        options = []
+        _check_dvcrel_options(cp_name, element_type, options)
     elif element_type in ['CBUSH']:
-        assert cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3'], msg
+        options = ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CVISC':
+        options = []
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CGAP':
+        options = []
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CBUSH1D':
+        options = []
+        _check_dvcrel_options(cp_name, element_type, options)
     else:
         raise NotImplementedError(msg)
 
@@ -276,6 +292,22 @@ def validate_dvprel(prop_type, pname_fid, validate):
     else:
         raise NotImplementedError(msg)
     return pname_fid
+
+def _check_dvcrel_options(cp_name, element_type, options):
+    if cp_name not in options:
+        soptions = [str(val) for val in options]
+        msg = (
+            '%r is an invalid option for %s\n'
+            'valid: [%s]' % (cp_name, element_type, ', '.join(soptions)))
+        raise ValueError(msg)
+
+def _check_dvmrel_options(mp_name, material_type, options):
+    if mp_name not in options:
+        soptions = [str(val) for val in options]
+        msg = (
+            '%r is an invalid option for %s\n'
+            'valid: [%s]' % (mp_name, material_type, ', '.join(soptions)))
+        raise ValueError(msg)
 
 def _check_dvprel_options(pname_fid, prop_type, options):
     if pname_fid not in options:
@@ -746,7 +778,7 @@ class DOPTPRM(OptConstraint):
 class DLINK(OptConstraint):
     type = 'DLINK'
 
-    def __init__(self, oid, ddvid, IDv, Ci, c0=0., cmult=1., comment=''):
+    def __init__(self, oid, ddvid, IDv, coeffs, c0=0., cmult=1., comment=''):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables.
@@ -766,7 +798,15 @@ class DLINK(OptConstraint):
         self.c0 = c0
         self.cmult = cmult
         self.IDv = IDv
-        self.Ci = Ci
+        self.coeffs = coeffs
+
+    @property
+    def Ci(self):
+        return self.coeffs
+
+    @Ci.setter
+    def Ci(self, coeffs):
+        self.coeffs = coeffs
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -788,19 +828,19 @@ class DLINK(OptConstraint):
         nfields = len(card) - 4
         n = nfields // 2
         idvs = []
-        Ci = []
+        coeffs = []
 
         for i in range(n):
             j = 2 * i + 5
             idv = integer(card, j, 'IDv' + str(i))
             ci = double(card, j + 1, 'Ci' + str(i))
             idvs.append(idv)
-            Ci.append(ci)
-        return DLINK(oid, ddvid, idvs, Ci, c0=c0, cmult=cmult, comment=comment)
+            coeffs.append(ci)
+        return DLINK(oid, ddvid, idvs, coeffs, c0=c0, cmult=cmult, comment=comment)
 
     def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
-        for (idv, ci) in zip(self.IDv, self.Ci):
+        for (idv, ci) in zip(self.IDv, self.coeffs):
             list_fields += [idv, ci]
         return list_fields
 
@@ -808,7 +848,7 @@ class DLINK(OptConstraint):
         c0 = set_blank_if_default(self.c0, 0.)
         cmult = set_blank_if_default(self.cmult, 1.)
         list_fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
-        for (idv, ci) in zip(self.IDv, self.Ci):
+        for (idv, ci) in zip(self.IDv, self.coeffs):
             list_fields += [idv, ci]
         return list_fields
 
