@@ -1926,6 +1926,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 auto_return = True
         else:
             auto_return = True
+
+        assert is_vectorized, '%r is not vectorized; obj=%s' % (result_name, obj_vector)
         return auto_return, is_vectorized
 
     def _set_structs(self):
