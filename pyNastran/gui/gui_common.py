@@ -3841,7 +3841,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         gif_filename : str
             path to the output gif & png folder
         scale : float
-            the deflection scale factor
+            the deflection scale factor; true scale
         istep : int; default=None
             the png file number (let's you pick a subset of images)
             useful for when you press ``Step``
@@ -4047,12 +4047,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
             timer_id = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
             return
 
-        return self.make_gif_helper(
-            gif_filename, icases, scales,
-            phases=phases, isteps=isteps,
-            time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
-            onesided=onesided, nrepeat=nrepeat,
-            make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+        is_failed = True
+        try:
+            is_failed = self.make_gif_helper(
+                gif_filename, icases, scales,
+                phases=phases, isteps=isteps,
+                time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
+                onesided=onesided, nrepeat=nrepeat,
+                make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+        except:
+            pass
+        return is_failed
 
     def stop_animation(self):
         """removes the animation timer"""
@@ -4062,7 +4067,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
             del self.observers['TimerEvent']
 
     def _update_animation_inputs(self, phases, icases, isteps, scales):
-        """helper method for make_gif_helper"""
+        """
+        Simplifies the format of phases, icases, steps, scales to make them
+        into lists of the correct length.
+
+        Parameters
+        ----------
+        phases : List[float] or None
+            List[float] : the phase angles
+            None : real result (same as [0., 0., ...])
+        icases : List[int] or int
+            List[int] : the icases to run
+            int : single icase (e.g., SOL 101, 103, 145; same as [icase, icase, ...]
+        isteps : List[int]
+            nominal isteps = [0, 1, 2, 3, 4, ..., nframes]
+            we can analyze pictures [1, 3, 4] by providing a subset
+        scales : List[float]
+            the displacement scale factor; true scale
+        """
         if phases is not None:
             pass
         elif phases is None:
@@ -4111,7 +4133,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         icases : int / List[int]
             the result case to plot the deflection for
         scales : List[float]
-            List[float] : the deflection scale factors
+            List[float] : the deflection scale factors; true scale
         phases : List[float]; default=None
             List[float] : the phase angles (degrees)
             None -> animate scale
@@ -4205,10 +4227,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 png_filenames.append(png_filename)
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
-        return write_gif(gif_filename, png_filenames, time=time,
-                         onesided=onesided,
-                         nrepeat=nrepeat, delete_images=delete_images,
-                         make_gif=make_gif)
+        is_failed = write_gif(
+            gif_filename, png_filenames, time=time,
+            onesided=onesided,
+            nrepeat=nrepeat, delete_images=delete_images,
+            make_gif=make_gif)
+        return is_failed
 
     def add_geometry(self):
         """
@@ -5364,6 +5388,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          is_low_to_high=True, is_discrete=True, is_horizontal=True,
                          nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                          is_shown=True):
+        """
+        Updates the legend/model
+
+        Parameters
+        ----------
+        scale : float
+            displacemnt scale factor; true scale
+        """
         #print('is_shown2 =', is_shown)
         #assert is_shown == False, is_shown
         key = self.case_keys[self.icase]

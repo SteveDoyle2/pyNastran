@@ -276,7 +276,7 @@ class TransientElementResults(object):
         #name : str
             #unused; useful for debugging
         #scale : float
-            #deflection scale factor
+            #deflection scale factor; true scale
         #phase : float; default=0.0
             #phase angle (degrees); unused for real results
 

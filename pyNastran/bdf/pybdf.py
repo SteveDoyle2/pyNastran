@@ -1,5 +1,4 @@
 # coding: utf-8
-# pylint: disable=W0201,R0915,R0912
 """
 Main BDF class.  Defines:
   - BDFInputPy
@@ -9,23 +8,29 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 from codecs import open as codec_open
 from typing import List, Dict, Optional, Union, Set, Any, cast
+from six import StringIO
 
 from pyNastran.utils import object_attributes, print_bad_path, _filename
 from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
+from pyNastran.bdf.errors import MissingDeckSections
 
 
 class BDFInputPy(object):
-    def __init__(self, read_includes, dumplines, encoding, log):
-        self.punch = True
+    def __init__(self, read_includes, dumplines, encoding, log=None, debug=False):
         self.dumplines = dumplines
         self.encoding = encoding
+        self.include_dir = ''
 
+        self.reject_lines = []
         self.read_includes = read_includes
         self.active_filenames = []
-        self.log = log
+        self.active_filename = None
 
-    def _get_lines(self, bdf_filename):
+        self.debug = debug
+        self.log = get_logger2(log, debug)
+
+    def _get_lines(self, bdf_filename, punch=False):
         """
         Opens the bdf and extracts the lines by group
 
@@ -49,13 +54,13 @@ class BDFInputPy(object):
         bulk_data_lines : List[str]
             the bulk data lines (stores geometry, boundary conditions, loads, etc.)
         """
-        main_lines = self._get_main_lines(bdf_filename, self.punch)
-        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
-        out = _lines_to_decks(all_lines, self.punch)
+        main_lines = self._get_main_lines(bdf_filename, punch)
+        all_lines = self._lines_to_deck_lines(main_lines)
+        out = _lines_to_decks(all_lines, punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
 
-    def _get_main_lines(self, bdf_filename, punch=False):
+    def _get_main_lines(self, bdf_filename):
         # type: (Union[str, StringIO], bool) -> List[str]
         """
         Opens the bdf and extracts the lines
@@ -64,10 +69,6 @@ class BDFInputPy(object):
         ----------
         bdf_filename : str
             the main bdf_filename
-        punch : bool; default=False
-            is this a punch file
-            True : no executive/case control decks
-            False : executive/case control decks exist
 
         Returns
         -------
@@ -93,7 +94,7 @@ class BDFInputPy(object):
                 _show_bad_file(self, bdf_filename, encoding=self.encoding)
         return lines
 
-    def _lines_to_deck_lines(self, lines, punch=False):
+    def _lines_to_deck_lines(self, lines):
         # type: (List[str], bool) -> List[str], int
         """
         Merges the includes into the main deck.
@@ -102,10 +103,6 @@ class BDFInputPy(object):
         ----------
         lines : List[str]
             the lines from the main BDF
-        punch : bool; default=False
-            is this a punch file
-            True : no executive/case control decks
-            False : executive/case control decks exist
 
         Returns
         -------
@@ -602,7 +599,7 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
                 for iline1, line in enumerate(lines[iline0:iline]):
                     self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
                 msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
-                    encoding, iline, bdf_filename, self._encoding)
+                    encoding, iline, bdf_filename, encoding)
                 raise RuntimeError(msg)
             if line:
                 nblank = 0
@@ -612,4 +609,3 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
                 raise RuntimeError('20 blank lines')
             iline += 1
             lines.append(line)
-

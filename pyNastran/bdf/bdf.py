@@ -144,7 +144,8 @@ from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, MissingDeckSections)
-from pyNastran.bdf.pybdf import BDFInputPy, _clean_comment, _lines_to_decks, _break_system_lines,_check_valid_deck
+from pyNastran.bdf.pybdf import (BDFInputPy, _clean_comment, _lines_to_decks,
+                                 _break_system_lines, _check_valid_deck, _show_bad_file)
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None, read_cards=None,
@@ -1117,8 +1118,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self._parse_primary_file_header(bdf_filename)
 
-        main_lines = self._get_main_lines(self.bdf_filename, self.punch)
-        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
+        main_lines = self._get_main_lines(self.bdf_filename)
+        all_lines = self._lines_to_deck_lines(main_lines)
 
         return all_lines
 
@@ -1161,10 +1162,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         self._parse_primary_file_header(bdf_filename)
-        obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding, self.log)
-        obj._get_lines(bdf_filename)
 
-        out = self._get_lines(bdf_filename)
+        if 0: # pragma: no cover
+            obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
+                             log=self.log, debug=self.debug)
+            out = obj._get_lines(bdf_filename, punch=self.punch)
+        else:
+            out = self._get_lines(bdf_filename, punch=self.punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
 
         self.system_command_lines = system_lines
@@ -3721,7 +3725,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             raise CardParseSyntaxError(msg)
         return card_name.upper()
 
-    def _get_lines(self, bdf_filename):
+    def _get_lines(self, bdf_filename, punch=False):
         """
         Opens the bdf and extracts the lines by group
 
@@ -3745,13 +3749,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         bulk_data_lines : List[str]
             the bulk data lines (stores geometry, boundary conditions, loads, etc.)
         """
-        main_lines = self._get_main_lines(bdf_filename, self.punch)
-        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
-        out = _lines_to_decks(all_lines, self.punch)
+        main_lines = self._get_main_lines(bdf_filename)
+        all_lines = self._lines_to_deck_lines(main_lines)
+        out = _lines_to_decks(all_lines, punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
 
-    def _get_main_lines(self, bdf_filename, punch=False):
+    def _get_main_lines(self, bdf_filename):
         # type: (Union[str, StringIO], bool) -> List[str]
         """
         Opens the bdf and extracts the lines
@@ -3760,10 +3764,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ----------
         bdf_filename : str
             the main bdf_filename
-        punch : bool; default=False
-            is this a punch file
-            True : no executive/case control decks
-            False : executive/case control decks exist
 
         Returns
         -------
@@ -3787,10 +3787,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 lines = bdf_file.readlines()
             except:
                 _show_bad_file(self, bdf_filename, encoding=self._encoding)
+                raise
         return lines
 
-    def _lines_to_deck_lines(self, lines, punch=False):
-        # type: (List[str], bool) -> List[str], int
+    def _lines_to_deck_lines(self, lines):
+        # type: List[str] -> List[str], int
         """
         Merges the includes into the main deck.
 
@@ -3798,10 +3799,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ----------
         lines : List[str]
             the lines from the main BDF
-        punch : bool; default=False
-            is this a punch file
-            True : no executive/case control decks
-            False : executive/case control decks exist
 
         Returns
         -------
