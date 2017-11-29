@@ -218,7 +218,7 @@ class OP2(OP2_Scalar):
         try:
             is_equal = self.assert_op2_equal(op2_model,
                                              stop_on_failure=True, debug=False)
-        except AssertionError, ValueError:
+        except (AssertionError, ValueError):
             is_equal = False
         return is_equal
 
