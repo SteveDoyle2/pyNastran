@@ -96,7 +96,6 @@ def run_op4(op4_filename, write_op4=True, debug=True,
                 except:
                     pass
 
-        del op4
         is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()

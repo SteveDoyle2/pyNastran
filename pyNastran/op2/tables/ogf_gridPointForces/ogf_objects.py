@@ -182,7 +182,13 @@ class RealGridPointForcesArray(ScalarObject):
             #print(self.data_frame)
 
     def __eq__(self, table):
-        return self.assert_equal(table)
+        is_valid = False
+        try:
+            self.assert_equal(table)
+            is_valid = True
+        except:
+            pass
+        return is_valid
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
@@ -211,7 +217,7 @@ class RealGridPointForcesArray(ScalarObject):
                 for itime in range(self.ntimes):
                     #print('node_element = ', self.node_element)
                     #print('shape = ', self.node_element.shape)
-                    msg += '#i, Nid, Eid, Name\n'
+                    msg += '#i, Nid, Eid, Name (itime=%s)\n' % itime
                     for ie, e in enumerate(self.node_element[itime, :, :]):
                         #print('e = ', e)
                         (nid, eid) = e

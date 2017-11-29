@@ -215,41 +215,136 @@ class OP2(OP2_Scalar):
         Diffs the current op2 model vs. another op2 model.
         Crashes if they're not equal.
         """
-        return self.op2_equal(op2_model)
+        try:
+            is_equal = self.assert_op2_equal(op2_model,
+                                             stop_on_failure=True, debug=False)
+        except AssertionError, ValueError:
+            is_equal = False
+        return is_equal
 
-    def op2_equal(self, op2_model):
+    def assert_op2_equal(self, op2_model, stop_on_failure=True, debug=False):
         """
         Diffs the current op2 model vs. another op2 model.
-        Crashes if they're not equal.
+
+        Parameters
+        ----------
+        stop_on_failure : bool; default=True
+            True : Crashes if they're not equal
+            False : Go to the next object
+        debug : bool; default=False
+            give slightly more debugging messages
+
+        Returns
+        -------
+        is_equal : bool
+            are the objects equal?
+
+        Raises
+        ------
+        AssertionError/ValueError : stop_on_failure=True and and error occurred
+        NotImplementedError : this is a sign of an unsupported object
         """
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
                 self.read_mode, op2_model.read_mode))
             return True
+
         table_types = self.get_table_types()
         for table_type in table_types:
+            # model.displacements
             adict = getattr(self, table_type)
             bdict = getattr(op2_model, table_type)
+
+            # check number of subcases
             if len(adict) != len(bdict):
                 self.log.warning('len(self.%s)=%s len(op2_model.%s)=%s' % (
                     table_type, len(adict), table_type, len(bdict)))
-                return False
+                if stop_on_failure:
+                    return False
+                continue
+
+            # loop over each DisplacementArray
             for key, avalue in iteritems(adict):
+                if debug:
+                    self.log.debug('working on %r subcase=%s' % (table_type, str(key)))
+
+                # get the displacement for model B
                 bvalue = bdict[key]
-                aname = avalue.__class__.__name__
-                bname = bvalue.__class__.__name__
-                if not aname == bname:
-                    self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
-                    return False
-                if not any(word in aname for word in ['Array', 'Eigenvalues']):
-                    msg = '%s is not an Array ... assume equal' % aname
-                    self.log.warning(msg)
-                    raise NotImplementedError('%s __eq__' % aname)
-                    #continue
-                if avalue != bvalue:
-                    self.log.warning('key=%s table_type=%r are not equal; class_name=%r' % (
-                        key, table_type, aname))
-                    return False
+                is_equal = self._is_op2_case_equal(table_type, key, avalue, bvalue,
+                                                   stop_on_failure=stop_on_failure, debug=debug)
+                if not is_equal and stop_on_failure:
+                    return is_equal
+        return True
+
+    def _is_op2_case_equal(self, table_type, key, a_obj, b_obj, stop_on_failure=True, debug=False):
+        """
+        Helper method for ``assert_op2_equal``
+
+        Parameters
+        ----------
+        table_type : str
+            the type of table (e.g., ``displacements``)
+        key : subcase_id / tuple_obj
+            subcase_id : int
+                the subcase_id
+            tuple_obj : Tuple(???, ???, ...)
+                the fancy tuple thingy that you see in single subcase buckling...
+
+                subcase_id : int
+                    the subcase_id
+                sort_code : int
+                    1 : SORT1
+                    2 : SORT2
+                title??? : str
+                    the case title
+                subtitle??? : str
+                    the case subtitle
+                superelement_id : str???
+                    the superelement
+                other terms???
+                TODO: document better
+        a_obj : Op2Object()
+            a RealDisplacementArray, ComplexDisplacementArray, RealSolidStressArray, etc.
+            for the self model
+        b_obj : Op2Object()
+            a RealDisplacementArray, ComplexDisplacementArray, RealSolidStressArray, etc.
+            for the comparison model
+        stop_on_failure : bool; default=True
+            True : Crashes if they're not equal
+            False : Go to the next object
+        debug : bool; default=False
+            give slightly more debugging messages
+
+        Returns
+        -------
+        is_equal : bool
+            are the objects equal?
+
+        Raises
+        ------
+        AssertionError/ValueError : stop_on_failure=True and and error occurred
+        NotImplementedError : this is a sign of an unsupported object
+        """
+        # check the name (e.g., RealDisplacementArray vs. ComplexDisplacementArray)
+        aname = a_obj.__class__.__name__
+        bname = b_obj.__class__.__name__
+        if not aname == bname:
+            self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
+            return False
+
+        # does this ever hit?
+        if not any(word in aname for word in ['Array', 'Eigenvalues']):
+            msg = '%s is not an Array ... assume equal' % aname
+            self.log.warning(msg)
+            raise NotImplementedError('%s __eq__' % aname)
+            #continue
+
+        # use the array methods to check for equality
+        # TODO: this can crash
+        if a_obj != b_obj:
+            self.log.warning('key=%s table_type=%r are not equal; class_name=%r' % (
+                key, table_type, aname))
+            return False
         return True
 
     def set_mode(self, mode):
