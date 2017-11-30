@@ -1,12 +1,21 @@
+"""
+tests:
+ - CELAS1, CELAS2, CELAS3, CELAS4
+ - PELAS, PELAST
+"""
 from __future__ import print_function
-import os
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PELAS, read_bdf
+from pyNastran.bdf.bdf import BDF, BDFCard, PELAS
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
 class TestSprings(unittest.TestCase):
+    """
+    tests:
+     - CELAS1, CELAS2, CELAS3, CELAS4
+     - PELAS, PELAST
+    """
     def test_pelas_01(self):
         """tests PELAS"""
         lines = ['pelas, 201, 1.e+5']
@@ -28,7 +37,7 @@ class TestSprings(unittest.TestCase):
         #model.echo = True
         card_name = fields[0]
         model.add_card(fields, card_name, comment='', is_list=True,
-                      has_none=True)
+                       has_none=True)
         assert len(model.properties) == 2, model.properties
 
     def test_springs_03(self):

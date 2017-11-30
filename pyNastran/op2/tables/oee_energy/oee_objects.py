@@ -1,9 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from math import isnan
-from collections import OrderedDict
-from six import itervalues, integer_types
-from numpy import zeros, empty
+from six import integer_types
+from numpy import zeros
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -47,9 +45,11 @@ class RealStrainEnergyArray(ScalarObject):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -99,7 +99,12 @@ class RealStrainEnergyArray(ScalarObject):
         """actually performs the build step"""
         self._times = zeros(self.ntimes, dtype=dtype)
         #self.element = zeros(self.nelements, dtype='int32')
-        self.element = zeros((self.ntimes, self.nelements), dtype='int32')
+        #if dtype in 'DMIG':
+        #print(self.element_name, self.element_type)
+        if self.element_name == 'DMIG':
+            self.element = zeros((self.ntimes, self.nelements), dtype='|U8')
+        else:
+            self.element = zeros((self.ntimes, self.nelements), dtype='int32')
         #self.element_data_type = empty(self.nelements, dtype='|U8')
 
         #[energy, percent, density]
@@ -128,52 +133,66 @@ class RealStrainEnergyArray(ScalarObject):
         headers = self.get_headers()
         ntimes = self.element.shape[0]
         nelements = self.element.shape[1]
+
+        element = self.element.ravel()
+        if element.dtype is np.dtype(np.int32):
+            compare = 0
+        else:
+            # unicode
+            #value = value.tolist()
+
+            element = np.asarray(element, dtype='|U8')
+            compare = ''
+
         if ntimes == 1:
             column_names, column_values = self._build_dataframe_transient_header()
-            element = self.element.ravel()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element,
                                        minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
         else:
+            # we can get into this in a linear case
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\setp04.op2
+
             nvalues = ntimes * nelements
-            element = self.element.ravel()
-            if self.nonlinear_factor is not None:
-                column_names, column_values = self._build_dataframe_transient_header()
-                #column_names = column_names[0]
-                #column_values = column_values[0]
 
-                column_values2 = []
-                for value in column_values:
-                    values2 = []
-                    for valuei in value:
-                        values = np.ones(nelements) * valuei
-                        values2.append(values)
-                    values3 = np.vstack(values2).ravel()
-                    column_values2.append(values3)
-                df1 = pd.DataFrame(column_values2).T
-                df1.columns = column_names
+            #if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            #column_names = column_names[0]
+            #column_values = column_values[0]
 
-                df2 = pd.DataFrame(element)
-                df2.columns = ['ElementID']
+            column_values2 = []
+            for value in column_values:
+                values2 = []
+                for valuei in value:
+                    values = np.ones(nelements) * valuei
+                    values2.append(values)
+                values3 = np.vstack(values2).ravel()
+                column_values2.append(values3)
+            df1 = pd.DataFrame(column_values2).T
+            df1.columns = column_names
 
-                dfs = [df2]
-                for i, header in enumerate(headers):
-                    df = pd.DataFrame(self.data[:, :, i].ravel())
-                    df.columns = [header]
-                    dfs.append(df)
-                self.data_frame = df1.join(dfs)
-                #self.data_frame.columns.names = column_names
+            df2 = pd.DataFrame(element)
+            df2.columns = ['ElementID']
+
+            dfs = [df2]
+            for i, header in enumerate(headers):
+                df = pd.DataFrame(self.data[:, :, i].ravel())
+                df.columns = [header]
+                dfs.append(df)
+            self.data_frame = df1.join(dfs)
+            self.data_frame.columns.names = column_names
 
             # remove empty rows
-            self.data_frame = self.data_frame[self.data_frame.ElementID != 0]
+            assert self.data_frame is not None
+            self.data_frame = self.data_frame[self.data_frame.ElementID != compare]
 
     def __eq__(self, table):
         return self.assert_equal(table)
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
 
         if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
@@ -240,13 +259,24 @@ class RealStrainEnergyArray(ScalarObject):
         #itime = self.itime // self.nelement_types
         itime = self.itime
         self._times[itime] = dt
-        try:
-            self.element[itime, self.ielement] = eid
-            #self.element_data_type[self.ielement] = etype
-            self.data[itime, self.ielement, :] = [energyi, percenti, densityi]
-        except IndexError:
-            print('RealStrainEnergyArray', dt, eid, energyi, percenti, densityi)
-            raise
+        self.element[itime, self.ielement] = eid
+
+        if self.element_name == 'DMIG':
+            if not np.isnan(densityi):
+                raise RuntimeError(
+                    'RealStrainEnergyArray: itime=%s ielement=%s; '
+                    'dt=%s eid=%s energyi=%s percenti=%s densityi=%s' % (
+                        self.itime, self.ielement, dt, eid, energyi, percenti, densityi))
+            self.data[itime, self.ielement, :] = [energyi, percenti, np.nan]
+        else:
+            try:
+                #self.element_data_type[self.ielement] = etype
+                self.data[itime, self.ielement, :] = [energyi, percenti, densityi]
+            except (ValueError, IndexError):
+                print('RealStrainEnergyArray: itime=%s ielement=%s; '
+                      'dt=%s eid=%s energyi=%s percenti=%s densityi=%s' % (
+                    self.itime, self.ielement, dt, eid, energyi, percenti, densityi))
+                raise
         self.ielement += 1
         self.itotal += 1
 
@@ -284,20 +314,19 @@ class RealStrainEnergyArray(ScalarObject):
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        """
-        '      EIGENVALUE =  2.005177E+05'
-        '      CYCLES =  7.126832E+01'
-        '                                           E L E M E N T   S T R A I N   E N E R G I E S'
-        ' '
-        '                ELEMENT-TYPE = TETRA               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   1.002589E+05'
-        '                   MODE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   1.002589E+05'
-        '0'
-        '                                    ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY'
-        '                                             4          3.247409E+00                 0.0032              1.948445E+01'
-        '                                             5          3.977916E+00                 0.0040              2.386749E+01'
-        ''
-        '                        TYPE = TETRA    SUBTOTAL        7.225325E+00                 0.0072'
-        """
+        # '      EIGENVALUE =  2.005177E+05'
+        # '      CYCLES =  7.126832E+01'
+        # '                                           E L E M E N T   S T R A I N   E N E R G I E S'
+        # ' '
+        # '                ELEMENT-TYPE = TETRA               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   1.002589E+05'
+        # '                   MODE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   1.002589E+05'
+        # '0'
+        # '                                    ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY'
+        # '                                             4          3.247409E+00                 0.0032              1.948445E+01'
+        # '                                             5          3.977916E+00                 0.0040              2.386749E+01'
+        # ''
+        # '                        TYPE = TETRA    SUBTOTAL        7.225325E+00                 0.0072'
+
         msg_temp = (
             '                                           E L E M E N T   S T R A I N   E N E R G I E S\n'
             ' \n'
@@ -383,9 +412,11 @@ class ComplexStrainEnergyArray(ScalarObject):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -509,7 +540,7 @@ class ComplexStrainEnergyArray(ScalarObject):
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
 
         if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)

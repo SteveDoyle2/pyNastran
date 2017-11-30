@@ -153,45 +153,49 @@ class STL(object):
         with open(stl_filename, 'rb') as infile:
             data = infile.read()
 
-        self.header = data[:80]
-        nelements, = unpack('i', data[80:84])
-        j = 84
+        ndata = len(data)
+        j = 0
+        while j < ndata:
+            self.log.info('  read_binary_stl: j=%s ndata=%s' % (j, ndata))
+            self.header = data[j:j+80]
+            nelements, = unpack('i', data[j+80:j+84])
+            j += 84
 
-        inode = 0
-        nodes_dict = {}
-        assert nelements > 0, 'nelements=%s' % nelements
-        elements = np.zeros((nelements, 3), 'int32')
+            inode = 0
+            nodes_dict = {}
+            assert nelements > 0, 'nelements=%s' % nelements
+            elements = np.zeros((nelements, 3), 'int32')
 
-        s = Struct('12fH')
-        for ielement in range(nelements):
-            (nx, ny, nz, ax, ay, az, bx, by, bz,
-             cx, cy, cz, i) = s.unpack(data[j:j+50])
+            s = Struct('12fH')
+            for ielement in range(nelements):
+                (nx, ny, nz, ax, ay, az, bx, by, bz,
+                 cx, cy, cz, i) = s.unpack(data[j:j+50])
 
-            t1 = (ax, ay, az)
-            t2 = (bx, by, bz)
-            t3 = (cx, cy, cz)
-            if t1 in nodes_dict:
-                i1 = nodes_dict[t1]
-            else:
-                i1 = inode
-                nodes_dict[t1] = inode
-                inode += 1
+                t1 = (ax, ay, az)
+                t2 = (bx, by, bz)
+                t3 = (cx, cy, cz)
+                if t1 in nodes_dict:
+                    i1 = nodes_dict[t1]
+                else:
+                    i1 = inode
+                    nodes_dict[t1] = inode
+                    inode += 1
 
-            if t2 in nodes_dict:
-                i2 = nodes_dict[t2]
-            else:
-                i2 = inode
-                nodes_dict[t2] = inode
-                inode += 1
+                if t2 in nodes_dict:
+                    i2 = nodes_dict[t2]
+                else:
+                    i2 = inode
+                    nodes_dict[t2] = inode
+                    inode += 1
 
-            if t3 in nodes_dict:
-                i3 = nodes_dict[t3]
-            else:
-                i3 = inode
-                nodes_dict[t3] = inode
-                inode += 1
-            elements[ielement] = [i1, i2, i3]
-            j += 50
+                if t3 in nodes_dict:
+                    i3 = nodes_dict[t3]
+                else:
+                    i3 = inode
+                    nodes_dict[t3] = inode
+                    inode += 1
+                elements[ielement] = [i1, i2, i3]
+                j += 50
         assert inode > 0, inode
         nnodes = inode + 1 # accounting for indexing
         self.elements = elements
@@ -783,4 +787,3 @@ def _rotate_model(stl):  # pragma: no cover
 if __name__ == '__main__':  # pragma: no cover
     from pyNastran.converters.stl.stl_reshape import main
     main()
-

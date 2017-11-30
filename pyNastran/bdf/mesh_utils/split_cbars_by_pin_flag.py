@@ -4,9 +4,7 @@ defines:
        bdf_filename, pin_flags_filename=None, bdf_filename_out=None)
 """
 from __future__ import print_function
-from collections import defaultdict
-from six import iteritems, string_types, integer_types
-import numpy as np
+from six import iteritems, string_types
 from pyNastran.bdf.bdf import read_bdf
 
 

@@ -1,4 +1,3 @@
-
 """
 group A
  - elements
@@ -22,10 +21,11 @@ Panair
   - type = 'panels'
   - panels = [2,4,6]
 """
+import numpy as np
 
 self.create_group('nastran', '0', element_id=element_id)  # panel ID
 self.create_group('nastran', 'A-Nastran', element_id=element_id, coord_id=3)
-self.create_group('nastran', 'B-Nastran', property_id=property_id, coord_id=[3,4])
+self.create_group('nastran', 'B-Nastran', property_id=property_id, coord_id=[3, 4])
 
 self.create_group('cart3d', '0', element_id=element_id)  # panel ID
 self.create_group('cart3d', 'A', element_id=element_id)
@@ -42,9 +42,9 @@ self.post_groups(['A', 'B'])
 
 def clear_groups(self):
     all_groups = self.groups # set
-    self.remove_groups(all_groups)
+    self.remove_groups(all_groups, all_groups)
 
-def remove_groups(self, groups):
+def remove_groups(self, groups, all_groups):
     assert isinstance(groups, list), type(groups)
     assert len(groups) >= 0, 'groups is empty'
     assert len(all_groups) >= 0, 'all_groups is empty'
@@ -52,9 +52,9 @@ def remove_groups(self, groups):
     all_groups = self.groups # set
     for group in all_groups:
         if group in groups:
-            self.remove_group(group)
+            self.remove_group(group, all_groups)
 
-def remove_group(self, group):
+def remove_group(self, group, all_groups):
     if group not in all_groups:
         raise RuntimeError('group=%r not found' % group)
 
@@ -76,7 +76,7 @@ def post_groups(self, groups):
         else:
             self.show_group(group)
 
-def _check_add(self, Format, name, element_id=None, property_id=None, coord_id=None):
+def _check_add(self, res_format, name, element_id=None, property_id=None, coord_id=None):
     if element_id is None and property_id is None:
         raise RuntimeError('either element_id or property_id must be set')
     if isinstance(element_id, int):
@@ -84,24 +84,24 @@ def _check_add(self, Format, name, element_id=None, property_id=None, coord_id=N
     if isinstance(property_id, int):
         property_id = [property_id]
 
-    if Format == 'nastran':
+    if res_format == 'nastran':
         if property_id:
             element_id = self.model.get_element_id_by_property_id(property_id)
 
-    elif Format == 'cart3d':
+    elif res_format == 'cart3d':
         if property_id:
             element_id = self.model.get_gelement_id_by_region_id(property_id)
-    elif Format == 'panair':
+    elif res_format == 'panair':
         if element_id is None:
             raise RuntimeError('element_id must be set for panair')
     else:
-        msg = "Format=%r is not supported; use 'nastran', 'cart3d', 'panair'" % Format
+        msg = "res_format=%r is not supported; use 'nastran', 'cart3d', 'panair'" % res_format
         raise NotImplementedError(msg)
 
-    if coord_id is not None and Format != 'nastran':
-        raise RuntimeError('coord_id must be None for format=%r' % Format)
+    if coord_id is not None and res_format != 'nastran':
+        raise RuntimeError('coord_id must be None for res_format=%r' % res_format)
 
-    element_id = asarray(element_id)
+    element_id = np.asarray(element_id)
     return element_id
 
 def _add_coord_id(self, name, coord_id):
@@ -114,17 +114,17 @@ def _add_coord_id(self, name, coord_id):
             assert isinstance(cid, int), type(cid)
     self._group_coords[name].union(set(coord_id))
 
-def add_to_group(self, Format, name, element_id=None, property_id=None, coord_id=None):
+def add_to_group(self, res_format, name, element_id=None, property_id=None, coord_id=None):
     assert name in self._group_data
-    element_id = self._check_add(Format, name,
+    element_id = self._check_add(res_format, name,
                                  element_id=element_id, property_id=property_id,
                                  coord_id=coord_id)
     self._group_elements[name].extend(element_id)
     self._add_coord_id(name, coord_id)
 
-def create_group(self, Format, name,
+def create_group(self, res_format, name,
                  element_id=None, property_id=None, coord_id=None, show=True):
-    element_id = self._check_add(Format, name,
+    element_id = self._check_add(res_format, name,
                                  element_id=element_id, property_id=property_id,
                                  coord_id=coord_id)
 

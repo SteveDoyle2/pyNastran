@@ -28,8 +28,8 @@ class NastranGuiResults(NastranGuiAttributes):
         """
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
-        new_cases = True
-        nnodes = self.nNodes
+        #new_cases = True
+        nnodes = self.nnodes
         displacement_like = [
             # slot, name, deflects
 
@@ -61,7 +61,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if not hasattr(case, 'data'):
                 print('str(%s) has no data...' % case.__class.__name__)
                 continue
-            #if not case.is_real():
+            #if not case.is_real:
                 #print('complex results not supported...')
                 #continue
             # transient
@@ -71,10 +71,10 @@ class NastranGuiResults(NastranGuiAttributes):
             else:
                 has_cycle = False
                 code_name = None
-            if not case.is_sort1():
+            if not case.is_sort1:
                 self.log.warning('Skipping because SORT2\n' + str(case))
                 continue
-            assert case.is_sort1(), case.is_sort1()
+            assert case.is_sort1, case.is_sort1
 
             itime0 = 0
             t1 = case.data[itime0, :, 0]
@@ -149,9 +149,9 @@ class NastranGuiResults(NastranGuiAttributes):
                     #else:
                         #scale = self.displacement_scale_factor / tnorm_abs_max
 
-                    scale = self.dim_max
+                    scale = self.settings.dim_max
                     if tnorm_abs_max > 0.0:
-                        scale = self.dim_max / tnorm_abs_max * 0.25
+                        scale = self.settings.dim_max / tnorm_abs_max * 0.25
                     scales.append(scale)
                     titles.append(title1)
                     headers.append(header)
@@ -183,9 +183,9 @@ class NastranGuiResults(NastranGuiAttributes):
                         #scale = self.displacement_scale_factor / tnorm_abs_max
 
                     # TODO: what to do with the scale factor?
-                    #scale = self.dim_max
+                    #scale = self.settings.dim_max
                     #if tnorm_abs_max > 0.0:
-                        #scale = self.dim_max / tnorm_abs_max * 0.25
+                        #scale = self.settings.dim_max / tnorm_abs_max * 0.25
                     scale = 1.
                     scales.append(scale)
                     titles.append(title1)
@@ -204,10 +204,10 @@ class NastranGuiResults(NastranGuiAttributes):
             if not hasattr(case, 'data'):
                 continue
 
-            if not case.is_sort1():
+            if not case.is_sort1:
                 self.log.warning('Skipping because SORT2\n' + str(case))
                 continue
-            assert case.is_sort1(), case.is_sort1()
+            assert case.is_sort1, case.is_sort1
 
             ntimes = case.ntimes
             for itime in range(ntimes):
@@ -248,7 +248,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #if not hasattr(case, 'data'):
                 #print('str(%s) has no data...' % case.__class.__name__)
                 #continue
-            ##if not case.is_real():
+            ##if not case.is_real:
                 ##print('complex results not supported...')
                 ##continue
             ## transient
@@ -258,7 +258,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #else:
                 #has_cycle = False
                 #code_name = None
-            #assert case.is_sort1(), case.is_sort1()
+            #assert case.is_sort1, case.is_sort1
 
             #itime0 = 0
             #t1 = case.data[itime0, :, 0]
@@ -401,7 +401,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 is_data = True
                 case = table[isubcase]
                 #print(case)
-                is_real = case.is_real()
+                is_real = case.is_real
                 if case.nonlinear_factor is not None:
                     times = case._times
                     is_static = False
@@ -428,7 +428,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if isubcase in table:
                 is_data = True
                 case = table[isubcase]
-                is_real = case.is_real()
+                is_real = case.is_real
                 if case.nonlinear_factor is not None:
                     times = case._times
                     is_static = False
@@ -575,7 +575,6 @@ class NastranGuiResults(NastranGuiAttributes):
         elif hasattr(case, 'dt'):
             time = case._times[itime]
             header += '; time = %g sec' % time
-            pass
         elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
             pass
             #raise RuntimeError(header)
@@ -647,7 +646,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #energy, percent, density
             #modes = [1, 2, 3]
 
-        nelements = self.nElements
+        nelements = self.nelements
 
         eids = self.element_ids
         ese = np.full(nelements, np.nan, dtype='float32')
@@ -662,7 +661,7 @@ class NastranGuiResults(NastranGuiAttributes):
             case = resdict[key]
             keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
-            if case.is_complex():
+            if case.is_complex:
                 continue
             itotal = np.where(case.element[itime, :] == 100000000)[0][0]
             #print('itotal = ', itotal)
@@ -698,8 +697,8 @@ class NastranGuiResults(NastranGuiAttributes):
                             title='Strain Energy', data_format='%.3e',
                             location='centroid', scalar=ese)
         percent_res = GuiResult(subcase_id, header='Percent of Total',
-                            title='Percent of Total', data_format='%.3f',
-                            location='centroid', scalar=percent)
+                                title='Percent of Total', data_format='%.3f',
+                                location='centroid', scalar=percent)
         sed_res = GuiResult(subcase_id, header='Strain Energy Density',
                             title='Strain Energy Density', data_format='%.3e',
                             location='centroid', scalar=strain_energy_density)
@@ -745,7 +744,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if key in res_type:
                 found_force = True
                 case = res_type[key]
-                if case.is_complex():
+                if case.is_complex:
                     continue
                 keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
                 data = case.data
@@ -774,7 +773,7 @@ class NastranGuiResults(NastranGuiAttributes):
             found_force = True
             ## CBAR-34
             case = model.cbar_force[key]
-            if case.is_real():
+            if case.is_real:
                 eids = case.element
                 i = np.searchsorted(self.element_ids, eids)
                 is_element_on[i] = 1.
@@ -887,7 +886,7 @@ class NastranGuiResults(NastranGuiAttributes):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
-        nelements = self.nElements
+        nelements = self.nelements
         out = self._create_op2_time_centroidal_force_arrays(
             model, nelements, key, itime, header_dict, keys_map)
         found_force, fx, fy, fz, rx, ry, rz, is_element_on = out
@@ -941,12 +940,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict[(key, itime)].append(('BendingZ', icase + 5, []))
                 icase += 6
 
-                is_axial = np.zeros(self.nElements, dtype='int8')
-                is_shear_y = np.zeros(self.nElements, dtype='int8')
-                is_shear_z = np.zeros(self.nElements, dtype='int8')
-                is_torsion = np.zeros(self.nElements, dtype='int8')
-                is_bending_y = np.zeros(self.nElements, dtype='int8')
-                is_bending_z = np.zeros(self.nElements, dtype='int8')
+                is_axial = np.zeros(self.nelements, dtype='int8')
+                is_shear_y = np.zeros(self.nelements, dtype='int8')
+                is_shear_z = np.zeros(self.nelements, dtype='int8')
+                is_torsion = np.zeros(self.nelements, dtype='int8')
+                is_bending_y = np.zeros(self.nelements, dtype='int8')
+                is_bending_z = np.zeros(self.nelements, dtype='int8')
                 is_axial[np.where(np.abs(fx) > 0.0)[0]] = 1
                 is_shear_y[np.where(np.abs(fy) > 0.0)[0]] = 1
                 is_shear_z[np.where(np.abs(fz) > 0.0)[0]] = 1
@@ -998,7 +997,7 @@ class NastranGuiResults(NastranGuiAttributes):
         assert is_stress in [True, False], is_stress
         eids = self.element_ids
         assert len(eids) > 0, eids
-        nelements = self.nElements
+        nelements = self.nelements
         dt = None
 
         is_element_on = np.zeros(nelements, dtype='int8')  # is the element supported
@@ -1026,7 +1025,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 continue
 
             case = result[key]
-            if case.is_complex():
+            if case.is_complex:
                 continue
             eidsi = case.element
             i = np.searchsorted(eids, eidsi)
@@ -1064,7 +1063,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in bars:
             case = bars[key]
-            if case.is_complex():
+            if case.is_complex:
                 pass
             else:
                 dt = case._times[itime]
@@ -1125,7 +1124,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in bars2:
             case = bars2[key]
-            if case.is_complex():
+            if case.is_complex:
                 pass
             else:
                 dt = case._times[itime]
@@ -1176,7 +1175,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in beams:
             case = beams[key]
-            if case.is_complex():
+            if case.is_complex:
                 pass
             else:
                 eidsi = case.element_node[:, 0]
@@ -1239,10 +1238,10 @@ class NastranGuiResults(NastranGuiAttributes):
             if key not in result:
                 continue
             case = result[key]
-            if case.is_complex():
+            if case.is_complex:
                 continue
 
-            if case.is_von_mises():
+            if case.is_von_mises:
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1324,10 +1323,10 @@ class NastranGuiResults(NastranGuiAttributes):
             if key not in result:
                 continue
             case = result[key]
-            if case.is_complex():
+            if case.is_complex:
                 continue
 
-            if case.is_von_mises():
+            if case.is_von_mises:
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1405,10 +1404,10 @@ class NastranGuiResults(NastranGuiAttributes):
             if key not in result:
                 continue
             case = result[key]
-            if case.is_complex():
+            if case.is_complex:
                 continue
 
-            if case.is_von_mises():
+            if case.is_von_mises:
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1653,9 +1652,9 @@ class NastranGuiResults(NastranGuiAttributes):
             model.genel_strain_energy, model.cshear_strain_energy,
         ]
 
-        result_groups = [
-            displacement_like, temperature_like, stress, strain, strain_energy,
-        ]
+        #result_groups = [
+            #displacement_like, temperature_like, stress, strain, strain_energy,
+        #]
 
         nids = self.node_ids
         eids = self.element_ids

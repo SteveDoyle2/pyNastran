@@ -1,3 +1,4 @@
+# coding: latin1
 """
 defines the command line tool test_gui
 """
@@ -143,10 +144,10 @@ def run_docopt(argv=None):
     msg = "Usage:\n"
     # INPUT format may be explicitly or implicitly defined with or
     # without an output file
-    msg += "  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  OUTPUT_FILENAME [--log LOG]\n"
-    msg += "  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  [--log LOG]\n"
-    msg += "  test_pynastrangui  -f FORMAT  [-r] [-d] INPUT_DIRECTORY [--log LOG]\n"
-    msg += "  test_pynastrangui  -f FORMAT  [-r] [-d]                 [--log LOG]\n"
+    msg += "  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  OUTPUT_FILENAME [--log LOG] [--test]\n"
+    msg += "  test_pynastrangui [-f FORMAT]           INPUT_FILENAME  [--log LOG] [--test]\n"
+    msg += "  test_pynastrangui  -f FORMAT  [-r] [-d] INPUT_DIRECTORY [--log LOG] [--test]\n"
+    msg += "  test_pynastrangui  -f FORMAT  [-r] [-d]                 [--log LOG] [--test]\n"
 
     msg += '  test_pynastrangui -h | --help\n'
     msg += '  test_pynastrangui -v | --version\n'
@@ -165,6 +166,9 @@ def run_docopt(argv=None):
     msg += "  -r, --regenerate     Resets the tests\n"
     msg += '  --log LOG            debug, info, warning, error; default=debug\n'
     msg += '\n'
+
+    msg += "Debug:\n"
+    msg += "  --test    temporary dev mode (default=False)\n"
 
     msg += 'Info:\n'
     #msg += "  -q, --quiet    prints debug messages (default=True)\n"
@@ -230,28 +234,29 @@ def run_docopt(argv=None):
         assert log_method in ['debug', 'info', 'warning', 'error'], 'log_method=%r' % log_method
     else:
         log_method = 'debug'
-    return formati, input_filenames, output_filenames, failed_cases_filename, log_method
+    return formati, input_filenames, output_filenames, failed_cases_filename, log_method, data['--test']
 
 def main():
     """runs the gui"""
-    formati, input_filenames, output_filenames, failed_cases_filename, log_method = run_docopt()
+    formati, input_filenames, output_filenames, failed_cases_filename, log_method, test = run_docopt()
     log = get_logger(log=None, level=log_method, encoding='utf-8')
     npass = 0
     nfailed = 0
     failed_files = []
     ntotal = len(input_filenames)
 
-    test = FakeGUI(formati)
-    test.log = log
+    print('test =', test)
+    test_gui = FakeGUI(formati)
+    test_gui.log = log
     stop_on_failure = ntotal == 1
-    t0 = time.time()
+    time0 = time.time()
     for input_filename, output_filename in zip(input_filenames, output_filenames):
         input_filename = os.path.abspath(input_filename)
         #output_filename =
         print("filename = %s" % input_filename)
         is_passed = True
         try:
-            test.load_geometry(input_filename)
+            test_gui.load_geometry(input_filename)
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
         except SystemExit:
@@ -284,7 +289,7 @@ def main():
                 raise
 
         if output_filename:
-            test.load_results(output_filename)
+            test_gui.load_results(output_filename)
 
         if is_passed:
             sys.stderr.write('%i  %s' % (npass, input_filename))
@@ -297,7 +302,7 @@ def main():
 
         if not stop_on_failure:
             print('-' * 80)
-    dt = time.time() - t0
+    dt = time.time() - time0
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
     time_msg = 'dt = %.0f sec = %.1f min' % (dt, dt/60.)
@@ -316,8 +321,8 @@ def main():
         print(time_msg)
         sys.exit('finished...')
 
-    #test.load_nastran_geometry(bdf_filename, None)
-    #test.load_nastran_results(op2_filename, None)
+    #test_gui.load_nastran_geometry(bdf_filename, None)
+    #test_gui.load_nastran_results(op2_filename, None)
 
 if __name__ == '__main__':
     main()

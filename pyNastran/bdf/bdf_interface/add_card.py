@@ -46,8 +46,8 @@ from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, 
                                                  CDAMP5)
 from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
-from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND#, CBAROR
-from pyNastran.bdf.cards.elements.beam import CBEAM
+from pyNastran.bdf.cards.elements.bars import CBAR, CBARAO, CBEAM3, CBEND#, BAROR
+from pyNastran.bdf.cards.elements.beam import CBEAM#, BEAMOR
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
@@ -497,7 +497,7 @@ class AddCards(AddMethods):
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_nsm(self, sid, nsm_type, id, value, comment=''):
+    def add_nsm(self, sid, nsm_type, pid_eid, value, comment=''):
         # type: (int, str, int, float, str) -> NSM
         """
         Creates an NSM card
@@ -513,14 +513,14 @@ class AddCards(AddMethods):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        id : int
+        pid_eid : int
             property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSM(sid, nsm_type, id, value, comment=comment)
+        nsm = NSM(sid, nsm_type, pid_eid, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
@@ -551,7 +551,7 @@ class AddCards(AddMethods):
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsml(self, sid, nsm_type, id, value, comment=''):
+    def add_nsml(self, sid, nsm_type, pid_eid, value, comment=''):
         # type: (int, str, int, float, str) -> NSML
         """
         Creates an NSML card, which defines lumped non-structural mass
@@ -567,14 +567,14 @@ class AddCards(AddMethods):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        id : int
+        pid_eid : int
             property id or element id depending on nsm_type
         value : float
             the non-structural pass per unit length/area
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSML(sid, nsm_type, id, value, comment=comment)
+        nsm = NSML(sid, nsm_type, pid_eid, value, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
@@ -641,8 +641,8 @@ class AddCards(AddMethods):
         self._add_property_mass_object(prop)
         return prop
 
-    def add_cmass1(self, eid, pid, g1, c1, g2, c2, comment=''):
-        # type: (int, int, int, int, int, int, str) -> CMASS1
+    def add_cmass1(self, eid, pid, nids, c1=0, c2=0, comment=''):
+        # type: (int, int, [int, int], int, int, str) -> CMASS1
         """
         Creates a CMASS1 card
 
@@ -652,21 +652,19 @@ class AddCards(AddMethods):
             element id
         pid : int
             property id (PMASS)
-        g1 : int
-            node id
-        g2 : int; default=None
-            node id
+        nids : List[int, int]
+            node ids
         c1 / c2 : int; default=None
             DOF for nid1 / nid2
         comment : str; default=''
             a comment for the card
         """
-        mass_obj = CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
+        mass_obj = CMASS1(eid, pid, nids, c1, c2, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_cmass2(self, eid, mass, g1, c1, g2, c2, comment=''):
-        # type: (int, float, int, int, int, int, str) -> CMASS2
+    def add_cmass2(self, eid, mass, nids, c1, c2, comment=''):
+        # type: (int, float, [int, int], int, int, str) -> CMASS2
         """
         Creates a CMASS2 card
 
@@ -676,21 +674,19 @@ class AddCards(AddMethods):
             element id
         mass : float
             mass
-        g1 : int
-            node id
-        g2 : int; default=None
-            node id
+        nids : List[int, int]
+            node ids
         c1 / c2 : int; default=None
             DOF for nid1 / nid2
         comment : str; default=''
             a comment for the card
         """
-        mass_obj = CMASS2(eid, mass, g1, c1, g2, c2, comment=comment)
+        mass_obj = CMASS2(eid, mass, nids, c1, c2, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_cmass3(self, eid, pid, s1, s2, comment=''):
-        # type: (int, int, int, int, str) -> CMASS3
+    def add_cmass3(self, eid, pid, nids, comment=''):
+        # type: (int, int, [int, int], str) -> CMASS3
         """
         Creates a CMASS3 card
 
@@ -700,19 +696,17 @@ class AddCards(AddMethods):
             element id
         pid : int
             property id (PMASS)
-        s1 : int
-            SPOINT id
-        s2 : int
-            SPOINT id
+        nids : List[int, int]
+            SPOINT ids
         comment : str; default=''
             a comment for the card
         """
-        mass = CMASS3(eid, pid, s1, s2, comment=comment)
+        mass = CMASS3(eid, pid, nids, comment=comment)
         self._add_mass_object(mass)
         return mass
 
-    def add_cmass4(self, eid, mass, s1, s2=0, comment=''):
-        # type: (int, float, int, int, str) -> CMASS4
+    def add_cmass4(self, eid, mass, nids, comment=''):
+        # type: (int, float, [int, int], str) -> CMASS4
         """
         Creates a CMASS4 card
 
@@ -722,14 +716,12 @@ class AddCards(AddMethods):
             element id
         mass : float
             SPOINT mass
-        s1 : int
-            SPOINT id
-        s2 : int; default=0
-            SPOINT id
+        nids : List[int, int]
+            SPOINT ids
         comment : str; default=''
             a comment for the card
         """
-        mass_obj = CMASS4(eid, mass, s1, s2=s2, comment=comment)
+        mass_obj = CMASS4(eid, mass, nids, comment=comment)
         self._add_mass_object(mass_obj)
         return mass_obj
 
@@ -988,6 +980,20 @@ class AddCards(AddMethods):
         return elem
 
     def add_pvisc(self, pid, ce, cr, comment=''):
+        """
+        Creates a PVISC card
+
+        Parameters
+        ----------
+        pid : int
+            property id for a CVISC
+        ce : float
+            Viscous damping values for extension in units of force per unit velocity
+        cr : float
+            Viscous damping values for rotation in units of moment per unit velocity.
+        comment : str; default=''
+            a comment for the card
+        """
         # type: (int, float, float, str) -> PVISC
         prop = PVISC(pid, ce, cr, comment=comment)
         self._add_property_object(prop)
@@ -1114,14 +1120,40 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbush(self, pid, k, b, ge, rcv, mass_fields=None, comment=''):
-        prop = PBUSH(pid, k, b, ge, rcv, mass_fields, comment=comment)
+    def add_pbush(self, pid, k, b, ge, rcv=None, mass=None, comment=''):
+        """
+        Creates a PBUSH card, which defines a property for a CBUSH
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        k : List[float]
+            Nominal stiffness values in directions 1 through 6.
+            len(k) = 6
+        b : List[float]
+            Nominal damping coefficients in direction 1 through 6 in units of
+            force per unit velocity
+            len(b) = 6
+        ge : List[float]
+            Nominal structural damping constant in directions 1 through 6.
+            len(ge) = 6
+        rcv : List[float]; default=None -> (None, None, None, None)
+            [sa, st, ea, et] = rcv
+            length(rcv) = 4
+        mass : float; default=None
+            lumped mass of the CBUSH
+            This is an MSC only parameter.
+        comment : str; default=''
+            a comment for the card
+        """
+        prop = PBUSH(pid, k, b, ge, rcv=rcv, mass=mass, comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_cbush1d(self, eid, pid, nids, cid, comment=''):
+    def add_cbush1d(self, eid, pid, nids, cid=None, comment=''):
         # type: (int, int, List[int], int, str) -> CBUSH1D
-        elem = CBUSH1D(eid, pid, nids, cid, comment=comment)
+        elem = CBUSH1D(eid, pid, nids, cid=cid, comment=comment)
         self._add_element_object(elem)
         return elem
 
@@ -1131,8 +1163,10 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbush1d(self, pid, k, c, m, sa, se, optional_vars, comment=''):
-        prop = PBUSH1D(pid, k, c, m, sa, se, optional_vars, comment=comment)
+    def add_pbush1d(self, pid, k=0., c=0., m=0., sa=0., se=0.,
+                    optional_vars=None, comment=''):
+        prop = PBUSH1D(pid, k=k, c=c, m=m, sa=sa, se=se,
+                       optional_vars=optional_vars, comment=comment)
         self._add_property_object(prop)
         return prop
 
@@ -1612,7 +1646,7 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pbeaml(self, pid, mid, Type, xxb, dims, so=None, nsm=None,
+    def add_pbeaml(self, pid, mid, beam_type, xxb, dims, so=None, nsm=None,
                    group='MSCBML0', comment=''):
         """
         Creates a PBEAML card
@@ -1623,24 +1657,26 @@ class AddCards(AddMethods):
             property id
         mid : int
             material id
+        beam_type : str
+            the section profile
         xxb : List[float]
             The percentage locations along the beam [0., ..., 1.]
         dims : List[dim]
             dim : List[float]
                 The dimensions for each section
-        group : str; default='MSCBMLO'
-            this parameter can lead to a very broken deck with a very
-            bad error message; don't touch it!
         so : List[str]; default=None
             YES, YESA, NO
             None : [0.] * len(xxb)
         nsm : List[float]; default=None
             nonstructural mass per unit length
             None : [0.] * len(xxb)
+        group : str; default='MSCBMLO'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
         comment : str; default=''
             a comment for the card
         """
-        prop = PBEAML(pid, mid, Type, xxb, dims,
+        prop = PBEAML(pid, mid, beam_type, xxb, dims,
                       group=group, so=so, nsm=nsm, comment=comment)
         self._add_property_object(prop)
         return prop
@@ -2323,7 +2359,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_presax(sid, pressure, rid1, rid2, phi1=0., phi2=360., comment=''):
+    def add_presax(self, sid, pressure, rid1, rid2, phi1=0., phi2=360., comment=''):
         load = PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
         self._add_load_object(load)
         return load
@@ -2662,7 +2698,7 @@ class AddCards(AddMethods):
             a comment for the card
         """
         load = LOAD(sid, scale, scale_factors, load_ids, comment=comment)
-        self._add_load_object(load)
+        self._add_load_combination_object(load)
         return load
 
     def add_lseq(self, sid, excite_id, lid, tid=None, comment=''):
@@ -2690,16 +2726,16 @@ class AddCards(AddMethods):
 
     def add_sload(self, sid, nids, mags, comment=''):
         """
-        Creates an SLOAD (SPOINT load)
+        Creates an SLOAD (GRID/SPOINT load)
 
         Parameters
         ----------
         sid : int
             load id
         nids : int; List[int]
-            the SPOINT ids
+            the GRID/SPOINT ids
         mags : float; List[float]
-            the SPOINT loads
+            the load magnitude
         comment : str; default=''
             a comment for the card
         """
@@ -3066,7 +3102,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        load = MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz=None, comment=comment)
+        load = MOMENT2(sid, node, mag, g1, g2, g3, g4, comment=comment)
         self._add_load_object(load)
         return load
 
@@ -3141,8 +3177,9 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        load = GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
-        self._add_load_object(load)
+        grav = GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
+        self._add_load_object(grav)
+        return grav
 
     def add_pload(self, sid, pressure, nodes, comment=''):
         """
@@ -3287,6 +3324,14 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
+    def add_gmload(self, sid, normal, entity, entity_id, method, load_magnitudes,
+                   cid=0, comment=''):
+        """Creates a GMLOAD object"""
+        load = GMLOAD(sid, normal, entity, entity_id, method, load_magnitudes,
+                      cid=cid, comment=comment)
+        self._add_load_object(load)
+        return load
+
     def add_spc(self, conid, gids, components, enforced, comment=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be
@@ -3356,7 +3401,7 @@ class AddCards(AddMethods):
 
     def add_spcadd(self, conid, sets, comment=''):
         spcadd = SPCADD(conid, sets, comment=comment)
-        self._add_constraint_spc_object(spcadd)
+        self._add_constraint_spcadd_object(spcadd)
         return spcadd
 
     def add_spcax(self, conid, rid, hid, c, d, comment=''):
@@ -3376,7 +3421,7 @@ class AddCards(AddMethods):
 
     def add_mpcadd(self, conid, sets, comment=''):
         mpcadd = MPCADD(conid, sets, comment=comment)
-        self._add_constraint_mpc_object(mpcadd)
+        self._add_constraint_mpcadd_object(mpcadd)
         return mpcadd
 
     def add_suport(self, nodes, Cs, comment=''):
@@ -4614,8 +4659,32 @@ class AddCards(AddMethods):
         self._add_dtable_object(dtable)
         return dtable
 
-    def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
-        table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
+    def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment=''):
+        """
+        Creates a TABLED1, which is a dynamic load card that is applied
+        by the DAREA card
+
+        Parameters
+        ----------
+        tid : int
+            table id
+        x : List[float]
+            nvalues
+        y : List[float]
+            nvalues
+        xaxis : str
+            LINEAR, LOG
+        yaxis : str
+            LINEAR, LOG
+        extrap : int; default=0
+            Extrapolation method:
+                0 : linear
+                1 : constant
+            .. note:: this is NX specific
+        comment : str; default=''
+            a comment for the card
+        """
+        table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
         self._add_tabled_object(table)
         return table
 
@@ -4634,18 +4703,18 @@ class AddCards(AddMethods):
         self._add_tabled_object(table)
         return table
 
-    def add_tablem1(self, tid, x, y, comment=''):
-        table = TABLEM1(tid, x, y, comment=comment)
+    def add_tablem1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
+        table = TABLEM1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
         self._add_tablem_object(table)
         return table
 
-    def add_tablem2(self, tid, x1, x, y, comment=''):
-        table = TABLEM2(tid, x1, x, y, comment=comment)
+    def add_tablem2(self, tid, x1, x, y, extrap=0, comment=''):
+        table = TABLEM2(tid, x1, x, y, extrap=extrap, comment=comment)
         self._add_tablem_object(table)
         return table
 
-    def add_tablem3(self, tid, x1, x2, x, y, comment=''):
-        table = TABLEM3(tid, x1, x2, x, y, comment=comment)
+    def add_tablem3(self, tid, x1, x2, x, y, extrap=0, comment=''):
+        table = TABLEM3(tid, x1, x2, x, y, extrap=extrap, comment=comment)
         self._add_tablem_object(table)
         return table
 
@@ -5175,7 +5244,7 @@ class AddCards(AddMethods):
         }
         """
         dresp = DRESP2(dresp_id, label, dequation, region, params,
-                       method=method, c1=c1, c2=c2, c3=c3, comment=comment)
+                       method=method, c1=c1, c2=c2, c3=c3, comment=comment, validate=validate)
         self._add_dresp_object(dresp)
         return dresp
 
@@ -6045,6 +6114,49 @@ class AddCards(AddMethods):
 
     def add_dmig(self, name, ifo, tin, tout, polar, ncols, GCj, GCi,
                  Real, Complex=None, comment=''):
+        """
+        Creates a DMIG card
+
+        Parameters
+        ----------
+        name : str
+            the name of the matrix
+        ifo : int
+            matrix shape
+            4=Lower Triangular
+            5=Upper Triangular
+            6=Symmetric
+            8=Identity (m=nRows, n=m)
+        tin : int
+            matrix input precision
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        tout : int
+            matrix output precision
+            0=same as tin
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        polar : int; default=0
+            Input format of Ai, Bi
+            Integer=blank or 0 indicates real, imaginary format
+            Integer > 0 indicates amplitude, phase format
+        ncols : int
+            ???
+        GCj  : List[(node, dof)]
+            the [jnode, jDOFs]
+        GCi  : List[(node, dof)]
+            the inode, iDOFs
+        Real : List[float]
+            The real values
+        Complex : List[float]; default=None
+            The complex values (if the matrix is complex)
+        comment : str; default=''
+            a comment for the card
+        """
         dmig = DMIG(name, ifo, tin, tout, polar, ncols, GCj, GCi,
                     Real, Complex, comment=comment)
         self._add_dmig_object(dmig)
@@ -6064,17 +6176,63 @@ class AddCards(AddMethods):
         self._add_dmij_object(dmij)
         return dmij
 
-    def add_dmiji(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
+    def add_dmiji(self, name, ifo, tin, tout, nrows, ncols, GCj, GCi,
                   Real, Complex=None, comment=''):
-        dmiji = DMIJI(name, form, tin, tout, nrows, ncols, GCj, GCi,
+        """
+        | DMIJI | NAME | 0 | IFO | TIN | TOUT POLAR | | NCOL |
+        """
+        dmiji = DMIJI(name, ifo, tin, tout, nrows, ncols, GCj, GCi,
                       Real, Complex, comment=comment)
         self._add_dmiji_object(dmiji)
         return dmiji
 
-    def add_dmik(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
-                 Real, Complex=None, comment=''):
-        dmik = DMIK(name, form, tin, tout, nrows, ncols, GCj, GCi,
-                    Real, Complex, comment=comment)
+    def add_dmik(self, name, ifo, tin, tout, polar, ncols,
+                 GCj, GCi, Real, Complex=None, comment=''):
+        """
+        Creates a DMIK card
+
+        Parameters
+        ----------
+        name : str
+            the name of the matrix
+        ifo : int
+            matrix shape
+            4=Lower Triangular
+            5=Upper Triangular
+            6=Symmetric
+            8=Identity (m=nRows, n=m)
+        tin : int
+            matrix input precision
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        tout : int
+            matrix output precision
+            0=same as tin
+            1=Real, Single Precision
+            2=Real, Double Precision
+            3=Complex, Single Precision
+            4=Complex, Double Precision
+        polar : int; default=0
+            Input format of Ai, Bi
+            Integer=blank or 0 indicates real, imaginary format
+            Integer > 0 indicates amplitude, phase format
+        ncols : int
+            ???
+        GCj  : List[(node, dof)]
+            the jnode, jDOFs
+        GCi  : List[(node, dof)]
+            the inode, iDOFs
+        Real : List[float]
+            The real values
+        Complex : List[float]; default=None
+            The complex values (if the matrix is complex)
+        comment : str; default=''
+            a comment for the card
+        """
+        dmik = DMIK(name, ifo, tin, tout, polar, ncols,
+                    GCj, GCi, Real, Complex, comment=comment)
         self._add_dmik_object(dmik)
         return dmik
 

@@ -46,7 +46,7 @@ class AFLR2(object):
 
     def read_bedge(self, bedge_filename, beta_reverse=179.7):
         """reads a *.bedge file"""
-        base, ext = os.path.splitext(bedge_filename)
+        ext = os.path.splitext(bedge_filename)[1].lower()
         assert ext == '.bedge', print_bad_path(bedge_filename)
 
         with open(bedge_filename, 'r') as bedge_file:
@@ -173,12 +173,12 @@ class AFLR2(object):
         for isubcurve in range(nsubcurves):
             nnodesi = nnodes_pack[isubcurve]
             icurve = isubcurve_to_curve_map[isubcurve]
-            bc = grid_bc[isubcurve]
-            self.log.debug('isubcurve=%s icurve=%s grid_bc=%s' % (isubcurve, icurve, bc))
+            grid_bci = grid_bc[isubcurve]
+            self.log.debug('isubcurve=%s icurve=%s grid_bc=%s' % (isubcurve, icurve, grid_bci))
 
             curves[ielement0:ielement0+nnodesi] = icurve
             subcurves[ielement0:ielement0+nnodesi] = isubcurve
-            grid_bcs[ielement0:ielement0+nnodesi] = bc
+            grid_bcs[ielement0:ielement0+nnodesi] = grid_bci
             ielement0 += nnodesi
         del icurve
 
@@ -223,90 +223,90 @@ class AFLR2(object):
             n1 = bars[:, 0]
             n2 = bars[:, 1]
             #n1 = n1a
-            n2a = n2
+            #n2a = n2
             #print "n1a = ", n1a, len(n1a)
             #print "n2a = ", n2a, len(n2a)
 
-            if 1:
-                ib = list(range(1, nbars))
-                ib.append(0)
+            ibar = list(range(1, nbars))
+            ibar.append(0)
 
-                ib = array(ib, dtype='int32')
-                n1 = n1
-                n3 = bars[ib, 1]
-                #print "n1a = ", n1a, len(n1a)
-                #print "n2a = ", n2a, len(n2a)
-                #print "n1b = ", n1b, len(n1b)
-                #print "n2b = ", n2b, len(n2b)
+            ibar = array(ibar, dtype='int32')
+            n1 = n1
+            n3 = bars[ibar, 1]
+            #print "n1a = ", n1a, len(n1a)
+            #print "n2a = ", n2a, len(n2a)
+            #print "n1b = ", n1b, len(n1b)
+            #print "n2b = ", n2b, len(n2b)
 
-                #if 0:
-                    #v1 = nodes[n2, :] - nodes[n1, :]
-                    #v2 = nodes[n3, :] - nodes[n1, :]
+            #if 0:
+                #v1 = nodes[n2, :] - nodes[n1, :]
+                #v2 = nodes[n3, :] - nodes[n1, :]
 
-                    #L1 = norm(v1, axis=1)
-                    #L2 = norm(v2, axis=1)
+                #L1 = norm(v1, axis=1)
+                #L2 = norm(v2, axis=1)
 
-                    #c = cross(v1, v2)
-                    #cn = norm(c, axis=1)
+                #c = cross(v1, v2)
+                #cn = norm(c, axis=1)
 
-                    #L1L2 = (L1 * L2)
-                    #izero = where(L1L2 == 0.0)[0]
-                    #L1L2[izero] = 1e-10
-                    #sin_theta = cn / L1L2
-                    #theta = degrees(arcsin(sin_theta))
+                #L1L2 = (L1 * L2)
+                #izero = where(L1L2 == 0.0)[0]
+                #L1L2[izero] = 1e-10
+                #sin_theta = cn / L1L2
+                #theta = degrees(arcsin(sin_theta))
 
-                # convention from http://en.wikipedia.org/wiki/Triangle
-                c = norm(nodes[n2, :2] - nodes[n1, :2], axis=1) # c
-                a = norm(nodes[n3, :2] - nodes[n2, :2], axis=1) # a
-                b = norm(nodes[n3, :2] - nodes[n1, :2], axis=1) # b
-                assert len(a) == len(n1), 'wrong size...check axis'
+            # convention from http://en.wikipedia.org/wiki/Triangle
+            c = norm(nodes[n2, :2] - nodes[n1, :2], axis=1) # c
+            a = norm(nodes[n3, :2] - nodes[n2, :2], axis=1) # a
+            b = norm(nodes[n3, :2] - nodes[n1, :2], axis=1) # b
+            assert len(a) == len(n1), 'wrong size...check axis'
 
-                cos_inner = (a**2 + c**2 - b**2)/(2 * a * c)
-                beta = arccos(np.clip(cos_inner, -1., 1.))
-                inan = where(isnan(beta))[0]
-                beta[inan] = 0.0
-                i180 = where(abs(beta) > radians(beta_reverse))[0]
-                beta[i180] = 0.0
-                #print('beta = %s' % beta)
-                #print('beta_nonzero = %s' % beta[where(beta != 0)[0]])
-                #print('beta_nonzero deg = %s' % degrees(beta[where(beta != 0)[0]]))
+            cos_inner = (a**2 + c**2 - b**2)/(2 * a * c)
+            beta = arccos(np.clip(cos_inner, -1., 1.))
+            inan = where(isnan(beta))[0]
+            beta[inan] = 0.0
+            i180 = where(abs(beta) > radians(beta_reverse))[0]
+            beta[i180] = 0.0
+            #print('beta = %s' % beta)
+            #print('beta_nonzero = %s' % beta[where(beta != 0)[0]])
+            #print('beta_nonzero deg = %s' % degrees(beta[where(beta != 0)[0]]))
 
-                #if 0:
-                    #for inani in inan:
-                        #nids_failed = [n1[inani], n2[inani], n3[inani]]
-                        #print('nodes = %s' % nids_failed)
-                        #for nid in nids_failed:
-                            #print('  nodes[%3i] = %s' % (nid, nodes[nid, :]))
+            #if 0:
+                #for inani in inan:
+                    #nids_failed = [n1[inani], n2[inani], n3[inani]]
+                    #print('nodes = %s' % nids_failed)
+                    #for nid in nids_failed:
+                        #print('  nodes[%3i] = %s' % (nid, nodes[nid, :]))
 
-                centroid = (nodes[n1, :] + nodes[n2, :] + nodes[n3, :]) / 3.
-                xcentroid = centroid[:, 0]
-                ycentroid = centroid[:, 1]
-                # maybe shift the node to the centroid of the element to fix sign?
-                min_xy = nodes[:, :2].min(axis=0)
-                delta_xy = 2.0 * abs(min_xy)
-                dx, dy = delta_xy
-                self.log.debug('min_xy = %s' % min_xy)
-                assert len(min_xy) == 2, min_xy
+            #centroid = (nodes[n1, :] + nodes[n2, :] + nodes[n3, :]) / 3.
+            #xcentroid = centroid[:, 0]
+            #ycentroid = centroid[:, 1]
 
-                # y/x for nodes 1, 2, and 3; find theta
-                theta1g = arctan2(nodes[n1, 1] + dy, nodes[n1, 0] + dx)
-                theta2g = arctan2(nodes[n2, 1] + dy, nodes[n2, 0] + dx)
-                theta3g = arctan2(nodes[n3, 1] + dy, nodes[n3, 0] + dx)
-                theta12g = theta2g - theta1g
-                theta23g = theta3g - theta2g
+            # maybe shift the node to the centroid of the element to fix sign?
+            min_xy = nodes[:, :2].min(axis=0)
+            delta_xy = 2.0 * abs(min_xy)
+            dx, dy = delta_xy
+            self.log.debug('min_xy = %s' % min_xy)
+            assert len(min_xy) == 2, min_xy
 
-                mag_theta = sign(theta12g - theta23g)
-                izero = where(beta == 0.)[0]
-                mag_theta[izero] = 0.
-                inotzero = where(beta != 0)
-                #print('i')
-                #izero = where(allclose(mag_theta, 0.))[0]
-                #mag_theta[izero] = 1.0
-                #print('mag_theta = %s' % mag_theta)
-                turn_angle = mag_theta * beta
-                #turn_angle = degrees(beta)
+            # y/x for nodes 1, 2, and 3; find theta
+            theta1g = arctan2(nodes[n1, 1] + dy, nodes[n1, 0] + dx)
+            theta2g = arctan2(nodes[n2, 1] + dy, nodes[n2, 0] + dx)
+            theta3g = arctan2(nodes[n3, 1] + dy, nodes[n3, 0] + dx)
+            theta12g = theta2g - theta1g
+            theta23g = theta3g - theta2g
 
-                turn_angle_list.append(turn_angle)
+            mag_theta = sign(theta12g - theta23g)
+            izero = where(beta == 0.)[0]
+            mag_theta[izero] = 0.
+            #inotzero = where(beta != 0)
+            #print('i')
+            #izero = where(allclose(mag_theta, 0.))[0]
+            #mag_theta[izero] = 1.0
+            #print('mag_theta = %s' % mag_theta)
+            turn_angle = mag_theta * beta
+            #turn_angle = degrees(beta)
+            turn_angle_list.append(turn_angle)
+
 
             #print('inodes[%i]=%s'  % (icurve, inodes))
             #print('bars[%i]=\n%s\n'  % (isubcurve, bars))
@@ -391,7 +391,8 @@ class AFLR2(object):
         subcurves = hstack([self.subcurves, bedge.subcurves])
         self.log.debug('ugrid_bcs = %s' % unique(grid_bc))
 
-        export_to_bedge(bedge_filename, nodes, grid_bc, curves, subcurves, axis=2, log=self.log)
+        export_to_bedge(bedge_filename,
+                        nodes, grid_bc, curves, subcurves, axis=2, log=self.log)
 
 def _flip_value(lst):
     """flips a 0 to 1 and vice-versa"""
@@ -400,14 +401,31 @@ def _flip_value(lst):
         for val in lst
     ]
 
-def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, log=None):
+def export_to_bedge(bedge_filename,
+                    nodes, grid_bcs, curves, subcurves, axis=1, log=None):
     """
+    Creates a bedge file
+
     Parameters
     ----------
+    bedge_filename : str
+        the *.bedge file
+    nodes : ???
+        ???
+    grid_bcs : ???
+        ???
+        source is model.grid_bc, not model.grid_bcs
+    curves : ???
+        ???
+    subcurves : ???
+        ???
     axis : int; default=1
         the axis to remove (nodes in Nx3)
+    log : Logger(); default=None
+        a required logging object
     """
     log.debug('bedge_filename = %s' % bedge_filename)
+    log.debug('grid_bc = %s' % grid_bcs)
     #if bedge_filename == 'farfield.bedge':
         #print(grid_bcs)
 
@@ -455,7 +473,10 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
         bedge_file.write('\n')
         nsubcurves = len(grid_bcs)
         log.debug('nsubcurves = %s?' % nsubcurves)
-        assert nsubcurves < 20
+        if nsubcurves > 30:
+            msg = 'Are you sure you are merging model.grid_bc and not model.grid_bcs?\n'
+            msg += 'nsubcurves=%s' % (nsubcurves)
+            raise RuntimeError(msg)
         #assert nsubcurves == len(nsubcurves_list) #  wrong check...
 
         for nnodes in nodes_pack:
@@ -483,5 +504,3 @@ def export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, 
             else:
                 raise RuntimeError(axis)
         #initial_normal_spacing = '112*1.0e-3'
-
-

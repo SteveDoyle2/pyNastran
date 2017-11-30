@@ -1,6 +1,5 @@
 from six import iteritems
 from collections import OrderedDict
-from pyNastran.utils.dev import write_class
 
 
 def remove_c_comments(lines):
@@ -190,9 +189,8 @@ class FoamFile(object):
         self.log = log
 
     def read_foam_file(self):
-        f = open(self.filename, 'r')
-        lines = f.readlines()
-        f.close()
+        with open(self.filename, 'r') as foam_file:
+            lines = foam_file.readlines()
 
         lines = remove_c_comments(lines)
         #for line in lines:

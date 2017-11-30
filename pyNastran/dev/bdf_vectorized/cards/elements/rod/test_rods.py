@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six.moves import StringIO
 from math import pi, sqrt
 #from itertools import count
 

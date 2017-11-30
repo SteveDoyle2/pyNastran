@@ -27,7 +27,7 @@ def write_rpy_file(fname_model, jobname, fname_user_subroutine=None, include=Non
         #for fname in include:
             #include_lines += write_include(fname)
         include_lines += '"""'
-        lines.append('mdb.models["%s"].keywordBlock.insert(0, %s)\n' % (model_name,  include_lines))
+        lines.append('mdb.models["%s"].keywordBlock.insert(0, %s)\n' % (model_name, include_lines))
 
     indent = '        '
     lines.extend(['mdb.Job(name="%s", model="%s",\n' % (jobname, model_name),

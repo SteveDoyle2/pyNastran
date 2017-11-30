@@ -11,6 +11,7 @@ from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 #from pyNastran.converters.tecplot.utils import merge_tecplot_files
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 class TecplotIO(object):
@@ -39,9 +40,9 @@ class TecplotIO(object):
         model = read_tecplot(tecplot_filename, log=self.log, debug=False)
 
         self.model_type = 'tecplot'
-        self.nNodes = model.nnodes
+        self.nnodes = model.nnodes
 
-        #self._make_tecplot_geometry(model, self.nNodes, quads_only=True) # cart3d
+        #self._make_tecplot_geometry(model, self.nnodes, quads_only=True) # cart3d
         is_surface = self._make_tecplot_geometry(model, quads_only=False)
 
         #self._create_cart3d_free_edegs(model, nodes, elements)
@@ -78,12 +79,12 @@ class TecplotIO(object):
 
     def _make_tecplot_geometry(self, model, quads_only=False):
         nodes = model.xyz
-        nnodes = self.nNodes
+        nnodes = self.nnodes
         grid = self.grid
 
         #points = vtk.vtkPoints()
         #points.SetNumberOfPoints(nnodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         #self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
@@ -96,7 +97,7 @@ class TecplotIO(object):
         dim_max = (mmax - mmin).max()
         self.create_global_axes(dim_max)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         #for i in range(nnodes):
             #points.InsertPoint(i, nodes[i, :])
 
@@ -116,7 +117,7 @@ class TecplotIO(object):
         if nshells:
             is_surface = True
             self._create_tecplot_shells(nquads, quads, ntris, tris)
-            self.nElements = nshells
+            self.nelements = nshells
 
         elif nsolids:
             #if 0:
@@ -130,7 +131,7 @@ class TecplotIO(object):
                 if nhexas:
                     free_faces = array(model.get_free_faces(), dtype='int32')# + 1
                     nfaces = len(free_faces)
-                    self.nElements = nfaces
+                    self.nelements = nfaces
                     elements = free_faces
                     grid.Allocate(nfaces, 1000)
 
@@ -146,7 +147,7 @@ class TecplotIO(object):
             else:
                 # is_volume
                 grid.Allocate(nsolids, 1000)
-                self.nElements = nsolids
+                self.nelements = nsolids
                 if ntets:
                     for node_ids in tets:
                         elem = vtkTetra()
@@ -217,7 +218,7 @@ class TecplotIO(object):
         #result_names = ['rho', 'U', 'V', 'W', 'p']
         result_names = model.variables[3:]
         #nelements = elements.shape[0]
-        nelements = self.nElements
+        nelements = self.nelements
         nnodes = model.nnodes
         #nnodes = nodes.shape[0]
 

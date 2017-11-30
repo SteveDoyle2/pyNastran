@@ -9,23 +9,15 @@ from __future__ import division, unicode_literals, print_function
 import sys
 import os.path
 
+# kills the program when you hit Cntl+C from the command line
+# doesn't save the current state as presumably there's been an error
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import (
-        QApplication, qApp)
-    #from PyQt4.QtCore import QString
-elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import (
-        QApplication, qApp)
-    #from six import text_type as QString
-elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
-    from PySide.QtGui import QApplication, qApp
-else:
-    raise NotImplementedError(qt_version)
+
+from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QApplication, qApp)
 
 # 3rd party
 import vtk
@@ -36,12 +28,6 @@ from pyNastran.gui.formats import Cart3dIO, is_cart3d
 from pyNastran.gui.arg_handling import get_inputs
 #from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.gui_common import GuiCommon2
-
-
-# kills the program when you hit Cntl+C from the command line
-# doesn't save the current state as presumably there's been an error
-import signal
-signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 if not is_cart3d:
@@ -163,9 +149,7 @@ class MainWindow(GuiCommon2, Cart3dIO):
         settings = QtCore.QSettings()
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
-        settings.setValue("backgroundColor", self.background_color)
-        settings.setValue("textColor", self.text_color)
-        settings.setValue("labelColor", self.label_color)
+        self.settings.save(settings)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.window()

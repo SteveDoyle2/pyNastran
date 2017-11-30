@@ -15,9 +15,9 @@ from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.bdf.mesh_utils.extract_free_faces import write_skin_solid_faces
 from pyNastran.utils.log import get_logger
 
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, 'converters', 'tecplot', 'models')
-nastran_path = os.path.join(pkg_path, '..', 'models')
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')
+NASTRAN_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class UGRID_GUI(UGRID_IO, FakeGUIMethods):
@@ -30,28 +30,27 @@ class TestUgridGui(unittest.TestCase):
     """defines UGRID tests"""
     def test_ugrid_gui_01(self):
         """tests solid_bending.bdf"""
-        nastran_filename1 = os.path.join(nastran_path, 'solid_bending', 'solid_bending.bdf')
+        nastran_filename1 = os.path.join(NASTRAN_PATH, 'solid_bending', 'solid_bending.bdf')
 
-        skin_filename = os.path.join(nastran_path, 'solid_bending', 'solid_bending_skin.bdf')
+        skin_filename = os.path.join(NASTRAN_PATH, 'solid_bending', 'solid_bending_skin.bdf')
         log = get_logger(level='warning')
         write_skin_solid_faces(nastran_filename1, skin_filename,
                                write_solids=True, write_shells=True,
                                size=8, is_double=False, encoding=None,
                                punch=False, log=log)
 
-        ugrid_filename = os.path.join(nastran_path, 'solid_bending', 'solid_bending.b8.ugrid')
+        ugrid_filename = os.path.join(NASTRAN_PATH, 'solid_bending', 'solid_bending.b8.ugrid')
         nastran_to_ugrid(skin_filename, ugrid_filename_out=ugrid_filename,
                          properties=None, check_shells=True, check_solids=True, log=log)
         assert os.path.exists(ugrid_filename), ugrid_filename
         test = UGRID_GUI()
         test.log = log
-        test.load_ugrid_geometry(ugrid_filename, name='main',
-                                 plot=True)
+        test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
 
     def test_ugrid_gui_02(self):
         """tests plate_with_circular_hole"""
-        bdf_filename = os.path.join(nastran_path, 'plate_with_circular_hole', 'a101x.dat')
-        ugrid_filename = os.path.join(nastran_path, 'plate_with_circular_hole', 'a101x.b8.ugrid')
+        bdf_filename = os.path.join(NASTRAN_PATH, 'plate_with_circular_hole', 'a101x.dat')
+        ugrid_filename = os.path.join(NASTRAN_PATH, 'plate_with_circular_hole', 'a101x.b8.ugrid')
         log = get_logger(level='warning')
 
         with self.assertRaises(RuntimeError):
@@ -59,8 +58,29 @@ class TestUgridGui(unittest.TestCase):
                              properties=None, check_shells=True, check_solids=False, log=log)
         #assert os.path.exists(ugrid_filename), ugrid_filename
         #test = UGRID_GUI()
-        #test.load_ugrid_geometry(ugrid_filename, name='main',
-                                 #plot=True)
+        #test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
+
+    def test_ugrid2d_gui(self):
+        """simple UGRID2D model"""
+        ugrid_filename = 'quad_tri.ugrid'
+        msg = (
+            #(nnodes, ntrias, nquads), ntets, npyram5, npenta6, nhexas8s
+            '5 1 1   0 0 0 0\n'
+            '0. 0. 0.\n'
+            '1. 0. 0.\n'
+            '1. 1. 0.\n'
+            '0. 1. 0.\n'
+            '0. 2. 0.\n'
+            '3 4 5\n'
+            '1 2 3 4\n'
+        )
+        with open(ugrid_filename, 'w') as ugrid_file:
+            ugrid_file.write(msg)
+
+        log = get_logger(level='warning')
+        test = UGRID_GUI()
+        test.log = log
+        test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

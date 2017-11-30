@@ -1,4 +1,5 @@
 import os
+import unittest
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.tecplot.tecplot_io import TecplotIO
@@ -7,7 +8,6 @@ import pyNastran
 pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'tecplot')
 
-import unittest
 
 class TecplotGUI(TecplotIO, FakeGUIMethods):
     def __init__(self):

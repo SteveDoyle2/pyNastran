@@ -937,9 +937,9 @@ class OP2(object):
                 startpos = pos + 8 + self._ibytes
                 bytes_per_mode = self._fileh.tell() - startpos
                 dbdir = self.dbnames[name]
-                for i in range(len(dbdir)):
-                    if dbdir[i][0][0] < startpos < dbdir[i][0][1]:
-                        endpos = dbdir[i][0][1]
+                for i, dbdiri in enumerate(dbdir):
+                    if dbdiri[0][0] < startpos < dbdiri[0][1]:
+                        endpos = dbdiri[0][1]
                         break
                 nmodes = (endpos - startpos) // bytes_per_mode
                 print('Number of modes in OUGV1 is {0:d}'.format(nmodes))

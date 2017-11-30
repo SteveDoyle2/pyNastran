@@ -527,13 +527,16 @@ class WriteMesh(BDFAttributes):
                 msg.append(suport.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
-        if self.spcs or self.spcoffs:
+        if self.spcs or self.spcadds or self.spcoffs:
             #msg = ['$SPCs\n']
             #str_spc = str(self.spcObject) # old
             #if str_spc:
                 #msg.append(str_spc)
             #else:
             msg = ['$SPCs\n']
+            for (unused_id, spcadds) in sorted(iteritems(self.spcadds)):
+                for spcadd in spcadds:
+                    msg.append(str(spcadd))
             for (unused_id, spcs) in sorted(iteritems(self.spcs)):
                 for spc in spcs:
                     msg.append(str(spc))
@@ -542,8 +545,11 @@ class WriteMesh(BDFAttributes):
                     msg.append(str(spc))
             bdf_file.write(''.join(msg))
 
-        if self.mpcs:
+        if self.mpcs or self.mpcadds:
             msg = ['$MPCs\n']
+            for (unused_id, mpcadds) in sorted(iteritems(self.mpcadds)):
+                for mpcadd in mpcadds:
+                    msg.append(str(mpcadd))
             for (unused_id, mpcs) in sorted(iteritems(self.mpcs)):
                 for mpc in mpcs:
                     msg.append(mpc.write_card(size, is_double))
@@ -652,8 +658,16 @@ class WriteMesh(BDFAttributes):
     def _write_loads(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
         """Writes the load cards sorted by ID"""
-        if self.loads or self.tempds:
+        if self.load_combinations or self.loads or self.tempds:
             msg = ['$LOADS\n']
+            for (key, load_combinations) in sorted(iteritems(self.load_combinations)):
+                for load_combination in load_combinations:
+                    try:
+                        msg.append(load_combination.write_card(size, is_double))
+                    except:
+                        print('failed printing load...type=%s key=%r'
+                              % (load_combination.type, key))
+                        raise
             for (key, loadcase) in sorted(iteritems(self.loads)):
                 for load in loadcase:
                     try:
@@ -665,7 +679,11 @@ class WriteMesh(BDFAttributes):
             for key, tempd in sorted(iteritems(self.tempds)):
                 msg.append(tempd.write_card(size, is_double))
             bdf_file.write(''.join(msg))
+        self._write_dloads(bdf_file, size=size, is_double=is_double)
 
+    def _write_dloads(self, bdf_file, size=8, is_double=False):
+    # type: (Any, int, bool) -> None
+        """Writes the dload cards sorted by ID"""
         if self.dloads or self.dload_entries:
             msg = ['$DLOADS\n']
             for (key, loadcase) in sorted(iteritems(self.dloads)):
@@ -752,9 +770,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_nodes(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
-        """
-        Writes the NODE-type cards
-        """
+        """Writes the NODE-type cards"""
         if self.spoints:
             msg = []  # type: List[str]
             msg.append('$SPOINTS\n')
@@ -776,6 +792,16 @@ class WriteMesh(BDFAttributes):
             for nid, ringax_pointax in iteritems(self.ringaxs):
                 bdf_file.write(ringax_pointax.write_card(size, is_double))
 
+        self._write_grids(bdf_file, size=size, is_double=is_double)
+        if self.seqgp:
+            bdf_file.write(self.seqgp.write_card(size, is_double))
+
+        #if 0:  # not finished
+            #self._write_nodes_associated(bdf_file, size, is_double)
+
+    def _write_grids(self, bdf_file, size=8, is_double=False):
+        # type: (Any, int, bool) -> None
+        """Writes the GRID-type cards"""
         if self.nodes:
             msg = []
             msg.append('$NODES\n')
@@ -789,11 +815,6 @@ class WriteMesh(BDFAttributes):
                 for (unused_nid, node) in sorted(iteritems(self.nodes)):
                     msg.append(node.write_card(size, is_double))
             bdf_file.write(''.join(msg))
-        if self.seqgp:
-            bdf_file.write(self.seqgp.write_card(size, is_double))
-
-        #if 0:  # not finished
-            #self._write_nodes_associated(bdf_file, size, is_double)
 
     #def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
         #"""

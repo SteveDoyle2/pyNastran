@@ -1,15 +1,15 @@
 from __future__ import print_function
 import os
 import unittest
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, get_logger2
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
-from pyNastran.utils.dev import get_files_of_type
+#from pyNastran.utils.dev import get_files_of_type
 
 import pyNastran
-pkg_path = pyNastran.__path__[0]
-model_path = os.path.join(pkg_path, '..', 'models')
-test_path = os.path.join(pkg_path, 'bdf', 'test')
-unit_path = os.path.join(test_path, 'unit')
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
+UNIT_PATH = os.path.join(TEST_PATH, 'unit')
 
 class TestRenumber(unittest.TestCase):
     def test_renumber_01(self):
@@ -80,25 +80,27 @@ class TestRenumber(unittest.TestCase):
         os.remove(bdf_filename_renumber)
 
     def test_renumber_02(self):
-        bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm.dat')
-        bdf_filename_renumber = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm_renumber.dat')
-        bdf_filename_check = os.path.join(model_path, 'iSat', 'ISat_Dploy_Sm_check.dat')
-        check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
+        bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm.dat')
+        bdf_filename_renumber = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm_renumber.dat')
+        bdf_filename_check = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm_check.dat')
+        log = get_logger2(debug=None)
+        check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check, log=log)
 
     def test_renumber_03(self):
-        bdf_filename = os.path.join(model_path, 'cbush', 'cbush.dat')
-        bdf_filename_renumber = os.path.join(model_path, 'cbush', 'cbush_renumber.dat')
-        bdf_filename_check = os.path.join(model_path, 'cbush', 'cbush_check.dat')
+        bdf_filename = os.path.join(MODEL_PATH, 'cbush', 'cbush.dat')
+        bdf_filename_renumber = os.path.join(MODEL_PATH, 'cbush', 'cbush_renumber.dat')
+        bdf_filename_check = os.path.join(MODEL_PATH, 'cbush', 'cbush_check.dat')
         check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
 
     def test_renumber_04(self):
-        bdf_filename = os.path.join(model_path, 'complex', 'tet10', 'Simple_Example.bdf')
-        bdf_filename_renumber = os.path.join(model_path, 'complex', 'tet10', 'Simple_Example_renumber.bdf')
-        bdf_filename_check = os.path.join(model_path, 'complex', 'tet10', 'Simple_Example_check.bdf')
+        dirname = os.path.join(MODEL_PATH, 'complex', 'tet10')
+        bdf_filename = os.path.join(dirname, 'Simple_Example.bdf')
+        bdf_filename_renumber = os.path.join(dirname, 'Simple_Example_renumber.bdf')
+        bdf_filename_check = os.path.join(dirname, 'Simple_Example_check.bdf')
         check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
 
     #def test_renumber_05(self):
-        #dirname = os.path.join(unit_path, 'obscure')
+        #dirname = os.path.join(UNIT_PATH, 'obscure')
         #bdf_filenames = get_files_of_type(dirname, extension='.bdf')
         #for bdf_filename in bdf_filenames:
             #print('bdf_filename = %s' % (bdf_filename))
@@ -109,15 +111,16 @@ class TestRenumber(unittest.TestCase):
             #check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
 
 
-def check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check):
+def check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check,
+                   log=None):
     """renumbers the file, then reloads both it and the renumbered deck"""
     bdf_renumber(bdf_filename, bdf_filename_renumber)
 
-    model = BDF(debug=False)
+    model = BDF(debug=False, log=log)
     model.read_bdf(bdf_filename)
     model.write_bdf(bdf_filename_check, interspersed=False)
 
-    model = BDF(debug=False)
+    model = BDF(debug=False, log=log)
     model.read_bdf(bdf_filename_renumber)
 
     os.remove(bdf_filename_renumber)

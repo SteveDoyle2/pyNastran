@@ -4,25 +4,26 @@ from six import integer_types
 from six.moves import range
 import numpy as np
 from numpy import zeros, allclose
-
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header # get_key0,
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header # get_key0,
 
 
 class ComplexRodArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
-
         self.nelements = 0  # result specific
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -68,7 +69,7 @@ class ComplexRodArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
@@ -84,7 +85,7 @@ class ComplexRodArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -105,7 +106,7 @@ class ComplexRodArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -157,34 +158,36 @@ class ComplexRodArray(OES_Object):
         ind = np.searchsorted(eids, self.element)
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def get_f06_header(self):
+        raise NotImplementedError('overwrite this')
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase)
 
-        if self.is_sort1():
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp, is_mag_phase)
+        if self.is_sort1:
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp, is_mag_phase)
         else:
             raise NotImplementedError()
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp, is_mag_phase):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp, is_mag_phase):
         ntimes = self.data.shape[0]
 
         eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             axial = self.data[itime, :, 0]
             torsion = self.data[itime, :, 1]
             for eid, iaxial, itorsion in zip(eids, axial, torsion):
                 [axialr, torsionr, axiali, torsioni] = write_imag_floats_13e([iaxial, itorsion], is_mag_phase)
-                f.write('                %8i                 %-13s / %-13s                 %-13s / %s\n' % (
+                f06_file.write('                %8i                 %-13s / %-13s                 %-13s / %s\n' % (
                     eid, axialr, axiali, torsionr, torsioni))
 
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

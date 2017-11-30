@@ -294,7 +294,12 @@ class TestAero(unittest.TestCase):
         with self.assertRaises(TypeError):
             aero.validate()
 
+    def test_aero_2(self):
+        """checks the AERO card"""
         acsid = 0
+        velocity = None
+        cref = 1.0
+        rho_ref = 1.0
         aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=0., sym_xy=0,
                     comment='aero card')
         with self.assertRaises(TypeError):
@@ -429,7 +434,7 @@ class TestAero(unittest.TestCase):
         bref = 2.0
         sref = 100.
         aeros = model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0,
-                       sym_xy=0, comment='aeros')
+                                sym_xy=0, comment='aeros')
         aeros.validate()
         aeros.write_card()
         model.aeros = aeros
@@ -558,7 +563,7 @@ class TestAero(unittest.TestCase):
         cref = 1.0
         rho_ref = 1.225
         model.add_aero(velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0,
-                      comment='')
+                       comment='')
 
         setg = 42
         ids = [100, 101, 102]
@@ -947,8 +952,15 @@ class TestAero(unittest.TestCase):
         bdf_card = BDFCard(card, has_none=True)
         caero4a = CAERO4.add_card(bdf_card, comment='msg')
         caero4a.validate()
+        npoints, nelements = caero4a.get_npanel_points_elements()
+        assert npoints == 10, npoints
+        assert nelements == 4, nelements
         caero4a.write_card()
         caero4a.raw_fields()
+
+        #caero4a.cross_reference(model)
+        #points, elements = caero4a.panel_points_elements()
+        #del points, elements
 
         p1 = [x1, y1, z1]
         p4 = [x4, y4, z4]
@@ -962,12 +974,16 @@ class TestAero(unittest.TestCase):
         caero4b.cross_reference(model)
         caero4b.write_card()
         caero4b.raw_fields()
+        points, elements = caero4b.panel_points_elements()
+        del points, elements
+
         p1, p2, p3, p4 = caero4b.get_points()
 
         caero4c = CAERO4(eid, pid, p1, x12, p4, x43,
                          cp=0,nspan=0, lspan=0,
                          comment='caero4c')
         with self.assertRaises(RuntimeError):
+            # nspan=lspan=0
             caero4c.validate()
 
 
@@ -988,7 +1004,7 @@ class TestAero(unittest.TestCase):
         caoci = [0., 0.5, 1.0]
         paero5 = model.add_paero5(pid, caoci,
                                   nalpha=0, lalpha=0, nxis=0, lxis=0,
-                                 ntaus=0, ltaus=0, comment='paero5')
+                                  ntaus=0, ltaus=0, comment='paero5')
         paero5.validate()
 
         #| PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
@@ -1127,6 +1143,7 @@ class TestAero(unittest.TestCase):
         save_load_deck(model)
 
     def test_spline4(self):
+        """checks the SPLINE4 card"""
         model = BDF(debug=False)
         eid = 1
         caero = 10
@@ -1137,8 +1154,9 @@ class TestAero(unittest.TestCase):
         usage = 'FORCE'
         nelements = 4
         melements = 5
-        model.add_spline4(eid, caero, aelist, setg, dz, method, usage,
-                          nelements, melements, comment='spline4')
+        spline = model.add_spline4(eid, caero, aelist, setg, dz, method, usage,
+                                   nelements, melements, comment='spline4')
+        spline.raw_fields()
 
         elements = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         model.add_aelist(aelist, elements)
@@ -1150,8 +1168,8 @@ class TestAero(unittest.TestCase):
         p4 = [0., 10., 0.]
         x43 = 3.
         model.add_caero1(caero, paero, igid, p1, x12, p4, x43, cp=0, nspan=5,
-                        lspan=0, nchord=10, lchord=0,
-                        comment='')
+                         lspan=0, nchord=10, lchord=0,
+                         comment='')
         model.add_paero1(paero)
 
         velocity = None
@@ -1165,12 +1183,24 @@ class TestAero(unittest.TestCase):
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 0.])
 
+        eid = 2
+        setg = 13
+        ids = [1, 2]
+        model.add_set1(setg, ids)
+        model.add_spline4(eid, caero, aelist, setg, dz, method, usage,
+                          nelements, melements, comment='spline4')
+        spline = model.splines[eid]
+        del model.splines[eid]
+        with self.assertRaises(ValueError):
+            spline.cross_reference(model)
+
         model.pop_parse_errors()
         model.pop_xref_errors()
         model.validate()
         save_load_deck(model)
 
     def test_spline5(self):
+        """checks the SPLINE5 card"""
         model = BDF(debug=False)
         eid = 1
         caero = 10
@@ -1184,9 +1214,10 @@ class TestAero(unittest.TestCase):
         #nelements = 4
         #melements = 5
         #dtor = 47
-        model.add_spline5(eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0,
-                          cid=0, usage='BOTH', method='BEAM', ftype='WF2',
-                          rcore=None, comment='')
+        spline = model.add_spline5(eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0,
+                                   cid=0, usage='BOTH', method='BEAM', ftype='WF2',
+                                   rcore=None, comment='')
+        spline.raw_fields()
 
         elements = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         model.add_aelist(aelist, elements)
@@ -1198,8 +1229,8 @@ class TestAero(unittest.TestCase):
         p4 = [0., 10., 0.]
         x43 = 3.
         model.add_caero1(caero, paero, igid, p1, x12, p4, x43, cp=0, nspan=5,
-                        lspan=0, nchord=10, lchord=0,
-                        comment='')
+                         lspan=0, nchord=10, lchord=0,
+                         comment='')
         model.add_paero1(paero)
 
         velocity = None
@@ -1300,29 +1331,40 @@ class TestAero(unittest.TestCase):
         ivelocity = 78
 
         # density, mach, velocity
-        flutter1 = FLUTTER(sid, method, idensity, imach, ivelocity)
+        flutter1 = model.add_flutter(sid, method, idensity, imach, ivelocity,
+                                     imethod='L', nvalue=None,
+                                     omax=None, epsilon=1.0e-3)
         flutter2 = FLUTTER.add_card(BDFCard(['FLUTTER', sid, method, idensity, imach,
                                              ivelocity]), comment='flutter card')
         assert flutter2.headers == ['density', 'mach', 'velocity'], flutter2.headers
 
+        assert flutter1.get_field(1) == sid, flutter1.get_field(1)
+        assert flutter1.get_field(2) == 'PKNL', flutter1.get_field(2)
+        assert flutter1.get_field(3) == idensity, flutter1.get_field(3)
+        assert flutter1.get_field(4) == imach, flutter1.get_field(4)
+        assert flutter1.get_field(5) == ivelocity, flutter1.get_field(5)
+        assert flutter1.get_field(6) == 'L', flutter1.get_field(6)
+        assert flutter1.get_field(7) is None, flutter1.get_field(7)
+        assert flutter1.get_field(8) == 1.0e-3, flutter1.get_field(8)
+        with self.assertRaises(KeyError):
+            assert flutter1.get_field(9) == 1.0e-3, flutter1.get_field(9)
         flutter1.validate()
         flutter1.write_card()
         flutter2.validate()
         flutter2.write_card()
-        model.flutters[75] = flutter1
 
         densities = np.linspace(0., 1.)
-        density = FLFACT(idensity, densities)
-        model.flfacts[idensity] = density
+        density = model.add_flfact(idensity, densities)
 
         machs = np.linspace(0.7, 0.8)
         mach = FLFACT(imach, machs)
         mach = FLFACT.add_card(BDFCard(['FLFACT', imach] + list(machs)), comment='flfact card')
+        mach2 = model.add_flfact(imach, machs, comment='flfact')
         mach.write_card(size=16)
-        model.flfacts[imach] = mach
+        mach2.write_card(size=8)
 
         velocities = np.linspace(3., 4.)
-        velocity = FLFACT(ivelocity, velocities)
+        velocity = model.add_flfact(ivelocity, velocities)
         velocity.validate()
         velocity.write_card()
         assert velocity.min() == 3., velocities
@@ -1359,10 +1401,20 @@ class TestAero(unittest.TestCase):
         assert kfreq.max() == 20., 'max=%s; factors=%s' % (kfreq.max(), factors)
         model.flfacts[ikfreq] = kfreq
 
+        ikfreq4 = 82
+        kfreq = model.add_flfact(ikfreq4, [])
+        with self.assertRaises(ValueError):
+            kfreq.validate()
+        kfreq.write_card()
+
         # density, mach, rfreq
         card = ['FLUTTER', 85, 'KE', idensity, imach, ikfreq]
         model.add_card(card, card[0])
+
+        #model.pop_parse_errors()
         model.cross_reference()
+        model.pop_xref_errors()
+
         flutter = model.Flutter(85)
         assert flutter.headers == ['density', 'mach', 'reduced_frequency'], flutter.headers
         flutter.write_card()
@@ -1417,6 +1469,23 @@ class TestAero(unittest.TestCase):
             msg += 'expected=%r\n%s' % (str(line2), msg)
             assert line1 == line2, msg
 
+        mkaerob = model.add_mkaero1([], reduced_freqs)
+        with self.assertRaises(ValueError):
+            mkaerob.validate()
+        with self.assertRaises(ValueError):
+            mkaerob.write_card()
+
+        mkaeroc = model.add_mkaero1([0.1, 0.2], [])
+        with self.assertRaises(ValueError):
+            mkaeroc.validate()
+        with self.assertRaises(ValueError):
+            mkaeroc.write_card()
+
+        # TODO: this fails...because it's linked to the first card somehow
+        #mkaerod = model.add_mkaero1(machs, [])
+        #with self.assertRaises(ValueError):
+            #mkaerod.write_card()
+
     def test_mkaero2(self):
         """checks the MKAERO2 card"""
         model = BDF()
@@ -1464,6 +1533,24 @@ class TestAero(unittest.TestCase):
         mkaero = MKAERO2(machs, reduced_freqs)
         mkaero.validate()
         mkaero.write_card()
+
+        mkaerob = model.add_mkaero2([], reduced_freqs)
+        with self.assertRaises(ValueError):
+            mkaerob.validate()
+        with self.assertRaises(ValueError):
+            mkaerob.write_card()
+
+        mkaeroc = model.add_mkaero2([0.1, 0.2], [])
+        with self.assertRaises(ValueError):
+            mkaeroc.validate()
+        with self.assertRaises(ValueError):
+            mkaeroc.write_card()
+
+        mkaeroc = model.add_mkaero2([], [])
+        with self.assertRaises(ValueError):
+            mkaeroc.validate()
+        with self.assertRaises(ValueError):
+            mkaeroc.write_card()
 
 
     def test_diverg(self):
@@ -1627,12 +1714,6 @@ class TestAero(unittest.TestCase):
     def test_csschd(self):
         """checks the CSSCHD card"""
         model = BDF(debug=None)
-        #sid = 10
-        #aesid = 0
-        #lalpha = None
-        #lmach = None
-        #lschd = None
-
         sid = 5
         aesid = 50
         lalpha = 12
@@ -1738,8 +1819,8 @@ class TestAero(unittest.TestCase):
         grid_set = 43
         elem_set = 44
         monpnt3 = model.add_monpnt3(name, label, axes, grid_set, elem_set,
-                                   xyz, cp=0, cd=None,
-                                   xflag=None, comment='monpnt3')
+                                    xyz, cp=0, cd=None,
+                                    xflag=None, comment='monpnt3')
         monpnt3.raw_fields()
         monpnt3.validate()
 
@@ -1755,14 +1836,14 @@ class TestAero(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')
         folder = ''
         run_bdf(folder, bdf_filename, debug=False, xref=True, check=True,
-               punch=False, cid=None, mesh_form='combined',
-               is_folder=False, print_stats=False,
-               encoding=None, sum_load=True, size=8,
-               is_double=False, stop=False, nastran='',
-               post=-1, dynamic_vars=None, quiet=True,
-               dumplines=False, dictsort=False,
-               run_extract_bodies=True, nerrors=0, dev=True,
-               crash_cards=None, pickle_obj=True)
+                punch=False, cid=None, mesh_form='combined',
+                is_folder=False, print_stats=False,
+                encoding=None, sum_load=True, size=8,
+                is_double=False, stop=False, nastran='',
+                post=-1, dynamic_vars=None, quiet=True,
+                dumplines=False, dictsort=False,
+                run_extract_bodies=True, nerrors=0, dev=True,
+                crash_cards=None, pickle_obj=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -1,3 +1,26 @@
+"""
+defines:
+ - TableObject
+ - RealTableArray
+ - ComplexTableArray
+
+these are used by:
+ - RealDisplacementArray
+ - RealVelocityArray
+ - RealAccelerationArray
+ - RealEigenvaluesArray
+ - RealSPCForcesArray
+ - RealMPCForcesArray
+ - RealAppliedLoadsArray
+
+ - ComplexDisplacementArray
+ - ComplexVelocityArray
+ - ComplexAccelerationArray
+ - ComplexEigenvaluesArray
+ - ComplexSPCForcesArray
+ - ComplexMPCForcesArray
+ - ComplexAppliedLoadsArray
+"""
 from __future__ import print_function, unicode_literals
 import copy
 from struct import Struct, pack
@@ -38,20 +61,22 @@ def append_sort1_sort2(data1, data2, to_sort1=True):
         out = hstack([
             swapaxes(data1, 0, 1),
             data2,])
-    #print(data1.shape)
-    #print(data2.shape)
-    #print(out.shape)
     return out
 
 class TableArray(ScalarObject):  # displacement style table
+    """
+    Base class for:
+     - RealTableArray
+     - ComplexTableArray
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = None
         self.table_name = None
         self.approach_code = None
         self.analysis_code = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
-        self.is_sort1()
-        self.is_sort2()
+        self.is_sort1
+        self.is_sort2
         #self.dt = dt
 
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -65,7 +90,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_gridtype, table.node_gridtype):
             assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -82,7 +107,7 @@ class TableArray(ScalarObject):  # displacement style table
             i = 0
             atols = []
             rtols = []
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     msg += '(nid, gridtype); itime=%s\n' % itime
                     msg += '(tx, ty, tz, rx, ry, rz)\n'
@@ -111,7 +136,7 @@ class TableArray(ScalarObject):  # displacement style table
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 msg += 'atol.max() = %s\n' % max(atols)
                 msg += 'rtol.max() = %s\n' % max(rtols)
@@ -121,7 +146,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def combine(self, result, is_sort1=True):
         #print("combine; result=%s" % result)
-        assert self.is_sort1() != result.is_sort1()
+        assert self.is_sort1 != result.is_sort1
         assert self.nonlinear_factor is not None
         assert result.nonlinear_factor is not None
         # self.ntimes += result.ntimes
@@ -157,7 +182,7 @@ class TableArray(ScalarObject):  # displacement style table
 
         nmajor = self.ntimes
         nminor = self.ntotal
-        if self.is_sort1():
+        if self.is_sort1:
             assert nmajor == ntimes, 'ntimes=%s expected=%s' % (nmajor, ntimes)
             assert nminor == ntotal, 'ntotal=%s expected=%s' % (nminor, nnodes)
         else:
@@ -200,7 +225,7 @@ class TableArray(ScalarObject):  # displacement style table
 
     def build(self):
         """sizes the vectorized attributes of the TableArray"""
-        #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1(),
+        #print('_nnodes=%s ntimes=%s sort1?=%s ntotal=%s -> _nnodes=%s' % (self._nnodes, self.ntimes, self.is_sort1,
                                                                           #self.ntotal, self._nnodes // self.ntimes))
         if self.is_built:
             #print("resetting...")
@@ -228,14 +253,14 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal = 0
         self.is_built = True
 
-        if self.is_sort1():
+        if self.is_sort1:
             ntimes = self.ntimes
             nnodes = self.ntotal
             ntotal = self.ntotal
             nx = ntimes
             ny = nnodes
             #print("ntimes=%s nnodes=%s" % (ntimes, nnodes))
-        elif self.is_sort2():
+        elif self.is_sort2:
             nnodes = self.ntimes
             ntimes = self.ntotal
             ntotal = self.ntotal
@@ -344,68 +369,11 @@ class TableArray(ScalarObject):  # displacement style table
             i = where(gridtypes == ugridtype)
             self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
 
-    def _write_xlsx(self, sheet, is_mag_phase=False):
-        from xlwings import Range, Chart
-        # 0.3.5 doesn't work, 0.5 does
-        #from numpy import astype
-        # print('xlsx_filename = %r' % xlsx_filename)
-        #f = None
-        #wb = Workbook()  # Creates a connection with a new workbook
-        #wb.save(xlsx_filename)
-        #Range('A1').value = 'Foo 1'
-        #print(Range('A1').value)
-        #'Foo 1'
-        # Range('A1').value = xlsx_filename
-        name = str(self.__class__.__name__)
-        Range(sheet, 'A1').value = [name]
-        Range(sheet, 'A2').value = ['Node', 'GridType'] + self.headers
-        Range(sheet, 'A3').value = self.node_gridtype
-
-        if self.is_real():
-            Range(sheet, 'C3').value = self.data[0, :, :]
-        else:
-            pass
-            #from numpy.core.defchararray import add as sadd
-            #n, m = self.data[0, :, :].shape
-            #nm = n * m
-            #scomplex = array(['=complex('] * nm, dtype='|S10').reshape(n, m)
-            #scomma = array([','] * nm, dtype='|S40').reshape(n, m)
-            #sparen = array([')'] * nm, dtype='|S40').reshape(n, m)
-            #data = sadd(
-                #sadd(scomplex, self.data.real.astype('|S10')), # complex(5.
-                #sadd(
-                    #scomma, # ,
-                    #sadd(self.data.imag.astype('|U10'), sparen), # 3j)
-                #)
-            #)
-            #data = sadd(
-                #scomplex,
-                #self.data.real.astype('|S10'),
-                #scomma,
-                #self.data.imag.astype('|S10'),
-                #sparen)
-            #print(self.data.real)
-            #Range(sheet, 'C3', atleast_2d=True).table.value = self.data.real
-            #Range(sheet, 'C3').value = self.data.real
-        #Range('C4').value = self.data[0, :, 0]
-        #Range('D4').value = self.data[0, :, 1:]
-        #print(Range('A1').table.value)  # or: Range('A1:C2').value
-        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        #print(Sheet(1).name)
-        #Sheet(isheet).name = 'displacements'
-        #'Sheet1'
-        #nrows = self.data.shape[1]
-        #end_row = '%s' % (4 + nrows)
-        #t1 = self.data[0, :, 0]
-        #chart = Chart.add(source_data=Range('C4').value)
-        #wb.save()
-        # wb.save()
-
-
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        """
         # itotal - the node number
         # itime - the time/frequency step
-
+        """
         # the times/freqs
         self._times[self.itime] = dt
         self.node_gridtype[self.itotal, :] = [node_id, grid_type]
@@ -413,8 +381,8 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
 
     def add_sort2(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
-        msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
-        msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
+        #msg = "dt=%s node_id=%s v1=%s v2=%s v3=%s\n" % (dt, node_id, v1, v2, v3)
+        #msg += "                    v4=%s v5=%s v6=%s" % (v4, v5, v6)
         self._times[self.itotal] = dt
 
         if 1:  # this is needed for SORT1 tables
@@ -432,23 +400,19 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
         #self.itime += 1
 
-#def two_dee_string_add(string_lists):
-    #string0 = string_lists[0]
-    #n, m = string0.shape
 
-    #s = []
-    #for string_list in string_lists:
-        #for string in string_list:
-            #pass
-    #return sumned
-
-class RealTableArray(TableArray):  # displacement style table
+class RealTableArray(TableArray):
+    """
+    displacement style table
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -589,19 +553,6 @@ class RealTableArray(TableArray):  # displacement style table
         f.write(pack(b'%ii' % len(header), *header))
         return itable
 
-    #def spike():
-        #import xlwings as xw
-        #wb = xw.Workbook()  # Creates a connection with a new workbook
-        #xw.Range('A1').value = 'Foo 1'
-        #xw.Range('A1').value
-        #'Foo 1'
-        #xw.Range('A1').value = [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        #xw.Range('A1').table.value  # or: Range('A1:C2').value
-        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        #xw.Sheet(1).name
-        #'Sheet1'
-        #chart = xw.Chart.add(source_data=xw.Range('A1').table)
-
 
     def write_csv(self, csv_file, is_mag_phase=False):
         name = str(self.__class__.__name__)
@@ -615,7 +566,7 @@ class RealTableArray(TableArray):  # displacement style table
 
         # sort1 as sort1
         for itime in range(self.ntimes):
-            dt = self._times[itime]
+            #dt = self._times[itime]
             t1 = self.data[itime, :, 0]
             t2 = self.data[itime, :, 1]
             t3 = self.data[itime, :, 2]
@@ -672,17 +623,11 @@ class RealTableArray(TableArray):  # displacement style table
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                if sgridtype == 'G':
+                if sgridtype in ['G', 'H', 'L']:
                     f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
                     f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
-                elif sgridtype == 'H':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
-                elif sgridtype == 'L':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 else:
                     raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
@@ -713,14 +658,10 @@ class RealTableArray(TableArray):  # displacement style table
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                if sgridtype == 'G':
+                if sgridtype in ['G', 'H', 'L']:
                     f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
                     f.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
-                elif sgridtype == 'H':
-                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
-                elif sgridtype == 'L':
-                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
                 else:
                     raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
@@ -746,17 +687,11 @@ class RealTableArray(TableArray):  # displacement style table
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                if sgridtype == 'G':
+                if sgridtype in ['G', 'H', 'L']:
                     f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
                     f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
-                elif sgridtype == 'H':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
-                elif sgridtype == 'L':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                        write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 else:
                     raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
@@ -773,7 +708,7 @@ class RealTableArray(TableArray):  # displacement style table
             header.append('')
 
         is_sort2 = not is_sort1
-        if self.is_sort1() or self.nonlinear_factor is None:
+        if self.is_sort1 or self.nonlinear_factor is None:
             if is_sort2 and self.nonlinear_factor is not None:
                 page_num = self._write_sort1_as_sort2(f, page_num, page_stamp, header, words)
             else:
@@ -792,7 +727,10 @@ class RealTableArray(TableArray):  # displacement style table
         return self.data[:, inids, i]
 
 
-class ComplexTableArray(TableArray):  # displacement style table
+class ComplexTableArray(TableArray):
+    """
+    complex displacement style table
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -831,9 +769,11 @@ class ComplexTableArray(TableArray):  # displacement style table
         else:
             raise RuntimeError()
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -853,7 +793,7 @@ class ComplexTableArray(TableArray):  # displacement style table
         if not len(header) >= 3:
             header.append('')
 
-        #is_sort1_table = self.is_sort1()
+        #is_sort1_table = self.is_sort1
         is_sort1_table = self.table_name[-1] == '1'
         if is_sort1_table:
             if is_sort1:

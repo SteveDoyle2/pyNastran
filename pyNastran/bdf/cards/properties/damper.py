@@ -32,11 +32,24 @@ class DamperProperty(Property):
 
 
 class PDAMP(DamperProperty):
+    """
+    +-------+------+-----+------+----+------+----+------+----+
+    |   1   |  2   |  3  |   4  | 5  |  6   |  7 |   8  |  9 |
+    +=======+======+=====+======+====+======+====+======+====+
+    | PDAMP | PID1 | B1  | PID2 | B2 | PID3 | B3 | PID4 | B4 |
+    +-------+------+-----+------+----+------+----+------+----+
+    | PDAMP |  1   | 2.0 |      |    |      |    |      |    |
+    +-------+------+-----+------+----+------+----+------+----+
+    """
     type = 'PDAMP'
     _field_map = {
         1: 'pid', 2:'b',
     }
-
+    pname_fid_map = {
+        # 1-based
+        3 : 'b',
+        'B1' : 'b',
+    }
     def __init__(self, pid, b, comment=''):
         DamperProperty.__init__(self)
         if comment:
@@ -211,6 +224,11 @@ class PDAMPT(DamperProperty):
     _field_map = {
         1: 'pid', 2:'tbid',
     }
+    pname_fid_map = {
+        # 1-based
+        #3 : 'b',
+        #'B1' : 'b',
+    }
 
     def __init__(self, pid, tbid, comment=''):
         DamperProperty.__init__(self)
@@ -297,9 +315,24 @@ class PDAMPT(DamperProperty):
 
 
 class PVISC(DamperProperty):
+    """
+    Viscous Damping Element Property
+    Defines properties of a one-dimensional viscous damping element (CVISC entry).
+
+    +-------+------+-----+------+------+-----+-----+
+    |   1   |  2   |  3  |  4   |   5  |  6  |  7  |
+    +=======+======+=====+======+======+=====+=====+
+    | PVISC | PID1 | CE1 | CR1  | PID2 | CE2 | CR2 |
+    +-------+------+-----+------+------+-----+-----+
+    | PVISC |  3   | 6.2 | 3.94 |      |     |     |
+    +-------+------+-----+------+------+-----+-----+
+    """
     type = 'PVISC'
     _field_map = {
         1: 'pid', 2:'ce', 3:'cr',
+    }
+    pname_fid_map = {
+        'CE1' : 'ce',
     }
 
     def __init__(self, pid, ce, cr, comment=''):
@@ -311,9 +344,9 @@ class PVISC(DamperProperty):
         pid : int
             property id for a CVISC
         ce : float
-            ???
+            Viscous damping values for extension in units of force per unit velocity
         cr : float
-            ???
+            Viscous damping values for rotation in units of moment per unit velocity.
         comment : str; default=''
             a comment for the card
         """

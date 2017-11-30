@@ -3,14 +3,11 @@ Defines the GUI IO file for Tetegen.
 """
 from __future__ import print_function
 import os
-#from six import iteritems
-from six.moves import range
-
-import vtk
-from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.tetgen.tetgen import Tetgen
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class TetgenIO(object):
@@ -32,11 +29,12 @@ class TetgenIO(object):
         model = Tetgen(log=self.log, debug=False)
 
         base_filename, ext = os.path.splitext(smesh_filename)
+        ext = ext.lower()
         node_filename = base_filename + '.node'
         ele_filename = base_filename + '.ele'
-        if '.smesh' == ext:
+        if ext == '.smesh':
             dimension_flag = 2
-        elif '.ele' == ext:
+        elif ext == '.ele':
             dimension_flag = 3
         else:
             raise RuntimeError('unsupported extension.  Use "smesh" or "ele".')
@@ -45,7 +43,7 @@ class TetgenIO(object):
         tris = model.tris
         tets = model.tets
 
-        self.nNodes = nodes.shape[0]
+        self.nnodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if dimension_flag == 2:
@@ -54,26 +52,26 @@ class TetgenIO(object):
             ntets = tets.shape[0]
         else:
             raise RuntimeError()
-        self.nElements = ntris + ntets
+        self.nelements = ntris + ntets
 
-        #print("nNodes = ",self.nNodes)
-        #print("nElements = ", self.nElements)
+        #print("nnodes = ",self.nnodes)
+        #print("nelements = ", self.nelements)
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         assert nodes is not None
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         self.nid_map = {}
 
         #elements -= 1
         if dimension_flag == 2:
             etype = 5  # vtkTriangle().GetCellType()
-            self.create_vtk_cells_of_constant_element_type(grid, tris, etype)
+            create_vtk_cells_of_constant_element_type(grid, tris, etype)
         elif dimension_flag == 3:
             etype = 10  # vtkTetra().GetCellType()
-            self.create_vtk_cells_of_constant_element_type(grid, tets, etype)
+            create_vtk_cells_of_constant_element_type(grid, tets, etype)
         else:
             raise RuntimeError('dimension_flag=%r; expected=[2, 3]' % dimension_flag)
 

@@ -1,3 +1,7 @@
+"""
+defines:
+ - TestCoords
+"""
 from __future__ import print_function
 import unittest
 from six import iteritems
@@ -10,7 +14,9 @@ from pyNastran.bdf.cards.coordinate_systems import define_coord_e123
 
 
 class TestCoords(unittest.TestCase):
+    """tests the coordinate systems and their transforms"""
     def test_same(self):
+        """simple coordinate equality test"""
         grids = [
             [1, 0, 0., 0., 1.],
             [2, 0, 0., 1., 0.],
@@ -23,6 +29,7 @@ class TestCoords(unittest.TestCase):
         get_nodes(grids, grids_expected, coords)
 
     def test_shift(self):
+        """simple coordinate test of origin shifting"""
         grids = [
             [1, 1, 0., 0., 1.],
             [2, 1, 0., 1., 0.],
@@ -44,6 +51,7 @@ class TestCoords(unittest.TestCase):
         get_nodes(grids, grids_expected, coords)
 
     def test_rotate(self):
+        """simple coordinate test of 90 degree rotations"""
         grids = [
             [1, 1, 0., 0., 1.],
             [2, 1, 0., 1., 0.],
@@ -67,6 +75,7 @@ class TestCoords(unittest.TestCase):
         get_nodes(grids, grids_expected, coords)
 
     def test_rotate2(self):
+        """simple coordinate test of 90 degree rotations"""
         grids = [
             [1, 1, 0., 0., 1.],  # nid, cid, x,y,z
             [2, 1, 0., 1., 0.],
@@ -89,6 +98,7 @@ class TestCoords(unittest.TestCase):
         get_nodes(grids, grids_expected, coords)
 
     def test_rotate3(self):
+        """simple coordinate test of 90 degree rotations"""
         grids = [
             [1, 1, 0., 0., 1.],
             [2, 1, 0., 1., 0.],
@@ -111,6 +121,7 @@ class TestCoords(unittest.TestCase):
         get_nodes(grids, grids_expected, coords)
 
     def test_rid_1(self):
+        """simple coordinate test of a referenced coordinate system"""
         grids = [
             [1, 2, 10., 5., 3.],  # nid, cid, x,y,z
             [2, 3, 10., 5., 3.],
@@ -132,6 +143,7 @@ class TestCoords(unittest.TestCase):
         get_nodes(grids, grids_expected, coords)
 
     def test_cord1r_01(self):
+        """simple CORD1R input/output test"""
         lines = ['cord1r,2,1,4,3']
         model = BDF(debug=False)
         card = model.process_card(lines)
@@ -145,6 +157,7 @@ class TestCoords(unittest.TestCase):
         coord.raw_fields()
 
     def test_cord2c_01(self):
+        """simple CORD2R/CORD2C input/output test"""
         lines = [
             'CORD2C*                3               0              0.              0.',
             '*                     0.              0.              0.              1.*',
@@ -153,8 +166,8 @@ class TestCoords(unittest.TestCase):
         model = BDF(debug=False)
         card = model.process_card(lines)
         cardi = BDFCard(card)
-        coord = CORD2C.add_card(cardi)
-        model._add_coord_object(coord)
+        cord2c = CORD2C.add_card(cardi)
+        model._add_coord_object(cord2c)
 
         lines = [
             'CORD2R         4       3     10.      0.      5.     10.     90.      5.',
@@ -162,23 +175,23 @@ class TestCoords(unittest.TestCase):
         ]
         card = model.process_card(lines)
         cardi = BDFCard(card)
-        coord = CORD2R.add_card(cardi)
-        model._add_coord_object(coord)
+        cord2r = CORD2R.add_card(cardi)
+        model._add_coord_object(cord2r)
         model.cross_reference()
 
-        cord2r = model.Coord(3)
-        self.assertEqual(cord2r.Cid(), 3)
-        self.assertEqual(cord2r.Rid(), 0)
+        cord2r_b = model.Coord(3)
+        self.assertEqual(cord2r_b.Cid(), 3)
+        self.assertEqual(cord2r_b.Rid(), 0)
 
-        cord2r = model.Coord(4)
-        self.assertEqual(cord2r.Cid(), 4)
-        self.assertEqual(cord2r.Rid(), 3)
+        cord2r_c = model.Coord(4)
+        self.assertEqual(cord2r_c.Cid(), 4)
+        self.assertEqual(cord2r_c.Rid(), 3)
 
-        self.assertTrue(allclose(cord2r.i, array([0., 0., 1.])))
-        delta = cord2r.j - array([1., 1., 0.]) / 2**0.5
-        self.assertTrue(allclose(cord2r.j, array([1., 1., 0.]) / 2**0.5), str(delta))
-        delta = cord2r.k - array([-1., 1., 0.]) / 2**0.5
-        self.assertTrue(allclose(cord2r.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
+        self.assertTrue(allclose(cord2r_c.i, array([0., 0., 1.])))
+        delta = cord2r_c.j - array([1., 1., 0.]) / 2**0.5
+        self.assertTrue(allclose(cord2r_c.j, array([1., 1., 0.]) / 2**0.5), str(delta))
+        delta = cord2r_c.k - array([-1., 1., 0.]) / 2**0.5
+        self.assertTrue(allclose(cord2r_c.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
 
 
     def test_grid_01(self):
@@ -334,13 +347,17 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0)
 
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
-        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([10, 11, 12]))
 
-        xyz_cid_10 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=10)
-        xyz_cid_11 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=11)
-        xyz_cid_12 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=12)
+        xyz_cid_10 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=10)
+        xyz_cid_11 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=11)
+        xyz_cid_12 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=12)
 
     def test_cord2_rcs_02(self):
         """
@@ -398,13 +415,17 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0)
 
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
-        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([20, 21, 22]))
 
-        xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=20)
-        xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=21)
-        xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=22)
+        xyz_cid_20 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=20)
+        xyz_cid_21 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=21)
+        xyz_cid_22 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=22)
 
 
     def test_cord2_rcs_03(self):
@@ -463,13 +484,17 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0)
 
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd()
-        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+        xyz_cid0_xform = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nid_cp_cd[:, 0], array([30, 31, 32]))
 
-        xyz_cid_30 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=30)
-        xyz_cid_31 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=31)
-        xyz_cid_32 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=32)
+        xyz_cid_30 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=30)
+        xyz_cid_31 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=31)
+        xyz_cid_32 = model.transform_xyzcp_to_xyz_cid(
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=32)
 
         model2 = BDF()
         cord2r = model2.add_cord2r(30, rid=2,
@@ -507,8 +532,8 @@ class TestCoords(unittest.TestCase):
 
         model = BDF()
         cid = 2
-        g1, g2, g3 = 1, 4, 3
-        coord = model.add_cord1c(cid, g1, g2, g3, comment='cord1c')
+        grid1, grid2, grid3 = 1, 4, 3
+        coord = model.add_cord1c(cid, grid1, grid2, grid3, comment='cord1c')
         coord.comment = ''
         assert coord == card, 'card:\n%r\ncoord:\n%r' % (str(coord), str(card))
 
@@ -527,8 +552,8 @@ class TestCoords(unittest.TestCase):
 
         model = BDF(debug=False)
         cid = 2
-        g1, g2, g3 = 1, 4, 3
-        coord = model.add_cord1s(cid, g1, g2, g3, comment='cord1c')
+        grid1, grid2, grid3 = 1, 4, 3
+        coord = model.add_cord1s(cid, grid1, grid2, grid3, comment='cord1c')
         coord.comment = ''
         assert coord == card, 'card:\n%r\ncoord:\n%r' % (str(coord), str(card))
 
@@ -550,9 +575,9 @@ class TestCoords(unittest.TestCase):
         #print(coord.origin)
         #print(coord.i, coord.j, coord.k)
 
-        g = model.Node(20143)
-        #print(g.Position(debug=False))
-        xyz = g.get_position()
+        node = model.Node(20143)
+        #print(node.Position(debug=False))
+        xyz = node.get_position()
 
         # by running it through Patran...
         #GRID     20143          1.1067  .207647 -.068531
@@ -574,10 +599,10 @@ class TestCoords(unittest.TestCase):
         model2 = BDF(debug=False)
         cid = 7
         coord2 = model2.add_cord2r(cid, rid=0,
-                                  origin=[1.135, .089237, -.0676],
-                                  zaxis=[.135, .089237, -.0676],
-                                  xzplane=[1.135, .089237, .9324],
-                                  comment='cord2r')
+                                   origin=[1.135, .089237, -.0676],
+                                   zaxis=[.135, .089237, -.0676],
+                                   xzplane=[1.135, .089237, .9324],
+                                   comment='cord2r')
         coord2.comment = ''
         assert coord == coord2, 'coord:\n%r\ncoord2:\n%r' % (str(coord), str(coord2))
 
@@ -596,19 +621,19 @@ class TestCoords(unittest.TestCase):
         rid = 0
         data = [1, rid] + list(origin) + list(z_axis) + list(xz_plane)
 
-        Fxyz = [0., -Fy, 0.]
-        Mxyz = [0., 0., 0.]
+        fxyz = [0., -Fy, 0.]
+        mxyz = [0., 0., 0.]
         cid_new = CORD2R.add_op2_data(data=data)
         model = None
 
-        Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
+        fxyz_local, mxyz_local = TransformLoadWRT(fxyz, mxyz, cid0, cid_new,
                                                   model, is_cid_int=False)
 
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local, F)), 'expected=%s actual=%s' % (F, Fxyz_local)
-        self.assertTrue(array_equal(Mxyz_local, cross(r, F))), 'expected=%s actual=%s' % (M, Mxyz_local)
+        self.assertTrue(array_equal(fxyz_local, F), 'expected=%s actual=%s' % (F, fxyz_local))
+        self.assertTrue(array_equal(mxyz_local, cross(r, F)), 'expected=%s actual=%s' % (M, mxyz_local))
 
     def test_coord_xform_b(self):
         origin = array([0., 0., 0.])
@@ -626,18 +651,18 @@ class TestCoords(unittest.TestCase):
         rid = 0
         data = [1, rid] + list(origin) + list(z_axis) + list(xz_plane)
 
-        Fxyz = [0., -Fy, 0.]
-        Mxyz = [0., 0., 0.]
+        fxyz = [0., -Fy, 0.]
+        mxyz = [0., 0., 0.]
         cid_new = CORD2R.add_op2_data(data=data)
         model = None
 
-        Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
+        fxyz_local, mxyz_local = TransformLoadWRT(fxyz, mxyz, cid0, cid_new,
                                                   model, is_cid_int=False)
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
-        self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
-        self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
+        self.assertTrue(array_equal(fxyz_local, F), 'expected=%s actual=%s' % (F, fxyz_local))
+        self.assertTrue(array_equal(mxyz_local, M), 'expected=%s actual=%s' % (M, mxyz_local))
 
     def test_coord_adding(self):
         origin = [0., 0., 0.]
@@ -758,6 +783,26 @@ class TestCoords(unittest.TestCase):
 
 
 def get_nodes(grids, grids_expected, coords):
+    """
+    Create each input grid/coord
+
+    Loop over the expected grids, use the provided coordinate system
+    and verify that the xyz location is correct.
+
+    Parameters
+    ----------
+    grids : List[grid]
+        the grids
+        grid : List[nid, cp, x, y, z]
+            the GRID fields
+    coords : List[coord]
+        coord : List[int cid, rid, origin, zaxis, xaxis]
+            the coordinate system to add to the model
+    grids_expected : List[grid]
+        the expected grids
+        grid : List[nid, cp, x, y, z]
+            the GRID fields
+    """
     model = BDF(debug=False)
 
     for grid in grids:
@@ -775,22 +820,21 @@ def get_nodes(grids, grids_expected, coords):
     for (i, grid) in enumerate(grids_expected):
         (nid, cid, x, y, z) = grid
         node = model.Node(nid)
-        pos = node.get_position()
-        n = array([x, y, z])
+        xyz_actual = node.get_position()
+        xyz = array([x, y, z])
 
-        msg = 'i=%s expected=%s actual=%s\n' % (i, n, pos)
+        msg = 'i=%s expected=%s actual=%s\n' % (i, xyz, xyz_actual)
         msg += 'n=%s grid=\n%s' % (nid, node)
         coord_ref = node.cp_ref
         msg += 'n=%s coord=\n%s' % (node.nid, coord_ref)
 
-        if not allclose(n, pos):
-            # TODO: this used to work, but the changing xref broken it somehow
+        if not allclose(xyz, xyz_actual):
+            # TODO: this used to work, but the changing xref broke it somehow
             #       this block probably needs to be slightly updated
             while coord_ref.rid:
-                msg += 'n=%s rcoord=\n%s' % (node.nid, coord_ref.rid)
+                msg += 'xyz=%s rcoord=\n%s' % (node.nid, coord_ref.rid)
                 coord_ref = coord_ref.rid
-                #print('coord_ref = %r' % coord_ref)
-            assert allclose(n, pos), msg
+            assert allclose(xyz, xyz_actual), msg
 
 
 if __name__ == '__main__':  # pragma: no cover

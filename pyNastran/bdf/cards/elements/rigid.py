@@ -74,28 +74,26 @@ class RROD(RigidElement):
             cmb = None
 
         self.eid = eid
-        self.ga = nids[0]
-        self.gb = nids[1]
+        self.nodes = nids
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
-        self.ga_ref = None
-        self.gb_ref = None
+        self.nodes_ref = None
 
     def validate(self):
         msg = ''
         if self.cma not in [None, '1', '2', '3']:
             msg += "  ga=%r; cma=%r must be in [None, '1', '2', '3']\n" % (
-                self.ga, self.cma)
+                self.nodes[0], self.cma)
         if self.cmb not in [None, '1', '2', '3']:
             msg += "  gb=%r; cmb=%r must be in [None, '1', '2', '3']\n" % (
-                self.gb, self.cmb)
+                self.nodes[1], self.cmb)
         if self.cma is None and self.cmb is None:
             msg += 'A  ga=%s cma=%r; gb=%s cmb=%r; cma or cmb must be None (not both)' % (
-                self.ga, self.cma, self.gb, self.cmb)
+                self.nodes[0], self.cma, self.nodes[1], self.cmb)
         elif self.cma is not None and self.cmb is not None:
             msg += 'D  ga=%s cma=%r; gb=%s cmb=%r; cma or cmb must be None (not both)' % (
-                self.ga, self.cma, self.gb, self.cmb)
+                self.nodes[0], self.cma, self.nodes[1], self.cmb)
 
         if msg:
             raise RuntimeError('Invalid Dependent DOFs\n' + msg.rstrip())
@@ -142,14 +140,14 @@ class RROD(RigidElement):
         return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     def Ga(self):
-        if self.ga_ref is None:
-            return self.ga
-        return self.ga_ref.nid
+        if self.nodes_ref is None:
+            return self.nodes[0]
+        return self.nodes_ref[0].nid
 
     def Gb(self):
-        if self.gb_ref is None:
-            return self.gb
-        return self.gb_ref.nid
+        if self.nodes_ref is None:
+            return self.nodes[1]
+        return self.nodes_ref[1].nid
 
     def cross_reference(self, model):
         """
@@ -161,14 +159,11 @@ class RROD(RigidElement):
             the BDF object
         """
         msg = ' which is required by RROD eid=%s' % (self.eid)
-        self.ga_ref = model.Node(self.ga, msg=msg)
-        self.gb_ref = model.Node(self.gb, msg=msg)
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
     def uncross_reference(self):
-        self.ga = self.Ga()
-        self.gb = self.Gb()
-        self.ga_ref = None
-        self.gb_ref = None
+        self.nodes = [self.Ga(), self.Gb()]
+        self.nodes_ref = None
 
     @property
     def independent_nodes(self):
@@ -1403,6 +1398,9 @@ class RSPLINE(RigidElement):
         # Ratio of the diameter of the elastic tube to the sum of the
         # lengths of all segments
         self.diameter_ratio = diameter_ratio
+
+    def validate(self):
+        assert len(self.dependent_nids) == len(self.dependent_components)
 
     @classmethod
     def add_card(cls, card, comment=''):

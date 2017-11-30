@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import unittest
-from six.moves import range, StringIO
+from six.moves import StringIO
 import numpy as np
 from numpy import array
 
@@ -11,6 +11,12 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
 class TestShells(unittest.TestCase):
+    def test_pshell(self):
+        model = BDF()
+        pid = 10
+        pshell = model.add_pshell(pid, mid1=1, mid2=2, mid3=3, mid4=4, tst=3.14)
+        assert ' 3.14' in pshell.rstrip(), pshell.rstrip()
+
     def _make_cquad4(self, model, rho, nu, G, E, t, nsm):
         eid = 10
         pid = 20
@@ -229,7 +235,7 @@ class TestShells(unittest.TestCase):
         n4 = 4
         n5 = 5
         n6 = 6
-        A = 2.
+        #A = 2.
         t = rho = nsm = E = G = nu = 0.1
         mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
 
@@ -263,8 +269,17 @@ class TestShells(unittest.TestCase):
         nids = model.get_node_ids_with_elements(eids)
         assert nids == set([1, 2, 3, 4, 5, 6]), nids
 
+        params = [
+            ('T', 1.0),
+            (6, 2.0), # 12I/T3
+            (8, 3.0), # 'TST'
+        ]
+        make_dvprel_optimization(model, params, 'PSHELL', pid)
+
         # get node IDs with cross referencing
         model.cross_reference()
+        model.update_model_by_desvars(xref=True)
+
         eids = [10]
         nids = model.get_node_ids_with_elements(eids)
         assert nids == set([1, 2, 3, 4]), nids
@@ -276,6 +291,7 @@ class TestShells(unittest.TestCase):
         eids = [10, 11]
         nids = model.get_node_ids_with_elements(eids)
         assert nids == set([1, 2, 3, 4, 5, 6]), nids
+
         save_load_deck(model)
 
 
@@ -564,6 +580,14 @@ class TestShells(unittest.TestCase):
         cshear = model.add_cshear(eid, pid, nids, comment='cshear')
         pshear = model.add_pshear(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
 
+        dvids = [1]
+        coeffs = 1.0
+        model.add_dvprel1(1, 'PSHEAR', pid, 'T', dvids, coeffs,
+                          p_min=None, p_max=1e20,
+                          c0=0.0, validate=True,
+                          comment='')
+        model.add_desvar(1, 'T', 10.0)
+
         E = 30.e7
         G = None
         nu = 0.3
@@ -587,7 +611,8 @@ class TestShells(unittest.TestCase):
 
         cshear.write_card(size=8)
         pshear.write_card(size=8)
-        #save_load_deck(model)
+        model.update_model_by_desvars()
+        save_load_deck(model)
 
     def test_shells(self):
         """tests a CTRIA3/CQUAD4/PSHELL and CTRIA6/CQUAD8/CQUAD/PCOMP"""
@@ -655,8 +680,14 @@ class TestShells(unittest.TestCase):
 
 
         model._verify_bdf(xref=False)
+
+        params = [('T1', 1.0), ('THETA1', 2.0), ('Z0', 3.0), ('SB', 4.0),
+                  ('TREF', 0.0), ('GE', 0.1)]
+        make_dvprel_optimization(model, params, 'PCOMP', pid)
         #--------------------------------
         model.cross_reference()
+        model.update_model_by_desvars(xref=True)
+
         model._verify_bdf(xref=True)
 
         ctria6.raw_fields()
@@ -1071,6 +1102,45 @@ class TestShells(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         save_load_deck(model)
+
+def make_dvcrel_optimization(model, params, element_type, eid, i=1):
+    j = i
+    for ii, (name, desvar_value) in enumerate(params):
+        j = i + ii
+        dvids = [j]
+        coeffs = [1.0]
+        model.add_dvcrel1(j, element_type, eid, name, dvids, coeffs,
+                          cp_min=None, cp_max=1e20,
+                          c0=0.0, validate=True,
+                          comment='')
+        model.add_desvar(j, 'v%s' % name, desvar_value)
+    return j + 1
+
+def make_dvprel_optimization(model, params, prop_type, pid, i=1):
+    j = i
+    for ii, (name, desvar_value) in enumerate(params):
+        j = i + ii
+        dvids = [j]
+        coeffs = [1.0]
+        model.add_dvprel1(j, prop_type, pid, name, dvids, coeffs,
+                          p_min=None, p_max=1e20,
+                          c0=0.0, validate=True,
+                          comment='')
+        model.add_desvar(j, 'v%s' % name, desvar_value)
+    return j + 1
+
+def make_dvmrel_optimization(model, params, material_type, mid, i=1):
+    j = i
+    for ii, (name, desvar_value) in enumerate(params):
+        j = i + ii
+        dvids = [j]
+        coeffs = [1.0]
+        model.add_dvmrel1(j, material_type, eid, name, dvids, coeffs,
+                          mp_min=None, mp_max=1e20,
+                          c0=0.0, validate=True,
+                          comment='')
+        model.add_desvar(j, 'v%s' % name, desvar_value)
+    return j + 1
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -410,10 +410,10 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     except AttributeError:
                         raise
                     self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
-                    self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises()))
-                    self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain()))
-                    self.binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature()))
-                    self.binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain()))
+                    self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises))
+                    self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain))
+                    self.binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature))
+                    self.binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain))
                     self.binary_debug.write('    stress_bits[4] = %i -> material coordinate system flag=%s vs ???\n' % (self.stress_bits[4], self.stress_bits[4]))
                 elif param == '???':
                     param = 0
@@ -423,24 +423,24 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
             if hasattr(self, 'format_code'):
                 try:
-                    is_complex = self.is_complex()
+                    is_complex = self.is_complex
                 except AssertionError:
-                    self.binary_debug.write('\n  ERROR: cannot determine is_complex() properly; '
+                    self.binary_debug.write('\n  ERROR: cannot determine is_complex properly; '
                                             'check_sort_bits!!!\n')
                     is_complex = '???'
 
                 try:
-                    is_random = self.is_random()
+                    is_random = self.is_random
                 except AssertionError:
                     is_random = '???'
 
                 try:
-                    is_sort1 = self.is_sort1()
+                    is_sort1 = self.is_sort1
                 except AssertionError:
                     is_sort1 = '???'
 
                 try:
-                    is_real = self.is_real()
+                    is_real = self.is_real
                 except AssertionError:
                     is_real = '???'
 
@@ -517,7 +517,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         try:
             name, func = mapper[keys]
         except KeyError:
-            raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
+            #raise KeyError('table_name=%s keys=%s' % (self.table_name_str, str(keys)))
             return n
         if self.is_debug_file:
             self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
@@ -576,7 +576,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 return ndata
 
             self._fix_format_code(format_code=1)
-            if self.is_sort1():
+            if self.is_sort1:
                 if self.nonlinear_factor is None:
                     n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
@@ -595,7 +595,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
             if auto_return:
                 return ndata
-            if self.is_sort1():
+            if self.is_sort1:
                 if self.is_magnitude_phase():
                     n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
                 else:
@@ -638,7 +638,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #self.log.debug('  *create table_vector')
 
         #self._fix_format_code(format_code=1)
-        is_sort1 = self.is_sort1()  # uses the sort_bits
+        is_sort1 = self.is_sort1  # uses the sort_bits
 
         if is_sort1:
             #self.log.debug('   sort1; table_name=%r' % self.table_name)
@@ -701,7 +701,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 return ndata
 
             self._fix_format_code(format_code=1)
-            if self.is_sort1():
+            if self.is_sort1:
                 if self.nonlinear_factor is None:
                     n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
@@ -720,7 +720,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 result_name, nnodes, storage_obj, complex_vector)
             if auto_return:
                 return ndata
-            if self.is_sort1():
+            if self.is_sort1:
                 if self.is_magnitude_phase():
                     n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
                 else:
@@ -762,7 +762,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 return ndata
 
             self._fix_format_code(format_code=1)
-            if self.is_sort1():
+            if self.is_sort1:
                 if self.nonlinear_factor is None:
                     n = self._read_real_scalar_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
                 else:
@@ -782,7 +782,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 result_name, nnodes, storage_obj, complex_vector)
             if auto_return:
                 return ndata
-            if self.is_sort1():
+            if self.is_sort1:
                 if self.is_magnitude_phase():
                     n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
                 else:
@@ -1386,7 +1386,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:
                 class_obj.is_cid = is_cid
-                is_sort1 = self.is_sort1()  # uses the sort_bits
+                is_sort1 = self.is_sort1  # uses the sort_bits
 
                 self.obj = class_obj(self.data_code, is_sort1, self.isubcase, self.nonlinear_factor)
             storage_obj[code] = self.obj
@@ -1712,18 +1712,21 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         except:
             sort_method = int(self.table_name[-1])
         #is_sort1 = self.table_name.endswith('1')
-        #is_sort1 = self.is_sort1()  # uses the sort_bits
+        #is_sort1 = self.is_sort1  # uses the sort_bits
         assert sort_method in [1, 2], 'sort_method=%r\n%s' % (sort_method, self.code_information())
         return sort_method
 
+    @property
     def is_real(self):
         sort_method, is_real, is_random = self._table_specs()
         return is_real
 
+    @property
     def is_complex(self):
         sort_method, is_real, is_random = self._table_specs()
         return not is_real
 
+    @property
     def is_random(self):
         sort_method, is_real, is_random = self._table_specs()
         return is_random
@@ -1742,23 +1745,25 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
     def debug3(self):
         return self.is_debug_file
-        # if self.debug and self.table_name in self.show_table3_map:
-            # return True
-        # return False
+        #if self.debug and self.table_name in self.show_table3_map:
+            #return True
+        #return False
 
     def debug4(self):
         return self.is_debug_file
-        # if self.debug and self.table_name in self.show_table4_map:
-            # return True
-        # return False
+        #if self.debug and self.table_name in self.show_table4_map:
+            #return True
+        #return False
 
+    #@property
     #def is_stress(self):
         #if self.stress_bits[1] == 0:
             #return True
         #return False
 
+    @property
     def is_curvature(self):
-        if self.is_stress():
+        if self.is_stress:
             curvature_flag = False
         else:
             # strain only
@@ -1769,18 +1774,23 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         assert not curvature_flag, curvature_flag
         return False
 
+    @property
     def is_fiber_distance(self):
-        return not self.is_curvature()
+        return not self.is_curvature
 
+    @property
     def is_max_shear(self):
         return True if self.stress_bits[4] == 0 else False
 
+    @property
     def is_von_mises(self):
-        return not self.is_max_shear()
+        return not self.is_max_shear
 
+    @property
     def is_stress(self):
-        return not self.is_strain()
+        return not self.is_strain
 
+    @property
     def is_strain(self):
         if self.stress_bits[1] == 1:
             return True
@@ -1916,6 +1926,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 auto_return = True
         else:
             auto_return = True
+
+        assert is_vectorized, '%r is not vectorized; obj=%s' % (result_name, obj_vector)
         return auto_return, is_vectorized
 
     def _set_structs(self):

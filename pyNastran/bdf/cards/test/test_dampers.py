@@ -4,6 +4,10 @@ from six.moves import StringIO
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, read_bdf#, get_logger2
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.test.test_shells import (
+    make_dvprel_optimization, make_dvcrel_optimization,
+    make_dvmrel_optimization,
+)
 
 
 class TestDampers(unittest.TestCase):
@@ -28,7 +32,7 @@ class TestDampers(unittest.TestCase):
         assert len(model.properties) == 2, model.properties
 
     def test_damper_02(self):
-        """tests CELAS1, CELAS2, PDAMP, PDAMPT"""
+        """tests CDAMP1, CDAMP2, PDAMP, PDAMPT, GRID"""
         model = BDF(debug=False)
         eid = 1
         pid = 2
@@ -67,20 +71,161 @@ class TestDampers(unittest.TestCase):
         model2 = read_bdf(bdf_file, punch=True, debug=False)
 
     def test_damper_03(self):
+        """tests the CDAMP4, PDAMP, CDAMP4, SPOINT"""
         model = BDF(debug=False)
-        eid = 1
+        eid = 3
         pid = 2
         s1 = 3
         s2 = 4
         cdamp3 = model.add_cdamp3(eid, pid, [s1, s2], comment='cdamp3')
-        cdamp3.raw_fields()
-        cdamp3.write_card(size=8, is_double=False)
 
-        b = 1.0e7
-        pelas = model.add_pdamp(pid, b, comment='pdamp')
-        spoints = model.add_spoint([3, 4], comment='spoints')
+        bdamp = 1.0e3
+        pdamp = model.add_pdamp(pid, bdamp, comment='pdamp')
+        spoints = model.add_spoint([3, 4, 5], comment='spoints')
+
+        eid = 4
+        bdamp = 2.0e3
+        s1 = 3
+        s2 = 4
+        cdamp4 = model.add_cdamp4(eid, bdamp, [s1, s2], comment='cdamp4')
+
+        eid = 5
+        pid = 5
+        mid = 10
+        bdamp = 3.0e3
+        pdamp5 = model.add_pdamp5(pid, mid, bdamp, comment='pdamp5')
+        cdamp5 = model.add_cdamp5(eid, pid, [s1, s2], comment='cdamp5')
+
+        eid = 6
+        pid = 6
+        ce = 1.
+        cr = 1.
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(11, [0., 0., 0.])
+        nids = [10, 11]
+        pvisc = model.add_pvisc(pid, ce, cr, comment='pvisc')
+        cvisc = model.add_cvisc(eid, pid, nids, comment='cvisc')
+
+        eid = 7
+        pid = 7
+        x = [1., 2., 3.]
+        g0 = None
+        cgap = model.add_cgap(eid, pid, nids, x, g0, cid=None, comment='cgap')
+        pgap = model.add_pgap(pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
+                              kt=None, mu2=None,
+                              tmax=0., mar=100., trmin=0.001,
+                              comment='pgap')
+
+        eid = 8
+        pid = 8
+        k = [1.0]
+        b = [2.0]
+        ge = [0.01]
+        cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
+                                ocid=-1, si=None, comment='cbush')
+        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
+                                comment='pbush')
+
+        eid = 9
+        pid = 9
+        k = 1.
+        c = 2.
+        m = 3.
+        sa = 4.
+        se = 5.
+        optional_vars = None
+        cbush1d = model.add_cbush1d(eid, pid, nids, cid=None, comment='cbush1d')
+        pbush1d = model.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
+                                    optional_vars=None, comment='pbush1d')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        model.validate()
+
+        cdamp3.raw_fields()
+        cdamp4.raw_fields()
+        cdamp5.raw_fields()
+        pdamp5.raw_fields()
+        cvisc.raw_fields()
+        pvisc.raw_fields()
+        cgap.raw_fields()
+        pgap.raw_fields()
+        cbush.raw_fields()
+        pbush.raw_fields()
+        cbush1d.raw_fields()
+        pbush1d.raw_fields()
+
         spoints.raw_fields()
+        cdamp3.write_card(size=8, is_double=False)
+        cdamp4.write_card(size=8, is_double=False)
+        cdamp5.write_card(size=8, is_double=False)
+        pdamp5.write_card(size=8, is_double=False)
+        cvisc.write_card(size=8, is_double=False)
+        pvisc.write_card(size=8, is_double=False)
+        cgap.write_card(size=8, is_double=False)
+        pgap.write_card(size=8, is_double=False)
+        cbush.write_card(size=8, is_double=False)
+        pbush.write_card(size=8, is_double=False)
+        cbush1d.write_card(size=8, is_double=False)
+        pbush1d.write_card(size=8, is_double=False)
+
+        params = [
+            ('K1', 1.0),
+            ('K2', 1.0),
+            ('K3', 1.0),
+            ('K4', 1.0),
+            ('K5', 1.0),
+            ('K6', 1.0),
+
+            ('B1', 1.0),
+            ('B2', 1.0),
+            ('B3', 1.0),
+            ('B4', 1.0),
+            ('B5', 1.0),
+            ('B6', 1.0),
+
+            #('M1', 1.0),
+            #('M2', 1.0),
+            #('M3', 1.0),
+            #('M4', 1.0),
+            #('M5', 1.0),
+            #('M6', 1.0),
+        ]
+        i = make_dvprel_optimization(model, params, 'PBUSH', pbush.pid, i=1)
+
+        params = [(5, 1.0)]
+        i = make_dvprel_optimization(model, params, 'PGAP', pgap.pid, i)
+
+        params = [('K', 1.0), ('C', 1.0), ('M', 1.0)]
+        i = make_dvprel_optimization(model, params, 'PBUSH1D', pbush1d.pid, i)
+
+        params = [('CE1', 1.0)]
+        i = make_dvprel_optimization(model, params, 'PVISC', pvisc.pid, i)
+
+        params = [('B1', 1.0), (3, 1.0)]
+        i = make_dvprel_optimization(model, params, 'PDAMP', pdamp.pid, i)
+
+        #-----------------------------------------
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CVISC', cvisc.eid, i)
+
+        params = [('X1', 1.0), ('X2', 2.0), ('X3', 3.0),
+                  ('S1', 1.0), ('S2', 2.0), ('S3', 3.0),
+                  ('S', 1.0), ]
+        i = make_dvcrel_optimization(model, params, 'CBUSH', cbush.eid, i)
+
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CBUSH1D', cbush.eid, i)
+
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CGAP', cgap.eid, i)
+
         spoints.write_card()
+
+        model.cross_reference()
+        model.update_model_by_desvars()
 
         save_load_deck(model)
 

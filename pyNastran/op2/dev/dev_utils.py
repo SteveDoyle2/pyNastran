@@ -1,7 +1,12 @@
+from __future__ import print_function
+import numpy as np
 from pyNastran.op2.op2 import read_op2
 from pyNastran.bdf.utils import parse_patran_syntax_dict
 
 def test_nodal_avg_stress():
+    op2 = None
+    subcase = None
+    eids = None
     get_nodal_avg_stress(op2, subcase, eids)
     get_centroid_stress(op2, subcase, eids)
 
@@ -20,7 +25,9 @@ def get_class_of_elements(etypes):
             assert etype in ['CTRIA3', 'CQUAD4'], etypes
             assert ptype in ['PSHELL'], etypes
         group = 'shell'
-    elif ('CTETRA', 'PSOLID') in etypes or ('CPENTA', 'PSOLID') in etypes or ('CHEXA', 'PSOLID') in etypes:
+    elif (('CTETRA', 'PSOLID') in etypes or
+          ('CPENTA', 'PSOLID') in etypes or
+          ('CHEXA', 'PSOLID') in etypes):
         for etype, ptype in etypes:
             assert etype in ['CTETRA', 'CPENTA', 'CHEXA'], etypes
             assert ptype in ['PSOLID'], etypes
@@ -60,10 +67,10 @@ def get_centroid_max_min_principal_stress(bdf, op2, subcase, eids):
             for obj in data:
                 eids = obj.element_node[:, 0]
                 nids = obj.element_node[:, 1]
-                assert obj.is_fiber_distance() == True, obj.code_information()
+                assert obj.is_fiber_distance is True, obj.code_information()
                 if eid in obj.element:
                     i = np.where(obj.element == eid)[0]
-                    print('eid=%s i=%s eid=%s i=%s nids=%s' % (eid, i, eids[i], nids[i]))
+                    print('eid=%s i=%s eid=%s nids=%s' % (eid, i, eids[i], nids[i]))
                     maxi = obj.data[itime, i, imax]
                     mini = obj.data[itime, i, imin]
                     if maxi is None or maxi > maxp:
@@ -74,7 +81,7 @@ def get_centroid_max_min_principal_stress(bdf, op2, subcase, eids):
                         minp = mini
                     found_eid = True
                     break
-            assert found_eid == True, eid
+            assert found_eid is True, eid
 
     elif group == 'solid':
         data = []
@@ -91,10 +98,10 @@ def get_centroid_max_min_principal_stress(bdf, op2, subcase, eids):
                     for obj in data:
                         eids = obj.element_node[:, 0]
                         nids = obj.element_node[:, 1]
-                        assert obj.is_fiber_distance() == True, obj.code_information()
+                        assert obj.is_fiber_distance is True, obj.code_information()
                         if eid in obj.element:
                             i = np.where(obj.element == eid)[0]
-                            print('eid=%s i=%s eid=%s i=%s nids=%s' % (eid, i, eids[i], nids[i]))
+                            print('eid=%s i=%s eid=%s nids=%s' % (eid, i, eids[i], nids[i]))
                             maxi = obj.data[itime, i, imax]
                             mini = obj.data[itime, i, imin]
                             if maxi is None or maxi > maxp:
@@ -105,7 +112,7 @@ def get_centroid_max_min_principal_stress(bdf, op2, subcase, eids):
                                 minp = mini
                             found_eid = True
                             break
-                    assert found_eid == True, eid
+                    assert found_eid is True, eid
 
     #elif group == 'bar':
         #data = []
@@ -140,17 +147,17 @@ def get_nodal_avg_min_principal_stress(bdf, op2, subcase, eids):
 def main():
     print('main...')
     bdf = None
-    op2_filename = 'model.op2'
+    #op2_filename = 'model.op2'
     op2 = read_op2(op2_filename=None, combine=True, log=None, debug=True,
-                  debug_file=None, build_dataframe=False,
-                  skip_undefined_matrices=True, mode='msc')
+                   debug_file=None, build_dataframe=False,
+                   skip_undefined_matrices=True, mode='msc')
 
     subcases = [1]
 
     groups = {
         1 : 'Elm 403082 565514 403084 552195 552196 553965 552204',
     }
-    eid_groups = {}
+    eid_groups = []
     results = {}
     for key, group in sorted(groups.items()):
         eid_group = parse_patran_syntax_dict(group, pound_dict=None)['Elm']
@@ -162,14 +169,15 @@ def main():
     for group_id, eids in enumerate(eid_groups):
         # TODO: speed this up by using the same indices
         for subcase in subcases:
-            eid_max, maxp, eid_min, minp = get_centroid_max_min_principal_stress(bdf, op2, subcase, eids)
+            eid_max, maxp, eid_min, minp = get_centroid_max_min_principal_stress(
+                bdf, op2, subcase, eids)
             centroid_file.write('%s, %s, %s, %s, %s, %s\n' % (
                 group, subcase, eid_max, maxp, eid_min, minp))
 
     cat('centroid.csv')
 
 def cat(fname):
-    with open(fname, r) as file_obj:
+    with open(fname, 'r') as file_obj:
         print(file_obj.readline().strip())
 
 

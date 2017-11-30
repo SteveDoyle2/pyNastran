@@ -6,24 +6,10 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4.QtGui import (
-        QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
-        QCheckBox, QGroupBox, QComboBox)
-elif qt_version == 5:
-    from PyQt5.QtWidgets import (
-        QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
-        QCheckBox, QGroupBox, QComboBox)
-elif qt_version == 'pyside':
-    from PySide.QtGui import (
-        QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
-        QCheckBox, QGroupBox, QComboBox)
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+from qtpy.QtWidgets import (
+    QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
+    QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
+    QCheckBox, QGroupBox, QComboBox)
 
 from pyNastran.gui.gui_interface.common import PyDialog
 from pyNastran.gui.gui_utils.dialogs import open_directory_dialog, open_file_dialog
@@ -53,7 +39,7 @@ class AnimationWindow(PyDialog):
     | iFrame  ______          |
     |                         |
     | Animations:             |
-    | o Scale, Phase, Time    |  # TODO: add time
+    | o Scale, Phase, Time    |
     |                         |
     | x delete images         |
     | x repeat                |  # TODO: change to an integer
@@ -72,6 +58,7 @@ class AnimationWindow(PyDialog):
         self._animate_type = 'time'
 
         self._updated_animation = False
+        self._active_deformation = 0.
         self._icase = data['icase']
         self._default_name = data['name']
         self._default_time = data['time']
@@ -120,7 +107,7 @@ class AnimationWindow(PyDialog):
                                    'Defaults to the result you had shown when you clicked "Create Animation".\n'
                                    'iCase can be seen by clicking "Apply" on a result.')
 
-        self.scale = QLabel("Scale:")
+        self.scale = QLabel("True Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
         self.scale_button = QPushButton("Default")
         self.scale_edit.setToolTip('Scale factor of the "deflection"')
@@ -345,8 +332,18 @@ class AnimationWindow(PyDialog):
 
         # bottom buttons
         self.step_button = QPushButton("Step")
+        self.wipe_button = QPushButton("Wipe Deformed Shape")
         self.stop_button = QPushButton("Stop")
         self.run_button = QPushButton("Run All")
+
+        self.step_button.setToolTip('Steps through the animation (for testing)')
+        self.wipe_button.setToolTip('Removes the existing "deflecton" from the animation')
+        self.stop_button.setToolTip('Stops the animation')
+        self.run_button.setToolTip('Creates the animation')
+
+        self.wipe_button.setEnabled(False)
+        #self.wipe_button.hide()
+        self.stop_button.setEnabled(False)
 
         #self.apply_button = QPushButton("Apply")
         #self.ok_button = QPushButton("OK")
@@ -371,6 +368,7 @@ class AnimationWindow(PyDialog):
         self.gif_button.clicked.connect(self.on_default_name)
 
         self.step_button.clicked.connect(self.on_step)
+        self.wipe_button.clicked.connect(self.on_wipe)
         self.stop_button.clicked.connect(self.on_stop)
         self.run_button.clicked.connect(self.on_run)
 
@@ -402,6 +400,7 @@ class AnimationWindow(PyDialog):
         self.browse_folder_button.setEnabled(enable)
         self.browse_folder_edit.setEnabled(enable)
         self.step_button.setEnabled(enable)
+        #wipe_button
 
     def on_animate(self, value):
         """
@@ -637,6 +636,7 @@ class AnimationWindow(PyDialog):
         # bottom buttons
         step_run_box = QHBoxLayout()
         step_run_box.addWidget(self.step_button)
+        step_run_box.addWidget(self.wipe_button)
         step_run_box.addWidget(self.stop_button)
         step_run_box.addWidget(self.run_button)
 
@@ -664,15 +664,35 @@ class AnimationWindow(PyDialog):
             except IndexError:
                 self._make_gif(validate_out, istep=0)
                 self.istep += 1
+            self.wipe_button.setEnabled(True)
+
+    def on_wipe(self):
+        """click the Wipe button"""
+        passed, validate_out = self.on_validate(wipe=True)
+        if passed:
+            self.istep = 0
+            self._make_gif(validate_out, istep=self.istep)
+            self.wipe_button.setEnabled(False)
+            self.stop_button.setEnabled(False)
 
     def on_stop(self):
-        passed, validate_out = self.on_validate()
-        if passed:
-            self._make_gif(validate_out, stop_animation=True)
+        """click the Stop button"""
+        #passed, validate_out = self.on_validate()
+        #if passed:
+            #self._make_gif(validate_out, stop_animation=True)
+        if self.is_gui:
+            self.win_parent.win_parent.stop_animation()
+
+        self.wipe_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
+
 
     def on_run(self):
         """click the Run button"""
         self.istep = 0
+        self.wipe_button.setEnabled(False)
+        self.stop_button.setEnabled(True)
+
         passed, validate_out = self.on_validate()
         if passed:
             self._make_gif(validate_out, istep=None)
@@ -683,7 +703,7 @@ class AnimationWindow(PyDialog):
         icase, scale, time, fps, animate_in_gui, magnify, output_dir, gifbase = validate_out
 
         gif_filename = None
-        if not stop_animation and not animate_in_gui:
+        if not stop_animation and not animate_in_gui and gifbase is not None:
             if gifbase.lower().endswith('.gif'):
                 gifbase = gifbase[:-4]
             gif_filename = os.path.join(output_dir, gifbase + '.gif')
@@ -743,22 +763,26 @@ class AnimationWindow(PyDialog):
         self.out_data['clicked_ok'] = True
         self.out_data['close'] = True
 
-    def on_validate(self):
+    def on_validate(self, wipe=False):
         """checks to see if the input is valid"""
+        # requires no special validation
         icase, flag0 = self.check_int(self.icase_edit)
         scale, flag1 = self.check_float(self.scale_edit)
         time, flag2 = self.check_float(self.time_edit)
         fps, flag3 = self.check_float(self.fps_edit)
-        animate_in_gui = self.animate_in_gui_checkbox.isChecked()
+        if wipe:
+            animate_in_gui = False
+        else:
+            animate_in_gui = self.animate_in_gui_checkbox.isChecked()
 
-        if animate_in_gui:
+        if animate_in_gui or wipe:
             passed = all([flag0, flag1, flag2, flag3])
-            return passed, (icase, scale, time, fps, animate_in_gui, None, None, None)
-
-        magnify, flag4 = self.check_int(self.resolution_edit)
-        output_dir, flag5 = self.check_path(self.browse_folder_edit)
-        gifbase, flag6 = self.check_name(self.gif_edit)
-        passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6])
+            magnify, output_dir, gifbase = None, None, None
+        else:
+            magnify, flag4 = self.check_int(self.resolution_edit)
+            output_dir, flag5 = self.check_path(self.browse_folder_edit)
+            gifbase, flag6 = self.check_name(self.gif_edit)
+            passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6])
         return passed, (icase, scale, time, fps, animate_in_gui,
                         magnify, output_dir, gifbase)
 

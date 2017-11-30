@@ -72,6 +72,47 @@ class Subcase(object):
         self.sol = None
         self.log = None
         #print("\n***adding subcase %s***" % self.id)
+        
+    def __deepcopy__(self, memo):
+        # custom method for copy.deepcopy to improve speed by more than 2x (tested with timeit)
+        # default method is a bit slow for a list of lists and can take a long time to read a bdf with many subcases
+        # this method removes some of the overhead
+        # if the subcase is the default subcase, it is shallow copied instead
+        # this greatly improves bdf read speed, since it avoids deepcopying large sets defined in the default subcase
+        # for every subcase that is defined
+        
+        _copy = self.__copy__()
+        memo[id(self)] = _copy
+
+        if _copy.id == 0:
+            return _copy
+
+        def _deepcopy(lst):
+            _cpy = list(lst)
+
+            for i in range(len(_cpy)):
+                _ = _cpy[i]
+                if isinstance(_, list):
+                    _cpy[i] = _deepcopy(_)
+
+            return _cpy
+
+        params = _copy.params
+
+        for key, val in iteritems(self.params):
+            if isinstance(val, list):
+                val = _deepcopy(val)
+            params[key] = val
+
+        return _copy
+
+    def __copy__(self):
+        _copy = self.__class__()
+        _copy.id = self.id
+        _copy.sol = self.sol
+        _copy.log = self.log
+        _copy.params.update(self.params)
+        return _copy
 
     def deprecated(self, old_name, new_name, deprecated_version):
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])

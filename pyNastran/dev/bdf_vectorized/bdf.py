@@ -2523,13 +2523,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             # not cards
             'debug', 'executive_control_lines',
             'case_control_lines', 'cards_to_read', 'card_count',
-            'isStructured', 'uniqueBulkDataCards',
-            'nCardLinesMax', 'model_type', 'includeDir',
+            'is_structured', 'uniqueBulkDataCards',
+            'model_type', 'include_dir',
             'sol_method', 'log',
-            'linesPack', 'lineNumbers', 'sol_iline',
-            'reject_count', '_relpath', 'isOpened',
+            'sol_iline',
+            'reject_count', '_relpath',
             #'foundEndData',
-            'specialCards',])
+            'special_cards',])
 
         unsupported_types = ignored_types.union(ignored_types2)
         all_params = object_attributes(self, keys_to_skip=unsupported_types)
@@ -2742,7 +2742,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
-    def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform, cid=0):
+    def transform_xyzcp_to_xyz_cid(self, xyz_cp, nids, icp_transform, cid=0):
         """
         Working on faster method for calculating node locations
         Not validated...
@@ -3080,7 +3080,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
-        return _lines_to_decks(lines, i, punch)
+        return _lines_to_decks(lines, punch)
 
     def _dump_file(self, bdf_dump_filename, lines, i):
         """
@@ -3847,7 +3847,7 @@ def _clean_comment(comment):
         #print(comment)
     return comment
 
-def _lines_to_decks(lines, i, punch):
+def _lines_to_decks(lines, punch):
     """
     Splits the lines into their deck.
     """

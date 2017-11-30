@@ -8,27 +8,11 @@ from six import iteritems
 
 from numpy import setdiff1d, unique, hstack
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtGui
-    from PyQt4.QtGui import (
-        QLabel, QLineEdit, QPushButton, QApplication,
-        QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    )
-elif qt_version == 5:
-    from PyQt5 import QtGui
-    from PyQt5.QtWidgets import (
-        QLabel, QLineEdit, QPushButton, QApplication,
-        QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    )
-elif qt_version == 'pyside':
-    from PySide import QtGui
-    from PySide.QtGui import (
-        QLabel, QLineEdit, QPushButton, QApplication,
-        QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    )
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+from qtpy import QtGui
+from qtpy.QtWidgets import (
+    QLabel, QLineEdit, QPushButton, QApplication,
+    QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
+)
 
 from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model

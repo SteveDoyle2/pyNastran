@@ -4,6 +4,10 @@ from scipy.sparse import coo_matrix  # type: ignore
 import numpy as np
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
 from pyNastran.utils import object_attributes, object_methods
+try:
+    import pandas as pd  # type: ignore
+except ImportError:
+    pass
 
 #from pyNastran.utils import object_attributes
 
@@ -73,6 +77,19 @@ class Matrix(object):
     def export_to_hdf5(self, group, log):
         """exports the object to HDF5 format"""
         export_to_hdf5(self, group, log)
+
+    def build_dataframe(self):
+        """exports the object to pandas format"""
+        matrix = self.data
+        if isinstance(matrix, coo_matrix):
+            print('HDF5: skipping sparse_coo_matrix')
+            #sparse_coo_matrix
+        else:
+            #nrows, ncols = matrix.shape
+            #rows = np.ones(nrows)
+            #cols = np.ones(ncols)
+            self.data_frame = pd.DataFrame(data=matrix)
+            #self.data_frame.columns.names = column_names
 
     def write(self, mat, print_full=True):
         """writes to the F06"""

@@ -89,8 +89,14 @@ class BaseScalarObject(Op2Codes):
 
         if hasattr(self, 'element_node'):
             if not np.array_equal(self.element_node, table.element_node):
-                assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
+                if self.element_node.shape != table.element_node.shape:
+                    msg = 'self.element_node.shape=%s table.element_node.shape=%s' % (
                     self.element_node.shape, table.element_node.shape)
+
+                    print(self.element_node.tolist())
+                    print(table.element_node.tolist())
+                    raise ValueError(msg)
+
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
                 for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):
@@ -101,6 +107,22 @@ class BaseScalarObject(Op2Codes):
     @property
     def class_name(self):
         return self.__class__.__name__
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if 'add' in state:
+            del state['add']
+        if 'add_new_eid' in state:
+            del state['add_new_eid']
+        if 'class_name' in state:
+            del state['class_name']
+        if 'nnodes_per_element' in state:
+            del state['nnodes_per_element']
+        if 'add_node' in state:
+            del state['add_node']
+        if 'add_eid' in state:
+            del state['add_eid']
+        return state
 
     def get_headers(self):
         raise RuntimeError()
@@ -299,6 +321,12 @@ class ScalarObject(BaseScalarObject):
         """alternate way to get the dataframe"""
         return self.data_frame
 
+    def __getstate__(self):
+        state = BaseScalarObject.__getstate__(self)
+        if 'dataframe' in state:
+            del state['dataframe']
+        return state
+
     def apply_data_code(self):
         if self.table_name is not None and self.table_name != self.data_code['table_name']:
             print(self.data_code)
@@ -317,7 +345,7 @@ class ScalarObject(BaseScalarObject):
         if 'data_names' not in self.data_code:
             return ['']
 
-        msg += 'sort1\n  ' if self.is_sort1() else 'sort2\n  '
+        msg += 'sort1\n  ' if self.is_sort1 else 'sort2\n  '
         for name in self.data_code['data_names']:
             if hasattr(self, name + 's'):
                 vals = getattr(self, name + 's')

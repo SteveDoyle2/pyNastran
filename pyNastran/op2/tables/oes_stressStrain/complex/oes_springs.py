@@ -3,13 +3,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 import numpy as np
 from numpy import zeros
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-
-from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 
 
 class ComplexSpringDamperArray(OES_Object):
@@ -26,9 +26,11 @@ class ComplexSpringDamperArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -76,7 +78,7 @@ class ComplexSpringDamperArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)

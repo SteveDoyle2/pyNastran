@@ -217,6 +217,18 @@ class MAT1(IsotropicMaterial):
         1: 'mid', 2:'e', 3:'g', 4:'nu', 5: 'rho', 6:'a', 7:'tref', 8:'ge',
         9: 'St', 10:'Sc', 11:'Ss', 12:'mcsid',
     }
+    mp_name_map = {
+        'E' : 'e', #3 : 'e',
+        'G' : 'g', #4 : 'g',
+        'NU' : 'nu', #5: 'nu',
+        'RHO' : 'rho', #6 : 'rho',
+        'A' : 'a', #7 : 'a',
+        'TREF' : 'tref', #8 : 'tref',
+        'GE' : 'ge', #9 : 'ge',
+        'ST' : 'st', #10 : 'st',
+        'SC' : 'sc', #11 : 'sc',
+        'SS' : 'ss', #12 : 'ss',
+    }
 
     def __init__(self, mid, E, G, nu,
                  rho=0.0, a=0.0, tref=0.0, ge=0.0,
@@ -1569,6 +1581,38 @@ class MAT9(AnisotropicMaterial):
     _field_map = {
         1: 'mid',
     }
+    mp_name_map = {
+        'G11' : 'G11',
+        'G12' : 'G12',
+        'G13' : 'G13',
+        'G14' : 'G14',
+        'G15' : 'G15',
+        'G16' : 'G16',
+        'G22' : 'G22',
+        'G23' : 'G23',
+        'G24' : 'G24',
+        'G25' : 'G25',
+        'G26' : 'G26',
+        'G33' : 'G33',
+        'G34' : 'G34',
+        'G35' : 'G35',
+        'G36' : 'G36',
+        'G44' : 'G44',
+        'G45' : 'G45',
+        'G46' : 'G46',
+        'G55' : 'G55',
+        'G56' : 'G56',
+        'G66' : 'G66',
+        # rho
+        # a1
+        # a2
+        # a3
+        # a4
+        # a5
+        # a6
+        'TREF' : 'tref', #8 : 'tref',
+        'GE' : 'ge', #9 : 'ge',
+    }
 
     def __init__(self, mid,
                  G11=0., G12=0., G13=0., G14=0., G15=0., G16=0.,
@@ -1796,6 +1840,7 @@ class MAT10(Material):
     +=======+=====+==========+=========+=====+========+===========+=====+=====+
     | MAT10 | MID |   BULK   |   RHO   |  C  |   GE   |   ALPHA   |     |     |
     +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+
     per MSC 2016
 
     +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
@@ -1805,6 +1850,7 @@ class MAT10(Material):
     +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
     |       |     | TID_BULK | TID_RHO |     | TID_GE | TID_GAMMA |     |     |
     +-------+-----+----------+---------+-----+--------+-----------+-----+-----+
+
     per NX 10
 
     ..note :: alpha is called gamma
@@ -2029,6 +2075,7 @@ class MATG(Material):
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
     |      |   GPL  |  GAP   | TABYPRS | TABEPL | TABGPL | TABGAP  |        |        |
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
+
     per MSC 2016
 
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
@@ -2040,6 +2087,7 @@ class MATG(Material):
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
     |      |   GPL  |        |         |        |        |         |        |        |
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
+
     per NX 10
 
     MATG 100 10 0 1001 1002 1003
@@ -2434,15 +2482,18 @@ class MAT3D(Material):
 class MATHE(HyperelasticMaterial):
     """
     model = MOONEY (default)
+    ========================
     +-------+-----+-----+-------+---+-----+------+
     | MATHE | MID |     | Model | K | RHO | TEXP |
     |  C10  | C01 |     |       |   |     |      |
     |  C20  | C11 | C02 |       |   |     |      |
     |  C30  | C21 | C12 |  C03  |   |     |      |
     +-------+-----+-----+-------+---+-----+------+
+
     NX version
 
     model = OGDEN, FOAM
+    ===================
     +-------+-------+--------+-------+-----+--------+-------+
     | MATHE |  MID  | Model  |       |  K  |  RHO   |  TEXP |
     |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
@@ -2451,24 +2502,30 @@ class MATHE(HyperelasticMaterial):
     |       |  MU6  | ALPHA6 | BETA6 | MU7 | ALPHA7 | BETA7 | # NX only line
     |       |  MU8  | ALPHA8 | BETA8 | MU9 | ALPHA9 | BETA9 | # NX only line
     +-------+-------+--------+-------+-----+--------+-------+
+
     NX version
 
     model = ABOYCE
+    ==============
     +-------+-----+-------+----+----+-----+------+
     | MATHE | MID | Model |    | K  | RHO | TEXP |
     |       | NKT |   N1  |    |    |     |      |
     |       |  D1 |   D2  | D3 | D4 | D5  |      |  # MSC only line
     +-------+-----+-------+----+----+-----+------+
+
     NX version
 
     model = SUSSBAT
+    ===============
     +-------+------+--------+--------+---+-----+------+
     | MATHE | MID  | Model  |        | K | RHO | TEXP |
     |       | TAB1 | SSTYPE | RELERR |   |     |      |
     +-------+------+--------+--------+---+-----+------+
+
     NX version
 
     model = MOONEY (default)
+    ========================
     +-------+-----+-----+-------+------+------+------+------+----+
     | MATHE | MID |     | Model | K    | RHO  | TEXP | TREF | GE |
     |  C10  | C01 |  D1 |  TAB1 | TAB2 | TAB3 | TAB4 | TABD |    |
@@ -2477,9 +2534,11 @@ class MATHE(HyperelasticMaterial):
     |  C40  | C31 | C22 |  C13  | C04  |  D4  |      |      |    |
     |  C50  | C41 | C32 |  C23  | C14  | C05  |  D5  |      |    |
     +-------+-----+-----+-------+------+------+------+------+----+
+
     MSC version
 
     model = OGDEN, FOAM
+    ===================
     +-------+-------+--------+-------+-----+--------+-------+
     | MATHE |  MID  | Model  |  NOT  |  K  |  RHO   |  TEXP |  # NOT is MSC only
     |       |  MU1  | ALPHA1 | BETA1 |     |        |       |
@@ -2487,20 +2546,25 @@ class MATHE(HyperelasticMaterial):
     |       |  MU4  | ALPHA4 | BETA4 | MU5 | ALPHA5 | BETA5 |
     |       |  D1   |   D2   |  D3   |  D4 |   D5   |       |  # MSC only line
     +-------+-------+--------+-------+-----+--------+-------+
+
     MSC version
 
     model = ABOYCE, GENT
+    ====================
     +-------+-----+-------+----+----+-----+------+
     | MATHE | MID | Model |    | K  | RHO | TEXP |
     |       | NKT | N1    |    |    |     |      |
     |       |  D1 |   D2  | D3 | D4 | D5  |      |  # MSC only line
     +-------+-----+-------+----+----+-----+------+
+
     MSC version
 
     model = GHEMi
+    =============
     +-------+-----+-------+---+-----+------+------+----+
     | MATHE | MID | Model | K | RHO | Texp | Tref | GE |
     +-------+-----+-------+---+-----+------+------+----+
+
     MSC version
     """
     type = 'MATHE'
@@ -2850,7 +2914,8 @@ class MATHP(HyperelasticMaterial):
             a comment for the card
         """
         main = data[0]
-        (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
+        av = None
+        (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
          a20, a11, a02, d2,
          a30, a21, a12, a03, d3,
          a40, a31, a22, a13, a04, d4,

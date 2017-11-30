@@ -145,6 +145,9 @@ class PLSOLID(SolidProperty):
         """
         return self.mid_ref.rho
 
+    def _verify(self, xref=False):
+        pass
+
     def raw_fields(self):
         stress_strain = set_blank_if_default(self.stress_strain, 'GRID')
         fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
@@ -318,8 +321,6 @@ class PSOLID(SolidProperty):
     |    1   |  2  |  3  |   4   |  5  |    6   |    7    |   8  |
     +========+=====+=====+=======+=====+========+=========+======+
     | PSOLID | PID | MID | CORDM | IN  | STRESS |   ISOP  | FCTN |
-    +--------+-----+-----+-------+-----+--------+---------+------+
-
     +--------+-----+-----+-------+-----+--------+---------+------+
     | PSOLID |  1  |     |   1   | 0   |        |         |      |
     +--------+-----+-----+-------+-----+--------+---------+------+

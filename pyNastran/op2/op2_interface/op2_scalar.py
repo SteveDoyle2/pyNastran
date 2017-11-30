@@ -231,7 +231,8 @@ GEOM_TABLES = [
 
     # other
     b'CONTACT', b'VIEWTB',
-    #b'KDICT',
+    b'KDICT',
+    #b'MDICTP' where does this go?
 
     # aero?
     #b'MONITOR',
@@ -497,6 +498,7 @@ NX_MATRIX_TABLES = [
     b'MPATRN', b'MIDENT', b'MRANDM', b'MCMPLX',
     b'MATPOOL',
     #b'KELM',
+    b'MELM', b'BELM',
 ]
 
 
@@ -1532,7 +1534,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #if 0:
                 #self._skip_table(table_name)
             #else:
-            if table_name in GEOM_TABLES:
+            if table_name in self.generalized_tables:
+                self.generalized_tables[table_name](self)
+            elif table_name in GEOM_TABLES:
                 self._read_geom_table()  # DIT (agard)
             elif table_name == b'GPL':
                 self._read_gpl()
@@ -1564,8 +1568,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._read_ibulk()
             elif table_name == b'CMODEXT':
                 self._read_cmodext()
-            elif table_name in self.generalized_tables:
-                self.generalized_tables[table_name](self)
             elif table_name in MATRIX_TABLES:
                 self._read_matrix(table_name)
             elif table_name in RESULT_TABLES:
@@ -1724,6 +1726,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Adds methods to call a generalized table.
         Everything is left to the user.
+
+        ::
+
+          def read_some_table(self):
+              # read the data from self.f
+              pass
+
+          # let's overwrite the existing OP2 table
+          model2 = OP2Geom(debug=True)
+          generalized_tables = {
+              b'GEOM1S' : read_some_table,
+          }
+
+          model.set_additional_generalized_tables_to_read(generalized_tables)
         """
         self._update_generalized_tables(tables)
         self.generalized_tables = tables

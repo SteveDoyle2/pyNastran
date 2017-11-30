@@ -381,6 +381,7 @@ class RLOAD1(DynamicLoad):
     +--------+-----+----------+-------+--------+----+----+------+
     | RLOAD1 |  5  |    3     |       |        | 1  |    |      |
     +--------+-----+----------+-------+--------+----+----+------+
+
     NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD1'
@@ -493,7 +494,7 @@ class RLOAD1(DynamicLoad):
                 #print(subcase, type(subcase))
                 #if 'LOADSET' in subcase:
                     #lseq_id = subcase['LOADSET'][0]
-                    #lseq = model.Load(lseq_id, msg=msg)[0]
+                    #lseq = model.Load(lseq_id, consider_load_combinations=False, msg=msg)[0]
                     #self.excite_id_ref = lseq
                     ##self.dload_id = lseq.
                 #elif 'DLOAD' in subcase:
@@ -658,6 +659,7 @@ class RLOAD2(DynamicLoad):
     +--------+-----+----------+-------+--------+----+----+------+
     | RLOAD2 |  5  |    3     |       |        | 1  |    |      |
     +--------+-----+----------+-------+--------+----+----+------+
+
     NX allows DELAY and DPHASE to be floats
     """
     type = 'RLOAD2'
@@ -932,6 +934,7 @@ class TLOAD1(DynamicLoad):
     +========+=====+==========+=======+======+=====+=====+=====+
     | TLOAD1 | SID | EXCITEID | DELAY | TYPE | TID | US0 | VS0 |
     +--------+-----+----------+-------+------+-----+-----+-----+
+
     MSC 2016.1
 
     +--------+-----+----------+-------+------+-----+
@@ -939,6 +942,7 @@ class TLOAD1(DynamicLoad):
     +========+=====+==========+=======+======+=====+
     | TLOAD1 | SID | EXCITEID | DELAY | TYPE | TID |
     +--------+-----+----------+-------+------+-----+
+
     NX 11
     """
     type = 'TLOAD1'
@@ -1171,6 +1175,7 @@ class TLOAD2(DynamicLoad):
     +--------+-----+----------+-------+------+-----+-----+-----+-----+
     |        |  C  |     B    |  US0  |  VS0 |     |     |     |     |
     +--------+-----+----------+-------+------+-----+-----+-----+-----+
+
     MSC 2016.1
 
     +--------+-----+----------+-------+------+-----+-----+-----+-----+
@@ -1180,6 +1185,7 @@ class TLOAD2(DynamicLoad):
     +--------+-----+----------+-------+------+-----+-----+-----+-----+
     |        |  C  |     B    |       |      |     |     |     |     |
     +--------+-----+----------+-------+------+-----+-----+-----+-----+
+
     NX 11
     """
     type = 'TLOAD2'

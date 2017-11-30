@@ -49,9 +49,8 @@ class DIT(GeomCommon):
         }
 
     def _read_tabdmp1(self, data, n):
-        """(15, 21, 162)"""
         """
-        TABDMP1(55,25,191)
+        TABDMP1(15, 21, 162)
 
         1 ID    I  Table identification number
         9 F     RS Natural frequency
@@ -70,7 +69,6 @@ class DIT(GeomCommon):
         for iend in iminus1_delta:
             datai = data[n+istart*4 : n+iend*4]
             tid = ints[istart]
-            #print('tid = %s' % tid)
             deltai = iend - istart - 8 # subtract 2 for sid, global scale
             assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
 

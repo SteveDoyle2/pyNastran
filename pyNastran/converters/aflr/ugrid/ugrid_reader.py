@@ -560,8 +560,11 @@ class UGRID(object):
 
         nquads = nhexas * 6 + npenta5s + 3 * npenta6s
         ntris = npenta5s * 4 + npenta6s * 2 + ntets * 4
-        tris = zeros((ntris, 3), dtype='int32')
-        quads = zeros((nquads, 4), dtype='int32')
+        self.log.info('ntris=%s nquads=%s' % (ntris, nquads))
+        if ntris:
+            tris = zeros((ntris, 3), dtype='int32')
+        if nquads:
+            quads = zeros((nquads, 4), dtype='int32')
 
         ntri_start = 0
         nquad_start = 0
@@ -625,25 +628,36 @@ class UGRID(object):
             tris[ntri_start+2*npenta6s:ntri_start+3*npenta6s] = faces5
         #from numpy.lib.arraysetops import unique
         #from numpy import lexsort
-        tris = tris.sort()
-        tri_set = set([])
-        tris = tris.sort()
-        for tri in tris:
-            tri_set.add(tri)
-        tri_array = array(list(tri_set))
 
-        quads.sort()
-        quad_set = set([])
-        # if tris:
-            # tris = vstack(tris)
-            # tris.sort(axis=0)
-            # tris = unique_rows(tris)
-        # if quads:
-            # quads = vstack(quads)
-            # quads.sort(axis=0)
-            # quads = unique_rows(tris)
-        raise NotImplementedError()
-        #return tris, quads
+        #-----------------------------------------
+        # we have two merged triangle faces of two neighboring TETRAs
+        # and we need to merge them
+        #
+        # this could likely be much, much more efficient
+
+        if ntris:
+            #print(tris)
+            #tris = tris.sort()
+            #print(tris)
+            tri_set = set([])
+            #tris = tris.sort()
+            for tri in tris:
+                tri_set.add(tuple(tri))
+            tri_array = array(list(tri_set))
+
+        if nquads:
+            quads.sort()
+            quad_set = set([])
+            # if tris:
+                # tris = vstack(tris)
+                # tris.sort(axis=0)
+                # tris = unique_rows(tris)
+            # if quads:
+                # quads = vstack(quads)
+                # quads.sort(axis=0)
+                # quads = unique_rows(tris)
+            raise NotImplementedError()
+        return tris, quads
 
 
 def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename=None):

@@ -107,7 +107,6 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         area_picker = vtk.vtkRenderedAreaPicker()
         area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
         #area_picker.Pick()
-        pass
 
 
     def _pick_depth_ids(self, xmin, ymin, xmax, ymax):

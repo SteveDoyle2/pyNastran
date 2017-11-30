@@ -2,15 +2,13 @@
 Defines the GUI IO file for Fast.
 """
 from __future__ import print_function
-from six import iteritems
-from six.moves import range
 import os
 from collections import defaultdict
+from six import iteritems
 
-import vtk
 from vtk import vtkTriangle, vtkTetra
-
 from pyNastran.converters.fast.fgrid_reader import FGridReader
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 class FastIO(object):
@@ -30,13 +28,12 @@ class FastIO(object):
 
         model = FGridReader(log=self.log, debug=False)
 
-        base_filename, ext = os.path.splitext(fgrid_filename)
-        if '.fgrid' == ext:
+        ext = os.path.splitext(fgrid_filename)[1]
+        ext = ext.lower()
+        if ext == '.fgrid':
             dimension_flag = 3
-        #elif '.ele' == ext:
-            #dimension_flag = 3
         else:
-            raise RuntimeError('unsupported extension.  Use "cogsg" or "front".')
+            raise RuntimeError('unsupported extension=%r.  Use "cogsg" or "front".' % ext)
 
         read_loads = True
         model.read_fgrid(fgrid_filename, dimension_flag)
@@ -60,22 +57,22 @@ class FastIO(object):
         #mapbc = model.mapbc
         #loads = model.loads
 
-        self.nNodes = nnodes
-        self.nElements = ntris + ntets
+        self.nnodes = nnodes
+        self.nelements = ntris + ntets
 
-        #print("nNodes = %i" % self.nNodes)
-        #print("nElements = %i" % self.nElements)
+        #print("nnodes = %i" % self.nnodes)
+        #print("nelements = %i" % self.nelements)
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         self.nid_map = {}
-        if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                self.gridResult.InsertNextValue(nid * fraction)
+        #if 0:
+            #fraction = 1. / self.nnodes  # so you can color the nodes by ID
+            #for nid, node in sorted(iteritems(nodes)):
+                #self.gridResult.InsertNextValue(nid * fraction)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -87,7 +84,8 @@ class FastIO(object):
                 elem.GetPointIds().SetId(0, n0)
                 elem.GetPointIds().SetId(1, n1)
                 elem.GetPointIds().SetId(2, n2)
-                grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                #elem.GetCellType() = 5  # vtkTriangle
+                grid.InsertNextCell(5, elem.GetPointIds())
         elif dimension_flag == 3:
             if ntets:
                 for (n0, n1, n2, n3) in tets:
@@ -96,7 +94,8 @@ class FastIO(object):
                     elem.GetPointIds().SetId(1, n1)
                     elem.GetPointIds().SetId(2, n2)
                     elem.GetPointIds().SetId(3, n3)
-                    grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(10, elem.GetPointIds())
         else:
             raise RuntimeError('dimension_flag=%r' % dimension_flag)
 
@@ -118,12 +117,6 @@ class FastIO(object):
 
     def _fill_fast_results(self, cases, model, results=False):
         note = ''
-        if 0:
-            if 'Mach' in loads:
-                avg_mach = loads['Mach'].mean()
-                note = ':  avg(Mach)=%g' % avg_mach
-            else:
-                note = ''
 
         self.isubcase_name_map = {
             1: ['Fast%s' % note, ''],

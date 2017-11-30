@@ -36,6 +36,9 @@ class GEOM1(GeomCommon):
         self.nodes[key] = node
 
     def _read_geom1_4(self, data, ndata):
+        #if data is None:
+            #return ndata
+        #self.show_ndata(140)
         return self._read_geom_4(self._geom1_map, data, ndata)
 
     def __init__(self):
@@ -54,7 +57,7 @@ class GEOM1(GeomCommon):
             (14301,143,651): ['CORD3G', self._read_cord3g],  # record 7
 
             (4501,  45,  1): ['GRID',   self._read_grid],    # record 17
-            (5301,  53,  4): ['SEQGP',  self._read_seqgp],   # record 27 - not done
+            (5301,  53,  4): ['SEQGP',  self._read_seqgp],   # record 27
 
             (2301,  23, 304): ['CSUPER',  self._read_fake],  # record 8
             (5501,  55, 297): ['CSUPEXT', self._read_fake],  # record 9
@@ -267,10 +270,10 @@ class GEOM1(GeomCommon):
                 #self.nodes[nid] = node
                 #self.add_node(node)
             else:
-                self.log.warning('*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s '
-                                 'seid=%s' % (nid, cp, x1, x2, x3, cd, ps, seid))
-                node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
-                self.rejects.append(str(node))
+                #self.log.warning('*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s '
+                                 #'seid=%s' % (nid, cp, x1, x2, x3, cd, ps, seid))
+                #node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+                #self.rejects.append(str(node))
                 nfailed += 1
             n += ntotal
         self.increase_card_count('GRID', nentries - nfailed)

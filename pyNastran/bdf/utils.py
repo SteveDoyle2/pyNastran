@@ -902,6 +902,8 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
 def deprecated(old_name, new_name, deprecated_version, levels=None):
     # type: (str, str, str, Optional[List[int]]) -> None
     """
+    Throws a deprecation message and crashes if past a specific version.
+
     Parameters
     ----------
     old_name : str
@@ -948,7 +950,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             line = source_lines[di]
         except:
             break
-        msg += '  %-25s lineNo=%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
+        msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
 
     if ver_tuple > dep_ver_tuple:
         # fail

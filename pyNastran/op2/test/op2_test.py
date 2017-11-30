@@ -64,8 +64,6 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
 
     isubcases = []
     write_op2 = False
-    is_vector = [True] # is this vectorized
-    vector_stop = [True]  # corresponds to is_vector; stop if case fails=True
     binary_debug = [True, False]  # catch any errors
     quiet = True
 
@@ -98,13 +96,12 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
 
     print("nfiles = %s" % len(files))
     import time
-    t0 = time.time()
+    time0 = time.time()
     failed_files = run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                                      write_f06=write_f06, delete_f06=delete_f06,
                                      skip_dataframe=skip_dataframe,
                                      write_op2=write_op2, debug=debug,
                                      skip_files=skip_files, stop_on_failure=stop_on_failure,
-                                     is_vector=is_vector, vector_stop=vector_stop,
                                      nstart=nstart, nstop=nstop, binary_debug=binary_debug,
                                      compare=compare, short_stats=short_stats,
                                      quiet=quiet, dev=True)
@@ -118,7 +115,7 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
             for op2file in failed_files:
                 failed_cases_file.write('%s\n' % op2file)
 
-    seconds = time.time() - t0
+    seconds = time.time() - time0
     minutes = seconds / 60.
     print("dt = %.2f seconds = %.2f minutes" % (seconds, minutes))
     ntotal = len(files)

@@ -4,14 +4,131 @@ from six.moves import range
 
 import numpy as np
 from numpy import zeros
-
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
 
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
+
+class ComplexTriaxStressArray(OES_Object):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
+        self.element_node = None
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        #self.itime = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            pass
+        else:
+            raise NotImplementedError('SORT2')
+
+    @property
+    def is_real(self):
+        return False
+
+    @property
+    def is_complex(self):
+        return True
+
+    def build(self):
+        """sizes the vectorized attributes of the ComplexPlateArray"""
+        #print('data_code = %s' % self.data_code)
+        if not hasattr(self, 'subtitle'):
+            self.subtitle = self.data_code['subtitle']
+        if self.is_built:
+            return
+        nnodes = self.get_nnodes()
+
+        #self.names = []
+        #self.nelements //= nnodes
+        self.nelements //= self.ntimes
+        #print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
+            #self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
+
+        self.ntotal = self.nelements * nnodes * 2
+        #self.ntotal
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        self.is_built = True
+        #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        self._times = zeros(self.ntimes, 'float32')
+        #self.ntotal = self.nelements * nnodes
+
+        # TODO: could be more efficient by using nelements for cid
+        self.element_node = zeros((self.ntotal, 2), 'int32')
+        #self.element_cid = zeros((self.nelements, 2), 'int32')
+
+        # the number is messed up because of the offset for the element's properties
+
+        if not self.nelements * nnodes * 2 == self.ntotal:
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
+                                                                           self.nelements, nnodes,
+                                                                           self.nelements * nnodes,
+                                                                           self.ntotal)
+            raise RuntimeError(msg)
+
+        self.fiber_curvature = zeros(self.ntotal, 'float32')
+        # [oxx, oyy, txy]
+        self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
+
+    def get_stats(self, short=False):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        nnodes = self.element_node.shape[0]
+        #ntotal = self.ntotal
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements, nnodes))
+        else:
+            msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
+        msg.append('  eType, cid\n')
+        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self._get_headers())))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def add_new_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
+        self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
+
+    def add_sort1(self, dt, eid, loc, rs, azs, As, ss):
+        """unvectorized method for adding SORT1 transient data"""
+        self.add_eid_sort1(dt, eid, loc, rs, azs, As, ss)
+
+    def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
+        self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
+
+    def add_eid_sort1(self, dt, eid, loc, rs, azs, As, ss):
+        self._times[self.itime] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
+
+        # dt, eid, loc, rs, azs, As, ss
+
+        assert isinstance(node_id, int), node_id
+        #self.data[self.itime, self.itotal] = [oxx, oyy, txy]
+        #self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
+        #self.fiber_curvature[self.itotal] = fdr
+        #self.ielement += 1
+        self.itotal += 1
 
 class ComplexPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -29,9 +146,11 @@ class ComplexPlateArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -95,7 +214,7 @@ class ComplexPlateArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
@@ -112,7 +231,7 @@ class ComplexPlateArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, (eid, nid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
@@ -147,7 +266,7 @@ class ComplexPlateArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -291,13 +410,13 @@ class ComplexPlateArray(OES_Object):
             ilayer0 = not ilayer0
 
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
-    #if self.is_von_mises():
+    #if self.is_von_mises:
         #von_mises = 'VON MISES'
     #else:
         #von_mises = 'MAX SHEAR'
 
-    if self.is_stress():
-        if self.is_fiber_distance():
+    if self.is_stress:
+        if self.is_fiber_distance:
             grid_msg_temp = ['    ELEMENT              FIBER                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                              '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
             fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
@@ -308,7 +427,7 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
             fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                               '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
     else:
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             grid_msg_temp = ['    ELEMENT              FIBER                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
                              '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
             fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
@@ -326,7 +445,7 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
         mag_real = ['                                                          (REAL/IMAGINARY)\n', ' \n']
 
     ## TODO: validation on header formatting...
-    if self.is_stress():
+    if self.is_stress:
         cquad4_bilinear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
         cquad4_linear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
         cquad8 = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
@@ -398,7 +517,7 @@ class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
-        assert self.is_strain(), self.stress_bits
+        assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
         return ['exx', 'eyy', 'exy']

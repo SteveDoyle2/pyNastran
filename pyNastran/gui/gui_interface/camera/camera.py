@@ -1,26 +1,19 @@
 from copy import deepcopy
 
+#from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QApplication, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+    QHBoxLayout, QVBoxLayout, QGridLayout)
+
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore
-    from PyQt4.QtGui import (
-        QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
-        QHBoxLayout, QVBoxLayout, QGridLayout)
-    QString = QtCore.QString
-elif qt_version == 5:
-    #from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import (
-        QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
-        QHBoxLayout, QVBoxLayout, QGridLayout)
-    from six import text_type as QString
-elif qt_version == 'pyside':
-    from PySide import QtCore
-    from PySide.QtGui import (
-        QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
-        QHBoxLayout, QVBoxLayout, QGridLayout)
-    from six import text_type as QString
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+#if qt_version == 4:
+    #QString = QtCore.QString
+#elif qt_version == 5:
+    #from six import text_type as QString
+#elif qt_version == 'pyside':
+    #from six import text_type as QString
+#else:
+    #raise NotImplementedError('qt_version = %r' % qt_version)
 
 from pyNastran.gui.gui_interface.common import PyDialog
 
@@ -71,7 +64,7 @@ class CameraWindow(PyDialog):
 
         self.table = QTableWidget()
         names_text = []
-        for iname, name in enumerate(self.names):
+        for name in self.names:
             name_text = QTableWidgetItem(str(name))
             names_text.append(name_text)
         self.create_layout(names_text)
@@ -82,7 +75,7 @@ class CameraWindow(PyDialog):
         table = self.table
         table.setRowCount(nrows)
         table.setColumnCount(1)
-        headers = [QString('Camera Name')]
+        headers = ['Camera Name']
         table.setHorizontalHeaderLabels(headers)
 
         header = table.horizontalHeader()

@@ -15,6 +15,7 @@ from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.utils import is_binary_file
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 class UGRID_IO(object):
@@ -29,17 +30,31 @@ class UGRID_IO(object):
         return data
 
     def load_ugrid_geometry(self, ugrid_filename, name='main', plot=True):
+        """
+        The entry point for UGRID geometry loading.
+
+        Parameters
+        ----------
+        ugrid_filename : str
+            the ugrid filename to load
+        name : str
+            the name of the "main" actor for the GUI
+        plot : bool; default=True
+            should the model be generated or should we wait until
+            after the results are loaded
+        """
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
         if is_binary_file(ugrid_filename):
             model = UGRID(log=self.log, debug=True)
-            base, fmt, ext = os.path.basename(ugrid_filename).split('.')
+            ext = os.path.basename(ugrid_filename).split('.')[2] # base, fmt, ext
             is_2d = False
         else:
-            base, ext = os.path.basename(ugrid_filename).split('.')
+            ext = os.path.basename(ugrid_filename).split('.')[1] # base, ext
             model = UGRID2D_Reader(log=self.log, debug=True)
             is_2d = True
+        is_3d = not is_2d
 
         self.model_type = 'ugrid'
         self.log.debug('ugrid_filename = %s' % ugrid_filename)
@@ -71,13 +86,13 @@ class UGRID_IO(object):
         nelements = ntris + nquads
 
         nodes = model.nodes
-        self.nElements = nelements
-        self.nNodes = nnodes
+        self.nelements = nelements
+        self.nnodes = nnodes
 
-        self.log.info("nnodes=%s nelements=%s" % (self.nNodes, self.nElements))
+        self.log.info("nnodes=%s nelements=%s" % (self.nnodes, self.nelements))
         assert nelements > 0, nelements
 
-        self.grid.Allocate(self.nElements, 1000)
+        self.grid.Allocate(self.nelements, 1000)
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
@@ -86,15 +101,16 @@ class UGRID_IO(object):
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
-        diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
-        if len(diff_node_ids):
-            red = (1., 0., 0.)
-            self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1.,
-                                           point_size=10, representation='point')
-            self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
-            self._add_alt_actors(self.alt_grids)
+        if is_3d:
+            diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
+            if len(diff_node_ids):
+                red = (1., 0., 0.)
+                self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1.,
+                                               point_size=10, representation='point')
+                self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
+                self._add_alt_actors(self.alt_grids)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
 
         if ntris:
             for eid, element in enumerate(tris):
@@ -114,7 +130,7 @@ class UGRID_IO(object):
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
 
-        self.nElements = nelements
+        self.nelements = nelements
         self.grid.SetPoints(points)
         self.grid.Modified()
         self.log.info('update...')
@@ -135,7 +151,7 @@ class UGRID_IO(object):
                 ugrid_filename, cases, ID, nnodes, nelements, model)
         else:
             form, cases = self._fill_ugrid2d_case(
-                ugrid_filename, cases, ID, nnodes, nelements, model)
+                cases, ID, nnodes, nelements)
 
         if plot:
             self._finish_results_io2(form, cases)
@@ -176,22 +192,19 @@ class UGRID_IO(object):
     # def _load_ugrid_results(self, openfoam_filename, dirname):
         # pass
 
-    def _fill_ugrid2d_case(self, base, cases, ID, nnodes, nelements, model):
-        cases_new = []
-        results_form = []
+    def _fill_ugrid2d_case(self, cases, ID, nnodes, nelements):
+        #cases_new = []
+        #results_form = []
 
         geometry_form = [
             ('ElementID', 0, []),
             ('NodeID', 1, []),
         ]
 
-        ntris = model.tris.shape[0]
-        nquads = model.quads.shape[0]
+        #ntris = model.tris.shape[0]
+        #nquads = model.quads.shape[0]
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
-
-        #cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
-        #cases[(ID, 1, 'NodeID', 1, 'node', '%i', '')] = nids
 
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
                             location='centroid', scalar=eids)
@@ -235,8 +248,8 @@ class UGRID_IO(object):
             #('GridBC', 6, []),
         ]
 
-        ntris = model.tris.shape[0]
-        nquads = model.quads.shape[0]
+        #ntris = model.tris.shape[0]
+        #nquads = model.quads.shape[0]
         #nelements = ntris + nquads
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)

@@ -6,7 +6,7 @@
 import os
 from pyNastran.utils import print_bad_path
 from pyNastran.op4.op4 import OP4
-from numpy import float32, float64, int32, int64, product
+from numpy import float32, float64, int64, product
 
 # <codecell>
 

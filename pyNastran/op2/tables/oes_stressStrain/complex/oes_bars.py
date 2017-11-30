@@ -1,8 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 import numpy as np
-from numpy import concatenate, zeros
+from numpy import zeros
 try:
     import pandas as pd  # type: ignore
 except ImportError:
@@ -35,9 +34,11 @@ class ComplexBarArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -85,7 +86,7 @@ class ComplexBarArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -93,7 +94,7 @@ class ComplexBarArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -115,7 +116,7 @@ class ComplexBarArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -156,10 +157,15 @@ class ComplexBarArray(OES_Object):
                        % (self.__class__.__name__, ntimes, nelements))
         else:
             msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
-        msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
-        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(
+            '  eType, cid\n'
+            '  data: [ntimes, nnodes, 6] where 6=[%s]\n'
+            '  element.shape = %s\n'
+            '  data.shape = %s\n' % (
+                ', '.join(self.get_headers()),
+                str(self.element.shape).replace('L', ''),
+                str(self.data.shape).replace('L', ''),
+        ))
 
         msg.append('  CBAR\n  ')
         msg += self.get_data_code()
@@ -186,7 +192,7 @@ class ComplexBarArray(OES_Object):
             #'   FREQUENCY       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE',
         #]
         name = self.data_code['name']
-        if self.is_sort1():
+        if self.is_sort1:
             line1 = '            ELEMENT                    LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n'
             line2 = '              ID.                          1              2              3              4             AXIAL STRESS\n'
         else:
@@ -197,7 +203,7 @@ class ComplexBarArray(OES_Object):
                 msg = 'name=%r\n\n%s' % (name, self.code_information())
                 raise RuntimeError(msg)
 
-        if self.is_stress():
+        if self.is_stress:
             stress_strain = '                             C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )'
         else:
             stress_strain = '                             C O M P L E X   S T R A I N S   I N   B A R   E L E M E N T S   ( C B A R )'
@@ -209,7 +215,7 @@ class ComplexBarArray(OES_Object):
             line1,
             line2,
         ]
-        if self.is_sort1():
+        if self.is_sort1:
             self._write_sort1_as_sort1(f, name, header, page_stamp, msg_temp, page_num,
                                        is_mag_phase=is_mag_phase)
         else:
@@ -248,11 +254,15 @@ class ComplexBarArray(OES_Object):
                  s1ai, s2ai, s3ai, s4ai, axiali,
                  s1bi, s2bi, s3bi, s4bi) = vals2
 
-                msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, s1ar, s2ar, s3ar, s4ar, axialr))
-                msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % ('', s1ai, s2ai, s3ai, s4ai, axiali))
+                msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %s\n'
+                           ' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                               eid, s1ar, s2ar, s3ar, s4ar, axialr,
+                               '', s1ai, s2ai, s3ai, s4ai, axiali))
 
-                msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
-                msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
+                msg.append(' %8s   %-13s  %-13s  %-13s  %s\n'
+                           ' %8s   %-13s  %-13s  %-13s  %s\n' % (
+                               '', s1br, s2br, s3br, s4br,
+                               '', s1bi, s2bi, s3bi, s4bi))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num

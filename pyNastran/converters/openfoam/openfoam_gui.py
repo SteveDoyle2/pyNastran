@@ -5,7 +5,8 @@ import sys
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from PyQt4 import QtGui
+from qtpy.QtGui import QMessageBox
+from qtpy.QtWidgets import QApplication
 
 import pyNastran
 from pyNastran.gui.gui_common import GuiCommon2
@@ -99,7 +100,7 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
             '',
             'Reload Model:  using the same filename reload the model',
         ]
-        QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
+        QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
 
     def on_reload(self):

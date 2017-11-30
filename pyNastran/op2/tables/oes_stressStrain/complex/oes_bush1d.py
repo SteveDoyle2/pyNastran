@@ -1,13 +1,14 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import integer_types
 import numpy as np
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
-from pyNastran.f06.f06_formatting import write_imag_floats_13e
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
+from pyNastran.f06.f06_formatting import write_imag_floats_13e
 
 
 class ComplexCBush1DArray(OES_Object):
@@ -17,9 +18,11 @@ class ComplexCBush1DArray(OES_Object):
 
         self.nelements = 0  # result specific
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -65,7 +68,7 @@ class ComplexCBush1DArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -73,7 +76,7 @@ class ComplexCBush1DArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -81,8 +84,8 @@ class ComplexCBush1DArray(OES_Object):
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         d = t1 - t2
-                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
-                                        [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        if not np.allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
+                                           [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
                         #if not np.array_equal(t1, t2):
                             msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
                                 eid,
@@ -94,7 +97,7 @@ class ComplexCBush1DArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -146,25 +149,26 @@ class ComplexCBush1DArray(OES_Object):
         ind = np.searchsorted(eids, self.element)
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
+                  is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase)
 
-        if self.is_sort1():
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp, is_mag_phase)
+        if self.is_sort1:
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp, is_mag_phase)
         else:
             raise NotImplementedError()
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp, is_mag_phase):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp, is_mag_phase):
         ntimes = self.data.shape[0]
 
         eids = self.element
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             tx = self.data[itime, :, 0]
             ty = self.data[itime, :, 1]
@@ -177,12 +181,12 @@ class ComplexCBush1DArray(OES_Object):
                  txi, tyi, tzi, rxi, ryi, rzi] = write_imag_floats_13e([itx, ity, itz, irx, iry, irz], is_mag_phase)
                 #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'
                 #'                                    0.0         179.9942        0.0           0.0           0.0           0.0'
-                f.write('                %8i    %-13s %-13s %-13s %-13s %-13s %s\n'
-                        '                %8s    %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                            eid, txr, tyr, tzr, rxr, ryr, rzr,
-                            '', txi, tyi, tzi, rxi, ryi, rzi))
+                f06_file.write('                %8i    %-13s %-13s %-13s %-13s %-13s %s\n'
+                               '                %8s    %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                                   eid, txr, tyr, tzr, rxr, ryr, rzr,
+                                   '', txi, tyi, tzi, rxi, ryi, rzi))
 
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

@@ -5,13 +5,13 @@ from six.moves import zip, range
 
 import numpy as np
 from numpy import zeros, concatenate
-
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_imag_floats_13e
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.f06.f06_formatting import write_imag_floats_13e
 
 
 class ComplexSolidArray(OES_Object):
@@ -32,9 +32,11 @@ class ComplexSolidArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -132,7 +134,7 @@ class ComplexSolidArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -140,7 +142,7 @@ class ComplexSolidArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid_nid in enumerate(self.element_node):
                         eid, nid = eid_nid
@@ -162,7 +164,7 @@ class ComplexSolidArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -285,7 +287,7 @@ def _get_msgs(self, is_mag_phase, is_sort1):
     else:
         mag_phase = '                                                          (REAL/IMAGINARY)'
 
-    if self.is_stress():
+    if self.is_stress:
         base_msg = [
             mag_phase,
             '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',

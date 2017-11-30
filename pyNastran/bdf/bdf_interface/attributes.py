@@ -139,6 +139,9 @@ class BDFAttributes(object):
         self.punch = None
         self._encoding = None
 
+        #: ignore any ECHOON flags
+        self.force_echo_off = True
+
         #: list of Nastran SYSTEM commands
         self.system_command_lines = []  # type: List[str]
 
@@ -251,8 +254,6 @@ class BDFAttributes(object):
         self.params = {}  # type: Dict[str, Any]
         # ------------------------------- nodes -------------------------------
         # main structural block
-        #: stores SPOINT, GRID cards
-        self.nodes = {}  # type: Dict[int, Any]
         #: stores POINT cards
         self.points = {}  # type: Dict[int, Any]
         self.ringaxs = {}  # type: Dict[int, Any]
@@ -316,12 +317,6 @@ class BDFAttributes(object):
         #: stores the CREEP card
         self.creep_materials = {}  # type: Dict[int, Any]
 
-        # loads
-        #: stores LOAD, FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-        #: PLOAD, PLOAD2, PLOAD4, SLOAD
-        #: GMLOAD, SPCD,
-        #: QVOL
-        self.loads = {}  # type: Dict[int, List[Any]]
         self.tics = {}  # type: Optional[Any]
 
         # stores DLOAD entries.
@@ -349,9 +344,11 @@ class BDFAttributes(object):
 
         #: stores SPCADD, SPC, SPC1, SPCAX, GMSPC
         self.spcs = {}  # type: Dict[int, List[Any]]
+        self.spcadds = {}  # type: Dict[int, List[Any]]
 
         self.spcoffs = {}  # type: Dict[int, List[Any]]
         self.mpcs = {}  # type: Dict[int, List[Any]]
+        self.mpcadds = {}  # type: Dict[int, List[Any]]
 
         # --------------------------- dynamic ----------------------------
         #: stores DAREA
@@ -616,16 +613,18 @@ class BDFAttributes(object):
             'thermal_materials' : ['MAT4', 'MAT5',],
 
             # spc/mpc constraints - TODO: is this correct?
-            'spcs' : ['SPC', 'SPC1', 'SPCAX', 'SPCADD', 'GMSPC'],
+            'spcadds' : ['SPCADD'],
+            'spcs' : ['SPC', 'SPC1', 'SPCAX', 'GMSPC'],
             'spcoffs' : ['SPCOFF', 'SPCOFF1'],
-            'mpcs' : ['MPC', 'MPCADD'],
+            'mpcadds' : ['MPCADD'],
+            'mpcs' : ['MPC'],
             'suport' : ['SUPORT'],
             'suport1' : ['SUPORT1'],
             'se_suport' : ['SESUP'],
 
             # loads
+            'load_combinations' : ['LOAD', 'LSEQ'],
             'loads' : [
-                'LOAD', 'LSEQ', 'RANDPS',
                 'FORCE', 'FORCE1', 'FORCE2',
                 'MOMENT', 'MOMENT1', 'MOMENT2',
                 'GRAV', 'ACCEL', 'ACCEL1',
@@ -640,7 +639,7 @@ class BDFAttributes(object):
             'dloads' : ['DLOAD', ],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
             'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-                               'QVECT',],
+                               'QVECT', 'RANDPS'],
 
             # aero cards
             'aero' : ['AERO'],

@@ -567,7 +567,7 @@ def main():
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time
-    t0 = time.time()
+    time0 = time.time()
 
     if data['--large']:
         size = 16
@@ -591,7 +591,7 @@ def main():
         precision=precision,
         sum_load=data['--loads'],
     )
-    print("total time:  %.2f sec" % (time.time() - t0))
+    print("total time:  %.2f sec" % (time.time() - time0))
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -13,21 +13,21 @@ from pyNastran.bdf.write_path import write_include, _split_path
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'bdf', 'test')
-#print("testPath = %s" % testPath)
 from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder
 
 
 class Tester(unittest.TestCase):
 
     def run_bdf(self, folder, bdf_filename, xref=False, cid=None, size=8,
-                mesh_form='combined', dynamic_vars=None, debug=False, quiet=True):
+                mesh_form='combined', dynamic_vars=None, debug=False, quiet=True,
+                run_extract_bodies=True):
         cid = 0
         #xref = False
         return run_bdf(folder, bdf_filename, xref=xref, cid=cid, size=size,
                        is_folder=True,
                        mesh_form=mesh_form, dynamic_vars=dynamic_vars,
                        debug=debug, quiet=quiet,
-                       sum_load=True, run_extract_bodies=True)
+                       sum_load=True, run_extract_bodies=run_extract_bodies)
 
     def run_all_files_in_folder(self, folder, xref=False, cid=None, debug=False):
         run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)
@@ -202,7 +202,9 @@ class TestBDF(Tester):
     def test_bdf_05(self):
         bdf_filename = 'testA.bdf'
         folder = os.path.abspath(os.path.join(pkg_path, 'bdf', 'test', 'unit'))
-        (fem1, fem2, diff_cards) = self.run_bdf(folder, bdf_filename)
+        (fem1, fem2, diff_cards) = self.run_bdf(
+            folder, bdf_filename, xref=False, run_extract_bodies=False,
+        )
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2

@@ -27,34 +27,34 @@ class MPT(GeomCommon):
     def __init__(self):
         GeomCommon.__init__(self)
         self.big_materials = {}
+
+        #F:\work\pyNastran\examples\Dropbox\move_tpl\chkout01.op2
         self._mpt_map = {
-            (1003, 10, 245): ['CREEP', self._read_creep],  # record 1
-            (103, 1, 77): ['MAT1', self._read_mat1],       # record 3-msc-dmap2014
-            (203, 2, 78): ['MAT2', self._read_mat2],       # record 3
-            (1403, 14, 122): ['MAT3', self._read_mat3],    # record 4
-            (2103, 21, 234): ['MAT4', self._read_mat4],    # record 5
-            (2203, 22, 235): ['MAT5', self._read_mat5],    # record 6
-            (2503, 25, 288): ['MAT8', self._read_mat8],    # record 7
-            (2603, 26, 300): ['MAT9', self._read_mat9],    # record 8 - buggy
-            (2801, 28, 365): ['MAT10', self._read_mat10],  # record 9
+            (1003, 10, 245) : ['CREEP', self._read_creep],  # record 1
+            (103, 1, 77) : ['MAT1', self._read_mat1],       # record 3-msc-dmap2014
+            (203, 2, 78) : ['MAT2', self._read_mat2],       # record 3
+            (1403, 14, 122) : ['MAT3', self._read_mat3],    # record 4
+            (2103, 21, 234) : ['MAT4', self._read_mat4],    # record 5
+            (2203, 22, 235) : ['MAT5', self._read_mat5],    # record 6
+            (2503, 25, 288) : ['MAT8', self._read_mat8],    # record 7
+            (2603, 26, 300) : ['MAT9', self._read_mat9],    # record 8 - buggy
+            (2801, 28, 365) : ['MAT10', self._read_mat10],  # record 9
             (2903, 29, 371) : ['MAT11', self._read_mat11],  # record ??? - NX specific - buggy?
 
-            #(2603, 26, 300): ['MAT9', self._read_fake],    # record 8 - buggy
-            #(2903, 29, 371) : ['MAT11', self._read_fake],  # record ??? - NX specific - buggy?
-
-            (4506, 45, 374): ['MATHP', self._read_mathp],   # record 11
-            (503, 5, 90): ['MATS1', self._read_mats1],      # record 12
-            (703, 7, 91): ['MATT1', self._read_matt1],      # record 13 - not done
-            (803, 8, 102): ['MATT2', self._read_matt2],     # record 14 - not done
-            (1503, 14, 189): ['MATT3', self._read_matt3],   # record 15 - not done
-            (2303, 23, 237): ['MATT4', self._read_matt4],   # record 16 - not done
-            (2403, 24, 238): ['MATT5', self._read_matt5],   # record 17 - not done
-            (2703, 27, 301): ['MATT9', self._read_matt9],   # record 19 - not done
-            (8802, 88, 413): ['RADM', self._read_radm],     # record 25 - not done
+            (1503, 15, 189)  : ['???', self._read_fake],
+            (4506, 45, 374) : ['MATHP', self._read_mathp],   # record 11
+            (503, 5, 90) : ['MATS1', self._read_mats1],      # record 12
+            (703, 7, 91) : ['MATT1', self._read_matt1],      # record 13 - not done
+            (803, 8, 102) : ['MATT2', self._read_matt2],     # record 14 - not done
+            (1503, 14, 189) : ['MATT3', self._read_matt3],   # record 15 - not done
+            (2303, 23, 237) : ['MATT4', self._read_matt4],   # record 16 - not done
+            (2403, 24, 238) : ['MATT5', self._read_matt5],   # record 17 - not done
+            (2703, 27, 301) : ['MATT9', self._read_matt9],   # record 19 - not done
+            (8802, 88, 413) : ['RADM', self._read_radm],     # record 25 - not done
             # record 26
-            (3003, 30, 286): ['NLPARM', self._read_nlparm],   # record 27
-            (3104, 32, 350): ['NLPCI', self._read_nlpci],     # record 28
-            (3103, 31, 337): ['TSTEPNL', self._read_tstepnl], # record 29
+            (3003, 30, 286) : ['NLPARM', self._read_nlparm],   # record 27
+            (3104, 32, 350) : ['NLPCI', self._read_nlpci],     # record 28
+            (3103, 31, 337) : ['TSTEPNL', self._read_tstepnl], # record 29
             (3303, 33, 988) : ['MATT11', self._read_matt11],
 
             (903, 9, 336) : ['MATT8', self._read_matt8],
@@ -79,6 +79,8 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             (mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
              Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CREEP=%s\n' % str(out))
             mat = CREEP.add_op2_data(out)
             self._add_creep_material_object(mat, allow_overwrites=True)
             n += 64
@@ -112,6 +114,8 @@ class MPT(GeomCommon):
         for i in range(nmaterials):
             edata = data[n:n+68]
             out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  MAT2=%s\n' % str(out))
             (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
              tref, ge, St, Sc, Ss, mcsid) = out
             #print("MAT2 = ",out)
@@ -135,6 +139,8 @@ class MPT(GeomCommon):
             out = s.unpack(data[n:n+64])
             (mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
              blank, ax, ath, az, tref, ge, blank) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  MAT3=%s\n' % str(out))
             mat = MAT3.add_op2_data([mid, ex, eth, ez, nuxth, nuthz,
                                      nuzx, rho, gzx, ax, ath, az, tref, ge])
             self.add_op2_material(mat)
@@ -166,6 +172,8 @@ class MPT(GeomCommon):
         for i in range(nmaterials):
             out = s.unpack(data[n:n+40])
             (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  MAT5=%s\n' % str(out))
             mat = MAT5.add_op2_data(out)
             self._add_thermal_material_object(mat, allow_overwrites=True)
             n += 40
@@ -197,6 +205,8 @@ class MPT(GeomCommon):
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             out = s.unpack(data[n:n+ntotal])
+            if self.is_debug_file:
+                self.binary_debug.write('  MAT9=%s\n' % str(out))
             assert len(out) == 35, out
             (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
@@ -226,6 +236,8 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             (mid, bulk, rho, c, ge) = out
             assert mid > 0, out
+            if self.is_debug_file:
+                self.binary_debug.write('  MAT10=%s\n' % str(out))
             mat = MAT10.add_op2_data(out)
             assert mat.mid > 0, mat
             self.add_op2_material(mat)
@@ -247,6 +259,8 @@ class MPT(GeomCommon):
             out = struc.unpack(edata)
             (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
              rho, a1, a2, a3, tref, ge) = out[:16]
+            if self.is_debug_file:
+                self.binary_debug.write('  MA11=%s\n' % str(out))
             mat = MAT11.add_op2_data(out)
             self.add_op2_material(mat)
             n += ntotal
@@ -267,6 +281,8 @@ class MPT(GeomCommon):
             (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
              rho, a1, a2, a3, tref, ge,
              blank1, blank2, blank3, blank4) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  MAT11-old=%s\n' % str(out))
             mat = MAT11.add_op2_data(out)
             assert mid > 0, mat
             self.add_op2_material(mat)
@@ -279,11 +295,12 @@ class MPT(GeomCommon):
         nmaterials = 0
         s1 = Struct(b(self._endian + 'i7f3i23fi'))
         s2 = Struct(b(self._endian + '8i'))
-        n2 = n
-        while n2 < n:
+        n2 = len(data)
+        while n < n2:
             edata = data[n:n+140]
             n += 140
             out1 = s1.unpack(edata)
+
             (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
              a20, a11, a02, d2,
              a30, a21, a12, a03, d3,
@@ -298,9 +315,12 @@ class MPT(GeomCommon):
                 out2 = s2.unpack(edata)
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data_in.append(out2)
-                mat = MATHP.add_op2_data(data_in)
-            self.add_op2_material(mat)
+            mat = MATHP.add_op2_data(data_in)
+            if self.is_debug_file:
+                self.binary_debug.write('  MATHP=%s\n' % str(out))
+            self._add_hyperelastic_material_object(mat)
             nmaterials += 1
+        assert nmaterials > 0, 'MATP nmaterials=%s' % nmaterials
         self.card_count['MATHP'] = nmaterials
         return n
 
@@ -316,6 +336,8 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
             data_in = [mid, tid, Type, h, yf, hr, limit1, limit2]
+            if self.is_debug_file:
+                self.binary_debug.write('  MATS1=%s\n' % str(out))
             mat = MATS1.add_op2_data(data_in)
             self._add_material_dependence_object(mat, allow_overwrites=True)
         self.card_count['MATS1'] = nmaterials
@@ -462,6 +484,8 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  NLPARM=%s\n' % str(out))
             self._add_nlparm_object(NLPARM.add_op2_data(out))
             n += ntotal
         self.card_count['NLPARM'] = nentries

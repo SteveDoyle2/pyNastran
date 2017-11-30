@@ -43,13 +43,16 @@ def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, includ
                     encoding=encoding, size=size, is_double=is_double)
     return model
 
-def main():
-    import sys
-    assert len(sys.argv) == 3, 'number of arguments must be 2; ugrid_filename, bdf_filename; nargs=%s; args=%s' % (len(sys.argv[1:]), sys.argv[1:])
-    ugrid_filename = sys.argv[1]
-    bdf_filename = sys.argv[2]
-    ugrid3d_to_nastran(ugrid_filename, bdf_filename,
-                       size=size, is_double=is_double)
+#def main():
+    #import sys
+    #if len(sys.argv) != 3:
+        #msg = 'number of arguments must be 2; ugrid_filename, bdf_filename; nargs=%s; args=%s' % (
+            #len(sys.argv[1:]), sys.argv[1:])
+        #raise SyntaxError(msg)
+    #ugrid_filename = sys.argv[1]
+    #bdf_filename = sys.argv[2]
+    #ugrid3d_to_nastran(ugrid_filename, bdf_filename,
+                       #size=size, is_double=is_double)
 
 
 if __name__ == '__main__':

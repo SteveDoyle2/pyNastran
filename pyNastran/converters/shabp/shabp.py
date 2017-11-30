@@ -1,4 +1,5 @@
 from __future__ import print_function
+import sys
 from six.moves import range
 from numpy import array, zeros, arange, ones, cross
 from numpy.linalg import norm  # type: ignore
@@ -28,13 +29,17 @@ class SHABP(ShabpOut):
         self.component_name_to_num = {}
         self.log = get_logger2(log, debug=debug)
 
+        self.title = ''
+        self.header = ''
+        self.shabp_cases = {}
+
     def write_shabp(self, out_filename):
         pass
 
     def get_area_xlength_by_component(self, components=None):
         if components is None:
             components = self.component_name_to_patch.keys()
-        ncomponents = len(components)
+        #ncomponents = len(components)
 
         # we're not using a vector because component name is
         # probably more useful
@@ -45,23 +50,23 @@ class SHABP(ShabpOut):
         for name in components:
             patches = self.component_name_to_patch[name]
 
-            A = 0.
+            area = 0.
             for i, ipatch in enumerate(patches):
                 X = self.X[ipatch-1]
                 nrows, ncols = X.shape
 
                 npoints = nrows * ncols
-                XYZ = zeros((npoints, 3), dtype='float32')
-                XYZ[:, 0] = self.X[ipatch-1].ravel()
-                XYZ[:, 1] = self.Y[ipatch-1].ravel()
-                XYZ[:, 2] = self.Z[ipatch-1].ravel()
+                xyz = zeros((npoints, 3), dtype='float32')
+                xyz[:, 0] = self.X[ipatch-1].ravel()
+                xyz[:, 1] = self.Y[ipatch-1].ravel()
+                xyz[:, 2] = self.Z[ipatch-1].ravel()
 
                 if xmin is None:
-                    xmin = XYZ[:, 0].min()
-                    xmax = XYZ[:, 0].max()
+                    xmin = xyz[:, 0].min()
+                    xmax = xyz[:, 0].max()
                 else:
-                    xmin = min(xmin, XYZ[:, 0].min())
-                    xmax = max(xmax, XYZ[:, 0].max())
+                    xmin = min(xmin, xyz[:, 0].min())
+                    xmax = max(xmax, xyz[:, 0].max())
 
                 # TODO: can we vectorize this efficiently?
                 for irow in range(nrows-1):
@@ -70,26 +75,26 @@ class SHABP(ShabpOut):
                         i2 = (irow+1)*ncols + jcol,
                         i3 = (irow+1)*ncols + (jcol+1),
                         i4 = irow*ncols +(jcol+1),
-                        a = XYZ[i3, :] - XYZ[i1, :]
-                        b = XYZ[i4, :] - XYZ[i2, :]
-                        A += 0.5 * norm(cross(a, b))
+                        a = xyz[i3, :] - xyz[i1, :]
+                        b = xyz[i4, :] - xyz[i2, :]
+                        area += 0.5 * norm(cross(a, b))
 
-            areas[name] = A
+            areas[name] = area
             lengths[name] = xmax - xmin
         return areas
 
     def get_area_by_component(self, components=None):
         if components is None:
             components = self.component_name_to_patch.keys()
-        ncomponents = len(components)
+        #ncomponents = len(components)
 
         # we're not using a vector because component name is
         # probably more useful
         areas = {}
         for name in components:
             patches = self.component_name_to_patch[name]
-            A = self.get_area_by_patch(patches)
-            areas[name] = A.sum()
+            area = self.get_area_by_patch(patches)
+            areas[name] = area.sum()
         return areas
 
     def get_area_by_patch(self, ipatches=None):
@@ -102,12 +107,12 @@ class SHABP(ShabpOut):
             nrows, ncols = X.shape
 
             npoints = nrows * ncols
-            XYZ = zeros((npoints, 3), dtype='float32')
-            XYZ[:, 0] = self.X[ipatch-1].ravel()
-            XYZ[:, 1] = self.Y[ipatch-1].ravel()
-            XYZ[:, 2] = self.Z[ipatch-1].ravel()
+            xyz = zeros((npoints, 3), dtype='float32')
+            xyz[:, 0] = self.X[ipatch-1].ravel()
+            xyz[:, 1] = self.Y[ipatch-1].ravel()
+            xyz[:, 2] = self.Z[ipatch-1].ravel()
 
-            A = 0.
+            area = 0.
             # TODO: can we vectorize this efficiently?
             for irow in range(nrows-1):
                 for jcol in range(ncols-1):
@@ -115,10 +120,10 @@ class SHABP(ShabpOut):
                     i2 = (irow+1)*ncols +(jcol),
                     i3 = (irow+1)*ncols +(jcol+1),
                     i4 = irow*ncols + (jcol+1),
-                    a = XYZ[i3, :] - XYZ[i1, :]
-                    b = XYZ[i4, :] - XYZ[i2, :]
-                    A += 0.5 * norm(cross(a, b))
-            areas[i] = A
+                    a = xyz[i3, :] - xyz[i1, :]
+                    b = xyz[i4, :] - xyz[i2, :]
+                    area += 0.5 * norm(cross(a, b))
+            areas[i] = area
         return areas
 
     def read_shabp(self, shabp_filename):
@@ -141,9 +146,9 @@ class SHABP(ShabpOut):
             if 1:
                 name = header[:7].strip()
                 #num = int(header[4:7])
-                nrows = int(header[7:20])
-                ncols = int(header[20:29])
-                name2 = header[29:].strip()
+                #nrows = int(header[7:20])
+                #ncols = int(header[20:29])
+                #name2 = header[29:].strip()
                 #print lines[i].strip()
                 flag = name[4]
             else:
@@ -264,7 +269,7 @@ class SHABP(ShabpOut):
         Y = []
         Z = []
         #XYZ = []
-        for ipatch, patch in enumerate(patches):
+        for patch in patches:
             nrows = len(patch)
             ncols = len(patch[0])
             #xyz = zeros((nrows, ncols, 3), dtype='float32')
@@ -299,8 +304,7 @@ class SHABP(ShabpOut):
 
         ipoint = 0
         ielement = 0
-        j = 0
-        XYZ = zeros((npoints, 3), dtype='float32')
+        xyz = zeros((npoints, 3), dtype='float32')
         elements2 = zeros((nelements, 4), dtype='int32')
         components = ones(nelements, dtype='int32')
         patches = ones(nelements, dtype='int32')
@@ -308,10 +312,10 @@ class SHABP(ShabpOut):
         shadow = ones(nelements, dtype='int32')
 
         for ipatch in range(npatches):
-            #print "---ipatch=%s---" % ipatch
             if ipatch not in self.patch_to_component_num:
                 comp_num = 0
-                #raise RuntimeError('ipatch=%s keys=%s' % (ipatch, sorted(self.patch_to_component_num)))
+                #raise RuntimeError('ipatch=%s keys=%s' % (
+                    #ipatch, sorted(self.patch_to_component_num)))
                 impact_val = 0
                 shadow_val = 0
                 #continue
@@ -323,9 +327,9 @@ class SHABP(ShabpOut):
             nrows, ncols = self.X[ipatch].shape
             npointsi = nrows * ncols
             nelementsi = (nrows-1) * (ncols-1)
-            XYZ[ipoint:ipoint+npointsi, 0] = self.X[ipatch].ravel()
-            XYZ[ipoint:ipoint+npointsi, 1] = self.Y[ipatch].ravel()
-            XYZ[ipoint:ipoint+npointsi, 2] = self.Z[ipatch].ravel()
+            xyz[ipoint:ipoint+npointsi, 0] = self.X[ipatch].ravel()
+            xyz[ipoint:ipoint+npointsi, 1] = self.Y[ipatch].ravel()
+            xyz[ipoint:ipoint+npointsi, 2] = self.Z[ipatch].ravel()
 
             #if comp_num == 0:
                 #continue
@@ -350,7 +354,7 @@ class SHABP(ShabpOut):
             #print("  ipatch=%i Cp[%i:%i]" % (ipatch+1, ielement, ielement+nelementsi))
             ipoint += npointsi
             ielement += nelementsi
-        return XYZ, elements2, patches, components, impact, shadow
+        return xyz, elements2, patches, components, impact, shadow
 
     def parse_trailer(self):
         out = parse_trailer(self.trailer)
@@ -369,22 +373,21 @@ class SHABP(ShabpOut):
 
         mach_line = self.trailer[2].rstrip()
         mach = float(mach_line[0 :10].strip())
-        alt = float(mach_line[10:20].strip())
-        pstag = float(mach_line[20:30].strip())
-        tstag = float(mach_line[30:40].strip())
-        igas = int(mach_line[40:41].strip())
+        #alt = float(mach_line[10:20].strip())
+        #pstag = float(mach_line[20:30].strip())
+        #tstag = float(mach_line[30:40].strip())
+        #igas = int(mach_line[40:41].strip())
         nalpha_beta = int(mach_line[41:43].strip())
 
-        ref_line = self.trailer[3].rstrip()
-        Sref = float(ref_line[0:10].strip())
-        Cref = float(ref_line[10:20].strip())
-        Bref = float(ref_line[20:30].strip())
-        Xcg = float(ref_line[30:40].strip())
-        Ycg = float(ref_line[40:50].strip())
-        Zcg = float(ref_line[50:60].strip())
+        #ref_line = self.trailer[3].rstrip()
+        #sref = float(ref_line[0:10].strip())
+        #cref = float(ref_line[10:20].strip())
+        #bref = float(ref_line[20:30].strip())
+        #xcg = float(ref_line[30:40].strip())
+        #ycg = float(ref_line[40:50].strip())
+        #zcg = float(ref_line[50:60].strip())
 
         i = 4
-        self.shabp_cases = {}
         for n in range(nalpha_beta):
             alpha_line = self.trailer[i].rstrip()
             #print "alpha_line =", alpha_line
@@ -398,7 +401,7 @@ class SHABP(ShabpOut):
         #print "comp line =", ncomponents_line
         ncomponents = int(ncomponents_line[:2])
         zero = ncomponents_line[2:3]
-        assert zero == '0', 'zero=%r; %s' %(zero, ncomponents_line)
+        assert zero == '0', 'zero=%r; %s' % (zero, ncomponents_line)
 
         i += 1
         for icomponent in range(ncomponents):
@@ -488,11 +491,13 @@ class SHABP(ShabpOut):
         #3142
         #print 'done with trailer'
 
-if __name__ == '__main__':  # pragma: no cover
-    import sys
-    s = SHABP()
-    s.read_shabp(sys.argv[1])
-    s.read_shabp_out('SHABP.OUT')
-    #s.get_area_by_component()
-    #s.get_area_xlength_by_component()
+def main():
+    model = SHABP()
+    model.read_shabp(sys.argv[1])
+    model.read_shabp_out('SHABP.OUT')
+    #model.get_area_by_component()
+    #model.get_area_xlength_by_component()
 
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

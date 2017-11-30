@@ -12,7 +12,8 @@ import numpy as np
 
 from pyNastran.converters.panair.panair_grid_patch import (
     PanairPatch, PanairWakePatch, print_float)
-#from pyNastran.converters.panair.panair_write import PanairWrite
+from pyNastran.converters.panair.assign_type import (
+    integer, double, integer_or_blank, double_or_blank, fortran_value)
 from pyNastran.utils.log import get_logger2
 from pyNastran.utils import print_bad_path
 
@@ -21,10 +22,6 @@ from pyNastran.utils import print_bad_path
 #CL = -Fx*sin(alpha)*cos(beta) + Fy*sin(alpha)*sin(beta) +Fz*cos(alpha)
 #CD =  Fx*cos(alpha)*cos(beta) - Fy*cos(alpha)*sin(beta) +Fz*sin(alpha)
 #CY =  Fx*sin(beta) +Fy*cos(beta)
-
-
-def fortran_value(value):
-    return "%8.4E" % value
 
 
 class PanairGrid(object):
@@ -43,7 +40,7 @@ class PanairGrid(object):
         self.lines = []
 
         self.alphas = [0.]
-        self.ncases = None
+        self.ncases = 0
         self.betas = [0.]
         self.alpha_compressibility = 0.
         self.beta_compressibility = 0.
@@ -79,6 +76,10 @@ class PanairGrid(object):
         self.pea_section = ''
         self.mach = 0.0
         self.data_check = 2
+
+        self.noff_body_points = 0
+        self.nstreamlines = 0
+
         self.title_section = ''
         self.xyz_section = ''
         self.streamline_section = ''
@@ -167,13 +168,14 @@ class PanairGrid(object):
         """
         reduces confusion by only printing cases that will run
         """
+        assert self.ncases > -1, 'ncases=%s' % self.ncases
         if len(self.alphas) > self.ncases:
-            print("self.ncases =", self.ncases)
             self.alphas = self.alphas[:self.ncases]
         if len(self.betas) > self.ncases:
             self.betas = self.alphas[:self.ncases]
 
     def write_panair(self, out_filename):
+        """writes the panair file"""
         self.update_cases()
         if PY2:
             wb = 'wb'
@@ -206,22 +208,6 @@ class PanairGrid(object):
             panair_file.write(self.write_liberalized_abutments())
             panair_file.write(self.write_end())
 
-    def remove_comments(self, lines):
-        lines2 = []
-        for line in lines:
-            line = line.rstrip().lower()
-            if '=' in line:
-                #print "line -> %r" % (line)
-                if '=' is not line[0]:
-                    self.log.debug("line[0] -> %s" % line[0])
-                    line = line.split('=')[0]
-                    #self.log.debug("******")
-                    lines2.append(line)
-                # else: skip
-            else:
-                lines2.append(line)
-        return lines2
-
     def _read_title(self, section):
         #self.title = section[1:]
         self.title_section = '\n'.join(section) + '\n'
@@ -229,7 +215,7 @@ class PanairGrid(object):
         return True
 
     def _read_data_check(self, section):
-        self.data_check = int(float(section[1][0:10]))
+        self.data_check = integer(section[1][0:10], 'data_check')
         #self.data_check = 2
         return True
 
@@ -246,10 +232,11 @@ class PanairGrid(object):
             doesnt consider antisymmetryic
         """
         # doesnt consider antisymmetric
-        self.xz_symmetry = int(float(section[1][0:10]))
-        self.xy_symmetry = int(float(section[1][10:20]))   # ???
+        self.xz_symmetry = integer(section[1][0:10], 'xz_symmetry')
+        self.xy_symmetry = integer(section[1][10:20], 'xy_symmetry')
 
-        # doesnt consider antisymmetric        self.xy_symmetry = int(float(section[1][10:20]))
+        # doesnt consider antisymmetric
+        #self.xy_symmetry = integer(section[1][10:20], 'xy_symmetry')
         self.nsymmetry_planes = self.xz_symmetry + self.xy_symmetry
         self.symmetry_section = '\n'.join(section) + '\n'
         self.log.debug("xz_symmetry=%s xy_symmetry=%s" % (
@@ -260,39 +247,43 @@ class PanairGrid(object):
         """
         reads the points
         """
-        i = 0
+        ipoint = 0
         nrows = 2 * nactual + nremainder
         points = np.zeros((nrows, 3), dtype='float32')
-        n = 0
+
         for n in range(nactual):
             line = lines[n]
-            (x1, y1, z1) = float(line[0:10]), float(line[10:20]), float(line[20:30])
-            (x2, y2, z2) = float(line[30:40]), float(lines[n][40:50]), float(line[50:60])
-            points[i, :] = [x1, y1, z1]
-            points[i + 1, :] = [x2, y2, z2]
-            i += 2
+            x1 = double(line[0:10], 'x%i' % (ipoint + 1))
+            y1 = double(line[10:20], 'y%i' % (ipoint + 1))
+            z1 = double(line[20:30], 'z%i' % (ipoint + 1))
+            points[ipoint, :] = [x1, y1, z1]
+            ipoint += 1
+
+            x2 = double(line[30:40], 'x%i' % (ipoint + 2))
+            y2 = double(line[40:50], 'y%i' % (ipoint + 2))
+            z2 = double(line[50:60], 'z%i' % (ipoint + 2))
+            points[ipoint, :] = [x2, y2, z2]
+            ipoint += 1
 
         if nremainder:
             n += 1
             line = lines[n]
-            (x1, y1, z1) = float(line[0:10]), float(line[10:20]), float(line[20:30])
-            points[i, :] = [x1, y1, z1]
+            x1 = double(line[0:10], 'x%i' % (ipoint + 1))
+            y1 = double(line[10:20], 'y%i' % (ipoint + 1))
+            z1 = double(line[20:30], 'z%i' % (ipoint + 1))
+            points[ipoint, :] = [x1, y1, z1]
 
         return points
 
     def add_wake_patch(self, network_name, options, xyz):
-        #print "self.nnetworks = ",self.nnetworks
         patch = PanairWakePatch(self.nnetworks, network_name, options, xyz, self.log)
         self.msg += patch.process()
-        #print "get_patch = ",get_patch
         self.patches[patch.inetwork] = patch  # deepcopy?
         self.nnetworks += 1
 
     def add_patch(self, network_name, kt, cp_norm, xyz):
-        #print "self.nnetworks = ",self.nnetworks
         patch = PanairPatch(self.nnetworks, network_name, kt, cp_norm, xyz, self.log)
         self.msg += patch.process()
-        #print "get_patch = ",get_patch
         self.patches[patch.inetwork] = patch  # deepcopy?
         self.nnetworks += 1
 
@@ -305,7 +296,7 @@ class PanairGrid(object):
             if patch.network_name == network_name:
                 return patch
             names.append(patch.network_name)
-        msg = 'couldnt findPatchbyName name=%r names=%s' % (network_name, names)
+        msg = "couldn't find_patch_by_name name=%r names=%s" % (network_name, names)
         raise KeyError(msg)
 
     def _read_points(self, section):
@@ -322,11 +313,11 @@ class PanairGrid(object):
           =x(1,1)   y(1,1)    z(1,1)    x(*,*)    y(*,*)    z(*,*)
              69.4737    9.2105    0.0000   63.7818    9.5807    0.7831
         """
-        nnetworks = int(float(section[1][0:10]))
+        nnetworks = integer(section[1][0:10], 'nnetworks')
         cp_norm = section[1][50:60].strip()
-        #cp_norm = float(section[1][50:60])
+        #cp_norm = double(section[1][50:60], 'cp_norm')
 
-        kt = int(float(section[2][0:10]))
+        kt = integer(section[2][0:10], 'kt')
         #if cp_norm:
             #self.log.debug("nnetworks=%s cp_norm=%s" % (nnetworks, cp_norm))
         #else:
@@ -337,8 +328,8 @@ class PanairGrid(object):
 
         for inetwork in range(nnetworks):
             #self.log.debug("lines[* %s] = %s" % (n - 1, section[n - 1]))
-            nm = int(float(section[n - 1][0:10]))
-            nn = int(float(section[n - 1][10:20]))
+            nm = integer(section[n - 1][0:10], 'nm')
+            nn = integer(section[n - 1][10:20], 'nn')
             network_name = section[n - 1][70:80]
             #self.log.debug("kt=%s nm=%s nn=%s netname=%s" % (
                 #kt, nm, nn, network_name))
@@ -379,24 +370,25 @@ class PanairGrid(object):
           =xs(1)    ri(1)     xs(2)     ri(2)     xs(*)     ri(*)
               2.0000    2.3000    1.5756    2.3000    1.1486    2.3000
               0.7460    2.3030    0.4069    2.3286    0.1624    2.3790
-              0.0214    2.4542   -0.0200    2.5485    0.0388    2.6522
+              0.0214    2.4542   -0.0200    2.5485    0.0388    2.6522 # 18
               0.2056    2.7554    0.4869    2.8522    0.8883    2.9413
-              1.4250    3.0178    2.1188    3.0656    2.9586    3.0658
-              3.8551    3.0175    4.6715    2.9439    5.3492    2.8700
-              6.0000    2.7842    6.4687    2.7442
+              1.4250    3.0178    2.1188    3.0656    2.9586    3.0658 # 36
+              3.8551    3.0175    4.6715    2.9439    5.3492    2.8700 # 42
+              6.0000    2.7842    6.4687    2.7442 # 46 ->23
           =nn
           5.
           =th(1)    th(2)     th(3)     th(4)     th(5)
           -90.      -45.      0.        45.       90.
         """
-        nnetworks = int(float(section[1][0:10]))
+        nnetworks = integer(section[1][0:10], 'nnetworks')
         cp_norm = section[1][50:60].strip()
 
-        kt = int(float(section[2][0:10]))
-        #if cpNorm:
-            #self.log.debug("nnetworks=%s cpNorm=%s" % (nnetworks, cpNorm))
-        #else:
-            #self.log.debug("nnetworks=%s" % (nnetworks))
+        kt = integer(section[2][0:10], 'kt')
+        if cp_norm:
+            self.log.debug("nnetworks=%s cp_norm=%s" % (nnetworks, cp_norm))
+        else:
+            self.log.debug("nnetworks=%s" % (nnetworks))
+        #print("nnetworks=%s cp_norm=%s" % (nnetworks, cp_norm))
 
         n = 3
         self.msg += '      kn,kt            %i          %i\n' % (nnetworks, kt)
@@ -404,60 +396,61 @@ class PanairGrid(object):
         for inetwork in range(nnetworks):
             #self.log.debug("lines[%s] = %s" % (n, section[n]))
             # 0-noDisplacement; 1-Specify
-            ndisplacement = int(float(section[n][0:10]))
+            ndisplacement = integer(section[n][0:10], 'ndisplacement')
             assert ndisplacement in [0, 1], section[n]
             n += 1
 
             #print("\nsection[n] = ", section[n].strip())
-            nxr = int(float(section[n][0:10]))
-            assert nxr > 0, section[n]
+            nx_nr = integer(section[n][0:10], 'nx_nr')
+            assert nx_nr > 0, section[n]
             #print("nxr = %s" % nxr)
             network_name = section[n][70:80]
-            #self.log.debug("kt=%s nxr=%s ndisplacement=%s network_name=%s" %
-                           #(kt, nxr, ndisplacement, network_name))
+            #self.log.debug("kt=%s nx_nr=%s ndisplacement=%s network_name=%s" %
+                           #(kt, nx_nr, ndisplacement, network_name))
 
-            nfull_lines = nxr // 3
-            npartial_lines = int(ceil(nxr % 3 / 3.))
-            nxr_lines = npartial_lines + npartial_lines
-            #print "X,Rad - npartial_lines=%s npartial_lines=%s nLines=%s\n" % (
-                #npartial_lines, npartial_lines, nxr_lines)
+            nfull_lines = nx_nr // 3
+            npartial_lines = int(ceil(nx_nr % 3 / 3.))
+            nx_nr_lines = nfull_lines + npartial_lines
+            #print("X,Rad - nfull_lines=%s npartial_lines=%s nx_nr_lines=%s\n" % (
+                #nfull_lines, npartial_lines, nx_nr_lines))
             n += 1
 
             Xin = []
             R = []
-            lines = section[n:n + nxr_lines]
-            n += nxr_lines
+            lines_full = section[n:n + nx_nr_lines]
+            n += nx_nr_lines
 
-            for line in lines:
-                print(line)
-                try:
-                    (x1, r1) = float(line[0:10]), float(line[10:20])
-                    #print("x1=%s r1=%s" % (x1, r1))
+            assert len(lines_full) == 7, len(lines_full)
+
+            ipoint = 1
+            for line in lines_full:
+                if len(line[0:60].strip()) > 0:
+                    x1 = double(line[0:10], 'x%i' % ipoint)
+                    r1 = double(line[10:20], 'r%i' % ipoint)
                     Xin.append(x1)
                     R.append(r1)
-                except ValueError:
-                    pass
+                    ipoint += 1
+                else:  # pragma: no cover
+                    raise RuntimeError(line.rstrip())
 
-                try:
-                    (x2, r2) = float(line[20:30]), float(line[30:40])
-                    #print("x2=%s r2=%s" % (x2, r2))
+                if len(line[20:60].strip()) > 0:
+                    x2 = double(line[20:30], 'x%i' % ipoint)
+                    r2 = double(line[30:40], 'r%i' % ipoint)
                     Xin.append(x2)
                     R.append(r2)
-                except ValueError:
-                    pass
+                    ipoint += 1
 
-                try:
-                    (x3, r3) = float(line[40:50]), float(line[50:60])
-                    #print("x3=%s r3=%s" % (x3, r3))
+                if len(line[40:60].strip()) > 0:
+                    x3 = double(line[40:50], 'x%i' % ipoint)
+                    r3 = double(line[50:60], 'r%i' % ipoint)
                     Xin.append(x3)
                     R.append(r3)
-                except ValueError:
-                    pass
-            assert nxr == len(Xin), 'nxr=%s Xin=%s' % (nxr, len(Xin))
+                    ipoint += 1
+            assert nx_nr == len(Xin), 'nx,nr=%s Xin=%s len(Xin)=%s' % (nx_nr, Xin, len(Xin))
 
             #----------------------------------------------------
             #print("section[n] = ", section[n].strip())
-            ntheta = int(float(section[n][0:10]))
+            ntheta = integer(section[n][0:10], 'ntheta')
             assert ntheta > 0, section[n]
             #print("ntheta = %s" % ntheta)
             nfull_lines = ntheta // 6
@@ -469,39 +462,41 @@ class PanairGrid(object):
 
             lines = section[n:n + ntheta_lines]
             theta = []
+
+            ipoint = 1
             for line in lines:
-                print(line)
-                try:
-                    (theta1) = float(line[0:10])
+                #print(line)
+                if len(line[0:60].rstrip()) > 0:
+                    (theta1) = double(line[0:10], 'theta%i' % ipoint)
                     theta.append(theta1)
-                except ValueError:
-                    pass
-                try:
-                    (theta2) = float(line[10:20])
+                    ipoint += 1
+                else:  # pragma: no cover
+                    raise RuntimeError(line.rstrip())
+
+                if len(line[0:60].rstrip()) > 0:
+                    (theta2) = double(line[10:20], 'theta%i' % ipoint)
                     theta.append(theta2)
-                except ValueError:
-                    pass
-                try:
-                    (theta3) = float(line[20:30])
+                    ipoint += 1
+
+                if len(line[20:60].rstrip()) > 0:
+                    (theta3) = double(line[20:30], 'theta%i' % ipoint)
                     theta.append(theta3)
-                except ValueError:
-                    pass
-                try:
-                    (theta4) = float(line[30:40])
+                    ipoint += 1
+
+                if len(line[30:60].rstrip()) > 0:
+                    (theta4) = double(line[30:40], 'theta%i' % ipoint)
                     theta.append(theta4)
-                except ValueError:
-                    pass
-                try:
-                    (theta5) = float(line[40:50])
+                    ipoint += 1
+
+                if len(line[40:60].rstrip()) > 0:
+                    (theta5) = double(line[40:50], 'theta%i' % ipoint)
                     theta.append(theta5)
-                except ValueError:
-                    pass
-                try:
-                    (theta6) = float(line[50:60])
+                    ipoint += 1
+
+                if len(line[50:60].rstrip()) > 0:
+                    (theta6) = double(line[50:60], 'theta%i' % ipoint)
                     theta.append(theta6)
-                except ValueError:
-                    pass
-            #print("theta = ", theta)
+                    ipoint += 1
             n += ntheta_lines
 
             assert ntheta == len(theta)
@@ -509,7 +504,8 @@ class PanairGrid(object):
             cos_theta_r = [cos(radians(thetai)) for thetai in theta]
 
             zi = 0.
-            XYZ = np.zeros([nxr, ntheta, 3], dtype='float32')
+            # TODO: can't we use numpy meshgrid?
+            XYZ = np.zeros([nx_nr, ntheta, 3], dtype='float32')
             #print("Xin=%s \nR=%s" % (Xin, R))
             for (i, x, r) in zip(count(), Xin, R):
                 for (j, sin_theta, cos_theta) in zip(count(), sin_theta_r, cos_theta_r):
@@ -518,8 +514,8 @@ class PanairGrid(object):
                     #print("x=%s y=%s z=%s" % (x, y, z))
                     XYZ[i, j, :] = [x, y, z]
 
-            #print "--XYZ--"
-            #print xyz
+            #print("--XYZ--")
+            #print(xyz)
             self.add_patch(network_name, kt, cp_norm, XYZ)
         return True
 
@@ -545,50 +541,50 @@ class PanairGrid(object):
         #self.printoutSection = '\n'.join(section)+'\n'
 
         #  ROW 1
-        self.isings = float(section[1][0:10])
+        self.isings = double(section[1][0:10], 'isings')
         #self.isings = 5.
         #2.0 output wake singularity grid-singularity strength and gradients at 9 pts/panel
         #3.0 add table of singularity parameter values
         #4.0 add network array of singularity values
         #5.0 add singularity grid for all network
 
-        self.igeomp = float(section[1][10:20])
+        self.igeomp = double(section[1][10:20], 'igeomp')
         self.igeomp = 1.
         # 1.0 outputs panel data - geometry diagnostic data
 
-        self.isingp = float(section[1][20:30])
+        self.isingp = double(section[1][20:30], 'isingp')
         #self.isignp = 1.  # ???
         # 1.0 outputs singularity spline data
 
-        self.icontp = float(section[1][30:40])
-        self.icontp = 1.
+        self.icontp = double(section[1][30:40], 1.0)
+        self.icontp = 1.0
         # 1.0 outputs control pt location, upper surface unit normals, control point
         #     diagnositc data, control pt maps and singularity parameter maps
         # 2.0 add additional control point map for each network
 
-        self.ibconp = float(section[1][40:50])
+        self.ibconp = double(section[1][40:50], 'ibconp')
         #self.ibconp = 0.0
         # 1.0 outputs boundary condition coeffs, diagnositc data,
         #     boundary condition maps, control point maps,
         #     and singularity paramter maps
 
-        self.iedgep = float(section[1][50:60])
-        self.iedgep = .0
+        self.iedgep = double(section[1][50:60], 'iedgep')
+        self.iedgep = 0.0
         # 1.0 outputs edge-matching diagnositic data
         #print("igeomp=%r isingp=%r icontp=%r ibconp=%r iedgep=%r" % (
             #igeomp, isingp, icontp, ibconp, iedgep))
 
         #  ROW 2
-        self.ipraic = float(section[2][0:10])
+        self.ipraic = double(section[2][0:10], 'ipraic')
         #self.ipraic = 3.
         # xxx inputs control point sequence number for
         #     which AIC values are to be pritned (rarely used)
 
-        self.nexdgn = float(section[2][10:20])
+        self.nexdgn = double(section[2][10:20], 'nexdgn')
         self.nexdgn = 0.
         # 1.0 outputs edge and extra control point data
 
-        self.ioutpr = float(section[2][20:30])
+        self.ioutpr = double(section[2][20:30], 'ioutpr')
         self.ioutpr = -1.0
         # -1.0 omits flow parameter output
         #  0.0 outputs 49 flow parameters
@@ -629,15 +625,12 @@ class PanairGrid(object):
           bodyu     3.        100.      .0                                      bodyuwk
         """
         #return True  # disable wakes
-        nnetworks = int(float(section[1][0:10]))
-        cp_norm = section[1][50:60].strip()
-        if cp_norm:
-            cp_norm = float(cp_norm)
-        else:
-            cp_norm = 0
+        nnetworks = integer_or_blank(section[1][0:10], 'nnetworks', 0)
+
+        cp_norm = integer_or_blank(section[1][50:60], 'cp_norm', 0)
 
         #print "section[2] = ",section[2]
-        kt = int(float(section[2][0:10]))
+        kt = integer(section[2][0:10], 'kt')
 
         matchw = section[2][10:20].strip()
         if matchw:
@@ -647,7 +640,7 @@ class PanairGrid(object):
         #else:
             #print "nnetworks=%s" % (nnetworks)
         #print ""
-        #matcw = int(float(section[2][10:20]))
+        #matcw = integer(section[2][10:20], 'matcw)
 
         n = 3  # line number
         self.msg += '      kn,kt            %i          %i\n' % (nnetworks, kt)
@@ -656,19 +649,19 @@ class PanairGrid(object):
             #self.log.debug("lines[* %s] = %s" % (n, section[n]))
 
             trailed_panel = section[n][0:10].strip()
-            edge_number = int(float(section[n][10:20]))
-            xwake = float(section[n][20:30])  # x distance
+            edge_number = integer(section[n][10:20], 'edge_number')
+            xwake = double(section[n][20:30], 'xwake')  # x distance
 
             # 0-wake parallel to x axis
             #1-wake in direction of compressibility
-            twake = float(section[n][30:40])
+            twake = double(section[n][30:40], 'twake')
             network_name = section[n][70:80].strip()
             self.log.debug('trailed_panel=%s edge_number=%s xwake=%s twake=%s network_name=%s' % (
                 trailed_panel, edge_number, xwake, twake, network_name))
             try:
                 patch = self.find_patch_by_name(trailed_panel)
             except KeyError:
-                self.log.debug('trailed_panel isnt defined...trailed_panel=|%s|' % (trailed_panel))
+                self.log.debug('trailed_panel isnt defined...trailed_panel=%r' % (trailed_panel))
                 raise
 
             (p1, xyz1) = patch.get_edge(edge_number)
@@ -686,8 +679,8 @@ class PanairGrid(object):
                 raise NotImplementedError('twake isnt supported')
             #self.log.debug("--xyz---")
             #self.log.debug(xyz)
-            #nm = int(float(section[n-1][0 :10]))
-            #nn = int(float(section[n-1][10:20]))
+            #nm = integer(section[n-1][0 :10], 'nm')
+            #nn = integer(section[n-1][10:20], 'nn')
             options = [kt, cp_norm, matchw, trailed_panel, edge_number, xwake,
                        twake]
             patch = self.add_wake_patch(network_name, options, xyz)
@@ -707,61 +700,42 @@ class PanairGrid(object):
 
     def _read_liberalized_abutments(self, section):
         #self.log.debug("section[1] = %s" % (section[1]))
-        self.epsgeo = section[1][0:10].strip()
-        if self.epsgeo:
-            self.epsgeo = float(self.epsgeo)
-        else:
-            self.epsgeo = 0.0
+
         # absolute value of tolerance used to establith equivalent network
         # edge points; minimum panel diagonal times 0.001 <= espgeo <= minimum
         # panel diagonal times 0.03; to not be restricted use negative numbers
+        self.epsgeo = double_or_blank(section[1][0:10].strip(), 'epsgeo', 0.0)
 
-        try:
-            self.igeoin = float(section[1][10:20])
-        except ValueError:
-            self.igeoin = -1.
         # prints network geometry before $EAT
         #  0.0 prints geometry
         # -1.0 omits printout
+        self.igeoin = double_or_blank(section[1][10:20].strip(), 'igeoin', -1.)
 
-        try:
-            self.igeout = float(section[1][20:30])
-        except ValueError:
-            # prints network geometry after $EAT
-            # 0.0 omits printout
-            # 1.0 prints geometry
-            self.igeout = 0.
+        # prints network geometry after $EAT
+        # 0.0 omits printout
+        # 1.0 prints geometry
+        self.igeout = double_or_blank(section[1][20:30].strip(), 'igeout', 0.)
 
-        try:
-            self.nwxref = float(section[1][30:40])
-        except ValueError:
-            #self.nwxref = 1.0
-            # prints abutment cross-reference; for each network, all abutments and
-            # abutment intersections are described in a format similar to that
-            # used in the abutment summary and abutment intersection summary output sections
-            # 0.0 omits printout
-            # 1.0 prints geometry
-            self.nwxref = 0.
+        # prints abutment cross-reference; for each network, all abutments and
+        # abutment intersections are described in a format similar to that
+        # used in the abutment summary and abutment intersection summary output sections
+        # 0.0 omits printout
+        # 1.0 prints geometry
+        self.nwxref = double_or_blank(section[1][30:40].strip(), 'nwxref', 0.)
 
-        try:
-            self.triint = float(section[1][40:50])
-        except ValueError:
-            # optionally checks for intersection of network edges through other panels
-            # for final geometry; used only if needed on complex configurations; can
-            # increase the cost of a computer run by 1 or 2 times that of a datachek (2.) run
-            # 0.0 omits intersection checking
-            # 1.0 checks intersection
-            self.triint = 0.0
+        # optionally checks for intersection of network edges through other panels
+        # for final geometry; used only if needed on complex configurations; can
+        # increase the cost of a computer run by 1 or 2 times that of a datachek (2.) run
+        # 0.0 omits intersection checking
+        # 1.0 checks intersection
+        self.triint = double_or_blank(section[1][40:50], 'triint', 0.)
 
-        try:
-            self.iabsum = float(section[1][50:60])
-        except ValueError:
-            #  0.0 abutment summary
-            #  1.0 plus intersection summary
-            #  2.0 plus complete list of each network and associated abutments
-            #  3.0 plus diagnostic data for program developer
-            # -1.0 no abutment printout
-            self.iabsum = -0.0
+        #  0.0 abutment summary
+        #  1.0 plus intersection summary
+        #  2.0 plus complete list of each network and associated abutments
+        #  3.0 plus diagnostic data for program developer
+        # -1.0 no abutment printout
+        self.iabsum = double_or_blank(section[1][50:60].strip(), 'iabsum', 0.)
         return True
 
     def _read_sectional_properties(self, section):
@@ -834,50 +808,16 @@ class PanairGrid(object):
                 break
         return sections
 
-    def split_into_sections(self, lines):
-        sections = []
-        section_names = []
-        section = None
-        section_name = None
-        assert len(lines) > 0, 'lines=%s' % lines
-        line = None
-        for line in lines:
-            if '$' in line:
-                sections.append(section)
-                section_names.append(section_name)
-                section = []
-                section_name = line[1:4]
-                if section_name == 'end':
-                    break
-                #print "new section...name=%s line - %s" %(section_name, line)
-            section.append(line)
-
-        # end section
-        section.append(line)
-        sections.append(section)
-        section_names.append(section_name)
-
-        # get rid of first dummy section
-        sections = sections[1:]
-        section_names = section_names[1:]
-
-        assert len(sections) == len(section_names), "%s %s" % (
-            len(sections), len(section_names))
-
-        #for section in sections: # 1st line
-            #print "section = ",len(section)
-            #print "section[0] = ",section[0]
-        return (sections, section_names)
-
     def read_panair(self, infilename):
+        """reads a panair input file"""
         assert os.path.exists(infilename), print_bad_path(infilename)
         self.infilename = infilename
 
         with open(self.infilename, 'r') as infile:
             self.lines = infile.readlines()
 
-        lines = self.remove_comments(self.lines)
-        (sections, section_names) = self.split_into_sections(lines)
+        lines = remove_comments(self.lines, self.log)
+        (sections, section_names) = split_into_sections(lines)
         groups = self.group_sections(sections, section_names)
         #self.log.debug("nPatches = %s" % (self.npatches))
         # split into headings
@@ -901,13 +841,11 @@ class PanairGrid(object):
             patch_points, npointsi = panel.get_points()
             patch_elements = panel.get_elements(npoints) + npoints
             npatch_elements = patch_elements.shape[0]
-            #print 'panel.inetwork=%r' % (panel.inetwork + 1)
             regions.append(np.ones(npatch_elements, dtype='int32') * (panel.inetwork + 1))
             kt.append(np.ones(npatch_elements, dtype='int32') * panel.kt)
             #print('panel.cp_norm = %r' % panel.cp_norm)
             cp_norm.append(np.ones(npatch_elements, dtype='int32') * panel.cp_norm)
 
-            #print("patch_elements = ", patch_elements)
             points += patch_points
             elements.append(patch_elements)
             npoints += npointsi
@@ -936,7 +874,7 @@ class PanairGrid(object):
         =nacase
         1.
         """
-        self.ncases = int(float(section[1][0:10]))
+        self.ncases = integer(section[1][0:10], 'ncases')
         #self.log.debug("ncases = %s" % (self.ncases))
         return True
 
@@ -947,7 +885,6 @@ class PanairGrid(object):
         .6
         """
         self.mach = float(section[1][0:10])
-        #self.log.debug("mach = %s" % (self.mach))
         return True
 
     def set_mach(self, mach):
@@ -1078,19 +1015,213 @@ class PanairGrid(object):
             self.ipraic, self.nexdgn, self.ioutpr, self.ifmcpr, self.icostp)
         return msg
 
+    def print_abutments(self):
+        msg = ''
+        msg += '               SUMMARY OF FACING SURFACES (+:upper, -:lower)\n'
+        msg += ' abutment   nw-ident  ntd  knet.edge    nw-ident  ntd  knet.edge\n'
+        msg += '        1   winga      12     1.3+      wingwk     18     7.1+\n'
+        msg += '            wingwk     18     7.1-      winga      12     1.1+\n'
+        msg += '            winga      12     1.1-      winga      12     1.3-\n'
+        msg += '        9   1st p-o-s   0    -1.0       bodyl      12     3.4+\n'
+        msg += '            bodyl      12     3.4-      1st p-o-s   0    -1.0\n'
 
-def main():
-    import sys
-    in_filename = sys.argv[1]
-    out_filename = in_filename[:-4] + '_new.inp'
-    print("outfile_name = %r" % out_filename)
-    grid = PanairGrid()
-    grid.read_panair(in_filename)
-    grid.write_panair(out_filename)
-    (points, elements, regions) = grid.get_points_elements_regions()
-    print("\nin_filename=%r" % in_filename)
-    return points, elements, regions
+        for patch_id, patch in iteritems(self.patches):
+            (p1, xyz1) = patch.get_edges()
+            self.log.debug("p[%s] = %s" % (patch_id, p1))
+        return msg
+
+    def print_options(self):
+        msg = ''
+        msg += '0            options\n'
+        msg += '            %i = singularity grid print flag\n' % (self.isings)
+        msg += '            %i = panel geometry print flag\n' % (self.igeomp)
+        msg += '            %i = spline data flag  ( 0 ==> off, nonzero ==> on )\n' % (self.isingp)
+        msg += '            %i = control point information print flag\n' % (self.icontp)
+        msg += '            %i = boundary condition data print flag \n' % (self.ibconp)
+        msg += '            %i = edge matching information print flag\n' % (self.iedgep)
+        msg += '            %i = index of control point for which aic-s are printed\n' % (self.ipraic)
+        msg += '            %i = edge control point flow properties print flag\n' % (self.nexdgn)
+        msg += '            %i = output control flag (-1 ==> no surface flow properties, 0 ==> standard output, 1 ==> short form output )\n' % (self.ioutpr)
+        msg += '            %s = force/moment control flag (-1 ==> no force and moment data, 0 ==> standard output, 1 ==> nw totals only )\n' % (self.ifmcpr)
+        msg += '            %i = print flag for detailed cost information during execution of job\n' % (self.icostp)
+        msg += '            1 = print flag for singularity parameter maps\n'
+        msg += '0               abutment processing options\n'
+        msg += '   %10s = global edge abutment tolerance specified by user.  if this value is zero, a default value will be calculated\n' % (fortran_value(self.epsgeo))
+        msg += '                later.   this default value is taken as:  .001  * (minimum panel diameter)\n'
+        msg += '            %i = print flag controlling geometry printout  b e f o r e  the abutment processing.  ( nonzero ==> do print )\n' % (self.igeoin)
+        msg += '            %i = print flag controlling geometry printout  a f t e r    the abutment processing.  ( nonzero ==> do print )\n' % (self.igeout)
+        msg += '            %i = network/abutment/abutment-intersection print flag.  ( nonzero ==> generate the cross referenced abutment listing\n' % (self.nwxref)
+        msg += '            %i = control index for panel intersection checking.  ( nonzero ==> do perform the check. )\n' % (self.triint)
+        msg += '            %i = abutment/abutment-intersection (short listing) print flag ( 0 ==> suppress, nonzero ==> generate usual print )\n' % (2)
+        msg += ' \n'
+        msg += '                force and moment reference parameters\n'
+        msg += '   %10s = reference area for force and moment calculations.    (sref)\n' % (
+            fortran_value(self.sref))
+        msg += '   %10s = rolling moment reference length  (bref)\n' % (
+            fortran_value(self.bref))
+        msg += '   %10s = pitching moment reference length (cref)\n' % (
+            fortran_value(self.cref))
+        msg += '   %10s = yawing moment reference length   (dref)\n' % (
+            fortran_value(self.dref))
+        msg += '   %10s = x - coordinate for the point about which moments will be calculated  (xref)\n' % (fortran_value(self.xref))
+        msg += '   %10s = y - coordinate for the point about which moments will be calculated  (yref)\n' % (fortran_value(self.yref))
+        msg += '   %10s = z - coordinate for the point about which moments will be calculated  (zref)\n' % (fortran_value(self.zref))
+        msg += '            3 = pressure coefficient index (nprcof) (1=linear, 2=slenderbody, 3=2nd, 4=isentropic)\n'
+        msg += '1\n'
+        return msg
+
+    def print_out_header(self):
+        msg = """\n
+         ****************************************************************************************************
+
+          dynamic memory management initialization
+
+          max no. levels         15   max no. arrays        200   maximum scratch storage     900000   total storage provided  900000
+             addr(maplev)          0     addr(maplws)          0     addr(scratch storage)          1
+
+        ****************************************************************************************************
+          wopen call on unit    1  blocks:    10   status:     0
+          wopen call on unit    2  blocks:    10   status:     0
+          wopen call on unit    3  blocks:    10   status:     0
+        1
 
 
-if __name__ == '__main__':  # pragma: no cover
-    main()
+        *****************************************************************************
+         *                                                                           *
+         *                     a502 - pan-air technology program                     *
+         *                                                                           *
+         *               potential flow about arbitrary configurations               *
+         *               version id = ht2 (12 feb 92) boeing ver i00                 *
+         *                                                                           *
+         *                                   02/12/92                                *
+         *                                                                           *
+         *                                                                           *
+         * simple wing-body with composite panel. (run with a502i)
+         * saaris  865-6209  m/s 7c-36
+         *                                                                           *
+         *                                                                           *
+         *                                                                           *
+         *****************************************************************************
+        1
+        0*b*input-da - list of a502 input data cards -\n"""
+        return msg
+
+    def print_grid_summary(self):
+        msg = ''
+        msg2 = ''
+        msg3 = ''
+
+        msg += '        1               ***  quick summary of a502 input  ***\n'
+
+        for i, title_line in enumerate(self.title_lines):
+            msg += "title%s:%s\n" % (i + 1, title_line)
+
+        msg += '0               processing options\n'
+        msg += '            %i = datacheck.   (0=regular run,1=full datacheck,2=short datacheck)\n' % (self.data_check)
+        msg += '            0 = s.p. flag.   (0 ==> no s.p. file (ft09) provided, 1 ==> local file ft09 with singularity values is provided)\n'
+        msg += '            0 = aic flag.    (0 ==>  no aic file (ft04) provided, 1 ==> local file ft04 with aic-s is provided by the user)\n'
+        msg += '            0 = b.l. flag    (0 ==> no boundary layer file requested, 1 ==> boundary layer data will be written to file ft17)\n'
+        msg += '            0 = velocity correction index.  (0 ==> no correction, 1 ==> mclean correction, 2 ==>  boctor correction)\n'
+        msg += '            0 = flow visualization flag.  (nonzero ==> off-body and streamline processing will be performed)\n'
+        msg += '            0 = off-body calculation type. (0 ==> mass flux, nonzero ==> velocity)\n'
+        msg += '            0 = streamline calculation type. (0 ==> mass flux, nonzero ==> velocity)\n'
+        msg += '           %2i = number of off-body points.\n' % (
+            self.noff_body_points)
+        msg += '           %2i = number of streamlines to be traced.\n' % (
+            self.nstreamlines)
+        msg += '0               case summary\n'
+        msg += '           %2i = number of cases\n' % (self.ncases)
+        msg += '     %f = mach number\n' % (self.mach)
+        msg += '     %f = compressibility axis angle of attack (alpc)\n' % (
+            self.alpha_compressibility)
+        msg += '     %f = compressibliity axis angle of sideslip (betc)\n' % (
+            self.beta_compressibility)
+
+        msg3 += '0network id&index   #rows   #cols  kt  src  dblt  nlopt1  nropt1  nlopt2  nropt2    ipot   # pts  # pans  cpnorm  cum pt  cum pn\n'
+        msg3 += '---------- -----   -----   -----  --  ---  ----  ------  ------  ------  ------    ----    ----    ----  ------  ------  ------\n'
+
+        total_points = 0
+        total_panels = 0
+        for patch_id in range(self.npatches):
+            patch = self.get_patch(patch_id)
+            msg3 += patch.quick_summary(total_points, total_panels)
+            total_panels += patch.npanels
+            total_points += patch.npoints
+
+        msg2 += '0  case       alpha          beta      mag(f-s-v)\n'
+        msg2 += ' ------    ----------    ----------   -----------\n'
+        for icase in range(self.ncases):
+            alpha = self.alphas[icase]
+            beta = self.betas[icase]
+            msg2 += '     %2s      %f      %f      1.000000\n' % (
+                icase + 1, alpha, beta)
+
+        msg2 += '0               symmetry options\n'
+        msg2 += '            %s = number of planes of symmetry\n' % (
+            self.nsymmetry_planes)
+        msg2 += '            %s = x-z plane of symmetry flag (0 ==> no symmetry, 1==> flow symmetry, -1 ==> flow antisymmetry)\n' % (self.xz_symmetry)
+        msg2 += '            %s = x-y plane of symmetry flag (0 ==> no symmetry, 1==> flow symmetry, -1 ==> flow antisymmetry)\n' % (self.xy_symmetry)
+        msg2 += '0               configuration summary\n'
+        msg2 += '          %3s = total number of networks read in\n' % (
+            self.nnetworks)
+        msg2 += '         %4s = total number of mesh points\n' % (total_points)
+        msg2 += '         %4s = total number of panels\n' % (total_panels)
+
+        return msg + msg2 + msg3
+
+
+
+def split_into_sections(lines):
+    sections = []
+    section_names = []
+    section = None
+    section_name = None
+    assert len(lines) > 0, 'lines=%s' % lines
+    line = None
+    for line in lines:
+        if '$' in line:
+            sections.append(section)
+            section_names.append(section_name)
+            section = []
+            section_name = line[1:4]
+            if section_name == 'end':
+                break
+            #print "new section...name=%s line - %s" %(section_name, line)
+        section.append(line)
+
+    # end section
+    section.append(line)
+    sections.append(section)
+    section_names.append(section_name)
+
+    # get rid of first dummy section
+    sections = sections[1:]
+    section_names = section_names[1:]
+
+    assert len(sections) == len(section_names), "%s %s" % (
+        len(sections), len(section_names))
+
+    #for section in sections: # 1st line
+        #print "section = ",len(section)
+        #print "section[0] = ",section[0]
+    return (sections, section_names)
+
+def remove_comments(lines, log):
+    """
+    Comment lines in Panair begin with an equal (=) sign.
+    The file is easier to parse if we remove them.
+    """
+    lines2 = []
+    for line in lines:
+        line = line.rstrip().lower()
+        if '=' in line:
+            #print "line -> %r" % (line)
+            if '=' is not line[0]:
+                log.debug("line[0] -> %s" % line[0])
+                line = line.split('=')[0]
+                #log.debug("******")
+                lines2.append(line)
+            # else: skip
+        else:
+            lines2.append(line)
+    return lines2

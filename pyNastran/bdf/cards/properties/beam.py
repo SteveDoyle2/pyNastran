@@ -26,15 +26,97 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
 
 class PBEAM(IntegratedLineProperty):
+    """
+    Defines the properties of a beam element (CBEAM entry). This element may be
+    used to model tapered beams.
+
+
+    +-------+-------+-------+-------+-------+-------+--------+-------+--------+
+    | PBEAM |  PID  |  MID  | A(A)  | I1(A) | I2(A) | I12(A) | J(A)  | NSM(A) |
+    +-------+-------+-------+-------+-------+-------+--------+-------+--------+
+    |       | C1(A) | C2(A) | D1(A) | D2(A) | E1(A) | E2(A)  | F1(A) | F2(A)  |
+    +-------+-------+-------+-------+-------+-------+--------+-------+--------+
+
+    The next two continuations are repeated for each intermediate station as
+    described in Remark 5. and SO and X/XB must be specified.
+    +----+------+----+----+----+-----+----+-----+
+    | SO | X/XB | A  | I1 | I2 | I12 | J  | NSM |
+    +----+------+----+----+----+-----+----+-----+
+    | C1 |  C2  | D1 | D2 | E1 | E2  | F1 | F2  |
+    +----+------+----+----+----+-----+----+-----+
+
+    The last two continuations are:
+    +-------+-------+-------+-------+--------+--------+-------+-------+
+    |   K1  |   K2  |   S1  |   S2  | NSI(A) | NSI(B) | CW(A) | CW(B) |
+    +-------+-------+-------+-------+--------+--------+-------+-------+
+    | M1(A) | M2(A) | M1(B) | M2(B) | N1(A)  | N2(A)  | N1(B) | N2(B) |
+    +-------+-------+-------+-------+--------+--------+-------+-------+
+    """
     type = 'PBEAM'
 
     #_opt_map = {
         #'I1(B)' : 'i1',
         #'I1(B)',
     #}
+    def update_by_pname_fid(self, pname_fid, value):
+        if isinstance(pname_fid, int):
+            if pname_fid < 0:
+                # shift to divisible by 16
+                if not (-167 <= pname_fid <= -6):
+                    raise NotImplementedError('A-property_type=%r has not implemented %r in pname_map' % (
+                        self.type, pname_fid))
+                ioffset = -pname_fid - 6
+                istation = ioffset // 16
+                iterm = ioffset % 16
+                print('istation=%s iterm=%s' % (istation, iterm))
+
+                # 0    1   2   3   4   5   6   7    8  9
+                #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                #
+                 #10  11  12  13  14  15
+                 #d1, d2, e1, e2, f1, f2) = pack
+                assert istation == 0, istation
+                if iterm == 2:
+                    self.A[istation] = value
+                elif iterm == 3:
+                    self.i1[istation] = value
+                elif iterm == 4:
+                    self.i2[istation] = value
+                elif iterm == 5:
+                    self.i12[istation] = value
+                elif iterm == 6:
+                    self.j[istation] = value
+                elif iterm == 8:
+                    self.c1[istation] = value
+                else:
+                    raise NotImplementedError('property_type=%r has not implemented %r (istation=%r, iterm=%r) in pname_map' % (
+                        self.type, pname_fid, istation, iterm))
+            else:
+                raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                    self.type, pname_fid))
+
+        #elif pname_fid.startswith('DIM'):
+            #word, num = break_word_by_trailing_integer(pname_fid)
+            #ndim = len(self.dim[0])
+
+            #num = int(num) - 1
+            #idim = num % ndim
+            #istation = num // ndim
+            #try:
+                #dim_station = self.dim[istation]
+                #dim_station[idim] = value
+            #except:
+                #print('pname_fid=%r num=%r ndim=%r' % (pname_fid, num, ndim))
+                #print('istation=%r idim=%r' % (istation, idim))
+                #print(self)
+                #raise
+        else:
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, pname_fid))
 
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
                  c1, c2, d1, d2, e1, e2, f1, f2,
@@ -209,6 +291,7 @@ class PBEAM(IntegratedLineProperty):
         #: z coordinate of neutral axis for end B.
         self.n2b = n2b
 
+        nxxb = len(xxb)
         # sort xxb
         ixxb = argsort(xxb)
         self.so = array(so, dtype='|U8')[ixxb]
@@ -216,12 +299,29 @@ class PBEAM(IntegratedLineProperty):
         #print('ixxb = %s' % ixxb)
         #print('i12 = %s' % i12)
 
+        assert len(area) == nxxb, 'pid=%s len(xxb)=%s len(A =)=%s' % (pid, nxxb, len(area))
+        assert len(i1) == nxxb, 'pid=%s len(xxb)=%s len(i1 )=%s' % (pid, nxxb, len(i1))
+        assert len(i2) == nxxb, 'pid=%s len(xxb)=%s len(i2 )=%s' % (pid, nxxb, len(i2))
+        assert len(i12) == nxxb, 'pid=%s len(xxb)=%s len(i12)=%s' % (pid, nxxb, len(i12))
+        assert len(j) == nxxb, 'pid=%s len(xxb)=%s len(j =)=%s' % (pid, nxxb, len(j))
+        assert len(nsm) == nxxb, 'pid=%s len(xxb)=%s len(nsm)=%s' % (pid, nxxb, len(nsm))
+
         self.A = array(area, dtype='float64')[ixxb]
         self.i1 = array(i1, dtype='float64')[ixxb]
         self.i2 = array(i2, dtype='float64')[ixxb]
         self.i12 = array(i12, dtype='float64')[ixxb]
         self.j = array(j, dtype='float64')[ixxb]
         self.nsm = array(nsm, dtype='float64')[ixxb]
+
+        #assert len(area) == nxxb, 'pid=%s len(xxb)=%s len(area)=%s' % (nxxb, len(area))
+        assert len(c1) == nxxb, 'pid=%s len(xxb)=%s len(c1)=%s' % (pid, nxxb, len(c1))
+        assert len(c2) == nxxb, 'pid=%s len(xxb)=%s len(c2)=%s' % (pid, nxxb, len(c2))
+        assert len(d1) == nxxb, 'pid=%s len(xxb)=%s len(d1)=%s' % (pid, nxxb, len(d1))
+        assert len(d2) == nxxb, 'pid=%s len(xxb)=%s len(d2)=%s' % (pid, nxxb, len(d2))
+        assert len(e1) == nxxb, 'pid=%s len(xxb)=%s len(e1)=%s' % (pid, nxxb, len(e1))
+        assert len(e2) == nxxb, 'pid=%s len(xxb)=%s len(e2)=%s' % (pid, nxxb, len(e2))
+        assert len(f1) == nxxb, 'pid=%s len(xxb)=%s len(f1)=%s' % (pid, nxxb, len(f1))
+        assert len(f2) == nxxb, 'pid=%s len(xxb)=%s len(f2)=%s' % (pid, nxxb, len(f2))
 
         self.c1 = array(c1, dtype='float64')[ixxb]
         self.c2 = array(c2, dtype='float64')[ixxb]
@@ -287,7 +387,6 @@ class PBEAM(IntegratedLineProperty):
                     self.f1[i] = self.f1[-1] + self.f1[0] * (1 - xxb)
                 if f2 == 0.0:
                     self.f2[i] = self.f2[-1] + self.f2[0] * (1 - xxb)
-
 
 
         if self.cwa or self.cwb:  # if either is non-zero
@@ -840,8 +939,9 @@ class PBEAM(IntegratedLineProperty):
                     raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
 
             i += 1
-        #k1 = set_blank_if_default(self.k1, 1.0)
-        #k2 = set_blank_if_default(self.k2, 1.0)
+        k1 = set_blank_if_default(self.k1, 1.0)
+        k2 = set_blank_if_default(self.k2, 1.0)
+
         s1 = set_blank_if_default(self.s1, 0.0)
         s2 = set_blank_if_default(self.s2, 0.0)
         #k1 = self.k1
@@ -871,7 +971,7 @@ class PBEAM(IntegratedLineProperty):
 
         #footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
-        footer = [self.k1, self.k2, s1, s2, nsia, nsib, cwa, cwb,
+        footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
 
         list_fields += footer
@@ -927,6 +1027,28 @@ class PBEAML(IntegratedLineProperty):
         "HAT1": 5,
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
+    def update_by_pname_fid(self, pname_fid, value):
+        if isinstance(pname_fid, int):
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, pname_fid))
+        elif pname_fid.startswith('DIM'):
+            word, num = break_word_by_trailing_integer(pname_fid)
+            ndim = len(self.dim[0])
+
+            num = int(num) - 1
+            idim = num % ndim
+            istation = num // ndim
+            try:
+                dim_station = self.dim[istation]
+                dim_station[idim] = value
+            except:
+                print('pname_fid=%r num=%r ndim=%r' % (pname_fid, num, ndim))
+                print('istation=%r idim=%r' % (istation, idim))
+                print(self)
+                raise
+        else:
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, pname_fid))
 
     def __init__(self, pid, mid, beam_type, xxb, dims, so=None, nsm=None,
                  group='MSCBML0', comment=''):
@@ -940,21 +1062,21 @@ class PBEAML(IntegratedLineProperty):
         mid : int
             material id
         beam_type : str
-            ???
+            the section profile
         xxb : List[float]
             The percentage locations along the beam [0., ..., 1.]
         dims : List[dim]
             dim : List[float]
                 The dimensions for each section
-        group : str; default='MSCBML0'
-            this parameter can lead to a very broken deck with a very
-            bad error message; don't touch it!
         so : List[str]; default=None
             YES, YESA, NO
             None : [0.] * len(xxb)
         nsm : List[float]; default=None
             nonstructural mass per unit length
             None : [0.] * len(xxb)
+        group : str; default='MSCBML0'
+            this parameter can lead to a very broken deck with a very
+            bad error message; don't touch it!
         comment : str; default=''
             a comment for the card
         """
@@ -973,8 +1095,16 @@ class PBEAML(IntegratedLineProperty):
         nxxb = len(xxb)
         if nsm is None:
             nsm = [0.] * nxxb
+        elif not isinstance(nsm, (list, tuple, ndarray)):
+            msg = 'pid=%s; nsm=%s and must be a list/tuple/ndarray; type=%s' % (
+                pid, nsm, type(nsm))
+            raise TypeError(msg)
         if so is None:
             so = ['YES'] * nxxb
+        elif not isinstance(so, (list, tuple, ndarray)):
+            msg = 'pid=%s; so=%s and must be a list/tuple/ndarray; type=%s' % (
+                pid, so, type(so))
+            raise TypeError(msg)
 
         self.dim = dims
         for xxbi, dim in zip(xxb, dims):
@@ -1079,35 +1209,44 @@ class PBEAML(IntegratedLineProperty):
         beam_type = beam_type.strip()
         ndim = cls.valid_types[beam_type]
         nfvalues = len(fvalues)
-        nsections = nfvalues // (3+ndim)
+        nsections = nfvalues // (3 + ndim)
         sections = fvalues.reshape(nsections, ndim+3)
+        #print('sections = \n%s' % sections)
 
         xxb = []
         so = []
         dims = []
         nsm = []
+        # XXB, SO, NSM, and dimensions
+        isections = []
         for i, section in enumerate(sections):
-            xxbi = section[0]
+            xxbi = section[1]
+            #print('PBEAML - i=%s x/xb=%s' % (i, xxbi))
             if i > 0 and allclose(xxbi, 0.0):
-                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
+                #print('  PBEAML - skipping i=%s x/xb=%s' % (i, xxbi))
                 continue
+            if xxbi in xxb:
+                #print("  PBEAML - skipping i=%s x/xb=%s because it's a duplicate" % (i, xxbi))
+                continue
+            isections.append(i)
 
-
-            sof = section[1]
-            if sof == 0.:
-                sos = 'YES'
-            elif sof == 1.:
-                sos = 'NO'
+            so_float = section[0]
+            if so_float == 0.:
+                so_string = 'YES'
+            elif so_float == 1.:
+                so_string = 'NO'
             else:
-                raise NotImplementedError(sof)
+                msg = 'so_float=%r; expected 0.0 or 1.0; data=%s' % (so_float, data)
+                raise NotImplementedError(msg)
 
             dim = list(section[2:-1])
             nsmi = section[-1]
             #print(dim, section)
             xxb.append(xxbi)
-            so.append(sos)
+            so.append(so_string)
             dims.append(dim)
             nsm.append(nsmi)
+        #print('sections2 = \n%s' % sections[isections])
         return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 

@@ -33,9 +33,11 @@ class RealCPLSTRNPlateArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -101,7 +103,7 @@ class RealCPLSTRNPlateArray(OES_Object):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -254,13 +256,13 @@ class RealCPLSTRNPlateStrainArray(RealCPLSTRNPlateArray, StrainObject):
 
 
 def _get_clpstsn_msg(self):
-    if self.is_von_mises():
+    if self.is_von_mises:
         von_mises = 'VON MISES'
     else:
         von_mises = 'MAX SHEAR'
 
-    if self.is_stress():
-        #if self.is_fiber_distance():
+    if self.is_stress:
+        #if self.is_fiber_distance:
             #quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)               \n',
                              #'      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             #tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
@@ -289,7 +291,7 @@ def _get_clpstsn_msg(self):
         ctria6_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
         ctriar_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
     else:
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             quad_msg_temp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             tri_msg_temp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',

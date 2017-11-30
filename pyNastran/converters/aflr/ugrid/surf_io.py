@@ -10,6 +10,8 @@ from vtk import vtkTriangle, vtkQuad
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.aflr.ugrid.surf_reader import SurfReader, TagReader
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 
 
 class SurfIO(object):
@@ -40,11 +42,11 @@ class SurfIO(object):
         nelements = ntris + nquads
 
         nodes = model.nodes
-        self.nElements = nelements
-        self.nNodes = nnodes
+        self.nelements = nelements
+        self.nnodes = nnodes
 
-        #print("nNodes = %s" % self.nNodes)
-        #print("nElements = %s" % self.nElements)
+        #print("nNodes = %s" % self.nnodes)
+        #print("nElements = %s" % self.nelements)
         assert nelements > 0, nelements
 
 
@@ -55,12 +57,12 @@ class SurfIO(object):
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         tris = model.tris - 1
         quads = model.quads - 1
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
+        grid.Allocate(self.nelements, 1000)
 
         elements = []
         etypes = []
@@ -70,7 +72,7 @@ class SurfIO(object):
         if nquads:
             elements.append(quads)
             etypes.append(9) # vtkQuad().GetCellType()
-        self.create_vtk_cells_of_constant_element_types(grid, elements, etypes)
+        create_vtk_cells_of_constant_element_types(grid, elements, etypes)
 
 
         model.read_surf_failnode(surf_filename)
@@ -104,7 +106,7 @@ class SurfIO(object):
             prop.SetRepresentationToPoints()
             prop.SetPointSize(10)
 
-        self.nElements = nelements
+        self.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
         if hasattr(grid, 'Update'):

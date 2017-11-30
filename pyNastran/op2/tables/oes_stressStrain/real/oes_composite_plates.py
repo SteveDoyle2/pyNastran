@@ -32,9 +32,11 @@ class RealCompositePlateArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -120,7 +122,7 @@ class RealCompositePlateArray(OES_Object):
             self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.element_layer, table.element_layer):
             assert self.element_node.shape == table.element_layer.shape, 'element_layer shape=%s table.shape=%s' % (
@@ -247,14 +249,14 @@ class RealCompositePlateArray(OES_Object):
         if header is None:
             header = []
         #msg, nnodes, is_bilinear = self._get_msgs()
-        if self.is_von_mises():
+        if self.is_von_mises:
             von = 'VON'
             mises = 'MISES'
         else:
             von = 'MAX'
             mises = 'SHEAR'
 
-        if self.is_strain():
+        if self.is_strain:
             words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' % von,
                      '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
         else:
@@ -262,27 +264,27 @@ class RealCompositePlateArray(OES_Object):
                      '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
         if self.element_type == 95:  # CQUAD4
-            if self.is_strain():
+            if self.is_strain:
                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
         #elif self.element_type == 96:  # CQUAD8
             #nnodes_per_element = 1
         elif self.element_type == 97:  # CTRIA3
-            if self.is_strain():
+            if self.is_strain:
                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         elif self.element_type == 96:  # QUAD8
             # good
-            if self.is_strain():
+            if self.is_strain:
                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
 
         elif self.element_type == 98:  # CTRIA6
             # good
-            if self.is_strain():
+            if self.is_strain:
                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
@@ -331,14 +333,16 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
         RealCompositePlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
+    @property
     def is_stress(self):
         return True
 
+    @property
     def is_strain(self):
         return False
 
     def get_headers(self):
-        if self.is_von_mises():
+        if self.is_von_mises:
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -351,14 +355,16 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
         RealCompositePlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
+    @property
     def is_stress(self):
         return False
 
+    @property
     def is_strain(self):
         return True
 
     def get_headers(self):
-        if self.is_von_mises():
+        if self.is_von_mises:
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'

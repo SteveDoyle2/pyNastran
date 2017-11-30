@@ -5,6 +5,7 @@ import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
+from pyNastran.bdf.cards.test.test_shells import make_dvprel_optimization
 
 #from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -24,6 +25,82 @@ class TestRods(unittest.TestCase):
         node_ids = card.node_ids
         assert node_ids == [10, 2], node_ids # probably wrong
 
+    def test_prod_nsm(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        nsm = 1.
+        A = 2.0
+        prod = model.add_prod(pid, mid, A, j=0., c=0., nsm=nsm, comment='')
+        #print(prod)
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+        #----------------
+        card_lines = [
+            'PROD           2       1      2.                      1.',
+        ]
+        model.add_card(card_lines, 'PROD', comment='', is_list=False,
+                       has_none=True)
+        model.pop_parse_errors()
+        prod2 = model.properties[2]
+        #------------------
+        model.cross_reference()
+
+        assert prod.Nsm() == 1.0
+        assert prod.Area() == 2.0
+
+        # mass/L = area*rho + nsm
+        assert prod.MassPerLength() == 1.0
+
+        # area = 2.0
+        mat1.rho = 10.0
+        assert prod.MassPerLength() == 21.0, prod.MassPerLength()
+        assert prod2.MassPerLength() == 21.0, prod2.MassPerLength()
+
+    def test_ptube_nsm(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        nsm = 1.
+        OD1 = 2.0
+        ptube = model.add_ptube(pid, mid, OD1, t=None, nsm=nsm, OD2=None,
+                              comment='')
+        #print(ptube)
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        rho = 0.0
+        mat1 = model.add_mat1(mid, E, G, nu, rho=rho)
+        #----------------
+        card_lines = [
+            'PTUBE          2       1      2.              1.',
+        ]
+        model.add_card(card_lines, 'PTUBE', comment='', is_list=False,
+                       has_none=True)
+        model.pop_parse_errors()
+        ptube2 = model.properties[2]
+        #print(ptube.get_stats())
+        #------------------
+        model.cross_reference()
+
+        assert ptube.Nsm() == 1.0
+
+        area = pi
+        mpl = area * rho + nsm
+        assert ptube.Area() == area, ptube.Area()
+
+        # mass/L = area*rho + nsm
+        assert ptube.MassPerLength() == 1.0, ptube.MassPerLength()
+
+        rho = 10.0
+        mat1.rho = rho
+        mpl = area * rho + nsm
+        assert ptube2.MassPerLength() == mpl, ptube2.MassPerLength()
+
     def test_conrod_01(self):
         eid = 10
         nid1 = 2
@@ -42,6 +119,45 @@ class TestRods(unittest.TestCase):
         self.assertEqual(card.Mid(), mid)
         node_ids = card.node_ids
         assert node_ids == [nid1, nid2], node_ids
+
+    def test_conrod_nsm(self):
+        model = BDF(debug=False)
+        mid = 1
+        nsm = 1.
+        A = 2.0
+        eid = 1
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        nids = [1, 2]
+        conrod = model.add_conrod(eid, mid, nids, A=A, j=0.0, c=0.0, nsm=nsm,
+                               comment='')
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+        #----------------
+        card_lines = [
+            'CONROD         2       1       2       1      2.                      1.',
+        ]
+        model.add_card(card_lines, 'CONROD', comment='', is_list=False,
+                       has_none=True)
+        model.pop_parse_errors()
+        conrod2 = model.elements[2]
+
+        #------------------
+        model.cross_reference()
+
+        assert conrod.Nsm() == 1.0
+        assert conrod.Area() == 2.0
+
+        # mass/L = area*rho + nsm
+        assert conrod.MassPerLength() == 1.0
+
+        # area = 2.0
+        mat1.rho = 10.0
+        assert conrod.MassPerLength() == 21.0, conrod.MassPerLength()
+        assert conrod2.MassPerLength() == 21.0, conrod2.MassPerLength()
 
     def test_rod_mass_01(self):
         """tests a CROD and a CONROD mass"""
@@ -201,6 +317,39 @@ class TestRods(unittest.TestCase):
         self.assertAlmostEqual(ptube.Area(), A, 5)
         ptube.J()
         self.assertEqual(ptube.Rho(), rho)
+
+    def test_rod_opt(self):
+        model = BDF(debug=False,)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        eid_rod = 1
+        pid_rod = 1
+        mid = 1
+        A = 1.0
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_crod(eid_rod, pid_rod, [1, 2])
+        model.add_prod(pid_rod, mid, A)
+        model.add_mat1(mid, E, G, nu)
+
+        eid_tube = 2
+        pid_tube = 2
+        model.add_ctube(eid_tube, pid_tube, [1, 2])
+        model.add_ptube(pid_tube, mid, 1.0)
+        params = [
+            ('A', 2.0),
+            ('J', 2.0),
+        ]
+        i = make_dvprel_optimization(model, params, 'PROD', pid_rod, i=1)
+
+        params = [
+            ('T', 2.0),
+        ]
+        i = make_dvprel_optimization(model, params, 'PTUBE', pid_tube, i)
+
+        model.cross_reference()
+        model.update_model_by_desvars()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

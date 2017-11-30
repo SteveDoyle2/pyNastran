@@ -10,7 +10,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank)
-from pyNastran.bdf.cards.elements.bars import CBAROR
+from pyNastran.bdf.cards.elements.bars import BAROR
 
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.dev.bdf_vectorized.cards.elements.element import Element

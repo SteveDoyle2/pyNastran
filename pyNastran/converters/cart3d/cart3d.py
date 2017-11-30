@@ -59,7 +59,7 @@ def comp2tri(in_filenames, out_filename,
     out_filename : str
         output filename
     is_binary : bool; default=False
-        is the output filename binary
+        is the output file binary
     float_fmt : str; default='%6.7f'
         the format string to use for ascii writing
 
@@ -93,7 +93,7 @@ def comp2tri(in_filenames, out_filename,
     model.elements = elements
     model.regions = regions
 
-    model.write_cart3d(out_filename, is_binary=False, float_fmt=float_fmt)
+    model.write_cart3d(out_filename, is_binary=is_binary, float_fmt=float_fmt)
 
 
 class Cart3dIO(object):
@@ -108,7 +108,7 @@ class Cart3dIO(object):
         self.infile = None
         # self.readHalf = False
         # self.nPoints = None
-        # self.nElements = None
+        # self.nelements = None
         self.infilename = None
         self.points = None
         self.elements = None
@@ -312,28 +312,29 @@ class Cart3dIO(object):
         assert nelements > 0, 'npoints=%s nelements=%s' % (self.npoints, nelements)
         elements = np.zeros((nelements, 3), dtype='int32')
 
-        e = 0
+        ieid = 0
         data = []
-        while e < nelements:
+        while ieid < nelements:
             data += self.infile.readline().strip().split()
             while len(data) > 2:
                 n1 = int(data.pop(0))
                 n2 = int(data.pop(0))
                 n3 = int(data.pop(0))
-                elements[e] = [n1, n2, n3]
-                e += 1
+                elements[ieid] = [n1, n2, n3]
+                ieid += 1
         assert elements.min() == 1, elements.min()
         return elements - 1
 
     def _read_regions_ascii(self, nelements):
+        """reads the region section"""
         regions = np.zeros(nelements, dtype='int32')
-        r = 0
+        iregion = 0
         data = []
-        while r < nelements:
+        while iregion < nelements:
             data = self.infile.readline().strip().split()
             ndata = len(data)
-            regions[r : r + ndata] = data
-            r += ndata
+            regions[iregion : iregion + ndata] = data
+            iregion += ndata
         return regions
 
     def _read_header_binary(self):
@@ -409,12 +410,12 @@ class Cart3dIO(object):
         """binary results are not supported"""
         pass
 
-    def _rewind(self):
+    def _rewind(self):  # pragma: no cover
         """go back to the beginning of the file"""
         self.n = 0
         self.infile.seek(self.n)
 
-    def show(self, n, types='ifs', endian=None):
+    def show(self, n, types='ifs', endian=None):  # pragma: no cover
         assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
         #nints = n // 4
         data = self.infile.read(4 * n)
@@ -422,10 +423,10 @@ class Cart3dIO(object):
         self.infile.seek(self.n)
         return strings, ints, floats
 
-    def show_data(self, data, types='ifs', endian=None):
+    def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
         return self._write_data(sys.stdout, data, types=types, endian=endian)
 
-    def _write_data(self, outfile, data, types='ifs', endian=None):
+    def _write_data(self, outfile, data, types='ifs', endian=None):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
         """
@@ -464,10 +465,10 @@ class Cart3dIO(object):
             outfile.write("long long = %s\n" % str(longs))
         return strings, ints, floats
 
-    def show_ndata(self, n, types='ifs'):
+    def show_ndata(self, n, types='ifs'):  # pragma: no cover
         return self._write_ndata(sys.stdout, n, types=types)
 
-    def _write_ndata(self, outfile, n, types='ifs'):
+    def _write_ndata(self, outfile, n, types='ifs'):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
         """
@@ -483,8 +484,8 @@ class Cart3D(Cart3dIO):
     Cart3d interface class
     """
     model_type = 'cart3d'
-    isStructured = False
-    isOutwardNormals = True
+    is_structured = False
+    is_outward_normals = True
 
     def __init__(self, log=None, debug=False):
         Cart3dIO.__init__(self, log=log, debug=debug)
@@ -627,7 +628,7 @@ class Cart3D(Cart3dIO):
         nelements = elements.shape[0]
         assert nelements > 0, 'nelements=%s'  % nelements
 
-        inodes_remove = set([])
+        #inodes_remove = set([])
         self.log.info('---starting make_half_model---')
         ax = self._get_ax(axis)
 
@@ -639,7 +640,7 @@ class Cart3D(Cart3dIO):
             raise NotImplementedError('axis=%r ax=%s' % (axis, ax))
         inodes_save.sort()
 
-        inodes_map = np.arange(len(inodes_save))
+        #inodes_map = np.arange(len(inodes_save))
         if not(0 < len(inodes_save) < nnodes):
             msg = 'len(inodes_save)=%s nnodes=%s'  % (len(inodes_save), nnodes)
             raise RuntimeError(msg)
@@ -879,35 +880,35 @@ class Cart3D(Cart3dIO):
             loads = {}
         Cp = results[:, 0]
         rho = results[:, 1]
-        rhoU = results[:, 2]
-        rhoV = results[:, 3]
-        rhoW = results[:, 4]
+        rho_u = results[:, 2]
+        rho_v = results[:, 3]
+        rho_w = results[:, 4]
         E = results[:, 5]
 
         ibad = np.where(rho <= 0.000001)[0]
         if len(ibad) > 0:
 
             if 'Mach' in result_names:
-                Mach = np.sqrt(rhoU**2 + rhoV**2 + rhoW**2)# / rho
+                Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)# / rho
                 Mach[ibad] = 0.0
             if 'U' in result_names:
-                U = rhoU / rho
+                U = rho_u / rho
                 U[ibad] = 0.0
             if 'U' in result_names:
-                V = rhoV / rho
+                V = rho_v / rho
                 V[ibad] = 0.0
             if 'W' in result_names:
-                W = rhoW / rho
+                W = rho_w / rho
                 W[ibad] = 0.0
             #if 'rhoE' in result_names:
-                #rhoE = rhoE / rho
+                #rho_e = rhoE / rho
                 #e[ibad] = 0.0
 
             is_bad = True
-            n = 0
+            #n = 0
             #for i in ibad:
                 #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (
-                    #i, Cp[i], Mach[i], rho[i], rhoU[i], rhoV[i], rhoW[i]))
+                    #i, Cp[i], Mach[i], rho[i], rho_u[i], rho_v[i], rho_w[i]))
                 #Mach[i] = 0.0
                 #n += 1
                 #if n > 10:
@@ -920,34 +921,34 @@ class Cart3D(Cart3dIO):
         if 'Cp' in result_names:
             loads['Cp'] = Cp
         if 'rhoU' in result_names:
-            loads['rhoU'] = rhoU
+            loads['rhoU'] = rho_u
         if 'rhoV' in result_names:
-            loads['rhoV'] = rhoV
+            loads['rhoV'] = rho_v
         if 'rhoW' in result_names:
-            loads['rhoW'] = rhoW
+            loads['rhoW'] = rho_w
         #if 'rhoE' in result_names:
-            #loads['rhoE'] = rhoE
+            #loads['rhoE'] = rho_e
 
         if 'rho' in result_names:
             loads['rho'] = rho
 
         if 'Mach' in result_names:
             if not is_bad:
-                #Mach = np.sqrt(rhoU**2 + rhoV**2 + rhoW**2) / rho
-                Mach = np.sqrt(rhoU**2 + rhoV**2 + rhoW**2)
+                #Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2) / rho
+                Mach = np.sqrt(rho_u**2 + rho_v**2 + rho_w**2)
             loads['Mach'] = Mach
 
         if 'U' in result_names:
             if not is_bad:
-                U = rhoU / rho
+                U = rho_u / rho
             loads['U'] = U
         if 'V' in result_names:
             if not is_bad:
-                V = rhoV / rho
+                V = rho_v / rho
             loads['V'] = V
         if 'W' in result_names:
             if not is_bad:
-                W = rhoW / rho
+                W = rho_w / rho
             loads['W'] = W
         if 'E' in result_names:
             #if not is_bad:
@@ -986,8 +987,8 @@ class Cart3D(Cart3dIO):
         # total enthalpy
 
         #i = where(Mach == max(Mach))[0][0]
-        #self.log.info("i=%s Cp=%s rho=%s rhoU=%s rhoV=%s rhoW=%s Mach=%s" % (
-            #i, Cp[i], rho[i], rhoU[i], rhoV[i], rhoW[i], Mach[i]))
+        #self.log.info("i=%s Cp=%s rho=%s rho_u=%s rho_v=%s rho_w=%s Mach=%s" % (
+            #i, Cp[i], rho[i], rho_u[i], rho_v[i], rho_w[i], Mach[i]))
         self.log.debug('---finished read_results---')
         return loads
 

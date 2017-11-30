@@ -290,7 +290,14 @@ class BaseCard(object):
 
     def rstrip(self):
         # type: () -> str
-        return str(self).rstrip()
+        try:
+            msg = '%s' % str(self)
+        except UnicodeEncodeError:
+            comment = self.comment
+            self.comment = ''
+            msg = '$ dropped comment due to unicode error\n%s' % str(self)
+            self.comment = comment
+        return msg.rstrip()
 
     def write_card(self, size=8, is_double=False):
         # type: (int, bool) -> str
@@ -694,7 +701,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     return out
 
 
-def expand_thru_by(fields, set_fields=True, sort_fields=False):
+def expand_thru_by(fields, set_fields=True, sort_fields=True):
     # type: (List[str], bool, bool) -> List[int]
     """
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
@@ -705,7 +712,8 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     fields : List[int/str]
         the fields to expand
     set_fields : bool; default=True
-        Should the fields be converted to a set and then back to a list?
+        Should the fields be converted to a set and then back to a list
+        to remove duplicates?
         This is useful for [2, 'THRU' 5, 1]
     sort_fields : bool; default=False
         Should the fields be sorted at the end?
@@ -739,11 +747,14 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
             for j in range(0, max_range):  # +1 is to include final point
                 value = min_value + by * j
                 out.append(value)
+            out.append(max_value)
 
             if by_case:  # null/standard case
+                # A thru B
                 i += 2
             else:     # BY case
-                i += 3
+                # A thru B by C
+                i += 4
         else:
             out.append(interpret_value(fields[i]))
             i += 1

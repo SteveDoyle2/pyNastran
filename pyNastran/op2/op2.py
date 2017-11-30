@@ -22,9 +22,10 @@ Defines the main OP2 class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iterkeys, iteritems, string_types, itervalues, b
 import os
 import sys
+from six import iterkeys, iteritems, string_types, itervalues, b
+from six.moves.cPickle import load, dump
 
 import numpy as np
 
@@ -214,41 +215,136 @@ class OP2(OP2_Scalar):
         Diffs the current op2 model vs. another op2 model.
         Crashes if they're not equal.
         """
-        return self.op2_equal(op2_model)
+        try:
+            is_equal = self.assert_op2_equal(op2_model,
+                                             stop_on_failure=True, debug=False)
+        except (AssertionError, ValueError):
+            is_equal = False
+        return is_equal
 
-    def op2_equal(self, op2_model):
+    def assert_op2_equal(self, op2_model, stop_on_failure=True, debug=False):
         """
         Diffs the current op2 model vs. another op2 model.
-        Crashes if they're not equal.
+
+        Parameters
+        ----------
+        stop_on_failure : bool; default=True
+            True : Crashes if they're not equal
+            False : Go to the next object
+        debug : bool; default=False
+            give slightly more debugging messages
+
+        Returns
+        -------
+        is_equal : bool
+            are the objects equal?
+
+        Raises
+        ------
+        AssertionError/ValueError : stop_on_failure=True and and error occurred
+        NotImplementedError : this is a sign of an unsupported object
         """
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
                 self.read_mode, op2_model.read_mode))
             return True
+
         table_types = self.get_table_types()
         for table_type in table_types:
+            # model.displacements
             adict = getattr(self, table_type)
             bdict = getattr(op2_model, table_type)
+
+            # check number of subcases
             if len(adict) != len(bdict):
                 self.log.warning('len(self.%s)=%s len(op2_model.%s)=%s' % (
                     table_type, len(adict), table_type, len(bdict)))
-                return False
+                if stop_on_failure:
+                    return False
+                continue
+
+            # loop over each DisplacementArray
             for key, avalue in iteritems(adict):
+                if debug:
+                    self.log.debug('working on %r subcase=%s' % (table_type, str(key)))
+
+                # get the displacement for model B
                 bvalue = bdict[key]
-                aname = avalue.__class__.__name__
-                bname = bvalue.__class__.__name__
-                if not aname == bname:
-                    self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
-                    return False
-                if not any(word in aname for word in ['Array', 'Eigenvalues']):
-                    msg = '%s is not an Array ... assume equal' % aname
-                    self.log.warning(msg)
-                    raise NotImplementedError('%s __eq__' % aname)
-                    #continue
-                if avalue != bvalue:
-                    self.log.warning('key=%s table_type=%r are not equal; class_name=%r' % (
-                        key, table_type, aname))
-                    return False
+                is_equal = self._is_op2_case_equal(table_type, key, avalue, bvalue,
+                                                   stop_on_failure=stop_on_failure, debug=debug)
+                if not is_equal and stop_on_failure:
+                    return is_equal
+        return True
+
+    def _is_op2_case_equal(self, table_type, key, a_obj, b_obj, stop_on_failure=True, debug=False):
+        """
+        Helper method for ``assert_op2_equal``
+
+        Parameters
+        ----------
+        table_type : str
+            the type of table (e.g., ``displacements``)
+        key : subcase_id / tuple_obj
+            subcase_id : int
+                the subcase_id
+            tuple_obj : Tuple(???, ???, ...)
+                the fancy tuple thingy that you see in single subcase buckling...
+
+                subcase_id : int
+                    the subcase_id
+                sort_code : int
+                    1 : SORT1
+                    2 : SORT2
+                title??? : str
+                    the case title
+                subtitle??? : str
+                    the case subtitle
+                superelement_id : str???
+                    the superelement
+                other terms???
+                TODO: document better
+        a_obj : Op2Object()
+            a RealDisplacementArray, ComplexDisplacementArray, RealSolidStressArray, etc.
+            for the self model
+        b_obj : Op2Object()
+            a RealDisplacementArray, ComplexDisplacementArray, RealSolidStressArray, etc.
+            for the comparison model
+        stop_on_failure : bool; default=True
+            True : Crashes if they're not equal
+            False : Go to the next object
+        debug : bool; default=False
+            give slightly more debugging messages
+
+        Returns
+        -------
+        is_equal : bool
+            are the objects equal?
+
+        Raises
+        ------
+        AssertionError/ValueError : stop_on_failure=True and and error occurred
+        NotImplementedError : this is a sign of an unsupported object
+        """
+        # check the name (e.g., RealDisplacementArray vs. ComplexDisplacementArray)
+        aname = a_obj.__class__.__name__
+        bname = b_obj.__class__.__name__
+        if not aname == bname:
+            self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
+            return False
+
+        # does this ever hit?
+        if not any(word in aname for word in ['Array', 'Eigenvalues']):
+            msg = '%s is not an Array ... assume equal' % aname
+            self.log.warning(msg)
+            raise NotImplementedError('%s __eq__' % aname)
+            #continue
+
+        # use the array methods to check for equality
+        # TODO: this can crash
+        if a_obj != b_obj:
+            self.log.warning('key=%s table_type=%r are not equal; class_name=%r' % (
+                key, table_type, aname))
+            return False
         return True
 
     def set_mode(self, mode):
@@ -261,6 +357,78 @@ class OP2(OP2_Scalar):
             self.set_as_nx()
         else:
             raise RuntimeError("mode=%r and must be 'msc' or 'nx'")
+
+    def saves(self):
+        """Saves a pickled string"""
+        return dumps(self)
+
+    def __getstate__(self):
+        """clears out a few variables in order to pickle the object"""
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        del state['log']
+        #if hasattr(self, '_card_parser_b'):
+            #del state['_card_parser_b']
+        #if hasattr(self, '_card_parser_prepare'):
+            #del state['_card_parser_prepare']
+
+        #i = 0
+        #for key, value in sorted(state.items()):
+            #if isinstance(value, dict) and len(value) == 0:
+                #continue
+            #if not isinstance(value, (str, int, float)):
+            #if i > 200: # 72
+                #del state[key]
+            #else:
+                #print(key, type(value), value)
+                #break
+            #i += 1
+        return state
+
+    def save(self, obj_filename='model.obj', unxref=True):
+        # type: (str, bool) -> None
+        """Saves a pickleable object"""
+        #del self.log
+        #del self._card_parser, self._card_parser_prepare
+
+        #print(object_attributes(self, mode="all", keys_to_skip=[]))
+        with open(obj_filename, 'wb') as obj_file:
+            dump(self, obj_file)
+
+    def load(self, obj_filename='model.obj'):
+        # type: (str) -> None
+        """Loads a pickleable object"""
+        with open(obj_filename, 'rb') as obj_file:
+            obj = load(obj_file)
+
+        keys_to_skip = [
+            'total_effective_mass_matrix',
+            'effective_mass_matrix',
+            'rigid_body_mass_matrix',
+            'modal_effective_mass_fraction',
+            'modal_participation_factors',
+            'modal_effective_mass',
+            'modal_effective_weight',
+        ]
+        for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
+            if key.startswith('__') and key.endswith('__'):
+                continue
+
+            val = getattr(obj, key)
+            print(key)
+            #if isinstance(val, types.FunctionType):
+                #continue
+            try:
+                setattr(self, key, val)
+            except AttributeError:
+                print('key=%r val=%s' % (key, val))
+                raise
+
+        #self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
+        self.log.debug('done loading!')
 
     #def _set_ask_vectorized(self, ask=False):
         #"""
@@ -431,8 +599,8 @@ class OP2(OP2_Scalar):
                     matrix.build_dataframe()
                 else:
                     self.log.warning('pandas: build_dataframe is not supported for key=%s type=%s' % (key, str(type(matrix))))
-                    #raise NotImplementedError()
-                    continue
+                    raise NotImplementedError()
+                    #continue
 
         for result_type in result_types:
             result = getattr(self, result_type)
@@ -451,7 +619,7 @@ class OP2(OP2_Scalar):
                         self.log.error('build_dataframe is broken for %s' % class_name)
                         raise
                     continue
-                if obj.is_sort2():
+                if obj.is_sort2:
                     #self.log.warning(obj)
                     self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
                     continue
@@ -492,13 +660,12 @@ class OP2(OP2_Scalar):
             if len(self.matrices):
                 matrix_group = hdf5_file.create_group('matrices')
                 for key, matrix in sorted(iteritems(self.matrices)):
-                    print('type(key) = ', type(key))
                     matrixi_group = matrix_group.create_group(b(key))
                     if hasattr(matrix, 'export_to_hdf5'):
                         matrix.export_to_hdf5(matrixi_group, self.log)
                     else:
                         self.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
-                        #raise
+                        #raise NotImplementedError()
                         continue
 
             subcase_groups = {}

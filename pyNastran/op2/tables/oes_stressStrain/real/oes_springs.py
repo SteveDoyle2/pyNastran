@@ -24,9 +24,11 @@ class RealSpringArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -84,7 +86,7 @@ class RealSpringArray(OES_Object):
             self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -92,7 +94,7 @@ class RealSpringArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -110,7 +112,7 @@ class RealSpringArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -175,7 +177,7 @@ class RealSpringArray(OES_Object):
             header = []
         msg_temp = self.get_f06_header(is_mag_phase)
 
-        if self.is_sort1():
+        if self.is_sort1:
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
         else:
             raise NotImplementedError(self.code_information())
@@ -297,12 +299,15 @@ class RealNonlinearSpringStressArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
+    @property
     def is_stress(self):
         return True
 
@@ -347,14 +352,14 @@ class RealNonlinearSpringStressArray(OES_Object):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -372,7 +377,7 @@ class RealNonlinearSpringStressArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -418,7 +423,7 @@ class RealNonlinearSpringStressArray(OES_Object):
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        if self.is_sort1():
+        if self.is_sort1:
             if self.element_type == 224:
                 nspring = 1 # CELAS1
             elif self.element_type == 225:

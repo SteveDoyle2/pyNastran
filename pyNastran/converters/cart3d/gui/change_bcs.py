@@ -3,28 +3,11 @@ from __future__ import print_function, unicode_literals
 
 from numpy import setdiff1d, unique, array, hstack
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore
-    from PyQt4.QtGui import (
-        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
-        QColorDialog, QLabel,
-    )
-elif qt_version == 5:
-    from PyQt5 import QtCore
-    from PyQt5.QtWidgets import (
-        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
-        QColorDialog, QLabel,
-    )
-elif qt_version == 'pyside':
-    from PySide import QtCore
-    from PySide.QtGui import (
-        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
-        QColorDialog, QLabel,
-    )
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
-
+from qtpy import QtCore
+from qtpy.QtWidgets import (
+    QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
+    QColorDialog, QLabel,
+)
 
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs

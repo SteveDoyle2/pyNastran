@@ -9,11 +9,10 @@ from six.moves import range
 from numpy import arange, mean, vstack, unique, where, sqrt
 import numpy as np
 
-import vtk
-from vtk import vtkTriangle
-
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry #, Cart3dResult
 
@@ -74,7 +73,7 @@ class Cart3dIO(object):
 
         Parameters
         ----------
-        bdf_filename : str
+        cart3d_filename : str
             the cart3d filename to load
         name : str
             the name of the "main" actor for the GUI
@@ -95,19 +94,19 @@ class Cart3dIO(object):
         regions = model.regions
         loads = model.loads
 
-        self.nNodes = model.npoints
-        self.nElements = model.nelements
+        self.nnodes = model.npoints
+        self.nelements = model.nelements
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
+        grid.Allocate(self.nelements, 1000)
 
-        if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                self.grid_result.InsertNextValue(nid * fraction)
+        #if 0:
+            #fraction = 1. / self.nnodes  # so you can color the nodes by ID
+            #for nid, node in sorted(iteritems(nodes)):
+                #self.grid_result.InsertNextValue(nid * fraction)
 
         assert nodes is not None
-        nnodes = nodes.shape[0]
+        #nnodes = nodes.shape[0]
 
         mmax = nodes.max(axis=0)
         mmin = nodes.min(axis=0)
@@ -118,12 +117,12 @@ class Cart3dIO(object):
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
         self.create_global_axes(dim_max)
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
 
         #assert elements.min() == 0, elements.min()
 
         etype = 5 # vtkTriangle().GetCellType()
-        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
+        create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         grid.SetPoints(points)
         grid.Modified()
@@ -180,7 +179,7 @@ class Cart3dIO(object):
                     ('Pressure', icase + 5, []),
                 ]
                 icase += 5
-                nelements = self.nElements
+                nelements = self.nelements
                 rho = np.full(nelements, np.nan, dtype='float32')
                 xvel = np.full(nelements, np.nan, dtype='float32')
                 yvel = np.full(nelements, np.nan, dtype='float32')
@@ -382,11 +381,11 @@ class Cart3dIO(object):
             alt_grid = self.alt_grids['free_edges']
             etype = 3  # vtk.vtkLine().GetCellType()
             elements2 = np.arange(0, npoints, dtype='int32').reshape(nfree_edges, 2)
-            self.create_vtk_cells_of_constant_element_type(alt_grid, elements2, etype)
+            create_vtk_cells_of_constant_element_type(alt_grid, elements2, etype)
 
             #alt_grid.Allocate(nfree_edges, 1000)
             free_edge_nodes = nodes[free_edges_array.ravel(), :]
-            points = self.numpy_to_vtk_points(free_edge_nodes)
+            points = numpy_to_vtk_points(free_edge_nodes)
             alt_grid.SetPoints(points)
 
         else:

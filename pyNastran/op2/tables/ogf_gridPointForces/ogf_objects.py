@@ -38,9 +38,11 @@ class RealGridPointForcesArray(ScalarObject):
         #self.nelements = 0  # result specific
         #self.nnodes = None
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -180,11 +182,17 @@ class RealGridPointForcesArray(ScalarObject):
             #print(self.data_frame)
 
     def __eq__(self, table):
-        return self.assert_equal(table)
+        is_valid = False
+        try:
+            self.assert_equal(table)
+            is_valid = True
+        except:
+            pass
+        return is_valid
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
             assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
             assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)
@@ -209,7 +217,7 @@ class RealGridPointForcesArray(ScalarObject):
                 for itime in range(self.ntimes):
                     #print('node_element = ', self.node_element)
                     #print('shape = ', self.node_element.shape)
-                    msg += '#i, Nid, Eid, Name\n'
+                    msg += '#i, Nid, Eid, Name (itime=%s)\n' % itime
                     for ie, e in enumerate(self.node_element[itime, :, :]):
                         #print('e = ', e)
                         (nid, eid) = e
@@ -711,7 +719,7 @@ class RealGridPointForcesArray(ScalarObject):
         assert self.is_unique, self.is_unique
         # sort1 as sort1
         for itime in range(self.ntimes):
-            dt = self._times[itime]
+            #dt = self._times[itime]
             t1 = self.data[itime, :, 0]
             t2 = self.data[itime, :, 1]
             t3 = self.data[itime, :, 2]
@@ -722,7 +730,6 @@ class RealGridPointForcesArray(ScalarObject):
             nids = self.node_element[itime, :, 0]
             eids = self.node_element[itime, :, 1]
             enames = self.element_names[itime, :]
-            zero = ' '
             ntotal = self._ntotals[itime]
 
             for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
@@ -910,9 +917,11 @@ class ComplexGridPointForcesArray(ScalarObject):
         #self.nelements = 0  # result specific
         #self.nnodes = None
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -1058,7 +1067,7 @@ class ComplexGridPointForcesArray(ScalarObject):
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
             assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
             assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)

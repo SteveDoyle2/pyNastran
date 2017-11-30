@@ -888,7 +888,7 @@ def print_data(lines, iline, word, msg, nlines=20):
     iline_start = max(iline_start, 0)
     for iiline in range(iline_start, iline):
         msg += lines[iiline]
-    raise NotImplementedError(msg)
+    return msg
 
 def main(): # pragma: no cover
     """tests a simple abaqus model"""

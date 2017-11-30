@@ -8,24 +8,10 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from six import string_types
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtGui
-    from PyQt4.QtGui import (
-        QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-        QComboBox, QLabel, QHBoxLayout)
-elif qt_version == 5:
-    from PyQt5 import QtGui
-    from PyQt5.QtWidgets import (
-        QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-        QComboBox, QLabel, QHBoxLayout)
-elif qt_version == 'pyside':
-    from PySide import QtGui
-    from PySide.QtGui import (
-        QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-        QComboBox, QLabel, QHBoxLayout)
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+from qtpy import QtGui
+from qtpy.QtWidgets import (
+    QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
+    QComboBox, QLabel, QHBoxLayout)
 
 
 class QTreeView2(QTreeView):

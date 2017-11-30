@@ -1,14 +1,16 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import get_key0, write_imag_floats_13e
 import numpy as np
-ints = (int, np.int32)
 try:
     import pandas as pd  # type: ignore
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
+from pyNastran.f06.f06_formatting import write_imag_floats_13e
+
+ints = (int, np.int32)
 
 
 class ComplexShearArray(OES_Object):
@@ -32,9 +34,11 @@ class ComplexShearArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return False
 
+    @property
     def is_complex(self):
         return True
 
@@ -42,8 +46,8 @@ class ComplexShearArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    def get_nnodes(self):
-        return get_nnodes(self)
+    #def get_nnodes(self):
+        #return get_nnodes(self)
 
     def build(self):
         """sizes the vectorized attributes of the ComplexShearArray"""
@@ -74,7 +78,7 @@ class ComplexShearArray(OES_Object):
         self.element = np.zeros(self.nelements, 'int32')
 
         # the number is messed up because of the offset for the element's properties
-        if not self.nelements == self.ntotal:
+        if self.nelements != self.ntotal:
             msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
                 self.ntimes, self.nelements, nnodes, self.nelements * nnodes,
                 self.ntotal)
@@ -92,7 +96,7 @@ class ComplexShearArray(OES_Object):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -100,7 +104,7 @@ class ComplexShearArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -121,7 +125,7 @@ class ComplexShearArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -182,7 +186,7 @@ class ComplexShearArray(OES_Object):
 
         ntimes = self.data.shape[0]
         eids = self.element
-        if self.is_sort1():
+        if self.is_sort1:
             if is_sort1:
                 for itime in range(ntimes):
                     dt = self._times[itime]
@@ -245,7 +249,7 @@ class ComplexShearStrainArray(ComplexShearArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
-        assert self.is_strain(), self.stress_bits
+        assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
         return ['max_shear', 'avg_shear']

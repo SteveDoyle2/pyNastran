@@ -1,0 +1,56 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-06;
+        relTol          0;
+    }
+
+    U
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-05;
+        relTol          0;
+    }
+
+    "cellDisplacement.*"
+    {
+        solver          GAMG;
+        tolerance       1e-08;
+        relTol          0;
+        smoother        GaussSeidel;
+    }
+
+    "(cellMotionU|cellMotionUz)"
+    {
+        $p;
+        tolerance       1e-08;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{}
+
+
+// ************************************************************************* //

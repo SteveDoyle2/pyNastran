@@ -1,3 +1,4 @@
+"""runs various OP4 tests"""
 from __future__ import print_function
 import os
 import unittest
@@ -9,11 +10,11 @@ from numpy import ndarray, eye, array_equal, zeros
 from pyNastran.op4.op4 import OP4, read_op4
 
 import pyNastran.op4.test
-op4_path = pyNastran.op4.test.__path__[0]
+OP4_PATH = pyNastran.op4.test.__path__[0]
 
 
 class TestOP4(unittest.TestCase):
-
+    """runs various OP4 tests"""
     @staticmethod
     def test_op4_binary():
         fnames = [
@@ -22,7 +23,7 @@ class TestOP4(unittest.TestCase):
             'mat_b_s2.op4',
         ]
         for fname in fnames:
-            matrices = read_op4(os.path.join(op4_path, fname))
+            matrices = read_op4(os.path.join(OP4_PATH, fname))
             for name, (form, matrix) in sorted(iteritems(matrices)):
                 #print("name = %s" % (name))
                 if isinstance(matrix, ndarray):
@@ -42,7 +43,7 @@ class TestOP4(unittest.TestCase):
         ]
         for fname in fnames:
             op4 = OP4()
-            matrices = op4.read_op4(os.path.join(op4_path, fname))
+            matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
             for name, (form, matrix) in sorted(iteritems(matrices)):
                 #print("name = %s" % name)
                 if isinstance(matrix, ndarray):
@@ -62,7 +63,7 @@ class TestOP4(unittest.TestCase):
         ]
         for fname in fnames:
             op4 = OP4(debug=False)
-            matrices = op4.read_op4(os.path.join(op4_path, fname))
+            matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
             (form, A) = matrices['EYE10']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
             if 's' in fname:  # sparse
@@ -70,8 +71,8 @@ class TestOP4(unittest.TestCase):
                 self.assertTrue(array_equal(A.col, range(10)))
                 self.assertTrue(array_equal(A.data, [1] * 10))
             else: # real
-                E = eye(10)
-                self.assertTrue(array_equal(A, E))
+                eye_matrix = eye(10)
+                self.assertTrue(array_equal(A, eye_matrix))
 
     def test_eye5cd(self):
         """tests the EYE5CD matrices"""
@@ -82,7 +83,7 @@ class TestOP4(unittest.TestCase):
         ]
         for fname in fnames:
             op4 = OP4(debug=False)
-            matrices = op4.read_op4(os.path.join(op4_path, fname))
+            matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
             (form, A) = matrices['EYE5CD']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
             if 's' in fname:  # sparse
@@ -90,8 +91,8 @@ class TestOP4(unittest.TestCase):
                 self.assertTrue(array_equal(A.col, range(5)))
                 self.assertTrue(array_equal(A.data, [-1+1j] * 5))
             else: # real
-                E = -eye(5) + 1j * eye(5)
-                self.assertTrue(array_equal(A, E))
+                eye_matrix = -eye(5) + 1j * eye(5)
+                self.assertTrue(array_equal(A, eye_matrix))
 
     def test_null(self):
         """tests the NULL matrices"""
@@ -103,7 +104,7 @@ class TestOP4(unittest.TestCase):
         for fname in fnames:
             #print('-------%s-------' % fname)
             op4 = OP4(debug=False)
-            matrices = op4.read_op4(os.path.join(op4_path, fname))
+            matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
             (form, A) = matrices['NULL']
             self.assertEqual(form, 6)  # form=6 -> Symmetric
             #print A.shape
@@ -116,14 +117,14 @@ class TestOP4(unittest.TestCase):
                 msg = 'fname=%s NULL sparse matrix error' % fname
                 self.assertTrue(array_equal(A.data, [0] * 3), msg)
             else: # real
-                E = zeros((3, 3))
+                zero_matrix = zeros((3, 3))
                 msg = 'fname=%s NULL dense matrix error' % fname
-                self.assertTrue(array_equal(A, E))
+                self.assertTrue(array_equal(A, zero_matrix))
             del A
 
     def test_bad_inputs_1(self):
         op4 = OP4(debug=False)
-        op4_filename = os.path.join(op4_path, 'bad_inputs.op4')
+        op4_filename = os.path.join(OP4_PATH, 'bad_inputs.op4')
         form1 = 1
         A1 = ones((3, 3), dtype='float64')
         matrices = {
@@ -168,7 +169,7 @@ class TestOP4(unittest.TestCase):
             wb = 'wb'
         else:
             wb = 'w'
-        with open(os.path.join(op4_path, 'file_ascii.op4'), wb) as op4_file:
+        with open(os.path.join(OP4_PATH, 'file_ascii.op4'), wb) as op4_file:
             op4.write_op4(op4_file, matrices, name_order='A1', precision='default',
                           is_binary=False)
 
@@ -180,14 +181,14 @@ class TestOP4(unittest.TestCase):
         matrices = {
             'A1': (form1, A1),
         }
-        with open(os.path.join(op4_path, 'file_binary.op4'), 'wb') as op4_file:
+        with open(os.path.join(OP4_PATH, 'file_binary.op4'), 'wb') as op4_file:
             op4.write_op4(op4_file, matrices, name_order='A1', precision='default',
                           is_binary=True)
 
     def test_square_matrices_1(self):
         """tests reading/writing square matrices (A1, A2, A3)"""
         op4 = OP4(debug=False)
-        #matrices = op4.read_op4(os.path.join(op4_path, fname))
+        #matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
         form1 = 1
         form2 = 2
         form3 = 2
@@ -201,7 +202,7 @@ class TestOP4(unittest.TestCase):
         }
 
         for (is_binary, fname) in [(False, 'small_ascii.op4'), (True, 'small_binary.op4')]:
-            op4_filename = os.path.join(op4_path, fname)
+            op4_filename = os.path.join(OP4_PATH, fname)
             op4.write_op4(op4_filename, matrices, name_order=None, precision='default',
                           is_binary=False)
             matrices2 = op4.read_op4(op4_filename, precision='default')
@@ -270,7 +271,7 @@ class TestOP4(unittest.TestCase):
                 #if 't' in fname:
                 #else:
                     #f = open('binary.op4','wb')
-                op4_filename = os.path.join(op4_path, op4_filename)
+                op4_filename = os.path.join(OP4_PATH, op4_filename)
                 matrices = op4.read_op4(op4_filename, matrix_names=matrix_names,
                                         precision='default')
                 #print("keys = %s" % matrices.keys())
@@ -322,6 +323,6 @@ def get_matrices():
 
 
 if __name__ == '__main__':  # pragma: no cover
-    on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-    if not on_rtd:
+    ON_RTD = os.environ.get('READTHEDOCS', None) == 'True'
+    if not ON_RTD:
         unittest.main()

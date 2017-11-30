@@ -603,8 +603,8 @@ class TestOP2(Tester):
         cquad4_stress.build_dataframe()
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements # TODO: should this be 4; yes by actual count...
         assert cquad4_stress.data.shape == (1, 20, 8), cquad4_stress.data.shape
-        assert cquad4_stress.is_fiber_distance(), cquad4_stress
-        assert cquad4_stress.is_von_mises(), cquad4_stress
+        assert cquad4_stress.is_fiber_distance, cquad4_stress
+        assert cquad4_stress.is_von_mises, cquad4_stress
 
         ctria3_force = op2.ctria3_force[isubcase]
         ctria3_force.build_dataframe()
@@ -615,26 +615,26 @@ class TestOP2(Tester):
         ctria3_stress.build_dataframe()
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
-        assert ctria3_stress.is_fiber_distance(), ctria3_stress
-        assert ctria3_stress.is_von_mises(), ctria3_stress
+        assert ctria3_stress.is_fiber_distance, ctria3_stress
+        assert ctria3_stress.is_von_mises, ctria3_stress
 
         ctetra_stress = op2.ctetra_stress[isubcase]
         ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 10, 10), ctetra_stress.data.shape
-        assert ctetra_stress.is_von_mises(), ctetra_stress
+        assert ctetra_stress.is_von_mises, ctetra_stress
 
         cpenta_stress = op2.cpenta_stress[isubcase]
         cpenta_stress.build_dataframe()
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (1, 14, 10), cpenta_stress.data.shape
-        assert cpenta_stress.is_von_mises(), cpenta_stress
+        assert cpenta_stress.is_von_mises, cpenta_stress
 
         chexa_stress = op2.chexa_stress[isubcase]
         chexa_stress.build_dataframe()
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (1, 9, 10), chexa_stress.data.shape
-        assert chexa_stress.is_von_mises(), chexa_stress
+        assert chexa_stress.is_von_mises, chexa_stress
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)

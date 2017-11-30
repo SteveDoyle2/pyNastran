@@ -448,12 +448,13 @@ def fortran_to_python(lines, default_values, comment=''):
         f = x + y
         return f
     """
-    msg = ''
+    func_msg = ''
     variables = []
     assert len(lines) > 0, lines
     for i, line in enumerate(lines):
         #print('--------------------')
         line = line.lower()
+        #func_msg += '#i=%s\n' % i
         try:
             # f(x, y) = 10.
             # f(x, y) = abs(x) + y
@@ -473,16 +474,19 @@ def fortran_to_python(lines, default_values, comment=''):
         #print('f=%r eq=%r' % (f, eq))
 
         if i == 0:
-            func_name, msg, variables = write_function_header(
+            func_name, func_msg, variables = write_function_header(
                 f, eq, default_values, comment)
-            #print(msg)
+            f = func_name  # return the value...
+            func_msg += '    # i=0 write_function_header\n'
+            #print(func_msg)
         else:
             out = f
-            msg += '    %s = %s\n' % (out, eq)
-    msg += '    return %s' % f
-    #print(msg)
+            func_msg += '    %s = %s\n' % (out, eq)
+
+    func_msg += '    return %s' % f
+    #print(func_msg)
     nargs = len(variables)
-    return func_name, nargs, msg
+    return func_name, nargs, func_msg
 
 
 def write_function_header(func_header, eq, default_values, comment=''):
@@ -593,7 +597,7 @@ def _write_variables(variables):
     for var in variables:
         #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
         #msg += '        %s = float(%s)\n' % (var, var)
-        msg += '        if isinstance(%s, (int, float, str)):\n' % var
+        msg += '        if isinstance(%s, (int, str)):\n' % var
         msg += '            %s = float(%s)\n' % (var, var)
     msg += '    except:\n'
     msg += '        print(locals())\n'

@@ -7,8 +7,9 @@ from six import integer_types
 from six.moves import zip, range
 import numpy as np
 ints = (int, np.int32)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header#, get_key0
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
     import pandas as pd  # type: ignore
 except ImportError:
@@ -34,9 +35,11 @@ class RealPlateArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -81,7 +84,8 @@ class RealPlateArray(OES_Object):
         else:
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
-        #print('nnodes_per_element[%s, %s] = %s' % (self.isubcase, self.element_type, nnodes_per_element))
+        #print('nnodes_per_element[%s, %s] = %s' % (
+            #self.isubcase, self.element_type, nnodes_per_element))
         self.nnodes = nnodes_per_element
         #self.nelements //= nnodes_per_element
         self.nelements //= self.ntimes
@@ -93,7 +97,8 @@ class RealPlateArray(OES_Object):
         self.is_built = True
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+            #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
+            #self.nelements, self.ntotal))
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
@@ -107,7 +112,7 @@ class RealPlateArray(OES_Object):
         headers = self.get_headers()
 
         nelements = self.element_node.shape[0] // 2
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             fiber_distance = ['Top', 'Bottom'] * nelements
         else:
             fiber_distance = ['Mean', 'Curvature'] * nelements
@@ -116,7 +121,8 @@ class RealPlateArray(OES_Object):
 
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data, items=column_values,
+                                       major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
         else:
@@ -126,11 +132,12 @@ class RealPlateArray(OES_Object):
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join(df2)
-        self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
+        self.data_frame = self.data_frame.reset_index().replace(
+            {'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
         #print(self.data_frame)
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -159,35 +166,47 @@ class RealPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def _add_new_eid(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        self._add_new_eid_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def _add_new_eid(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                     major_principal, minor_principal, ovm):
+        self._add_new_eid_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                                major_principal, minor_principal, ovm)
 
-    def _add_new_eid_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def _add_new_eid_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                           major_principal, minor_principal, ovm):
         assert isinstance(eid, ints), eid
         assert isinstance(node_id, ints), node_id
         self._times[self.itime] = dt
         #assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, node_id]
-        self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle,
+                                                 major_principal, minor_principal, ovm]
         self.itotal += 1
         self.ielement += 1
 
-    def _add_new_node(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def _add_new_node(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                      major_principal, minor_principal, ovm):
         assert isinstance(node_id, ints), node_id
-        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                        major_principal, minor_principal, ovm)
 
-    def _add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def _add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+             major_principal, minor_principal, ovm):
         assert isinstance(node_id, ints), node_id
-        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                        major_principal, minor_principal, ovm)
 
-    def _add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def _add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                            major_principal, minor_principal, ovm):
+        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                        major_principal, minor_principal, ovm)
 
-    def _add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def _add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
+                   major_principal, minor_principal, ovm):
         assert eid is not None, eid
         assert isinstance(node_id, ints), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
-        self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle,
+                                                 major_principal, minor_principal, ovm]
         self.itotal += 1
 
     def get_stats(self, short=False):
@@ -264,12 +283,12 @@ class RealPlateArray(OES_Object):
             oyy = self.data[itime, :, 2]
             txy = self.data[itime, :, 3]
             angle = self.data[itime, :, 4]
-            majorP = self.data[itime, :, 5]
-            minorP = self.data[itime, :, 6]
+            major_principal = self.data[itime, :, 5]
+            minor_principal = self.data[itime, :, 6]
             ovm = self.data[itime, :, 7]
 
             for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
-                 count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+                 count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
                 [fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
                     [fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 ilayer = i % 2
@@ -296,6 +315,7 @@ class RealPlateArray(OES_Object):
         return page_num - 1
 
     def get_nnodes_bilinear(self):
+        """gets the number of nodes and whether or not the element has bilinear results"""
         is_bilinear = False
         if self.element_type == 74:
             nnodes = 3
@@ -327,12 +347,12 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             fiber_dist = 'fiber_distance'
         else:
             fiber_dist = 'fiber_curvature'
 
-        if self.is_von_mises():
+        if self.is_von_mises:
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -341,17 +361,22 @@ class RealPlateStressArray(RealPlateArray, StressObject):
 
 
 class RealPlateStrainArray(RealPlateArray, StrainObject):
+    """
+    used for:
+     - RealPlateStressArray
+     - RealPlateStrainArray
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             fiber_dist = 'fiber_distance'
         else:
             fiber_dist = 'fiber_curvature'
 
-        if self.is_von_mises():
+        if self.is_von_mises:
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -360,13 +385,13 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
 
 
 def _get_plate_msg(self):
-    if self.is_von_mises():
+    if self.is_von_mises:
         von_mises = 'VON MISES'
     else:
         von_mises = 'MAX SHEAR'
 
-    if self.is_stress():
-        if self.is_fiber_distance():
+    if self.is_stress:
+        if self.is_fiber_distance:
             quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)               \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
@@ -392,7 +417,7 @@ def _get_plate_msg(self):
         ctria6_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
         ctriar_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
     else:
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             quad_msg_temp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             tri_msg_temp = ['  ELEMENT      FIBER                STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',

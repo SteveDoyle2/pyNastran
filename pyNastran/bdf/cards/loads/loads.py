@@ -52,7 +52,7 @@ class Load(BaseCard):
             return [node.nid for node in nodes]
 
 
-class LoadCombination(Load):  # LOAD, DLOAD
+class LoadCombination(Load):
     """Common method for LOAD, DLOAD"""
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         """
@@ -148,18 +148,20 @@ class LoadCombination(Load):  # LOAD, DLOAD
         if self.load_ids_ref is None:
             return self.load_ids
         load_ids = []
+        supported_loads = [
+            'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
+            'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
+            'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2',
+            'RFORCE', 'RFORCE1', #'RFORCE2'
+            'ACCEL', 'ACCEL1', #'SLOAD',
+        ]
         for loads in self.load_ids_ref:
             for load in loads:
                 if isinstance(load, integer_types):
                     load_ids.append(load)
                 elif load.type == 'LOAD':
                     load_ids.append(load.sid)
-                elif load.type in ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
-                                   'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
-                                   'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2',
-                                   'RFORCE', 'RFORCE1', #'RFORCE2'
-                                   'ACCEL', #'ACCEL1', 'SLOAD',
-                                   ]:
+                elif load.type in supported_loads:
                     load_ids.append(load.sid)
                 else:
                     msg = ('The get_load_ids method doesnt support %s cards.\n'
@@ -297,7 +299,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         lid = integer(card, 3, 'lid')
         tid = integer_or_blank(card, 4, 'tid')
         assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
-        return LSEQ(sid, excite_id, lid, tid=None, comment=comment)
+        return LSEQ(sid, excite_id, lid, tid=tid, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -327,7 +329,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             the BDF object
         """
         msg = ', which is required by LSEQ=%s' % (self.sid)
-        self.lid_ref = model.Load(self.lid, msg=msg)
+        self.lid_ref = model.Load(self.lid, consider_load_combinations=False, msg=msg)
         #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
             # TODO: temperature set, not a table?
@@ -487,6 +489,8 @@ class DAREA(BaseCard):
         scales : List[float]
             Scale (area) factor
         """
+        if comment:
+            self.comment = comment
         self.sid = sid
         if isinstance(nodes, integer_types):
             nodes = [nodes]
@@ -735,8 +739,15 @@ class SPCD(Load):
 class SLOAD(Load):
     """
     Static Scalar Load
-
     Defines concentrated static loads on scalar or grid points.
+
+    +-------+-----+----+-----+----+------+----+-------+
+    |   1   |  2  | 3  |  4  |  5 |  6   |  7 |   8   |
+    +=======+=====+====+=====+====+======+====+=======+
+    | SLOAD | SID | S1 | F1  | S2 |  F2  | S3 |   F3  |
+    +-------+-----+----+-----+----+------+----+-------+
+    | SLOAD | 16  | 2  | 5.9 | 17 | -6.3 | 14 | -2.93 |
+    +-------+-----+----+-----+----+------+----+-------+
 
     .. note:: Can be used in statics OR dynamics.
 
@@ -747,16 +758,16 @@ class SLOAD(Load):
 
     def __init__(self, sid, nodes, mags, comment=''):
         """
-        Creates an SLOAD (SPOINT load)
+        Creates an SLOAD (GRID/SPOINT load)
 
         Parameters
         ----------
         sid : int
             load id
         nodes : int; List[int]
-            the SPOINT ids
+            the GRID/SPOINT ids
         mags : float; List[float]
-            the SPOINT loads
+            the load magnitude
         comment : str; default=''
             a comment for the card
         """
@@ -790,15 +801,15 @@ class SLOAD(Load):
         sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
-        n = nfields // 2
+        ngroups = nfields // 2
         if nfields % 2 == 1:
-            n += 1
+            ngroups += 1
             msg = 'Missing last magnitude on SLOAD card=%s' % card.fields()
             raise RuntimeError(msg)
 
         nodes = []
         mags = []
-        for i in range(n):
+        for i in range(ngroups):
             j = 2 * i + 2
             nodes.append(integer(card, j, 'nid' + str(i)))
             mags.append(double(card, j + 1, 'mag' + str(i)))

@@ -1,6 +1,6 @@
 from __future__ import print_function
-from six import iteritems
 from codecs import open as codec_open
+from six import iteritems
 from numpy import zeros, ones, arange, array, searchsorted, array_equal
 
 from pyNastran.bdf.bdf import BDF
@@ -152,8 +152,3 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
                 mids += '\n'
             j += 1
         cart3d.write(mids + '\n')
-
-if __name__ == '__main__':  # pragma: no cover
-    bdf_filename = 'g278.bdf'
-    cart3d_filename = 'g278.tri'
-    nastran_to_cart3d_filename(bdf_filename, cart3d_filename)

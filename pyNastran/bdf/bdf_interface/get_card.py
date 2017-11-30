@@ -289,6 +289,7 @@ class GetCard(GetMethods):
             try:
                 key = rslot_map[card_type]  # update attributes.py ~line 540
             except:
+                print(rslot_map.keys())
                 self.log.error("card_type=%r' hasn't been added to "
                                "self._slot_to_type_map...check for typos")
                 raise
@@ -769,7 +770,7 @@ class GetCard(GetMethods):
                 forces[nid_map[nid]] += load.xyz * scale2
 
             elif load.type == 'PLOAD2':
-                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:
                     elem = self.elements[eid]
                     if elem.type in ['CTRIA3',
@@ -1151,15 +1152,26 @@ class GetCard(GetMethods):
                 # +------+-----+-----+-----+-------+-----+-----+-----+
                 dependent = elem.dependent_nodes
                 independent = elem.independent_nodes
-                assert len(dependent) == 1, dependent
-                assert len(independent) == 1, independent
+                #assert len(dependent) == 1, dependent
+                #assert len(independent) == 1, independent
+                if len(independent) != 1 or len(dependent) != 1:
+                    msg = 'skipping card because len(independent) != 1 or len(dependent) != 1\n'
+                    msg += str(elem)
+                    self.log.error(msg)
+                    continue
                 lines_rigid.append([dependent[0], independent[0]])
+            elif elem.type == 'RSPLINE':
+                independent_nid = elem.independent_nid
+                for dependent_nid in np.unique(elem.dependent_nids):
+                    lines_rigid.append([dependent_nid, independent_nid])
             else:
                 print(str(elem))
                 raise NotImplementedError(elem.type)
         return lines_rigid
 
-    def get_reduced_loads(self, load_case_id, scale=1., skip_scale_factor0=False,
+    def get_reduced_loads(self, load_case_id, scale=1.,
+                          consider_load_combinations=True,
+                          skip_scale_factor0=False,
                           stop_on_failure=True, msg=''):
         """
         Accounts for scale factors.
@@ -1196,7 +1208,8 @@ class GetCard(GetMethods):
             raise TypeError(msg)
 
         try:
-            load_case = self.Load(load_case_id, msg=msg)
+            load_case = self.Load(
+                load_case_id, consider_load_combinations=consider_load_combinations, msg=msg)
         except KeyError:
             if stop_on_failure:
                 raise
@@ -1208,7 +1221,8 @@ class GetCard(GetMethods):
         assert len(loads) == len(scale_factors)
         return loads, scale_factors, is_grav
 
-    def _reduce_load_case(self, load_case, scale=1., unallowed_load_ids=None, msg=''):
+    def _reduce_load_case(self, load_case, scale=1., consider_load_combinations=True,
+                          unallowed_load_ids=None, msg=''):
         """reduces a load case"""
         scale_factors_out = []
         loads_out = []
@@ -1231,9 +1245,12 @@ class GetCard(GetMethods):
                     unallowed_load_ids2 = deepcopy(unallowed_load_ids)
                     unallowed_load_ids2.append(load_idi)
 
-                    load_casei = self.Load(load_idi, msg=msg)
+                    load_casei = self.Load(
+                        load_idi, consider_load_combinations=consider_load_combinations, msg=msg)
                     loadsi, scale_factorsi, is_gravi = self._reduce_load_case(
-                        load_casei, scale=scalei, unallowed_load_ids=unallowed_load_ids2)
+                        load_casei, scale=scalei,
+                        consider_load_combinations=consider_load_combinations,
+                        unallowed_load_ids=unallowed_load_ids2)
                     if is_gravi:
                         is_grav_out = True
                     scale_factors_out += scale_factorsi
@@ -1429,6 +1446,23 @@ class GetCard(GetMethods):
                 #assert len(dependent) == 1, dependent
                 #assert len(independent) == 1, independent
                 #lines_rigid.append([dependent[0], independent[0]])
+            elif rigid_element.type == 'RROD':
+                components = [rigid_element.cma, rigid_element.cmb]
+                if rigid_element.cma is not None:
+                    nid = rigid_element.nodes[0]
+                    for component in rigid_element.cma:
+                        dependent_nid_to_components[nid] = component
+
+                if rigid_element.cmb is not None:
+                    nid = rigid_element.nodes[1]
+                    for component in rigid_element.cmb:
+                        dependent_nid_to_components[nid] = component
+            elif rigid_element.type == 'RSPLINE':
+                #independent_nid = rigid_element.independent_nid
+                for nid, component in zip(rigid_element.dependent_nids, rigid_element.dependent_components):
+                    if component is None:
+                        continue
+                    dependent_nid_to_components[nid] = component
             else:
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components
@@ -2138,7 +2172,61 @@ class GetCard(GetMethods):
                     raise KeyError('mid=%s is invalid for card %s=\n%s' % (mid, msg, str(prop)))
         return mid_to_pids_map
 
-    def get_reduced_mpcs(self, mpc_id, stop_on_failure=True):
+    def get_reduced_nsms(self, nsm_id, consider_nsmadd=False, stop_on_failure=True):
+        """
+        Get all traced NSMs that are part of a set
+
+        Parameters
+        ----------
+        nsm_id : int
+            the NSM id
+        consider_nsmadd : bool
+            NSMADDs should not be considered when referenced from an NSMADD
+            from a case control, True should be used.
+        stop_on_failure : bool; default=True
+            errors if parsing something new
+
+        Returns
+        -------
+        mpcs : List[NSM]
+            the various NSMs
+        """
+        if not isinstance(nsm_id, integer_types):
+            msg = 'nsm_id must be an integer; type=%s, nsm_id=\n%r' % (type(nsm_id), nsm_id)
+            raise TypeError(msg)
+
+        try:
+            nsms = self.NSM(nsm_id, consider_nsmadd=consider_mpcadd)
+        except KeyError:
+            if stop_on_failure:
+                raise
+            else:
+                self.log.error("could not find expected NSM id=%s" % nsm_id)
+                return []
+
+        mpcs2 = []
+        for nsm in nsms:
+            if nsm.type == 'NSMADD':
+                for nsmi in nsm.nsm_ids:
+                    if isinstance(nsmi, list):
+                        for nsmii in nsmi:
+                            if isinstance(nsmii, integer_types):
+                                nsmiii = nsmii
+                            else:
+                                nsmiii = nsmii.conid
+                            nsms2i = self.get_reduced_nsms(
+                                nsmiii, consider_nsmadd=False, stop_on_failure=stop_on_failure)
+                            nsms2 += nsms2i
+                    else:
+                        assert isinstance(nsmi, integer_types), nsmi
+                        nsms2i = self.get_reduced_nsms(
+                            mpci, consider_mpcadd=False, stop_on_failure=stop_on_failure)
+                        nsms2 += nsms2i
+            else:
+                nsms2.append(nsm)
+        return nsms2
+
+    def get_reduced_mpcs(self, mpc_id, consider_mpcadd=False, stop_on_failure=True):
         """
         Get all traced MPCs that are part of a set
 
@@ -2146,6 +2234,9 @@ class GetCard(GetMethods):
         ----------
         mpc_id : int
             the MPC id
+        consider_mpcadd : bool
+            MPCADDs should not be considered when referenced from an MPCADD
+            from a case control, True should be used.
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -2159,7 +2250,7 @@ class GetCard(GetMethods):
             raise TypeError(msg)
 
         try:
-            mpcs = self.MPC(mpc_id)
+            mpcs = self.MPC(mpc_id, consider_mpcadd=consider_mpcadd)
         except KeyError:
             if stop_on_failure:
                 raise
@@ -2177,17 +2268,19 @@ class GetCard(GetMethods):
                                 mpciii = mpcii
                             else:
                                 mpciii = mpcii.conid
-                            mpcs2i = self.get_reduced_mpcs(mpciii, stop_on_failure=stop_on_failure)
+                            mpcs2i = self.get_reduced_mpcs(
+                                mpciii, consider_mpcadd=False, stop_on_failure=stop_on_failure)
                             mpcs2 += mpcs2i
                     else:
                         assert isinstance(mpci, integer_types), mpci
-                        mpcs2i = self.get_reduced_mpcs(mpci, stop_on_failure=stop_on_failure)
+                        mpcs2i = self.get_reduced_mpcs(
+                            mpci, consider_mpcadd=False, stop_on_failure=stop_on_failure)
                         mpcs2 += mpcs2i
             else:
                 mpcs2.append(mpc)
         return mpcs2
 
-    def get_reduced_spcs(self, spc_id, stop_on_failure=True):
+    def get_reduced_spcs(self, spc_id, consider_spcadd=True, stop_on_failure=True):
         """
         Get all traced SPCs that are part of a set
 
@@ -2195,6 +2288,9 @@ class GetCard(GetMethods):
         ----------
         spc_id : int
             the SPC id
+        consider_spcadd : bool
+            SPCADDs should not be considered when referenced from an SPCADD
+            from a case control, True should be used.
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -2208,7 +2304,7 @@ class GetCard(GetMethods):
             raise TypeError(msg)
 
         try:
-            spcs = self.SPC(spc_id)
+            spcs = self.SPC(spc_id, consider_spcadd=consider_spcadd)
         except KeyError:
             if stop_on_failure:
                 raise
@@ -2226,13 +2322,17 @@ class GetCard(GetMethods):
                                 spciii = spcii
                             else:
                                 spciii = spcii.conid
-                            spcs2i = self.get_reduced_spcs(spciii, stop_on_failure=stop_on_failure)
+                            spcs2i = self.get_reduced_spcs(spciii,
+                                                           consider_spcadd=False,
+                                                           stop_on_failure=stop_on_failure)
                             spcs2 += spcs2i
                     else:
                         # print('spci =', spci)
                         # print(spci.object_attributes())
                         assert isinstance(spci, integer_types), spci
-                        spcs2i = self.get_reduced_spcs(spci, stop_on_failure=stop_on_failure)
+                        spcs2i = self.get_reduced_spcs(spci,
+                                                       consider_spcadd=False,
+                                                       stop_on_failure=stop_on_failure)
                         spcs2 += spcs2i
             else:
                 spcs2.append(spc)
@@ -2268,7 +2368,7 @@ class GetCard(GetMethods):
           - GMSPC
         """
         warnings = ''
-        spcs = self.get_reduced_spcs(spc_id, stop_on_failure=stop_on_failure)
+        spcs = self.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=stop_on_failure)
         nids = []
         comps = []
         for spc in spcs:
@@ -2316,7 +2416,7 @@ class GetCard(GetMethods):
           - MPC
           - MPCADD
         """
-        mpcs = self.get_reduced_mpcs(mpc_id, stop_on_failure=stop_on_failure)
+        mpcs = self.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=stop_on_failure)
         nids = []
         comps = []
         for mpc in mpcs:

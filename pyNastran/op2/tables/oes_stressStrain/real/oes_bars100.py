@@ -4,7 +4,7 @@ from itertools import count
 from six import iteritems, integer_types
 
 import numpy as np
-from numpy import zeros, searchsorted, ravel
+from numpy import zeros, searchsorted
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
@@ -36,9 +36,11 @@ class RealBar10NodesArray(OES_Object):
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -106,7 +108,7 @@ class RealBar10NodesArray(OES_Object):
             self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -114,7 +116,7 @@ class RealBar10NodesArray(OES_Object):
             ntimes = self.data.shape[0]
 
             i = 0
-            if self.is_sort1():
+            if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
@@ -132,7 +134,7 @@ class RealBar10NodesArray(OES_Object):
                             print(msg)
                             raise ValueError(msg)
             else:
-                raise NotImplementedError(self.is_sort2())
+                raise NotImplementedError(self.is_sort2)
             if i > 0:
                 print(msg)
                 raise ValueError(msg)
@@ -203,7 +205,7 @@ class RealBar10NodesArray(OES_Object):
             header = []
         msg = self._get_msgs()
         #print('CBAR ntimes=%s ntotal=%s' % (ntimes, ntotal))
-        if self.is_sort1():
+        if self.is_sort1:
             page_num = self._write_sort1_as_sort1(f, header, page_stamp, msg, page_num)
         else:
             raise RuntimeError()
@@ -249,12 +251,12 @@ class RealBar10NodesStressArray(RealBar10NodesArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        #if self.is_fiber_distance():
+        #if self.is_fiber_distance:
             #fiber_dist = 'fiber_distance'
         #else:
             #fiber_dist = 'fiber_curvature'
 
-        #if self.is_von_mises():
+        #if self.is_von_mises:
             #ovm = 'von_mises'
         #else:
             #ovm = 'max_shear'
@@ -277,12 +279,12 @@ class RealBar10NodesStrainArray(RealBar10NodesArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        #if self.is_fiber_distance():
+        #if self.is_fiber_distance:
             #fiber_dist = 'fiber_distance'
         #else:
             #fiber_dist = 'fiber_curvature'
 
-        #if self.is_von_mises():
+        #if self.is_von_mises:
             #ovm = 'von_mises'
         #else:
             #ovm = 'max_shear'

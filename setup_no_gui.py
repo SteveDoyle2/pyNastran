@@ -17,12 +17,6 @@ packages = find_packages()+['gui/icons/*.*']
 #print "packages = ",packages
 #sys.exit()
 
-#extra = {}
-#if sys.version_info >= (3,):
-    #extra['use_2to3'] = True
-    #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
-    #extra['use_2to3_fixers'] = ['your.fixers']
-
 py2_packages = []
 py_packages = []
 
@@ -31,7 +25,7 @@ try:
     ver = np.lib.NumpyVersion(np.__version__)
     if ver < '1.11.0':
         print("np.__version__ = %r < '1.11.0'" % np.__version__)
-    py_packages.append('numpy >= 1.11.0,<1.13.0')
+        py_packages.append('numpy >= 1.11.0,<1.13.0')
 except ImportError:
     py_packages.append('numpy >= 1.11.0,<1.13.0')
 
@@ -42,16 +36,17 @@ try:
         print("scipy.version.short_version = %r < '0.17.0'" % scipy.version.short_version)
         py_packages.append('scipy >= 0.17.0')
 except ImportError:
-    py_packages.append('scipy >= 0.17.0')
+    py_packages.append('scipy >= 0.17.0')  # 0.18.1 used
 
 try:
     import six
     sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
-    if sver < [1, 9, 0]:
-        print("six.__version__ = %r < '1.9.0'" % six.__version__)
-        py_packages.append('six >= 1.9.0')
+    if sver < [1, 10, 0]:
+        print("six.__version__ = %r < '1.10.0'" % six.__version__)
+        py_packages.append('six >= 1.10.0')
 except ImportError:
-    py_packages.append('six >= 1.9.0')
+    py_packages.append('six >= 1.10.0')  # 1.10.0 used
+
 
 #try:
 #    import matplotlib
@@ -62,6 +57,7 @@ except ImportError:
 #except ImportError:
 #    py_packages.append('matplotlib >= 1.5.1')
 
+
 try:
     import docopt
     sver = [int(val) for val in docopt.__version__.split('-')[0].split('.')]
@@ -70,20 +66,29 @@ try:
         print("docopt.__version__ = %r != '0.6.2'" % docopt.__version__)
         py_packages.append('docopt == 0.6.2')
 except ImportError:
-    py_packages.append('docopt == 0.6.2')
+    py_packages.append('docopt == 0.6.2')  # 0.6.2 used
 
 
 try:
     import typing
 except ImportError:
-    py_packages.append('typing >= 3.6.1')
+    py_packages.append('typing >= 3.6.1')  # 3.6.1 used
 
 
 if PY2:
     try:
         import pathlib2
     except ImportError:
-        py_packages.append('pathlib2 >= 2.2.0')
+        py_packages.append('pathlib2 >= 2.2.0')  # 2.2.0 used
+
+    try:
+        import scandir
+        sver = [int(val) for val in scandir.__version__.split('-')[0].split('.')]
+        if sver < [1, 4, 0]:
+            print("scandir.__version__ = %r < '1.4.0'" % scandir.__version__)
+            py_packages.append('scandir >= 1.4.0')
+    except ImportError:
+        py_packages.append('scandir >= 1.4.0')  # 1.4.0 used
 
 #py_packages = [
 #    'numpy >= 1.9.2',
@@ -167,9 +172,9 @@ setup(
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 
-            'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
-            'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
-            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
+            #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
+            #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
+            #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
         ]# + py2_gui_scripts
     },
     test_suite='pyNastran.all_tests',

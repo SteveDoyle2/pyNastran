@@ -27,9 +27,11 @@ class RealNonlinearPlateArray(OES_Object):
         self.nelements = 0  # result specific
         self.nnodes = None
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -37,6 +39,7 @@ class RealNonlinearPlateArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
+    @property
     def is_stress(self):
         return True
 
@@ -117,7 +120,7 @@ class RealNonlinearPlateArray(OES_Object):
         headers = self.get_headers()[1:]
 
         nelements = self.element.shape[0]
-        if self.is_fiber_distance():
+        if self.is_fiber_distance:
             fiber_distance = ['Top', 'Bottom'] * nelements
         else:
             fiber_distance = ['Mean', 'Curvature'] * nelements
@@ -161,13 +164,13 @@ class RealNonlinearPlateArray(OES_Object):
             #print(self.element_node[:10, :])
             #raise RuntimeError()
         #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
-        assert eid == self.element[self.ielement - 1], 'eid=%s self.element[i-1] = ' % (eid, self.element[self.ielement - 1])
+        assert eid == self.element[self.ielement - 1], 'eid=%s self.element[i-1]=%s' % (eid, self.element[self.ielement - 1])
         self.data[self.itime, self.itotal, :] = [fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy]
         self.itotal += 1
 
     def __eq__(self, table):
         self._eq_header(table)
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())

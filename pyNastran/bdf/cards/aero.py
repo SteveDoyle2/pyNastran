@@ -56,8 +56,6 @@ class AECOMP(BaseCard):
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
     |        | LIST7 |  -etc.-  |       |       |       |       |       |       |
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
-
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
     | AECOMP | WING  |  AELIST  | 1001  | 1002  |       |       |       |       |
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
 
@@ -203,10 +201,8 @@ class AEFACT(BaseCard):
     +--------+-----+----+--------+-----+----+----+----+----+
     |        | D8  | D9 | -etc.- |     |    |    |    |    |
     +--------+-----+----+--------+-----+----+----+----+----+
-
-    +--------+-----+----+--------+-----+
-    | AEFACT | 97  |.3  |  0.7   | 1.0 |
-    +--------+-----+----+--------+-----+
+    | AEFACT | 97  |.3  |  0.7   | 1.0 |    |    |    |    |
+    +--------+-----+----+--------+-----+----+----+----+----+
 
     TODO: Are these defined in percentages and thus,
           should they be normalized if they are not?
@@ -427,8 +423,6 @@ class AELIST(BaseCard):
     +---------+------+------+------+------+------+------+------+------+
     |         |  E8  | etc. |      |      |      |      |      |      |
     +---------+------+------+------+------+------+------+------+------+
-
-    +---------+------+------+------+------+------+------+------+------+
     |  AELIST |  75  | 1001 | THRU | 1075 | 1101 | THRU | 1109 | 1201 |
     +---------+------+------+------+------+------+------+------+------+
     |         | 1202 |      |      |      |      |      |      |      |
@@ -591,6 +585,9 @@ class AEPARM(BaseCard):
         return AEPARM(aeparm_id, label, units, comment=comment)
 
     def cross_reference(self, model):
+        pass
+
+    def safe_cross_reference(self, model):
         pass
 
     def uncross_reference(self):
@@ -1086,22 +1083,22 @@ class AESURFS(BaseCard):  # not integrated
         """
         msg = ' which is required by AESURFS aesid=%s' % self.aesid
         self.list1_ref = model.Set(self.list1, msg)
-        self.list1_ref.cross_reference(model, 'Node')
+        self.list1_ref.cross_reference(model, 'Node', msg)
 
         self.list2_ref = model.Set(self.list1, msg=msg)
-        self.list2_ref.cross_reference(model, 'Node')
+        self.list2_ref.cross_reference(model, 'Node', msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by AESURFS aesid=%s' % self.aesid
         try:
             self.list1_ref = model.Set(self.list1, msg=msg)
-            self.list1_ref.cross_reference(model, 'Node')
+            self.list1_ref.cross_reference(model, 'Node', msg)
         except KeyError:
             pass
 
         try:
             self.list2_ref = model.Set(self.list1, msg=msg)
-            self.list2_ref.cross_reference(model, 'Node')
+            self.list2_ref.cross_reference(model, 'Node', msg)
         except KeyError:
             pass
 
@@ -1198,7 +1195,7 @@ class AERO(Aero):
     Gives basic aerodynamic parameters for unsteady aerodynamics.
 
     +------+-------+----------+------+--------+-------+-------+
-    | 1    | 2     | 3        | 4    | 5      | 6     | 7     |
+    |   1  |   2   |    3     |   4  |   5    |   6   |   7   |
     +======+=======+==========+======+========+=======+=======+
     | AERO | ACSID | VELOCITY | REFC | RHOREF | SYMXZ | SYMXY |
     +------+-------+----------+------+--------+-------+-------+
@@ -1390,11 +1387,9 @@ class AEROS(Aero):
     Gives basic aerodynamic parameters for unsteady aerodynamics.
 
     +-------+-------+-------+------+------+-------+-------+-------+
-    | 1     | 2     | 3     | 4    | 5    | 6     |   7   |   8   |
+    |   1   |   2   |   3   |  4   |  5   |   6   |   7   |   8   |
     +=======+=======+=======+======+======+=======+=======+=======+
     | AEROS | ACSID | RCSID | REFC | REFB | REFS  | SYMXZ | SYMXY |
-    +-------+-------+-------+------+------+-------+-------+-------+
-
     +-------+-------+-------+------+------+-------+-------+-------+
     | AEROS |   10  |   20  | 10.  | 100. | 1000. |   1   |       |
     +-------+-------+-------+------+------+-------+-------+-------+
@@ -1607,8 +1602,6 @@ class CSSCHD(Aero):
     +========+=====+=======+========+=======+=======+
     | CSSCHD | SlD | AESID | LALPHA | LMACH | LSCHD |
     +--------+-----+-------+--------+-------+-------+
-
-    +--------+-----+-------+--------+-------+-------+
     | CSSCHD |  5  |  50   |   12   |   15  |   25  |
     +--------+-----+-------+--------+-------+-------+
     """
@@ -1790,16 +1783,16 @@ class CAERO1(BaseCard):
     |        |  X1 | Y1  | Z1 |  X12  |   X4   |   Y4   |   Z4   | X43  |
     +--------+-----+-----+----+-------+--------+--------+--------+------+
 
-        ::
+    ::
 
-          1
-          | \
-          |   \
-          |     \
-          |      4
-          |      |
-          |      |
-          2------3
+      1
+      | \
+      |   \
+      |     \
+      |      4
+      |      |
+      |      |
+      2------3
 
     Attributes
     ----------
@@ -3253,9 +3246,9 @@ class CAERO4(BaseCard):
         self.cp = cp
         self.nspan = nspan
         self.lspan = lspan
-        self.p1 = p1
+        self.p1 = np.asarray(p1)
         self.x12 = x12
-        self.p4 = p4
+        self.p4 = np.asarray(p4)
         self.x43 = x43
         self.pid_ref = None
         self.cp_ref = None
@@ -3513,8 +3506,6 @@ class CAERO5(BaseCard):
     | CAERO5 | EID  | PID  | CP  | NSPAN | LSPAN | NTHRY | NTHICK |       |
     +--------+------+------+-----+-------+-------+-------+--------+-------+
     |        | X1   |  Y1  | Z1  |  X12  |  X4   |  Y4   |   Z4   |  X43  |
-    +--------+------+------+-----+-------+-------+-------+--------+-------+
-
     +--------+------+------+-----+-------+-------+-------+--------+-------+
     | CAERO5 | 6000 | 6001 | 100 |       |  315  |   0   |   0    |       |
     +--------+------+------+-----+-------+-------+-------+--------+-------+
@@ -4097,24 +4088,20 @@ class DIVERG(BaseCard):
 
 class FLFACT(BaseCard):
     """
-    +--------+-----+----+------+----+----+----+----+----+
-    |   1    |  2  |  3 |   4  | 5  | 6  | 7  | 8  | 9  |
-    +========+=====+====+======+====+====+====+====+====+
-    | FLFACT | SID | F1 | F2   | F3 | F4 | F5 | F6 | F7 |
-    +--------+-----+----+------+----+----+----+----+----+
-    |        | F8  | F9 | etc. |    |    |    |    |    |
-    +--------+-----+----+------+----+----+----+----+----+
-
-    +--------+-----+----+------+-----+
-    |   1    |  2  |  3 |   4  | 5   |
-    +========+=====+====+======+=====+
-    | FLFACT | 97  | .3 |  .7  | 3.5 |
-    +--------+-----+----+------+-----+
+    +--------+-----+----+------+-----+----+----+----+----+
+    |   1    |  2  |  3 |   4  |  5  | 6  | 7  | 8  | 9  |
+    +========+=====+====+======+=====+====+====+====+====+
+    | FLFACT | SID | F1 | F2   | F3  | F4 | F5 | F6 | F7 |
+    +--------+-----+----+------+-----+----+----+----+----+
+    |        | F8  | F9 | etc. |     |    |    |    |    |
+    +--------+-----+----+------+-----+----+----+----+----+
+    | FLFACT | 97  | .3 |  .7  | 3.5 |    |    |    |    |
+    +--------+-----+----+------+-----+----+----+----+----+
 
     # delta quantity approach
 
     +--------+-----+-------+------+-------+----+--------+
-    |   1    |  2  |  3    |   4  |   5   | 6  |     7  |
+    |   1    |  2  |  3    |   4  |   5   | 6  |   7    |
     +========+=====+=======+======+=======+====+========+
     | FLFACT | SID | F1    | THRU | FNF   | NF |  FMID  |
     +--------+-----+-------+------+-------+----+--------+
@@ -4172,6 +4159,10 @@ class FLFACT(BaseCard):
                 (   (fnf - fmid) * (nf-i) +       (fmid - f1) * (i-1))
             )
         self.factors = np.asarray(factors)
+
+    def validate(self):
+        if len(self.factors) == 0:
+            raise ValueError('FLFACT sid=%s is empty; factors=%s' % (self.sid, str(self.factors)))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -4259,7 +4250,7 @@ class FLUTTER(BaseCard):
     """
     type = 'FLUTTER'
     _field_map = {
-        1: 'sid', 2:'method', 3:'density', 4:'mach', 5:'rfreq_vel', 6:'imethod',
+        1: 'sid', 2:'method', 3:'density', 4:'mach', 5:'reduced_freq_velocity', 6:'imethod',
         8:'epsilon',
     }
     def _get_field_helper(self, n):
@@ -4285,7 +4276,7 @@ class FLUTTER(BaseCard):
                 value = self.nvalue
             return value
         else:
-            raise KeyError('Field %r=%r is an invalid FLUTTER entry.' % (n, value))
+            raise KeyError('Field %r is an invalid FLUTTER entry.' % (n))
 
     def _update_field_helper(self, n, value):
         """
@@ -4519,7 +4510,7 @@ class FLUTTER(BaseCard):
         else:
             return(self.imethod, self.nvalue)
 
-    def _repr_nvalue_omax(self):
+    def _get_repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             imethod = set_blank_if_default(self.imethod, 'L')
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethods
@@ -4543,11 +4534,12 @@ class FLUTTER(BaseCard):
                        self.get_mach(), self.get_rfreq_vel(), imethod, nvalue, self.epsilon]
         return list_fields
 
-    #def repr_fields(self):
-        #(imethod, nvalue) = self._get_raw_nvalue_omax()
-        #list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
-        #          self.get_rfreq_vel(), imethod, nvalue, self.epsilon]
-        #return list_fields
+    def repr_fields(self):
+        (imethod, nvalue) = self._get_repr_nvalue_omax()
+        epsilon = set_blank_if_default(self.epsilon, 0.001)
+        list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
+                 self.get_rfreq_vel(), imethod, nvalue, epsilon]
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -4621,7 +4613,7 @@ class GUST(BaseCard):
         dload = integer(card, 2, 'dload')
         wg = double(card, 3, 'wg')
         x0 = double(card, 4, 'x0')
-        V = double_or_blank(card, 4, 'V')
+        V = double_or_blank(card, 5, 'V')
         assert len(card) <= 6, 'len(GUST card) = %i\ncard=%s' % (len(card), card)
         return GUST(sid, dload, wg, x0, V=V, comment=comment)
 
@@ -4641,6 +4633,11 @@ class GUST(BaseCard):
 
     #def uncross_reference(self):
         #pass
+
+    def _verify(self, model, xref):
+        if model.aero:
+            pass
+            #assert model.aero.V == self.V
 
     def raw_fields(self):
         """
@@ -4884,6 +4881,12 @@ class MKAERO2(BaseCard):
                 nvalues = 0
         if nvalues:
             cards.append(print_card_8(list_fields))
+        else:
+            if len(self.machs) != len(self.reduced_freqs) or len(self.machs) == 0:
+                msg = 'MKAERO2: len(machs)=%s len(reduced_freqs)=%s' % (
+                    len(self.machs), len(self.reduced_freqs))
+                raise ValueError(msg)
+
         return self.comment + ''.join(cards)
 
     def __repr__(self):
@@ -4899,10 +4902,6 @@ class MONPNT1(BaseCard):
     +---------+---------+------+-----+-----+-------+------+----+----+
     |         |  AXES   | COMP | CP  |  X  |   Y   |   Z  | CD |    |
     +---------+---------+------+-----+-----+-------+------+----+----+
-
-    +---------+---------+------+-----+-----+-------+------+----+----+
-    |    1    |    2    |  3   |  4  |  5  |   6   |   7  | 8  | 9  |
-    +=========+=========+======+=====+=====+=======+======+====+====+
     | MONPNT1 | WING155 |    Wing Integrated Load to Butline 155    |
     +---------+---------+------+-----+-----+-------+------+----+----+
     |         |    34   | WING |     | 0.0 | 155.0 | 15.0 |    |    |
@@ -5896,7 +5895,7 @@ class SPLINE1(Spline):
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node')
+        self.setg_ref.cross_reference(model, 'Node', msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -5914,7 +5913,10 @@ class SPLINE1(Spline):
 
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
-            self.setg_ref.cross_reference(model, 'Node')
+            try:
+                self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
+            except:
+                raise
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
@@ -5923,7 +5925,8 @@ class SPLINE1(Spline):
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
         except KeyError:
-            pass
+            model.log.warning('failed to find SETx set_id=%s,%s; allowed_sets=%s' % (
+                self.setg, msg, np.unique(list(model.sets.keys()))))
 
     def uncross_reference(self):
         self.caero = self.CAero()
@@ -5976,10 +5979,6 @@ class SPLINE2(Spline):
       +---------+------+-------+-------+-------+------+----+------+-----+
       |         | DTHX | DTHY  | None  | USAGE |      |    |      |     |
       +---------+------+-------+-------+-------+------+----+------+-----+
-
-      +---------+------+-------+-------+-------+------+----+------+-----+
-      |    1    |   2  |   3   |   4   |   5   |  6   |  7 |   8  |  9  |
-      +=========+======+=======+=======+=======+======+====+======+=====+
       | SPLINE2 |   5  |   8   |  12   | 24    | 60   | 0. | 1.0  |  3  |
       +---------+------+-------+-------+-------+------+----+------+-----+
       |         |  1.  |       |       |       |      |    |      |     |
@@ -6189,7 +6188,7 @@ class SPLINE3(Spline):
     +=========+======+=======+=======+======+====+====+=====+=======+
     | SPLINE3 | EID  | CAERO | BOXID | COMP | G1 | C1 | A1  | USAGE |
     +---------+------+-------+-------+------+----+----+-----+-------+
-    |         |  G2  |  C2   |  A2   | ---- | G3 | C3 | A2  |  ---  |
+    |         |  G2  |  C2   |  A2   |      | G3 | C3 | A2  |       |
     +---------+------+-------+-------+------+----+----+-----+-------+
     |         |  G4  |  C4   |  A4   | etc. |    |    |     |       |
     +---------+------+-------+-------+------+----+----+-----+-------+
@@ -6338,17 +6337,17 @@ class SPLINE3(Spline):
         ai = [a1]
         for irow in range(1, nrows):
             j = 1 + nrows * 8
-            gii = integer(card, j, 'Gi_' % i)
-            cii = integer(card, j + 1, 'Ci_' % i)
-            aii = double(card, j + 2, 'Ai_' % i)
+            gii = integer(card, j, 'Gi_%i' % i)
+            cii = integer(card, j + 1, 'Ci_%i' % i)
+            aii = double(card, j + 2, 'Ai_%i' % i)
             Gi.append(gii)
             ci.append(cii)
             ai.append(aii)
             if card[j + 3] or card[j + 4] or card[j + 5]:
                 i += 1
-                gii = integer(card, j, 'Gi_' % i)
-                cii = parse_components(card, j + 1, 'Ci_' % i)
-                aii = double(card, j + 2, 'Ai_' % i)
+                gii = integer(card, j, 'Gi_%i' % i)
+                cii = parse_components(card, j + 1, 'Ci_%i' % i)
+                aii = double(card, j + 2, 'Ai_%i' % i)
                 Gi.append(gii)
                 ci.append(cii)
                 ai.append(aii)
@@ -6413,11 +6412,11 @@ class SPLINE4(Spline):
     +---------+-------+-------+--------+-----+------+----+------+-------+
     |    1    |   2   |   3   |    4   |  5  |   6  |  7 |   8  |   9   |
     +=========+=======+=======+========+=====+======+====+======+=======+
-    | SPLINE4 |  EID  | CAERO | AELIST | --- | SETG | DZ | METH | USAGE |
+    | SPLINE4 |  EID  | CAERO | AELIST |     | SETG | DZ | METH | USAGE |
     +---------+-------+-------+--------+-----+------+----+------+-------+
-    | NELEM   | MELEM |       |        |     |      |    |      |       |
+    |         | NELEM | MELEM |        |     |      |    |      |       |
     +---------+-------+-------+--------+-----+------+----+------+-------+
-    | SPLINE4 |   3   | 111   |   115  | --- |  14  | 0. | IPS  |       |
+    | SPLINE4 |   3   | 111   |   115  |     |  14  | 0. | IPS  |       |
     +---------+-------+-------+--------+-----+------+----+------+-------+
     """
     type = 'SPLINE4'
@@ -6561,14 +6560,14 @@ class SPLINE4(Spline):
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node')
+        self.setg_ref.cross_reference(model, 'Node', msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
             msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
             msg += str(self)
             msg += str(self.setg_ref)
-            raise RuntimeError(msg)
+            raise ValueError(msg)
 
     def uncross_reference(self):
         self.caero = self.CAero()
@@ -6620,9 +6619,9 @@ class SPLINE5(Spline):
     +=========+======+=======+========+=======+======+====+=======+=======+
     |    1    |  2   |    3  |    4   |   5   |   6  |  7 |   8   |   9   |
     +=========+======+=======+========+=======+======+====+=======+=======+
-    | SPLINE5 | EID  | CAERO | AELIST |  ---  | SETG | DZ | DTOR  |  CID  |
+    | SPLINE5 | EID  | CAERO | AELIST |       | SETG | DZ | DTOR  |  CID  |
     +---------+------+-------+--------+-------+------+----+-------+-------+
-    |         | DTHX | DTHY  |  ---   | USAGE | METH |    | FTYPE | RCORE |
+    |         | DTHX | DTHY  |        | USAGE | METH |    | FTYPE | RCORE |
     +---------+------+-------+--------+-------+------+----+-------+-------+
 
     METH, FTYPE, RCORE are in 2012+ (not MSC.2005r2 or NX.10)
@@ -6733,7 +6732,7 @@ class SPLINE5(Spline):
         self.cid_ref = model.Coord(self.cid, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node')
+        self.setg_ref.cross_reference(model, 'Node', msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
 
         nnodes = len(self.setg_ref.ids)
@@ -6766,7 +6765,7 @@ class SPLINE5(Spline):
             pass
 
         try:
-            self.setg_ref.cross_reference(model, 'Node')
+            self.setg_ref.cross_reference(model, 'Node', msg)
             self.aelist_ref = model.AEList(self.aelist, msg=msg)
         except KeyError:
             pass
@@ -6850,7 +6849,7 @@ class TRIM(BaseCard):
             if i == 1:
                 #list_fields += [self.aeqr]
                 ni += 1
-        raise KeyError('Field %r=%r is an invalid TRIM entry.' % (n, value))
+        raise KeyError('Field %r is an invalid TRIM entry.' % n)
 
     def _update_field_helper(self, n, value):
         """

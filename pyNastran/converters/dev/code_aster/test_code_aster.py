@@ -1,7 +1,7 @@
-from six.moves import range
+from __future__ import print_function
 import os
-from numpy import array_equal, allclose
 import unittest
+from numpy import array_equal, allclose
 
 import pyNastran
 from pyNastran.converters.dev.code_aster.nastran_to_code_aster import CodeAsterConverter
@@ -13,7 +13,7 @@ test_path = os.path.join(pkg_path, 'converters', 'dev', 'code_aster')
 
 class TestCodeAster(unittest.TestCase):
 
-    def test_cart3d_io_01(self):
+    def test_code_aster_io_01(self):
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
 
         #bdf_filename = data['BDF_FILENAME']
@@ -26,6 +26,6 @@ class TestCodeAster(unittest.TestCase):
 
 if __name__ == '__main__':  # pragma: no cover
     import time
-    t0 = time.time()
+    time0 = time.time()
     unittest.main()
-    print("dt = %s" % (time.time() - t0))
+    print("dt = %s" % (time.time() - time0))

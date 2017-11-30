@@ -5,31 +5,18 @@ defines:
 from __future__ import print_function
 import os
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore#, QtGui
-    from PyQt4.QtGui import (
-        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QFont)
-elif qt_version == 5:
-    #from PyQt5 import QtCore, QtGui
-    from PyQt5.QtGui import QFont
-    from PyQt5.QtWidgets import (
-        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
-elif qt_version == 'pyside':
-    from PySide import QtCore#, QtGui
-    from PySide.QtGui import (
-        QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
-        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QFont)
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+from qtpy import QtCore
+from qtpy.QtGui import QFont
+from qtpy.QtWidgets import (
+    QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+    QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.colormaps import colormap_keys
 
 from pyNastran.gui.gui_interface.common import PyDialog
 from pyNastran.gui.gui_interface.legend.animation import AnimationWindow
+from pyNastran.gui.qt_version import qt_version
 
 
 class LegendPropertiesWindow(PyDialog):

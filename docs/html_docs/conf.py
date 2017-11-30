@@ -84,33 +84,33 @@ if load_mock:
     class Mock(MagicMock):
         @classmethod
         def __getattr__(cls, name):
-                if name in ['__path__', 'pi', '_string', '__get__', '__set__']:
-                    return Mock()
-                #print('MOCK cls=%r name=%r' % (cls, name))
-                return MagicMock()
+            if name in ['__path__', 'pi', '_string', '__get__', '__set__']:
+                return Mock()
+            #print('MOCK cls=%r name=%r' % (cls, name))
+            return MagicMock()
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-if 0:
-    class Mock(object):
-        def __init__(self, *args, **kwargs):
-            pass
+#if 0:
+    #class Mock(object):
+        #def __init__(self, *args, **kwargs):
+            #pass
 
-        def __call__(self, *args, **kwargs):
-            return Mock()
+        #def __call__(self, *args, **kwargs):
+            #return Mock()
 
-        #def __len__(self):  # for numpy arrays
-        #    return 3 #  needs to be an integer
+        ##def __len__(self):  # for numpy arrays
+        ##    return 3 #  needs to be an integer
 
-        @classmethod
-        def __getattr__(cls, name):
-            if name in ('__file__', '__path__'):
-                return '/dev/null'
-            elif name[0] == name[0].upper():
-                mockType = type(name, (), {})
-                mockType.__module__ = __name__
-                return mockType
-            else:
-                return Mock()
+        #@classmethod
+        #def __getattr__(cls, name):
+            #if name in ('__file__', '__path__'):
+                #return '/dev/null'
+            #elif name[0] == name[0].upper():
+                #mockType = type(name, (), {})
+                #mockType.__module__ = __name__
+                #return mockType
+            #else:
+                #return Mock()
 
 #for mod_name in MOCK_MODULES:
     #sys.modules[mod_name] = Mock()
@@ -308,21 +308,21 @@ htmlhelp_basename = 'pyNastrandoc'
 # -- Options for LaTeX output --------------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-'papersize': 'a4',
+    # The paper size ('letterpaper' or 'a4paper').
+    'papersize': 'a4',
 
-# The font size ('10pt', '11pt' or '12pt').
-'pointsize': '11pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    'pointsize': '11pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'pyNastran.tex', u'pyNastran Documentation',
-   u'Steven Doyle & Saullo Castro', 'manual'),
+    ('index', 'pyNastran.tex', u'pyNastran Documentation',
+     u'Steven Doyle & Saullo Castro', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -365,9 +365,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'pyNastran', u'pyNastran Documentation',
-   u'Steven Doyle & Saullo Castro', 'pyNastran', 'Nastran BDF/F06/OP2/OP4 '
-   'File reader/editor/writer/viewer.', 'Miscellaneous'),
+    ('index', 'pyNastran', u'pyNastran Documentation',
+     u'Steven Doyle & Saullo Castro', 'pyNastran', 'Nastran BDF/F06/OP2/OP4 '
+     'File reader/editor/writer/viewer.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

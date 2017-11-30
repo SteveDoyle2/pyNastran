@@ -152,8 +152,8 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        with open('junk.bdf', 'w') as f:
-            model.write_bdf(f, close=False)
+        with open('junk.bdf', 'w') as bdf_file:
+            model.write_bdf(bdf_file, close=False)
             #s.getvalue()
         os.remove('junk.bdf')
 
@@ -288,7 +288,7 @@ class TestDEQATN(unittest.TestCase):
         bdf_file.close()
 
     @unittest.skipUnless(2 < 1, 'skipping')
-    def test_deqatn_8(self):
+    def test_deqatn_8_skip(self):
         """
         based off nast/tpl/ptdmi1.dat
 
@@ -374,7 +374,7 @@ class TestDEQATN(unittest.TestCase):
 
 
     @unittest.skipUnless(2 < 1, 'skipping')
-    def test_deqatn_11(self):
+    def test_deqatn_11_skip(self):
         """
         based off nast/tpl/ptdmi1.dat
 
@@ -402,8 +402,8 @@ class TestDEQATN(unittest.TestCase):
                 'desvar,100,101,102',
             ],
             #[
-                #'dresp2,11,respB,F(A,B)=A+B**2*SIN(A*B)'
-                #',desvar,100,101',
+            #'dresp2,11,respB,F(A,B)=A+B**2*SIN(A*B)'
+            #',desvar,100,101',
             #],
         ]
         desvar_cards = [
@@ -456,7 +456,7 @@ class TestDEQATN(unittest.TestCase):
         #save_load_deck(model)
 
     @unittest.expectedFailure
-    def test_deqatn_13(self):
+    def test_deqatn_13_fail(self):
         """
         add_deqatn doesnt support semicolons (;) in the eqs
         You're defining them; break it up
@@ -469,6 +469,18 @@ class TestDEQATN(unittest.TestCase):
         model = BDF(debug=None)
         deqatn = model.add_deqatn(1001, eqs)
         model.cross_reference()
+
+    def test_deqatn_14(self):
+        """
+        def a(b, h):
+            a = b * h
+            return a
+        """
+        model = BDF(debug=None)
+        deqatn_card = [
+            'DEQATN  121     A(B,H) = B*H            $  ...equations for'
+        ]
+        model.add_card(deqatn_card, 'DEQATN', is_list=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

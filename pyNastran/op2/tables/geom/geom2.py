@@ -13,7 +13,8 @@ from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
-                                                CQUADR, CQUAD8, CQUAD,
+                                                CQUADR, CTRIAR,
+                                                CQUAD8, CQUAD,
                                                 CSHEAR)
 from pyNastran.bdf.cards.elements.rods import CROD, CTUBE, CONROD
 from pyNastran.bdf.cards.elements.bars import CBAR, CBEND
@@ -278,6 +279,40 @@ class GEOM2(GeomCommon):
     def _read_cbar(self, data, n):
         """
         CBAR(2408,24,180) - the marker for Record 8
+
+        MSC/NX
+        Word Name Type Description
+        1 EID    I  Element identification number
+        2 PID    I  Property identification number
+        3 GA     I  Grid point identification number at end A
+        4 GB     I  Grid point identification number at end B
+
+        F=0* XYZ option -- basic coordinate system
+           5 X1 RS  T1 component of orientation vector from GA
+           6 X2 RS  T2 component of orientation vector from GA
+           7 X3 RS  T3 component of orientation vector from GA
+           8 FE  I  Orientation vector flag (encoded)
+        F=1* XYZ option -- global coordinate system
+           5 X1 RS  T1 component of orientation vector from GA
+           6 X2 RS  T2 component of orientation vector from GA
+           7 X3 RS  T3 component of orientation vector from GA
+           8 FE  I   Orientation vector flag (encoded)
+        F=2* Grid option
+           5 GO I Grid point identification number at end of orientation vector
+           6 UNDEF(2) none Not used
+           8 FE I Orientation vector flag (encoded)
+        *F = FE bit-wise AND with 3
+        End F
+
+        9  PA   I Pin flags for end A
+        10 PB   I Pin flags for end B
+        11 W1A RS T1 component of offset vector from GA
+        12 W2A RS T2 component of offset vector from GA
+        13 W3A RS T3 component of offset vector from GA
+        14 W1B RS T1 component of offset vector from GB
+        15 W2B RS T2 component of offset vector from GB
+        16 W3B RS T3 component of offset vector from GB
+        F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sebload1.op2
         """
         nelements = (len(data) - n) // 64
         for i in range(nelements):
@@ -1551,7 +1586,7 @@ class GEOM2(GeomCommon):
 # CTRIA6FD
 # CTRIAP
 
-    def _read_ctriar(self, data, n):  # 98
+    def _read_ctriar(self, data, n):
         """
         CTRIAR(9200,92,385)    - the marker for Record 99
         """
@@ -1568,10 +1603,10 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIAR=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
-            elem = CTRIA3.add_op2_data(data_in)
+            elem = CTRIAR.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CTRIA3'] = nelements
+        self.card_count['CTRIAR'] = nelements
         return n
 
     def _read_ctriax(self, data, n): # 100

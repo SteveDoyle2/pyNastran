@@ -4,8 +4,7 @@ defines:
              is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False)
 """
 from __future__ import print_function
-import os
-import numpy as np
+from six.moves import StringIO
 from six import string_types, iteritems
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.bdf import BDF, read_bdf
@@ -83,7 +82,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     model = BDF(debug=False, log=log)
     model.disable_cards(cards_to_skip)
     bdf_filename0 = bdf_filenames[0]
-    model.read_bdf(bdf_filename0, encoding=encoding)
+    model.read_bdf(bdf_filename0, encoding=encoding, validate=False)
     if skip_case_control_deck:
         model.case_control_deck = CaseControlDeck([], log=None)
     model.log.info('primary=%s' % bdf_filename0)
@@ -119,16 +118,16 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         if skip_case_control_deck:
             model2.case_control_deck = CaseControlDeck([], log=None)
         model2.disable_cards(cards_to_skip)
-        bdf_dump = 'bdf_merge_temp.bdf'
-        #model2.read_bdf(bdf_filename, xref=False)
 
+        bdf_dump = StringIO() # 'bdf_merge_temp.bdf'
         _, mapperi = bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict,
                                   size=size, is_double=is_double, cards_to_skip=cards_to_skip)
+        bdf_dump.seek(0)
+
         mappers.append(mapperi)
         model2 = BDF(debug=False)
         model2.disable_cards(cards_to_skip)
         model2.read_bdf(bdf_dump)
-        os.remove(bdf_dump)
 
         #model.log.info('model2.node_ids = %s' % np.array(model2.node_ids))
         for data_member in data_members:
@@ -166,12 +165,12 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         _, mapper_renumber = bdf_renumber(model, bdf_filename_out,
                                           starting_id_dict=starting_id_dict, size=size,
                                           is_double=is_double, cards_to_skip=cards_to_skip)
-        bdf_filename_temp = 'temp.bdf'
+        bdf_filename_temp = StringIO()
         model.write_bdf(bdf_filename_temp, size=size, is_double=False, interspersed=False,
                         enddata=None, close=False)
+        bdf_filename_temp.seek(0)
         model = read_bdf(bdf_filename_temp, validate=False, xref=model._xref, punch=False,
                          log=model.log, debug=True, mode=model._nastran_format)
-        os.remove(bdf_filename_temp)
 
     elif bdf_filename_out:
         model.write_bdf(out_filename=bdf_filename_out, encoding=None,
@@ -218,16 +217,16 @@ def _get_mapper_0(model):
     nid_map = {nid : nid for nid in model.point_ids}
     cid_map = {cid : cid for cid in model.coord_ids}
     mid_map = {mid : mid for mid in model.material_ids}
-    spc_map = _dict_key_to_key(model.spcs)
-    mpc_map = _dict_key_to_key(model.mpcs)
+    spc_map = _dicts_key_to_key((model.spcs, model.spcadds))
+    mpc_map = _dicts_key_to_key((model.mpcs, model.mpcadds))
     method_map = _dict_key_to_key(model.methods)
     cmethod_map = _dict_key_to_key(model.cMethods)
     flfact_map = _dict_key_to_key(model.flfacts)
     flutter_map = _dict_key_to_key(model.flutters)
     freq_map = _dict_key_to_key(model.frequencies)
 
-    dload_map = _dict_key_to_key(model.dloads)
-    load_map = _dict_key_to_key(model.loads)
+    dload_map = _dicts_key_to_key((model.dload_entries, model.dloads))
+    load_map = _dicts_key_to_key((model.loads, model.load_combinations))
     lseq_map = load_map # wrong???
     temp_map = load_map # wrong???
 
@@ -305,4 +304,16 @@ def _renumber_mapper(mapper_0, mapper_renumber):
     return mapper
 
 def _dict_key_to_key(dictionary):
+    """creates a dummy map from the nominal key to the nominal key"""
     return {key : key for key in dictionary.keys()}
+
+def _dicts_key_to_key(dictionaries):
+    """
+    creates a dummy map from the nominal key to the nominal key for
+    multiple input dictionaries
+    """
+    out = {}
+    for dicti in dictionaries:
+        for key in dicti:
+            out[key] = key
+    return out

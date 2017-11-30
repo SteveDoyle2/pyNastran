@@ -7,16 +7,17 @@ import numpy as np
 
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
-from pyNastran.utils.log import get_logger
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
-from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.converters.nastran.displacements import DisplacementResults
 
-#from pyNastran.gui.qt_version import qt_version
-#if qt_version == 4:
-#    from PyQt4.QtGui import QMainWindow
-#elif qt_version == 5:
-#    from PyQt5.QtWidgets import  QMainWindow
+from pyNastran.utils.log import get_logger
+from pyNastran.gui.settings import Settings
+from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+#from pyNastran.gui.gui_objects.gui_result import GuiResult
+#from pyNastran.converters.nastran.displacements import DisplacementResults
+from pyNastran.bdf.cards.base_card import deprecated
+from pyNastran.gui.gui_utils.utils import create_res_obj
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
+
 
 #class GuiAttributes(QMainWindow):
 class GuiAttributes(object):
@@ -29,6 +30,7 @@ class GuiAttributes(object):
         inputs = kwds['inputs']
         res_widget = kwds['res_widget']
         self.dev = False
+        self.settings = Settings(self)
 
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
@@ -41,7 +43,10 @@ class GuiAttributes(object):
         self._camera_mode = None
         self.observers = {}
 
-        self.is_testing = False
+        if 'test' in inputs:
+            self.is_testing_flag = inputs['test']
+        else:
+            self.is_testing_flag = False
         self.is_groups = False
         self._logo = None
         self._script_path = None
@@ -94,8 +99,8 @@ class GuiAttributes(object):
 
         self.ncases = 0
         self.icase = 0
-        self.nNodes = 0
-        self.nElements = 0
+        self.nnodes = 0
+        self.nelements = 0
 
         self.supported_formats = []
         self.model_type = None
@@ -140,7 +145,6 @@ class GuiAttributes(object):
         self._xyz_nominal = None
 
         self.nvalues = 9
-        self.dim_max = 1.0
         self.nid_maps = {}
         self.eid_maps = {}
         self.name = 'main'
@@ -160,6 +164,48 @@ class GuiAttributes(object):
 
         self.main_edge_mappers = {}
         self.main_edge_actors = {}
+
+    #-------------------------------------------------------------------
+    # deprecated attributes
+    def deprecated(self, old_name, new_name, deprecated_version):
+        # type: (str, str, str, Optional[List[int]]) -> None
+        """
+        Throws a deprecation message and crashes if past a specific version.
+
+        Parameters
+        ----------
+        old_name : str
+            the old function name
+        new_name : str
+            the new function name
+        deprecated_version : float
+            the version the method was first deprecated in
+        """
+        deprecated(old_name, new_name, deprecated_version, levels=[0])
+
+    @property
+    def nNodes(self):
+        """gets the number of nodes"""
+        self.deprecated('self.nNodes', 'self.nnodes', '1.1')
+        return self.nnodes
+
+    @nNodes.setter
+    def nNodes(self, nnodes):
+        """sets the number of nodes"""
+        self.deprecated('self.nNodes', 'self.nnodes', '1.1')
+        self.nnodes = nnodes
+
+    @property
+    def nElements(self):
+        """gets the number of elements"""
+        self.deprecated('self.nElements', 'self.nelements', '1.1')
+        return self.nelements
+
+    @nElements.setter
+    def nElements(self, nelements):
+        """sets the number of elements"""
+        self.deprecated('self.nElements', 'self.nelements', '1.1')
+        self.nelements = nelements
 
     #-------------------------------------------------------------------
     # geom
@@ -243,10 +289,12 @@ class GuiAttributes(object):
         out_filename_short = os.path.relpath(nod_filename)
         result_type = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type,
-                                out_filename_short, update=True)
+                                out_filename_short, update=True,
+                                is_scalar=True)
 
     def _add_cases_to_form(self, A, fmt_dict, headers, result_type,
-                           out_filename_short, update=True):
+                           out_filename_short, update=True, is_scalar=True,
+                           is_deflection=False, is_force=False):
         """
         common method between:
           - _load_csv
@@ -294,47 +342,15 @@ class GuiAttributes(object):
                 islot = case_key[0]
                 break
 
+        #assert len(headers) > 0, 'headers=%s' % (headers)
+        #assert len(headers) < 50, 'headers=%s' % (headers)
         for header in headers:
-            datai = A[header]
-            fmti = fmt_dict[header]
-            title = header
-            location = result_type
-
-            dimension = len(datai.shape)
-            if dimension == 1:
-                vector_size = 1
-            elif dimension == 2:
-                vector_size = datai.shape[1]
+            if is_scalar:
+                out = create_res_obj(islot, headers, header, A, fmt_dict, result_type)
             else:
-                raise RuntimeError('dimension=%s' % (dimension))
-
-            if vector_size == 1:
-                res_obj = GuiResult(
-                    islot, header, title, location, datai,
-                    nlabels=None, labelsize=None, ncolors=None,
-                    colormap='jet', data_format=fmti,
-                )
-            elif vector_size == 3:
-                # title is 3 values
-                # header is 3 values
-                # scale is 3 values
-                titles = [header]
-                headers = header
-
-                norm_max = np.linalg.norm(datai, axis=1).max()
-                scales = [self.dim_max / norm_max * 0.25]
-                data_formats = [fmti] * 3
-                scalar = None
-                dxyz = datai
-                xyz = self.xyz_cid0
-                res_obj = DisplacementResults(
-                    islot, titles, headers,
-                    xyz, dxyz, scalar, scales, data_formats=data_formats,
-                    nlabels=None, labelsize=None, ncolors=None,
-                    colormap='jet',
-                    set_max_min=True, deflects=True)
-            else:
-                raise RuntimeError('vector_size=%s' % (vector_size))
+                out = create_res_obj(islot, headers, header, A, fmt_dict, result_type,
+                                     self.settings.dim_max, self.xyz_cid0)
+            res_obj, title = out
 
             #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
             #form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
@@ -355,170 +371,6 @@ class GuiAttributes(object):
 
 
     #-------------------------------------------------------------------
-    # apparently the rules are already broken...
-    def numpy_to_vtk_points(self, nodes, points=None, dtype='<f', deep=1):
-        """
-        common method to account for vtk endian quirks and
-        efficiently adding points
-        """
-        assert isinstance(nodes, np.ndarray), type(nodes)
-        if points is None:
-            points = vtk.vtkPoints()
-            nnodes = nodes.shape[0]
-            points.SetNumberOfPoints(nnodes)
-
-            # if we're in big endian, VTK won't work, so we byte swap
-            nodes = np.asarray(nodes, dtype=np.dtype(dtype))
-
-        points_array = numpy_to_vtk(
-            num_array=nodes,
-            deep=deep,
-            array_type=vtk.VTK_FLOAT,
-        )
-        points.SetData(points_array)
-        return points
-
-    def create_vtk_cells_of_constant_element_type(self, grid, elements, etype):
-        """
-        Adding constant type elements is overly complicated.  Note that
-        some of the documentation in this method is likely triangle-specific
-        as it was developed for a tri mesh.
-
-        grid : vtk.vtkUnstructuredGrid()
-            the unstructured grid
-        elements : (nelements, nnodes_per_element) int ndarray
-            the elements to add
-        etype : int
-            VTK cell type
-
-            1  = vtk.vtkVertex().GetCellType()
-            3  = vtkLine().GetCellType()
-            5  = vtkTriangle().GetCellType()
-            9  = vtk.vtkQuad().GetCellType()
-            10 = vtkTetra().GetCellType()
-            #vtkPenta().GetCellType()
-            #vtkHexa().GetCellType()
-            #vtkPyram().GetCellType()
-        """
-        nelements, nnodes_per_element = elements.shape
-        # We were careful about how we defined the arrays, so the data
-        # is contiguous when we ravel it.  Otherwise, you need to
-        # deepcopy the arrays (deep=1).  However, numpy_to_vtk isn't so
-        # good, so we could use np.copy, which is better, but it's
-        # ultimately unnecessary.
-
-        #nodes = numpy_to_vtk(elements, deep=0, array_type=vtk.VTK_ID_TYPE)
-        # (nnodes_per_element + 1)  # TODO: was 4; for a tri...didn't seem to crash???
-        cell_offsets = np.arange(0, nelements, dtype='int32') * (nnodes_per_element + 1)
-        assert len(cell_offsets) == nelements
-
-        # Create the array of cells
-        vtk_cells = vtk.vtkCellArray()
-
-        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
-        if isize == 4:
-            dtype = 'int32' # TODO: can we include endian?
-        elif isize == 8:
-            dtype = 'int64'
-        else:
-            msg = 'elements.dtype=%s' % str(elements.dtype)
-            raise NotImplementedError(msg)
-
-        elements_vtk = np.zeros((nelements, nnodes_per_element + 1), dtype=dtype)
-        elements_vtk[:, 0] = nnodes_per_element # 3 nodes/tri element
-        elements_vtk[:, 1:] = elements
-
-        cells_id_type = numpy_to_vtkIdTypeArray(elements_vtk.ravel(), deep=1)
-        vtk_cells.SetCells(nelements, cells_id_type)
-
-        # Cell types
-        # 5 = vtkTriangle().GetCellType()
-        cell_types = np.ones(nelements, dtype='int32') * etype
-        vtk_cell_types = numpy_to_vtk(
-            cell_types, deep=0,
-            array_type=vtk.vtkUnsignedCharArray().GetDataType())
-
-        vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
-                                        array_type=vtk.VTK_ID_TYPE)
-
-        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
-
-    def create_vtk_cells_of_constant_element_types(self, grid, elements_list,
-                                                   etypes_list):
-        """
-        Adding constant type elements is overly complicated enough as in
-        ``create_vtk_cells_of_constant_element_type``.  Now we extend
-        this to multiple element types.
-
-        grid : vtk.vtkUnstructuredGrid()
-            the unstructured grid
-        elements_list : List[elements, ...]
-            elements : (nelements, nnodes_per_element) int ndarray
-                the elements to add
-        etypes_list : List[etype, ...]
-            etype : int
-                the VTK flag as defined in
-                ``create_vtk_cells_of_constant_element_type``
-        """
-        if isinstance(etypes_list, list) and len(etypes_list) == 1:
-            return self.create_vtk_cells_of_constant_element_type(
-                grid, elements_list[0], etypes_list[0])
-
-        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
-        if isize == 4:
-            dtype = 'int32' # TODO: can we include endian?
-        elif isize == 8:
-            dtype = 'int64'
-        else:
-            msg = 'elements_list[0].dtype=%s' % str(elements_list[0].dtype)
-            raise NotImplementedError(msg)
-
-        cell_offsets_list2 = []
-        cell_types_list2 = []
-        elements_list2 = []
-        nelements = 0
-        noffsets = 0
-        for element, etype in zip(elements_list, etypes_list):
-            nelement, nnodes_per_element = element.shape
-
-            nnodesp1 = nnodes_per_element + 1  # TODO: was 4; for a tri???
-            cell_offset = np.arange(0, nelement, dtype='int32') * nnodesp1 + noffsets
-            noffset = nelement * nnodesp1
-
-            cell_type = np.ones(nelement, dtype='int32') * etype
-            assert len(cell_offset) == nelement
-
-            nnodesp1 = nnodes_per_element + 1
-            element_vtk = np.zeros((nelement, nnodesp1), dtype=dtype)
-            element_vtk[:, 0] = nnodes_per_element # 3 nodes/tri
-            element_vtk[:, 1:] = element
-
-            cell_offsets_list2.append(cell_offset)
-            cell_types_list2.append(cell_type)
-            elements_list2.append(element_vtk.ravel())
-            nelements += nelement
-            noffsets += noffset
-
-        cell_types_array = np.hstack(cell_types_list2)
-        cell_offsets_array = np.hstack(cell_offsets_list2)
-        elements_array = np.hstack(elements_list2)
-
-        # Create the array of cells
-        cells_id_type = numpy_to_vtkIdTypeArray(elements_array.ravel(), deep=1)
-        vtk_cells = vtk.vtkCellArray()
-        vtk_cells.SetCells(nelements, cells_id_type)
-
-        # Cell types
-        vtk_cell_types = numpy_to_vtk(
-            cell_types_array, deep=0,
-            array_type=vtk.vtkUnsignedCharArray().GetDataType())
-
-        vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
-                                        array_type=vtk.VTK_ID_TYPE)
-
-        grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
-
-
     def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
         """
         Makes a CQUAD4 grid
@@ -537,12 +389,12 @@ class GuiAttributes(object):
         #print('adding quad_grid %s; nnodes=%s nquads=%s' % (name, nnodes, nquads))
         assert isinstance(nodes, np.ndarray), type(nodes)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         grid = self.alt_grids[name]
         grid.SetPoints(points)
 
         etype = 9  # vtk.vtkQuad().GetCellType()
-        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
+        create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         self._add_alt_actors({name : self.alt_grids[name]})
 
@@ -601,8 +453,8 @@ class GuiAttributes(object):
 
         scale = self.displacement_scale_factor / tnorm_abs_max
         """
-        #scale = self.dim_max / tnorm_abs_max * 0.25
-        scale = self.dim_max * 0.25
+        #scale = dim_max / tnorm_abs_max * 0.25
+        scale = self.settings.dim_max * 0.25
         return scale
 
     def set_script_path(self, script_path):
@@ -751,6 +603,7 @@ class MockResWidget(object):
     def __init__(self):
         pass
     def update_results(self, form, name):
+        """fake method"""
         pass
 
 class FakeGUIMethods(GuiAttributes):
@@ -769,7 +622,6 @@ class FakeGUIMethods(GuiAttributes):
             'res_widget' : res_widget
         }
         GuiAttributes.__init__(self, **kwds)
-        self.is_testing = True
         self.debug = False
         self._form = []
         self.result_cases = {}
@@ -804,6 +656,9 @@ class FakeGUIMethods(GuiAttributes):
         This is not quite the same as the main one.
         It's more or less just _set_results
         """
+        #assert self.node_ids is not None
+        #assert self.element_ids is not None
+
         assert len(cases) > 0, cases
         if isinstance(cases, OrderedDict):
             self.case_keys = list(cases.keys())
@@ -816,7 +671,9 @@ class FakeGUIMethods(GuiAttributes):
             assert isinstance(key, integer_types), key
             obj, (i, name) = cases[key]
             value = cases[key]
-            assert not isinstance(value[0], int), 'key=%s\n type=%s value=%s' % (key, type(value[0]), value)
+            if isinstance(value[0], int):
+                raise RuntimeError('old style key is being used.\n key=%s\n type=%s value=%s' % (
+                    key, type(value[0]), value))
             #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))
 
             subcase_id = obj.subcase_id
@@ -874,68 +731,104 @@ class FakeGUIMethods(GuiAttributes):
             self.ncases = 0
 
     def cycle_results(self):
+        """fake method"""
         pass
 
     def cycle_results_explicit(self):
+        """fake method"""
         pass
 
     def _create_annotation(self, label, icase, x, y, z):
+        """fake method"""
         pass
 
     def  turn_text_on(self):
+        """fake method"""
         pass
 
     def turn_text_off(self):
+        """fake method"""
         pass
 
     def create_global_axes(self, dim_max):
+        """fake method"""
         pass
 
     def update_axes_length(self, value):
-        self.dim_max = value
+        self.settings.dim_max = value
 
     def passer(self):
+        """fake method"""
         pass
 
     def passer1(self, a):
+        """fake method"""
         pass
 
     def passer2(self, a, b):
+        """fake method"""
         pass
 
     @property
     def displacement_scale_factor(self):
-        return 1 * self.dim_max
+        return 1 * self.settings.dim_max
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=None,
                                   opacity=None, point_size=None, bar_scale=None,
                                   representation=None, is_visible=True,
                                   follower_nodes=None, is_pickable=False):
+        """Fake creates an AltGeometry object"""
         self.alt_grids[name] = Grid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
                            point_size=point_size, bar_scale=bar_scale,
                            opacity=opacity, representation=representation,
                            is_visible=is_visible, is_pickable=is_pickable)
         self.geometry_properties[name] = geom
-        self.follower_nodes[name] = follower_nodes
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
+
+    def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
+                                     opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
+                                     follower_nodes=None, is_pickable=False):
+        """Fake copies the VTK actor"""
+        if name_duplicate_from == 'main':
+            grid_copy_from = self.grid
+            representation = 'toggle'
+        else:
+            grid_copy_from = self.alt_grids[name_duplicate_from]
+            props = self.geometry_properties[name_duplicate_from]
+            representation = props.representation
+
+        self.alt_grids[name] = Grid()
+        geom = AltGeometry(self, name, color=color, line_width=line_width,
+                           point_size=point_size, bar_scale=bar_scale,
+                           opacity=opacity, representation=representation,
+                           is_visible=is_visible, is_pickable=is_pickable)
+        self.geometry_properties[name] = geom
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
 
     def _add_alt_actors(self, alt_grids):
         for name, grid in iteritems(alt_grids):
             self.geometry_actors[name] = GeometryActor()
 
     def log_debug(self, msg):
+        """turns logs into prints to aide testing debug"""
         if self.debug:
             print('DEBUG:  ', msg)
 
     def log_info(self, msg):
+        """turns logs into prints to aide testing debug"""
         if self.debug:
             print('INFO:  ', msg)
 
     def log_error(self, msg):
+        """turns logs into prints to aide testing debug"""
         if self.debug:
             print('ERROR:  ', msg)
 
     def log_warning(self, msg):
+        """turns logs into prints to aide testing debug"""
         if self.debug:
             print('WARNING:  ', msg)
 

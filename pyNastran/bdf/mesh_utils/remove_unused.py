@@ -325,20 +325,25 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             #for temp_id in ids:
                 #tempd = self.tempds[temp_id]
 
-        elif card_type in ['MPCADD', 'MPC']:
+        elif card_type == 'MPCADD':
+            pass
+            #for mpcadds in itervalues(model.mpcadds):
+                #for mpcadd in mpcadds:
+                    #nids_used.update(mpc.node_ids)
+        elif card_type == 'MPC':
             for mpcs in itervalues(model.mpcs):
                 for mpc in mpcs:
-                    if mpc.type in ['MPCADD']:
-                        pass
-                    elif mpc.type in ['MPC']:
-                        nids_used.update(mpc.node_ids)
-                    else:
-                        raise NotImplementedError(mpc)
+                    nids_used.update(mpc.node_ids)
 
-        elif card_type in ['SPCADD', 'SPC1', 'SPC', 'GMSPC', 'SPCAX']:
+        elif card_type == 'SPCADD':
+            pass
+            #for spcadds in itervalues(model.spcadds):
+                #for spcadd in spcadds:
+                    #nids_used.update(spc.node_ids)
+        elif card_type in ['SPC1', 'SPC', 'GMSPC', 'SPCAX']:
             for spcs in itervalues(model.spcs):
                 for spc in spcs:
-                    if spc.type in ['SPCADD', 'GMSPC', 'SPCAX']:
+                    if spc.type in ['GMSPC', 'SPCAX']:
                         pass
                     elif spc.type in ['SPC1', 'SPC']:
                         nids_used.update(spc.node_ids)

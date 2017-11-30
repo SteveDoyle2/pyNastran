@@ -1,9 +1,6 @@
-# pylint: disable=W0612
 """
-``test_bdf`` runs multiple checks on a BDF in order to make sure that:
-  - no data is lost on IO
-  - card field types are correct (e.g. node_ids are integers)
-  - various card methods (e.g. Area) work correctly
+``test_abaqus`` runs multiple checks on a ABAQUS in order to make sure that:
+  - materials exist
 
 As such, ``test_abaqus`` is very useful for debugging models.
 """
@@ -15,13 +12,11 @@ from six import iteritems
 import numpy as np
 #warnings.simplefilter('always')
 
-np.seterr(all='raise')
 
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 
-import pyNastran.bdf.test
-test_path = pyNastran.bdf.test.__path__[0]
+np.seterr(all='raise')
 
 
 def run_abaqus(abaqus_filename):
@@ -40,7 +35,7 @@ def run_abaqus(abaqus_filename):
 
 def main():
     """
-    The main function for the command line ``test_bdf`` script.
+    The main function for the command line ``test_abaqus`` script.
     """
     encoding = sys.getdefaultencoding()
     from docopt import docopt
@@ -71,11 +66,11 @@ def main():
 
     #print(data)
     import time
-    t0 = time.time()
+    time0 = time.time()
     run_abaqus(
         data['ABAQUS_FILENAME'],
     )
-    print("total time:  %.2f sec" % (time.time() - t0))
+    print("total time:  %.2f sec" % (time.time() - time0))
 
 
 if __name__ == '__main__':  # pragma: no cover

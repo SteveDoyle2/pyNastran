@@ -21,7 +21,8 @@ FORMAT_TO_EXTENSION = {
     'usm3d' : ['.front'],  # .cogsg
     'bedge' : ['.bedge'],
     'su2' : ['.su2'],
-    'tetgen' : ['.smesh', '*.ele'],  # TODO: why does this have a *?
+    'tetgen' : ['.smesh', '.ele'],
+    'obj' : ['.obj'],
     #'abaqus' : []
 
     # no duplicates are allowed
@@ -41,7 +42,7 @@ def determine_format(input_filename, allowed_formats=None):
             'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
             #'plot3d',
             'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
-            'usm3d', 'bedge', 'su2', 'tetgen',
+            'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
         ]
 
     ext = os.path.splitext(input_filename)[1].lower()
@@ -65,14 +66,14 @@ def run_docopt():
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
 
     # You don't need to throw a -o flag
     msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
 
     # no input/output files
     # can you ever have an OUTPUT, but no INPUT?
@@ -80,7 +81,7 @@ def run_docopt():
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -102,6 +103,9 @@ def run_docopt():
     msg += "  --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)\n"
     msg += "  -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)\n"
     msg += '\n'
+
+    msg += "Debug:\n"
+    msg += "  --test    temporary dev mode (default=False)\n"
 
     msg += "Info:\n"
     msg += "  -q, --quiet    prints debug messages (default=True)\n"
@@ -142,6 +146,7 @@ def run_docopt():
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
+        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',
         None,
     ]
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format
@@ -182,7 +187,7 @@ def run_docopt():
     #assert data['--console'] == False, data['--console']
     return (input_format, input_filenames, output_filenames, shots,
             magnify, rotation, geom_script, post_script, debug, user_points,
-            user_geom, is_groups, no_update, data['--log'])
+            user_geom, is_groups, no_update, data['--log'], data['--test'])
 
 
 def get_inputs(argv=None):
@@ -204,6 +209,7 @@ def get_inputs(argv=None):
     is_groups = False
     no_update = True
     log = None
+    test = False
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
@@ -211,7 +217,7 @@ def get_inputs(argv=None):
         if len(argv) > 1:
             (input_format, input_filename, output_filename, shots, magnify,
              rotation, geom_script, post_script, debug, user_points, user_geom,
-             is_groups, no_update, log) = run_docopt()
+             is_groups, no_update, log, test) = run_docopt()
 
     inputs = {
         'format' : input_format,
@@ -228,5 +234,6 @@ def get_inputs(argv=None):
         'is_groups' : is_groups,
         'no_update' : no_update,
         'log' : log,
+        'test' : test,
     }
     return inputs

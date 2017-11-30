@@ -2,7 +2,7 @@
 defines:
  - CBAR
  - CBARAO
- - CBAROR
+ - BAROR
  - CBEAM3
  - CBEND
 """
@@ -167,14 +167,27 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return [(node_ids[0], node_ids[1])]
 
 
-class CBAROR(object):
-    type = 'CBAROR'
+class BAROR(object):
+    """
+    +-------+-----+---+---+---+-------+-----+-------+------+
+    |   1   |  2  | 3 | 4 | 5 |   6   |  7  |   8   |  9   |
+    +=======+=====+===+===+===+=======+=====+=======+======+
+    | BAROR | PID |   |   |   | G0/X1 |  X2 |  X3   | OFFT |
+    +-------+-----+---+---+---+-------+-----+-------+------+
+    | BAROR | 39  |   |   |   |  0.6  | 2.9 | -5.87 | GOG  |
+    +-------+-----+---+---+---+-------+-----+-------+------+
+    """
+    type = 'BAROR'
     def __init__(self):
         self.n = 0
+        self.property_id = None
+        self.g0 = None
+        self.x = None
+        self.offt = None
 
     def add_card(self, card, comment=''):
         if self.n == 1:
-            raise RuntimeError('only one CBAROR is allowed')
+            raise RuntimeError('only one BAROR is allowed')
         self.n = 1
         if comment:
             self.comment = comment
@@ -195,7 +208,7 @@ class CBAROR(object):
                                double_or_blank(card, 7, 'x3', 0.0)],
                               dtype='float64')
         self.offt = string_or_blank(card, 8, 'offt', 'GGG')
-        assert len(card) <= 9, 'len(CBAROR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
 
 
 class CBARAO(BaseCard):

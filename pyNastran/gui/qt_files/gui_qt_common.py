@@ -13,6 +13,7 @@ from vtk.util.numpy_support import numpy_to_vtk
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.testing_methods import GuiAttributes
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
 class GuiCommon(GuiAttributes):
@@ -38,7 +39,7 @@ class GuiCommon(GuiAttributes):
           - coordinate systems
           - label size
         """
-        self.dim_max = dim_max
+        self.settings.dim_max = dim_max
         dim = self.dim * 0.10
         self.on_set_axes_length(dim)
 
@@ -47,7 +48,7 @@ class GuiCommon(GuiAttributes):
         scale coordinate system based on model length
         """
         if dim is None:
-            dim = self.dim_max * 0.10
+            dim = self.settings.dim_max * 0.10
         if hasattr(self, 'axes'):
             for axes in itervalues(self.axes):
                 axes.SetTotalLength(dim, dim, dim)
@@ -92,6 +93,15 @@ class GuiCommon(GuiAttributes):
         self.cycle_results(self.icase + 1)
 
     def cycle_results(self, case=None):
+        """
+        Selects the next case
+
+        Parameters
+        ----------
+        case : int; default=None
+            selects the icase
+            None : defaults to self.icase+1
+        """
         #print('-----------------')
         #print('real-cycle_results(case=%r)' % case)
         if case is None:
@@ -112,6 +122,9 @@ class GuiCommon(GuiAttributes):
     def get_subtitle_label(self, subcase_id):
         try:
             subtitle, label = self.isubcase_name_map[subcase_id]
+        except TypeError:
+            subtitle = 'case=NA'
+            label = 'label=NA'
         except KeyError:
             subtitle = 'case=NA'
             label = 'label=NA'
@@ -453,7 +466,7 @@ class GuiCommon(GuiAttributes):
         icase : int
             result number in self.result_cases
         scale : float
-            deflection scale factor
+            deflection scale factor; true scale
         phase : float; default=0.0
             phase angle (degrees); unused for real results
 
@@ -645,7 +658,7 @@ class GuiCommon(GuiAttributes):
         #inan = np.where(nodes.ravel() == np.nan)[0]
         #if len(inan) > 0:
             #raise RuntimeError('nan in nodes...')
-        self.numpy_to_vtk_points(nodes, points=points, dtype='<f', deep=1)
+        numpy_to_vtk_points(nodes, points=points, dtype='<f', deep=1)
         grid.Modified()
         self.grid_selected.Modified()
         self._update_follower_grids(nodes)

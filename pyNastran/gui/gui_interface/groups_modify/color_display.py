@@ -5,29 +5,10 @@ defines:
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtGui
-    from PyQt4.QtGui import (
-        QWidget,
-        #QLabel, QLineEdit, QPushButton, QWidget, QApplication,
-        #QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    )
-elif qt_version == 5:
-    from PyQt5 import QtGui
-    from PyQt5.QtWidgets import (
-        QWidget,
-        #QLabel, QLineEdit, QPushButton, QApplication,
-        #QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    )
-elif qt_version == 'pyside':
-    from PySide import QtGui
-    #from PySide.QtGui import (
-        #QLabel, QLineEdit, QPushButton, QWidget, QApplication,
-        #QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
-    #)
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+from qtpy import QtGui
+from qtpy.QtWidgets import (
+    QWidget,
+)
 
 
 class ColorDisplay(QWidget):

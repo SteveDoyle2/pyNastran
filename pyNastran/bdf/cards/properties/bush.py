@@ -10,6 +10,7 @@ All bush properties are BushingProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import Property
@@ -33,12 +34,70 @@ class BushingProperty(Property):
 
 
 class PBUSH(BushingProperty):
+    """
+    Generalized Spring-and-Damper Property
+    Defines the nominal property values for a generalized spring-and-damper
+    structural element.
+
+    +-------+-----+------+-----+-----+-----+-----+-----+----+
+    |   1   |  2  |   3  |  4  |  5  |  6  |  7  |  8  | 9  |
+    +=======+=====+======+=====+=====+=====+=====+=====+====+
+    | PBUSH | PID |   K  |  K1 |  K2 |  K3 |  K4 |  K5 | K6 |
+    +-------+-----+------+-----+-----+-----+-----+-----+----+
+    |       |  B  |  B1  |  B2 |  B3 |  B4 |  B5 |  B6 |    |
+    +-------+-----+------+-----+-----+-----+-----+-----+----+
+    |       | GE  |  GE1 | GE2 | GE3 | GE4 | GE5 | GE6 |    |
+    +-------+-----+------+-----+-----+-----+-----+-----+----+
+    |       | RCV |  SA  |  ST |  EA |  ET |     |     |    |
+    +-------+-----+------+-----+-----+-----+-----+-----+----+
+    |       |  M  | MASS |     |     |     |     |     |    |
+    +-------+-----+------+-----+-----+-----+-----+-----+----+
+    """
     type = 'PBUSH'
     _field_map = {
         1: 'pid',
     }
+    def update_by_pname_fid(self, name, value):
+        if name == 'B1':
+            self.Bi[0]
+        elif name == 'B2':
+            self.Bi[1]
+        elif name == 'B3':
+            self.Bi[2]
+        elif name == 'B4':
+            self.Bi[3]
+        elif name == 'B5':
+            self.Bi[4]
+        elif name == 'B6':
+            self.Bi[5]
 
-    def __init__(self, pid, k, b, ge, rcv, mass_fields=None, comment=''):
+        elif name == 'K1':
+            self.Ki[0]
+        elif name == 'K2':
+            self.Ki[1]
+        elif name == 'K3':
+            self.Ki[2]
+        elif name == 'K4':
+            self.Ki[3]
+        elif name == 'K5':
+            self.Ki[4]
+        elif name == 'K6':
+            self.Ki[5]
+
+        #elif name == 'M':
+            #self.mass
+        else:
+            raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                self.type, name))
+    #pname_fid_map = {
+        #4 : 'A', 'A' : 'A',
+        #5 : 'i1', 'I1' : 'i1',
+        #6 : 'i2', 'I2' : 'i2',
+        #7 : 'i12', 'I12' : 'i12',
+        #5 : 'j', 'J' : 'j',
+    #}
+
+    def __init__(self, pid, k, b, ge, rcv=None, mass=None, comment=''):
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -56,11 +115,11 @@ class PBUSH(BushingProperty):
         ge : List[float]
             Nominal structural damping constant in directions 1 through 6.
             len(ge) = 6
-        rcv : List[float]
+        rcv : List[float]; default=None -> (None, None, None, None)
             [sa, st, ea, et] = rcv
             length(mass_fields) = 4
-        mass_fields : List[float]; default=None
-            length(mass_fields) = 1
+        mass : float; default=None
+            lumped mass of the CBUSH
             This is an MSC only parameter.
         comment : str; default=''
             a comment for the card
@@ -76,19 +135,31 @@ class PBUSH(BushingProperty):
         # K parameter
         self.Ki = k
         if k:
+            nk = len(k)
+            if nk < 6:
+                k.extend([0.] * (6 - nk))
             self.vars.append('K')
         # B parameter
         self.Bi = b
         if b:
+            nb = len(b)
+            if nb < 6:
+                b.extend([0.] * (6 - nb))
             self.vars.append('B')
 
         # GE parameter
         self.GEi = ge
         if ge:
+            nge = len(ge)
+            if nge < 6:
+                ge.extend([0.] * (6 - nge))
             self.vars.append('GE')
 
         # RCV parameters
-        sa, st, ea, et = rcv
+        if rcv is None:
+            sa, st, ea, et = None, None, None, None
+        else:
+            sa, st, ea, et = rcv
         if sa is not None or st is not None or ea is not None or et is not None:
             self.vars.append('RCV')
             self.sa = rcv[0]
@@ -97,9 +168,14 @@ class PBUSH(BushingProperty):
             self.et = rcv[3]
 
         # M parameter (MSC only; in 2016, not in 2005)
-        self.Mi = mass_fields
-        if mass_fields:
+        self.mass = mass
+        if mass:
             self.vars.append('M')
+
+    def validate(self):
+        assert isinstance(self.Ki, list), 'PBUSH: pid=%i type(Ki)=%s Ki=%s' % (self.pid, type(self.Ki), self.Ki)
+        assert isinstance(self.Bi, list), 'PBUSH: pid=%i type(Bi)=%s Bi=%s' % (self.pid, type(self.Bi), self.Bi)
+        assert isinstance(self.GEi, list), 'PBUSH: pid=%i type(GEi)=%s GEi=%s' % (self.pid, type(self.GEi), self.GEi)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -117,7 +193,7 @@ class PBUSH(BushingProperty):
         b_fields = []
         ge_fields = []
         rcv_fields = [None, None, None, None]
-        m_fields = []
+        mass = None
 
         pid = integer(card, 1, 'pid')
 
@@ -125,22 +201,50 @@ class PBUSH(BushingProperty):
         istart = 2
         while istart < nfields:
             pname = string(card, istart, 'pname')
-            if   pname == 'K':
-                k_fields = cls._read_k(card, istart)
+
+            if pname == 'K':
+                # Flag indicating that the next 1 to 6 fields are stiffness values in
+                # the element coordinate system.
+                #self.k = string(card, istart, 'k')
+
+                #: Nominal stiffness values in directions 1 through 6.
+                #: See Remarks 2 and 3. (Real; Default = 0.0)
+                k_fields = cls._read_var(card, 'Ki', istart + 1, istart + 7)
+
             elif pname == 'B':
-                b_fields = cls._read_b(card, istart)
+                # Flag indicating that the next 1 to 6 fields are force-per-velocity
+                # damping.
+                #self.b = string(card, istart, 'b')
+
+                #: Force per unit velocity (Real)
+                #: Nominal damping coefficients in direction 1 through 6 in units of
+                #: force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
+                b_fields = cls._read_var(card, 'Bi', istart + 1, istart + 7)
+
             elif pname == 'GE':
-                ge_fields = cls._read_ge(card, istart)
+                # Flag indicating that the next fields, 1 through 6 are structural
+                # damping constants. See Remark 7. (Character)
+                #self.ge = string(card, istart, 'ge')
+
+                #: Nominal structural damping constant in directions 1 through 6. See
+                #: Remarks 2. and 3. (Real; Default = 0.0)
+                ge_fields = cls._read_var(card, 'GEi', istart + 1, istart + 7)
             elif pname == 'RCV':
                 rcv_fields = cls._read_rcv(card, istart)
             elif pname == 'M':
-                m_fields = cls._read_m(card, istart)
+                # Lumped mass of the cbush; default=0.0
+                mass = double_or_blank(card, istart + 1, 'mass', 0.)
             else:
                 raise RuntimeError('unsupported PBUSH type; pname=%r' % pname)
                 #break #  old version...
             istart += 8
-        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, m_fields,
+        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
                      comment=comment)
+
+    @classmethod
+    def _read_var(cls, card, var_prefix, istart, iend):
+        Ki = fields(double_or_blank, card, 'Ki', istart, iend)
+        return Ki
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -160,47 +264,13 @@ class PBUSH(BushingProperty):
         b_fields = [b1, b2, b3, b4, b5, b6]
         ge_fields = [g1, g2, g3, g4, g5, g6]
         rcv_fields = [sa, st, ea, et]
-        m_fields = [0.]
-        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, m_fields,
+        mass = 0.
+        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
                      comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
-
-    @classmethod
-    def _read_k(cls, card, istart):
-        # Flag indicating that the next 1 to 6 fields are stiffness values in
-        # the element coordinate system.
-        #self.k = string(card, istart, 'k')
-
-        #: Nominal stiffness values in directions 1 through 6.
-        #: See Remarks 2 and 3. (Real; Default = 0.0)
-        Ki = fields(double_or_blank, card, 'Ki', istart + 1, istart + 7)
-        return Ki
-
-    @classmethod
-    def _read_b(cls, card, istart):
-        # Flag indicating that the next 1 to 6 fields are force-per-velocity
-        # damping.
-        #self.b = string(card, istart, 'b')
-
-        #: Force per unit velocity (Real)
-        #: Nominal damping coefficients in direction 1 through 6 in units of
-        #: force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
-        Bi = fields(double_or_blank, card, 'Bi', istart + 1, istart + 7)
-        return Bi
-
-    @classmethod
-    def _read_ge(cls, card, istart):
-        # Flag indicating that the next fields, 1 through 6 are structural
-        # damping constants. See Remark 7. (Character)
-        #self.ge = string(card, istart, 'ge')
-
-        #: Nominal structural damping constant in directions 1 through 6. See
-        #: Remarks 2. and 3. (Real; Default = 0.0)
-        GEi = fields(double_or_blank, card, 'GEi', istart + 1, istart + 7)
-        return GEi
 
     @classmethod
     def _read_rcv(cls, card, istart):
@@ -212,12 +282,6 @@ class PBUSH(BushingProperty):
         ea = double_or_blank(card, istart + 3, 'ea', 1.)
         et = double_or_blank(card, istart + 4, 'et', 1.)
         return [sa, st, ea, et]
-
-    @classmethod
-    def _read_m(cls, card, istart):
-        # Lumped mass of the cbush; default=0.0
-        m = double_or_blank(card, istart + 1, 'sa', 0.)
-        return [m]
 
     def raw_fields(self):
         list_fields = ['PBUSH', self.pid]
@@ -231,7 +295,7 @@ class PBUSH(BushingProperty):
             elif var == 'RCV':
                 list_fields += ['RCV', self.sa, self.st, self.ea, self.et]
             elif var == 'M':
-                list_fields += ['M'] + self.Mi
+                list_fields += ['M', self.mass]
             else:
                 raise RuntimeError('not supported PBUSH field...')
             nspaces = 8 - (len(list_fields) - 1) % 8
@@ -253,9 +317,44 @@ class PBUSH(BushingProperty):
 
 
 class PBUSH1D(BushingProperty):
+    """
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |   1     |    2   |   3   |    4   |    5   |   6   |   7   |   8   |
+    +=========+========+=======+========+========+=======+=======+=======+
+    | PBUSH1D |   PID  |   K   |    C   |    M   |   SA  |  SE   |       |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | SHOCKA | TYPE  |   CVT  |   CVC  | EXPVT | EXPVC |  IDTS |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | IDETS  | IDECS | IDETSD | IDECSD |       |       |       |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | SPRING |  TYPE |   IDT  |   IDC  | IDTDU | IDCDU |       |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | DAMPER |  TYPE |   IDT  |   IDC  | IDTDV | IDCDV |       |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    |         | GENER  |  IDT  |   IDC  |  IDTDU | IDCDU | IDTDV | IDCDV |
+    +---------+--------+-------+--------+--------+-------+-------+-------+
+    """
     type = 'PBUSH1D'
+    pname_fid_map = {
+        'K' : 'k',
+        'C' : 'c',
+        'M' : 'm',
+    }
+    def __init__(self, pid, k=0., c=0., m=0., sa=0., se=0.,
+                 optional_vars=None, comment=''):
+        """
+        Creates a PBUSH1D card
 
-    def __init__(self, pid, k, c, m, sa, se, optional_vars, comment=''):
+        Parameters
+        ----------
+        pid : ???
+            ???
+        optional_vars : dict[name] : value; default=None
+            name : str
+                SHOCKA, SPRING, DAMPER, GENER
+            values : ???
+                ???
+        """
         BushingProperty.__init__(self)
         if comment:
             self.comment = comment
@@ -303,54 +402,63 @@ class PBUSH1D(BushingProperty):
         #self.shockIDECS = None
         #self.shockIDETSD = None
         #self.shockIDECSD = None
-        if 'SHOCKA' in optional_vars:
-            (shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
-             shock_idts, shock_idets, shock_idecs, shock_idetsd, shock_idecsd
-            ) = optional_vars['SHOCKA']
-            self.shock_type = shock_type
-            self.shock_cvt = shock_cvt
-            self.shock_cvc = shock_cvc
-            self.shock_exp_vt = shock_exp_vt
-            self.shock_exp_vc = shock_exp_vc
-            self.shock_idts = shock_idts
-            self.shock_idets = shock_idets
-            self.shock_idecs = shock_idecs
-            self.shock_idetsd = shock_idetsd
-            self.shock_idecsd = shock_idecsd
+        if optional_vars:
+            for key, values in iteritems(optional_vars):
+                if key == 'SHOCKA':
+                    (shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
+                     shock_idts, shock_idets, shock_idecs, shock_idetsd, shock_idecsd
+                    ) = values
+                    self.shock_type = shock_type
+                    self.shock_cvt = shock_cvt
+                    self.shock_cvc = shock_cvc
+                    self.shock_exp_vt = shock_exp_vt
+                    self.shock_exp_vc = shock_exp_vc
+                    self.shock_idts = shock_idts
+                    self.shock_idets = shock_idets
+                    self.shock_idecs = shock_idecs
+                    self.shock_idetsd = shock_idetsd
+                    self.shock_idecsd = shock_idecsd
 
-        if 'SPRING' in optional_vars:
-            (spring_type, spring_idt, spring_idc, spring_idtdu,
-             spring_idcdu) = optional_vars['SPRING']
-            self.spring_type = spring_type
-            self.spring_idt = spring_idt
-            self.spring_idtc = spring_idc
-            self.spring_idc = spring_idc
-            self.spring_idtdu = spring_idtdu
-            self.spring_idcdu = spring_idcdu
+                elif key == 'SPRING':
+                    (spring_type, spring_idt, spring_idc, spring_idtdu,
+                     spring_idcdu) = values
+                    self.spring_type = spring_type
+                    self.spring_idt = spring_idt
+                    self.spring_idtc = spring_idc
+                    self.spring_idc = spring_idc
+                    self.spring_idtdu = spring_idtdu
+                    self.spring_idcdu = spring_idcdu
 
-        if 'DAMPER' in optional_vars:
-            (damper_type, damper_idt, damper_idc, damper_idtdv,
-             damper_idcdv) = optional_vars['DAMPER']
-            self.damper_type = damper_type
-            self.damper_idt = damper_idt
-            self.damper_idc = damper_idc
-            self.damper_idtdv = damper_idtdv
-            self.damper_idcdv = damper_idcdv
+                elif key == 'DAMPER':
+                    (damper_type, damper_idt, damper_idc, damper_idtdv,
+                     damper_idcdv) = values
+                    self.damper_type = damper_type
+                    self.damper_idt = damper_idt
+                    self.damper_idc = damper_idc
+                    self.damper_idtdv = damper_idtdv
+                    self.damper_idcdv = damper_idcdv
 
-        if 'GENER' in optional_vars:
-            (gener_idt, gener_idc,
-             gener_idtdu, gener_idcdu,
-             gener_idtdv, gener_idcdv
-             ) = optional_vars['GENER']
+                elif key == 'GENER':
+                    (gener_idt, gener_idc,
+                     gener_idtdu, gener_idcdu,
+                     gener_idtdv, gener_idcdv
+                     ) = values
 
-            self.gener_idt = gener_idt
-            self.gener_idc = gener_idc
-            self.gener_idtdu = gener_idtdu
-            self.gener_idcdu = gener_idcdu
-            self.gener_idtdv = gener_idtdv
-            self.gener_idcdv = gener_idcdv
-        self.vars = list(optional_vars.keys())
-        self.vars.sort()
+                    self.gener_idt = gener_idt
+                    self.gener_idc = gener_idc
+                    self.gener_idtdu = gener_idtdu
+                    self.gener_idcdu = gener_idcdu
+                    self.gener_idtdv = gener_idtdv
+                    self.gener_idcdv = gener_idcdv
+                else:
+                    msg = ('PBUSH1D: pid=%s key=%r and must be '
+                           '{SHOCKA, SPRING, DAPMER, GENER}' % self.pid)
+                    raise RuntimeError(msg)
+        if optional_vars is None:
+            self.vars = []
+        else:
+            self.vars = list(optional_vars.keys())
+            self.vars.sort()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -403,7 +511,8 @@ class PBUSH1D(BushingProperty):
 
         #self.sa = sa
         #self.se = se
-        return PBUSH1D(pid, k, c, m, sa, se, optional_vars, comment=comment)
+        return PBUSH1D(pid, k=k, c=c, m=m, sa=sa, se=se,
+                       optional_vars=optional_vars, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):

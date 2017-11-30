@@ -16,6 +16,8 @@ class AltGeometry(object):
                  point_size=1, bar_scale=1.0, representation='main', is_visible=True,
                  is_pickable=False):
         """
+        Creates an AltGeometry object
+
         Parameters
         ----------
         line_width : int

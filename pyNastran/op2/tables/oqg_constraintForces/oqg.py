@@ -56,7 +56,7 @@ class OQG(OP2Common):
         ## thermal flag; 1 for heat transfer, 0 otherwise
         self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
 
-        if not self.is_sort1():
+        if not self.is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
         #assert self.isThermal()==False,self.thermal
 
@@ -409,11 +409,6 @@ class OQG(OP2Common):
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealMPCForcesArray, ComplexMPCForcesArray,
                                             'node', random_code=self.random_code)
-        #elif self.thermal == 1:
-            #raise NotImplementedError(self.thermal)
-            #n = self._read_table(data, result_name, storage_obj,
-                                 #None, None,
-                                 #None, None, 'node')
         else:
             raise RuntimeError(self.code_information())
             #msg = 'thermal=%s' % self.thermal

@@ -135,21 +135,21 @@ class TestNodes(unittest.TestCase):
         import time
         import six
 
-        t0 = time.time()
+        time0 = time.time()
         for i in six.moves.range(5000000):
             if g.type == 'GRID':
                 pass
             if s.type == 'GRID':
                 pass
-        dt_type = time.time() - t0
+        dt_type = time.time() - time0
 
-        t1 = time.time()
+        time1 = time.time()
         for i in six.moves.range(5000000):
             if isinstance(g, GRID):
                 pass
             if isinstance(s, GRID):
                 pass
-        dt_instance = time.time() - t1
+        dt_instance = time.time() - time1
         #print('dt_type=%.4f dt_instance=%.4f' % (dt_type, dt_instance))
         if dt_instance < dt_type:
             msg = ("flip the way you do type checking; card.type == 'GRID' "

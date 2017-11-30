@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
-from itertools import islice
-from bdf_doc import head, tail
+from bdf_doc import tail
 
 
 def introduction():

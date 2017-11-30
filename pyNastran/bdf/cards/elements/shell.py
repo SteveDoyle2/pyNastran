@@ -392,18 +392,23 @@ class TriShell(ShellElement):
 
 class CTRIA3(TriShell):
     """
-    +--------+-------+-------+----+----+----+------------+---------+-----+
-    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |  9  |
-    +========+=======+=======+=====+===+====+============+=========+=====+
-    | CTRIA3 |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |     |
-    +--------+-------+-------+----+----+----+------------+---------+-----+
-    |        |       | TFLAG | T1 | T2 | T3 |            |         |     |
-    +--------+-------+-------+----+----+----+------------+---------+-----+
+    +--------+-------+-------+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |
+    +========+=======+=======+=====+===+====+============+=========+
+    | CTRIA3 |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 |            |         |
+    +--------+-------+-------+----+----+----+------------+---------+
     """
     type = 'CTRIA3'
     _field_map = {
         1: 'eid', 2:'pid', 6:'theta_mcid', 7:'zoffset', 10:'tflag',
         11:'T1', 12:'T2', 13:'T3'}
+    cp_name_map = {
+        'T1' : 'T1',
+        'T2' : 'T2',
+        'T3' : 'T3',
+    }
 
     def _update_field_helper(self, n, value):
         # (int, Any) -> None
@@ -1110,13 +1115,13 @@ class CTRIA6(TriShell):
 
 class CTRIAR(TriShell):
     """
-    +--------+-------+-------+----+----+----+------------+---------+-----+
-    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |  9  |
-    +========+=======+=======+=====+===+====+============+=========+=====+
-    | CTRIAR |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |     |
-    +--------+-------+-------+----+----+----+------------+---------+-----+
-    |        |       | TFLAG | T1 | T2 | T3 |            |         |     |
-    +--------+-------+-------+----+----+----+------------+---------+-----+
+    +--------+-------+-------+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |
+    +========+=======+=======+=====+===+====+============+=========+
+    | CTRIAR |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 |            |         |
+    +--------+-------+-------+----+----+----+------------+---------+
     """
     type = 'CTRIAR'
     def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
@@ -1202,6 +1207,38 @@ class CTRIAR(TriShell):
         T3 = double_or_blank(card, 13, 'T3')
         assert len(card) <= 14, 'len(CTRIAR card) = %i\ncard=%s' % (len(card), card)
         return CTRIAR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CTRIAR card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = data[0]
+        pid = data[1]
+        nids = data[2:5]
+
+        theta_mcid = data[5]
+        zoffset = data[6]
+        tflag = data[7]
+        T1 = data[8]
+        T2 = data[9]
+        T3 = data[10]
+        if T1 == -1.0:
+            T1 = 1.0
+        if T2 == -1.0:
+            T2 = 1.0
+        if T3 == -1.0:
+            T3 = 1.0
+        assert tflag in [0, 1], data
+        return CTRIAR(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     def cross_reference(self, model):
@@ -1770,6 +1807,12 @@ class CQUAD4(QuadShell):
     +--------+-------+-------+----+----+----+----+------------+---------+
     """
     type = 'CQUAD4'
+    cp_name_map = {
+        'T1' : 'T1',
+        'T2' : 'T2',
+        'T3' : 'T3',
+        'T4' : 'T4',
+    }
     _field_map = {1: 'eid', 2:'pid', 7:'theta_mcid', 8:'zoffset',
                   10:'tflag', 11:'T1', 12:'T2', 13:'T3'}
 

@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtGui
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
 

@@ -7,7 +7,7 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 class NastranTable(GuiResultCommon):
-    def __init__(self, subcase_id, titles, headers, dxyz, #xyz, scalar,
+    def __init__(self, subcase_id, titles, headers, dxyz, linked_scale_factor, #xyz, scalar,
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
@@ -31,6 +31,10 @@ class NastranTable(GuiResultCommon):
 
         dxyz : (nnodes, 3)
             the delta xyz values
+        linked_scale_factor : bool
+            is the displacement scale factor linked
+            displacements/loads steps should be
+            force/eigenvectors should not be
 
         scales : List[float]
             the table (e.g., deflection, SPC Forces) scale factors
@@ -52,10 +56,12 @@ class NastranTable(GuiResultCommon):
         GuiResultCommon.__init__(self)
 
         self.subcase_id = subcase_id
+        self.linked_scale_factor = linked_scale_factor
         #assert self.subcase_id > 0, self.subcase_id
 
         self.dxyz = dxyz
         self.dim = len(self.dxyz.shape)
+
 
         self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
@@ -156,7 +162,10 @@ class NastranTable(GuiResultCommon):
 
     def set_scale(self, i, name, scale):
         #j = self.titles_default.index(name)
-        self.scales[i] = scale
+        if self.linked_scale_factor:
+            self.scales[:] = scale
+        else:
+            self.scales[i] = scale
 
     def set_phase(self, i, name, phase):
         if self.is_real:
@@ -282,8 +291,9 @@ class ForceTableResults(NastranTable):
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
+        linked_scale_factor = False
         NastranTable.__init__(
-            self, subcase_id, titles, headers, dxyz, scales,
+            self, subcase_id, titles, headers, dxyz, linked_scale_factor, scales,
             data_formats=data_formats, nlabels=nlabels,
             labelsize=labelsize, ncolors=ncolors,
             colormap=colormap, set_max_min=set_max_min,
@@ -313,7 +323,8 @@ class ForceTableResults(NastranTable):
         name : str
             unused; useful for debugging
         scale : float
-            deflection scale factor
+            deflection scale factor; true scale
+            unused because it's a force
         phase : float; default=0.0
             phase angle (degrees); unused for real results
 
@@ -380,8 +391,10 @@ class DisplacementResults(NastranTable):
         uname : str
             some unique name for ...
         """
+        linked_scale_factor = False
         NastranTable.__init__(
-            self, subcase_id, titles, headers, dxyz, scales,
+            self, subcase_id, titles, headers, dxyz, linked_scale_factor,
+            scales,
             data_formats=data_formats, nlabels=nlabels,
             labelsize=labelsize, ncolors=ncolors,
             colormap=colormap, set_max_min=set_max_min,
@@ -426,7 +439,7 @@ class DisplacementResults(NastranTable):
         name : str
             unused; useful for debugging
         scale : float
-            deflection scale factor
+            deflection scale factor; true scale
         phase : float; default=0.0
             phase angle (degrees); unused for real results
 

@@ -35,9 +35,11 @@ class RealSolidArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
     def is_real(self):
         return True
 
+    @property
     def is_complex(self):
         return False
 
@@ -130,7 +132,7 @@ class RealSolidArray(OES_Object):
         self.ielement += 1
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -515,7 +517,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.is_von_mises():
+        if self.is_von_mises:
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
@@ -529,7 +531,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.is_von_mises():
+        if self.is_von_mises:
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
@@ -537,12 +539,12 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         return headers
 
 def _get_solid_msgs(self):
-    if self.is_von_mises():
+    if self.is_von_mises:
         von_mises = 'VON MISES'
     else:
         von_mises = 'MAX SHEAR'
 
-    if self.is_stress():
+    if self.is_stress:
 
         base_msg = [
             '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',

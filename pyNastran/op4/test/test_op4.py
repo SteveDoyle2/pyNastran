@@ -19,7 +19,6 @@ def run_lots_of_files(files, write_op4=True,
     if skip_files is None:
         skip_files = []
     n = ''
-    isubcases = []
     failed_cases = []
     nfailed = 0
     ntotal = 0
@@ -63,7 +62,7 @@ def run_lots_of_files(files, write_op4=True,
 def run_op4(op4_filename, write_op4=True, debug=True,
             stop_on_failure=False):
     """run an op4"""
-    print('***debug=%s' % debug)
+    #print('***debug=%s' % debug)
     assert '.op4' in op4_filename.lower(), 'op4_filename=%s is not an OP4' % op4_filename
     is_passed = False
     stop_on_failure = True
@@ -97,7 +96,6 @@ def run_op4(op4_filename, write_op4=True, debug=True,
                 except:
                     pass
 
-        del op4
         is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
@@ -177,13 +175,13 @@ def main():
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
-    t0 = time.time()
+    time0 = time.time()
     run_op4(
         data['OP4_FILENAME'],
         write_op4=data['--write_op4'],
         debug=data['--debug'],
     )
-    print("dt = %f" % (time.time() - t0))
+    print("dt = %f" % (time.time() - time0))
 
 
 if __name__ == '__main__':  # op4

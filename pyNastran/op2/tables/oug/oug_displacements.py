@@ -62,6 +62,8 @@ class RealDisplacementArray(RealTableArray):
             words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
         elif self.table_name in ['OUGNO1', 'OUGNO2']:
             words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']
+        elif self.table_name in ['OCRUG']:
+            words += ['                                                 ( OCRUG??? )']
         else:
             raise NotImplementedError('table_name=%r' % self.table_name)
         #words += self.get_table_marker()

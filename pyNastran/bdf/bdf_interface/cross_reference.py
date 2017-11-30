@@ -67,6 +67,7 @@ from typing import List, Dict, Any
 from six import iteritems, itervalues
 from collections import defaultdict
 import traceback
+
 from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
@@ -181,6 +182,9 @@ class XrefMesh(BDFAttributes):
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
         """
+        for spcadds in itervalues(self.spcadds):
+            for spcadd in spcadds:
+                spcadd.cross_reference(self)
         for spcs in itervalues(self.spcs):
             for spc in spcs:
                 spc.cross_reference(self)
@@ -188,14 +192,19 @@ class XrefMesh(BDFAttributes):
             for spcoff in spcoffs:
                 spcoff.cross_reference(self)
 
+        for mpcadds in itervalues(self.mpcadds):
+            for mpcadd in mpcadds:
+                mpcadd.cross_reference(self)
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:
                 mpc.cross_reference(self)
 
         for suport in self.suport:
             suport.cross_reference(self)
+
         for suport1_id, suport1 in iteritems(self.suport1):
             suport1.cross_reference(self)
+
         for se_suport in self.se_suport:
             se_suport.cross_reference(self)
 
@@ -214,7 +223,7 @@ class XrefMesh(BDFAttributes):
         for coord in itervalues(self.coords):
             coord.setup()
 
-    def _cross_reference_aero(self):
+    def _cross_reference_aero(self, check_caero_element_ids=False):
         # type: () -> None
         """
         Links up all the aero cards
@@ -222,27 +231,37 @@ class XrefMesh(BDFAttributes):
         """
         for caero in itervalues(self.caeros):
             caero.cross_reference(self)
+
         for paero in itervalues(self.paeros):
             paero.cross_reference(self)
+
         for trim in itervalues(self.trims):
             trim.cross_reference(self)
+
         for csschd in itervalues(self.csschds):
             csschd.cross_reference(self)
 
         for spline in itervalues(self.splines):
             spline.cross_reference(self)
+
         for aecomp in itervalues(self.aecomps):
             aecomp.cross_reference(self)
+
         for aelist in itervalues(self.aelists):
             aelist.cross_reference(self)
+
         for aeparam in itervalues(self.aeparams):
             aeparam.cross_reference(self)
+
         #for aestat in itervalues(self.aestats):
             #aestat.cross_reference(self)
+
         for aesurf in itervalues(self.aesurf):
             aesurf.cross_reference(self)
+
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.cross_reference(self)
+
         for flutter in itervalues(self.flutters):
             flutter.cross_reference(self)
 
@@ -251,7 +270,7 @@ class XrefMesh(BDFAttributes):
         if self.aeros:
             self.aeros.cross_reference(self)
 
-        if 0:  # only support CAERO1
+        if check_caero_element_ids:  # only support CAERO1
             ncaeros = len(self.caeros)
             if ncaeros > 1:
                 # we don't need to check the ncaeros=1 case
@@ -346,15 +365,15 @@ class XrefMesh(BDFAttributes):
             #if element.type in ['CONM2']:
             #    pass
             #else:
-                if element.nodes is not None:
-                    for nid in element.node_ids:
-                        if nid is None:
-                            continue
-                        nodes[nid].append(element)
-                        #except AttributeError:
-                            #print(element)
-                            #print('node = %s' % str(node))
-                            #raise
+            if element.nodes is not None:
+                for nid in element.node_ids:
+                    if nid is None:
+                        continue
+                    nodes[nid].append(element)
+                    #except AttributeError:
+                        #print(element)
+                        #print('node = %s' % str(node))
+                        #raise
         for node in itervalues(self.nodes):
             node.elements_ref = nodes[node.nid]
 
@@ -435,9 +454,21 @@ class XrefMesh(BDFAttributes):
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
-        for (lid, sid) in iteritems(self.loads):
-            #self.log.debug("load lid=%s sid=%s" %(lid, sid))
-            for load in sid:
+        for (lid, load_combinations) in iteritems(self.load_combinations):
+            #self.log.debug("load lid=%s load_combinations=%s" %(lid, load_combinations))
+            for load_combination in load_combinations:
+                try:
+                    load_combination.cross_reference(self)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                    self._ixref_errors += 1
+                    var = traceback.format_exception_only(type(e), e)
+                    self._stored_xref_errors.append((load_combination, var))
+                    if self._ixref_errors > self._nxref_errors:
+                        self.pop_xref_errors()
+
+        for (lid, loads) in iteritems(self.loads):
+            #self.log.debug("load lid=%s loads=%s" %(lid, loads))
+            for load in loads:
                 try:
                     load.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:

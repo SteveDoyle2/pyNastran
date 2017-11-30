@@ -206,7 +206,7 @@ class TestBars(unittest.TestCase):
         spc = ['SPC1', 123456, 123456, 1]
         grid1 = ['GRID', 1, None, 0., 0., 0.]
         grid2 = ['GRID', 2, None, 1., 0., 0.]
-        grid3 = ['GRID', 3, None, 1., 0., 0.]
+        #grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
         pid = 11
         mid = 12
@@ -340,14 +340,113 @@ class TestBars(unittest.TestCase):
         pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBMLO', nsm=0.,
                                 comment='PBARL')
         #---------------------------------------------------------------
+        eid = 3
+        pid = 103
+        #cbar = model.add_cbar(eid, pid, nids, x, g0, offt='GGG',
+                              #pa=42, pb=5, wa=None, wb=None,
+                              #comment='CBAR')
+        pbar = model.add_pbar(pid, mid, A=1., i1=0., i2=0., i12=0., j=0., nsm=0.1,
+                              c1=0., c2=0.,
+                              d1=0., d2=0.,
+                              e1=0., e2=0.,
+                              f1=0., f2=0.,
+                              k1=1.e8, k2=1.e8,
+                              comment='pbar')
+
+        #G = 3.0e7
+        #E = None
+        #nu = 0.3
+        #model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       #St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
+                       #comment='')
+        #---------------------------------------------------------------
         model.validate()
-        model._verify_bdf(xref=False)
         model.pop_parse_errors()
+        model._verify_bdf(xref=False)
+
         model.cross_reference()
         model.pop_xref_errors()
 
         model._verify_bdf(xref=True)
         model.uncross_reference()
+
+    def test_pbar_nsm(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        nsm = 1.
+        area = 2.0
+        pbar = model.add_pbar(pid, mid, A=area, i1=0., i2=0., i12=0., j=0.,
+                             nsm=nsm,
+                             c1=0., c2=0., d1=0., d2=0.,
+                             e1=0., e2=0., f1=0., f2=0.,
+                             k1=1.e8,
+                             k2=1.e8,
+                             comment='')
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        #----------------
+        card_lines = [
+            'PBAR           2       1      2.                              1.',
+        ]
+        model.add_card(card_lines, 'PBAR', comment='', is_list=False,
+                       has_none=True)
+        pbar2 = model.properties[2]
+        #------------------
+        model.cross_reference()
+
+        assert pbar.Nsm() == 1.0
+        assert pbar.Area() == 2.0
+
+        # mass/L = area*rho + nsm
+        assert pbar.MassPerLength() == 1.0
+
+        # area = 2.0
+        mat1.rho = 10.0
+        assert pbar.MassPerLength() == 21.0, pbar.MassPerLength()
+        assert pbar2.MassPerLength() == 21.0, pbar2.MassPerLength()
+
+    def test_pbarl_nsm(self):
+        model = BDF(debug=False)
+        pid = 1
+        mid = 1
+        bar_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBMLO', nsm=1.,
+                               comment='')
+
+        E = 1.0
+        G = None
+        nu = 0.3
+        mat1 = model.add_mat1(mid, E, G, nu)
+
+        #----------------
+        card_lines = [
+            'PBARL   2       1               BAR',
+            '        1.0     2.0      1.0',
+        ]
+        model.add_card(card_lines, 'PBARL', comment='', is_list=False,
+                       has_none=True)
+        pbarl2 = model.properties[2]
+        #------------------
+        model.cross_reference()
+
+        assert pbarl.Nsm() == 1.0
+        assert pbarl.Area() == 2.0
+
+        # mass/L = area*rho + nsm
+        assert pbarl.MassPerLength() == 1.0
+
+        # area = 2.0
+        mat1.rho = 10.0
+        assert pbarl.MassPerLength() == 21.0, pbarl.MassPerLength()
+        assert pbarl2.MassPerLength() == 21.0, pbarl2.MassPerLength()
+
 
     def test_pbrsect(self):
         """tests a PBRSECT"""

@@ -2,20 +2,10 @@ from __future__ import print_function
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict, write_patran_syntax_dict)
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import QDialog, QLineEdit, QFocusEvent, QFont, QPushButton
-elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtGui import QFocusEvent, QFont
-    from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton
+from qtpy import QtCore, QtGui
+from qtpy.QtGui import QFocusEvent, QFont
+from qtpy.QtWidgets import QDialog, QLineEdit, QPushButton
 
-elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
-    from PySide.QtGui import QDialog, QLineEdit, QFocusEvent, QFont, QPushButton
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
 
 class QElementEdit(QLineEdit):
     """creates a QLineEdit that can pick element ids"""

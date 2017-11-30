@@ -17,19 +17,8 @@ from six.moves import range
 
 
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import QApplication, QMessageBox, qApp
-    print("Using PyQt4")
-elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import QApplication, QMessageBox, qApp
-    print("Using PyQt5")
-elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
-    from PySide.QtGui import QApplication, QMessageBox, qApp
-else:
-    raise NotImplementedError(qt_version)
+from qtpy import QtCore
+from qtpy.QtWidgets import QMessageBox, qApp
 
 # 3rd party
 import vtk
@@ -43,7 +32,7 @@ from pyNastran.gui.gui_utils.utils import check_for_newer_version
 from pyNastran.gui.formats import (
     NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, ShabpIO, ADB_IO, FastIO, # Plot3d_io,
-    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
+    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO, OpenFoamIO, ObjIO,
 )
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -67,7 +56,9 @@ except:
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
                  LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, ADB_IO, # Plot3d_io,
-                 FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO):
+                 FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
+                 OpenFoamIO, ObjIO,
+                 ):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -112,6 +103,9 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             # no results
             'lawgs', 'stl', 'fast',
             'bedge', 'su2', 'tetgen', 'avus', 'abaqus',
+
+            # openfoam
+            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
@@ -141,6 +135,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             UGRID_IO.__init__(self)
             AbaqusIO.__init__(self)
             SU2_IO.__init__(self)
+            OpenFoamIO.__init__(self)
+            ObjIO.__init__(self)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 
@@ -151,6 +147,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
 
         self.setup_gui()
         self.setup_post(inputs)
+
         self._check_for_latest_version(inputs['no_update'])
 
     def _check_for_latest_version(self, check=True):
@@ -161,14 +158,14 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             ## pyNastran v0.7.2 has been Released (4/25/2015)
         """
         import time
-        t0 = time.time()
+        time0 = time.time()
         version_latest, version_current, is_newer = check_for_newer_version()
         if is_newer:
             url = pyNastran.__website__
             from pyNastran.gui.menus.download import DownloadWindow
             win = DownloadWindow(url, version_latest, win_parent=self)
             win.show()
-        dt = time.time() - t0
+        dt = time.time() - time0
         #print('dt_version_check = %.2f' % dt)
 
     def mousePressEvent(self, ev):
@@ -253,16 +250,18 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         """
         Runs the reload button.
 
-        Reload allows you to edit the input model and "reload" the data without
-        having to go to the pulldown menu.  For USM3D, we dynamically load the
-        latest CFD results time step, which is really handy when you're running
-        a job.
+        Reload allows you to edit the input model and "reload" the data
+        without having to go to the pulldown menu.  If you don't like
+        this behavior, implement the self.on_reload_nastran() or similar
+        method for a given format.
         """
         camera = self.get_camera_data()
         Title = self.title
         case = self.icase
-        if self.format == 'usm3d':
-            self.step_results_usm3d()
+
+        on_reload_name = 'on_reload_%s' % self.format
+        if hasattr(self, on_reload_name) or 1:
+            getattr(self, on_reload_name)()
         else:
             self.on_load_geometry(self.infile_name, self.format)
 
@@ -281,20 +280,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         being closed.
         """
         settings = QtCore.QSettings()
-        settings.setValue("mainWindowGeometry", self.saveGeometry())
-        settings.setValue("mainWindowState", self.saveState())
-        settings.setValue("backgroundColor", self.background_color)
-        settings.setValue("textColor", self.text_color)
-        settings.setValue("labelColor", self.label_color)
-        settings.setValue("font_size", self.font_size)
+        settings.clear()
+        self.settings.save(settings)
 
-        #screen_shape = QtGui.QDesktopWidget().screenGeometry()
-        main_window = self.window()
-        width = main_window.frameGeometry().width()
-        height = main_window.frameGeometry().height()
-        settings.setValue('screen_shape', (width, height))
-
-        qpos = self.pos()
-        pos = qpos.x(), qpos.y()
-        settings.setValue('pos', pos)
         qApp.quit()

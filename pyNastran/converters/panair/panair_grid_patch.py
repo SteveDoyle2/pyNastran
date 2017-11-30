@@ -1,6 +1,7 @@
 from __future__ import print_function
 from six.moves import range
 import numpy as np
+from pyNastran.converters.panair.assign_type import integer
 
 
 def print_float(value):  # sInt #string_float_value
@@ -12,6 +13,7 @@ def print_float(value):  # sInt #string_float_value
 
 
 class PanairPatch(object):
+    """Used for physical surfaces"""
     def __init__(self, inetwork, network_name, kt, cp_norm, xyz, log):
         self.log = log
 
@@ -22,7 +24,7 @@ class PanairPatch(object):
         self.kt = kt
         if cp_norm == '':
             cp_norm = 0
-        self.cp_norm = cp_norm
+        self.cp_norm = integer(cp_norm, 'cp_norm')
         self.matchw = 0
         self.xyz = xyz
         self.nrows = xyz.shape[0]
@@ -381,6 +383,7 @@ class PanairPatch(object):
 
 
 class PanairWakePatch(PanairPatch):
+    """Used for explicit wakes"""
     def __init__(self, inetwork, network_name, options, xyz, log):
         (kt, cp_norm, matchw, trailed_panel, edge_number, xwake, twake) = options
         PanairPatch.__init__(self, inetwork, network_name, kt, cp_norm, xyz, log)

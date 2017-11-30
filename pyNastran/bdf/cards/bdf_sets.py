@@ -565,7 +565,7 @@ class ASET1(ABQSet1):
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
-    +=======+=====+=====+==================+=====+=====+=====+
+    +=======+=====+=====+======+=====+=====+=====+=====+=====+
     | ASET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |       | ID8 | ID9 |      |     |     |     |     |     |
@@ -598,7 +598,7 @@ class BSET1(ABQSet1):
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
-    +=======+=====+=====+==================+=====+=====+=====+
+    +=======+=====+=====+======+=====+=====+=====+=====+=====+
     | BSET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |       | ID8 | ID9 |      |     |     |     |     |     |
@@ -632,7 +632,7 @@ class CSET1(Set):
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
-    +=======+=====+=====+==================+=====+=====+=====+
+    +=======+=====+=====+======+=====+=====+=====+=====+=====+
     | CSET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |       | ID8 | ID9 |      |     |     |     |     |     |
@@ -870,6 +870,42 @@ class SET1(Set):
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type
 
+    def safe_cross_reference(self, model, xref_type, msg='', allow_empty_nodes=False):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        xref_type : str
+            {'Node'}
+        allow_empty_nodes : bool; default=False
+            do all nodes need to exist?
+
+        SPLINEx, ACMODL, PANEL, AECOMP, XYOUTPUT
+
+        - nodes
+          - SPLINEx (all nodes must exist)
+          - PANEL (all nodes must exist)
+          - XYOUTPUT (missing nodes ignored)
+          - AECOMP
+          - ACMODL (optional)
+        - elements
+          - ACMODL (optional)
+        """
+        assert msg != ''
+        msg = ' which is required by SET1 sid=%s%s nid=%%s' % (self.sid, msg)
+        if xref_type == 'Node':
+            self.ids_ref, out = model.safe_get_nodes(self.get_ids(), msg=msg)
+            if len(out):
+                model.log.warning(out)
+        elif xref_type == 'Point':
+            self.ids_ref, out = model.SafePoints(self.get_ids(), msg=msg)
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
+        self.xref_type = xref_type
+
     def uncross_reference(self):
         if self.xref_type in ['Node', 'Point']:
             self.ids = self.get_ids()
@@ -948,6 +984,7 @@ class SET3(Set):
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
 
     Example
+
     +------+-----+-------+-----+----+
     | SET3 |  1  | POINT | 11  | 12 |
     +------+-----+-------+-----+----+
@@ -1315,7 +1352,7 @@ class USET(Set):
     Defines a degrees-of-freedom set.
 
     +------+-------+-----+------+-----+----+-----+----+
-    |  1   |   2   |  3  |   4  |  5  |  6  |  7 | 8  |
+    |  1   |   2   |  3  |   4  |  5  |  6 |  7  | 8  |
     +======+=======+=====+======+=====+====+=====+====+
     | USET | SNAME | ID1 |  C1  | ID2 | C2 | ID3 | C3 |
     +------+-------+-----+------+-----+----+-----+----+

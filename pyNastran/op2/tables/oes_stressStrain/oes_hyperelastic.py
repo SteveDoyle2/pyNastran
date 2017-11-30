@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import cycle
-from six import iteritems, integer_types
+from six import integer_types
 from six.moves import range
 import numpy as np
 ints = (int, np.int32)
@@ -12,7 +12,7 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 class HyperelasticQuadArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        #HyperelasticQuad
+        HyperelasticQuad
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -117,7 +117,7 @@ class HyperelasticQuadArray(OES_Object):
         #headers = self.get_headers()
 
         #nelements = self.element_node.shape[0] // 2
-        #if self.is_fiber_distance():
+        #if self.is_fiber_distance:
             #fiber_distance = ['Top', 'Bottom'] * nelements
         #else:
             #fiber_distance = ['Mean', 'Curvature'] * nelements
@@ -140,7 +140,7 @@ class HyperelasticQuadArray(OES_Object):
         #print(self.data_frame)
 
     def __eq__(self, table):
-        assert self.is_sort1() == table.is_sort1()
+        assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)

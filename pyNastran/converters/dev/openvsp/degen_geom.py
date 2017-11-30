@@ -170,23 +170,23 @@ class DegenGeom(object):
         #self.nNetworks = i
 
     def read_degen_geom(self, degen_geom_csv):  # pragma: no cover
-        f = open(degen_geom_csv)
+        degen_geom_file = open(degen_geom_csv)
         for i in range(4):
-            line = f.readline()
+            line = degen_geom_file.readline()
         ncomponents = int(line)
-        f.readline()
+        degen_geom_file.readline()
 
         for i in range(ncomponents):
-            line = f.readline().strip().split(',')
+            line = degen_geom_file.readline().strip().split(',')
             lifting_surface, name = line
             if lifting_surface == 'LIFTING_SURFACE':
                 #degenGeom, Type, nxsections, npoints/xsection
                 # SURFACE_NODE,6,33
                 # nnodes -> 6*33=198
                 # nelements -> 160
-                f.readline()
+                degen_geom_file.readline()
 
-                line = f.readline.strip()
+                line = degen_geom_file.readline.strip()
                 surface_node, lifting_surface_nx, lifting_surface_ny = line.split(',')
                 assert surface_node == 'SURFACE_NODE', surface_node
                 lifting_surface_nx = int(lifting_surface_nx)
@@ -199,18 +199,18 @@ class DegenGeom(object):
                 area = np.zeros(nelements, dtype='float64')
 
                 # x, y, z, u, v
-                f.readline()
+                degen_geom_file.readline()
                 for i in range(npoints):
-                    line = f.readline()
+                    line = degen_geom_file.readline()
                     x, y, z, u, v = line.split(',')
                     lifting_surface_xyz[i, :] = [x, y, z]
 
                 # SURFACE_FACE,5,32
-                surface_node, nx, ny = f.readline().strip().split(',')
-                line = f.readline() # nx,ny,nz,area
+                surface_node, nx, ny = degen_geom_file.readline().strip().split(',')
+                line = degen_geom_file.readline() # nx,ny,nz,area
                 print(line)
                 for i in range(nelements):
-                    line = f.readline()
+                    line = degen_geom_file.readline()
                     nx, ny, nz, areai = line.split(',')
                     normals[i, :] = [nx, ny, nz]
                     area[i] = areai
@@ -220,19 +220,19 @@ class DegenGeom(object):
                 # DegenGeom Type,nXsecs,nPnts/Xsec
                 # PLATE,6,17
                 # nx,ny,nz
-                f.readline()
-                plate, nx, ny = f.readline().strip().split(',')
+                degen_geom_file.readline()
+                plate, nx, ny = degen_geom_file.readline().strip().split(',')
                 nx = int(nx)
                 ny = int(ny)
                 nxy = nx * ny
-                f.readline()
+                degen_geom_file.readline()
                 for i in range(nx):
-                    f.readline()
+                    degen_geom_file.readline()
 
                 # x,y,z,zCamber,t,nCamberx,nCambery,nCamberz,u,wTop,wBot
-                line = f.readline()
+                line = degen_geom_file.readline()
                 for i in range(nxy):
-                    f.readline()
+                    degen_geom_file.readline()
 
                 # DegenGeom Type, nXsecs
                 # STICK_NODE, 6
@@ -245,24 +245,24 @@ class DegenGeom(object):
                  #t20, t21, t22, t23, t30, t31, t32, t33,
                  #it00, it01, it02, it03, it10, it11, it12, it13,
                  #it20, it21, it22, it23, it30, it31, it32, it33)
-                f.readline()
-                stick_node, nx = f.readline().split(',')
+                degen_geom_file.readline()
+                stick_node, nx = degen_geom_file.readline().split(',')
                 assert stick_node == 'STICK_NODE', stick_node
                 nx = int(nx)
-                f.readline()
+                degen_geom_file.readline()
                 for i in range(nx):
-                    f.readline()
+                    degen_geom_file.readline()
 
                 # DegenGeom Type, nXsecs
                 # STICK_FACE, 5
                 # sweeple,sweepte,areaTop,areaBot
-                f.readline()
-                stick_face, nx = f.readline().split(',')
+                degen_geom_file.readline()
+                stick_face, nx = degen_geom_file.readline().split(',')
                 assert stick_face == 'STICK_FACE', stick_face
                 nx = int(nx)
-                f.readline()
+                degen_geom_file.readline()
                 for i in range(nx):
-                    f.readline()
+                    degen_geom_file.readline()
 
                 # DegenGeom Type
                 # POINT
@@ -270,12 +270,12 @@ class DegenGeom(object):
                  #Ishellxx, Ishellyy, Ishellzz, Ishellxy, Ishellxz, Ishellyz,
                  #Isolidxx, Isolidyy, Isolidzz, Isolidxy, Isolidxz, Isolidyz,
                  #cgShellx, cgShelly, cgShellz, cgSolidx, cgSolidy, cgSolidz)
-                f.readline()
-                point = f.readline().strip()
+                degen_geom_file.readline()
+                point = degen_geom_file.readline().strip()
                 assert point == 'POINT', point
-                f.readline()
-                cg_line = f.readline()
-                f.readline()
+                degen_geom_file.readline()
+                cg_line = degen_geom_file.readline()
+                degen_geom_file.readline()
             else:
                 raise RuntimeError(line)
             component = Geom(name, lifting_surface_xyz,

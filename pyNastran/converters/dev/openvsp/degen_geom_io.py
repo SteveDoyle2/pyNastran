@@ -1,11 +1,10 @@
 from __future__ import print_function
-from six import iteritems
 from six.moves import range
 import numpy as np
-from numpy import arange, mean, amax, amin, zeros, hstack
+from numpy import amax, amin
 
 import vtk
-from vtk import vtkQuad, vtkParametricSpline
+from vtk import vtkQuad
 
 from pyNastran.converters.dev.openvsp.degen_geom import DegenGeom
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -37,24 +36,24 @@ class DegenGeomIO(object):
         #self.model_type = model.model_type
         model.read_degen_geom(csv_filename)
         for name, comps in sorted(model.components.items()):
-            print('name = %r' % name)
+            #print('name = %r' % name)
             #print(comp)
-            print('------------')
+            #print('------------')
             for comp in comps:
                 nodes = comp.xyz
                 elements = comp.elements
                 nnodes = nodes.shape[0]
                 nelements = elements.shape[0]
 
-        self.nNodes = nnodes
-        self.nElements = nelements
+        self.nnodes = nnodes
+        self.nelements = nelements
 
-        self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        self.grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
+        points.SetNumberOfPoints(self.nnodes)
+        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
 
@@ -91,7 +90,7 @@ class DegenGeomIO(object):
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-        self.log_info("updated grid")
+        #self.log_info("updated grid")
 
         # load results - regions/loads
         self.scalarBar.VisibilityOn()
@@ -120,9 +119,8 @@ class DegenGeomIO(object):
         icase = 0
         itime = 0
         form = [
-            #('ElementID', icase, []),
-            ('NodeID', icase, []),
-            #('NodeID', icase + 1, []),
+            ('ElementID', icase, []),
+            ('NodeID', icase + 1, []),
         ]
 
         #form = ['Geometry', None, []]
@@ -137,7 +135,6 @@ class DegenGeomIO(object):
                             location='centroid', scalar=elements)
         nid_res = GuiResult(0, header='NodeID', title='NodeID',
                             location='node', scalar=nodes)
-        #cases[icase] = (eid_res, (itime, 'ElementID'))
-        cases[icase] = (nid_res, (itime, 'NodeID'))
-        #cases[icase + 1] = (nid_res, (itime, 'NodeID'))
+        cases[icase] = (eid_res, (itime, 'ElementID'))
+        cases[icase + 1] = (nid_res, (itime, 'NodeID'))
         return form, cases

@@ -64,8 +64,8 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
         p = array(p0)
 
     try:
-        load_case = model.loads[loadcase_id]
-    except:
+        load_case = model.Load(loadcase_id, consider_load_combinations=True)
+    except KeyError:
         msg = 'load_case=%s is invalid; ' % loadcase_id
         msg += 'load_cases = %s\n' % np.unique(list(model.loads.keys()))
         for subcase_id, subcase in iteritems(model.subcases):

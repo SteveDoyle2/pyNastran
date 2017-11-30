@@ -1,6 +1,4 @@
 from __future__ import print_function
-import os
-from six import iteritems
 
 from numpy import zeros, array
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID

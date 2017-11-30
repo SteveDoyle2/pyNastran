@@ -42,10 +42,47 @@ class BushElement(Element):
         return [tuple(sorted(self.node_ids))]
 
 class CBUSH(BushElement):
+    """
+    Generalized Spring-and-Damper Connection
+
+    Defines a generalized spring-and-damper structural element that
+    may be nonlinear or frequency dependent.
+
+    +-------+-----+------+----+----+-------+----+----+-----+
+    |   1   |  2  |  3   |  4 |  5 |   6   |  7 |  8 |  9  |
+    +=======+=====+======+====+====+=======+====+====+=====+
+    | CBUSH | EID | PID  | GA | GB | GO/X1 | X2 | X3 | CID |
+    +-------+-----+------+----+----+-------+----+----+-----+
+    |       |  S  | OCID | S1 | S2 |  S3   |    |    |     |
+    +-------+-----+------+----+----+-------+----+----+-----+
+    """
     type = 'CBUSH'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'cid', 9:'s', 10:'ocid'
     }
+
+    def update_by_cp_name(self, cp_name, value):
+        #if isinstance(pname_fid, int):
+            #self._update_field_helper(pname_fid, value)
+        if cp_name == 'X1':
+            self.x[0] = value
+        elif cp_name == 'X2':
+            self.x[1] = value
+        elif cp_name == 'X3':
+            self.x[2] = value
+
+        elif cp_name == 'S1':
+            self.si[0] = value
+        elif cp_name == 'S2':
+            self.si[1] = value
+        elif cp_name == 'S3':
+            self.si[2] = value
+
+        elif cp_name == 'S':
+            self.s = value
+        else:
+            raise NotImplementedError('element_type=%r has not implemented %r in update_by_cp_name' % (
+                self.type, cp_name))
 
     def _update_field_helper(self, n, value):
         if n == 11:
@@ -116,16 +153,14 @@ class CBUSH(BushElement):
             si = [None, None, None]
         self.eid = eid
         self.pid = pid
-        self.ga = nids[0]
-        self.gb = nids[1]
+        self.nodes = nids
         self.x = x
         self.g0 = g0
         self.cid = cid
         self.s = s
         self.ocid = ocid
         self.si = si
-        self.ga_ref = None
-        self.gb_ref = None
+        self.nodes_ref = None
         self.pid_ref = None
         self.cid_ref = None
         self.ocid_ref = None
@@ -198,9 +233,9 @@ class CBUSH(BushElement):
         ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
         return CBUSH(eid, pid, [ga, gb], x, g0, cid=cid, s=s, ocid=ocid, si=si, comment=comment)
 
-    @property
-    def nodes(self):
-        return [self.ga, self.gb]
+    #@property
+    #def nodes(self):
+        #return [self.ga, self.gb]
 
     @property
     def node_ids(self):
@@ -220,14 +255,16 @@ class CBUSH(BushElement):
         assert isinstance(ocid, integer_types), 'ocid=%r' % ocid
 
     def Ga(self):
-        if self.gb_ref is None:
-            return self.ga
-        return self.ga_ref.nid
+        if self.nodes_ref is not None:
+            return self.nodes_ref[0].nid
+        return self.nodes[0]
 
     def Gb(self):
-        if self.gb_ref is None:
-            return self.gb
-        return self.gb_ref.nid
+        if self.nodes[1] in [0, None]:
+            return 0
+        if self.nodes_ref is not None:
+            return self.nodes_ref[1].nid
+        return self.nodes[1]
 
     def OCid(self):
         if self.ocid_ref is not None:
@@ -249,9 +286,7 @@ class CBUSH(BushElement):
             the BDF object
         """
         msg = ' which is required by CBUSH eid=%s' % self.eid
-        self.ga_ref = model.Node(self.ga, msg=msg)
-        if self.gb is not None:
-            self.gb_ref = model.Node(self.gb, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid_ref = model.Coord(self.cid, msg=msg)
@@ -301,7 +336,7 @@ class CBUSH1D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid',
     }
 
-    def __init__(self, eid, pid, nids, cid, comment=''):
+    def __init__(self, eid, pid, nids, cid=None, comment=''):
         if comment:
             self.comment = comment
         BushElement.__init__(self)
@@ -333,7 +368,7 @@ class CBUSH1D(BushElement):
         gb = integer_or_blank(card, 4, 'gb')
         cid = integer_or_blank(card, 5, 'cid')
         assert len(card) <= 6, 'len(CBUSH1D card) = %i\ncard=%s' % (len(card), card)
-        return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
+        return CBUSH1D(eid, pid, [ga, gb], cid=cid, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):

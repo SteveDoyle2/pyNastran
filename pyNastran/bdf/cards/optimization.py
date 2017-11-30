@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import count, cycle
+from itertools import cycle
 from six import iteritems, string_types
 from six.moves import zip, range
 import numpy as np
@@ -22,7 +22,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
 
-def validate_dvcrel(validate, Type, cp_name):
+def validate_dvcrel(validate, element_type, cp_name):
     """
     Valdiates the DVCREL1/2
 
@@ -33,21 +33,37 @@ def validate_dvcrel(validate, Type, cp_name):
     """
     if not validate:
         return
-    msg = 'DVCRELx: Type=%r cp_name=%r is invalid' % (Type, cp_name)
-    if Type in ['CQUAD4']:
-        assert cp_name in ['T1', 'T2', 'T3', 'T4'], msg # 'ZOFFS',
-    elif Type in ['CTRIA3']:
-        assert cp_name in [], msg
-    elif Type in ['CONM2']:
-        assert cp_name in ['M', 'X1', 'X2', 'X3'], msg
-    elif Type in ['CBAR']:
-        assert cp_name in ['X1', 'X2', 'X3'], msg
-    elif Type in ['CBEAM']:
-        assert cp_name in ['X1', 'X2', 'X3'], msg
-    elif Type in ['CELAS1']:
-        assert cp_name in [], msg
-    elif Type in ['CBUSH']:
-        assert cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3'], msg
+    msg = 'DVCRELx: element_type=%r cp_name=%r is invalid' % (element_type, cp_name)
+    if element_type in ['CQUAD4']:
+        options = ['T1', 'T2', 'T3', 'T4'] # 'ZOFFS',
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CTRIA3':
+        options = ['T1', 'T2', 'T3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CONM2':
+        options = ['M', 'X1', 'X2', 'X3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CBAR':
+        options = ['X1', 'X2', 'X3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CBEAM':
+        options = ['X1', 'X2', 'X3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type in ['CELAS1']:
+        options = []
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type in ['CBUSH']:
+        options = ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CVISC':
+        options = []
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CGAP':
+        options = []
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CBUSH1D':
+        options = []
+        _check_dvcrel_options(cp_name, element_type, options)
     else:
         raise NotImplementedError(msg)
 
@@ -108,7 +124,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pname_fid = 'GE1'
         else:
             raise NotImplementedError('PELAST pname_fid=%r is invalid' % pname_fid)
-        #assert pname_fid in [3, 4, 'K1', 'GE1'], msg
+
     elif prop_type == 'PELAST':
         if pname_fid in ['TKID', 3]:
             pname_fid = 'TKID'
@@ -126,28 +142,41 @@ def validate_dvprel(prop_type, pname_fid, validate):
         else:
             raise NotImplementedError('PROD pname_fid=%r is invalid' % pname_fid)
         assert pname_fid in [4, 'A', 5, 'J', 'NSM'], msg
+
     elif prop_type == 'PTUBE':
-        assert pname_fid in [4, 5], msg
+        options = [4, 5, 'T']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBAR':
         #assert pname_fid in ['X1', 'X2'], msg
     elif prop_type == 'PBAR':
-        assert pname_fid in [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J'], msg
+        options = [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J']
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBARL':
-        assert pname_fid in [12, 13, 14, 15, 16, 17, 'DIM1', 'DIM2', 'DIM3', 'DIM4'], msg
+        options = [
+            12, 13, 14, 15, 16, 17,
+            'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBEAM':
         #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
     elif prop_type == 'PBEAM':
-        assert pname_fid in ['I1', 'I2', 'A', 'J',
-                             'I1(A)', 'I1(B)', 'I2(B)',
-                             '-8', '-9', '-10', '-14', '-15', '-16', '-17', '-18', '-19', '-20', '-21',
-                             '-168'], msg
+        options = [
+            'I1', 'I2', 'A', 'J',
+            'I1(A)', 'I1(B)', 'I2(B)',
+            -8, -9, -10, -14, -15, -16, -17, -18, -19, -20, -21,
+            -168, -169, -170, -174, -175, -176, -177, -178, -179,
+            -180, -181,]
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBEAML':
-        assert pname_fid in ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6',
-                             'DIM1(A)',
-                             'DIM1(B)', 'DIM2(B)', 'I1(B)', 'I2(B)',
-                             'NSM'], msg # 'DIM(B)'
+        options = [
+            'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10',
+            'DIM1(A)',
+            'DIM1(B)', 'DIM2(B)', 'I1(B)', 'I2(B)',
+            'NSM'] # 'DIM(B)'
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CQUAD4':
         #assert pname_fid in ['T1', 'T2', 'T3', 'T4'], msg
@@ -156,19 +185,26 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pname_fid = 'T'
         elif pname_fid in [6]:  # 12I/T**3 doesn't support strings
             pass
+        elif pname_fid in [8]:  # TS/T doesn't support strings?
+            pass
         else:
-            raise NotImplementedError('PSHELL pname_fid=%r is invalid' % pname_fid)
+            allowed = ("['T', 4, \n"
+                       "6 # 12I/T^3, \n"
+                       "8 # TS/T]\n")
+            msg = 'PSHELL pname_fid=%r is invalid\nmust be in:\n%s' % (pname_fid, str(allowed))
+            raise NotImplementedError(msg)
         #if cp_name in '12I/T**3':
             #cp_name =
         #assert pname_fid in ['T', 4, 6], msg
     elif prop_type == 'PCOMP':
-        if isinstance(pname_fid, str):
-            if pname_fid in ['Z0', 'SB']:
+        if isinstance(pname_fid, string_types):
+            if pname_fid in ['Z0', 'SB', 'TREF', 'GE']:
                 pass
             else:
                 word, num = break_word_by_trailing_integer(pname_fid)
                 if word not in ['T', 'THETA']:
                     raise RuntimeError('word=%r\n%s' % (word, msg))
+                int(num)
         else:
             assert pname_fid in [3, #3-z0
                                  #'Z0',
@@ -185,40 +221,50 @@ def validate_dvprel(prop_type, pname_fid, validate):
         #else:
             #raise NotImplementedError('PSHELL pname_fid=%r is invalid' % pname_fid)
         #if cp_name in '12I/T**3':
-        assert pname_fid in ['Z0', 'SB',
-                             14, 24, 34, 44,
-                             15, 25, 75, 85], msg
+        options = ['Z0', 'SB',
+                   14, 24, 34, 44,
+                   15, 25, 75, 85]
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBUSH':
         #assert pname_fid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
     elif prop_type == 'PBUSH':
-        assert pname_fid in [18,
-                             'K1', 'K2', 'K3', 'K4', 'K5', 'K6',
-                             'B2',
-                             'GE1', 'GE3', 'GE4', 'GE5', 'GE6',
-                             '-13'], msg
+        options = [18,
+                   'K1', 'K2', 'K3', 'K4', 'K5', 'K6',
+                   'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
+                   'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
+                   'GE1', 'GE3', 'GE4', 'GE5', 'GE6',
+                   -13]
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBUSH1D':
-        assert pname_fid in ['K', 'C'], msg
+        options = ['K', 'C', 'M']
+        _check_dvprel_options(pname_fid, prop_type, options)
     elif prop_type == 'PBUSHT':
-        assert pname_fid in ['TBID1', 'TGEID1', 'TGEID2'], msg
+        options = ['TBID1', 'TGEID1', 'TGEID2']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     # CGAP
     elif prop_type == 'PGAP':
-        assert pname_fid in [5], msg
+        options = [5]
+        _check_dvprel_options(pname_fid, prop_type, options)
     elif prop_type == 'PVISC':
-        assert pname_fid in ['CE1'], msg
+        options = ['CE1']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CDAMP2':
         #assert pname_fid in ['B'], msg
     elif prop_type == 'PDAMP':
-        assert pname_fid in [3, 'B1'], msg
+        options = [3, 'B1']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CMASS2':
         #assert pname_fid in ['M'], msg
     #elif prop_type == 'CMASS4':
         #assert pname_fid in ['M'], msg
     elif prop_type == 'PMASS':
-        assert pname_fid in [3], msg
+        options = [3]
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CONM2':
         #assert pname_fid in ['M', 'X1', 'X2', 'I11', 'I22'], msg
@@ -230,17 +276,46 @@ def validate_dvprel(prop_type, pname_fid, validate):
             raise NotImplementedError('PSHEAR pname_fid=%r is invalid' % pname_fid)
 
     elif prop_type == 'PWELD':
-        assert pname_fid in ['D'], msg
+        options = ['D']
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PFAST':
-        assert pname_fid in ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS'], msg
+        options = ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS']
+        _check_dvprel_options(pname_fid, prop_type, options)
+
     elif prop_type == 'PBMSECT':
-        assert pname_fid in ['T', 'W', 'H'], msg
+        options = ['T', 'W', 'H']
+        _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBEND':
         raise RuntimeError('Nastran does not support the PBEND')
     else:
         raise NotImplementedError(msg)
     return pname_fid
+
+def _check_dvcrel_options(cp_name, element_type, options):
+    if cp_name not in options:
+        soptions = [str(val) for val in options]
+        msg = (
+            '%r is an invalid option for %s\n'
+            'valid: [%s]' % (cp_name, element_type, ', '.join(soptions)))
+        raise ValueError(msg)
+
+def _check_dvmrel_options(mp_name, material_type, options):
+    if mp_name not in options:
+        soptions = [str(val) for val in options]
+        msg = (
+            '%r is an invalid option for %s\n'
+            'valid: [%s]' % (mp_name, material_type, ', '.join(soptions)))
+        raise ValueError(msg)
+
+def _check_dvprel_options(pname_fid, prop_type, options):
+    if pname_fid not in options:
+        soptions = [str(val) for val in options]
+        msg = (
+            '%r is an invalid option for %s\n'
+            'valid: [%s]' % (pname_fid, prop_type, ', '.join(soptions)))
+        raise ValueError(msg)
 
 
 class OptConstraint(BaseCard):
@@ -251,9 +326,11 @@ class OptConstraint(BaseCard):
 class DCONSTR(OptConstraint):
     """
     +---------+------+-----+------------+------------+-------+--------+
-    |   1     |   2  |  3  |     4      |      5     |   6   |   7    |
+    |    1    |   2  |  3  |     4      |      5     |   6   |   7    |
     +=========+======+=====+============+============+=======+========+
     | DCONSTR | DCID | RID | LALLOW/LID | UALLOW/UID | LOWFQ | HIGHFQ |
+    +---------+------+-----+------------+------------+-------+--------+
+    | DCONSTR |  10  |  4  |    1.25    |            |       |        |
     +---------+------+-----+------------+------------+-------+--------+
     """
     type = 'DCONSTR'
@@ -468,6 +545,12 @@ class DESVAR(OptConstraint):
         assert len(card) <= 8, 'len(DESVAR card) = %i\ncard=%s' % (len(card), card)
         return DESVAR(desvar_id, label, xinit, xlb=xlb, xub=xub,
                       delx=delx, ddval=ddval, comment=comment)
+
+    @property
+    def value(self):
+        """gets the actual value for the DESVAR"""
+        value = min(max(self.xinit, self.xlb), self.xub)
+        return value
 
     def raw_fields(self):
         list_fields = ['DESVAR', self.desvar_id, self.label, self.xinit, self.xlb,
@@ -697,7 +780,7 @@ class DOPTPRM(OptConstraint):
 class DLINK(OptConstraint):
     type = 'DLINK'
 
-    def __init__(self, oid, ddvid, IDv, Ci, c0=0., cmult=1., comment=''):
+    def __init__(self, oid, ddvid, IDv, coeffs, c0=0., cmult=1., comment=''):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables.
@@ -717,7 +800,15 @@ class DLINK(OptConstraint):
         self.c0 = c0
         self.cmult = cmult
         self.IDv = IDv
-        self.Ci = Ci
+        self.coeffs = coeffs
+
+    @property
+    def Ci(self):
+        return self.coeffs
+
+    @Ci.setter
+    def Ci(self, coeffs):
+        self.coeffs = coeffs
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -739,19 +830,19 @@ class DLINK(OptConstraint):
         nfields = len(card) - 4
         n = nfields // 2
         idvs = []
-        Ci = []
+        coeffs = []
 
         for i in range(n):
             j = 2 * i + 5
             idv = integer(card, j, 'IDv' + str(i))
             ci = double(card, j + 1, 'Ci' + str(i))
             idvs.append(idv)
-            Ci.append(ci)
-        return DLINK(oid, ddvid, idvs, Ci, c0=c0, cmult=cmult, comment=comment)
+            coeffs.append(ci)
+        return DLINK(oid, ddvid, idvs, coeffs, c0=c0, cmult=cmult, comment=comment)
 
     def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
-        for (idv, ci) in zip(self.IDv, self.Ci):
+        for (idv, ci) in zip(self.IDv, self.coeffs):
             list_fields += [idv, ci]
         return list_fields
 
@@ -759,7 +850,7 @@ class DLINK(OptConstraint):
         c0 = set_blank_if_default(self.c0, 0.)
         cmult = set_blank_if_default(self.cmult, 1.)
         list_fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
-        for (idv, ci) in zip(self.IDv, self.Ci):
+        for (idv, ci) in zip(self.IDv, self.coeffs):
             list_fields += [idv, ci]
         return list_fields
 
@@ -1094,17 +1185,15 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
 
 class DRESP1(OptConstraint):
     """
-    +--------+-------+---------+--------+--------+--------+-------+------+-------+
-    |   1    |  2    |     3   |   4    |   5    |   6    |   7   |   8  |   9   |
-    +========+=======+=========+========+========+========+=======+======+=======+
-    | DRESP1 |  OID  | LABEL   | RTYPE  | PTYPE  | REGION | ATTA  | ATTB | ATTI  |
-    +--------+-------+---------+--------+--------+--------+-------+------+-------+
-
-    +--------+-------+---------+--------+--------+--------+-------+------+-------+
-    | DRESP1 |  103  |  S02    | STRESS | PSHELL |        |  9    |      |   3   |
-    +--------+-------+---------+--------+--------+--------+-------+------+-------+
-    | DRESP1 |  1S1  | CSTRAIN | PCOMP  |        |        | 1     | 1    | 10000 |
-    +--------+-------+---------+--------+--------+--------+-------+------+-------+
+    +--------+-------+---------+---------+--------+--------+-------+------+-------+
+    |   1    |  2    |    3    |    4    |   5    |   6    |   7   |   8  |   9   |
+    +========+=======+=========+=========+========+========+=======+======+=======+
+    | DRESP1 |  OID  | LABEL   | RTYPE   | PTYPE  | REGION | ATTA  | ATTB | ATTI  |
+    +--------+-------+---------+---------+--------+--------+-------+------+-------+
+    | DRESP1 |  103  | STRESS2 |  STRESS | PSHELL |        |   9   |      |   3   |
+    +--------+-------+---------+---------+--------+--------+-------+------+-------+
+    | DRESP1 |  1S1  | CSTRAN3 | CSTRAIN |  PCOMP |        |   1   |  1   | 10000 |
+    +--------+-------+---------+---------+--------+--------+-------+------+-------+
     """
     type = 'DRESP1'
 
@@ -1359,8 +1448,8 @@ class DRESP1(OptConstraint):
                     model.FLFACT(self.atti[2], msg=msg),
                     model.FLFACT(self.atti[3], msg=msg),
                 ]
-                msgi = 'max density=%s mach=%s velocity=%s' % (
-                    self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
+                #msgi = 'max density=%s mach=%s velocity=%s' % (
+                    #self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
                 #print(msgi)
                 self.atti_ref = self.atti
             elif self.property_type is None:
@@ -1628,16 +1717,16 @@ class DRESP2(OptConstraint):
         self.dequation = dequation
         self.region = region
         self.method = method
-        if validate:
-            self._validate()
-            #atta, attb, atti = validate_dresp1(
-                #property_type, response_type, atta, attb, atti)
         self.c1 = c1
         self.c2 = c2
         self.c3 = c3
         self.params = params
         self.params_ref = None
         self.dequation_ref = None
+        if validate:
+            self._validate()
+            #atta, attb, atti = validate_dresp1(
+                #property_type, response_type, atta, attb, atti)
 
     def _validate(self):
         assert isinstance(self.params, dict), self.params
@@ -2025,7 +2114,7 @@ class DRESP3(OptConstraint):
             assert isinstance(iorder, int), 'iorder=%s key=%s' % (iorder, str(key))
             assert isinstance(name, str), 'name=%r key=%s' % (name, str(key))
             if name == 'DNODE':
-                assert len(values) == 2, 'name=%r val=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
+                assert len(values) == 2, 'name=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
                 nids, components = values
                 for nid in nids:
                     assert isinstance(nid, int), 'name=%r nid=%r is not an int; values=%s' % (name, nid, values)
@@ -2122,23 +2211,23 @@ class DRESP3(OptConstraint):
             iorder, name = key
             if name in ['DRESP1', 'DRESP2']:
                 params[key] = []
-                for i, val in enumerate(vals):
+                for val in vals:
                     params[key].append(model.DResp(val, msg))
             elif name in ['DVMREL1', 'DVMREL2']:
                 params[key] = []
-                for i, val in enumerate(vals):
+                for val in vals:
                     params[key].append(model.DVmrel(val, msg))
             elif name in ['DVPREL1', 'DVPREL2']:
                 params[key] = []
-                for i, val in enumerate(vals):
+                for val in vals:
                     params[key].append(model.DVprel(val, msg))
             elif name == 'DESVAR':
                 params[key] = []
-                for i, val in enumerate(vals):
+                for val in vals:
                     params[key].append(model.Desvar(val, msg))
             elif name == 'DTABLE':
                 self.dtable = model.dtable
-                for i, val in enumerate(vals):
+                for val in vals:
                     default_values[val] = self.dtable[val]
             elif name == 'DNODE':
                 params[key] = [[], []]
@@ -2465,6 +2554,38 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
     def OptID(self):
         return self.oid
 
+    @property
+    def element_type(self):
+        return self.Type
+
+    def update_model(self, model, desvar_values):
+        """doesn't require cross-referencing"""
+        value = get_dvxrel1_coeffs(self, model, desvar_values)
+        assert isinstance(self.eid, int), type(self.eid)
+        element = self._get_element(model, msg='')
+        try:
+            self._update_by_dvcrel(element, value)
+        except AttributeError:
+            raise
+            #raise NotImplementedError('mat_type=%r is not supported in update_model' % self.mat_type)
+
+    def _update_by_dvcrel(self, element, value):
+        if hasattr(element, 'update_by_cp_name'):
+            element.update_by_cp_name(self.cp_name, value)
+        else:
+            try:
+                cp_name_map = element.cp_name_map
+            except AttributeError:
+                raise NotImplementedError('element_type=%r cp_name=%r has not implemented cp_name_map/update_by_cp_name' % (
+                    self.element_type, self.cp_name))
+
+            try:
+                key = cp_name_map[self.cp_name]
+            except KeyError:
+                raise NotImplementedError('connectivity_type=%r has not implemented %r for in cp_name_map/update_by_cp_name' % (
+                    self.element_type, self.cp_name))
+            setattr(element, key, value)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -2475,16 +2596,26 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             the BDF object
         """
         msg = ', which is required by DVCREL1 name=%r' % self.type
+        elem = self._get_element(model, msg=msg)
+        self.eid_ref = elem
+        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+
+    @property
+    def desvar_ids(self):
+        if isinstance(self.dvids[0], integer_types):
+            return self.dvids
+        return [desvar.desvar_id for desvar in self.dvids]
+
+    def _get_element(self, model, msg=''):
         if self.Type in ['CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CELAS2', 'CELAS4',
                          'CDAMP2', 'CGAP', 'CBUSH']:
-            self.eid = model.Element(self.eid, msg=msg)
+            elem = model.Element(self.eid, msg=msg)
         elif self.Type in ['CONM1', 'CONM2', 'CMASS2', 'CMASS4']:
-            self.eid = model.Mass(self.eid, msg=msg)
+            elem = model.Mass(self.eid, msg=msg)
         #elif Type in ['CBUSH']:
         else:
             raise NotImplementedError(self.Type)
-        self.eid_ref = self.eid
-        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+        return elem
 
     def uncross_reference(self):
         self.eid = self.Eid()
@@ -2887,6 +3018,37 @@ class DVMREL1(OptConstraint):
         return DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
                        mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
 
+    @property
+    def desvar_ids(self):
+        if isinstance(self.dvids[0], integer_types):
+            return self.dvids
+        return [desvar.desvar_id for desvar in self.dvids]
+
+    def update_model(self, model, desvar_values):
+        """doesn't require cross-referencing"""
+        value = get_dvxrel1_coeffs(self, model, desvar_values)
+        assert isinstance(self.mid, int), type(self.mid)
+        mat = model.materials[self.mid]
+        try:
+            self._update_by_dvmrel(mat, value)
+        except AttributeError:
+            raise
+            #raise NotImplementedError('mat_type=%r is not supported in update_model' % self.mat_type)
+
+    def _update_by_dvmrel(self, mat, value):
+        try:
+            mp_name_map = mat.mp_name_map
+        except AttributeError:
+            raise NotImplementedError('mat_type=%r, mp_name=%r has not implemented mp_name_map' % (
+                self.mat_type, self.self.mp_name))
+
+        try:
+            key = mp_name_map[self.mp_name]
+        except KeyError:
+            raise NotImplementedError('mat_type=%r has not implemented %r for in mp_name_map' % (
+                self.mat_type, self.mp_name))
+        setattr(mat, key, value)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -2896,8 +3058,7 @@ class DVMREL1(OptConstraint):
         model : BDF()
             the BDF object
         """
-        self.mid = model.Material(self.mid)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid)
 
     def uncross_reference(self):
         self.mid = self.Mid()
@@ -3247,19 +3408,17 @@ def break_word_by_trailing_integer(pname_fid):
 
 class DVPREL1(OptConstraint):
     """
-    +---------+--------+--------+--------+-----------+-------+--------+-----+---+
-    |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  | 9 |
-    +=========+========+========+========+===========+=======+========+=====+===+
-    | DVPREL1 |   ID   |  TYPE  |  PID   | PNAME/FID | PMIN  |  PMAX  |  C0 |   |
-    +---------+--------+--------+--------+-----------+-------+--------+-----+---+
-    |         | DVID1  | COEF1  | DVID2  |   COEF2   | DVID3 | -etc.- |     |   |
-    +---------+--------+--------+--------+-----------+-------+--------+-----+---+
-
-    +---------+--------+--------+--------+-----+
-    | DVPREL1 | 200000 | PCOMP  | 2000   |  T2 |
-    +---------+--------+--------+--------+-----+
-    |         | 200000 |   1.0  |        |     |
-    +---------+--------+--------+--------+-----+
+    +---------+--------+--------+--------+-----------+-------+--------+-----+
+    |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  |
+    +=========+========+========+========+===========+=======+========+=====+
+    | DVPREL1 |   ID   |  TYPE  |  PID   | PNAME/FID | PMIN  |  PMAX  |  C0 |
+    +---------+--------+--------+--------+-----------+-------+--------+-----+
+    |         | DVID1  | COEF1  | DVID2  |   COEF2   | DVID3 | -etc.- |     |
+    +---------+--------+--------+--------+-----------+-------+--------+-----+
+    | DVPREL1 | 200000 | PCOMP  | 2000   |     T2    |       |        |     |
+    +---------+--------+--------+--------+-----------+-------+--------+-----+
+    |         | 200000 |   1.0  |        |           |       |        |     |
+    +---------+--------+--------+--------+-----------+-------+--------+-----+
     """
     type = 'DVPREL1'
 
@@ -3346,10 +3505,12 @@ class DVPREL1(OptConstraint):
         # scale factor for DESVAR
         self.coeffs = coeffs
 
+        self.pid_ref = None
+
         if len(coeffs) == 0:
             msg = 'len(coeffs)=%s len(dvids)=%s\n' % (len(coeffs), len(dvids))
-            msg += "We've added a coeff=1 and desvar_id=1 in order to look at the crashing card\n"
-            self.coeffs = [1]
+            msg += "We've added a coeff=1.0 and desvar_id=1 in order to look at the crashing card\n"
+            self.coeffs = [1.]
             self.dvids = [1]
             msg += str(self)
             raise RuntimeError(msg)
@@ -3357,6 +3518,47 @@ class DVPREL1(OptConstraint):
 
         pname_fid = validate_dvprel(prop_type, pname_fid, validate)
         self.pname_fid = pname_fid
+        self.pid_ref = None
+
+    def update_model(self, model, desvar_values):
+        """doesn't require cross-referencing"""
+        value = get_dvxrel1_coeffs(self, model, desvar_values, debug=False)
+        assert isinstance(self.pid, int), type(self.pid)
+        prop = self._get_property(model, self.pid)
+        try:
+            self._update_by_dvprel(prop, value)
+        except AttributeError:
+            raise
+            #raise NotImplementedError('prop_type=%r is not supported in update_model' % self.prop_type)
+
+    def _update_by_dvprel(self, prop, value):
+        if hasattr(prop, 'update_by_pname_fid'):
+            prop.update_by_pname_fid(self.pname_fid, value)
+        else:
+            try:
+                pname_fid_map = prop.pname_fid_map
+            except AttributeError:
+                raise NotImplementedError('prop_type=%r name=%r has not implemented pname_fid_map/update_by_pname_fid' % (
+                    self.prop_type, self.pname_fid))
+
+            try:
+                key = pname_fid_map[self.pname_fid]
+            except KeyError:
+                valid = list(pname_fid_map.keys())
+                if len(valid) == 0:
+                    msg = ('prop_type=%r has not implemented %r for in '
+                           'pname_fid_map/update_by_pname_fid\n'
+                           'valid: []' % (
+                               self.prop_type, self.pname_fid))
+                    raise NotImplementedError(msg)
+                svalid = [str(val) for val in valid]
+
+                msg = ('prop_type=%r has not implemented %r for in '
+                       'pname_fid_map/update_by_pname_fid\n'
+                       'valid: [%s]' % (
+                           self.prop_type, self.pname_fid, ', '.join(svalid)))
+                raise NotImplementedError(msg)
+            setattr(prop, key, value)
 
     def validate(self):
         self.pname_fid = validate_dvprel(self.prop_type, self.pname_fid, validate=True)
@@ -3429,46 +3631,52 @@ class DVPREL1(OptConstraint):
             the BDF object
         """
         msg = ', which is required by DVPREL1 name=%r' % self.type
+        self.pid_ref = self._get_property(model, self.pid, msg=msg)
+        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+
+    def _get_property(self, model, pid, msg=''):
+        assert isinstance(self.pid, int), type(self.pid)
         if self.prop_type in self.allowed_properties:
-            self.pid = model.Property(self.pid, msg=msg)
+            pid_ref = model.Property(pid, msg=msg)
         #elif self.prop_type in self.allowed_elements:
-            #self.pid = model.Element(self.pid, msg=msg)
+            #pid_ref = model.Element(pid, msg=msg)
         #elif self.prop_type in self.allowed_masses:
-            #self.pid = model.masses[self.pid]
+            #pid_ref = model.masses[pid]
         elif self.prop_type in self.allowed_properties_mass:
-            self.pid = model.properties_mass[self.pid]
+            pid_ref = model.properties_mass[pid]
         elif self.prop_type == 'PBUSHT':
-            self.pid = model.pbusht[self.pid]
+            pid_ref = model.pbusht[pid]
         elif self.prop_type == 'PELAST':
-            self.pid = model.pelast[self.pid]
+            pid_ref = model.pelast[pid]
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
-        self.pid_ref = self.pid
-        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+        assert pid_ref.type not in ['PBEND'], pid_ref
+        return pid_ref
 
     def uncross_reference(self):
         self.pid = self.Pid()
-        del self.pid_ref
+        self.pid_ref = None
         self.dvids = self.desvar_ids
 
     def calculate(self, op2_model, subcase_id):
         raise NotImplementedError('\n' + str(self))
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
-            return self.pid
-        if self.prop_type in self.allowed_properties:
-            pid = self.pid_ref.pid
-        #elif self.prop_type in self.allowed_elements:
-            #pid = self.pid_ref.eid
-        #elif self.prop_type in self.allowed_masses:
-            #pid = self.pid_ref.eid
-        elif self.prop_type in self.allowed_properties_mass:
-            pid = self.pid_ref.pid
-        elif self.prop_type in ['PBUSHT', 'PELAST']:
-            pid = self.pid_ref.pid
+        if self.pid_ref is not None:
+            if self.prop_type in self.allowed_properties:
+                pid = self.pid_ref.pid
+            #elif self.prop_type in self.allowed_elements:
+                #pid = self.pid_ref.eid
+            #elif self.prop_type in self.allowed_masses:
+                #pid = self.pid_ref.eid
+            elif self.prop_type in self.allowed_properties_mass:
+                pid = self.pid_ref.pid
+            elif self.prop_type in ['PBUSHT', 'PELAST']:
+                pid = self.pid_ref.pid
+            else:
+                raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
         else:
-            raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
+            pid = self.pid
         return pid
 
     @property
@@ -3538,7 +3746,7 @@ class DVPREL2(OptConstraint):
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
-    def __init__(self, oid, Type, pid, pname_fid, deqation,
+    def __init__(self, oid, prop_type, pid, pname_fid, deqation,
                  dvids=None, labels=None, p_min=None, p_max=1e20,
                  validate=False, comment=''):
         """
@@ -3560,6 +3768,16 @@ class DVPREL2(OptConstraint):
             DESVAR ids
         labels : List[str]; default=None
             DTABLE names
+        #params : dict[(index, card_type)] = values
+            #the storage table for the response function
+            #index : int
+                #a counter
+            #card_type : str
+                #the type of card to pull from
+                #DESVAR, DVPREL1, DRESP2, etc.
+            #values : List[int]
+                #the values for this response
+
         p_min : float; default=None
             minimum property value
         p_max : float; default=1e20
@@ -3587,7 +3805,7 @@ class DVPREL2(OptConstraint):
         self.oid = oid
 
         #: Name of a property entry, such as PBAR, PBEAM, etc
-        self.Type = Type
+        self.prop_type = prop_type
 
         #: Property entry identification number
         self.pid = pid
@@ -3613,13 +3831,13 @@ class DVPREL2(OptConstraint):
         self.dvids = dvids
         self.labels = labels
 
-        pname_fid = validate_dvprel(Type, pname_fid, validate)
+        pname_fid = validate_dvprel(prop_type, pname_fid, validate)
         self.pname_fid = pname_fid
-        #print(self)
+        self.pid_ref = None
 
     def validate(self):
         assert len(self.dvids) > 0 or len(self.labels) > 0
-        self.pname_fid = validate_dvprel(self.Type, self.pname_fid, validate=True)
+        self.pname_fid = validate_dvprel(self.prop_type, self.pname_fid, validate=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3634,7 +3852,7 @@ class DVPREL2(OptConstraint):
             a comment for the card
         """
         oid = integer(card, 1, 'oid')
-        Type = string(card, 2, 'Type')
+        prop_type = string(card, 2, 'prop_type')
         pid = integer(card, 3, 'pid')
         pname_fid = integer_or_string(card, 4, 'pName_FID')
         p_min = double_or_blank(card, 5, 'pMin', None)
@@ -3685,25 +3903,37 @@ class DVPREL2(OptConstraint):
                 if label:
                     assert label is not 'DTABLE'
                     labels.append(label)
-        return DVPREL2(oid, Type, pid, pname_fid, dequation, dvids, labels,
-                       p_min=p_min, p_max=p_max, comment=comment)
+
+        dvprel = DVPREL2(oid, prop_type, pid, pname_fid, dequation, dvids, labels,
+                         p_min=p_min, p_max=p_max, comment=comment)
+        if len(dvids) and len(labels) and idtable < idesvar:
+            raise SyntaxError('DESVARs must be defined before DTABLE\n%s' % str(dvprel))
+        return dvprel
 
     def OptID(self):
         return self.oid
 
+    @property
+    def Type(self):
+        return self.prop_type
+
+    @Type.setter
+    def Type(self, prop_type):
+        self.prop_type = prop_type
+
     def Pid(self):
         if isinstance(self.pid, integer_types):
             return self.pid
-        if self.Type in self.allowed_properties:
+        if self.prop_type in self.allowed_properties:
             pid = self.pid_ref.pid
-        elif self.Type in self.allowed_elements:
+        elif self.prop_type in self.allowed_elements:
             pid = self.pid_ref.eid
-        elif self.Type in self.allowed_masses:
+        elif self.prop_type in self.allowed_masses:
             pid = self.pid_ref.eid
-        elif self.Type in self.allowed_properties_mass:
+        elif self.prop_type in self.allowed_properties_mass:
             pid = self.pid_ref.pid
         else:
-            raise NotImplementedError('Type=%r is not supported' % self.Type)
+            raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
         return pid
 
     def DEquation(self):
@@ -3714,7 +3944,7 @@ class DVPREL2(OptConstraint):
     def calculate(self, op2_model, subcase_id):
         """
         this should really make a call the the DEQATN;
-        see the PBEAM for an example of get/set_opt_value
+        see the PBEAM for an example of get/set_optimization_value
         """
         try:
             get = self.pid_ref.get_optimization_value(self.pname_fid)
@@ -3752,26 +3982,60 @@ class DVPREL2(OptConstraint):
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
         msg = ', which is required by DVPREL2 name=%r' % self.type
-        if self.Type in self.allowed_properties:
-            self.pid = model.Property(self.pid, msg=msg)
-        elif self.Type in self.allowed_elements:
-            self.pid = model.Element(self.pid, msg=msg)
-        elif self.Type in self.allowed_masses:
-            self.pid = model.masses[self.pid]
-        elif self.Type in self.allowed_properties_mass:
-            self.pid = model.properties_mass[self.pid]
-        else:
-            raise NotImplementedError('Type=%r is not supported' % self.Type)
-        self.dequation = model.DEQATN(self.dequation)
+        self.pid_ref = self._get_property(model, self.pid, msg=msg)
+        self.dequation_ref = model.DEQATN(self.dequation)
 
-        self.pid_ref = self.pid
-        self.dequation_ref = self.dequation
-        assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
+    def _get_property(self, model, pid, msg=''):
+        assert isinstance(self.pid, int), type(self.pid)
+        if self.prop_type in self.allowed_properties:
+            pid_ref = model.Property(pid, msg=msg)
+        #elif self.prop_type in self.allowed_elements:
+            #pid_ref = model.Element(pid, msg=msg)
+        #elif self.prop_type in self.allowed_masses:
+            #pid_ref = model.masses[pid]
+        elif self.prop_type in self.allowed_properties_mass:
+            pid_ref = model.properties_mass[pid]
+        elif self.prop_type == 'PBUSHT':
+            pid_ref = model.pbusht[pid]
+        elif self.prop_type == 'PELAST':
+            pid_ref = model.pelast[pid]
+        else:
+            raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
+        assert pid_ref.type not in ['PBEND'], pid_ref
+        return pid_ref
 
     def uncross_reference(self):
         self.pid = self.Pid()
         self.dequation = self.DEquation()
-        del self.pid_ref, self.dequation_ref
+        self.pid_ref = None
+        del self.dequation_ref
+
+    def update_model(self, model, desvar_values):
+        """doesn't require cross-referencing"""
+        values = get_deqatn_value(self, model, desvar_values)
+        prop = self._get_property(model, self.pid)
+        try:
+            self._update_by_dvprel(prop, values)
+        except AttributeError:
+            raise
+            #raise NotImplementedError('prop_type=%r is not supported in update_model' % self.prop_type)
+
+    def _update_by_dvprel(self, prop, value):
+        if hasattr(prop, 'update_by_pname_fid'):
+            prop.update_by_pname_fid(self.pname_fid, value)
+        else:
+            try:
+                pname_fid_map = prop.pname_fid_map
+            except AttributeError:
+                raise NotImplementedError('prop_type=%r name=%r has not implemented pname_fid_map/update_by_pname_fid' % (
+                    self.prop_type, self.pname_fid))
+
+            try:
+                key = pname_fid_map[self.pname_fid]
+            except KeyError:
+                raise NotImplementedError('prop_type=%r has not implemented %r for in pname_fid_map/update_by_pname_fid' % (
+                    self.prop_type, self.pname_fid))
+            setattr(prop, key, value)
 
     def _verify(self, xref):
         """
@@ -3788,7 +4052,7 @@ class DVPREL2(OptConstraint):
         #self.pid_ref.OptValue(self.pname_fid)
 
     def raw_fields(self):
-        list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
+        list_fields = ['DVPREL2', self.oid, self.prop_type, self.Pid(),
                        self.pname_fid, self.p_min, self.p_max, self.DEquation(), None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
@@ -3811,8 +4075,6 @@ class DVPREL2(OptConstraint):
         return self.comment + print_card_16(card)
 
 class DVGRID(BaseCard):
-    type = 'DVGRID'
-
     """
     +--------+------+-----+-----+-------+----+----+----+
     |    1   |   2  |  3  |  4  |   5   |  6 |  7 |  8 |
@@ -3820,6 +4082,7 @@ class DVGRID(BaseCard):
     | DVGRID | DVID | GID | CID | COEFF | N1 | N2 | N3 |
     +--------+------+-----+-----+-------+----+----+----+
     """
+    type = 'DVGRID'
     def __init__(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
         """
         Creates a DVGRID card
@@ -4013,34 +4276,34 @@ def _get_dresp23_table_values(name, values_list, inline=False):
     """
     out = []
     if name in ['DRESP1', 'DRESP2']:
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
                 out.append(val.OptID())
 
     elif name in ['DVCREL1', 'DVCREL2']:
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
                 out.append(val.OptID())
 
     elif name in ['DVMREL1', 'DVMREL2']:
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
                 out.append(val.OptID())
 
     elif name in ['DVPREL1', 'DVPREL2']:
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
                 out.append(val.OptID())
     elif name == 'DESVAR':
-        for i, val in enumerate(values_list):
+        for val in values_list:
             if isinstance(val, integer_types):
                 out.append(val)
             else:
@@ -4049,7 +4312,7 @@ def _get_dresp23_table_values(name, values_list, inline=False):
     elif name == 'DNODE':
         nids_list, components_list = values_list
         if inline:
-            for i, nid, component in zip(count(), nids_list, components_list):
+            for nid, component in zip(nids_list, components_list):
                 if isinstance(nid, integer_types):
                     out.append(nid)
                 else:
@@ -4059,7 +4322,7 @@ def _get_dresp23_table_values(name, values_list, inline=False):
             out1 = []
             out2 = []
             out = [out1, out2]
-            for i, nid, component in zip(count(), nids_list, components_list):
+            for nid, component in zip(nids_list, components_list):
                 if isinstance(nid, integer_types):
                     out1.append(nid)
                 else:
@@ -4072,3 +4335,74 @@ def _get_dresp23_table_values(name, values_list, inline=False):
         raise NotImplementedError('  TODO: _get_values %s' % str(name))
         #out = values_list
     return out
+
+
+def get_dvxrel1_coeffs(dvxrel, model, desvar_values, debug=False):
+    """
+    Used by DVPREL1/2, DVMREL1/2, DVCREL1/2, and DVGRID to determine
+    the value for the new property/material/etc. value
+    """
+    value = dvxrel.c0
+    if debug:
+        print('value_init=%s' % (value))
+    for coeff, desvar_id in zip(dvxrel.coeffs, dvxrel.desvar_ids):
+        #desvar = model.desvars[desvar_id]
+        #valuei = desvar.value
+        valuei = _get_desvar(desvar_values, desvar_id, dvxrel)
+        if debug:
+            print('  desvar_id=%s coeff=%s valuei=%s' % (desvar_id, coeff, valuei))
+        value += coeff * valuei
+
+    if debug:
+        print('value_final=%s' % (value))
+    return value
+
+def _get_desvar(desvar_values, desvar_id, dvxrel):
+    try:
+        value = desvar_values[desvar_id]
+    except KeyError:
+        msg = 'Cannot find desvar_id=%r in:\n%s\ndesvar_ids=%s' % (
+            desvar_id, dvxrel, list(desvar_values.keys())
+        )
+        raise KeyError(msg)
+    assert isinstance(value, float), value
+    #print('value = %s' % value)
+    return value
+
+def _get_dtable_value(dtable, labels, dvxrel):
+    values = []
+    if not labels:
+        return values
+    if dtable is None:
+        raise KeyError('DTABLE is None and must contain %s\n%s' % (
+            str(labels), str(dvxrel)))
+    for label in labels:
+        value = dtable[label]
+        values.append(value)
+    return values
+
+def get_deqatn_args(dvxrel2, model, desvar_values):
+    """gets the arguments for the DEQATN for the DVxREL2"""
+    values = []
+    for desvar_id in dvxrel2.dvids:
+        valuei = _get_desvar(desvar_values, desvar_id, dvxrel2)
+        values.append(valuei)
+
+    if dvxrel2.labels:
+        values += _get_dtable_value(model.dtable, dvxrel2.labels, dvxrel2)
+    return values
+
+def get_deqatn_value(dvxrel2, model, desvar_values):
+    values = get_deqatn_args(dvxrel2, model, desvar_values)
+    deqatn = model.DEQATN(dvxrel2.dequation)
+    #print(deqatn.func_str)
+    #from six import exec_
+    #exec_(deqatn.func_str)
+    func = deqatn.func
+    if func is None:
+        msg = 'func is None...DEQATN=%s\n%s\n%s' % (dvxrel2.dequation, dvxrel2, deqatn)
+        raise RuntimeError(msg)
+    #print(func)
+    value = func(*values)
+    return value
+

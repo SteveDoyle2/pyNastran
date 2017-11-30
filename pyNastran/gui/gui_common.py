@@ -20,26 +20,13 @@ from six.moves import range
 import numpy as np
 
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import (
-        QMessageBox, QWidget,
-        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
-    from PyQt4.QtCore import QString
-elif qt_version == 5:
-    from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import (
-        QMessageBox, QWidget,
-        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
-    from six import text_type as QString
-elif qt_version == 'pyside':
-    from PySide import QtCore, QtGui
-    from PySide.QtGui import (
-        QMessageBox, QWidget,
-        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
-    from six import text_type as QString
-else:
-    raise NotImplementedError('qt_version = %r' % qt_version)
+
+from qtpy import QtCore, QtGui #, API
+from qtpy.QtWidgets import (
+    QMessageBox, QWidget,
+    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QFileDialog)
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+
 
 import vtk
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -49,7 +36,6 @@ from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowIn
 import pyNastran
 
 from pyNastran.bdf.utils import write_patran_syntax_dict
-from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
@@ -140,6 +126,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         fmt_order = kwds['fmt_order']
         inputs = kwds['inputs']
+
+        #self.app = inputs['app']
+        #del inputs['app']
+
 
         if inputs['log'] is not None:
             html_logging = False
@@ -469,7 +459,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
                 ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
-                #('flip_pick', 'Flip Pick', '', 'CTRL+K', 'Flips the pick state from centroidal to nodal', self.on_flip_picker),
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
@@ -514,8 +503,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.on_area_pick),
             ]
-        # print('version =', vtk.VTK_VERSION, self.vtk_version)
-        #if self.vtk_version[0] < 6
 
         if 'nastran' in self.fmts:
             tools += [
@@ -527,9 +514,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.checkables = checkables
 
     def on_increase_text_size(self):
+        """used by the hidden_tools for Ctrl +"""
         self.on_set_font_size(self.font_size + 1)
 
     def on_decrease_text_size(self):
+        """used by the hidden_tools for Ctrl -"""
         self.on_set_font_size(self.font_size - 1)
 
     def on_set_font_size(self, font_size, show_command=True):
@@ -566,23 +555,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self._preferences_window.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
-        self.log_command('on_set_font_size(%s)' % font_size)
-
+        self.parent.log_command('settings.on_set_font_size(%s)' % font_size)
         return False
-
-    def deprecated(self, old_name, new_name, deprecated_version):
-        deprecated(old_name, new_name, deprecated_version, levels=[-1])
-
-    def on_flip_picker(self):
-        return
-        # if self.pick_state == 'centroidal':
-            # self.pick_state = 'nodal'
-
-        # elif self.pick_state == 'nodal':
-            # self.pick_state = 'centroidal'
-        # else:
-            # raise RuntimeError(self.pick_state)
-        # self.log_command("on_flip_pick() # pick_state='%s'" % self.pick_state)
 
     def _create_menu_items(self, actions=None, create_menu_bar=True):
         if actions is None:
@@ -852,7 +826,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         filename = os.path.basename(_fr.f_globals['__file__'])
 
         #if typ in ['GUI', 'COMMAND']:
-        msg = '   fname=%-25s lineNo=%-4s   %s\n' % (filename, n, msg)
+        msg = '   fname=%-25s:%-4s   %s\n' % (filename, n, msg)
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
@@ -886,6 +860,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """ Helper funtion: log a message msg with a 'INFO:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
+            return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'INFO')
 
     def log_debug(self, msg):
@@ -916,35 +891,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'WARNING')
 
-    def set_background_color(self, color):
-        """
-        Set the background color
-
-        Parameters
-        ----------
-        color : (float, float, float)
-            RGB values as floats
-        """
-        self.background_color = color
-        self.rend.SetBackground(*color)
-        self.vtk_interactor.Render()
-        self.log_command('set_background_color(%s, %s, %s)' % color)
-
-    def set_text_color(self, color):
-        """
-        Set the text color
-
-        Parameters
-        ----------
-        color : (float, float, float)
-            RGB values as floats
-        """
-        self.text_color = color
-        for text_actor in itervalues(self.text_actors):
-            text_actor.GetTextProperty().SetColor(color)
-        self.vtk_interactor.Render()
-        self.log_command('set_text_color(%s, %s, %s)' % color)
-
     def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
                                  Type='xyz'):
         """
@@ -973,7 +919,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
         """
         coord_id = self.coord_id
-        self.dim_max = dim_max
+        self.settings.dim_max = dim_max
         scale = 0.05 * dim_max
 
         transform = vtk.vtkTransform()
@@ -1102,6 +1048,35 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
                                   bar_scale=0.0, representation=None, is_visible=True,
                                   follower_nodes=None, is_pickable=False):
+        """
+        Creates an AltGeometry object
+
+        Parameters
+        ----------
+        line_width : int
+            the width of the line for 'surface' and 'main'
+        color : [int, int, int]
+            the RGB colors
+        opacity : float
+            0.0 -> solid
+            1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
+        representation : str
+            main - change with main mesh
+            wire - always wireframe
+            point - always points
+            surface - always surface
+            bar - can use bar scale
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
+        follower_nodes : List[int]
+            the nodes that are brought along with a deflection
+        """
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         self.geometry_properties[name] = AltGeometry(
             self, name, color=color,
@@ -1114,6 +1089,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
                                      opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
                                      follower_nodes=None, is_pickable=False):
+        """
+        Copies the VTK actor
+
+        Parameters
+        ----------
+        line_width : int
+            the width of the line for 'surface' and 'main'
+        color : [int, int, int]
+            the RGB colors
+        opacity : float
+            0.0 -> solid
+            1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
+        follower_nodes : List[int]
+            the nodes that are brought along with a deflection
+        """
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         if name_duplicate_from == 'main':
             grid_copy_from = self.grid
@@ -1124,6 +1122,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             representation = props.representation
         self.alt_grids[name].DeepCopy(grid_copy_from)
 
+        #representation : str
+            #main - change with main mesh
+            #wire - always wireframe
+            #point - always points
+            #surface - always surface
+            #bar - can use bar scale
         self.geometry_properties[name] = AltGeometry(self, name, color=color, line_width=line_width,
                                                      opacity=opacity, point_size=point_size,
                                                      bar_scale=bar_scale,
@@ -1360,79 +1364,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
         camera.OrthogonalizeViewUp()
         self.vtk_interactor.Render()
-
-    #def _rotation_center_node_picker(self, obj, event):
-        #"""reset the rotation center"""
-        #self.log_command('_rotation_center_node_picker()')
-        #picker = self.node_picker
-
-        #print('picker.object_methods =', object_methods(picker))
-        #point_id = picker.GetPointId()
-        #if point_id < 0:
-            ##self.picker_textActor.VisibilityOff()
-            #print('picker.point_id =', point_id)
-        #else:
-            #self.log_command('_rotation_center_node_picker()')
-            #camera = self.rend.GetActiveCamera()
-
-            #world_position = picker.GetPickPosition()
-            #focal_point = world_position
-            #point_id = picker.GetPointId()
-            ##ds = picker.GetDataSet()
-            #select_point = picker.GetSelectionPoint()
-
-            #self.log_command("_rotation_center_node_picker()")
-            #self.log_info('focal_point = %s' % str(focal_point))
-            ##self.log_info('point_id = %s' % point_id)
-            ##self.log_info('data_set = %s' % ds)
-            ##self.log_info('select_point = %s' % str(select_point))
-
-            ##self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
-            ##self.picker_textActor.SetPosition(select_point[:2])
-            ##self.picker_textActor.VisibilityOn()
-            #self.setup_mouse_buttons(mode='default')
-
-            ## now we can actually modify the camera
-            #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            #camera.OrthogonalizeViewUp()
-            #rotation_center_button = self.actions['rotation_center']
-            #rotation_center_button.setChecked(False)
-
-            ##self.set_cell_picker()
-        ##if self.revert:
-            ##self.setup_mouse_buttons(mode='default')
-
-    #def _rotation_center_cell_picker(self, obj, event):
-        #"""reset the rotation center"""
-        #picker = self.cell_picker
-        #pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        #picker.Pick(pixel_x, pixel_y, 0, self.rend)
-
-        #cell_id = picker.GetCellId()
-        ##print('_rotation_center_cell_picker', cell_id)
-
-        #if cell_id < 0:
-            #print('picker.cell_id =', cell_id)
-            ##self.picker_textActor.VisibilityOff()
-            #pass
-        #else:
-            #camera = self.rend.GetActiveCamera()
-            #world_position = picker.GetPickPosition()
-            #focal_point = self._get_closest_node_xyz(cell_id, world_position)
-
-            ##ds = picker.GetDataSet()
-            ##select_point = picker.GetSelectionPoint()
-            #self.log_command("_rotation_center_cell_picker()")
-            #self.log_info('focal_point = %s' % str(focal_point))
-            #self.setup_mouse_buttons(mode='default')
-
-            ## now we can actually modify the camera
-            #camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-            #camera.OrthogonalizeViewUp()
-            #rotation_center_button = self.actions['rotation_center']
-            #rotation_center_button.setChecked(False)
-        ##if self.revert:
-            ##self.setup_mouse_buttons(mode='default')
 
     def revert_pressed(self, active_name):
         if active_name != 'probe_result':
@@ -2125,7 +2056,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """masks the specific 0-based element ids"""
         #print('ids_to_show = ', ids_to_show)
         prop = self.geom_actor.GetProperty()
-        if len(ids_to_show) == self.nElements:
+        if len(ids_to_show) == self.nelements:
             #prop.BackfaceCullingOn()
             pass
         else:
@@ -2143,8 +2074,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # works
             flip_flag = True is self._show_flag
             assert self._show_flag is True, self._show_flag
-            self._update_ids_mask_showTrue(ids_to_show, flip_flag, render=False)
-            self._update_ids_mask_showTrue(ids_to_show, False, render=True)
+            self._update_ids_mask_show_true(ids_to_show, flip_flag, render=False)
+            self._update_ids_mask_show_true(ids_to_show, False, render=True)
             self._show_flag = True
         else:  # pragma: no cover
             # old; works; slow
@@ -2176,7 +2107,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         helper method for ``show_ids_mask``
         .. todo:: doesn't work
         """
-        all_i = np.arange(self.nElements, dtype='int32')
+        all_i = np.arange(self.nelements, dtype='int32')
         ids_to_hide = np.setdiff1d(all_i, ids_to_show)
         self._hide_ids_mask(ids_to_hide)
 
@@ -2233,7 +2164,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
         return vtk_ids
 
-    def _update_ids_mask_showFalse(self, ids_to_show, flip_flag=True, render=True):
+    def _update_ids_mask_show_false(self, ids_to_show, flip_flag=True, render=True):
         ids = self.numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
@@ -2281,8 +2212,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #render_window = self.vtk_interactor.GetRenderWindow()
             #render_window.Render()
 
-    def _update_ids_mask_showTrue(self, ids_to_show,
-                                  flip_flag=True, render=True):  # pragma: no cover
+    def _update_ids_mask_show_true(self, ids_to_show,
+                                   flip_flag=True, render=True):  # pragma: no cover
         ids = self.numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
@@ -2461,7 +2392,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
 
     def create_text(self, position, label, text_size=18):
-        """creates a text actor"""
+        """creates the lower left text actors"""
         text_actor = vtk.vtkTextActor()
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
@@ -2488,9 +2419,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             text.VisibilityOn()
 
     def build_lookup_table(self):
-        """TODO: add support for NanColors"""
         scalar_range = self.grid_selected.GetScalarRange()
-        #print('min = %s\nmax = %s' % scalar_range)
         self.grid_mapper.SetScalarRange(scalar_range)
         self.grid_mapper.SetLookupTable(self.color_function)
         self.rend.AddActor(self.scalarBar)
@@ -2705,9 +2634,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #args, varargs, keywords, defaults = inspect.getargspec(load_function)
             #if args[-1] == 'plot':
             try:
-                t0 = time.time()
+                time0 = time.time()
                 has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
-                dt = time.time() - t0
+                dt = time.time() - time0
                 print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
                 #else:
                     #name = load_function.__name__
@@ -2912,19 +2841,26 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _load_deflection(self, out_filename):
         """loads a deflection file"""
+        self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
+
+
+    def _load_deflection(self, out_filename):
+        """loads a force file"""
+        self._load_deflection_force(out_filename, is_deflection=False, is_force=True)
+
+    def _load_deflection_force(self, out_filename, is_deflection=False, is_force=False):
         out_filename_short = os.path.basename(out_filename)
         A, fmt_dict, headers = load_deflection_csv(out_filename)
         #nrows, ncols, fmts
         header0 = headers[0]
-        print('headers=%s' % headers)
-        print('A.keys()=%s' % A.keys())
         result0 = A[header0]
         nrows = result0.shape[0]
 
-        assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
+        assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
         result_type2 = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
-                                out_filename_short, update=True)
+                                out_filename_short, update=True, is_scalar=False,
+                                is_deflection=is_deflection, is_force=is_deflection)
 
     def _load_csv(self, result_type, out_filename):
         """
@@ -2947,11 +2883,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         nrows = result0.size
 
         if result_type == 'Nodal':
-            assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
+            assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
             result_type2 = 'node'
             #ids = self.node_ids
         elif result_type == 'Elemental':
-            assert nrows == self.nElements, 'nrows=%s nelements=%s' % (nrows, self.nElements)
+            assert nrows == self.nelements, 'nrows=%s nelements=%s' % (nrows, self.nelements)
             result_type2 = 'centroid'
             #ids = self.element_ids
         else:
@@ -2968,7 +2904,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #iids = np.searchsorted(ids, )
             #A = A2
         self._add_cases_to_form(A, fmt_dict, headers, result_type2,
-                                out_filename_short, update=True)
+                                out_filename_short, update=True, is_scalar=True)
 
     def on_load_results(self, out_filename=None):
         """
@@ -3066,20 +3002,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
 
-        main_window_geometry = settings.value("mainWindowGeometry")
-        if main_window_geometry is not None:
-            if PY2 and qt_version == 4:
-                self.restoreGeometry(main_window_geometry.toByteArray())
-            elif qt_version == 5:  # tested on PY2
-                self.restoreGeometry(main_window_geometry)
-            else:
-                raise NotImplementedError('PY2=%s PY3=%s qt_version=%s' % (PY2, PY3, qt_version))
-
         self.reset_settings = False
         #if self.reset_settings or qt_version in [5, 'pyside']:
-            #self._reset_settings()
+            #self.settings.reset_settings()
         #else:
-        self._reapply_settings(settings)
+        self.settings.load(settings)
 
         self.init_ui()
         if self.reset_settings:
@@ -3087,92 +3014,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.init_cell_picker()
 
         main_window_state = settings.value("mainWindowState")
-        if main_window_state is not None:
-            if PY2 and qt_version == 4:
-                self.restoreState(main_window_state.toByteArray())
         self.create_corner_axis()
         #-------------
         # loading
         self.show()
-
-    def _reset_settings(self):
-        """helper method for ``setup_gui``"""
-        #white = (1.0, 1.0, 1.0)
-        black = (0.0, 0.0, 0.0)
-        #red = (1.0, 0.0, 0.0)
-        grey = (119/255., 136/255., 153/255.)
-        #screen_shape_default = (1100, 700)
-
-        self.background_color = grey
-        self.label_color = black
-        self.text_color = black
-        self.resize(1100, 700)
-
-    def _reapply_settings(self, settings):
-        """helper method for ``setup_gui``"""
-        #white = (1.0, 1.0, 1.0)
-        black = (0.0, 0.0, 0.0)
-        #red = (1.0, 0.0, 0.0)
-        grey = (119/255., 136/255., 153/255.)
-        screen_shape_default = (1100, 700)
-        font_size = 8
-
-        setting_keys = [str(key) for key in settings.childKeys()]
-        try:
-            if qt_version == 4:
-                self.font_size = settings.value("font_size", font_size).toPyObject()
-            elif qt_version == 4:
-                self.font_size = settings.value("font_size", font_size)
-            else:
-                self.font_size = 8
-        except (TypeError, AttributeError):
-            self.font_size = 8
-
-        try:
-            self.background_color = settings.value("backgroundColor", grey).toPyObject()
-        except (TypeError, AttributeError):
-            self.background_color = grey
-
-        try:
-            self.label_color = settings.value("labelColor", black).toPyObject()
-        except (TypeError, AttributeError):
-            self.label_color = black
-
-        try:
-            self.text_color = settings.value("textColor", black).toPyObject()
-        except (TypeError, AttributeError):
-            self.text_color = black
-
-        try:
-            screen_shape = settings.value("screen_shape", screen_shape_default).toPyObject()
-        except (TypeError, AttributeError):
-            screen_shape = screen_shape_default
-
-        #if 'recent_files' in setting_keys:
-        try:
-            self.recent_files = settings.value("recent_files", self.recent_files).toPyObject()
-        except (TypeError, AttributeError):
-            pass
-
-        #w = screen_shape.width()
-        #h = screen_shape.height()
-        #try:
-        self.resize(screen_shape[0], screen_shape[1])
-        width, height = screen_shape
-
-        font = QtGui.QFont()
-        font.setPointSize(self.font_size)
-        self.setFont(font)
-
-        if 0 and PY3:
-            pos = settings.value("pos", pos_default).toPyObject()
-            x_pos, y_pos = pos
-            #print(pos)
-            #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
-            y_pos = pos_default[0]
-            self.setGeometry(x_pos, y_pos, width, height)
-        #except TypeError:
-            #self.resize(1100, 700)
 
     def setup_post(self, inputs):
         """interface for user defined post-scripts"""
@@ -3297,7 +3142,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.alt_grids[geom_name].Allocate(npoints, 1000)
 
         # set points
-        points = self.numpy_to_vtk_points(xyz, dtype='<f')
+        points = numpy_to_vtk_points(xyz, dtype='<f')
 
         if nelements > 0:
             geom_grid = self.alt_grids[geom_name]
@@ -3651,7 +3496,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
 
         #self.convert_units(icase, result_value, x, y, z)
-        if 1:
+
+        if self.vtk_version[0] >= 7: # TODO: should check for 7.1
+            text_actor = vtk.vtkBillboardTextActor3D()
+            label = text
+            text_actor.SetPosition(x, y, z)
+            text_actor.SetInput(label)
+            text_actor.PickableOff()
+            text_actor.DragableOff()
+
+            #text_actor.SetPosition(actor.GetPosition())
+            text_prop = text_actor.GetTextProperty()
+            text_prop.SetFontSize(self.annotation_size_int)
+            text_prop.SetFontFamilyToArial()
+            text_prop.BoldOn()
+            text_prop.ShadowOn()
+
+            text_prop.SetColor(self.annotation_color)
+            text_prop.SetJustificationToCentered()
+            follower = text_actor
+
+        else:  # vector text
             source = vtk.vtkVectorText()
             source.SetText(str(text))
 
@@ -3667,34 +3532,36 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # 1 point = 1/72"
             # SetScale works on model scale size
             #follower.SetScale(0.5)
-            follower.SetScale(self.dim_max * 0.02 * self.label_scale)
+            follower.SetScale(self.settings.dim_max * 0.02 * self.label_scale)
 
-            prop = follower.GetProperty()
-            prop.SetColor(self.label_color)
-            #prop.SetOpacity( 0.3 );
+            text_prop = follower.GetProperty()
+            text_prop.SetColor(self.annotation_color)
+            #text_prop.SetJustificationToCentered()  # doesn't work
+            #text_prop.SetOpacity(0.3)
 
             # we need to make sure the text rotates when the camera is changed
             camera = self.rend.GetActiveCamera()
             follower.SetCamera(camera)
-        else:
+        #else:
             # Create a text mapper and actor to display the results of picking.
-            text_mapper = vtk.vtkTextMapper()
-            text_mapper.SetInput(text)
+            # this wasn't quite done...forget how
+            #text_mapper = vtk.vtkTextMapper()
+            #text_mapper.SetInput(text)
 
-            tprop = text_mapper.GetTextProperty()
-            tprop.SetFontFamilyToArial()
-            tprop.SetFontSize(10)
-            tprop.BoldOn()
-            tprop.ShadowOn()
-            tprop.SetColor(self.label_color)
+            #text_prop = text_mapper.GetTextProperty()
+            #text_prop.SetFontFamilyToArial()
+            #text_prop.SetFontSize(10)
+            #text_prop.BoldOn()
+            #text_prop.ShadowOn()
+            #text_prop.SetColor(self.annotation_color)
 
-            text_actor = vtk.vtkActor2D()
-            text_actor.PickableOff()
-            text_actor.DragableOff()
-            text_actor.GetPositionCoordinate().SetCoordinateSystemToWorld()
-            #text_actor.SetPosition(world_position[:2])
-            text_actor.SetMapper(text_mapper)
-            follower = text_actor
+            #text_actor = vtk.vtkActor2D()
+            #text_actor.PickableOff()
+            #text_actor.DragableOff()
+            #text_actor.GetPositionCoordinate().SetCoordinateSystemToWorld()
+            ##text_actor.SetPosition(world_position[:2])
+            #text_actor.SetMapper(text_mapper)
+            #follower = text_actor
 
         # finish adding the actor
         self.rend.AddActor(follower)
@@ -3804,7 +3671,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         self.hide_axes()
         self.hide_legend()
-        #self.set_background_color_to_white()
+        #self.settings.set_background_color_to_white()
 
     def hide_axes(self, cids=None):
         """
@@ -3824,12 +3691,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
-    def set_background_color_to_white(self):
-        """sets the background color to white; used by gif writing?"""
-        white = (1., 1., 1.)
-        self.set_background_color(white)
-
-
     def on_take_screenshot(self, fname=None, magnify=None):
         """
         Take a screenshot of a current view and save as a file
@@ -3844,7 +3705,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             int : resolution increase factor
         """
         if fname is None or fname is False:
-            filt = QString()
+            filt = ''
             default_filename = ''
 
             title = ''
@@ -3898,7 +3759,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if not isinstance(magnify, integer_types):
                 msg = 'magnify=%r type=%s' % (magnify, type(magnify))
                 raise TypeError(msg)
-            self._update_text_size(magnify=magnify)
+            self.settings.update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
 
             # multiply linewidth by magnify
@@ -3948,7 +3809,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             #self.log_info("Saved screenshot: " + fname)
             self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
-            self._update_text_size(magnify=1.0)
+            self.settings.update_text_size(magnify=1.0)
 
             # show corner axes
             axes_actor.SetVisibility(True)
@@ -3980,7 +3841,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         gif_filename : str
             path to the output gif & png folder
         scale : float
-            the deflection scale factor
+            the deflection scale factor; true scale
         istep : int; default=None
             the png file number (let's you pick a subset of images)
             useful for when you press ``Step``
@@ -4183,15 +4044,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # fps
             # -> frames_per_second = 1/fps
             delay = int(1. / fps * 1000)
-            timerId = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
+            timer_id = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
             return
 
-        return self.make_gif_helper(
-            gif_filename, icases, scales,
-            phases=phases, isteps=isteps,
-            time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
-            onesided=onesided, nrepeat=nrepeat,
-            make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+        is_failed = True
+        try:
+            is_failed = self.make_gif_helper(
+                gif_filename, icases, scales,
+                phases=phases, isteps=isteps,
+                time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
+                onesided=onesided, nrepeat=nrepeat,
+                make_images=make_images, delete_images=delete_images, make_gif=make_gif)
+        except:
+            pass
+        return is_failed
 
     def stop_animation(self):
         """removes the animation timer"""
@@ -4201,7 +4067,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
             del self.observers['TimerEvent']
 
     def _update_animation_inputs(self, phases, icases, isteps, scales):
-        """helper method for make_gif_helper"""
+        """
+        Simplifies the format of phases, icases, steps, scales to make them
+        into lists of the correct length.
+
+        Parameters
+        ----------
+        phases : List[float] or None
+            List[float] : the phase angles
+            None : real result (same as [0., 0., ...])
+        icases : List[int] or int
+            List[int] : the icases to run
+            int : single icase (e.g., SOL 101, 103, 145; same as [icase, icase, ...]
+        isteps : List[int]
+            nominal isteps = [0, 1, 2, 3, 4, ..., nframes]
+            we can analyze pictures [1, 3, 4] by providing a subset
+        scales : List[float]
+            the displacement scale factor; true scale
+        """
         if phases is not None:
             pass
         elif phases is None:
@@ -4250,7 +4133,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         icases : int / List[int]
             the result case to plot the deflection for
         scales : List[float]
-            List[float] : the deflection scale factors
+            List[float] : the deflection scale factors; true scale
         phases : List[float]; default=None
             List[float] : the phase angles (degrees)
             None -> animate scale
@@ -4344,18 +4227,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 png_filenames.append(png_filename)
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
-        return write_gif(gif_filename, png_filenames, time=time,
-                         onesided=onesided,
-                         nrepeat=nrepeat, delete_images=delete_images,
-                         make_gif=make_gif)
-
-    def _update_text_size(self, magnify=1.0):
-        """Internal method for updating the bottom-left text when we go to take a picture"""
-        text_size = int(14 * magnify)
-        for text_actor in itervalues(self.text_actors):
-            text_prop = text_actor.GetTextProperty()
-            text_prop.SetFontSize(text_size)
-        self.itext += 1  # TODO: why is this here?
+        is_failed = write_gif(
+            gif_filename, png_filenames, time=time,
+            onesided=onesided,
+            nrepeat=nrepeat, delete_images=delete_images,
+            make_gif=make_gif)
+        return is_failed
 
     def add_geometry(self):
         """
@@ -4479,7 +4356,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #glyph_source.InvertOn()  # flip this arrow direction
         if self.vtk_version[0] == 5:
             glyphs.SetInput(grid)
-        elif self.vtk_version[0] in [6, 7]:
+        elif self.vtk_version[0] in [6, 7, 8]:
             glyphs.SetInputData(grid)
         else:
             raise NotImplementedError(vtk.VTK_VERSION)
@@ -4827,7 +4704,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.groups['main'] = main_group
             self.groups['anti_main'] = anti_main_group
             self.post_group(main_group)
-            #self.show_elements_mask(np.arange(self.nElements))
+            #self.show_elements_mask(np.arange(self.nelements))
 
     def get_result_by_cell_id(self, cell_id, world_position, icase=None):
         """should handle multiple cell_ids"""
@@ -5289,6 +5166,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_set_camera_data(self, camera_data, show_log=True):
         """
+        Sets the current camera
+
+        Parameters
+        ----------
         position : (float, float, float)
             where am I is xyz space
         focal_point : (float, float, float)
@@ -5303,8 +5184,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ???
         parallel_projection : bool (0/1)
             flag?
+            TODO: not used
         distance : float
-            distance to ???
+            distance to the camera
 
         i_vector = focal_point - position
         j'_vector = view_up
@@ -5337,69 +5219,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
                 % (position, focal_point, view_angle, view_up,
                    clip_range, parallel_scale, parallel_proj, distance))
-
-    #---------------------------------------------------------------------------------------
-    # LABEL SIZE/COLOR
-    def set_labelsize_color(self, size=None, color=None):
-        """
-        Parameters
-        ----------
-        size : float
-            label size
-        color : (float, float, float)
-            RGB values
-        """
-        if size is not None:
-            assert isinstance(size, (int, float)), 'size=%r' % size
-            self.set_labelsize(size)
-        if color is not None:
-            assert len(color) == 3, color
-            assert isinstance(color[0], float), 'color=%r' % color
-            self.set_label_color(color)
-
-    @property
-    def label_text_size(self):
-        return self.dim_max * 0.02 * self.label_scale
-
-    @label_text_size.setter
-    def label_text_size(self, label_text_size):
-        #self.label_text_size = self.dim_max * 0.02 * self.label_scale
-        #a = b * c * d
-        #d = a / bc
-        self.label_scale = label_text_size / (self.dim_max * 0.02)
-
-    def set_labelsize(self, size, render=True):
-        """Updates the size of all the labels"""
-        assert size >= 0., size
-        self.label_text_size = size
-        for icase, follower_actors in iteritems(self.label_actors):
-            for follower_actor in follower_actors:
-                follower_actor.SetScale(size)
-                follower_actor.Modified()
-        if render:
-            self.vtk_interactor.GetRenderWindow().Render()
-            self.log_command('set_labelsize(%s)' % size)
-
-    def set_label_color(self, color, render=True):
-        """
-        Set the label color
-
-        Parameters
-        ----------
-        color : (float, float, float)
-            RGB values as floats
-        """
-        if np.allclose(self.label_color, color):
-            return
-        self.label_color = color
-        for follower_actors in itervalues(self.label_actors):
-            for follower_actor in follower_actors:
-                prop = follower_actor.GetProperty()
-                prop.SetColor(*color)
-
-        if render:
-            self.vtk_interactor.GetRenderWindow().Render()
-            self.log_command('set_label_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------------------
     # PICKER
@@ -5477,7 +5296,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         renwin.SetMultiSamples(scale)
         self.vtk_interactor.Render()
         self.log_command('on_set_anti_aliasing(%r)' % (scale))
-
 
     #---------------------------------------------------------------------------------------
     # LEGEND MENU
@@ -5570,6 +5388,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          is_low_to_high=True, is_discrete=True, is_horizontal=True,
                          nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                          is_shown=True):
+        """
+        Updates the legend/model
+
+        Parameters
+        ----------
+        scale : float
+            displacemnt scale factor; true scale
+        """
         #print('is_shown2 =', is_shown)
         #assert is_shown == False, is_shown
         key = self.case_keys[self.icase]

@@ -57,6 +57,7 @@ class GetMethods(BDFAttributes):
         msg : str; default=''
             a debugging message
         """
+        #assert isinstance(nid, integer_types), 'nid=%s' % str(nid)
         if nid in self.nodes:
             return self.nodes[nid]
         elif nid in self.spoints:
@@ -79,8 +80,23 @@ class GetMethods(BDFAttributes):
         Returns a series of node objects given a list of IDs
         """
         nodes = []
+        bad_nids = []
         for nid in nids:
-            nodes.append(self.EmptyNode(nid, msg=msg))
+            try:
+                nodes.append(self.EmptyNode(nid, msg=msg))
+            except KeyError:
+                bad_nids.append(nid)
+
+        if bad_nids:
+            nid_list = np.unique(list(self.nodes.keys()))
+            msg = 'nids=%s are not a GRID, SPOINT, or EPOINT%s\n' % (bad_nids, msg)
+            msg += 'nids=%s\n' % nid_list
+            if self.spoints:
+                msg += 'spoints=%s\n' % np.unique(list(self.spoints.keys()))
+            if self.epoints:
+                msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
+            raise KeyError(msg)
+
         return nodes
 
     def Nodes(self, nids, msg=''):
@@ -124,8 +140,16 @@ class GetMethods(BDFAttributes):
 
     def Elements(self, eids, msg=''):
         elements = []
+        bad_eids = []
         for eid in eids:
-            elements.append(self.Element(eid, msg))
+            try:
+                elements.append(self.Element(eid, msg))
+            except KeyError:
+                bad_eids.append(eid)
+        if bad_eids:
+            msg = 'eids=%s not found%s.  Allowed elements=%s' % (
+                bad_eids, msg, np.unique(list(self.elements.keys())))
+            raise KeyError(msg)
         return elements
 
     def Mass(self, eid, msg=''):
@@ -247,13 +271,30 @@ class GetMethods(BDFAttributes):
     #--------------------
     # LOADS
 
-    def Load(self, sid, msg=''):
+    def Load(self, sid, consider_load_combinations=True, msg=''):
+        """
+        Gets an LOAD or FORCE/PLOAD4/etc.
+
+        Parameters
+        ---------
+        sid : int
+            the LOAD id
+        consider_load_combinations : bool; default=True
+            LOADs should not be considered when referenced from an LOAD card
+            from a case control, True should be used.
+        msg : str
+            additional message to print when failing
+        """
         assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
-        if sid in self.loads:
+        if consider_load_combinations and sid in self.load_combinations:
+            load = self.load_combinations[sid]
+        elif sid in self.loads:
             load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (
-                sid, msg, np.unique(list(self.loads.keys()))))
+            loads_ids = list(self.loads.keys())
+            load_combination_ids = list(self.load_combinations.keys())
+            raise KeyError('cannot find LOAD ID=%r%s.\nAllowed loads (e.g., FORCE)=%s; LOAD=%s' % (
+                sid, msg, np.unique(loads_ids), np.unique(load_combination_ids)))
         return load
 
     def DLoad(self, sid, msg=''):
@@ -303,24 +344,56 @@ class GetMethods(BDFAttributes):
                            % (dphase_id, msg, list(self.dphases.keys())))
 
     #--------------------
-    def MPC(self, mpc_id, msg=''):
-        """gets an MPC"""
+    def MPC(self, mpc_id, consider_mpcadd=True, msg=''):
+        """
+        Gets an MPCADD or MPC
+
+        Parameters
+        ---------
+        mpc_id : int
+            the MPC id
+        consider_mpcadd : bool; default=True
+            MPCADDs should not be considered when referenced from an MPCADD
+            from a case control, True should be used.
+        msg : str
+            additional message to print when failing
+        """
         assert isinstance(mpc_id, integer_types), 'mpc_id=%s is not an integer\n' % mpc_id
-        if mpc_id in self.mpcs:
+        if consider_mpcadd and mpc_id in self.mpcadds:
+            constraint = self.mpcadds[mpc_id]
+        elif mpc_id in self.mpcs:
             constraint = self.mpcs[mpc_id]
         else:
-            raise KeyError('cannot find MPC ID=%r%s.\nAllowed MPCs=%s' % (
-                mpc_id, msg, np.unique(list(self.mpcs.keys()))))
+            mpc_ids = list(self.mpcs.keys())
+            mpcadd_ids = list(self.mpcadds.keys())
+            raise KeyError('cannot find MPC ID=%r%s.\nAllowed MPCs=%s; MPCADDs=%s' % (
+                mpc_id, msg, np.unique(mpc_ids), np.unique(mpcadd_ids)))
         return constraint
 
-    def SPC(self, spc_id, msg=''):
-        """gets an SPC"""
+    def SPC(self, spc_id, consider_spcadd=True, msg=''):
+        """
+        Gets an SPCADD or SPC
+
+        Parameters
+        ---------
+        spc_id : int
+            the SPC id
+        consider_spcadd : bool; default=True
+            SPCADDs should not be considered when referenced from an SPCADD
+            from a case control, True should be used.
+        msg : str
+            additional message to print when failing
+        """
         assert isinstance(spc_id, integer_types), 'spc_id=%s is not an integer\n' % spc_id
-        if spc_id in self.spcs:
+        if consider_spcadd and spc_id in self.spcadds:
+            constraint = self.spcadds[spc_id]
+        elif spc_id in self.spcs:
             constraint = self.spcs[spc_id]
         else:
-            raise KeyError('cannot find SPC ID=%r%s.\nAllowed SPCs=%s' % (
-                spc_id, msg, np.unique(list(self.spcs.keys()))))
+            spc_ids = list(self.spcs.keys())
+            spcadd_ids = list(self.spcadds.keys())
+            raise KeyError('cannot find SPC ID=%r%s.\nAllowed SPCs=%s; SPCADDs=%s' % (
+                spc_id, msg, np.unique(spc_ids), np.unique(spcadd_ids)))
         return constraint
 
     #--------------------

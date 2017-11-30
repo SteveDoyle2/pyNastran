@@ -1,16 +1,19 @@
-from six import iteritems
-from six.moves import range
+"""
+Defines the GUI IO file for Usm3d.
+"""
+from __future__ import print_function
 import os
 from collections import defaultdict
+from six import iteritems
 
 import numpy as np
-import vtk
-from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 from pyNastran.converters.usm3d.time_accurate_results import get_n_list
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class Usm3dIO(object):
@@ -23,7 +26,11 @@ class Usm3dIO(object):
                 'Usm3d (*.flo)', self.load_usm3d_results)
         return data
 
-    def step_results_usm3d(self):
+    def on_reload_usm3d(self):
+        """
+        For USM3D, we dynamically load the latest CFD results time step,
+        hich is really handy when you're running a job.
+        """
         # minimum is 1
         nstep = 100
 
@@ -35,6 +42,8 @@ class Usm3dIO(object):
         basename = os.path.basename(flo_filename)
         base = os.path.splitext(basename)[0]
 
+
+        # box.flo -> box_100.flo
         if '_' in base:
             model_name, n = base.rsplit('_', 1)
             #print("model_name=%r n=%r" % (model_name, n))
@@ -50,13 +59,16 @@ class Usm3dIO(object):
             #print("inn=%r nnew=%r" % (inn, nnew))
             flo_filename = model_name + '_%s.flo' % nnew
         else:
-            msg = 'The current file is must have the format of xxx_%%i.flo, not %r' % self.out_filename
-            raise RuntimeError(msg)
+            flo_filename = self.out_filename
+            #msg = (
+                #'The current file is must have the format of '
+                #'xxx_%%i.flo, not %r' % self.out_filename)
+            #raise RuntimeError(msg)
         #print("loading %r" % flo_filename)
         self.load_usm3d_results(flo_filename)
         self.out_filename = os.path.join(dirname, flo_filename)
 
-        print("done stepping...")
+        #print("done stepping...")
 
     #def _get_next_n(self, base):
         #n = int(n)
@@ -76,8 +88,7 @@ class Usm3dIO(object):
 
     def load_usm3d_results(self, flo_filename):
         model = Usm3d(log=self.log, debug=False)
-        #self.result_cases = {}
-        npoints = self.nNodes
+        npoints = self.nnodes
         node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
 
         cases = self.result_cases
@@ -102,9 +113,9 @@ class Usm3dIO(object):
         base_filename, ext = os.path.splitext(cogsg_filename)
         #node_filename = base_filename + '.node'
         #ele_filename = base_filename + '.ele'
-        if '.cogsg' == ext:
+        if ext == '.cogsg':
             dimension_flag = 3
-        #elif '.ele' == ext:
+        #elif ext == '.ele':
             #dimension_flag = 3
         else:
             raise RuntimeError('unsupported extension.  Use "cogsg" or "front".')
@@ -126,7 +137,7 @@ class Usm3dIO(object):
 
         bcmap_to_bc_name = model.bcmap_to_bc_name
 
-        self.nNodes = nodes.shape[0]
+        self.nnodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if tris is not None:
@@ -139,44 +150,25 @@ class Usm3dIO(object):
             ntets = 0
         else:
             raise RuntimeError()
-        self.nElements = ntris + ntets
+        self.nelements = ntris + ntets
 
-        self.log.debug("nNodes = %i" % self.nNodes)
-        self.log.debug("nElements = %i" % self.nElements)
+        self.log.debug("nnodes = %i" % self.nnodes)
+        self.log.debug("nelements = %i" % self.nelements)
 
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        grid.Allocate(self.nelements, 1000)
 
         self.nid_map = {}
         self.eid_map = {}
-        #elem.SetNumberOfPoints(nNodes)
-        #if 0:
-            #fraction = 1. / self.nNodes  # so you can color the nodes by ID
-            #for nid, node in sorted(iteritems(nodes)):
-                #points.InsertPoint(nid - 1, *node)
-                #self.gridResult.InsertNextValue(nid * fraction)
-                #print(str(element))
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         if ntris:
             self.element_ids = np.arange(1, ntris + 1, dtype='int32')
             etype = 5  # vtkTriangle().GetCellType()
-            self.create_vtk_cells_of_constant_element_type(grid, tris, etype)
-            #for (n0, n1, n2) in tris:
-                #elem = vtkTriangle()
-                #elem.GetPointIds().SetId(0, n0)
-                #elem.GetPointIds().SetId(1, n1)
-                #elem.GetPointIds().SetId(2, n2)
-                #grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+            create_vtk_cells_of_constant_element_type(grid, tris, etype)
         else:
             ntets = tets.shape[0]
             self.element_ids = np.arange(1, ntets + 1, dtype='int32')
@@ -185,14 +177,9 @@ class Usm3dIO(object):
             pass
         elif dimension_flag == 3:
             if ntets:
-                for (n0, n1, n2, n3) in tets:
-                    elem = vtkTetra()
-                    #assert elem.GetCellType() == 10, elem.GetCellType()
-                    elem.GetPointIds().SetId(0, n0)
-                    elem.GetPointIds().SetId(1, n1)
-                    elem.GetPointIds().SetId(2, n2)
-                    elem.GetPointIds().SetId(3, n3)
-                    grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                etype = 10 # vtkTetra().GetCellType()
+                assert tets.max() > 0, tets.min()
+                create_vtk_cells_of_constant_element_type(grid, tets, etype)
         else:
             raise RuntimeError('dimension_flag=%r' % dimension_flag)
 

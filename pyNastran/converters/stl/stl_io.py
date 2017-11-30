@@ -11,6 +11,8 @@ from vtk import vtkTriangle
 
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_utils.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class STL_IO(object):
@@ -37,19 +39,19 @@ class STL_IO(object):
         normals = model.get_normals(elements, stop_on_failure=False)
         areas = model.get_area(elements, stop_on_failure=False)
         #nnormals = model.get_normals_at_nodes(elements)
-        self.nNodes = nodes.shape[0]
-        self.nElements = elements.shape[0]
+        self.nnodes = nodes.shape[0]
+        self.nelements = elements.shape[0]
 
-        self.log.info('nnodes=%s nelements=%s' % (self.nNodes, self.nElements))
+        self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
         grid = self.grid
-        grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
+        grid.Allocate(self.nelements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nelements)
 
-        points = self.numpy_to_vtk_points(nodes)
+        points = numpy_to_vtk_points(nodes)
         self.nid_map = {}
         #elem.SetNumberOfPoints(nnodes)
         if 0:
-            fraction = 1. / self.nNodes  # so you can color the nodes by ID
+            fraction = 1. / self.nnodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
                 self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)
@@ -71,7 +73,7 @@ class STL_IO(object):
 
 
         etype = 5  # vtkTriangle().GetCellType()
-        self.create_vtk_cells_of_constant_element_type(grid, elements, etype)
+        create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
         grid.SetPoints(points)
         grid.Modified()

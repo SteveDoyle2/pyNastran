@@ -482,6 +482,16 @@ class AddMethods(BDFAttributes):
             self.coords[key] = coord
             self._type_to_id_map[coord.type].append(key)
 
+    def _add_load_combination_object(self, load):
+        # type: (Any) -> None
+        """adds a load object to a load case"""
+        key = load.sid
+        if key in self.load_combinations:
+            self.load_combinations[key].append(load)
+        else:
+            self.load_combinations[key] = [load]
+            self._type_to_id_map[load.type].append(key)
+
     def _add_load_object(self, load):
         # type: (Any) -> None
         """adds a load object to a load case"""
@@ -516,10 +526,10 @@ class AddMethods(BDFAttributes):
         # type: (Any) -> None
         """adds a LSEQ object to a load case"""
         key = load.sid
-        if key in self.loads:
-            self.loads[key].append(load)
+        if key in self.load_combinations:
+            self.load_combinations[key].append(load)
         else:
-            self.loads[key] = [load]
+            self.load_combinations[key] = [load]
             self._type_to_id_map[load.type].append(key)
 
     def _add_thermal_load_object(self, load):  # same function at the moment...
@@ -568,6 +578,15 @@ class AddMethods(BDFAttributes):
             self.mpcs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
+    def _add_constraint_mpcadd_object(self, constraint):
+        # type: (Any) -> None
+        key = constraint.conid
+        if key in self.mpcadds:
+            self.mpcadds[key].append(constraint)
+        else:
+            self.mpcadds[key] = [constraint]
+            self._type_to_id_map[constraint.type].append(key)
+
     def _add_constraint_spc_object(self, constraint):
         # type: (Any) -> None
         key = constraint.conid
@@ -575,6 +594,15 @@ class AddMethods(BDFAttributes):
             self.spcs[key].append(constraint)
         else:
             self.spcs[key] = [constraint]
+            self._type_to_id_map[constraint.type].append(key)
+
+    def _add_constraint_spcadd_object(self, constraint):
+        # type: (Any) -> None
+        key = constraint.conid
+        if key in self.spcadds:
+            self.spcadds[key].append(constraint)
+        else:
+            self.spcadds[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
     def _add_constraint_spcoff_object(self, constraint):
