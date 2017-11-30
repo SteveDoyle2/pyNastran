@@ -4,6 +4,10 @@ from six.moves import StringIO
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, read_bdf#, get_logger2
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.test.test_shells import (
+    make_dvprel_optimization, make_dvcrel_optimization,
+    make_dvmrel_optimization,
+)
 
 
 class TestDampers(unittest.TestCase):
@@ -76,7 +80,7 @@ class TestDampers(unittest.TestCase):
         cdamp3 = model.add_cdamp3(eid, pid, [s1, s2], comment='cdamp3')
 
         bdamp = 1.0e3
-        pelas = model.add_pdamp(pid, bdamp, comment='pdamp')
+        pdamp = model.add_pdamp(pid, bdamp, comment='pdamp')
         spoints = model.add_spoint([3, 4, 5], comment='spoints')
 
         eid = 4
@@ -119,7 +123,7 @@ class TestDampers(unittest.TestCase):
         ge = [0.01]
         cbush = model.add_cbush(eid, pid, nids, x, g0, cid=None, s=0.5,
                                 ocid=-1, si=None, comment='cbush')
-        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass_fields=None,
+        pbush = model.add_pbush(pid, k, b, ge, rcv=None, mass=None,
                                 comment='pbush')
 
         eid = 9
@@ -167,9 +171,61 @@ class TestDampers(unittest.TestCase):
         cbush1d.write_card(size=8, is_double=False)
         pbush1d.write_card(size=8, is_double=False)
 
+        params = [
+            ('K1', 1.0),
+            ('K2', 1.0),
+            ('K3', 1.0),
+            ('K4', 1.0),
+            ('K5', 1.0),
+            ('K6', 1.0),
+
+            ('B1', 1.0),
+            ('B2', 1.0),
+            ('B3', 1.0),
+            ('B4', 1.0),
+            ('B5', 1.0),
+            ('B6', 1.0),
+
+            #('M1', 1.0),
+            #('M2', 1.0),
+            #('M3', 1.0),
+            #('M4', 1.0),
+            #('M5', 1.0),
+            #('M6', 1.0),
+        ]
+        i = make_dvprel_optimization(model, params, 'PBUSH', pbush.pid, i=1)
+
+        params = [(5, 1.0)]
+        i = make_dvprel_optimization(model, params, 'PGAP', pgap.pid, i)
+
+        params = [('K', 1.0), ('C', 1.0), ('M', 1.0)]
+        i = make_dvprel_optimization(model, params, 'PBUSH1D', pbush1d.pid, i)
+
+        params = [('CE1', 1.0)]
+        i = make_dvprel_optimization(model, params, 'PVISC', pvisc.pid, i)
+
+        params = [('B1', 1.0), (3, 1.0)]
+        i = make_dvprel_optimization(model, params, 'PDAMP', pdamp.pid, i)
+
+        #-----------------------------------------
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CVISC', cvisc.eid, i)
+
+        params = [('X1', 1.0), ('X2', 2.0), ('X3', 3.0),
+                  ('S1', 1.0), ('S2', 2.0), ('S3', 3.0),
+                  ('S', 1.0), ]
+        i = make_dvcrel_optimization(model, params, 'CBUSH', cbush.eid, i)
+
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CBUSH1D', cbush.eid, i)
+
+        params = []
+        i = make_dvcrel_optimization(model, params, 'CGAP', cgap.eid, i)
+
         spoints.write_card()
 
         model.cross_reference()
+        model.update_model_by_desvars()
 
         save_load_deck(model)
 

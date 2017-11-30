@@ -39,7 +39,7 @@ class AnimationWindow(PyDialog):
     | iFrame  ______          |
     |                         |
     | Animations:             |
-    | o Scale, Phase, Time    |  # TODO: add time
+    | o Scale, Phase, Time    |
     |                         |
     | x delete images         |
     | x repeat                |  # TODO: change to an integer
@@ -107,7 +107,7 @@ class AnimationWindow(PyDialog):
                                    'Defaults to the result you had shown when you clicked "Create Animation".\n'
                                    'iCase can be seen by clicking "Apply" on a result.')
 
-        self.scale = QLabel("Scale:")
+        self.scale = QLabel("True Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
         self.scale_button = QPushButton("Default")
         self.scale_edit.setToolTip('Scale factor of the "deflection"')

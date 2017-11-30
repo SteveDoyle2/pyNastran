@@ -61,6 +61,29 @@ class CBUSH(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'cid', 9:'s', 10:'ocid'
     }
 
+    def update_by_cp_name(self, cp_name, value):
+        #if isinstance(pname_fid, int):
+            #self._update_field_helper(pname_fid, value)
+        if cp_name == 'X1':
+            self.x[0] = value
+        elif cp_name == 'X2':
+            self.x[1] = value
+        elif cp_name == 'X3':
+            self.x[2] = value
+
+        elif cp_name == 'S1':
+            self.si[0] = value
+        elif cp_name == 'S2':
+            self.si[1] = value
+        elif cp_name == 'S3':
+            self.si[2] = value
+
+        elif cp_name == 'S':
+            self.s = value
+        else:
+            raise NotImplementedError('element_type=%r has not implemented %r in update_by_cp_name' % (
+                self.type, cp_name))
+
     def _update_field_helper(self, n, value):
         if n == 11:
             self.si[0] = value

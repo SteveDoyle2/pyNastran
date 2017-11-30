@@ -46,7 +46,8 @@ class PDAMP(DamperProperty):
         1: 'pid', 2:'b',
     }
     pname_fid_map = {
-        #3 : 'b', 'B' : 'b',
+        # 1-based
+        3 : 'b',
         'B1' : 'b',
     }
     def __init__(self, pid, b, comment=''):
@@ -222,6 +223,11 @@ class PDAMPT(DamperProperty):
     type = 'PDAMPT'
     _field_map = {
         1: 'pid', 2:'tbid',
+    }
+    pname_fid_map = {
+        # 1-based
+        #3 : 'b',
+        #'B1' : 'b',
     }
 
     def __init__(self, pid, tbid, comment=''):

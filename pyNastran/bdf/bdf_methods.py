@@ -655,17 +655,32 @@ class BDFMethods(BDFAttributes):
             write_solids=write_solids, write_shells=write_shells,
             size=size, is_double=is_double, encoding=encoding)
 
-    def update_model_by_desvars(self, xref=True):
+    def update_model_by_desvars(self, xref=True, desvar_values=None):
         """doesn't require cross referenceing"""
-        ## these are the nominal values of the desvars
+        # these are the nominal values of the desvars
         desvar_init = {key : desvar.value
-                       for key, desvar in self.desvars.items()}
+                       for key, desvar in iteritems(self.desvars)}
 
-        ## these are the current values of the desvars
-        desvar_values = {key : min(max(desvar.value + 0.1, desvar.xlb), desvar.xub)
-                         for key, desvar in self.desvars.items()}
+        # these are the current values of the desvars
+        if desvar_values is None:
+            desvar_values = {key : min(max(desvar.value + 0.1, desvar.xlb), desvar.xub)
+                             for key, desvar in iteritems(self.desvars)}
+
+        # Relates one design variable to one or more other design variables.
+        for desvar_id, dlink in iteritems(self.dlinks):
+            value = dlink.c0
+            desvar = self.desvars[desvar_id]
+            for coeff, desvar_idi in zip(dlink.coeffs, dlink.IDv):
+                valuei = desvar_values[desvar_idi]
+                value += coeff * valuei
+            value2 = min(max(value + 0.1, desvar.xlb))
+            desvar_values[desvar_id] = value
+
+        # calculates the real delta to be used by DVGRID
         desvar_delta = {key : (desvar_init[key] - desvar_values[key])
                         for key in self.desvars}
+
+
         #min(max(self.xinit, self.xlb), self.xub)
 
         # DVxREL1
@@ -677,13 +692,13 @@ class BDFMethods(BDFAttributes):
             dvprel.update_model(self, desvar_values)
 
         for dvid, dvmrel in iteritems(self.dvmrels):
-            if dvprel.type == 'DVPREL2':
+            if dvmrel.type == 'DVPREL2':
                 dvxrel2s[('DVMREL2', dvid)] = dvmrel
                 continue
             dvmrel.update_model(self, desvar_values)
 
         for dvid, dvcrel in iteritems(self.dvcrels):
-            if dvprel.type == 'DVPREL2':
+            if dvcrel.type == 'DVPREL2':
                 dvxrel2s[('DVMREL2', dvid)] = dvcrel
                 continue
             dvcrel.update_model(self, desvar_values)

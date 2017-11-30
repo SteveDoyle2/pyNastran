@@ -144,7 +144,8 @@ from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, MissingDeckSections)
-
+from pyNastran.bdf.pybdf import (BDFInputPy, _clean_comment, _lines_to_decks,
+                                 _break_system_lines, _check_valid_deck, _show_bad_file)
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None, read_cards=None,
@@ -1117,8 +1118,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self._parse_primary_file_header(bdf_filename)
 
-        main_lines = self._get_main_lines(self.bdf_filename, self.punch)
-        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
+        main_lines = self._get_main_lines(self.bdf_filename)
+        all_lines = self._lines_to_deck_lines(main_lines)
 
         return all_lines
 
@@ -1161,7 +1162,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         self._parse_primary_file_header(bdf_filename)
-        out = self._get_lines(bdf_filename)
+
+        if 0: # pragma: no cover
+            obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
+                             log=self.log, debug=self.debug)
+            out = obj._get_lines(bdf_filename, punch=self.punch)
+        else:
+            out = self._get_lines(bdf_filename, punch=self.punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
 
         self.system_command_lines = system_lines
@@ -3718,7 +3725,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             raise CardParseSyntaxError(msg)
         return card_name.upper()
 
-    def _get_lines(self, bdf_filename):
+    def _get_lines(self, bdf_filename, punch=False):
         """
         Opens the bdf and extracts the lines by group
 
@@ -3742,13 +3749,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         bulk_data_lines : List[str]
             the bulk data lines (stores geometry, boundary conditions, loads, etc.)
         """
-        main_lines = self._get_main_lines(bdf_filename, self.punch)
-        all_lines = self._lines_to_deck_lines(main_lines, punch=self.punch)
-        out = _lines_to_decks(all_lines, self.punch)
+        main_lines = self._get_main_lines(bdf_filename)
+        all_lines = self._lines_to_deck_lines(main_lines)
+        out = _lines_to_decks(all_lines, punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
 
-    def _get_main_lines(self, bdf_filename, punch=False):
+    def _get_main_lines(self, bdf_filename):
         # type: (Union[str, StringIO], bool) -> List[str]
         """
         Opens the bdf and extracts the lines
@@ -3757,17 +3764,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ----------
         bdf_filename : str
             the main bdf_filename
-        punch : bool; default=False
-            is this a punch file
-            True : no executive/case control decks
-            False : executive/case control decks exist
 
         Returns
         -------
         lines : List[str]
             all the lines packed into a single line stream
         """
-        print('bdf_filename_main =', bdf_filename)
+        #print('bdf_filename_main =', bdf_filename)
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             bdf_filename = cast(StringIO, bdf_filename)
             lines = bdf_filename.readlines()
@@ -3784,10 +3787,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 lines = bdf_file.readlines()
             except:
                 _show_bad_file(self, bdf_filename, encoding=self._encoding)
+                raise
         return lines
 
-    def _lines_to_deck_lines(self, lines, punch=False):
-        # type: (List[str], bool) -> List[str], int
+    def _lines_to_deck_lines(self, lines):
+        # type: List[str] -> List[str], int
         """
         Merges the includes into the main deck.
 
@@ -3795,10 +3799,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ----------
         lines : List[str]
             the lines from the main BDF
-        punch : bool; default=False
-            is this a punch file
-            True : no executive/case control decks
-            False : executive/case control decks exist
 
         Returns
         -------
@@ -4328,21 +4328,6 @@ class BDF(BDF_):
         self.load_combinations = {}  # type: Dict[int, List[Any]]
 
 
-IGNORE_COMMENTS = (
-    '$EXECUTIVE CONTROL DECK',
-    '$CASE CONTROL DECK',
-    'NODES', 'SPOINTS', 'EPOINTS', 'ELEMENTS',
-    'PARAMS', 'PROPERTIES', 'ELEMENTS_WITH_PROPERTIES',
-    'ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
-    'UNASSOCIATED_PROPERTIES',
-    'MATERIALS', 'THERMAL MATERIALS',
-    'CONSTRAINTS', 'SPCs', 'MPCs', 'RIGID ELEMENTS',
-    'LOADS', 'AERO', 'STATIC AERO', 'AERO CONTROL SURFACES',
-    'FLUTTER', 'GUST', 'DYNAMIC', 'OPTIMIZATION',
-    'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
-    'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
-    'PROPERTIES_MASS', 'MASSES')
-
 def _prep_comment(comment):
     return comment.rstrip()
     #print('comment = %r' % comment)
@@ -4352,35 +4337,6 @@ def _prep_comment(comment):
              #for comment in comment.rstrip().split('\n')]
     #print('sline = ', sline)
     #asdh
-
-def _clean_comment(comment):
-    # type: (str) -> Optional[str]
-    """
-    Removes specific pyNastran comment lines so duplicate lines aren't
-    created.
-
-    Parameters
-    ----------
-    comment : str
-        the comment to possibly remove
-
-    Returns
-    -------
-    updated_comment : str
-        the comment
-    """
-    if comment == '':
-        pass
-    elif comment in IGNORE_COMMENTS:
-        comment = None
-    elif 'pynastran' in comment.lower():
-        csline = comment.lower().split('pynastran', 1)
-        if csline[1].strip()[0] == ':':
-            comment = None
-
-    #if comment:
-        #print(comment)
-    return comment
 
 def _clean_comment_bulk(comment):
     # type: (str) -> str
@@ -4412,185 +4368,6 @@ def _clean_comment_bulk(comment):
     return comment
 
 
-def _lines_to_decks(lines, punch):
-    """
-    Splits the BDF lines into:
-     - system lines
-     - executive control deck
-     - case control deck
-     - bulk data deck
-
-    Parameters
-    ----------
-    lines : List[str]
-        all the active lines in the deck
-    punch : bool
-        True : starts from the bulk data deck
-        False : read the entire deck
-
-    Returns
-    -------
-    system_lines : List[str]
-        the system control lines (typically empty; used for alters)
-    executive_control_lines : List[str]
-        the executive control lines (stores SOL 101)
-    case_control_lines : List[str]
-        the case control lines (stores subcases)
-    bulk_data_lines : List[str]
-        the bulk data lines (stores geometry, boundary conditions, loads, etc.)
-    """
-    executive_control_lines = []
-    case_control_lines = []
-    bulk_data_lines = []
-
-    if punch:
-        bulk_data_lines = lines
-    else:
-        flag = 1
-        for i, line in enumerate(lines):
-            #print(flag, line.rstrip())
-            if flag == 1:
-                #line = line.upper()
-                if line.upper().startswith('CEND'):
-                    assert flag == 1
-                    flag = 2
-                executive_control_lines.append(line.rstrip())
-            elif flag == 2:
-                uline = line.upper()
-                if 'BEGIN' in uline and ('BULK' in uline or 'SUPER' in uline):
-                    assert flag == 2
-                    flag = 3
-                case_control_lines.append(line.rstrip())
-            else:
-                break
-        for line in lines[i:]:
-            bulk_data_lines.append(line.rstrip())
-
-        _check_valid_deck(flag)
-
-    del lines
-    #for line in bulk_data_lines:
-        #print(line)
-
-    # break out system commands
-    system_lines, executive_control_lines = _break_system_lines(executive_control_lines)
-
-    # clean comments
-    system_lines = [_clean_comment(line) for line in system_lines
-                    if _clean_comment(line) is not None]
-    executive_control_lines = [_clean_comment(line) for line in executive_control_lines
-                               if _clean_comment(line) is not None]
-    case_control_lines = [_clean_comment(line) for line in case_control_lines
-                          if _clean_comment(line) is not None]
-    return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
-
-def _break_system_lines(executive_control_lines):
-    """
-    Extracts the Nastran system lines
-
-    Per NX Nastran 10:
-
-    ACQUIRE Selects NDDL schema and NX Nastran Delivery Database.
-    ASSIGN Assigns physical files to DBset members or special FORTRAN
-    files.
-    CONNECT Groups geometry data by evaluator and database.
-    DBCLEAN Deletes selected database version(s) and/or projects.
-    DBDICT Prints the database directory in user-defined format.
-    DBDIR Prints the database directory.
-    DBFIX Identifies and optionally corrects errors found in the database.
-    DBLOAD Loads a database previously unloaded by DBUNLOAD.
-    DBLOCATE Obtains data blocks and parameters from databases.
-    DBSETDEL Deletes DBsets.
-    DBUNLOAD Unloads a database for compression, transfer, or archival
-    storage.
-    DBUPDATE Specifies the time between updates of the database directory.
-    ENDJOB Terminates a job upon completion of FMS statements.
-    EXPAND Concatenates additional DBset members to an existing DBset.
-    INCLUDE Inserts an external file in the input file.
-    INIT Creates a temporary or permanent DBset.
-    NASTRAN Specifies values for system cells.
-    PROJ Defines the current or default project identifier.
-    """
-    file_management = (
-        'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
-        'DBFIX ', 'DBLOAD ', 'DBLOCATE ', 'DBSETDEL ', 'DBUNLOAD ',
-        'DBUPDATE ', 'ENDJOB ', 'EXPAND ', 'INCLUDE ', 'INIT ', 'NASTRAN ',
-        'PROJ ',
-    )
-    system_lines = []
-    j = None
-    for i, line in enumerate(executive_control_lines):
-        if line.strip().upper().startswith(file_management):
-            j = i
-    if j is not None:
-        system_lines = executive_control_lines[:j+1]
-        executive_control_lines = executive_control_lines[j+1:]
-    return system_lines, executive_control_lines
-
-def _check_valid_deck(flag):
-    """Crashes if the flag is set wrong"""
-    if flag != 3:
-        if flag == 1:
-            found = ' - Executive Control Deck\n'
-            missing = ' - Case Control Deck\n'
-            missing += ' - Bulk Data Deck\n'
-        elif flag == 2:
-            found = ' - Executive Control Deck\n'
-            found += ' - Case Control Deck\n'
-            missing = ' - Bulk Data Deck\n'
-        else:
-            raise RuntimeError('flag=%r is not [1, 2, 3]' % flag)
-
-        msg = 'This is not a valid BDF (a BDF capable of running Nastran).\n\n'
-        msg += 'The following sections were found:\n%s\n' % found
-        msg += 'The following sections are missing:\n%s\n' % missing
-        msg += 'If you do not have an Executive Control Deck or a Case Control Deck:\n'
-        msg += '  1.  call read_bdf(...) with `punch=True`\n'
-        msg += "  2.  Add '$ pyNastran : punch=True' to the top of the main file\n"
-        msg += '  3.  Name your file *.pch\n\n'
-        msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
-        msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
-        raise MissingDeckSections(msg)
-
-def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
-    # type: (Union[str, StringIO]) -> None
-    """
-    Prints the 10 lines before the UnicodeDecodeError occurred.
-
-    Parameters
-    ----------
-    bdf_filename : str
-        the filename to print the lines of
-    encoding : str
-        the file encoding
-    nlines_previous : int; default=10
-        the number of lines to show
-    """
-    lines = []  # type: List[str]
-    print('ENCODING - show_bad_file=%r' % encoding)
-
-    with codec_open(_filename(bdf_filename), 'r', encoding=encoding) as bdf_file:
-        iline = 0
-        nblank = 0
-        while 1:
-            try:
-                line = bdf_file.readline().rstrip()
-            except UnicodeDecodeError:
-                iline0 = max([iline - nlines_previous, 0])
-                self.log.error('filename=%s' % self.bdf_filename)
-                for iline1, line in enumerate(lines[iline0:iline]):
-                    self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
-                msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
-                    encoding, iline, bdf_filename, self._encoding)
-                raise RuntimeError(msg)
-            if line:
-                nblank = 0
-            else:
-                nblank += 1
-            if nblank == 20:
-                raise RuntimeError('20 blank lines')
-            iline += 1
-            lines.append(line)
 
 def main():  # pragma: no cover
     """

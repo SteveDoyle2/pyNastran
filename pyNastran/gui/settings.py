@@ -33,6 +33,7 @@ class Settings(object):
 
         # not stored
         self.dim_max = 1.0
+        self.annotation_scale = 1.0
 
     def reset_settings(self):
         """helper method for ``setup_gui``"""
@@ -49,6 +50,7 @@ class Settings(object):
 
         # not stored
         self.dim_max = 1.0
+        self.annotation_scale = 1.0
 
     def load(self, settings):
         """helper method for ``setup_gui``"""

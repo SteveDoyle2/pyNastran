@@ -463,9 +463,25 @@ class NSMADD(BaseCard):
 
 
 class PMASS(Property):
+    """
+    Scalar Mass Property
+    Specifies the mass value of a scalar mass element (CMASS1 or CMASS3 entries).
+
+    +-------+------+------+------+------+------+----+------+----+
+    |   1   |   2  |   3  |   4  |   5  |   6  |  7 |   8  |  9 |
+    +=======+======+======+======+======+======+====+======+====+
+    | PMASS | PID1 |  M1  | PID2 |  M2  | PID3 | M3 | PID4 | M4 |
+    +-------+------+------+------+------+------+----+------+----+
+    | PMASS |   7  | 4.29 |   6  | 13.2 |      |    |      |    |
+    +-------+------+------+------+------+------+----+------+----+
+    """
     type = 'PMASS'
     _field_map = {
         1: 'pid', 2:'mass',
+    }
+    pname_fid_map = {
+        # 1-based
+        3 : 'mass',
     }
 
     def __init__(self, pid, mass, comment=''):

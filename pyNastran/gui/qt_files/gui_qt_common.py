@@ -466,7 +466,7 @@ class GuiCommon(GuiAttributes):
         icase : int
             result number in self.result_cases
         scale : float
-            deflection scale factor
+            deflection scale factor; true scale
         phase : float; default=0.0
             phase angle (degrees); unused for real results
 

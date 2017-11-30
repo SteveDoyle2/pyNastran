@@ -64,7 +64,6 @@ class TestOpt(unittest.TestCase):
         #      0.1 + 0.5*1.0 = 0.6
         tnew = c0p + c2 * (t2 + delta)
         model.add_desvar(2, 'T2', t2)
-        print(model.desvars[2])
         desvars = [2] # desvar
         coeffs = [c2]
         prop_type = 'PSHELL'

@@ -5,6 +5,7 @@ import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
+from pyNastran.bdf.cards.test.test_shells import make_dvprel_optimization
 
 #from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -143,6 +144,7 @@ class TestRods(unittest.TestCase):
                        has_none=True)
         model.pop_parse_errors()
         conrod2 = model.elements[2]
+
         #------------------
         model.cross_reference()
 
@@ -315,6 +317,39 @@ class TestRods(unittest.TestCase):
         self.assertAlmostEqual(ptube.Area(), A, 5)
         ptube.J()
         self.assertEqual(ptube.Rho(), rho)
+
+    def test_rod_opt(self):
+        model = BDF(debug=False,)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        eid_rod = 1
+        pid_rod = 1
+        mid = 1
+        A = 1.0
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_crod(eid_rod, pid_rod, [1, 2])
+        model.add_prod(pid_rod, mid, A)
+        model.add_mat1(mid, E, G, nu)
+
+        eid_tube = 2
+        pid_tube = 2
+        model.add_ctube(eid_tube, pid_tube, [1, 2])
+        model.add_ptube(pid_tube, mid, 1.0)
+        params = [
+            ('A', 2.0),
+            ('J', 2.0),
+        ]
+        i = make_dvprel_optimization(model, params, 'PROD', pid_rod, i=1)
+
+        params = [
+            ('T', 2.0),
+        ]
+        i = make_dvprel_optimization(model, params, 'PTUBE', pid_tube, i)
+
+        model.cross_reference()
+        model.update_model_by_desvars()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
