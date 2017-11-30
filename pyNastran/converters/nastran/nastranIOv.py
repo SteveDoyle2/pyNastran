@@ -591,7 +591,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     cs_name = '%s_control_surface' % aesurf.label
                     self.set_caero_control_surface_grid(
                         cs_name, cs_box_ids[cs_name],
-                        box_id_to_caero_element_map, caero_points, label=aesurf.label)
+                        box_id_to_caero_element_map, caero_points)
+                        #box_id_to_caero_element_map, caero_points, label=aesurf.label)
 
         if nconm2 > 0:
             self._set_conm_grid(nconm2, dim_max, model)
