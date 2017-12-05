@@ -260,8 +260,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         case = self.icase
 
         on_reload_name = 'on_reload_%s' % self.format
-        if hasattr(self, on_reload_name) or 1:
-            getattr(self, on_reload_name)()
+        if hasattr(self, on_reload_name):
+            getattr(self, on_reload_name)()  # on_reload_nastran
         else:
             self.on_load_geometry(self.infile_name, self.format)
 

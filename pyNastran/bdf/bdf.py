@@ -2225,8 +2225,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'DSCREEN' : (DSCREEN, self._add_dscreen_object),
 
             'DTABLE' : (DTABLE, self._add_dtable_object),
-            'DRESP1' : (DRESP1, self._add_dresp_object),
-            'DRESP2' : (DRESP2, self._add_dresp_object), # deqatn
+            'DRESP1' : (DRESP1, self._add_dresp_object), # dresps
+            'DRESP2' : (DRESP2, self._add_dresp_object),
             'DRESP3' : (DRESP3, self._add_dresp_object),
             'DVCREL1' : (DVCREL1, self._add_dvcrel_object), # dvcrels
             'DVCREL2' : (DVCREL2, self._add_dvcrel_object),
