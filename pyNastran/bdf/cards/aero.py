@@ -2106,6 +2106,10 @@ class CAERO1(BaseCard):
                       cp=cp, nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
                       comment=comment)
 
+    def flip_normal(self):
+        self.p1, self.p4 = self.p4, self.p1
+        self.x12, self.x43 = self.x43, self.x12
+
     def _init_ids(self, dtype='int32'):
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
@@ -2255,10 +2259,19 @@ class CAERO1(BaseCard):
         p1234 : (4, 3) list
              List of 4 corner points in the global frame
         """
-        p1 = self.cp_ref.transform_node_to_global(self.p1)
-        p4 = self.cp_ref.transform_node_to_global(self.p4)
-        p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
-        p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
+        if self.cp_ref is None and self.cp == 0:
+            p1 = self.p1
+            p4 = self.p4
+        else:
+            p1 = self.cp_ref.transform_node_to_global(self.p1)
+            p4 = self.cp_ref.transform_node_to_global(self.p4)
+
+        if self.ascid_ref is None:
+            p2 = p1 + np.array([self.x12, 0., 0.])
+            p3 = p4 + np.array([self.x43, 0., 0.])
+        else:
+            p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
+            p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
         return [p1, p2, p3, p4]
 
     @property

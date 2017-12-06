@@ -94,8 +94,8 @@ class WriteMesh(BDFAttributes):
         """write the CAERO cards as CQUAD4s that can be visualized"""
         bdf_file = open(caero_bdf_filename, 'w')
         #bdf_file.write('$ pyNastran: punch=True\n')
-        bdf_file.write('CEND')
-        bdf_file.write('BEGIN BULK')
+        bdf_file.write('CEND\n')
+        bdf_file.write('BEGIN BULK\n')
         i = 1
         mid = 1
         bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
