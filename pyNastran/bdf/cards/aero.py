@@ -6896,7 +6896,7 @@ class TRIM(BaseCard):
                 ni += 1
         raise KeyError('Field %r=%r is an invalid TRIM entry.' % (n, value))
 
-    def __init__(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
+    def __init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
         """
         Creates a TRIM card for a static aero (144) analysis.
 
@@ -6914,7 +6914,7 @@ class TRIM(BaseCard):
             values corresponding to labels
         aeqr : float
             0.0 : rigid trim analysis
-            1.0 : elastic trim analysis
+            1.0 : elastic trim analysis (default)
         comment : str; default=''
             a comment for the card
         """
@@ -7160,7 +7160,7 @@ class TRIM(BaseCard):
             ux = double(card, 7, 'ux1')
             uxs.append(ux)
             labels.append(label)
-        aeqr = double_or_blank(card, 8, 'aeqr', 0.0)
+        aeqr = double_or_blank(card, 8, 'aeqr', 1.0)
 
         i = 9
         n = 3
