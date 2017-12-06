@@ -635,6 +635,19 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     #units_from = ['m', 'kg', 's']
     #convert(fem1, units_to, units=units_from)
     if xref:
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = fem1.get_displacement_index_xyz_cp_cd(
+            fdtype='float64', idtype='int32', sort_ids=True)
+        cds = np.unique(nid_cp_cd[:, 2])
+        cd_coords = []
+        for cd in cds:
+            coord = fem1.coords[cd]
+            # coordRs work in op2 extraction
+            if coord.type not in ['CORD2R', 'CORD1R']:
+                cd_coords.append(cd)
+        if cd_coords:
+            msg = 'GRID-CD coords=%s can cause a problem in the OP2 results processing; be careful' % cd_coords
+            self.log.warning(msg)
+
         try:
             fem1.get_area_breakdown()
             fem1.get_volume_breakdown()

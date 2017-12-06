@@ -674,7 +674,7 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
     xyz_cid0 : (nnodes + nspoints + nepoints, 3) ndarray
         the grid locations in coordinate system 0
     summation_point_cid0 : (3, ) ndarray
-        the summation point in the global frame???
+        the summation point in the global frame
     consider_rxf : bool; default=True
         considers the r x F term
     debug : bool; default=False
