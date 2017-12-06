@@ -177,7 +177,7 @@ class Settings(object):
         self.on_set_font_size(self.font_size - 1)
 
     def on_set_font_size(self, font_size, show_command=True):
-        return self.parent.on_set_font_size(self, font_size, show_command=show_command)
+        return self.parent.on_set_font_size(font_size, show_command=show_command)
 
     #---------------------------------------------------------------------------
     # ANNOTATION SIZE/COLOR
