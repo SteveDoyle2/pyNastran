@@ -4,6 +4,9 @@ import numpy as np
 import vtk
 from qtpy import QtGui
 
+from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+from pyNastran.gui.qt_files.coord_properties import CoordProperties
+
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
 GREY = (119/255., 136/255., 153/255.)
@@ -215,17 +218,50 @@ class Settings(object):
         self.annotation_text_size = size
 
         if USE_ANNOTATION_INT:
+            size = int(size)
+            assert size > 0, size
+
+            # case attached annotations (typical)
             for follower_actors in itervalues(self.parent.label_actors):
-                size = int(size)
-                assert size > 0, size
                 for follower_actor in follower_actors:
                     follower_actor.GetTextProperty().SetFontSize(size)
                     follower_actor.Modified()
+
+            # geometry property attached annotations (e.g., flaps)
+            for obj in itervalues(self.parent.geometry_properties):
+                if isinstance(obj, CoordProperties):
+                    continue
+                elif isinstance(obj, AltGeometry):
+                    pass
+                else:
+                    raise NotImplementedError(obj)
+
+                follower_actors = obj.label_actors
+                for follower_actor in follower_actors:
+                    follower_actor.GetTextProperty().SetFontSize(size)
+                    follower_actor.Modified()
+
         else:
+            # case attached annotations (typical)
             for follower_actors in itervalues(self.parent.label_actors):
                 for follower_actor in follower_actors:
                     follower_actor.SetScale(size)
                     follower_actor.Modified()
+
+            # geometry property attached annotations (e.g., flaps)
+            for obj in itervalues(self.parent.geometry_properties):
+                if isinstance(obj, CoordProperties):
+                    continue
+                elif isinstance(obj, AltGeometry):
+                    pass
+                else:
+                    raise NotImplementedError(obj)
+
+                follower_actors = obj.label_actors
+                for follower_actor in follower_actors:
+                    follower_actor.SetScale(size)
+                    follower_actor.Modified()
+
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
             self.parent.log_command('settings.set_annotation_size(%s)' % size)
@@ -242,7 +278,23 @@ class Settings(object):
         if np.allclose(self.annotation_color, color):
             return
         self.annotation_color = color
+
+        # case attached annotations (typical)
         for follower_actors in itervalues(self.parent.label_actors):
+            for follower_actor in follower_actors:
+                prop = follower_actor.GetProperty()
+                prop.SetColor(*color)
+
+        # geometry property attached annotations (e.g., flaps)
+        for obj in itervalues(self.parent.geometry_properties):
+            if isinstance(obj, CoordProperties):
+                continue
+            elif isinstance(obj, AltGeometry):
+                pass
+            else:
+                raise NotImplementedError(obj)
+
+            follower_actors = obj.label_actors
             for follower_actor in follower_actors:
                 prop = follower_actor.GetProperty()
                 prop.SetColor(*color)

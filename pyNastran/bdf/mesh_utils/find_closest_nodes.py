@@ -17,11 +17,11 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None, msg=''
     Parameters
     ----------
     nodes_xyz : (Nnodes, 3) float ndarray
-        the source points
+        the source points (e.g., xyz_cid0)
     nids : (Nnodes, ) int ndarray
-        the source node ids
+        the source node ids (e.g.; nid_cp_cid[:, 0])
     xyz_compare : (Ncompare, 3) float ndarray
-        the xyz points to compare to
+        the xyz points to compare to; xyz_to_find
     tol : float; default=None
         the max spherical tolerance
         None : the whole model

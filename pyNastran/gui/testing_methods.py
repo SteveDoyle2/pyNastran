@@ -527,16 +527,6 @@ class GuiAttributes(object):
         return skip_reading
 
 
-class CoordProperties(object):
-    def __init__(self, label, Type, is_visible, scale):
-        self.label = label
-        #self.axes = axes
-        self.Type = Type
-        self.is_visible = is_visible
-        self.representation = 'coord'
-        self.scale = scale
-
-
 class GeometryProperty(object):
     def __init__(self):
         pass
@@ -738,7 +728,7 @@ class FakeGUIMethods(GuiAttributes):
         """fake method"""
         pass
 
-    def _create_annotation(self, label, icase, x, y, z):
+    def _create_annotation(self, label, slot, x, y, z):
         """fake method"""
         pass
 

@@ -46,6 +46,7 @@ from pyNastran.gui.gui_utils.write_gif import write_gif
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+from pyNastran.gui.qt_files.coord_properties import CoordProperties
 
 
 from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
@@ -66,7 +67,6 @@ from pyNastran.gui.styles.probe_style import ProbeResultStyle
 from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 
-from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
 
@@ -555,7 +555,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self._preferences_window.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
-        self.parent.log_command('settings.on_set_font_size(%s)' % font_size)
+        self.log_command('settings.on_set_font_size(%s)' % font_size)
         return False
 
     def _create_menu_items(self, actions=None, create_menu_bar=True):
@@ -1558,7 +1558,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
             text = str(result_value)
             assert icase in self.label_actors, icase
-            self._create_annotation(text, icase, x, y, z)
+            self._create_annotation(text, self.label_actors[icase], x, y, z)
             self.vtk_interactor.Render()
         if self.revert:
             self.setup_mouse_buttons(mode='default')
@@ -3328,7 +3328,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 cell_id, centroid, icase_result)
             texti = '%s' % result_values
             xi, yi, zi = centroid
-            self._create_annotation(texti, icase_to_apply, xi, yi, zi)
+            self._create_annotation(texti, self.label_actors[icase_to_apply], xi, yi, zi)
         self.log_command('mark_elements_by_different_case(%s, %s, %s)' % (
             eids, icase_result, icase_to_apply))
         self.vtk_interactor.Render()
@@ -3365,7 +3365,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         xyz = self.xyz_cid0[i, :]
         for (xi, yi, zi), texti in zip(xyz, text):
-            self._create_annotation(texti, icase, xi, yi, zi)
+            self._create_annotation(texti, self.label_actors[icase], xi, yi, zi)
         self.vtk_interactor.Render()
 
     def __mark_nodes_by_result(self, nids, icases):
@@ -3394,7 +3394,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #xyz = self.xyz_cid0[i, :]
                 out = self.get_result_by_xyz_node_id(world_position, node_id)
                 _result_name, result_value, node_id, node_xyz = out
-                self._create_annotation(texti, icase, xi, yi, zi)
+                self._create_annotation(texti, self.label_actors[icase], xi, yi, zi)
         self.vtk_interactor.Render()
 
     def _cell_centroid_pick(self, cell_id, world_position):
@@ -3477,21 +3477,28 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.display_units
         return result_value, xyz
 
-    def _create_annotation(self, text, icase, x, y, z):
+    def _create_annotation(self, text, slot, x, y, z):
         """
-        Creates the actual annotation
+        Creates the actual annotation and appends it to slot
 
         Parameters
         ----------
         text : str
             the text to display
-        icase : int
-            the key in label_actors to slot the result into
         x, y, z : float
             the position of the label
+        slot : List[annotation]
+            where to place the annotation
+            self.label_actors[icase] : List[annotation]
+                icase : icase
+                    the key in label_actors to slot the result into
+                annotation : varies
+                    vtk >=7 : vtkBillboardTextActor3D
+                    vtk <7 : vtkVectorText
+            ???
         """
-        if not isinstance(icase, integer_types):
-            msg = 'icase=%r type=%s' % (icase, type(icase))
+        if not isinstance(slot, list):
+            msg = 'slot=%r type=%s' % (slot, type(slot))
             raise TypeError(msg)
         # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
 
@@ -3566,7 +3573,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # finish adding the actor
         self.rend.AddActor(follower)
         follower.SetPickable(False)
-        self.label_actors[icase].append(follower)
+
+        #self.label_actors[icase].append(follower)
+        slot.append(follower)
+
         #print('added label actor %r; icase=%s' % (text, icase))
         #print(self.label_actors)
 
@@ -5676,8 +5686,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # we've deleted the actor
             return
         actor = self.geometry_actors[namei]
+
         if isinstance(actor, vtk.vtkActor):
-            lines += self._update_geomtry_properties_actor(namei, group, actor)
+            alt_prop = self.geometry_properties[namei]
+            label_actors = alt_prop.label_actors
+            lines += self._update_geomtry_properties_actor(namei, group, actor, label_actors)
         elif isinstance(actor, vtk.vtkAxesActor):
             changed = False
             is_visible1 = bool(actor.GetVisibility())
@@ -5697,7 +5710,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if render:
             self.vtk_interactor.Render()
 
-    def _update_geomtry_properties_actor(self, name, group, actor):
+    def _update_geomtry_properties_actor(self, name, group, actor, label_actors):
         """
         Updates an actor
 
@@ -5781,11 +5794,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #print('name=%s rep=%r bar_scale1=%s bar_scale2=%s' % (
                 #name, representation, bar_scale1, bar_scale2))
             self.set_bar_scale(name, bar_scale2)
+
         if is_visible1 != is_visible2:
             actor.SetVisibility(is_visible2)
             alt_prop.is_visible = is_visible2
             #prop.SetViPointSize(is_visible2)
             actor.Modified()
+            for label_actor in label_actors:
+                label_actor.SetVisibility(is_visible2)
+                label_actor.Modified()
             changed = True
 
         if changed:

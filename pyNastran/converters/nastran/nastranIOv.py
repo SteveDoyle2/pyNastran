@@ -1758,6 +1758,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self._set_results([form], cases)
 
     def _create_caero_actors(self, ncaeros, ncaeros_sub, ncaeros_cs, has_control_surface):
+        """
+        This just creates the following actors.  It does not fill them.
+        These include:
+         - caero
+         - caero_subpanels
+         - caero_control_surfaces
+        """
         if self.has_caero:
             if 'caero' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
@@ -1775,14 +1782,24 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def make_caeros(self, model):
         """
-        Creates the CAERO panel inputs
+        Creates the CAERO panel inputs including:
+         - caero
+         - caero_subpanels
+         - caero_control_surfaces
+         - N control surfaces
+
+        Parameters
+        ----------
+        model : BDF()
+            the bdf model
 
         Returns
         -------
-        caero_points : ???
-            ???
+        caero_points : (N_aero_points, 3) float ndarray
+            the xyz points for the aero panels
+            N_aero_points can be 0
         ncaeros : int
-            ???
+            the number of aero sub-panels?
         ncaeros_sub : int
             ???
         ncaeros_cs : int
@@ -1793,8 +1810,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ???
         has_control_surface : bool
             is there a control surface
-        box_id_to_caero_element_map : ???
-            ???
+        box_id_to_caero_element_map : dict[box_id] = box_index
+            used to map the CAEROx box id to index in the ???
+            (aero panel elements) array, which will be used with
+            cs_box_ids
         cs_box_ids : dict[control_surface_name] : List[panel ids]
             list of panels used by each aero panel
         """
@@ -2204,7 +2223,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if label:
             # points_list (15, 4, 3) = (elements, nodes, 3)
             x, y, z = np.average(centroids, weights=areas, axis=0)
-            self._create_annotation(str(label), -1, x, y, z)
+            text = str(label)
+            #slot = self.label_actors[-1]
+            slot = self.geometry_properties[name].label_actors
+            self._create_annotation(text, slot, x, y, z)
 
         self.alt_grids[name].SetPoints(points)
         return j
