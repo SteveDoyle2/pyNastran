@@ -93,11 +93,10 @@ class WriteMesh(BDFAttributes):
         # type: (str) -> None
         """write the CAERO cards as CQUAD4s that can be visualized"""
         bdf_file = open(caero_bdf_filename, 'w')
+        #bdf_file.write('$ pyNastran: punch=True\n')
         bdf_file.write('CEND\n')
         bdf_file.write('BEGIN BULK\n')
-        bdf_file.write('$ punch=True\n')
         i = 1
-
         mid = 1
         bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
         for aesurf_id, aesurf in iteritems(self.aesurf):
@@ -110,10 +109,10 @@ class WriteMesh(BDFAttributes):
             #bdf_file.write('CORD2R,%s,,%s,%s,%s,%s,%s,%s\n' % (cid, ax, ay, az, bx, by, bz))
             #bdf_file.write(',%s,%s,%s\n' % (cx, cy, cz))
             #print(cid)
-            bdf_file.write(str(cid))
             #aesurf.elements
+
         for eid, caero in sorted(iteritems(self.caeros)):
-            assert eid != 1, 'CAERO eid=1 is reserved for non-flaps'
+            #assert eid != 1, 'CAERO eid=1 is reserved for non-flaps'
             scaero = str(caero).rstrip().split('\n')
             bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
             points, elements = caero.panel_points_elements()
@@ -121,14 +120,10 @@ class WriteMesh(BDFAttributes):
             #nelements = elements.shape[0]
             for ipoint, point in enumerate(points):
                 x, y, z = point
-                bdf_file.write('GRID,%s,,%s,%s,%s\n' % (i + ipoint, x, y, z))
+                bdf_file.write(print_card_8(['GRID', i+ipoint, None, x, y, z]))
 
             pid = eid
             mid = eid
-            #if 0:
-                #bdf_file.write('PSHELL,%s,%s,0.1\n' % (pid, mid))
-                #bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
-            #else:
             bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
             bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % 1)
 
@@ -146,11 +141,9 @@ class WriteMesh(BDFAttributes):
                 if pidi is None:
                     #pidi = pid
                     pidi = 1
-                bdf_file.write('CQUAD4,%s,%s,%s,%s,%s,%s\n' % (j + eid, pidi, p1, p2, p3, p4))
+                bdf_file.write(print_card_8(['CQUAD4', j + eid, pidi, p1, p2, p3, p4]))
                 j += 1
             i += npoints
-            #break
-            #j += nelements
         bdf_file.write('ENDDATA\n')
 
     def write_bdf(self, out_filename=None, encoding=None,

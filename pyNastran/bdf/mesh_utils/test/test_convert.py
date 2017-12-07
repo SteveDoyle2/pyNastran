@@ -196,7 +196,11 @@ class TestConvert(unittest.TestCase):
         #units_to = units_from
         convert(model, units_to, units_from)
         model.write_bdf(bdf_filename_out)
+
+        caero_bdf_filename = 'caero.bdf'
+        model.write_caero_model(caero_bdf_filename=caero_bdf_filename)
         os.remove(bdf_filename_out)
+        os.remove(caero_bdf_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

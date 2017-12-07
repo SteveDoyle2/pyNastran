@@ -404,9 +404,9 @@ class RealGridPointForcesArray(ScalarObject):
             the mapping for nid_cd
         xyz_cid0 : (nnodes + nspoints + nepoints, 3) ndarray
             the grid locations in coordinate system 0
-        summation_point : (3, ) float ndarray; default=None
+        summation_point0 : (3, ) float ndarray; default=None
             None : no load summation
-            array : the summation point in the output??? coordinate system
+            array : the summation point in the global frame
         consider_rxf : bool; default=True
             considers the r x F term
         itime : int; default=0
@@ -487,13 +487,14 @@ class RealGridPointForcesArray(ScalarObject):
 
         force_global = self.data[itime, irange, :3]
         moment_global = self.data[itime, irange, 3:]
-        out = transform_force_moment_sum(force_global, moment_global,
-                                         coord_out, coords, nid_cd[is_in3, :][isort],
-                                         icd_transform,
-                                         xyz_cid0[is_in3, :][isort], summation_point_cid0=summation_point,
-                                         consider_rxf=consider_rxf,
-                                         debug=debug, logger=logger)
-        return out
+        force_out, moment_out, force_out_sum, moment_out_sum = transform_force_moment_sum(
+            force_global, moment_global,
+            coord_out, coords, nid_cd[is_in3, :][isort],
+            icd_transform,
+            xyz_cid0[is_in3, :][isort], summation_point_cid0=summation_point,
+            consider_rxf=consider_rxf,
+            debug=debug, logger=logger)
+        return force_out, moment_out, force_out_sum, moment_out_sum
 
     def find_centroid_of_load(self, f, m):
         """

@@ -82,7 +82,8 @@ class ProbeResultStyle(vtk.vtkInteractorStyleTrackballCamera):
             text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
             text = str(result_value)
             assert result_name in self.parent.label_actors, result_name
-            self.parent._create_annotation(text, result_name, x, y, z)
+            slot = self.label_actors[result_name]
+            self.parent._create_annotation(text, slot, x, y, z)
             self.parent.vtk_interactor.Render()
             self.parent.vtk_interactor.Update()
             self.parent.Update()

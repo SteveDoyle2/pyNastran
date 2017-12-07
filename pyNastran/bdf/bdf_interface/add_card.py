@@ -3932,7 +3932,7 @@ class AddCards(AddMethods):
         self._add_spline_object(spline)
         return spline
 
-    def add_trim(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
+    def add_trim(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
         """
         Creates a TRIM card for a static aero (144) analysis.
 
@@ -3950,7 +3950,7 @@ class AddCards(AddMethods):
             values corresponding to labels
         aeqr : float
             0.0 : rigid trim analysis
-            1.0 : elastic trim analysis
+            1.0 : elastic trim analysis (default)
         comment : str; default=''
             a comment for the card
         """

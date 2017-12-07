@@ -7,14 +7,14 @@ class AltGeometry(object):
     def __repr__(self):
         msg = ('AltGeometry(self, %s, color=%s, line_width=%s, opacity=%s,\n'
               ' point_size=%s, bar_scale=%s, representation=%r, is_visible=%s,\n'
-              'is_pickable=%s)' % (
+              'is_pickable=%s, label_actors=%s)' % (
                   self.name, str(self.color), self.line_width, self.opacity, self.point_size,
-                  self.bar_scale, self.representation, self.is_visible, self.is_pickable))
+                  self.bar_scale, self.representation, self.is_visible, self.is_pickable, self.label_actors))
         return msg
 
     def __init__(self, parent, name, color=None, line_width=1, opacity=0.0,
                  point_size=1, bar_scale=1.0, representation='main', is_visible=True,
-                 is_pickable=False):
+                 is_pickable=False, label_actors=None):
         """
         Creates an AltGeometry object
 
@@ -41,15 +41,20 @@ class AltGeometry(object):
             is this actor currently visable
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
+        label_actors : List[annotation]; None -> []
+            stores annotations (e.g., for a control surface)
         """
         if line_width is None:
             line_width = 1
         if opacity is None:
             opacity = 1.0
+        if label_actors is None:
+            label_actors = []
 
         self.parent = parent
         self.name = name
         assert isinstance(name, string_types), 'name=%r' % name
+        assert isinstance(label_actors, list), 'name=%r label_actors=%s' % (name, str(label_actors))
         self._color = None
         if color is not None:
             assert color is not None, color
@@ -58,6 +63,7 @@ class AltGeometry(object):
         self.point_size = point_size
         self._opacity = opacity
         self.bar_scale = bar_scale
+        self.label_actors = []
 
         assert isinstance(is_visible, bool), is_visible
         self.is_visible = is_visible
@@ -140,6 +146,8 @@ class AltGeometry(object):
     @property
     def representation(self):
         """
+        Gets the representation
+
         * main - main mesh
         * toggle - change with main mesh
         * wire - always wireframe
@@ -152,8 +160,8 @@ class AltGeometry(object):
 
     @representation.setter
     def representation(self, representation):
+        """Sets the representation"""
         if representation not in self.representations:
             msg = 'representation=%r is invalid\nrepresentations=%r' % (
                 representation, self.representations)
         self._representation = representation
-
