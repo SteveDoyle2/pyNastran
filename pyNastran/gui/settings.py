@@ -1,3 +1,22 @@
+"""
+defines:
+ - Settings(parent)
+   - reset_settings(self)
+   - load(self, settings)
+   - save(self, settings)
+   - on_increase_text_size(self)
+   - on_decrease_text_size(self)
+   - on_set_font_size(self, font_size, show_command=True)
+   - set_annotation_size_color(self, size=None, color=None)
+   - set_annotation_size(self, size, render=True)
+   - set_annotation_color(self, color, render=True)
+   - set_background_color_to_white(self)
+   - set_background_color(self, color)
+   - set_text_color(self, color)
+   - update_text_size(self, magnify=1.0)
+
+ - repr_settings(settings)
+"""
 from __future__ import print_function
 from six import itervalues, PY3
 import numpy as np
@@ -10,7 +29,7 @@ from pyNastran.gui.qt_files.coord_properties import CoordProperties
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
 GREY = (119/255., 136/255., 153/255.)
-USE_ANNOTATION_INT = int(vtk.VTK_VERSION[0]) >= 7
+
 
 class Settings(object):
     """storage class for various settings"""
@@ -31,7 +50,7 @@ class Settings(object):
         self.text_color = BLACK
 
         # int
-        self.annotation_size_int = 18
+        self.annotation_size = 18
         self.font_size = 8
 
         # not stored
@@ -46,7 +65,7 @@ class Settings(object):
         self.text_color = BLACK
 
         # int
-        self.annotation_size_int = 18
+        self.annotation_size = 18
         self.font_size = 8
 
         self.parent.resize(1100, 700)
@@ -76,7 +95,10 @@ class Settings(object):
 
         # this is for the 3d annotation
         self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'], BLACK)
-        self._set_setting(settings, setting_keys, ['annotation_size_int'], 18)
+        self._set_setting(settings, setting_keys, ['annotation_size', 'annotation_size'], 18) # int
+        if isinstance(self.annotation_size, float):
+            # throw the float in the trash as it's from an old version of vtk
+            self.annotation_size = 18
 
         # this is the text in the lower left corner
         self._set_setting(settings, setting_keys, ['text_color', 'textColor'], BLACK)
@@ -159,7 +181,7 @@ class Settings(object):
 
         # int
         settings.setValue('font_size', self.font_size)
-        settings.setValue('annotation_size_int', self.annotation_size_int)
+        settings.setValue('annotation_size', self.annotation_size)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.parent.window()
@@ -194,73 +216,40 @@ class Settings(object):
             RGB values
         """
         if size is not None:
-            assert isinstance(size, (int, float)), 'size=%r' % size
+            assert isinstance(size, int), 'size=%r' % size
             self.set_annotation_size(size)
         if color is not None:
             assert len(color) == 3, color
             assert isinstance(color[0], float), 'color=%r' % color
             self.set_annotation_color(color)
 
-    @property
-    def annotation_text_size(self):
-        return self.dim_max * 0.02 * self.annotation_scale
-
-    @annotation_text_size.setter
-    def annotation_text_size(self, annotation_text_size):
-        # annotation_text_size = dim_max * 0.02 * annotation_scale
-        #a = b * c * d
-        #d = a / bc
-        self.annotation_scale = annotation_text_size / (self.dim_max * 0.02)
-
     def set_annotation_size(self, size, render=True):
         """Updates the size of all the annotations"""
-        assert size >= 0., size
-        self.annotation_text_size = size
+        assert size >= 0, size
+        assert isinstance(size, int), size
+        if self.annotation_size == size:
+            return
+        self.annotation_size = size
 
-        if USE_ANNOTATION_INT:
-            size = int(size)
-            assert size > 0, size
+        # case attached annotations (typical)
+        for follower_actors in itervalues(self.parent.label_actors):
+            for follower_actor in follower_actors:
+                follower_actor.GetTextProperty().SetFontSize(size)
+                follower_actor.Modified()
 
-            # case attached annotations (typical)
-            for follower_actors in itervalues(self.parent.label_actors):
-                for follower_actor in follower_actors:
-                    follower_actor.GetTextProperty().SetFontSize(size)
-                    follower_actor.Modified()
+        # geometry property attached annotations (e.g., flaps)
+        for obj in itervalues(self.parent.geometry_properties):
+            if isinstance(obj, CoordProperties):
+                continue
+            elif isinstance(obj, AltGeometry):
+                pass
+            else:
+                raise NotImplementedError(obj)
 
-            # geometry property attached annotations (e.g., flaps)
-            for obj in itervalues(self.parent.geometry_properties):
-                if isinstance(obj, CoordProperties):
-                    continue
-                elif isinstance(obj, AltGeometry):
-                    pass
-                else:
-                    raise NotImplementedError(obj)
-
-                follower_actors = obj.label_actors
-                for follower_actor in follower_actors:
-                    follower_actor.GetTextProperty().SetFontSize(size)
-                    follower_actor.Modified()
-
-        else:
-            # case attached annotations (typical)
-            for follower_actors in itervalues(self.parent.label_actors):
-                for follower_actor in follower_actors:
-                    follower_actor.SetScale(size)
-                    follower_actor.Modified()
-
-            # geometry property attached annotations (e.g., flaps)
-            for obj in itervalues(self.parent.geometry_properties):
-                if isinstance(obj, CoordProperties):
-                    continue
-                elif isinstance(obj, AltGeometry):
-                    pass
-                else:
-                    raise NotImplementedError(obj)
-
-                follower_actors = obj.label_actors
-                for follower_actor in follower_actors:
-                    follower_actor.SetScale(size)
-                    follower_actor.Modified()
+            follower_actors = obj.label_actors
+            for follower_actor in follower_actors:
+                follower_actor.GetTextProperty().SetFontSize(size)
+                follower_actor.Modified()
 
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()

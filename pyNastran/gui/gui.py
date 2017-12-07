@@ -32,12 +32,13 @@ def cmd_line():
     from qtpy.QtWidgets import QApplication
     app = QApplication(sys.argv)
 
-    try:
-        import qtmodern.styles
-    except ImportError:
-        pass
-    else:
-        qtmodern.styles.dark(app)
+    if 0:
+        try:
+            import qtmodern.styles
+        except ImportError:
+            pass
+        else:
+            qtmodern.styles.dark(app)
 
     #app.setStyle('Fusion')
     #app.setStyle('WindowsXP')

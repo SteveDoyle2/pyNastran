@@ -3492,9 +3492,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.label_actors[icase] : List[annotation]
                 icase : icase
                     the key in label_actors to slot the result into
-                annotation : varies
-                    vtk >=7 : vtkBillboardTextActor3D
-                    vtk <7 : vtkVectorText
+                annotation : vtkBillboardTextActor3D
+                    the annotation object
             ???
         """
         if not isinstance(slot, list):
@@ -3504,78 +3503,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #self.convert_units(icase, result_value, x, y, z)
 
-        if self.vtk_version[0] >= 7: # TODO: should check for 7.1
-            text_actor = vtk.vtkBillboardTextActor3D()
-            label = text
-            text_actor.SetPosition(x, y, z)
-            text_actor.SetInput(label)
-            text_actor.PickableOff()
-            text_actor.DragableOff()
+        text_actor = vtk.vtkBillboardTextActor3D()
+        label = text
+        text_actor.SetPosition(x, y, z)
+        text_actor.SetInput(label)
+        text_actor.PickableOff()
+        text_actor.DragableOff()
+        #text_actor.SetPickable(False)
 
-            #text_actor.SetPosition(actor.GetPosition())
-            text_prop = text_actor.GetTextProperty()
-            text_prop.SetFontSize(self.annotation_size_int)
-            text_prop.SetFontFamilyToArial()
-            text_prop.BoldOn()
-            text_prop.ShadowOn()
+        #text_actor.SetPosition(actor.GetPosition())
+        text_prop = text_actor.GetTextProperty()
+        text_prop.SetFontSize(self.annotation_size)
+        text_prop.SetFontFamilyToArial()
+        text_prop.BoldOn()
+        text_prop.ShadowOn()
 
-            text_prop.SetColor(self.annotation_color)
-            text_prop.SetJustificationToCentered()
-            follower = text_actor
-
-        else:  # vector text
-            source = vtk.vtkVectorText()
-            source.SetText(str(text))
-
-            # mappers are weird; they seem to do nothing
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(source.GetOutputPort())
-
-            # the follower lets us set the position/size/color
-            follower = vtk.vtkFollower()
-            follower.SetMapper(mapper)
-            follower.SetPosition((x, y, z))
-
-            # 1 point = 1/72"
-            # SetScale works on model scale size
-            #follower.SetScale(0.5)
-            follower.SetScale(self.settings.dim_max * 0.02 * self.label_scale)
-
-            text_prop = follower.GetProperty()
-            text_prop.SetColor(self.annotation_color)
-            #text_prop.SetJustificationToCentered()  # doesn't work
-            #text_prop.SetOpacity(0.3)
-
-            # we need to make sure the text rotates when the camera is changed
-            camera = self.rend.GetActiveCamera()
-            follower.SetCamera(camera)
-        #else:
-            # Create a text mapper and actor to display the results of picking.
-            # this wasn't quite done...forget how
-            #text_mapper = vtk.vtkTextMapper()
-            #text_mapper.SetInput(text)
-
-            #text_prop = text_mapper.GetTextProperty()
-            #text_prop.SetFontFamilyToArial()
-            #text_prop.SetFontSize(10)
-            #text_prop.BoldOn()
-            #text_prop.ShadowOn()
-            #text_prop.SetColor(self.annotation_color)
-
-            #text_actor = vtk.vtkActor2D()
-            #text_actor.PickableOff()
-            #text_actor.DragableOff()
-            #text_actor.GetPositionCoordinate().SetCoordinateSystemToWorld()
-            ##text_actor.SetPosition(world_position[:2])
-            #text_actor.SetMapper(text_mapper)
-            #follower = text_actor
+        text_prop.SetColor(self.annotation_color)
+        text_prop.SetJustificationToCentered()
 
         # finish adding the actor
         self.rend.AddActor(follower)
-        follower.SetPickable(False)
 
         #self.label_actors[icase].append(follower)
-        slot.append(follower)
+        slot.append(text_actor)
 
         #print('added label actor %r; icase=%s' % (text, icase))
         #print(self.label_actors)
@@ -5690,7 +5640,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if isinstance(actor, vtk.vtkActor):
             alt_prop = self.geometry_properties[namei]
             label_actors = alt_prop.label_actors
-            lines += self._update_geomtry_properties_actor(namei, group, actor, label_actors)
+            lines += self._update_geometry_properties_actor(namei, group, actor, label_actors)
         elif isinstance(actor, vtk.vtkAxesActor):
             changed = False
             is_visible1 = bool(actor.GetVisibility())
@@ -5710,7 +5660,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if render:
             self.vtk_interactor.Render()
 
-    def _update_geomtry_properties_actor(self, name, group, actor, label_actors):
+    def _update_geometry_properties_actor(self, name, group, actor, label_actors):
         """
         Updates an actor
 

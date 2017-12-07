@@ -20,7 +20,6 @@ import vtk
 from pyNastran.gui.gui_interface.common import PyDialog, QPushButtonColor
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
-USE_ANNOTATION_INT = int(vtk.VTK_VERSION[0]) >= 7
 
 class PreferencesWindow(PyDialog):
     """
@@ -52,10 +51,7 @@ class PreferencesWindow(PyDialog):
         self._default_clipping_max = data['clipping_max']
 
         self.dim_max = data['dim_max']
-        if USE_ANNOTATION_INT:
-            self._default_annotation_size_int = data['annotation_size_int']
-        else:
-            self._default_annotation_size_float = data['annotation_size_float']
+        self._default_annotation_size = data['annotation_size'] # int
 
         #self.out_data = data
         self._picker_size = data['picker_size'] * 100.
@@ -97,24 +93,11 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Annotation Size
-        if USE_ANNOTATION_INT:
-            self.annotation_size = QLabel("Annotation Size:")
-            self.annotation_size_edit = QSpinBox(self)
-            self.annotation_size_edit.setRange(1, 500)
-            self.annotation_size_edit.setValue(self._default_annotation_size_int)
-            self.annotation_size_button = QPushButton("Default")
-        else:
-            self.annotation_size = QLabel("Annotation Size:")
-            self.annotation_size_edit = QDoubleSpinBox(self)
-            self.annotation_size_edit.setRange(0.0, self.dim_max)
-
-            log_dim = log10(self.dim_max)
-            decimals = int(ceil(abs(log_dim)))
-            decimals = max(6, decimals)
-            self.annotation_size_edit.setDecimals(decimals)
-            #self.annotation_size_edit.setSingleStep(self.dim_max / 100.)
-            self.annotation_size_edit.setSingleStep(self.dim_max / 1000.)
-            self.annotation_size_edit.setValue(self._default_annotation_size_float)
+        self.annotation_size = QLabel("Annotation Size:")
+        self.annotation_size_edit = QSpinBox(self)
+        self.annotation_size_edit.setRange(1, 500)
+        self.annotation_size_edit.setValue(self._default_annotation_size)
+        self.annotation_size_button = QPushButton("Default")
 
         #-----------------------------------------------------------------------
         # Picker Size
@@ -165,8 +148,7 @@ class PreferencesWindow(PyDialog):
 
         grid.addWidget(self.annotation_size, 4, 0)
         grid.addWidget(self.annotation_size_edit, 4, 1)
-        if USE_ANNOTATION_INT:
-            grid.addWidget(self.annotation_size_button, 4, 2)
+        grid.addWidget(self.annotation_size_button, 4, 2)
 
         grid.addWidget(self.picker_size, 5, 0)
         grid.addWidget(self.picker_size_edit, 5, 1)
@@ -195,8 +177,7 @@ class PreferencesWindow(PyDialog):
         self.font_size_button.clicked.connect(self.on_default_font_size)
         self.font_size_edit.valueChanged.connect(self.on_set_font)
 
-        if USE_ANNOTATION_INT:
-            self.annotation_size_button.clicked.connect(self.on_default_annotation_size)
+        self.annotation_size_button.clicked.connect(self.on_default_annotation_size)
         self.annotation_size_edit.editingFinished.connect(self.on_set_annotation_size)
         self.annotation_size_edit.valueChanged.connect(self.on_set_annotation_size)
         self.annotation_color_edit.clicked.connect(self.on_annotation_color)
@@ -227,7 +208,7 @@ class PreferencesWindow(PyDialog):
     def on_set_annotation_size(self, value=None):
         """update the annotation size"""
         if value is None:
-            value = float(self.annotation_size_edit.text())
+            value = int(self.annotation_size_edit.text())
         self._annotation_size = value
         #self.on_apply(force=True)
         #self.min_edit.setText(str(self._default_min))
@@ -236,8 +217,7 @@ class PreferencesWindow(PyDialog):
 
     def update_annotation_size_color(self):
         if self.win_parent is not None:
-            self.win_parent.settings.set_annotation_size_color(
-                self._annotation_size, self.annotation_color_float)
+            self.win_parent.settings.set_annotation_size_color(size=self._annotation_size)
 
     def on_annotation_color(self):
         rgb_color_ints = self.annotation_color_int
@@ -358,8 +338,7 @@ class PreferencesWindow(PyDialog):
         if (passed or force) and self.win_parent is not None:
             self.win_parent.settings.on_set_font_size(self.out_data['font_size'])
 
-            #self.win_parent.settings.set_annotation_size_color(
-                #self._annotation_size, self.annotation_color_float)
+            #self.win_parent.settings.set_annotation_size_color(self._annotation_size)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
             self.win_parent._apply_clipping(self.out_data)
@@ -400,8 +379,7 @@ def main():
         'text_color' : (0., 1., 0.), # green
 
         'annotation_color' : (1., 0., 0.), # red
-        'annotation_size_float' : 10.,
-        'annotation_size_int' : 11,
+        'annotation_size' : 11,
         'picker_size' : 10.,
 
         'clipping_min' : 0.,
