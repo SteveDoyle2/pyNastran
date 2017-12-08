@@ -3522,9 +3522,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         text_prop.SetJustificationToCentered()
 
         # finish adding the actor
-        self.rend.AddActor(follower)
+        self.rend.AddActor(text_actor)
 
-        #self.label_actors[icase].append(follower)
+        #self.label_actors[icase].append(text_actor)
         slot.append(text_actor)
 
         #print('added label actor %r; icase=%s' % (text, icase))
