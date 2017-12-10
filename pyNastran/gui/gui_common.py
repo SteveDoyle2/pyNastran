@@ -154,7 +154,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         self.html_logging = html_logging
         self.execute_python = True
+
         self.scalar_bar = ScalarBar(self.is_horizontal_scalar_bar)
+        self.color_function_black = vtk.vtkColorTransferFunction()
+        self.color_function_black.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
+        self.color_function_black.AddRGBPoint(1.0, 0.0, 0.0, 0.0)
+
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
         self.display_units = ['', '', '']
@@ -1890,9 +1895,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if self.is_edges_black:
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOn()
+            self.edge_mapper.SetLookupTable(self.color_function_black)
         else:
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
+            self.edge_mapper.SetLookupTable(self.color_function)
         self.edge_actor.Modified()
         prop.Modified()
         self.vtk_interactor.Render()
