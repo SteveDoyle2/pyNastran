@@ -4473,28 +4473,46 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera = self.GetCamera()
         #print("code =", code)
         if code == '+x':  # set x-axis
+            # +z up
+            # +y right
+            # looking forward
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(1., 0., 0.)
         elif code == '-x':  # set x-axis
+            # +z up
+            # +y to the left (right wing)
+            # looking aft
             camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 0., -1.)
+            camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(-1., 0., 0.)
 
         elif code == '+y':  # set y-axis
+            # +z up
+            # +x aft to left
+            # view from right wing
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(0., 1., 0.)
         elif code == '-y':  # set y-axis
+            # +z up
+            # +x aft to right
+            # view from left wing
             camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 0., -1.)
+            camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(0., -1., 0.)
 
         elif code == '+z':  # set z-axis
+            # +x aft
+            # +y up (right wing up)
+            # top view
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 1., 0.)
             camera.SetPosition(0., 0., 1.)
         elif code == '-z':  # set z-axis
+            # +x aft
+            # -y down (left wing up)
+            # bottom view
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., -1., 0.)
             camera.SetPosition(0., 0., -1.)
@@ -4895,7 +4913,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             widget = QWidget()
             title = 'Clear Application Log'
             msg = 'Are you sure you want to clear the Application Log?'
-            result = QMessageBox.question(widget, title, msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            result = QMessageBox.question(widget, title, msg,
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if result == QMessageBox.Yes:
                 self.log_widget.clear()
                 self.log_command('clear_application_log(force=%s)' % force)
@@ -5546,20 +5565,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_update_geometry_properties_override_dialog(self, geometry_properties):
         """
-        Update the goemetry properties and overwite the options in the edit geometry properties
-        dialog if it is open.
+        Update the goemetry properties and overwite the options in the
+        edit geometry properties dialog if it is open.
 
         Parameters
         -----------
         geometry_properties : dict {str : CoordProperties or AltGeometry}
             Dictionary from name to properties object. Only the names included in
             ``geometry_properties`` are modified.
-
         """
         if self._edit_geometry_properties_window_shown:
-            # Overirde the output state in the edit geometry properties diaglog if the button is
-            # pushed while the dialog is open. This prevent the case where you close the dialog and
-            # the # state reverts back to before you hit the button.
+            # Override the output state in the edit geometry properties diaglog
+            # if the button is pushed while the dialog is open. This prevent the
+            # case where you close the dialog and the state reverts back to
+            # before you hit the button.
             for name, prop in iteritems(geometry_properties):
                 self._edit_geometry_properties.out_data[name] = prop
                 if self._edit_geometry_properties.active_key == name:
@@ -5609,8 +5628,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         something changed.
 
         Note that some of the values are limited.  This prevents
-        points/lines from being shrunk to 0 and also the actor
-        being actually "hidden" at the same time.
+        points/lines from being shrunk to 0 and also the actor being
+        actually "hidden" at the same time.  This prevents confusion
+        when you try to show the actor and it's not visible.
         """
         lines = []
         if name is None:
