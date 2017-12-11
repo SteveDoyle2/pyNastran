@@ -32,12 +32,8 @@ class QTreeView2(QTreeView):
         #return
         key = event.key()
         if key == Qt.Key_Delete:
-            print('----------------')
-            print('QTreeView2.delete')
-
             rows = self.find_list_index()
             self.remove_rows(rows)
-            #print(self.data)
             #self.model().removeRow(row)
             #self.parent().on_delete(index.row())
 

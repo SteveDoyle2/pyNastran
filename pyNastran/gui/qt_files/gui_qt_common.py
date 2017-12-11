@@ -85,11 +85,18 @@ class GuiCommon(GuiAttributes):
 
     def on_rcycle_results(self, case=None):
         """the reverse of on_cycle_results"""
-        if len(self.case_keys) == 0:
+        if len(self.case_keys) <= 1:
             return
 
+        #ncases = len(self.case_keys)
+        #icasei = self.case_keys.index(self.icase)
+        #icasei2 = ncases + icasei - 1
+        #icase = (self.case_keys + self.case_keys)[icasei2]
+        #self.cycle_results(icase)
+        #self.icase = icase
+
         icase = self.icase - 1
-        while 1:
+        while 1:  # TODO: speed this up
             if icase == -1:
                 icase = self.ncases - 1
             try:
@@ -100,11 +107,18 @@ class GuiCommon(GuiAttributes):
 
     def on_cycle_results(self, case=None):
         """the gui method for calling cycle_results"""
-        if len(self.case_keys) == 0:
+        if len(self.case_keys) <= 1:
             return
 
+        #ncases = len(self.case_keys)
+        #icasei = self.case_keys.index(self.icase)
+        #icasei2 = icasei + 1
+        #icase = (self.case_keys + self.case_keys)[icasei2]
+        #self.cycle_results(icase)
+        #self.icase = icase
+
         icase = self.icase + 1
-        while 1:
+        while 1:  # TODO: speed this up
             if icase == self.ncases:
                 icase = 0
             try:
