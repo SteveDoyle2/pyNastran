@@ -6,6 +6,7 @@ Defines:
 """
 from __future__ import print_function
 import os
+from six import string_types
 import numpy as np
 try:
     import imageio
@@ -19,7 +20,7 @@ def setup_animation(scale, istep=None,
                     animate_scale=True, animate_phase=False, animate_time=False,
                     icase=None,
                     icase_start=None, icase_end=None, icase_delta=None,
-                    time=2.0, onesided=True,
+                    time=2.0, animation_profile='0 to scale',
                     fps=30):
     """
     helper method for ``make_gif``
@@ -38,58 +39,30 @@ def setup_animation(scale, istep=None,
     analysis_time : float
         the time that needs to be simulated for the analysis; not the runtime
     """
-    if animate_time or animate_phase:
-        onesided = True
-    analysis_time = get_analysis_time(time, onesided)
+    if animate_scale or animate_phase:
+        # ignored for time
+        assert isinstance(fps, integer_types), 'fps=%s must be an integer'% fps
 
-    nframes = int(analysis_time * fps)
-    scales = None
     phases = None
+    icases = None
     if animate_scale:
-        # TODO: we could start from 0 deflection, but that's more work
-        # TODO: we could do a sine wave, but again, more work
-        icases = icase
-        scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
-        isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
-        phases = [0.] * nframes
-        assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
-        assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
+        icases, isteps, scales, analysis_time = setup_animate_scale(
+            scale,
+            icase, time, animation_profile, fps)
     elif animate_phase:
-        # animate phase
-        icases = icase
-        phases = np.linspace(0., 360, num=nframes, endpoint=False)
-        isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
-        scales = [scale] * nframes
-        assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
-        assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+        phases, icases, isteps, scales, analysis_time, fps = setup_animate_phase(
+            scale, icase,
+            time, fps)
     elif animate_time:
-        icases = np.arange(icase_start, icase_end+1, icase_delta)
-        #min_value = 0.
-        #max_value = 1.46862
-        nfiles = len(icases)
-
-        # specifying fps and dt makes the problem overdefined
-        # assuming dt
-        #
-        # TDOO: change this to stepping similar to icase_delta
-        #       icases = icases[::5]
-        fps = nfiles / time
-
-        # our scale will be constant
-        # phases is just None
-        scales = [scale] * nfiles
-        assert len(icases) == nfiles, 'len(icases)=%s nfiles=%s' % (len(icases), nfiles)
-        phases = None
-        assert len(scales) == len(icases), 'nscales=%s len(icases)=%s' % (len(scales), len(icases))
-
-        # TODO: this isn't maintained...
-        #assert nframes == nfiles, 'nframes=%s nfiles=%s' % (nframes, nfiles)
-
-        isteps = np.linspace(0, nfiles, num=nfiles, endpoint=True, dtype='int32')
-
+        icases, isteps, scales, analysis_time, fps = setup_animate_time(
+            scale, time,
+            icase_start, icase_end, icase_delta,
+            fps)
     else:
         raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
             animate_scale, animate_phase, animate_time))
+
+
     if istep is not None:
         assert isinstance(istep, integer_types), 'istep=%r' % istep
         scales = (scales[istep],)
@@ -100,6 +73,135 @@ def setup_animation(scale, istep=None,
         phases, icases, isteps, scales,
         analysis_time, fps)
     return phases2, icases2, isteps2, scales2, analysis_time
+
+def setup_animate_scale(scale, icase, time, profile, fps):
+    if isinstance(profile, string_types):
+        profile = profile.lower()
+        if profile == '0 to scale':
+            onesided = False
+        elif profile == '0 to scale to 0':
+            onesided = True
+            if fps % 2 == 1:
+                fps += 1
+        elif profile == '-scale to scale':
+            onesided = False
+        elif profile == '-scale to scale to -scale':
+            onesided = True
+            if fps % 2 == 1:
+                fps += 1
+        else:
+            msg = "profile=%r is not '0 to scale' or '-scale to scale', '-scale to scale to -scale'"
+            raise NotImplementedError(msg)
+    else:
+        msg = 'profile=%r is not supported' % profile
+        raise NotImplementedError(msg)
+
+    analysis_time = get_analysis_time(time, onesided)
+    nframes = int(analysis_time * fps)
+    if profile in ['0 to scale to 0', '-scale to scale to -scale']:
+        nframes += 1
+
+    nframes_interp = nframes - 1
+
+    if isinstance(profile, string_types):
+        profile = profile.lower()
+        if profile == '0 to scale':
+            yp = np.array([0, scale])
+            xp = np.array([0., nframes_interp])
+            x = np.arange(nframes)
+            scales = np.interp(x, xp, yp)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+        elif profile == '-scale to scale':
+            yp = np.array([-scale, scale])
+            xp = np.array([0., nframes_interp])
+            x = np.arange(nframes)
+            scales = np.interp(x, xp, yp)
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
+
+        elif profile == '0 to scale to 0':
+            yp = np.array([0, scale, 0.])
+            xp = np.array([0., nframes_interp / 2., nframes_interp])
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            x = isteps
+            scales = np.interp(x, xp, yp)
+        elif profile == '-scale to scale to -scale':
+            yp = np.array([-scale, scale, -scale])
+            xp = np.array([0., nframes_interp / 2., nframes_interp])
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            x = isteps
+            scales = np.interp(x, xp, yp)
+
+        else:
+            msg = "profile=%r is not '0 to scale', '0 to scale to 0', or '-scale to scale'"
+            raise NotImplementedError(msg)
+    #elif isinstance(profile, list):
+        #yp = np.array(profile)
+        #xp = np.linspace(0., nframes_interp, num=len(yp), endpoint=True, dtype='float64')
+    else:
+        msg = 'profile=%r is not supported' % profile
+        raise NotImplementedError(msg)
+
+    x = np.arange(nframes)
+
+    icases = icase
+    assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+    #assert len(scales) == nframes, 'len(scales)=%s nframes=%s' % (len(scales), nframes)
+    if profile == '0 to scale to 0' and len(scales) % 2 == 0:
+        raise RuntimeError('nscales=%s scales=%s' % (len(scales), scales))
+
+
+    #scales = None
+    #phases = None
+    #if animate_scale:
+
+    #else:
+        #raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
+            #animate_scale, animate_phase, animate_time))
+    return icases, isteps, scales, analysis_time
+
+def setup_animate_phase(scale, icase,
+                        time, fps):
+    # animate phase
+    nframes = int(time * fps)
+    icases = icase
+    phases = np.linspace(0., 360., num=nframes, endpoint=False)
+    isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
+    scales = [scale] * len(isteps)
+    assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
+    assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+    #assert len(phases) == nframes, 'len(phases)=%s nframes=%s' % (len(phases), nframes)
+    return phases, icases, isteps, scales, time, fps
+
+def setup_animate_time(scale, time,
+                       icase_start, icase_end, icase_delta,
+                       fps):
+    analysis_time = time
+    assert isinstance(icase_start, integer_types), 'icase_start=%s' % icase_start
+    assert isinstance(icase_end, integer_types), 'icase_end=%s' % icase_end
+    assert isinstance(icase_start, integer_types), 'icase_delta=%s' % icase_delta
+    icases = np.arange(icase_start, icase_end+1, icase_delta)
+    #min_value = 0.
+    #max_value = 1.46862
+    nfiles = len(icases)
+
+    # specifying fps and dt makes the problem overdefined
+    # assuming dt
+    #
+    # TDOO: change this to stepping similar to icase_delta
+    #       icases = icases[::5]
+    fps = nfiles / time
+
+    # our scale will be constant
+    # phases is just None
+    scales = [scale] * nfiles
+    assert len(icases) == nfiles, 'len(icases)=%s nfiles=%s' % (len(icases), nfiles)
+    assert len(scales) == len(icases), 'nscales=%s len(icases)=%s' % (len(scales), len(icases))
+
+    # TODO: this isn't maintained...
+    #assert nframes == nfiles, 'nframes=%s nfiles=%s' % (nframes, nfiles)
+
+    isteps = np.linspace(0, nfiles, num=nfiles, endpoint=True, dtype='int32')
+    return icases, isteps, scales, analysis_time, fps
 
 def get_analysis_time(time, onesided=True):
     """
@@ -152,6 +254,7 @@ def update_animation_inputs(phases, icases, isteps, scales, analysis_time, fps):
         icases = [icases] * len(scales)
 
 
+    assert icases is not None
     if len(icases) != len(scales):
         msg = 'ncases=%s nscales=%s' % (len(icases), len(scales))
         print(msg)
@@ -172,7 +275,7 @@ def update_animation_inputs(phases, icases, isteps, scales, analysis_time, fps):
         print(msg)
         raise ValueError(msg)
     assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
-    return phases, icases, isteps, scales
+    return np.array(phases), np.array(icases), np.array(isteps), np.array(scales)
 
 def write_gif(gif_filename, png_filenames, time=2.0,
               onesided=True, nrepeat=0,

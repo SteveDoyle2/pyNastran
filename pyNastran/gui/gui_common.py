@@ -3776,7 +3776,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def make_gif(self, gif_filename, scale, istep=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
                  icase=None, icase_start=None, icase_end=None, icase_delta=None,
-                 time=2.0, onesided=True,
+                 time=2.0, animation_profile='0 to scale',
                  nrepeat=0, fps=30, magnify=1,
                  make_images=True, delete_images=False, make_gif=True, stop_animation=False,
                  animate_in_gui=True):
@@ -3844,8 +3844,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         Options
         -------
-        onesided : bool; default=True
-            should the animation go up and back down
+        animation_profile : str; default='0 to scale'
+            animation profile to follow
+                '0 to Scale',
+                '0 to Scale to 0',
+                #'0 to Scale to -Scale to 0',
+                '-Scale to Scale',
+                '-scale to scale to -scale',
         nrepeat : int; default=0
             0 : loop infinitely
             1 : loop 1 time
@@ -3887,7 +3892,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             animate_scale=True, animate_phase=False, animate_time=False,
             icase=icase,
             icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
-            time=time, onesided=True,
+            time=time, animation_profile=animation_profile,
             fps=fps)
 
         parent = self
