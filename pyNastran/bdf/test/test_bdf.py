@@ -536,7 +536,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 if card in fem1.card_count:
                     raise DisabledCardError('card=%r has been disabled' % card)
             #fem1.geom_check(geom_check=True, xref=False)
-            if not stop:
+            if not stop and not xref:
                 skin_filename = 'skin_file.bdf'
                 fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
                 if os.path.exists(skin_filename):
@@ -620,7 +620,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     if mesh_form is None:
         pass
     elif mesh_form == 'combined':
-        fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
+        fem1.write_bdf(out_model, interspersed=True, size=size, is_double=is_double)
     elif mesh_form == 'separate':
         fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
     else:
