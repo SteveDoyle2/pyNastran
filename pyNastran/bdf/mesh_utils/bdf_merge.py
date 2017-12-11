@@ -220,6 +220,7 @@ def _get_mapper_0(model):
     spc_map = _dicts_key_to_key((model.spcs, model.spcadds))
     mpc_map = _dicts_key_to_key((model.mpcs, model.mpcadds))
     method_map = _dict_key_to_key(model.methods)
+    rigid_elements_map = _dict_key_to_key(model.rigid_elements)
     cmethod_map = _dict_key_to_key(model.cMethods)
     flfact_map = _dict_key_to_key(model.flfacts)
     flutter_map = _dict_key_to_key(model.flutters)
@@ -257,6 +258,7 @@ def _get_mapper_0(model):
         'nodes' : nid_map,
         'coords' : cid_map,
         'materials' : mid_map,
+        'rigid_elements': rigid_elements_map,
         'SPC' : spc_map,
         'MPC' : mpc_map,
         'METHOD' : method_map,
