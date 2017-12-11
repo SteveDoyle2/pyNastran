@@ -9,24 +9,137 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 from six import string_types
 
 from qtpy import QtGui
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-    QComboBox, QLabel, QHBoxLayout)
+    QComboBox, QLabel, QHBoxLayout, QMessageBox)
 
 
 class QTreeView2(QTreeView):
-    def __init__(self, data, choices):
+    def __init__(self, parent, data, choices):
+        self.parent = parent
         self.old_rows = []
         self.data = data
+        self.cases_deleted = set([])
         self.choices = choices
         self.single = False
         QTreeView.__init__(self)
+        #self.setAlternatingRowColors(True)
 
-    def mousePressEvent(self, position):
-        QTreeView.mousePressEvent(self, position)
+    def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
+        #if event.key() == QtCore.Qt.Key_Escape:
+            #self.close()
+        #return
+        key = event.key()
+        if key == Qt.Key_Delete:
+            print('----------------')
+            print('QTreeView2.delete')
+
+            rows = self.find_list_index()
+            self.remove_rows(rows)
+            #print(self.data)
+            #self.model().removeRow(row)
+            #self.parent().on_delete(index.row())
+
+            #del self.data[row]
+            #self.model().change_data(self.data)
+        else:
+            QTreeView.keyPressEvent(self, event)
+
+    def remove_rows(self, rows):
+        """
+        We just hide the row to delete things to prevent refreshing
+        the window and changing which items have been expanded
+
+        Parameters
+        ----------
+        rows : List[int]
+            the trace on the data/form block
+
+        form = [
+            ['Geometry', None, [
+                ('NodeID', 0, []),
+                ('ElementID', 1, []),
+                ('PropertyID', 2, []),
+                ('MaterialID', 3, []),
+                ('E', 4, []),
+                ('Element Checks', None, [
+                    ('ElementDim', 5, []),
+                    ('Min Edge Length', 6, []),
+                    ('Min Interior Angle', 7, []),
+                    ('Max Interior Angle', 8, [])],
+                 ),],
+             ],
+        ]
+
+        # delete Geometry
+        data[0] = ('Geometry', None, [...])
+        >>> remove_rows([0])
+
+        # delete MaterialID
+        data[0][3] = ('MaterialID', 3, [])
+        >>> remove_rows([0, 3])
+
+        # delete ElementChecks
+        data[0][5] = ('Element Checks', None, [...])
+        >>> remove_rows([0, 5])
+
+        # delete Min Edge Length
+        data[0][5][1] = ('Min Edge Length', 6, [])
+        >>> remove_rows([0, 5, 1])
+        """
+        # find the row the user wants to delete
+        data = self.data
+        for row in rows[:-1]:
+            data = data[row][2]
+
+        # we got our data block
+        # now we need to get 1+ results
+        last_row = rows[-1]
+        cases_to_delete = get_many_cases(data[last_row])
+
+        cases_to_delete = list(set(cases_to_delete) - self.cases_deleted)
+        cases_to_delete.sort()
+        if len(cases_to_delete) == 0: # can this happen?
+            # this happens when you cleared out a data block by
+            # deleting to entries, but not the parent
+            #
+            # we'll just hide the row now
+            msg = ''
+            return
+        elif len(cases_to_delete) == 1:
+            msg = 'Are you sure you want to delete 1 result case load_case=%s' % cases_to_delete[0]
+        else:
+            msg = 'Are you sure you want to delete %s result cases %s' % (
+                len(cases_to_delete), str(cases_to_delete))
+
+        if msg:
+            widget = QMessageBox()
+            title = 'Delete Cases'
+            result = QMessageBox.question(widget, title, msg,
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if result != QMessageBox.Yes:
+                return
+
+            self.cases_deleted.update(set(cases_to_delete))
+            sidebar = self.parent.parent
+            if hasattr(sidebar.parent, 'delete_cases'):
+                gui = sidebar.parent
+                gui.delete_cases(cases_to_delete, ask=False)
+
+        # hide the line the user wants to delete
+        row = rows[-1]
+        indexes = self.selectedIndexes()
+        self.setRowHidden(row, indexes[-1].parent(), True)
+        self.update()
+
+    def find_list_index(self):
+        """
+        trace the tree to find the selected item
+        """
         indexes = self.selectedIndexes()
 
-        # trace the tree to find the selected item
         rows = []
         for index in indexes:
             row = index.row()
@@ -38,6 +151,14 @@ class QTreeView2(QTreeView):
                 rows.append(row)
                 level += 1
         rows.reverse()
+        return rows
+
+    def mousePressEvent(self, position):
+        """called when you click a result"""
+        QTreeView.mousePressEvent(self, position)
+
+        # trace the tree to find the selected item
+        rows = self.find_list_index()
 
         # TODO: what is this for???
         if rows != self.old_rows:
@@ -198,38 +319,26 @@ class Sidebar(QWidget):
     | - avg/derive |
     +--------------+
     """
-    def __init__(self, parent, debug=False):
+    def __init__(self, parent, debug=False, data=None, clear_data=True):
         """creates the buttons in the Sidebar, not the actual layout"""
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
 
         name = 'main'
-        data = []
-        data = [
-            ("Alice", None, [
-                ("Keys", 1, []),
-                ("Purse", 2, [
-                    ("Cellphone", 3, [])
-                    ])
-                ]),
-            ("Bob", None, [
-                ("Wallet", None, [
-                    ("Credit card", 4, []),
-                    ("Money", 5, [])
-                    ])
-                ]),
-            ]
 
         choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
-        self.result_case_window = ResultsWindow('Case/Results', data, choices)
+        if data is None:
+            data = []
+
+        self.result_case_window = ResultsWindow(self, 'Case/Results', data, choices)
 
         data = [
             ('A', 1, []),
             #('B', 2, []),
             #('C', 3, []),
         ]
-        self.result_data_window = ResultsWindow('Method', data, choices)
+        self.result_data_window = ResultsWindow(self, 'Method', data, choices)
         self.result_data_window.setVisible(False)
 
         self.show_pulldown = False
@@ -250,9 +359,9 @@ class Sidebar(QWidget):
         self.name_pulldown.setDisabled(True)
         self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
 
-        self.setup_layout()
+        self.setup_layout(clear_data=clear_data)
 
-    def setup_layout(self):
+    def setup_layout(self, clear_data=True):
         """creates the sidebar visual layout"""
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
@@ -267,7 +376,8 @@ class Sidebar(QWidget):
         vbox.addWidget(self.apply_button)
         self.setLayout(vbox)
 
-        self.clear_data()
+        if clear_data:
+            self.clear_data()
 
     def update_method(self, method):
         if isinstance(method, string_types):
@@ -281,6 +391,9 @@ class Sidebar(QWidget):
             #datai = self.result_data_window.data[0]
 
     def get_form(self):
+        """
+        TODO: At this point, we should clear out the data block and refresh it
+        """
         return self.result_case_window.data
 
     def update_results(self, data, name):
@@ -364,13 +477,13 @@ class ResultsWindow(QWidget):
     A ResultsWindow creates the box where we actually select our
     results case.  It does not have an apply button.
     """
-    def __init__(self, name, data, choices):
+    def __init__(self, parent, name, data, choices):
         QWidget.__init__(self)
         self.name = name
         self.data = data
         self.choices = choices
-
-        self.treeView = QTreeView2(self.data, choices)
+        self.parent = parent
+        self.treeView = QTreeView2(self, self.data, choices)
         self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.model = QtGui.QStandardItemModel()
@@ -458,10 +571,63 @@ class ResultsWindow(QWidget):
         #    ]
         #    self.update_data(data)
 
+def get_many_cases(data):
+    """
+    Get the result case ids that are a subset of the data/form list
+
+    data = [
+        (u'Element Checks', None, [
+            (u'ElementDim', 5, []),
+            (u'Min Edge Length', 6, []),
+            (u'Min Interior Angle', 7, []),
+            (u'Max Interior Angle', 8, [])],
+        ),
+    ]
+    >>> get_many_cases(data)
+    [5, 6, 7, 8]
+
+    >>> data = [(u'Max Interior Angle', 8, [])]
+    [8]
+    """
+    name, case, rows = data
+    if case is None:
+        # remove many results
+        # (Geometry, None, [results...])
+        cases = []
+        for irow, row in enumerate(rows):
+            name, row_id, data2 = row
+            cases += get_many_cases(row)
+    else:
+        cases = [case]
+    return cases
+
 def main():  # pragma: no cover
     app = QApplication(sys.argv)
-    window = Sidebar(app, debug=True)
-    window.show()
+
+    form = [
+        [u'Geometry', None, [
+            (u'NodeID', 0, []),
+            (u'ElementID', 1, []),
+            (u'PropertyID', 2, []),
+            (u'MaterialID', 3, []),
+            (u'E', 4, []),
+            (u'Element Checks', None, [
+                (u'ElementDim', 5, []),
+                (u'Min Edge Length', 6, []),
+                (u'Min Interior Angle', 7, []),
+                (u'Max Interior Angle', 8, [])],
+             ),],
+         ],
+    ]
+    #form = []
+    res_widget = Sidebar(app, data=form, clear_data=False, debug=True)
+
+    name = 'name'
+    #res_widget.update_results(form, name)
+
+    res_widget.show()
+
+
     sys.exit(app.exec_())
 
 if __name__ == "__main__":  # pragma: no cover

@@ -4500,6 +4500,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             5 : GuiResult(...),  # Stress; t=1.0
             6 : GuiResult(...),  # Displacement; t=1.0
         }
+        case_keys = [0, 1, 2, 3, 4, 5, 6]
         """
         self.turn_text_on()
         self._set_results(form, cases)
@@ -4528,12 +4529,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #    ('C', []),
         #]
 
-        #self.case_keys = [
-        #    (1, 'ElementID', 1, 'centroid', '%.0f'), (1, 'Region', 1, 'centroid', '%.0f')
-        #]
         data = []
         for key in self.case_keys:
-            #print(key)
             assert isinstance(key, integer_types), key
             obj, (i, name) = self.result_cases[key]
             t = (i, [])
