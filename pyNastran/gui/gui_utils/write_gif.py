@@ -62,16 +62,15 @@ def setup_animation(scale, istep=None,
         raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
             animate_scale, animate_phase, animate_time))
 
-
-    if istep is not None:
-        assert isinstance(istep, integer_types), 'istep=%r' % istep
-        scales = (scales[istep],)
-        phases = (phases[istep],)
-        isteps = (istep,)
-
     phases2, icases2, isteps2, scales2 = update_animation_inputs(
         phases, icases, isteps, scales,
         analysis_time, fps)
+
+    if istep is not None:
+        assert isinstance(istep, integer_types), 'istep=%r' % istep
+        scales = (scales2[istep],)
+        phases = (phases2[istep],)
+        isteps = (istep,)
     return phases2, icases2, isteps2, scales2, analysis_time
 
 def setup_animate_scale(scale, icase, time, profile, fps):

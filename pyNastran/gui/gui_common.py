@@ -3965,6 +3965,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             observer_name = self.observers['TimerEvent']
             self.iren.RemoveObserver(observer_name)
             del self.observers['TimerEvent']
+            self.setup_mouse_buttons(mode='default')
 
     def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
                         max_value=None, min_value=None,
