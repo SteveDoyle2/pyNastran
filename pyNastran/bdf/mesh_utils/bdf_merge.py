@@ -6,8 +6,9 @@ defines:
 from __future__ import print_function
 from six.moves import StringIO
 from six import string_types, iteritems
-from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.case_control_deck import CaseControlDeck
+from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
 
 def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
@@ -40,8 +41,20 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     --------
     model : BDF
         Merged model.
-    mappers_all : list [dict{str, dict{int:int, ...}}, ...]
-        List of mapper dictionaries of original ids to merged
+    mappers_all : List[mapper]
+        mapper : Dict[bdf_attribute] : old_id_to_new_id_dict
+            List of mapper dictionaries of original ids to merged
+
+            bdf_attribute : str
+                a BDF attribute (e.g., 'nodes', 'elements')
+            old_id_to_new_id_dict : dict[id_old] : id_new
+                a sub dictionary that is used to map the node/element/etc. ids
+            mapper = {
+                'elements' : eid_map,
+                'nodes' : nid_map,
+                'coords' : cid_map,
+                ...
+            }
 
     Supports
     --------
@@ -61,8 +74,9 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     if not len(bdf_filenames) > 1:
         raise RuntimeError("You can't merge one BDF...bdf_filenames=%s" % str(bdf_filenames))
     for bdf_filename in bdf_filenames:
-        if not isinstance(bdf_filename, string_types):
-            raise TypeError('bdf_filenames is not a string...%s' % bdf_filename)
+        if not isinstance(bdf_filename, (string_types, BDF, StringIO)):
+            raise TypeError('bdf_filenames is not a string/BDF...%s' % bdf_filename)
+
         #bdf_filenames = [bdf_filenames]
 
     #starting_id_dict_default = {
@@ -78,11 +92,14 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #]),
         #'mid' : max(model.material_ids),
     #}
-    from pyNastran.bdf.case_control_deck import CaseControlDeck
-    model = BDF(debug=False, log=log)
-    model.disable_cards(cards_to_skip)
     bdf_filename0 = bdf_filenames[0]
-    model.read_bdf(bdf_filename0, encoding=encoding, validate=False)
+    if isinstance(bdf_filename0, BDF):
+        model = bdf_filename0
+    else:
+        model = BDF(debug=False, log=log)
+        model.disable_cards(cards_to_skip)
+        model.read_bdf(bdf_filename0, encoding=encoding, validate=False)
+
     if skip_case_control_deck:
         model.case_control_deck = CaseControlDeck([], log=None)
     model.log.info('primary=%s' % bdf_filename0)
@@ -114,18 +131,20 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             #print('  %-3s %s' % (param, val))
 
         model.log.info('secondary=%s' % bdf_filename)
-        model2 = BDF(debug=False)
-        if skip_case_control_deck:
-            model2.case_control_deck = CaseControlDeck([], log=None)
-        model2.disable_cards(cards_to_skip)
+        if isinstance(bdf_filename, BDF):
+            model2_renumber = bdf_filename
+        else:
+            model2_renumber = BDF(debug=False, log=log)
+            model2_renumber.disable_cards(cards_to_skip)
+            model2_renumber.read_bdf(bdf_filename)
 
         bdf_dump = StringIO() # 'bdf_merge_temp.bdf'
-        _, mapperi = bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict,
+        _, mapperi = bdf_renumber(model2_renumber, bdf_dump, starting_id_dict=starting_id_dict,
                                   size=size, is_double=is_double, cards_to_skip=cards_to_skip)
         bdf_dump.seek(0)
 
         mappers.append(mapperi)
-        model2 = BDF(debug=False)
+        model2 = BDF(debug=False, log=log)
         model2.disable_cards(cards_to_skip)
         model2.read_bdf(bdf_dump)
 
@@ -186,6 +205,42 @@ def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
     """
     Assemble final mappings from all original ids to the ids in the merged and possibly
     renumbered model.
+
+    Parameters
+    ----------
+    mappers : List[mapper]
+       mapper : dict[key] : value
+            key : ???
+                ???
+            value : ???
+                ???
+    mapper_0 : mapper
+        key : ???
+            ???
+        value : ???
+            ???
+    data_members : List[str]
+       list of things to include in the mappers?
+        data_members = [
+            'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
+            'materials', 'sets', 'rigid_elements', 'mpcs',
+        ]
+    mapper_renumber : dict[key]: value; default=None
+        key : str
+            a BDF attribute
+        value : dict[id_old] : id_new
+            a sub dictionary that is used to map the node/element/etc. ids
+        mapper = {
+            'elements' : eid_map,
+            'nodes' : nid_map,
+            'coords' : cid_map,
+            ...
+        }
+
+    Returns
+    -------
+    mappers_all : List[mappers]
+        One mapper for each bdf_filename
     """
     if mapper_renumber is not None:
         mappers_all = [_renumber_mapper(mapper_0, mapper_renumber)]
@@ -209,8 +264,26 @@ def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
 def _get_mapper_0(model):
     """
     Get the mapper for the first model.
+
+    Parameters
+    ----------
+    model : BDF()
+        the bdf model object
+
+    Returns
+    -------
+    mapper : dict[key]: value
+        key : str
+            a BDF attribute
+        value : dict[id_old] : id_new
+            a sub dictionary that is used to map the node/element/etc. ids
+        mapper = {
+            'elements' : eid_map,
+            'nodes' : nid_map,
+            'coords' : cid_map,
+            ...
+        }
     """
-    isinstance(model, BDF)
     # build the maps
     eids_all = list(model.elements.keys()) + list(model.masses.keys()) + list(model.rigid_elements.keys())
     eid_map = {eid : eid for eid in eids_all}
@@ -296,6 +369,34 @@ def _get_mapper_0(model):
     return mapper
 
 def _renumber_mapper(mapper_0, mapper_renumber):
+    """
+    Parameters
+    ----------
+    mapper_0 : dict[key]: value
+        key : str
+            a BDF attribute
+        value : dict[id_old] : id_new
+            a sub dictionary that is used to map the node/element/etc. ids
+        mapper = {
+            'elements' : eid_map,
+            'nodes' : nid_map,
+            'coords' : cid_map,
+            ...
+        }
+    mapper_renumber : ???
+        ???
+
+    Returns
+    -------
+    mapper : dict[map_type] : sub_mapper
+        map_type : ???
+            ???
+        sub_mapper : dict[key] : value
+            key : ???
+                ???
+            value : ???
+                ???
+    """
     mapper = mapper_0.copy()
     # apply any renumbering
     for map_type, sub_mapper in iteritems(mapper):

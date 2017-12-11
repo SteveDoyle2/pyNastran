@@ -16,11 +16,13 @@ from pyNastran.gui.gui_utils.dialogs import open_directory_dialog, open_file_dia
 from pyNastran.gui.gui_utils.write_gif import IS_IMAGEIO
 
 
-ANIMATION_PROFILES = OrderedDict()
-ANIMATION_PROFILES['0 to Scale'] = [0., 1.]
-#ANIMATION_PROFILES['0 to Scale to 0'] = [0., 1., 0.]
-#ANIMATION_PROFILES['0 to Scale to -Scale to 0'] = [0., 1., -1., 0.]
-ANIMATION_PROFILES['-Scale to Scale'] = [-1., 1.]
+ANIMATION_PROFILES = [
+    '0 to Scale',
+    '0 to Scale to 0',
+    #'0 to Scale to -Scale to 0',
+    '-Scale to Scale',
+    '-Scale to Scale to -Scale',
+]
 #ANIMATION_PROFILES['-Scale to Scale to -Scale'] = [-1., 1., -1.]
 #ANIMATION_PROFILES['CSV Profile  (not supported)'] = None
 
@@ -701,6 +703,7 @@ class AnimationWindow(PyDialog):
     def _make_gif(self, validate_out, istep=None, stop_animation=False):
         """interface for making the gif"""
         icase, scale, time, fps, animate_in_gui, magnify, output_dir, gifbase = validate_out
+        fps = int(fps)
 
         gif_filename = None
         if not stop_animation and not animate_in_gui and gifbase is not None:
@@ -727,15 +730,7 @@ class AnimationWindow(PyDialog):
         make_images = self.make_images_checkbox.isChecked()
         delete_images = self.delete_images_checkbox.isChecked()
         make_gif = self.make_gif_checkbox.isChecked()
-        key = str(self.animation_profile_edit.currentText())
-        #profile = ANIMATION_PROFILES[key]
-
-        #ANIMATION_PROFILES['0 to Scale'] = [0., 1.]
-        #ANIMATION_PROFILES['0 to Scale to 0'] = [0., 1., 0.]
-        if key == '0 to Scale':
-            onesided = True
-        else:
-            onesided = False
+        animation_profile = str(self.animation_profile_edit.currentText())
 
         icase_start = self.icase_start_edit.value()
         icase_end = self.icase_end_edit.value()
@@ -754,7 +749,7 @@ class AnimationWindow(PyDialog):
                 gif_filename, scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
                 icase=icase, icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
-                time=time, onesided=onesided,
+                time=time, animation_profile=animation_profile,
                 nrepeat=nrepeat, fps=fps, magnify=magnify,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,
                 stop_animation=stop_animation, animate_in_gui=animate_in_gui,

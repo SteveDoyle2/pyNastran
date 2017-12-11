@@ -327,12 +327,12 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #suport_map = {}
     suport1_map = {}
 
-    if isinstance(bdf_filename, string_types):
+    if isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
         model = BDF(log=log, debug=debug)
         model.disable_cards(cards_to_skip)
         model.read_bdf(bdf_filename)
-    else:
-        model = bdf_filename
 
     spoints = list(model.spoints.keys())
     epoints = list(model.epoints.keys())
@@ -595,6 +595,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         else:
             param_id = 1
         for idi, param in sorted(iteritems(dict_obj)):
+            print('working on id=%s param=%s' % (str(idi), str(param)))
             try:
                 msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
             except AttributeError:

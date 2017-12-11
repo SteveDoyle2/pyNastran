@@ -2,7 +2,6 @@ from __future__ import print_function
 import vtk
 from pyNastran.gui.gui_interface.preferences.preferences import PreferencesWindow
 
-USE_ANNOTATION_INT = int(vtk.VTK_VERSION[0]) >= 7
 
 def set_preferences_menu(self):
     """
@@ -20,8 +19,7 @@ def set_preferences_menu(self):
     min_clip, max_clip = camera.GetClippingRange()
     data = {
         'font_size' : self.settings.font_size,
-        'annotation_size_float' : self.settings.annotation_text_size,
-        'annotation_size_int' : self.settings.annotation_size_int,
+        'annotation_size' : self.settings.annotation_size, # int
         'annotation_color' : self.settings.annotation_color,
         'background_color' : self.settings.background_color,
         'text_color' : self.settings.text_color,
@@ -50,4 +48,3 @@ def set_preferences_menu(self):
         self._preferences_window_shown = False
     else:
         self._preferences_window.activateWindow()
-

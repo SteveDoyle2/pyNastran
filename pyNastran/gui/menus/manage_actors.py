@@ -6,7 +6,7 @@ http://www.saltycrane.com/blog/2007/12/pyqt-43-qtableview-qabstracttablemodel/
 http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-work-in-this-program
 """
 from __future__ import print_function
-
+from pyNastran.gui.limits import MAX_POINT_SIZE, MAX_LINE_WIDTH
 from pyNastran.gui.qt_version import qt_version
 
 from qtpy.QtCore import Qt, QVariant
@@ -195,8 +195,8 @@ class EditGeometryProperties(PyDialog):
         table_model = Model(items, header_labels, self)
         view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        if qt_version == 4:
-            view.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+        #if qt_version == 4:
+            #view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         self.table = view
         #self.opacity_edit.valueChanged.connect(self.on_opacity)
@@ -269,12 +269,12 @@ class EditGeometryProperties(PyDialog):
 
         self.line_width = QLabel("Line Width:")
         self.line_width_edit = QSpinBox(self)
-        self.line_width_edit.setRange(1, 15)
+        self.line_width_edit.setRange(1, MAX_LINE_WIDTH)
         self.line_width_edit.setSingleStep(1)
         self.line_width_edit.setValue(line_width)
         if self.use_slider:
             self.line_width_slider_edit = QSlider(QtCore.Qt.Horizontal)
-            self.line_width_slider_edit.setRange(1, 15)
+            self.line_width_slider_edit.setRange(1, MAX_LINE_WIDTH)
             self.line_width_slider_edit.setValue(line_width)
             self.line_width_slider_edit.setTickInterval(1)
             self.line_width_slider_edit.setTickPosition(QSlider.TicksBelow)
@@ -286,14 +286,14 @@ class EditGeometryProperties(PyDialog):
 
         self.point_size = QLabel("Point Size:")
         self.point_size_edit = QSpinBox(self)
-        self.point_size_edit.setRange(1, 15)
+        self.point_size_edit.setRange(1, MAX_POINT_SIZE)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
         self.point_size.setVisible(False)
         self.point_size_edit.setVisible(False)
         if self.use_slider:
             self.point_size_slider_edit = QSlider(QtCore.Qt.Horizontal)
-            self.point_size_slider_edit.setRange(1, 15)
+            self.point_size_slider_edit.setRange(1, MAX_POINT_SIZE)
             self.point_size_slider_edit.setValue(point_size)
             self.point_size_slider_edit.setTickInterval(1)
             self.point_size_slider_edit.setTickPosition(QSlider.TicksBelow)
@@ -563,10 +563,6 @@ class EditGeometryProperties(PyDialog):
         #self.on_apply(force=True)  # TODO: was turned on...do I want this???
         #self.allow_update = True
 
-    #def on_name_select(self):
-        #print('on_name_select')
-        #return
-
     def create_layout(self):
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.cancel_button)
@@ -619,13 +615,9 @@ class EditGeometryProperties(PyDialog):
         checkboxs.addButton(self.checkbox_hide)
 
         vbox = QVBoxLayout()
-        vbox.addWidget(self.table)
+        vbox.addWidget(self.table, stretch=1)
         vbox.addLayout(grid)
 
-        #if 0:
-            #vbox.addWidget(self.checkbox_show)
-            #vbox.addWidget(self.checkbox_hide)
-        #else:
         vbox1 = QVBoxLayout()
         vbox1.addWidget(self.checkbox_show)
         vbox1.addWidget(self.checkbox_hide)
@@ -658,7 +650,7 @@ class EditGeometryProperties(PyDialog):
         self.checkbox_show.clicked.connect(self.on_show)
         self.checkbox_hide.clicked.connect(self.on_hide)
         self.cancel_button.clicked.connect(self.on_cancel)
-            # closeEvent
+        # closeEvent
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -793,9 +785,9 @@ class EditGeometryProperties(PyDialog):
 
     def on_opacity_slider(self):
         """
-            opacity = 1.0 (solid/opaque)
-            opacity = 0.0 (invisible)
-            """
+        opacity = 1.0 (solid/opaque)
+        opacity = 0.0 (invisible)
+        """
         self.is_opacity_edit_slider_active = True
         #name = self.active_key
         int_opacity = self.opacity_slider_edit.value()
@@ -803,47 +795,6 @@ class EditGeometryProperties(PyDialog):
             float_opacity = int_opacity / 10.
             self.opacity_edit.setValue(float_opacity)
         self.is_opacity_edit_slider_active = False
-
-    #def on_axis(self, text):
-        ##print(self.combo_axis.itemText())
-        #self._axis = str(text)
-        #self.plane.setText('Point on %s? Plane:' % self._axis)
-        #self.point_a.setText('Point on %s Axis:' % self._axis)
-        #self.point_b.setText('Point on %s%s Plane:' % (self._axis, self._plane))
-
-    #def on_plane(self, text):
-        #self._plane = str(text)
-        #self.point_b.setText('Point on %s%s Plane:' % (self._axis, self._plane))
-
-    #def _on_float(self, field):
-        #try:
-            #eval_float_from_string(field.text())
-            #field.setStyleSheet("QLineEdit{background: white;}")
-        #except ValueError:
-            #field.setStyleSheet("QLineEdit{background: red;}")
-
-    #def on_default_name(self):
-        #self.name_edit.setText(str(self._default_name))
-        #self.name_edit.setStyleSheet("QLineEdit{background: white;}")
-
-    #def check_float(self, cell):
-        #text = cell.text()
-        #try:
-            #value = eval_float_from_string(text)
-            #cell.setStyleSheet("QLineEdit{background: white;}")
-            #return value, True
-        #except ValueError:
-            #cell.setStyleSheet("QLineEdit{background: red;}")
-            #return None, False
-
-    #def check_name(self, cell):
-        #text = str(cell.text()).strip()
-        #if len(text):
-            #cell.setStyleSheet("QLineEdit{background: white;}")
-            #return text, True
-        #else:
-            #cell.setStyleSheet("QLineEdit{background: red;}")
-            #return None, False
 
     def on_validate(self):
         self.out_data['clicked_ok'] = True
@@ -882,11 +833,6 @@ class EditGeometryProperties(PyDialog):
             self.close()
             #self.destroy()
 
-    # def on_cancel(self):
-        # self.out_data['clicked_ok'] = False
-        # self.out_data['clicked_cancel'] = True
-        # self.close()
-
 
 def main():  # pragma: no cover
     """gui independent way to test the program"""
@@ -905,12 +851,23 @@ def main():  # pragma: no cover
     blue = (0, 0, 255)
     green = (0, 255, 0)
     purple = (255, 0, 255)
+
+    # representation
+    # * main - main mesh
+    # * toggle - change with main mesh
+    # * wire - always wireframe
+    # * point - always points
+    # * wire+point - point (vertex) and wireframe allowed
+    # * surface - always surface
+    # * bar - this can use bar scale
     data = {
         'font_size' : 8,
-        'caero1' : AltGeometry(parent, 'caero', color=green, line_width=3, opacity=0.2),
-        'caero2' : AltGeometry(parent, 'caero', color=purple, line_width=4, opacity=0.3),
-        'caero' : AltGeometry(parent, 'caero', color=blue, line_width=2, opacity=0.1, bar_scale=1.0),
-        'main' : AltGeometry(parent, 'main', color=red, line_width=1, opacity=0.0, bar_scale=1.0),
+        'toggle' : AltGeometry(parent, 'toggle', color=green, line_width=3, opacity=0.2, representation='toggle'),
+        'wire' : AltGeometry(parent, 'wire', color=purple, line_width=4, opacity=0.3, representation='wire'),
+        'wire+point' : AltGeometry(parent, 'wire+point', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+point'),
+        'main' : AltGeometry(parent, 'main', color=red, line_width=1, opacity=0.0, representation='main'),
+        'point' : AltGeometry(parent, 'point', color=blue, opacity=0.1, representation='point'),
+        'surface' : AltGeometry(parent, 'surface', color=blue, opacity=0.1, representation='surface'),
     }
     main_window = EditGeometryProperties(data, win_parent=None)
     main_window.show()

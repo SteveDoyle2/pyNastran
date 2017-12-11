@@ -39,23 +39,40 @@ try:
 except:
     # git isn't installed
     ghash = 'no.checksum.error'
-version = '0.9.0+dev.%s' % ghash
 
 # hacking on the __init___.py file to set:
 #   is_pynastrangui_exe = True
 init_filename_bkp = init_filename + '.bkp'
 shutil.copyfile(init_filename, init_filename_bkp)
+
+print('opening %s to hack the is_pynastrangui_exe flag' % init_filename)
 with open(init_filename, 'r') as init_file:
     lines = init_file.readlines()
+
+# update the init.py with:
+# - is_pynastrangui_exe = True
+#
+# and get the version
+#
+lines2 = []
+for line in lines:
+    if 'is_pynastrangui_exe = False' in line:
+        line = 'is_pynastrangui_exe = True\n'
+    elif '__version__ = ' in line:
+        # __version__ = '1.1.0+%s' % revision
+        version_fmt = line.split("'")[1]  # '1.1.0+%s'
+    lines2.append(line)
+
+assert len(lines2) > 8, lines2
 with open(init_filename, 'w') as init_file:
-    for line in lines:
-        if 'is_pynastrangui_exe = False' in line:
-            line = 'is_pynastrangui_exe = True\n'
+    for line in lines2:
         init_file.write(line)
+
+#version = '1.1.0+dev.%s' % ghash
+version = version_fmt % ghash
 
 # write the version
 version_filename = os.path.join(pkg_path, 'version.py')
-print('version_filename =', version_filename)
 with open(version_filename, 'w') as version_file:
     datei = datetime.date.today()
     version_file.write('# -*- coding: utf-8 -*-\n')
@@ -63,7 +80,6 @@ with open(version_filename, 'w') as version_file:
     version_file.write('__version__ = %r\n' % version)
     version_file.write('__releaseDate__ = %r\n' % str(datei))  # 2016-2-5
     version_file.write('__releaseDate2__ = %r\n' % datei.strftime('%d %B %Y')) # 5 Feb 2016
-
 
 #-------------------------------------------------------------------------
 
@@ -106,9 +122,15 @@ assert os.path.exists(icon_main), '%s doesnt exist' % icon_main
 python_path = os.path.dirname(sys.executable)
 
 if PY2:
-    mkl_dll = os.path.join(python_path, 'Library', 'bin', 'mkl_def.dll')
+    mkl_dlls = [
+        os.path.join(python_path, 'Library', 'bin', 'mkl_def.dll'),
+        #os.path.join(python_path, 'Library', 'bin', 'mkl_avx2.dll'),  # do I need this?
+    ]
 else:
-    mkl_dll = os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
+    mkl_dlls = [
+        os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
+        # others?
+    ]
 mkl_dll_base = os.path.basename(mkl_dll)
 #assert os.path.exists(mkl_dll), '%s doesnt exist' % mkl_dll
 has_mkl_dll = os.path.exists(mkl_dll_base)
@@ -119,10 +141,11 @@ if sys.platform == 'win32':
         ('msvcp100.dll', 'C:\\Windows\\System32\\msvcp100.dll', 'BINARY'),
         ('msvcr100.dll', 'C:\\Windows\\System32\\msvcr100.dll', 'BINARY'),
     ]
-    if has_mkl_dll:
-        binaries.append(
-            (mkl_dll_base, mkl_dll, 'BINARY')
-        )
+    if has_mkl_dlls:
+        for mkl_dll in mkl_dlls:
+            binaries.append(
+                (mkl_dll_base, mkl_dll, 'BINARY')
+            )
 
 
 pathex = pyInstaller_path + [
