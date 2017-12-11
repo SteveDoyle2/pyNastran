@@ -41,7 +41,7 @@ from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
 from pyNastran.gui.gui_utils.dialogs import save_file_dialog, open_file_dialog
-from pyNastran.gui.gui_utils.write_gif import write_gif
+from pyNastran.gui.gui_utils.write_gif import setup_animation, write_gif
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -154,7 +154,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         self.html_logging = html_logging
         self.execute_python = True
+
         self.scalar_bar = ScalarBar(self.is_horizontal_scalar_bar)
+        self.color_function_black = vtk.vtkColorTransferFunction()
+        self.color_function_black.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
+        self.color_function_black.AddRGBPoint(1.0, 0.0, 0.0, 0.0)
+
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
         self.display_units = ['', '', '']
@@ -1128,11 +1133,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #point - always points
             #surface - always surface
             #bar - can use bar scale
-        self.geometry_properties[name] = AltGeometry(self, name, color=color, line_width=line_width,
-                                                     opacity=opacity, point_size=point_size,
-                                                     bar_scale=bar_scale,
-                                                     representation=representation,
-                                                     is_visible=is_visible, is_pickable=is_pickable)
+        self.geometry_properties[name] = AltGeometry(
+            self, name, color=color, line_width=line_width,
+            opacity=opacity, point_size=point_size,
+            bar_scale=bar_scale, representation=representation,
+            is_visible=is_visible, is_pickable=is_pickable)
+
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
 
@@ -1583,7 +1589,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         fmt = os.path.splitext(image_filename)[1].lower()
         if fmt not in ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp']:
-            raise NotImplementedError('invalid image type=%r; filename=%r' % (fmt, image_filename))
+            msg = 'invalid image type=%r; filename=%r' % (fmt, image_filename)
+            raise NotImplementedError(msg)
 
         #image_reader = vtk.vtkJPEGReader()
         #image_reader = vtk.vtkPNGReader()
@@ -1608,7 +1615,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #elif fmt == '.ps': # doesn't exist?
             #self.image_reader = vtk.vtkPostScriptReader()
         else:
-            raise NotImplementedError('invalid image type=%r; filename=%r' % (fmt, image_filename))
+            msg = 'invalid image type=%r; filename=%r' % (fmt, image_filename)
+            raise NotImplementedError(msg)
 
         if not self.image_reader.CanReadFile(image_filename):
             print("Error reading file %s" % image_filename)
@@ -1706,19 +1714,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # initialize geometry_actors
         self.geometry_actors['main'] = self.geom_actor
-        #self.geometry_actors['anti-main'] = self.not_selected_actor
 
         # bar scale set so you can't edit the bar scale
         white = (255, 255, 255)
         geom_props = AltGeometry(
             self, 'main', color=white, line_width=1, opacity=1.0, point_size=1,
             bar_scale=0.0, representation='main', is_visible=True)
-        anti_geom_props = AltGeometry(
-            self, 'anti-main', color=white, line_width=1, opacity=0.3, point_size=1,
-            bar_scale=0.0, representation='main', is_visible=True)
 
         self.geometry_properties['main'] = geom_props
-        #self.geometry_properties['anti-main'] = anti_geom_props
 
         #self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
@@ -1892,9 +1895,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if self.is_edges_black:
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOn()
+            self.edge_mapper.SetLookupTable(self.color_function_black)
         else:
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
+            self.edge_mapper.SetLookupTable(self.color_function)
         self.edge_actor.Modified()
         prop.Modified()
         self.vtk_interactor.Render()
@@ -1984,6 +1989,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         obj, (i, name) = self.result_cases[case_key]
         default_title = obj.get_default_title(i, name)
         location = obj.get_location(i, name)
+        if obj.data_format != '%i':
+            self.log.error('not creating result=%r; must be an integer result' % result_name)
+            return 0
         if location != 'centroid':
             self.log.error('not creating result=%r; must be a centroidal result' % result_name)
             return 0
@@ -2201,7 +2209,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # seems to also work
         self.extract_selection.Update()
-        #self.update_all(render=False)
 
         self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
 
@@ -2271,9 +2278,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #if 0:
             #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
             #self.extract_selection.Update()
-
-            #self.grid_not_selected = vtk.vtkUnstructuredGrid()
-            #self.grid_not_selected.ShallowCopy(self.extract_selection.GetOutput())
         self.update_all(render=render)
 
     def update_all_2(self, render=True):  # pragma: no cover
@@ -2293,7 +2297,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.rend.Modified()
 
         self.geom_actor.Modified()
-        self.not_selected_actor.Modified()
 
         if render:
             self.vtk_interactor.Render()
@@ -2312,7 +2315,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #grid_selected.Update()
         self.grid_selected.Modified()
-        #self.grid_not_selected.Modified()
         self.grid_mapper.Update()
         self.grid_mapper.Modified()
         #selected_actor.Update()
@@ -2330,7 +2332,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.rend.Modified()
 
         self.geom_actor.Modified()
-        self.not_selected_actor.Modified()
 
         if render:
             self.vtk_interactor.Render()
@@ -2338,7 +2339,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             render_window.Render()
 
 
-    def _setup_element_mask(self):
+    def _setup_element_mask(self, create_grid_selected=True):
         """
         starts the masking
 
@@ -2369,26 +2370,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.extract_selection.Update()
 
         # In selection
-        self.grid_selected = vtk.vtkUnstructuredGrid()
-        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+        if create_grid_selected:
+            self.grid_selected = vtk.vtkUnstructuredGrid()
+            self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
 
         #if 0:
         self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
         self.extract_selection.Update()
-
-        self.grid_not_selected = vtk.vtkUnstructuredGrid()
-        self.grid_not_selected.ShallowCopy(self.extract_selection.GetOutput())
-
-        self.not_selected_mapper = vtk.vtkDataSetMapper()
-        if vtk.VTK_MAJOR_VERSION <= 5:
-            self.not_selected_mapper.SetInputConnection(self.grid_not_selected.GetProducerPort())
-        else:
-            self.not_selected_mapper.SetInputData(self.grid_not_selected)
-
-        self.not_selected_actor = vtk.vtkLODActor()
-        self.not_selected_actor.DragableOff()
-        self.not_selected_actor.PickableOff()
-        self.not_selected_actor.SetMapper(self.not_selected_mapper)
 
 
     def create_text(self, position, label, text_size=18):
@@ -2839,10 +2827,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.window_title = msg
             #self.out_filename = out_filename
 
-    def _load_deflection(self, out_filename):
-        """loads a deflection file"""
-        self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
-
+    #def _load_force(self, out_filename):
+        #"""loads a deflection file"""
+        #self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
 
     def _load_deflection(self, out_filename):
         """loads a force file"""
@@ -3789,7 +3776,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def make_gif(self, gif_filename, scale, istep=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
                  icase=None, icase_start=None, icase_end=None, icase_delta=None,
-                 time=2.0, onesided=True,
+                 time=2.0, animation_profile='0 to scale',
                  nrepeat=0, fps=30, magnify=1,
                  make_images=True, delete_images=False, make_gif=True, stop_animation=False,
                  animate_in_gui=True):
@@ -3857,8 +3844,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         Options
         -------
-        onesided : bool; default=True
-            should the animation go up and back down
+        animation_profile : str; default='0 to scale'
+            animation profile to follow
+                '0 to Scale',
+                '0 to Scale to 0',
+                #'0 to Scale to -Scale to 0',
+                '-Scale to Scale',
+                '-scale to scale to -scale',
         nrepeat : int; default=0
             0 : loop infinitely
             1 : loop 1 time
@@ -3895,67 +3887,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if stop_animation:
             return self.stop_animation()
 
-        if animate_time or animate_phase:
-            onesided = True
-        analysis_time = get_analysis_time(time, onesided)
-
-        nframes = int(analysis_time * fps)
-        scales = None
-        phases = None
-        if animate_scale:
-            # TODO: we could start from 0 deflection, but that's more work
-            # TODO: we could do a sine wave, but again, more work
-            icases = icase
-            scales = np.linspace(-scale, scale, num=nframes, endpoint=True)
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
-            phases = [0.] * nframes
-            assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
-            assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
-        elif animate_phase:
-            # animate phase
-            icases = icase
-            phases = np.linspace(0., 360, num=nframes, endpoint=False)
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
-            scales = [scale] * nframes
-            assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
-            assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
-        elif animate_time:
-            icases = np.arange(icase_start, icase_end+1, icase_delta)
-            #min_value = 0.
-            #max_value = 1.46862
-            nfiles = len(icases)
-
-            # specifying fps and dt makes the problem overdefined
-            # assuming dt
-            #
-            # TDOO: change this to stepping similar to icase_delta
-            #       icases = icases[::5]
-            fps = nfiles / time
-
-            # our scale will be constant
-            # phases is just None
-            scales = [scale] * nfiles
-            assert len(icases) == nfiles, 'len(icases)=%s nfiles=%s' % (len(icases), nfiles)
-            phases = None
-            assert len(scales) == len(icases), 'nscales=%s len(icases)=%s' % (len(scales), len(icases))
-
-            # TODO: this isn't maintained...
-            #assert nframes == nfiles, 'nframes=%s nfiles=%s' % (nframes, nfiles)
-
-            isteps = np.linspace(0, nfiles, num=nfiles, endpoint=True, dtype='int32')
-
-        else:
-            raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
-                animate_scale, animate_phase, animate_time))
-        if istep is not None:
-            assert isinstance(istep, integer_types), 'istep=%r' % istep
-            scales = (scales[istep],)
-            phases = (phases[istep],)
-            isteps = (istep,)
+        phases, icases, isteps, scales, analysis_time = setup_animation(
+            scale, istep=istep,
+            animate_scale=True, animate_phase=False, animate_time=False,
+            icase=icase,
+            icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
+            time=time, animation_profile=animation_profile,
+            fps=fps)
 
         parent = self
-        phases, icases, isteps, scales = self._update_animation_inputs(
-            phases, icases, isteps, scales)
 
         #animate_in_gui = True
         self.stop_animation()
@@ -4025,58 +3965,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             observer_name = self.observers['TimerEvent']
             self.iren.RemoveObserver(observer_name)
             del self.observers['TimerEvent']
-
-    def _update_animation_inputs(self, phases, icases, isteps, scales):
-        """
-        Simplifies the format of phases, icases, steps, scales to make them
-        into lists of the correct length.
-
-        Parameters
-        ----------
-        phases : List[float] or None
-            List[float] : the phase angles
-            None : real result (same as [0., 0., ...])
-        icases : List[int] or int
-            List[int] : the icases to run
-            int : single icase (e.g., SOL 101, 103, 145; same as [icase, icase, ...]
-        isteps : List[int]
-            nominal isteps = [0, 1, 2, 3, 4, ..., nframes]
-            we can analyze pictures [1, 3, 4] by providing a subset
-        scales : List[float]
-            the displacement scale factor; true scale
-        """
-        if phases is not None:
-            pass
-        elif phases is None:
-            phases = [0.] * len(scales)
-        else:
-            raise RuntimeError('phases=%r' % phases)
-
-        if isinstance(icases, integer_types):
-            icases = [icases] * len(scales)
-
-
-        if len(icases) != len(scales):
-            msg = 'ncases=%s nscales=%s' % (len(icases), len(scales))
-            print(msg)
-            raise ValueError(msg)
-
-        if len(icases) != len(phases):
-            msg = 'ncases=%s nphases=%s' % (len(icases), len(phases))
-            print(msg)
-            raise ValueError(msg)
-
-        if isteps is None:
-            isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
-            print("setting isteps in make_gif")
-
-        if len(scales) != len(isteps):
-            msg = 'len(scales)=%s len(isteps)=%s analysis_time=%s fps=%s' % (
-                len(scales), len(isteps), analysis_time, fps)
-            print(msg)
-            raise ValueError(msg)
-        assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
-        return phases, icases, isteps, scales
 
     def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
                         max_value=None, min_value=None,
@@ -4473,28 +4361,46 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera = self.GetCamera()
         #print("code =", code)
         if code == '+x':  # set x-axis
+            # +z up
+            # +y right
+            # looking forward
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(1., 0., 0.)
         elif code == '-x':  # set x-axis
+            # +z up
+            # +y to the left (right wing)
+            # looking aft
             camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 0., -1.)
+            camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(-1., 0., 0.)
 
         elif code == '+y':  # set y-axis
+            # +z up
+            # +x aft to left
+            # view from right wing
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(0., 1., 0.)
         elif code == '-y':  # set y-axis
+            # +z up
+            # +x aft to right
+            # view from left wing
             camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 0., -1.)
+            camera.SetViewUp(0., 0., 1.)
             camera.SetPosition(0., -1., 0.)
 
         elif code == '+z':  # set z-axis
+            # +x aft
+            # +y up (right wing up)
+            # top view
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., 1., 0.)
             camera.SetPosition(0., 0., 1.)
         elif code == '-z':  # set z-axis
+            # +x aft
+            # -y down (left wing up)
+            # bottom view
             camera.SetFocalPoint(0., 0., 0.)
             camera.SetViewUp(0., -1., 0.)
             camera.SetPosition(0., 0., -1.)
@@ -4599,6 +4505,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             5 : GuiResult(...),  # Stress; t=1.0
             6 : GuiResult(...),  # Displacement; t=1.0
         }
+        case_keys = [0, 1, 2, 3, 4, 5, 6]
         """
         self.turn_text_on()
         self._set_results(form, cases)
@@ -4627,12 +4534,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #    ('C', []),
         #]
 
-        #self.case_keys = [
-        #    (1, 'ElementID', 1, 'centroid', '%.0f'), (1, 'Region', 1, 'centroid', '%.0f')
-        #]
         data = []
         for key in self.case_keys:
-            #print(key)
             assert isinstance(key, integer_types), key
             obj, (i, name) = self.result_cases[key]
             t = (i, [])
@@ -4657,12 +4560,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             main_group = Group(
                 'main', '', elements_pound,
                 editable=False)
-            anti_main_group = Group(
-                'anti-main', '', elements_pound,
-                editable=False)
             main_group.element_ids = self.element_ids
             self.groups['main'] = main_group
-            self.groups['anti_main'] = anti_main_group
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))
 
@@ -4895,7 +4794,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             widget = QWidget()
             title = 'Clear Application Log'
             msg = 'Are you sure you want to clear the Application Log?'
-            result = QMessageBox.question(widget, title, msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            result = QMessageBox.question(widget, title, msg,
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if result == QMessageBox.Yes:
                 self.log_widget.clear()
                 self.log_command('clear_application_log(force=%s)' % force)
@@ -5546,20 +5446,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_update_geometry_properties_override_dialog(self, geometry_properties):
         """
-        Update the goemetry properties and overwite the options in the edit geometry properties
-        dialog if it is open.
+        Update the goemetry properties and overwite the options in the
+        edit geometry properties dialog if it is open.
 
         Parameters
         -----------
         geometry_properties : dict {str : CoordProperties or AltGeometry}
             Dictionary from name to properties object. Only the names included in
             ``geometry_properties`` are modified.
-
         """
         if self._edit_geometry_properties_window_shown:
-            # Overirde the output state in the edit geometry properties diaglog if the button is
-            # pushed while the dialog is open. This prevent the case where you close the dialog and
-            # the # state reverts back to before you hit the button.
+            # Override the output state in the edit geometry properties diaglog
+            # if the button is pushed while the dialog is open. This prevent the
+            # case where you close the dialog and the state reverts back to
+            # before you hit the button.
             for name, prop in iteritems(geometry_properties):
                 self._edit_geometry_properties.out_data[name] = prop
                 if self._edit_geometry_properties.active_key == name:
@@ -5609,8 +5509,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         something changed.
 
         Note that some of the values are limited.  This prevents
-        points/lines from being shrunk to 0 and also the actor
-        being actually "hidden" at the same time.
+        points/lines from being shrunk to 0 and also the actor being
+        actually "hidden" at the same time.  This prevents confusion
+        when you try to show the actor and it's not visible.
         """
         lines = []
         if name is None:
@@ -5910,24 +5811,3 @@ class GuiCommon2(QMainWindow, GuiCommon):
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
         prop.SetPointSize(point_size)
-
-def get_analysis_time(time, onesided=True):
-    """
-    The analysis time is the time that needs to be simulated for the analysis.
-
-    TODO: could we define time as 1/2-sided time so we can do less work?
-    TODO: we could be more accurate regarding dt
-          Nonesided = 5
-          Ntwosided = 2 * Nonesided - 1 = 9
-          Nonesided = (Ntwosided + 1) / 2
-
-          Nframes = int(fps * t)
-          Nonesided = Nframes
-          Ntwosided = 2 * Nonesided - 1 = 9
-          Nonesided = (Ntwosided + 1) / 2
-    """
-    if onesided:
-        analysis_time = time / 2.
-    else:
-        analysis_time = time
-    return analysis_time

@@ -85,14 +85,47 @@ class GuiCommon(GuiAttributes):
 
     def on_rcycle_results(self, case=None):
         """the reverse of on_cycle_results"""
+        if len(self.case_keys) <= 1:
+            return
+
+        #ncases = len(self.case_keys)
+        #icasei = self.case_keys.index(self.icase)
+        #icasei2 = ncases + icasei - 1
+        #icase = (self.case_keys + self.case_keys)[icasei2]
+        #self.cycle_results(icase)
+        #self.icase = icase
+
         icase = self.icase - 1
-        if icase == -1:
-            icase = self.ncases - 1
-        self.cycle_results(icase)
+        while 1:  # TODO: speed this up
+            if icase == -1:
+                icase = self.ncases - 1
+            try:
+                self.cycle_results(icase)
+                break
+            except IndexError:
+                icase -= 1
 
     def on_cycle_results(self, case=None):
         """the gui method for calling cycle_results"""
-        self.cycle_results(self.icase + 1)
+        if len(self.case_keys) <= 1:
+            return
+
+        #ncases = len(self.case_keys)
+        #icasei = self.case_keys.index(self.icase)
+        #icasei2 = icasei + 1
+        #icase = (self.case_keys + self.case_keys)[icasei2]
+        #self.cycle_results(icase)
+        #self.icase = icase
+
+        icase = self.icase + 1
+        while 1:  # TODO: speed this up
+            if icase == self.ncases:
+                icase = 0
+            try:
+                self.cycle_results(icase)
+                break
+            except IndexError:
+                icase += 1
 
     def cycle_results(self, case=None):
         """
@@ -111,9 +144,10 @@ class GuiCommon(GuiAttributes):
             case = self.icase + 1
 
         assert case is not False, case
-        if self.ncases <= 1:
+        ncases = len(self.case_keys)
+        if ncases <= 1:
             self.log_warning('cycle_results(result_name=%r); ncases=%i' % (
-                case, self.ncases))
+                case, ncases))
             if self.ncases == 0:
                 self.scalarBar.SetVisibility(False)
             return
@@ -151,6 +185,27 @@ class GuiCommon(GuiAttributes):
         #subcase_id = obj.subcase_id
         case = obj.get_result(i, name)
         return name, case
+
+    def delete_cases(self, icases_to_delete, ask=True):
+        """
+        Used by the Sidebar to delete results
+
+        Parameters
+        ----------
+        icases_to_delete : List[int]
+            the result cases to delete
+        ask : bool; default=True
+            TODO: does nothing...
+        """
+        for icase in icases_to_delete:
+            if icase not in self.case_keys:
+                continue
+            self.case_keys.remove(icase)
+            del self.result_cases[icase]
+
+            # we leave this, so we can still cycle the results without renumbering the cases
+            #self.ncases -= 1
+        self.log_command('delete_cases(icases_to_delete=%s, ask=%s)' % (icases_to_delete, ask))
 
     def _get_sidebar_data(self, name):
         """
