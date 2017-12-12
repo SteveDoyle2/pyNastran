@@ -2466,12 +2466,13 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 4 * (2 + 17 * nnodes_all)
                 nelements = ndata // ntotal
+                assert ndata % ntotal == 0
                 nlayers = 2 * nelements * nnodes_all  # 2 layers per node
 
                 auto_return, is_vectorized = self._create_oes_object4(
                     nlayers, result_name, slot, obj_vector_real)
                 if auto_return:
-                    self._data_factor = 10  # TODO: why is this 10?
+                    self._data_factor = 2 * nnodes_all  # number of "layers" for an element
                     return nelements * self.num_wide * 4
 
                 obj = self.obj

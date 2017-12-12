@@ -107,7 +107,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 # (itime, nnodes, xyz)
                 # tnorm (901, 3)
                 tnorm = norm(t123, axis=2)   # I think this is wrong...
-                print('tnorm.shape ', tnorm.shape)
+                #print('tnorm.shape ', tnorm.shape)
                 assert len(tnorm) == t123.shape[0]
             else:
                 # (itime, nnodes, xyz)
@@ -1252,6 +1252,8 @@ class NastranGuiResults(NastranGuiAttributes):
 
             i = np.searchsorted(eids, eidsi)
             if len(i) != len(np.unique(i)):
+                print(case.element_node)
+                print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
                 print('iplate = %s' % i)
                 print('eids = %s' % eids)
                 print('eidsiA = %s' % case.element_node[:, 0])
@@ -1282,8 +1284,11 @@ class NastranGuiResults(NastranGuiAttributes):
             o3i = case.data[itime, j, 6]
             ovmi = case.data[itime, j, 7]
 
+            #print("nlayers_per_element = ", case.element_name, nlayers_per_element)
             for inode in range(1, nlayers_per_element):
                 #print('%s - ilayer = %s' % (case.element_name, inode))
+                #print(case.data[itime, j + inode, 1])
+                #print(case.data[itime, :, 1])
                 oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 1]]), axis=0)
                 oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 2]]), axis=0)
                 txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
@@ -1291,6 +1296,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
                 ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 7]]), axis=0)
                 assert len(oxxi) == len(j)
+                #print('-------')
 
             oxx[i] = oxxi
             oyy[i] = oyyi
