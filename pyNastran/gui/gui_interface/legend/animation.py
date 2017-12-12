@@ -94,6 +94,7 @@ class AnimationWindow(PyDialog):
         if hasattr(self.win_parent, '_updated_legend'):
             self.win_parent.is_animate_open = True
             self.is_gui = True
+        self.on_update_min_max_defaults()
 
 
     def create_widgets(self):
@@ -168,7 +169,7 @@ class AnimationWindow(PyDialog):
 
         self.min_value_enable = QCheckBox()
         self.min_value = QLabel("Min Value:")
-        self.min_value_edit = QLineEdit(str(0.))
+        self.min_value_edit = QLineEdit('')
         #self.min_value_edit.setRange(1, 1000)
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
@@ -176,7 +177,7 @@ class AnimationWindow(PyDialog):
 
         self.max_value_enable = QCheckBox()
         self.max_value = QLabel("Max Value:")
-        self.max_value_edit = QLineEdit(str(1.))
+        self.max_value_edit = QLineEdit('')
         #self.min_value_edit.setRange(1, 1000)  # TODO: update 1000
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
@@ -297,25 +298,6 @@ class AnimationWindow(PyDialog):
         horizontal_vertical_group.addButton(self.animate_time_radio)
         horizontal_vertical_group.addButton(self.animate_freq_sweeep_radio)
 
-        # one / two sided
-        self.onesided_radio = QRadioButton("One Sided")
-        self.onesided_radio.setToolTip(
-            "A one sided gif doesn't return to the starting point (e.g., 0 to 360 degrees)")
-        self.twosided_radio = QRadioButton("Two Sided")
-        self.twosided_radio.setToolTip(
-            'A two sided gif returns to the starting point (e.g., 0 to 10 to 0)')
-
-        if self._default_phase is None:
-            self.onesided_radio.setChecked(False)
-            self.twosided_radio.setChecked(True)
-        else:
-            self.onesided_radio.setChecked(True)
-            self.twosided_radio.setChecked(False)
-        widget = QWidget(self)
-        horizontal_vertical_group = QButtonGroup(widget)
-        horizontal_vertical_group.addButton(self.onesided_radio)
-        horizontal_vertical_group.addButton(self.twosided_radio)
-
         # animate in gui
         self.animate_in_gui_checkbox = QCheckBox("Animate In GUI?")
         self.animate_in_gui_checkbox.setChecked(True)
@@ -389,6 +371,10 @@ class AnimationWindow(PyDialog):
         self.run_button.clicked.connect(self.on_run)
         self.min_value_enable.clicked.connect(self.on_min_value_enable)
         self.max_value_enable.clicked.connect(self.on_max_value_enable)
+
+        self.min_value_button.clicked.connect(self.on_min_value_default)
+        self.max_value_button.clicked.connect(self.on_max_value_default)
+        self.icase_start_button.clicked.connect(self.on_update_min_max_defaults)
 
         #self.animate_scale_radio.clicked.connect(self.on_animate_scale)
         #self.animate_phase_radio.clicked.connect(self.on_animate_phase)
@@ -537,6 +523,24 @@ class AnimationWindow(PyDialog):
         self.max_value.setEnabled(is_max_enabled)
         self.max_value_edit.setEnabled(is_max_enabled)
         self.max_value_button.setEnabled(is_max_enabled)
+
+    def on_update_min_max_defaults(self):
+        icase = self.icase_start_edit.value()
+        min_value, max_value = self.get_min_max(icase)
+        self.min_value_button.setToolTip('Sets the min value to %g' % min_value)
+        self.max_value_button.setToolTip('Sets the max value to %g' % max_value)
+
+    def on_min_value_default(self):
+        icase = self.icase_start_edit.value()
+        min_value = self.get_min_max(icase)[0]
+        self.min_value_edit.setText(str(min_value))
+        self.min_value_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_max_value_default(self):
+        icase = self.icase_start_edit.value()
+        max_value = self.get_min_max(icase)[1]
+        self.max_value_edit.setText(str(max_value))
+        self.max_value_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_browse_folder(self):
         """opens a folder dialog"""
@@ -756,7 +760,9 @@ class AnimationWindow(PyDialog):
 
     def _make_gif(self, validate_out, istep=None, stop_animation=False):
         """interface for making the gif"""
-        icase, scale, time, fps, animate_in_gui, magnify, output_dir, gifbase = validate_out
+        (icase, scale, time, fps, animate_in_gui,
+         magnify, output_dir, gifbase,
+         min_value, max_value) = validate_out
         fps = int(fps)
 
         gif_filename = None
@@ -790,7 +796,6 @@ class AnimationWindow(PyDialog):
         icase_end = self.icase_end_edit.value()
         icase_delta = self.icase_delta_edit.value()
 
-        #onesided = self.onesided_radio.isChecked()
         bool_repeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
         if bool_repeat:
             nrepeat = 0
@@ -808,10 +813,19 @@ class AnimationWindow(PyDialog):
                 nrepeat=nrepeat, fps=fps, magnify=magnify,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,
                 stop_animation=stop_animation, animate_in_gui=animate_in_gui,
+                min_value=None, max_value=None,
             )
 
         self.out_data['clicked_ok'] = True
         self.out_data['close'] = True
+
+    def get_min_max(self, icase):
+        if self.is_gui:
+            (obj, (i, name)) = self.win_parent.win_parent.result_cases[icase]
+            min_value, max_value = obj.get_min_max(i, name)
+        else:
+            return 0., 1.0
+        return min_value, max_value
 
     def on_validate(self, wipe=False):
         """checks to see if the input is valid"""
@@ -820,6 +834,14 @@ class AnimationWindow(PyDialog):
         scale, flag1 = self.check_float(self.scale_edit)
         time, flag2 = self.check_float(self.time_edit)
         fps, flag3 = self.check_float(self.fps_edit)
+
+        min_value = max_value = None
+        flag4 = flag5 = True
+        if self.min_value_edit.isEnabled():
+            min_value, flag4 = self.check_float(self.min_value_edit)
+        if self.max_value_edit.isEnabled():
+            max_value, flag5 = self.check_float(self.max_value_edit)
+
         if wipe:
             animate_in_gui = False
             scale = 0.
@@ -828,15 +850,15 @@ class AnimationWindow(PyDialog):
             animate_in_gui = self.animate_in_gui_checkbox.isChecked()
 
         if animate_in_gui or wipe:
-            passed = all([flag0, flag1, flag2, flag3])
+            passed = all([flag0, flag1, flag2, flag3, flag4, flag5])
             magnify, output_dir, gifbase = None, None, None
         else:
-            magnify, flag4 = self.check_int(self.resolution_edit)
-            output_dir, flag5 = self.check_path(self.browse_folder_edit)
-            gifbase, flag6 = self.check_name(self.gif_edit)
-            passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6])
+            magnify, flag6 = self.check_int(self.resolution_edit)
+            output_dir, flag7 = self.check_path(self.browse_folder_edit)
+            gifbase, flag8 = self.check_name(self.gif_edit)
+            passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8])
         return passed, (icase, scale, time, fps, animate_in_gui,
-                        magnify, output_dir, gifbase)
+                        magnify, output_dir, gifbase, min_value, max_value)
 
     @staticmethod
     def check_name(cell):

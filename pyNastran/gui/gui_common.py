@@ -1752,6 +1752,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.on_run_script(python_file)
 
     def set_style_as_trackball(self):
+        """sets the default rotation style"""
         #self._simulate_key_press('t') # change mouse style to trackball
         self.style = vtk.vtkInteractorStyleTrackballCamera()
         self.vtk_interactor.SetInteractorStyle(self.style)
@@ -3838,12 +3839,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             None : unused
             int : active if animate_time=True
 
-        Time Plot Options (not supported)
-        ---------------------------------
+        Time Plot Options
+        -----------------
         max_value : float; default=None
-            the max value on the plot (not supported)
+            the max value on the plot
         min_value : float; default=None
-            the min value on the plot (not supported)
+            the min value on the plot
 
         Options
         -------
@@ -3887,11 +3888,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - analysis_time should be one-sided
          - set onesided=False
         """
-        min_value = 0.
-        max_value = 1.5
-        min_value = None
-        max_value = None
-
         if stop_animation:
             return self.stop_animation()
 
