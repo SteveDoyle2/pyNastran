@@ -2013,13 +2013,13 @@ class GetCard(GetMethods):
             pid_to_eids_map[pid] = []
 
         elem_count = 0
-        elements_without_properties = ['CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4']
+        elements_without_properties = ['CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'CHBDYG']
         for eid, element in iteritems(self.elements):
-            if element.type in elements_without_properties:
-                continue
             try:
                 pid = element.Pid()
             except AttributeError:
+                if element.type in elements_without_properties:
+                    continue
                 print(element)
                 raise
             if pid in pids:
@@ -2027,7 +2027,8 @@ class GetCard(GetMethods):
             elem_count += 1
 
         if elem_count == 0 and stop_if_no_eids:
-            raise RuntimeError('no elements with properties found%s' % msg)
+            raise RuntimeError('no elements with properties found%s\ncard_count=%s' % (
+                msg, str(self.card_count)))
         elif elem_count == 0:
             self.log.warning('no elements with properties found%s' % msg)
         return pid_to_eids_map
