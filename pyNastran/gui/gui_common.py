@@ -1161,7 +1161,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                             left_button_down=None, left_button_up=None,
                             right_button_down=None,
                             end_pick=None,
-                            style=None):
+                            style=None, force=False):
         """
         Remaps the mouse buttons temporarily
 
@@ -1181,11 +1181,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         style : vtkInteractorStyle (default=None)
             a custom vtkInteractorStyle
             None -> keep the same style, but overwrite the left mouse button
+        force : bool; default=False
+            override the mode=camera_mode check
         """
         assert isinstance(mode, string_types), mode
         assert revert in [True, False], revert
         #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))
-        if mode == self._camera_mode:
+        if mode == self._camera_mode and not force:
             #print('auto return from set mouse mode')
             return
         self._camera_mode = mode
@@ -1212,14 +1214,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # Re-assign left mouse click event to custom function (Point Picker)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.style.Rotate)
 
-        elif mode in ['measure_distance']: # 'rotation_center',
+        elif mode == 'measure_distance': # 'rotation_center',
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
 
             self.vtk_interactor.RemoveObservers('EndPickEvent')
             self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
-        elif mode in ['probe_result']:
+        elif mode == 'probe_result':
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
@@ -3774,6 +3776,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     raise NotImplementedError(geom_actor)
 
     def make_gif(self, gif_filename, scale, istep=None,
+                 min_value=None, max_value=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
                  icase=None, icase_start=None, icase_end=None, icase_delta=None,
                  time=2.0, animation_profile='0 to scale',
@@ -3884,6 +3887,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - analysis_time should be one-sided
          - set onesided=False
         """
+        min_value = 0.
+        max_value = 1.5
+        min_value = None
+        max_value = None
+
         if stop_animation:
             return self.stop_animation()
 
@@ -3952,6 +3960,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             is_failed = self.make_gif_helper(
                 gif_filename, icases, scales,
                 phases=phases, isteps=isteps,
+                max_value=None, min_value=None,
                 time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
                 onesided=onesided, nrepeat=nrepeat,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif)
@@ -3965,7 +3974,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             observer_name = self.observers['TimerEvent']
             self.iren.RemoveObserver(observer_name)
             del self.observers['TimerEvent']
-            self.setup_mouse_buttons(mode='default')
+            self.setup_mouse_buttons(mode='default', force=True)
 
     def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
                         max_value=None, min_value=None,
@@ -4040,8 +4049,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #icase_start = 6
         #icase_delta = 1
-        min_value = 0.
-        max_value = 1.46862
 
         assert fps >= 1, fps
         nframes = ceil(analysis_time * fps)
@@ -4065,9 +4072,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                 if icase != icase0:
                     #self.cycle_results(case=icase)
-                    self.cycle_results_explicit(icase, explicit=True)
+                    self.cycle_results_explicit(icase, explicit=True,
+                                                min_value=min_value, max_value=max_value)
                 self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
-                #self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)  # old
                 self.on_take_screenshot(fname=png_filename, magnify=magnify)
                 png_filenames.append(png_filename)
         else:

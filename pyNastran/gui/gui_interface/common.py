@@ -118,7 +118,6 @@ class PyDialog(QDialog):
         try:
             value = float(text)
             cell.setStyleSheet("QLineEdit{background: white;}")
-            cell.setToolTip('')
             return value, True
         except ValueError:
             cell.setStyleSheet("QLineEdit{background: red;}")

@@ -166,13 +166,14 @@ class GuiCommon(GuiAttributes):
             label = 'label=NA'
         return subtitle, label
 
-    def cycle_results_explicit(self, case=None, explicit=True):
+    def cycle_results_explicit(self, case=None, explicit=True, min_value=None, max_value=None):
         assert case is not False, case
         #if explicit:
             #self.log_command('cycle_results(case=%r)' % case)
         found_cases = self.increment_cycle(case)
         if found_cases:
-            icase = self._set_case(case, self.icase, explicit=explicit, cycle=True)
+            icase = self._set_case(case, self.icase, explicit=explicit, cycle=True,
+                                   min_value=min_value, max_value=max_value)
             assert icase is not False, case
         else:
             icase = None

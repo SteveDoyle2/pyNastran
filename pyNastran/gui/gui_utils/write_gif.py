@@ -44,7 +44,6 @@ def setup_animation(scale, istep=None,
         assert isinstance(fps, integer_types), 'fps=%s must be an integer'% fps
 
     phases = None
-    icases = None
     if animate_scale:
         icases, isteps, scales, analysis_time = setup_animate_scale(
             scale,
@@ -226,7 +225,7 @@ def get_analysis_time(time, onesided=True):
 def update_animation_inputs(phases, icases, isteps, scales, analysis_time, fps):
     """
     Simplifies the format of phases, icases, steps, scales to make them
-    into lists of the correct length.
+    into ndarrays of the correct length.
 
     Parameters
     ----------

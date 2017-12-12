@@ -166,6 +166,7 @@ class AnimationWindow(PyDialog):
         self.icase_delta_edit.setValue(1)
         self.icase_delta_button = QPushButton("Default")
 
+        self.min_value_enable = QCheckBox()
         self.min_value = QLabel("Min Value:")
         self.min_value_edit = QLineEdit(str(0.))
         #self.min_value_edit.setRange(1, 1000)
@@ -173,12 +174,25 @@ class AnimationWindow(PyDialog):
         #self.min_value_edit.setValue(1)
         self.min_value_button = QPushButton("Default")
 
+        self.max_value_enable = QCheckBox()
         self.max_value = QLabel("Max Value:")
         self.max_value_edit = QLineEdit(str(1.))
         #self.min_value_edit.setRange(1, 1000)  # TODO: update 1000
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
         self.max_value_button = QPushButton("Default")
+
+        # TODO: enable this (uncomment) ------------------------------------------
+        #self.min_value_enable.hide()
+        #self.min_value.hide()
+        #self.min_value_edit.hide()
+        #self.min_value_button.hide()
+
+        #self.max_value_enable.hide()
+        #self.max_value.hide()
+        #self.max_value_edit.hide()
+        #self.max_value_button.hide()
+        # TODO: enable this (uncomment) ------------------------------------------
 
         self.icase_start_edit.setToolTip('The first frame of the animation')
         self.icase_end_edit.setToolTip(
@@ -373,6 +387,8 @@ class AnimationWindow(PyDialog):
         self.wipe_button.clicked.connect(self.on_wipe)
         self.stop_button.clicked.connect(self.on_stop)
         self.run_button.clicked.connect(self.on_run)
+        self.min_value_enable.clicked.connect(self.on_min_value_enable)
+        self.max_value_enable.clicked.connect(self.on_max_value_enable)
 
         #self.animate_scale_radio.clicked.connect(self.on_animate_scale)
         #self.animate_phase_radio.clicked.connect(self.on_animate_phase)
@@ -461,6 +477,11 @@ class AnimationWindow(PyDialog):
         #self.csv_profile_edit.setEnabled(enabled)
         #self.csv_profile_button.setEnabled(enabled)
 
+        self.min_value_enable.setEnabled(enabled)
+        self.max_value_enable.setEnabled(enabled)
+        self.on_min_value_enable()
+        self.on_max_value_enable()
+
 
     def set_grid_time(self, enabled=True, word=''):
         """enables/disables the secondary input"""
@@ -477,19 +498,45 @@ class AnimationWindow(PyDialog):
         self.icase_delta_edit.setEnabled(enabled)
         self.icase_delta_button.setEnabled(enabled)
 
-        self.min_value.setEnabled(enabled)
-        self.min_value_edit.setEnabled(enabled)
-        self.min_value_button.setEnabled(enabled)
+        is_min_enabled = self.min_value_enable.isChecked()
+        self.min_value.setEnabled(is_min_enabled)
+        self.min_value_edit.setEnabled(is_min_enabled)
+        self.min_value_button.setEnabled(is_min_enabled)
 
-        self.max_value.setEnabled(enabled)
-        self.max_value_edit.setEnabled(enabled)
-        self.max_value_button.setEnabled(enabled)
+        is_max_enabled = self.max_value_enable.isChecked()
+        self.max_value.setEnabled(is_max_enabled)
+        self.max_value_edit.setEnabled(is_max_enabled)
+        self.max_value_button.setEnabled(is_max_enabled)
+
+        self.min_value_enable.setEnabled(enabled)
+        self.on_min_value_enable()
+        #self.min_value.setEnabled(enabled)
+        #self.min_value_edit.setEnabled(enabled)
+        #self.min_value_button.setEnabled(enabled)
+
+        self.max_value_enable.setEnabled(enabled)
+        self.on_max_value_enable()
+        #self.max_value.setEnabled(enabled)
+        #self.max_value_edit.setEnabled(enabled)
+        #self.max_value_button.setEnabled(enabled)
 
         self.icase.setEnabled(not enabled)
         self.icase_edit.setEnabled(not enabled)
         self.fps.setEnabled(not enabled)
         self.fps_edit.setEnabled(not enabled)
         self.fps_button.setEnabled(not enabled)
+
+    def on_min_value_enable(self):
+        is_min_enabled = self.min_value_enable.isChecked() and self.min_value_enable.isEnabled()
+        self.min_value.setEnabled(is_min_enabled)
+        self.min_value_edit.setEnabled(is_min_enabled)
+        self.min_value_button.setEnabled(is_min_enabled)
+
+    def on_max_value_enable(self):
+        is_max_enabled = self.max_value_enable.isChecked() and self.max_value_enable.isEnabled()
+        self.max_value.setEnabled(is_max_enabled)
+        self.max_value_edit.setEnabled(is_max_enabled)
+        self.max_value_button.setEnabled(is_max_enabled)
 
     def on_browse_folder(self):
         """opens a folder dialog"""
@@ -582,13 +629,20 @@ class AnimationWindow(PyDialog):
         grid_time.addWidget(self.icase_delta_edit, 2, 1)
         #grid_time.addWidget(self.icase_delta_button, 2, 2)
 
-        #grid_time.addWidget(self.min_value, 3, 0)
-        #grid_time.addWidget(self.min_value_edit, 3, 1)
-        #grid_time.addWidget(self.min_value_button, 3, 2)
 
-        #grid_time.addWidget(self.max_value, 4, 0)
-        #grid_time.addWidget(self.max_value_edit, 4, 1)
-        #grid_time.addWidget(self.max_value_button, 4, 2)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.min_value_enable)
+        hbox.addWidget(self.min_value)
+        grid_time.addLayout(hbox, 3, 0)
+        grid_time.addWidget(self.min_value_edit, 3, 1)
+        grid_time.addWidget(self.min_value_button, 3, 2)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.max_value_enable)
+        hbox.addWidget(self.max_value)
+        grid_time.addLayout(hbox, 4, 0)
+        grid_time.addWidget(self.max_value_edit, 4, 1)
+        grid_time.addWidget(self.max_value_button, 4, 2)
         grid_time.addWidget(spacer, 5, 0)
 
         #--------------
@@ -744,6 +798,7 @@ class AnimationWindow(PyDialog):
             nrepeat = 1
         #self.out_data['is_shown'] = self.show_radio.isChecked()
         #icase = self._icase
+
         if self.is_gui:
             self.win_parent.win_parent.make_gif(
                 gif_filename, scale, istep=istep,
@@ -767,6 +822,8 @@ class AnimationWindow(PyDialog):
         fps, flag3 = self.check_float(self.fps_edit)
         if wipe:
             animate_in_gui = False
+            scale = 0.
+            flag1 = True
         else:
             animate_in_gui = self.animate_in_gui_checkbox.isChecked()
 
