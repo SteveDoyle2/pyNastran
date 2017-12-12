@@ -159,7 +159,7 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
-        #test.load_nastran_results(op2_filename)
+        test.load_nastran_results(op2_filename)
 
     def test_gui_elements_03(self):
         """tests a large number of elements and results in SOL 108-freq"""

@@ -112,7 +112,20 @@ class NastranGuiResults(NastranGuiAttributes):
             else:
                 # (itime, nnodes, xyz)
                 # tnorm (901, 3)
-                tnorm = norm(t123, axis=1)   # I think this is wrong...
+
+                # float32s are apparently buggy in numpy if you have small numbers
+                # see models/elements/loadstep_elememnts.op2
+                try:
+                    tnorm = norm(t123, axis=1)
+                except FloatingPointError:
+                    t123 = t123.astype(dtype='float64')
+                    tnorm = norm(t123, axis=1)
+
+                    #print('skipping %s' % name)
+                    #print(t123.max(axis=1))
+                    #for itime, ti in enumerate(t123):
+                        #print('itime=%s' % itime)
+                        #print(ti.tolist())
                 assert len(tnorm) == t123.shape[0]
 
             assert t123.shape[0] == ntimes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
@@ -1044,15 +1057,28 @@ class NastranGuiResults(NastranGuiAttributes):
             # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
             oxx[i] = case.data[itime, :, 0]
             txy[i] = case.data[itime, :, 2]
-            ovm[i] = np.sqrt(oxx[i]**2 + 3*txy[i]**2) # plane stress
+            try:
+                ovm[i] = np.sqrt(oxx[i]**2 + 3*txy[i]**2) # plane stress
+            except FloatingPointError:
+                ovm[i] = 0.
+                assert np.allclose(oxx[i], 0.)
+                assert np.allclose(txy[i], 0.)
             # max_principal[i] = sqrt(oxx[i]**2 + txy[i]**2)
             # min_principal[i] = max_principal[i] - 2 * txy[i]
             # simplification of:
             #   eig(A) = [oxx, txy]
             #            [txy, 0.0]
             # per Equation 7: http://www.soest.hawaii.edu/martel/Courses/GG303/Eigenvectors.pdf
-            max_principal[i] = (oxx[i] + np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
-            min_principal[i] = (oxx[i] - np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+            try:
+                max_principal[i] = (oxx[i] + np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+                min_principal[i] = (oxx[i] - np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+            except FloatingPointError:
+                # underflow is a thing...we can promote the dtype from float32 to float64
+                # but we'll hold off until there's a real example
+                assert np.allclose(oxx[i], 0.)
+                assert np.allclose(txy[i], 0.)
+                max_principal[i] = 0.
+                min_principal[i] = 0.
         del rods
 
 
