@@ -479,13 +479,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
 
-                ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
-                ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
-                ('z', 'Flips to +Z Axis', 'plus_z.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
+                ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
+                ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
+                ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
 
-                ('X', 'Flips to -X Axis', 'minus_x.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-                ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-                ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+                ('front_view', 'Front View', 'front.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+                ('left_view', 'Left View', 'left.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
@@ -625,7 +625,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             'load_custom_result', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
-                         'x', 'y', 'z', 'X', 'Y', 'Z',
+                         'front_view', 'back_view', 'top_view', 'bottom_view', 'left_view', 'right_view',
                          'magnify', 'shrink', 'zoom',
                          'rotate_clockwise', 'rotate_cclockwise',
                          'rotation_center', 'measure_distance', 'probe_result', 'area_pick',
@@ -692,7 +692,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     elif not isinstance(i, string_types):
                         raise RuntimeError('what is this...action i() = %r' % i())
 
-                    action = self.actions[i] #if isinstance(i, string_types) else i()
+                    try:
+                        action = self.actions[i] #if isinstance(i, string_types) else i()
+                    except:
+                        print(self.actions.keys())
+                        raise
                     menu.addAction(action)
         #self._create_plane_from_points(None)
 
