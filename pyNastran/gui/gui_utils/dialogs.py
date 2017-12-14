@@ -2,22 +2,6 @@ from pyNastran.gui.qt_version import qt_version
 
 from qtpy.QtWidgets import QFileDialog
 
-
-def save_file_dialog(self, title, default_filename,
-                     file_types, filt):
-    """common method for saving files"""
-    if qt_version == 4:
-        fname = str(QFileDialog.getSaveFileName(
-            self, title, default_filename, file_types, filt))
-        try:
-            flt = str(filt).split()[0]
-        except IndexError:
-            flt = None
-    else:
-        fname, flt = QFileDialog.getSaveFileName(
-            self, title, default_filename, file_types, filt)
-    return fname, flt
-
 def open_file_dialog(self, title, default_filename,
                      file_types):
     """common method for opening files"""

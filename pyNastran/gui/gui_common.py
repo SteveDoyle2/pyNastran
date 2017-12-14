@@ -25,6 +25,9 @@ from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QFileDialog)
+from qtpy.compat import getsavefilename, getopenfilename
+
+
 from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
@@ -40,8 +43,8 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
-from pyNastran.gui.gui_utils.dialogs import save_file_dialog, open_file_dialog
-from pyNastran.gui.gui_utils.write_gif import setup_animation, write_gif
+from pyNastran.gui.gui_utils.write_gif import (
+    setup_animation, update_animation_inputs, write_gif)
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -2422,9 +2425,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
         if default_filename is None:
             default_filename = self.last_dir
-        # getOpenFileName return QString and we want Python string
-        fname, wildcard_level = open_file_dialog(self, title, default_filename,
-                                                 qt_wildcard)
+        fname, wildcard_level = getopenfilename(
+            parent=self, caption=title,
+            basedir=default_filename, filters=qt_wildcard,
+            selectedfilter='', options=None)
         return wildcard_level, fname
 
     #def _create_load_file_dialog2(self, qt_wildcard, title):
@@ -3684,9 +3688,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'PostScript Document *.ps (*.ps)')
 
             title = 'Choose a filename and type'
-            fname, flt = save_file_dialog(self, title, default_filename,
-                                          file_types, filt)
-
+            fname, flt = getsavefilename(parent=self, caption=title, basedir='',
+                                         filters=file_types, selectedfilter=filt,
+                                         options=None)
             if fname in [None, '']:
                 return
             #print("fname=%r" % fname)
@@ -3895,7 +3899,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if stop_animation:
             return self.stop_animation()
 
-        phases, icases, isteps, scales, analysis_time = setup_animation(
+        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=istep,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase=icase,
@@ -3964,8 +3968,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
                 onesided=onesided, nrepeat=nrepeat,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif)
-        except:
-            pass
+        except Exception as e:
+            #self.log_error(traceback.print_stack(f))
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
+
         return is_failed
 
     def stop_animation(self):
@@ -4060,8 +4068,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if not os.path.exists(png_dirname):
             os.makedirs(png_dirname)
 
-        phases, icases, isteps, scales = self._update_animation_inputs(
-            phases, icases, isteps, scales)
+        phases, icases, isteps, scales = update_animation_inputs(
+            phases, icases, isteps, scales, analysis_time, fps)
 
         png_filenames = []
         fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))

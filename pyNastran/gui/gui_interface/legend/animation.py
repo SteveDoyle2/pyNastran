@@ -9,10 +9,11 @@ from collections import OrderedDict
 from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
-    QCheckBox, QGroupBox, QComboBox)
+    QCheckBox, QGroupBox, QComboBox, QFileDialog)
+from qtpy.compat import getexistingdirectory # getopenfilename
 
 from pyNastran.gui.gui_interface.common import PyDialog
-from pyNastran.gui.gui_utils.dialogs import open_directory_dialog, open_file_dialog
+from pyNastran.gui.gui_utils.dialogs import open_file_dialog
 from pyNastran.gui.gui_utils.write_gif import IS_IMAGEIO
 
 
@@ -106,9 +107,10 @@ class AnimationWindow(PyDialog):
         self.icase_edit.setRange(1, icase_max)
         self.icase_edit.setSingleStep(1)
         self.icase_edit.setValue(self._icase)
-        self.icase_edit.setToolTip('Case Number for the Scale/Phase Animation Type.\n'
-                                   'Defaults to the result you had shown when you clicked "Create Animation".\n'
-                                   'iCase can be seen by clicking "Apply" on a result.')
+        self.icase_edit.setToolTip(
+            'Case Number for the Scale/Phase Animation Type.\n'
+            'Defaults to the result you had shown when you clicked "Create Animation".\n'
+            'iCase can be seen by clicking "Apply" on a result.')
 
         self.scale = QLabel("True Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
@@ -513,30 +515,43 @@ class AnimationWindow(PyDialog):
         self.fps_button.setEnabled(not enabled)
 
     def on_min_value_enable(self):
+        """
+        The min edit value box is enabled when we switch to time
+        and the box is checked
+        """
         is_min_enabled = self.min_value_enable.isChecked() and self.min_value_enable.isEnabled()
         self.min_value.setEnabled(is_min_enabled)
         self.min_value_edit.setEnabled(is_min_enabled)
         self.min_value_button.setEnabled(is_min_enabled)
 
     def on_max_value_enable(self):
+        """
+        The max edit value box is enabled when we switch to time
+        and the box is checked
+        """
         is_max_enabled = self.max_value_enable.isChecked() and self.max_value_enable.isEnabled()
         self.max_value.setEnabled(is_max_enabled)
         self.max_value_edit.setEnabled(is_max_enabled)
         self.max_value_button.setEnabled(is_max_enabled)
 
     def on_update_min_max_defaults(self):
+        """
+        When the icase is changed, the min/max value default message is changed
+        """
         icase = self.icase_start_edit.value()
         min_value, max_value = self.get_min_max(icase)
         self.min_value_button.setToolTip('Sets the min value to %g' % min_value)
         self.max_value_button.setToolTip('Sets the max value to %g' % max_value)
 
     def on_min_value_default(self):
+        """When min default icase is pressued, update the value"""
         icase = self.icase_start_edit.value()
         min_value = self.get_min_max(icase)[0]
         self.min_value_edit.setText(str(min_value))
         self.min_value_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_max_value_default(self):
+        """When max default icase is pressued, update the value"""
         icase = self.icase_start_edit.value()
         max_value = self.get_min_max(icase)[1]
         self.max_value_edit.setText(str(max_value))
@@ -544,7 +559,9 @@ class AnimationWindow(PyDialog):
 
     def on_browse_folder(self):
         """opens a folder dialog"""
-        dirname = open_directory_dialog(self, 'Select a Directory')
+        dirname = getexistingdirectory(parent=self, caption='Select a Directory',
+                                       basedir='',
+                                       options=QFileDialog.ShowDirsOnly)
         if not dirname:
             return
         self.browse_folder_edit.setText(dirname)
@@ -813,7 +830,7 @@ class AnimationWindow(PyDialog):
                 nrepeat=nrepeat, fps=fps, magnify=magnify,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,
                 stop_animation=stop_animation, animate_in_gui=animate_in_gui,
-                min_value=None, max_value=None,
+                min_value=min_value, max_value=max_value,
             )
 
         self.out_data['clicked_ok'] = True
@@ -951,4 +968,3 @@ def main(): # pragma: no cover
 
 if __name__ == "__main__": # pragma: no cover
     main()
-

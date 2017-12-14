@@ -44,8 +44,9 @@ def setup_animation(scale, istep=None,
         assert isinstance(fps, integer_types), 'fps=%s must be an integer'% fps
 
     phases = None
+    onesided = False
     if animate_scale:
-        icases, isteps, scales, analysis_time = setup_animate_scale(
+        icases, isteps, scales, analysis_time, onesided = setup_animate_scale(
             scale,
             icase, time, animation_profile, fps)
     elif animate_phase:
@@ -70,7 +71,7 @@ def setup_animation(scale, istep=None,
         scales = (scales2[istep],)
         phases = (phases2[istep],)
         isteps = (istep,)
-    return phases2, icases2, isteps2, scales2, analysis_time
+    return phases2, icases2, isteps2, scales2, analysis_time, onesided
 
 def setup_animate_scale(scale, icase, time, profile, fps):
     """Gets the inputs for a displacement scale/real modal animation"""
@@ -147,7 +148,7 @@ def setup_animate_scale(scale, icase, time, profile, fps):
     #assert len(scales) == nframes, 'len(scales)=%s nframes=%s' % (len(scales), nframes)
     if profile == '0 to scale to 0' and len(scales) % 2 == 0:
         raise RuntimeError('nscales=%s scales=%s' % (len(scales), scales))
-    return icases, isteps, scales, analysis_time
+    return icases, isteps, scales, analysis_time, onesided
 
 def setup_animate_phase(scale, icase, time, fps):
     """Gets the inputs for a phase animation"""

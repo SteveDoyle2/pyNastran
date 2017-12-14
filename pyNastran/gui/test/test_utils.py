@@ -56,7 +56,7 @@ class GuiUtils(unittest.TestCase):
     def test_animation_scale_1(self):
         """0 to scale"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time = setup_animation(
+        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase=42,
@@ -72,7 +72,7 @@ class GuiUtils(unittest.TestCase):
     def test_animation_scale_2(self):
         """-scale to scale"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time = setup_animation(
+        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase=42,
@@ -88,7 +88,7 @@ class GuiUtils(unittest.TestCase):
     def test_animation_scale_3(self):
         """-scale to scale to -scale"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time = setup_animation(
+        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase=42,
@@ -105,7 +105,7 @@ class GuiUtils(unittest.TestCase):
         """animate_scale/phase/time must be specified"""
         scale = 1.0
         with self.assertRaises(NotImplementedError):
-            phases, icases, isteps, scales, analysis_time = setup_animation(
+            phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
                 scale, istep=None,
                 animate_scale=False, animate_phase=False, animate_time=False,
                 icase=42,
@@ -116,7 +116,7 @@ class GuiUtils(unittest.TestCase):
     def test_animation_phase_1(self):
         """phase plot"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time = setup_animation(
+        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=False, animate_phase=True, animate_time=False,
             icase=42,
@@ -132,7 +132,7 @@ class GuiUtils(unittest.TestCase):
     def test_animation_time_1(self):
         """time plot"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time = setup_animation(
+        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=False, animate_phase=False, animate_time=True,
             icase=42,
