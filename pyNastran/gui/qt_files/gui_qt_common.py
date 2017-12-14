@@ -105,7 +105,7 @@ class GuiCommon(GuiAttributes):
             except IndexError:
                 icase -= 1
 
-    def on_cycle_results(self, case=None):
+    def on_cycle_results(self, case=None, show_msg=True):
         """the gui method for calling cycle_results"""
         if len(self.case_keys) <= 1:
             return
@@ -122,12 +122,12 @@ class GuiCommon(GuiAttributes):
             if icase == self.ncases:
                 icase = 0
             try:
-                self.cycle_results(icase)
+                self.cycle_results(icase, show_msg=show_msg)
                 break
             except IndexError:
                 icase += 1
 
-    def cycle_results(self, case=None):
+    def cycle_results(self, case=None, show_msg=True):
         """
         Selects the next case
 
@@ -151,9 +151,10 @@ class GuiCommon(GuiAttributes):
             if self.ncases == 0:
                 self.scalarBar.SetVisibility(False)
             return
-        case = self.cycle_results_explicit(case, explicit=False)
+        case = self.cycle_results_explicit(case, explicit=False, show_msg=show_msg)
         assert case is not False, case
-        self.log_command('cycle_results(case=%r)' % self.icase)
+        if show_msg:
+            self.log_command('cycle_results(case=%r)' % self.icase)
 
     def get_subtitle_label(self, subcase_id):
         try:
@@ -166,14 +167,15 @@ class GuiCommon(GuiAttributes):
             label = 'label=NA'
         return subtitle, label
 
-    def cycle_results_explicit(self, case=None, explicit=True, min_value=None, max_value=None):
+    def cycle_results_explicit(self, case=None, explicit=True, min_value=None, max_value=None,
+                               show_msg=True):
         assert case is not False, case
         #if explicit:
             #self.log_command('cycle_results(case=%r)' % case)
         found_cases = self.increment_cycle(case)
         if found_cases:
             icase = self._set_case(case, self.icase, explicit=explicit, cycle=True,
-                                   min_value=min_value, max_value=max_value)
+                                   min_value=min_value, max_value=max_value, show_msg=show_msg)
             assert icase is not False, case
         else:
             icase = None
@@ -226,7 +228,7 @@ class GuiCommon(GuiAttributes):
 
     def _set_case(self, result_name, icase, explicit=False, cycle=False,
                   skip_click_check=False, min_value=None, max_value=None,
-                  is_legend_shown=None):
+                  is_legend_shown=None, show_msg=True):
         """
         Internal method for doing results updating
 
@@ -354,7 +356,7 @@ class GuiCommon(GuiAttributes):
 
         self.final_grid_update(name, grid_result,
                                name_vector, grid_result_vector,
-                               key, subtitle, label)
+                               key, subtitle, label, show_msg)
 
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
@@ -550,7 +552,7 @@ class GuiCommon(GuiAttributes):
 
     def final_grid_update(self, name, grid_result,
                           name_vector, grid_result_vector,
-                          key, subtitle, label):
+                          key, subtitle, label, show_msg):
         assert isinstance(key, integer_types), key
         (obj, (i, res_name)) = self.result_cases[key]
         subcase_id = obj.subcase_id
@@ -562,17 +564,17 @@ class GuiCommon(GuiAttributes):
             #print('name, grid_result, vector_size=3', name, grid_result)
         self._final_grid_update(name, grid_result, None, None, None,
                                 1, subcase_id, result_type, location, subtitle, label,
-                                revert_displaced=True)
+                                revert_displaced=True, show_msg=show_msg)
         if vector_size == 3:
             self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
                                     vector_size, subcase_id, result_type, location, subtitle, label,
-                                    revert_displaced=False)
+                                    revert_displaced=False, show_msg=show_msg)
             #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
             #self._update_grid(vector_data)
 
     def _final_grid_update(self, name, grid_result, obj, i, res_name,
                            vector_size, subcase_id, result_type, location, subtitle, label,
-                           revert_displaced=True):
+                           revert_displaced=True, show_msg=True):
         if name is None:
             return
 
@@ -601,9 +603,10 @@ class GuiCommon(GuiAttributes):
                     self._names_storage.remove(name)
 
                 cell_data.AddArray(grid_result)
-                self.log_info('centroidal plotting vector=%s - subcase_id=%s '
-                              'result_type=%s subtitle=%s label=%s'
-                              % (vector_size, subcase_id, result_type, subtitle, label))
+                if show_msg:
+                    self.log_info('centroidal plotting vector=%s - subcase_id=%s '
+                                  'result_type=%s subtitle=%s label=%s'
+                                  % (vector_size, subcase_id, result_type, subtitle, label))
             elif location == 'node':
                 point_data = grid.GetPointData()
                 if self._names_storage.has_close_name(name):
@@ -611,9 +614,10 @@ class GuiCommon(GuiAttributes):
                     self._names_storage.remove(name)
 
                 if vector_size == 1:
-                    self.log_info('node plotting vector=%s - subcase_id=%s '
-                                  'result_type=%s subtitle=%s label=%s"'
-                                  % (vector_size, subcase_id, result_type, subtitle, label))
+                    if show_msg:
+                        self.log_info('node plotting vector=%s - subcase_id=%s '
+                                      'result_type=%s subtitle=%s label=%s"'
+                                      % (vector_size, subcase_id, result_type, subtitle, label))
                     point_data.AddArray(grid_result)
                 elif vector_size == 3:
                     #print('vector_size3; get, update')
@@ -635,9 +639,10 @@ class GuiCommon(GuiAttributes):
                         xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
                         self._update_forces(vector_data, scale)
 
-                    self.log_info('node plotting vector=%s - subcase_id=%s '
-                                  'result_type=%s subtitle=%s label=%s'
-                                  % (vector_size, subcase_id, result_type, subtitle, label))
+                    if show_msg:
+                        self.log_info('node plotting vector=%s - subcase_id=%s '
+                                      'result_type=%s subtitle=%s label=%s'
+                                      % (vector_size, subcase_id, result_type, subtitle, label))
                     #point_data.AddVector(grid_result) # old
                     #point_data.AddArray(grid_result)
                 else:

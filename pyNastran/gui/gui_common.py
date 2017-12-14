@@ -11,10 +11,10 @@ import cgi #  html lib
 import traceback
 from copy import deepcopy
 from collections import OrderedDict
-from itertools import count, cycle
+from itertools import cycle
 from math import ceil
 
-from six import string_types, iteritems, itervalues, PY2, PY3
+from six import string_types, iteritems, itervalues
 from six.moves import range
 
 import numpy as np
@@ -24,7 +24,7 @@ from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
-    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QFileDialog)
+    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction)
 from qtpy.compat import getsavefilename, getopenfilename
 
 
@@ -3649,7 +3649,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
-    def on_take_screenshot(self, fname=None, magnify=None):
+    def on_take_screenshot(self, fname=None, magnify=None, show_msg=True):
         """
         Take a screenshot of a current view and save as a file
 
@@ -3661,6 +3661,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         magnify : int; default=None
             None : use self.magnify
             int : resolution increase factor
+        show_msg : bool; default=True
+            log the command
         """
         if fname is None or fname is False:
             filt = ''
@@ -3709,40 +3711,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 render_large.SetInput(self.rend)
 
-            if magnify is None:
-                magnify_min = 1
-                magnify = self.magnify if self.magnify > magnify_min else magnify_min
-            else:
-                magnify = magnify
-            if not isinstance(magnify, integer_types):
-                msg = 'magnify=%r type=%s' % (magnify, type(magnify))
-                raise TypeError(msg)
-            self.settings.update_text_size(magnify=magnify)
-            render_large.SetMagnification(magnify)
-
-            # multiply linewidth by magnify
-            line_widths0 = {}
-            point_sizes0 = {}
-            for key, geom_actor in iteritems(self.geometry_actors):
-                if isinstance(geom_actor, vtk.vtkActor):
-                    prop = geom_actor.GetProperty()
-                    line_width0 = prop.GetLineWidth()
-                    point_size0 = prop.GetPointSize()
-                    line_widths0[key] = line_width0
-                    point_sizes0[key] = point_size0
-                    line_width = line_width0 * magnify
-                    point_size = point_size0 * magnify
-                    prop.SetLineWidth(line_width)
-                    prop.SetPointSize(point_size)
-                    prop.Modified()
-                elif isinstance(geom_actor, vtk.vtkAxesActor):
-                    pass
-                else:
-                    raise NotImplementedError(geom_actor)
-
-            # hide corner axis
-            axes_actor = self.corner_axis.GetOrientationMarker()
-            axes_actor.SetVisibility(False)
+            line_widths0, point_sizes0, axes_actor = self._screenshot_setup(magnify, render_large)
 
             nam, ext = os.path.splitext(fname)
             ext = ext.lower()
@@ -3766,23 +3735,64 @@ class GuiCommon2(QMainWindow, GuiCommon):
             writer.Write()
 
             #self.log_info("Saved screenshot: " + fname)
-            self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
-            self.settings.update_text_size(magnify=1.0)
+            if show_msg:
+                self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
+            self._screenshot_teardown(line_widths0, point_sizes0, axes_actor)
 
-            # show corner axes
-            axes_actor.SetVisibility(True)
+    def _screenshot_setup(self, magnify, render_large):
+        if magnify is None:
+            magnify_min = 1
+            magnify = self.magnify if self.magnify > magnify_min else magnify_min
+        else:
+            magnify = magnify
+        if not isinstance(magnify, integer_types):
+            msg = 'magnify=%r type=%s' % (magnify, type(magnify))
+            raise TypeError(msg)
+        self.settings.update_text_size(magnify=magnify)
+        render_large.SetMagnification(magnify)
 
-            # set linewidth back
-            for key, geom_actor in iteritems(self.geometry_actors):
-                if isinstance(geom_actor, vtk.vtkActor):
-                    prop = geom_actor.GetProperty()
-                    prop.SetLineWidth(line_widths0[key])
-                    prop.SetPointSize(point_sizes0[key])
-                    prop.Modified()
-                elif isinstance(geom_actor, vtk.vtkAxesActor):
-                    pass
-                else:
-                    raise NotImplementedError(geom_actor)
+        # multiply linewidth by magnify
+        line_widths0 = {}
+        point_sizes0 = {}
+        for key, geom_actor in iteritems(self.geometry_actors):
+            if isinstance(geom_actor, vtk.vtkActor):
+                prop = geom_actor.GetProperty()
+                line_width0 = prop.GetLineWidth()
+                point_size0 = prop.GetPointSize()
+                line_widths0[key] = line_width0
+                point_sizes0[key] = point_size0
+                line_width = line_width0 * magnify
+                point_size = point_size0 * magnify
+                prop.SetLineWidth(line_width)
+                prop.SetPointSize(point_size)
+                prop.Modified()
+            elif isinstance(geom_actor, vtk.vtkAxesActor):
+                pass
+            else:
+                raise NotImplementedError(geom_actor)
+
+        # hide corner axis
+        axes_actor = self.corner_axis.GetOrientationMarker()
+        axes_actor.SetVisibility(False)
+        return line_widths0, point_sizes0, axes_actor
+
+    def _screenshot_teardown(self, line_widths0, point_sizes0, axes_actor):
+        self.settings.update_text_size(magnify=1.0)
+
+        # show corner axes
+        axes_actor.SetVisibility(True)
+
+        # set linewidth back
+        for key, geom_actor in iteritems(self.geometry_actors):
+            if isinstance(geom_actor, vtk.vtkActor):
+                prop = geom_actor.GetProperty()
+                prop.SetLineWidth(line_widths0[key])
+                prop.SetPointSize(point_sizes0[key])
+                prop.Modified()
+            elif isinstance(geom_actor, vtk.vtkAxesActor):
+                pass
+            else:
+                raise NotImplementedError(geom_actor)
 
     def make_gif(self, gif_filename, scale, istep=None,
                  min_value=None, max_value=None,
@@ -3901,7 +3911,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=istep,
-            animate_scale=True, animate_phase=False, animate_time=False,
+            animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
             icase=icase,
             icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
             time=time, animation_profile=animation_profile,
@@ -3964,25 +3974,46 @@ class GuiCommon2(QMainWindow, GuiCommon):
             is_failed = self.make_gif_helper(
                 gif_filename, icases, scales,
                 phases=phases, isteps=isteps,
-                max_value=None, min_value=None,
+                max_value=max_value, min_value=min_value,
                 time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
                 onesided=onesided, nrepeat=nrepeat,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif)
         except Exception as e:
-            #self.log_error(traceback.print_stack(f))
-            self.log_error('\n' + ''.join(traceback.format_stack()))
-            #traceback.print_exc(file=self.log_error)
             self.log_error(str(e))
+            raise
+            #self.log_error(traceback.print_stack(f))
+            #self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+
+        if not is_failed:
+            msg = (
+                'make_gif(gif_filename, scale, istep=%s,\n'
+                '         min_value=%s, max_value=%s,\n'
+                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n'
+                '         icase=%s, icase_start=%s, icase_end=%s, icase_delta=%s,\n'
+                "         time=%s, animation_profile=%r,\n"
+                '         nrepeat=%s, fps=%s, magnify=%s,\n'
+                '         make_images=%s, delete_images=%s, make_gif=%s, stop_animation=%s,\n'
+                '         animate_in_gui=%s)\n' % (
+                    gif_filename, scale, istep, min_value, max_value,
+                    animate_scale, animate_phase, animate_time,
+                    icase, icase_start, icase_end, icase_delta, time, animation_profile,
+                    nrepeat, fps, magnify, make_images, delete_images, make_gif, stop_animation,
+                    animate_in_gui)
+            )
+            self.log_command(msg)
 
         return is_failed
 
     def stop_animation(self):
         """removes the animation timer"""
+        is_failed = False
         if 'TimerEvent' in self.observers:
             observer_name = self.observers['TimerEvent']
             self.iren.RemoveObserver(observer_name)
             del self.observers['TimerEvent']
             self.setup_mouse_buttons(mode='default', force=True)
+        return is_failed
 
     def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
                         max_value=None, min_value=None,
@@ -4055,9 +4086,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - analysis_time should be one-sided
          - set onesided=False
         """
-        #icase_start = 6
-        #icase_delta = 1
-
         assert fps >= 1, fps
         nframes = ceil(analysis_time * fps)
         assert nframes >= 2, nframes
@@ -4071,31 +4099,36 @@ class GuiCommon2(QMainWindow, GuiCommon):
         phases, icases, isteps, scales = update_animation_inputs(
             phases, icases, isteps, scales, analysis_time, fps)
 
-        png_filenames = []
-        fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
+        if gif_filename is not None:
+            png_filenames = []
+            fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
+
         icase0 = -1
+        is_failed = True
         if make_images:
             for istep, icase, scale, phase in zip(isteps, icases, scales, phases):
-                png_filename = fmt % istep
-
                 if icase != icase0:
                     #self.cycle_results(case=icase)
                     self.cycle_results_explicit(icase, explicit=True,
                                                 min_value=min_value, max_value=max_value)
                 self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
-                self.on_take_screenshot(fname=png_filename, magnify=magnify)
-                png_filenames.append(png_filename)
+
+                if gif_filename is not None:
+                    png_filename = fmt % istep
+                    self.on_take_screenshot(fname=png_filename, magnify=magnify)
+                    png_filenames.append(png_filename)
         else:
             for istep in isteps:
                 png_filename = fmt % istep
                 png_filenames.append(png_filename)
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
-        is_failed = write_gif(
-            gif_filename, png_filenames, time=time,
-            onesided=onesided,
-            nrepeat=nrepeat, delete_images=delete_images,
-            make_gif=make_gif)
+        if png_filenames:
+            is_failed = write_gif(
+                gif_filename, png_filenames, time=time,
+                onesided=onesided,
+                nrepeat=nrepeat, delete_images=delete_images,
+                make_gif=make_gif)
         return is_failed
 
     def add_geometry(self):
