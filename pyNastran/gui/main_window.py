@@ -263,7 +263,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         if hasattr(self, on_reload_name):
             getattr(self, on_reload_name)()  # on_reload_nastran
         else:
-            self.on_load_geometry(self.infile_name, self.format)
+            self.on_load_geometry(self.infile_name, self.format, raise_error=False)
 
         if self.out_filename is None:
             msg = '%s - %s' % (self.format, self.infile_name)

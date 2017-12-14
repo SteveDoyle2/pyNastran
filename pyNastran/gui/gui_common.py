@@ -7,12 +7,12 @@ import sys
 import os.path
 import time
 import datetime
-import cgi #  html lib
 import traceback
 from copy import deepcopy
 from collections import OrderedDict
 from itertools import cycle
 from math import ceil
+import cgi #  html lib
 
 from six import string_types, iteritems, itervalues
 from six.moves import range
@@ -2493,10 +2493,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             raise RuntimeError('no modules were loaded...')
 
     def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
-                                plot=True, raise_error=True):
+                                plot=True, raise_error=False):
         """action version of ``on_load_geometry``"""
-        self.on_load_geometry(infile_name=None, geometry_format=None,
-                              name='main', plot=True, raise_error=True)
+        self.on_load_geometry(infile_name=infile_name, geometry_format=geometry_format,
+                              name=name, plot=True, raise_error=raise_error)
 
     def _load_geometry_filename(self, geometry_format, infile_name):
         """gets the filename and format"""
@@ -2514,10 +2514,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             print("geometry_format = %r" % geometry_format)
 
             for fmt in self.fmts:
-                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                fmt_name, _major_name, _geom_wildcard, geom_func, res_wildcard, _resfunc = fmt
                 if geometry_format == fmt_name:
-                    load_function = _geofunc
-                    if _reswild is None:
+                    load_function = geom_func
+                    if res_wildcard is None:
                         has_results = False
                     else:
                         has_results = True
@@ -2529,21 +2529,26 @@ class GuiCommon2(QMainWindow, GuiCommon):
             formats = [geometry_format]
             filter_index = 0
         else:
+            # load a pyqt window
             formats = []
             load_functions = []
             has_results_list = []
             wildcard_list = []
 
+            # setup the selectable formats
             for fmt in self.fmts:
-                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                fmt_name, _major_name, geom_wildcard, geom_func, res_wildcard, _res_func = fmt
                 formats.append(_major_name)
-                wildcard_list.append(_geowild)
-                load_functions.append(_geofunc)
+                wildcard_list.append(geom_wildcard)
+                load_functions.append(geom_func)
 
-                if _reswild is None:
+                if res_wildcard is None:
                     has_results_list.append(False)
                 else:
                     has_results_list.append(True)
+
+            # the list of formats that will be selectable in some odd syntax
+            # that pyqt uses
             wildcard = ';;'.join(wildcard_list)
 
             # get the filter index and filename
@@ -2552,8 +2557,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 title = 'Choose a Geometry File to Load'
                 wildcard_index, infile_name = self._create_load_file_dialog(wildcard, title)
-                #print("infile_name = %r" % infile_name)
-                #print("wildcard_index = %r" % wildcard_index)
                 if not infile_name:
                     # user clicked cancel
                     is_failed = True
@@ -2563,7 +2566,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             geometry_format = formats[filter_index]
             load_function = load_functions[filter_index]
             has_results = has_results_list[filter_index]
-            #return is_failed
         return is_failed, (infile_name, load_function, filter_index, formats)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
@@ -2577,6 +2579,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             path to the filename
         geometry_format : str; default=None
             the geometry format for programmatic loading
+        name : str; default='main'
+            the name of the actor; don't use this
         plot : bool; default=True
             Should the baseline geometry have results created and plotted/rendered?
             If you're calling the on_load_results method immediately after, set it to False
@@ -2611,8 +2615,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self.alt_grids[name].Reset()
                 self.alt_grids[name].Modified()
 
-            #gridResult.Reset()
-            #gridResult.Modified()
             if not os.path.exists(infile_name) and geometry_format:
                 msg = 'input file=%r does not exist' % infile_name
                 self.log_error(msg)
@@ -2629,9 +2631,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     print("method %r does not exist" % clear_name)
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
 
-            # inspect the load_geometry method to see what version it's using
-            #args, varargs, keywords, defaults = inspect.getargspec(load_function)
-            #if args[-1] == 'plot':
             try:
                 time0 = time.time()
                 has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
@@ -3987,7 +3986,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         if not is_failed:
             msg = (
-                'make_gif(gif_filename, scale, istep=%s,\n'
+                'make_gif(%r, %s, istep=%s,\n'
                 '         min_value=%s, max_value=%s,\n'
                 '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n'
                 '         icase=%s, icase_start=%s, icase_end=%s, icase_delta=%s,\n'
