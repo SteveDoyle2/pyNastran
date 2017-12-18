@@ -144,8 +144,9 @@ from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, MissingDeckSections)
-from pyNastran.bdf.pybdf import (BDFInputPy, _clean_comment, _lines_to_decks,
-                                 _break_system_lines, _check_valid_deck, _show_bad_file)
+from pyNastran.bdf.bdf_interface.pybdf import (
+    BDFInputPy, _clean_comment, _lines_to_decks,
+    _break_system_lines, _check_valid_deck, _show_bad_file)
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None, read_cards=None,
