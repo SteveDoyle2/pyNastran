@@ -615,7 +615,7 @@ class GetCard(GetMethods):
                 prop_type = dvprel.prop_type
                 desvars = dvprel.dvids
                 coeffs = dvprel.coeffs
-                if hasattr(dvprel, 'pid_ref'):
+                if dvprel.pid_ref is not None:
                     pid = dvprel.pid_ref.pid
                 else:
                     pid = dvprel.pid
