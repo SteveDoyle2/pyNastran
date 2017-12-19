@@ -146,7 +146,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, MissingDeckSections)
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _lines_to_decks,
-    _break_system_lines, _check_valid_deck, _show_bad_file)
+    _break_system_lines, _check_valid_deck, _show_bad_file, IGNORE_COMMENTS)
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None, read_cards=None,
@@ -4292,6 +4292,211 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             except:
                 print(str(card))
                 raise
+
+#------------------------------------------------------------------------------------------------------
+    # HDF5
+    def _read_bdf_cards(self, bdf_filename=None,
+                        validate=True, xref=False, punch=False, read_includes=True, encoding=None):
+        """
+        Read method for the bdf files
+
+        Parameters
+        ----------
+        bdf_filename : str / None
+            the input bdf (default=None; popup a dialog)
+        validate : bool; default=True
+            runs various checks on the BDF
+        xref :  bool; default=False
+            should the bdf be cross referenced
+        punch : bool; default=False
+            indicates whether the file is a punch file
+        read_includes : bool; default=True
+            indicates whether INCLUDE files should be read
+        encoding : str; default=None -> system default
+            the unicode encoding
+
+        .. code-block:: python
+
+          >>> bdf = BDF()
+          >>> bdf.read_bdf(bdf_filename, xref=True)
+          >>> g1 = bdf.Node(1)
+          >>> print(g1.get_position())
+          [10.0, 12.0, 42.0]
+          >>> bdf.write_card(bdf_filename2)
+          >>> print(bdf.card_stats())
+
+          ---BDF Statistics---
+          SOL 101
+          bdf.nodes = 20
+          bdf.elements = 10
+          etc.
+        """
+        self._is_cards_dict = True
+
+        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
+        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+        self._parse_primary_file_header(bdf_filename)
+
+        out = self._get_lines(bdf_filename, punch=self.punch)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+
+        self.system_command_lines = system_lines
+        self.executive_control_lines = executive_control_lines
+        self.case_control_lines = case_control_lines
+
+        sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
+        self.update_solution(sol, method, sol_iline)
+
+        self.case_control_deck = CaseControlDeck(case_control_lines, self.log)
+        self.case_control_deck.solmap_to_value = self._solmap_to_value
+        self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
+
+        #self._is_cards_dict = True
+        if self._is_cards_dict:
+            cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
+        cards_out = self._parse_cards_hdf5(cards, card_count)
+        assert isinstance(cards_out, dict), cards_out
+        return cards_out
+
+    def _parse_cards_hdf5(self, cards, card_count):
+        self.echo = False
+        cards_out = {}
+        for card_name, card in sorted(iteritems(cards)):
+            cards_list = []
+            cards_out[card_name] = cards_list
+            if self.is_reject(card_name):
+                self.log.info('    rejecting card_name = %s' % card_name)
+                for comment, card_lines in card:
+                    self.increase_card_count(card_name)
+                    self.rejects.append([_format_comment(comment)] + card_lines)
+            else:
+                for comment, card_lines in card:
+                    class_instance = self.add_card(card_lines, card_name, comment=comment,
+                                                   is_list=False, has_none=False)
+                    cards_list.append(class_instance)
+        return cards_out
+
+
+    def add_card_hdf5(self, card_lines, card_name, comment='', is_list=True, has_none=True):
+        """
+        Adds a card object to the BDF object.
+
+        Parameters
+        ----------
+        card_lines: list[str]
+            the list of the card fields
+        card_name : str
+            the card_name -> 'GRID'
+        comment : str
+            an optional the comment for the card
+        is_list : bool, optional
+            False : input is a list of card fields -> ['GRID', 1, None, 3.0, 4.0, 5.0]
+            True :  input is list of card_lines -> ['GRID, 1,, 3.0, 4.0, 5.0']
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID', 1, 2, 3.0, 4.0, 5.0, None])
+            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
+
+        Returns
+        -------
+        class_instance : BaseCard()
+            the card object representation of card
+
+        .. code-block:: python
+
+          >>> model = BDF()
+
+          # is_list is a somewhat misleading name; is it a list of card_lines
+          # where a card_line is an unparsed string
+          >>> card_lines = ['GRID,1,2']
+          >>> comment = 'this is a comment'
+          >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
+
+          # here is_list=False because it's been parsed
+          >>> card = ['GRID', 1, 2,]
+          >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
+
+          # here is_list=False because it's been parsed
+          # Note the None at the end of the 1st line, which is there
+          #      because the CONM2 card has a blank field.
+          #      It must be there.
+          # We also set i32 on the 2nd line, so it will default to 0.0
+          >>> card = [
+                  'CONM2', eid, nid, cid, mass, x1, x2, x3, None,
+                           i11, i21, i22, i31, None, i33,
+              ]
+          >>> model.add_card(card_lines, 'CONM2', comment, is_list=False)
+
+          # here's an alternate approach for the CONM2
+          # we use Nastran's CSV format
+          # There are many blank fields, but it's parsed exactly like a
+          # standard CONM2.
+          >>> card = [
+                  'CONM2,1,2,3,10.0',
+                  ',1.0,,5.0'
+              ]
+          >>> model.add_card(card_lines, 'CONM2', comment, is_list=True)
+
+        .. note:: this is a very useful method for interfacing with the code
+        .. note:: the card_object is not a card-type object...so not a GRID
+                  card or CQUAD4 object.  It's a BDFCard Object.  However,
+                  you know the type (assuming a GRID), so just call the
+                  *mesh.Node(nid)* to get the Node object that was just
+                  created.
+        """
+        card_name = card_name.upper()
+        card_obj, card = self.create_card_object(card_lines, card_name,
+                                                     is_list=is_list, has_none=has_none)
+        class_instance = self._add_card_helper_hdf5(card_obj, card_name, card_name, comment)
+        return class_instance
+
+    def _add_card_helper_hdf5(self, card_obj, card, card_name, comment=''):
+        # type: (BDFCard, List[str], str, str) -> None
+        """
+        Adds a card object to the BDF object.
+
+        Parameters
+        ----------
+        card_object : BDFCard()
+            the card object representation of card
+        card : List[str]
+            the fields of the card object; used for rejection and special cards
+        card_name : str
+            the card_name -> 'GRID'
+        comment : str
+            an optional the comment for the card
+        """
+        if card_name == 'ECHOON':
+            self.echo = True
+            return
+        elif card_name == 'ECHOOFF':
+            self.echo = False
+            return
+
+        if self.echo and not self.force_echo_off:
+            try:
+                print(print_card_8(card_obj).rstrip())
+            except:
+                if card in ['DEQATN']:
+                    print(str(card_obj).rstrip())
+                else:
+                    print(print_card_16(card_obj).rstrip())
+
+        if card_name in self._card_parser:
+            card_class, add_card_function = self._card_parser[card_name]
+
+            # simplified, so no error catching
+            class_instance = card_class.add_card(card_obj, comment=comment)
+            #add_card_function(class_instance)
+
+        elif card_name in self._card_parser_prepare:
+            add_card_function = self._card_parser_prepare[card_name]
+            # simplified, so no error catching
+            class_instance = add_card_function(card, card_obj, comment=comment)
+
+        else:
+            self.reject_cards.append(card_obj)
+            class_instance = None
+        return class_instance
 
 class BDF(BDF_):
     """
