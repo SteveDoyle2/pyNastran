@@ -17,7 +17,7 @@ from collections import defaultdict
 
 from typing import List, Dict, Optional, Union, Set, Any, cast
 from six import string_types, iteritems, itervalues, iterkeys, StringIO
-from six.moves.cPickle import load, dump  # type: ignore
+from six.moves.cPickle import load, dump, dumps  # type: ignore
 #from pickle import load, dump
 
 import numpy as np  # type: ignore
@@ -143,10 +143,10 @@ from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
-                                  CardParseSyntaxError, MissingDeckSections)
+                                  CardParseSyntaxError)
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _lines_to_decks,
-    _break_system_lines, _check_valid_deck, _show_bad_file, IGNORE_COMMENTS)
+    _show_bad_file, IGNORE_COMMENTS)
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None, read_cards=None,
@@ -1812,95 +1812,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             card_obj = BDFCard(card, has_none=False)
         return card_obj, card
 
-    def create_card_object_list(self, card_lines, card_name, has_none=True):
-        """
-        Creates a BDFCard object, which is really just a list that
-        allows indexing past the last field
-
-        Parameters
-        ----------
-        card_lines: list[str]
-            the list of the card lines
-            input is list of lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
-        card_name : str
-            the card_name -> 'GRID'
-        has_none : bool; default=True
-            ???
-
-        Returns
-        -------
-        card_obj : BDFCard
-            the BDFCard object
-        card : list[str]
-            the card with empty fields removed
-        """
-        card_name = card_name.upper()
-        self.increase_card_count(card_name)
-        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
-            card_obj = card_lines
-            card = card_lines
-        else:
-            fields = card_lines
-
-            # apply OPENMDAO syntax
-            if self._is_dynamic_syntax:
-                fields = [print_field_16(self._parse_dynamic_syntax(field)) if '%' in
-                          field.strip()[0:1] else print_field_16(field) for field in fields]
-                has_none = False
-
-            if has_none:
-                card = wipe_empty_fields([print_field_16(field) for field in fields])
-            else:
-                #card = remove_trailing_fields(fields)
-                card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card, has_none=False)
-        return card_obj, card
-
-    def create_card_object_fields(self, card_lines, card_name, has_none=True):
-        """
-        Creates a BDFCard object, which is really just a list that
-        allows indexing past the last field
-
-        Parameters
-        ----------
-        card_lines: list[str]
-            the list of the card fields
-            input is list of fields -> ['GRID', '1', '2', '3.0', '4.0', '5.0']
-        card_name : str
-            the card_name -> 'GRID'
-        has_none : bool; default=True
-            can there be trailing Nones in the card data
-            (e.g. ['GRID', '1', '2', '3.0', '4.0', '5.0'])
-
-        Returns
-        -------
-        card_obj : BDFCard
-            the BDFCard object
-        card : list[str]
-            the card with empty fields removed
-        """
-        card_name = card_name.upper()
-        self.increase_card_count(card_name)
-        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
-            card_obj = card_lines
-            card = card_lines
-        else:
-            fields = to_fields(card_lines, card_name)
-
-            # apply OPENMDAO syntax
-            if self._is_dynamic_syntax:
-                fields = [print_field_16(self._parse_dynamic_syntax(field)) if '%' in
-                          field.strip()[0:1] else print_field_16(field) for field in fields]
-                has_none = False
-
-            if has_none:
-                card = wipe_empty_fields([print_field_16(field) for field in fields])
-            else:
-                #card = remove_trailing_fields(fields)
-                card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card, has_none=False)
-        return card_obj, card
-
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
         class Crash(object):
@@ -3004,19 +2915,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'convection_properties', ]
 
         # These are ignored because they're lists
-        ignored_types = set([
-            'spoints', 'spointi',  # singleton
-            'grdset',  # singleton
+        #ignored_types = set([
+            #'spoints', 'spointi',  # singleton
+            #'grdset',  # singleton
 
-            'spcs',
+            #'spcs',
 
-            'suport', 'se_suport', # suport, suport1 - list
-            'doptprm',  # singleton
+            #'suport', 'se_suport', # suport, suport1 - list
+            #'doptprm',  # singleton
 
-            # SETx - list
-            'sets', 'asets', 'bsets', 'csets', 'qsets',
-            'se_bsets', 'se_csets', 'se_qsets',
-        ])
+            ## SETx - list
+            #'sets', 'asets', 'bsets', 'csets', 'qsets',
+            #'se_bsets', 'se_csets', 'se_qsets',
+        #])
 
         ## TODO: why are some of these ignored?
         #ignored_types2 = set([
@@ -3181,8 +3092,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         for (lid, loads) in sorted(iteritems(self.loads)):
             msg.append('bdf.loads[%s]' % lid)
             groups_dict = {}  # type: Dict[str, int]
-            for load in loads:
-                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for loadi in loads:
+                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
@@ -3406,9 +3317,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                         coord.e2 = xyz_cid0[i2, :] #: a point on the z-axis
                         coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
                     else:
-                        g1_ref = model.nodes[nid1]
-                        g2_ref = model.nodes[nid2]
-                        g3_ref = model.nodes[nid3]
+                        g1_ref = self.nodes[nid1]
+                        g2_ref = self.nodes[nid2]
+                        g3_ref = self.nodes[nid3]
                         coord.e1 = g1_ref.get_position() #: the origin in the local frame
                         coord.e2 = g2_ref.get_position() #: a point on the z-axis
                         coord.e3 = g3_ref.get_position() #: a point on the xz-plane
@@ -4359,6 +4270,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         return cards_out
 
     def _parse_cards_hdf5(self, cards, card_count):
+        """creates card objects and adds the parsed cards to the deck"""
         self.echo = False
         cards_out = {}
         for card_name, card in sorted(iteritems(cards)):
@@ -4371,15 +4283,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     self.rejects.append([_format_comment(comment)] + card_lines)
             else:
                 for comment, card_lines in card:
-                    class_instance = self.add_card(card_lines, card_name, comment=comment,
-                                                   is_list=False, has_none=False)
+                    class_instance = self._add_card_hdf5(card_lines, card_name, comment=comment,
+                                                         is_list=False, has_none=False)
                     cards_list.append(class_instance)
         return cards_out
 
 
-    def add_card_hdf5(self, card_lines, card_name, comment='', is_list=True, has_none=True):
+    def _add_card_hdf5(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """
-        Adds a card object to the BDF object.
+        Creates a BaseCard object that will be used to simplify HDF5 adding.
 
         Parameters
         ----------
@@ -4445,7 +4357,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
-                                                     is_list=is_list, has_none=has_none)
+                                                 is_list=is_list, has_none=has_none)
         class_instance = self._add_card_helper_hdf5(card_obj, card_name, card_name, comment)
         return class_instance
 
@@ -4542,7 +4454,6 @@ def _prep_comment(comment):
     #sline = [comment[1:] if len(comment) and comment[0] == ' ' else comment
              #for comment in comment.rstrip().split('\n')]
     #print('sline = ', sline)
-    #asdh
 
 def _clean_comment_bulk(comment):
     # type: (str) -> str
