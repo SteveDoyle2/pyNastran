@@ -88,6 +88,7 @@ class PBEAM(CardTable):
     @staticmethod
     def from_bdf(card):
         # TODO: PBEAM ccf, cweld
+        # Constant cross-section flag: 1=yes and 0=no; 2 is also possible, but no idea
         ccf = -10
         cweld = -10
 
@@ -109,6 +110,17 @@ class PBEAM(CardTable):
             'YESA': np.nan
         }
 
+        # TODO: The first and last stations (xxb = 0.0, 1.0 are in slots 0 and 10).
+        #       Intermediate slots are 0.0 if they are not defined and nonzero
+        #       if the data is meaningful.  The data coming from the PBEAM/PBEAML
+        #       is sorted, but only uses as many fields as is necessary to fully
+        #       define the card.
+        #
+        # _so = {
+        #       'YES' : 0.,
+        #       'NO' : 1,
+        # }
+        #
         so = [_so[_] for _ in card.so]
         so = _resize(so, 11)
         xxb = _resize(card.xxb, 11)
