@@ -1646,6 +1646,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             #nsprings += 1
 
         # fill grids
+        zfighting_offset0 = 0.001
+        zfighting_offset = zfighting_offset0
         self._create_splines(model, box_id_to_caero_element_map, caero_points)
         if 'caero' in self.alt_grids:
             self.set_caero_grid(ncaeros_points, model, j=0)
@@ -1653,8 +1655,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if has_control_surface:
                 cs_name = 'caero_control_surfaces'
                 self.set_caero_control_surface_grid(
-                    cs_name, cs_box_ids[cs_name], box_id_to_caero_element_map, caero_points
-                )
+                    cs_name, cs_box_ids[cs_name],
+                    box_id_to_caero_element_map, caero_points,
+                    zfighting_offset=zfighting_offset, j=0)
+                zfighting_offset += zfighting_offset0
 
                 # sort the control surfaces
                 labels_to_aesurfs = {aesurf.label: aesurf for aesurf in itervalues(model.aesurf)}
@@ -1670,7 +1674,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     cs_name = '%s_control_surface' % aesurf.label
                     self.set_caero_control_surface_grid(
                         cs_name, cs_box_ids[cs_name],
-                        box_id_to_caero_element_map, caero_points, label=aesurf.label)
+                        box_id_to_caero_element_map, caero_points, label=aesurf.label,
+                        zfighting_offset=zfighting_offset, j=0)
+                    zfighting_offset += zfighting_offset0
 
         if nconm2 > 0 and xref_nodes:
             self._set_conm_grid(nconm2, dim_max, model)
@@ -1887,8 +1893,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if 'caero_control_surfaces' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
                     'caero_control_surfaces', color=PINK, line_width=5, opacity=1.0,
-                    representation='surface', is_visible=False,
-                )
+                    representation='surface', is_visible=False)
 
             # sort the control surfaces
             labels_to_aesurfs = {aesurf.label: aesurf for aesurf in itervalues(model.aesurf)}
@@ -1906,7 +1911,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 cs_name = '%s_control_surface' % aesurf.label
                 if cs_name not in self.alt_grids:
                     self.create_alternate_vtk_grid(
-                        cs_name, color=PINK, line_width=5, opacity=1.0,
+                        cs_name, color=PINK, line_width=5, opacity=0.5,
                         representation='surface')
 
                 cs_box_ids['caero_control_surfaces'].extend(aelist.elements)

@@ -5,7 +5,7 @@ defines:
 """
 from __future__ import print_function
 from six.moves import StringIO
-from six import string_types, iteritems
+from six import string_types, iteritems, itervalues
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -108,7 +108,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     data_members = [
         'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
-        'materials', 'sets', 'rigid_elements', 'mpcs',
+        'materials', 'sets', 'rigid_elements', 'mpcs', 'caeros',
     ]
     mappers = []
     for bdf_filename in bdf_filenames[1:]:
@@ -126,6 +126,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             'mid' : max(model.material_ids) + 1,
             'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
             'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
+            'caero_id' : max(caero.box_ids[-1, -1] for caero in itervalues(model.caeros)) + 1 if model.caeros else 1,
         }
         #for param, val in sorted(iteritems(starting_id_dict)):
             #print('  %-3s %s' % (param, val))
@@ -293,10 +294,12 @@ def _get_mapper_0(model):
     spc_map = _dicts_key_to_key((model.spcs, model.spcadds))
     mpc_map = _dicts_key_to_key((model.mpcs, model.mpcadds))
     method_map = _dict_key_to_key(model.methods)
+    properties_map = _dict_key_to_key(model.properties)
     rigid_elements_map = _dict_key_to_key(model.rigid_elements)
     cmethod_map = _dict_key_to_key(model.cMethods)
     flfact_map = _dict_key_to_key(model.flfacts)
     flutter_map = _dict_key_to_key(model.flutters)
+    caero_map = _dict_key_to_key(model.caeros)
     freq_map = _dict_key_to_key(model.frequencies)
 
     dload_map = _dicts_key_to_key((model.dload_entries, model.dloads))
@@ -331,6 +334,7 @@ def _get_mapper_0(model):
         'nodes' : nid_map,
         'coords' : cid_map,
         'materials' : mid_map,
+        'properties' : properties_map,
         'rigid_elements': rigid_elements_map,
         'SPC' : spc_map,
         'MPC' : mpc_map,
@@ -338,6 +342,7 @@ def _get_mapper_0(model):
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,
         'FMETHOD' : flutter_map,
+        'caero' : caero_map,
         'FREQUENCY' : freq_map,
 
         'DLOAD' : dload_map,

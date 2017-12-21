@@ -44,9 +44,9 @@ def setup_animation(scale, istep=None,
         assert isinstance(fps, integer_types), 'fps=%s must be an integer'% fps
 
     phases = None
-    icases = None
+    onesided = False
     if animate_scale:
-        icases, isteps, scales, analysis_time = setup_animate_scale(
+        icases, isteps, scales, analysis_time, onesided = setup_animate_scale(
             scale,
             icase, time, animation_profile, fps)
     elif animate_phase:
@@ -62,19 +62,19 @@ def setup_animation(scale, istep=None,
         raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
             animate_scale, animate_phase, animate_time))
 
-
-    if istep is not None:
-        assert isinstance(istep, integer_types), 'istep=%r' % istep
-        scales = (scales[istep],)
-        phases = (phases[istep],)
-        isteps = (istep,)
-
     phases2, icases2, isteps2, scales2 = update_animation_inputs(
         phases, icases, isteps, scales,
         analysis_time, fps)
-    return phases2, icases2, isteps2, scales2, analysis_time
+
+    if istep is not None:
+        assert isinstance(istep, integer_types), 'istep=%r' % istep
+        scales = (scales2[istep],)
+        phases = (phases2[istep],)
+        isteps = (istep,)
+    return phases2, icases2, isteps2, scales2, analysis_time, onesided
 
 def setup_animate_scale(scale, icase, time, profile, fps):
+    """Gets the inputs for a displacement scale/real modal animation"""
     if isinstance(profile, string_types):
         profile = profile.lower()
         if profile == '0 to scale':
@@ -148,20 +148,10 @@ def setup_animate_scale(scale, icase, time, profile, fps):
     #assert len(scales) == nframes, 'len(scales)=%s nframes=%s' % (len(scales), nframes)
     if profile == '0 to scale to 0' and len(scales) % 2 == 0:
         raise RuntimeError('nscales=%s scales=%s' % (len(scales), scales))
+    return icases, isteps, scales, analysis_time, onesided
 
-
-    #scales = None
-    #phases = None
-    #if animate_scale:
-
-    #else:
-        #raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
-            #animate_scale, animate_phase, animate_time))
-    return icases, isteps, scales, analysis_time
-
-def setup_animate_phase(scale, icase,
-                        time, fps):
-    # animate phase
+def setup_animate_phase(scale, icase, time, fps):
+    """Gets the inputs for a phase animation"""
     nframes = int(time * fps)
     icases = icase
     phases = np.linspace(0., 360., num=nframes, endpoint=False)
@@ -175,6 +165,7 @@ def setup_animate_phase(scale, icase,
 def setup_animate_time(scale, time,
                        icase_start, icase_end, icase_delta,
                        fps):
+    """Gets the inputs for a transient animation"""
     analysis_time = time
     assert isinstance(icase_start, integer_types), 'icase_start=%s' % icase_start
     assert isinstance(icase_end, integer_types), 'icase_end=%s' % icase_end
@@ -227,7 +218,7 @@ def get_analysis_time(time, onesided=True):
 def update_animation_inputs(phases, icases, isteps, scales, analysis_time, fps):
     """
     Simplifies the format of phases, icases, steps, scales to make them
-    into lists of the correct length.
+    into ndarrays of the correct length.
 
     Parameters
     ----------

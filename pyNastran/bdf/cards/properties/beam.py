@@ -119,7 +119,7 @@ class PBEAM(IntegratedLineProperty):
                 self.type, pname_fid))
 
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                 c1, c2, d1, d2, e1, e2, f1, f2,
+                 c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
                  k1=1., k2=1., s1=0., s2=0.,
                  nsia=0., nsib=None, cwa=0., cwb=None,
                  m1a=0., m2a=None, m1b=0., m2b=None,
@@ -190,6 +190,23 @@ class PBEAM(IntegratedLineProperty):
             n2a = n1a
         if n2b is None:
             n2b = n1b
+
+        if c1 is None:
+            c1 = [None] * len(xxb)
+        if c2 is None:
+            c2 = [None] * len(xxb)
+        if d1 is None:
+            d1 = [None] * len(xxb)
+        if d2 is None:
+            d2 = [None] * len(xxb)
+        if e1 is None:
+            e1 = [None] * len(xxb)
+        if e2 is None:
+            e2 = [None] * len(xxb)
+        if f1 is None:
+            f1 = [None] * len(xxb)
+        if f2 is None:
+            f2 = [None] * len(xxb)
 
         #: Property ID
         self.pid = pid

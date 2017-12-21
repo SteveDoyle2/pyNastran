@@ -7,14 +7,14 @@ import sys
 import os.path
 import time
 import datetime
-import cgi #  html lib
 import traceback
 from copy import deepcopy
 from collections import OrderedDict
-from itertools import count, cycle
+from itertools import cycle
 from math import ceil
+import cgi #  html lib
 
-from six import string_types, iteritems, itervalues, PY2, PY3
+from six import string_types, iteritems, itervalues
 from six.moves import range
 
 import numpy as np
@@ -24,7 +24,10 @@ from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
-    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QFileDialog)
+    QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction)
+from qtpy.compat import getsavefilename, getopenfilename
+
+
 from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
 
 
@@ -40,8 +43,8 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
-from pyNastran.gui.gui_utils.dialogs import save_file_dialog, open_file_dialog
-from pyNastran.gui.gui_utils.write_gif import setup_animation, write_gif
+from pyNastran.gui.gui_utils.write_gif import (
+    setup_animation, update_animation_inputs, write_gif)
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -479,13 +482,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
 
-                ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
-                ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
-                ('z', 'Flips to +Z Axis', 'plus_z.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
+                ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
+                ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
+                ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
 
-                ('X', 'Flips to -X Axis', 'minus_x.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-                ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-                ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+                ('front_view', 'Front View', 'front.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+                ('left_view', 'Left View', 'left.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
@@ -625,7 +628,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             'load_custom_result', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
-                         'x', 'y', 'z', 'X', 'Y', 'Z',
+                         'front_view', 'back_view', 'top_view', 'bottom_view', 'left_view', 'right_view',
                          'magnify', 'shrink', 'zoom',
                          'rotate_clockwise', 'rotate_cclockwise',
                          'rotation_center', 'measure_distance', 'probe_result', 'area_pick',
@@ -692,7 +695,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     elif not isinstance(i, string_types):
                         raise RuntimeError('what is this...action i() = %r' % i())
 
-                    action = self.actions[i] #if isinstance(i, string_types) else i()
+                    try:
+                        action = self.actions[i] #if isinstance(i, string_types) else i()
+                    except:
+                        print(self.actions.keys())
+                        raise
                     menu.addAction(action)
         #self._create_plane_from_points(None)
 
@@ -1161,7 +1168,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                             left_button_down=None, left_button_up=None,
                             right_button_down=None,
                             end_pick=None,
-                            style=None):
+                            style=None, force=False):
         """
         Remaps the mouse buttons temporarily
 
@@ -1181,11 +1188,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         style : vtkInteractorStyle (default=None)
             a custom vtkInteractorStyle
             None -> keep the same style, but overwrite the left mouse button
+        force : bool; default=False
+            override the mode=camera_mode check
         """
         assert isinstance(mode, string_types), mode
         assert revert in [True, False], revert
         #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))
-        if mode == self._camera_mode:
+        if mode == self._camera_mode and not force:
             #print('auto return from set mouse mode')
             return
         self._camera_mode = mode
@@ -1212,14 +1221,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # Re-assign left mouse click event to custom function (Point Picker)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.style.Rotate)
 
-        elif mode in ['measure_distance']: # 'rotation_center',
+        elif mode == 'measure_distance': # 'rotation_center',
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
 
             self.vtk_interactor.RemoveObservers('EndPickEvent')
             self.vtk_interactor.AddObserver('EndPickEvent', left_button_down)
-        elif mode in ['probe_result']:
+        elif mode == 'probe_result':
             # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
@@ -1750,6 +1759,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.on_run_script(python_file)
 
     def set_style_as_trackball(self):
+        """sets the default rotation style"""
         #self._simulate_key_press('t') # change mouse style to trackball
         self.style = vtk.vtkInteractorStyleTrackballCamera()
         self.vtk_interactor.SetInteractorStyle(self.style)
@@ -2415,9 +2425,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
         if default_filename is None:
             default_filename = self.last_dir
-        # getOpenFileName return QString and we want Python string
-        fname, wildcard_level = open_file_dialog(self, title, default_filename,
-                                                 qt_wildcard)
+        fname, wildcard_level = getopenfilename(
+            parent=self, caption=title,
+            basedir=default_filename, filters=qt_wildcard,
+            selectedfilter='', options=None)
         return wildcard_level, fname
 
     #def _create_load_file_dialog2(self, qt_wildcard, title):
@@ -2482,10 +2493,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             raise RuntimeError('no modules were loaded...')
 
     def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
-                                plot=True, raise_error=True):
+                                plot=True, raise_error=False):
         """action version of ``on_load_geometry``"""
-        self.on_load_geometry(infile_name=None, geometry_format=None,
-                              name='main', plot=True, raise_error=True)
+        self.on_load_geometry(infile_name=infile_name, geometry_format=geometry_format,
+                              name=name, plot=True, raise_error=raise_error)
 
     def _load_geometry_filename(self, geometry_format, infile_name):
         """gets the filename and format"""
@@ -2503,10 +2514,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             print("geometry_format = %r" % geometry_format)
 
             for fmt in self.fmts:
-                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                fmt_name, _major_name, _geom_wildcard, geom_func, res_wildcard, _resfunc = fmt
                 if geometry_format == fmt_name:
-                    load_function = _geofunc
-                    if _reswild is None:
+                    load_function = geom_func
+                    if res_wildcard is None:
                         has_results = False
                     else:
                         has_results = True
@@ -2518,21 +2529,26 @@ class GuiCommon2(QMainWindow, GuiCommon):
             formats = [geometry_format]
             filter_index = 0
         else:
+            # load a pyqt window
             formats = []
             load_functions = []
             has_results_list = []
             wildcard_list = []
 
+            # setup the selectable formats
             for fmt in self.fmts:
-                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                fmt_name, _major_name, geom_wildcard, geom_func, res_wildcard, _res_func = fmt
                 formats.append(_major_name)
-                wildcard_list.append(_geowild)
-                load_functions.append(_geofunc)
+                wildcard_list.append(geom_wildcard)
+                load_functions.append(geom_func)
 
-                if _reswild is None:
+                if res_wildcard is None:
                     has_results_list.append(False)
                 else:
                     has_results_list.append(True)
+
+            # the list of formats that will be selectable in some odd syntax
+            # that pyqt uses
             wildcard = ';;'.join(wildcard_list)
 
             # get the filter index and filename
@@ -2541,8 +2557,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 title = 'Choose a Geometry File to Load'
                 wildcard_index, infile_name = self._create_load_file_dialog(wildcard, title)
-                #print("infile_name = %r" % infile_name)
-                #print("wildcard_index = %r" % wildcard_index)
                 if not infile_name:
                     # user clicked cancel
                     is_failed = True
@@ -2552,7 +2566,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             geometry_format = formats[filter_index]
             load_function = load_functions[filter_index]
             has_results = has_results_list[filter_index]
-            #return is_failed
         return is_failed, (infile_name, load_function, filter_index, formats)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
@@ -2566,6 +2579,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             path to the filename
         geometry_format : str; default=None
             the geometry format for programmatic loading
+        name : str; default='main'
+            the name of the actor; don't use this
         plot : bool; default=True
             Should the baseline geometry have results created and plotted/rendered?
             If you're calling the on_load_results method immediately after, set it to False
@@ -2600,8 +2615,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self.alt_grids[name].Reset()
                 self.alt_grids[name].Modified()
 
-            #gridResult.Reset()
-            #gridResult.Modified()
             if not os.path.exists(infile_name) and geometry_format:
                 msg = 'input file=%r does not exist' % infile_name
                 self.log_error(msg)
@@ -2618,9 +2631,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     print("method %r does not exist" % clear_name)
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
 
-            # inspect the load_geometry method to see what version it's using
-            #args, varargs, keywords, defaults = inspect.getargspec(load_function)
-            #if args[-1] == 'plot':
             try:
                 time0 = time.time()
                 has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
@@ -3638,7 +3648,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
-    def on_take_screenshot(self, fname=None, magnify=None):
+    def on_take_screenshot(self, fname=None, magnify=None, show_msg=True):
         """
         Take a screenshot of a current view and save as a file
 
@@ -3650,6 +3660,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         magnify : int; default=None
             None : use self.magnify
             int : resolution increase factor
+        show_msg : bool; default=True
+            log the command
         """
         if fname is None or fname is False:
             filt = ''
@@ -3677,9 +3689,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'PostScript Document *.ps (*.ps)')
 
             title = 'Choose a filename and type'
-            fname, flt = save_file_dialog(self, title, default_filename,
-                                          file_types, filt)
-
+            fname, flt = getsavefilename(parent=self, caption=title, basedir='',
+                                         filters=file_types, selectedfilter=filt,
+                                         options=None)
             if fname in [None, '']:
                 return
             #print("fname=%r" % fname)
@@ -3698,40 +3710,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 render_large.SetInput(self.rend)
 
-            if magnify is None:
-                magnify_min = 1
-                magnify = self.magnify if self.magnify > magnify_min else magnify_min
-            else:
-                magnify = magnify
-            if not isinstance(magnify, integer_types):
-                msg = 'magnify=%r type=%s' % (magnify, type(magnify))
-                raise TypeError(msg)
-            self.settings.update_text_size(magnify=magnify)
-            render_large.SetMagnification(magnify)
-
-            # multiply linewidth by magnify
-            line_widths0 = {}
-            point_sizes0 = {}
-            for key, geom_actor in iteritems(self.geometry_actors):
-                if isinstance(geom_actor, vtk.vtkActor):
-                    prop = geom_actor.GetProperty()
-                    line_width0 = prop.GetLineWidth()
-                    point_size0 = prop.GetPointSize()
-                    line_widths0[key] = line_width0
-                    point_sizes0[key] = point_size0
-                    line_width = line_width0 * magnify
-                    point_size = point_size0 * magnify
-                    prop.SetLineWidth(line_width)
-                    prop.SetPointSize(point_size)
-                    prop.Modified()
-                elif isinstance(geom_actor, vtk.vtkAxesActor):
-                    pass
-                else:
-                    raise NotImplementedError(geom_actor)
-
-            # hide corner axis
-            axes_actor = self.corner_axis.GetOrientationMarker()
-            axes_actor.SetVisibility(False)
+            line_widths0, point_sizes0, axes_actor = self._screenshot_setup(magnify, render_large)
 
             nam, ext = os.path.splitext(fname)
             ext = ext.lower()
@@ -3755,25 +3734,67 @@ class GuiCommon2(QMainWindow, GuiCommon):
             writer.Write()
 
             #self.log_info("Saved screenshot: " + fname)
-            self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
-            self.settings.update_text_size(magnify=1.0)
+            if show_msg:
+                self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
+            self._screenshot_teardown(line_widths0, point_sizes0, axes_actor)
 
-            # show corner axes
-            axes_actor.SetVisibility(True)
+    def _screenshot_setup(self, magnify, render_large):
+        if magnify is None:
+            magnify_min = 1
+            magnify = self.magnify if self.magnify > magnify_min else magnify_min
+        else:
+            magnify = magnify
+        if not isinstance(magnify, integer_types):
+            msg = 'magnify=%r type=%s' % (magnify, type(magnify))
+            raise TypeError(msg)
+        self.settings.update_text_size(magnify=magnify)
+        render_large.SetMagnification(magnify)
 
-            # set linewidth back
-            for key, geom_actor in iteritems(self.geometry_actors):
-                if isinstance(geom_actor, vtk.vtkActor):
-                    prop = geom_actor.GetProperty()
-                    prop.SetLineWidth(line_widths0[key])
-                    prop.SetPointSize(point_sizes0[key])
-                    prop.Modified()
-                elif isinstance(geom_actor, vtk.vtkAxesActor):
-                    pass
-                else:
-                    raise NotImplementedError(geom_actor)
+        # multiply linewidth by magnify
+        line_widths0 = {}
+        point_sizes0 = {}
+        for key, geom_actor in iteritems(self.geometry_actors):
+            if isinstance(geom_actor, vtk.vtkActor):
+                prop = geom_actor.GetProperty()
+                line_width0 = prop.GetLineWidth()
+                point_size0 = prop.GetPointSize()
+                line_widths0[key] = line_width0
+                point_sizes0[key] = point_size0
+                line_width = line_width0 * magnify
+                point_size = point_size0 * magnify
+                prop.SetLineWidth(line_width)
+                prop.SetPointSize(point_size)
+                prop.Modified()
+            elif isinstance(geom_actor, vtk.vtkAxesActor):
+                pass
+            else:
+                raise NotImplementedError(geom_actor)
+
+        # hide corner axis
+        axes_actor = self.corner_axis.GetOrientationMarker()
+        axes_actor.SetVisibility(False)
+        return line_widths0, point_sizes0, axes_actor
+
+    def _screenshot_teardown(self, line_widths0, point_sizes0, axes_actor):
+        self.settings.update_text_size(magnify=1.0)
+
+        # show corner axes
+        axes_actor.SetVisibility(True)
+
+        # set linewidth back
+        for key, geom_actor in iteritems(self.geometry_actors):
+            if isinstance(geom_actor, vtk.vtkActor):
+                prop = geom_actor.GetProperty()
+                prop.SetLineWidth(line_widths0[key])
+                prop.SetPointSize(point_sizes0[key])
+                prop.Modified()
+            elif isinstance(geom_actor, vtk.vtkAxesActor):
+                pass
+            else:
+                raise NotImplementedError(geom_actor)
 
     def make_gif(self, gif_filename, scale, istep=None,
+                 min_value=None, max_value=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
                  icase=None, icase_start=None, icase_end=None, icase_delta=None,
                  time=2.0, animation_profile='0 to scale',
@@ -3835,12 +3856,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             None : unused
             int : active if animate_time=True
 
-        Time Plot Options (not supported)
-        ---------------------------------
+        Time Plot Options
+        -----------------
         max_value : float; default=None
-            the max value on the plot (not supported)
+            the max value on the plot
         min_value : float; default=None
-            the min value on the plot (not supported)
+            the min value on the plot
 
         Options
         -------
@@ -3887,9 +3908,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if stop_animation:
             return self.stop_animation()
 
-        phases, icases, isteps, scales, analysis_time = setup_animation(
+        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=istep,
-            animate_scale=True, animate_phase=False, animate_time=False,
+            animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
             icase=icase,
             icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
             time=time, animation_profile=animation_profile,
@@ -3952,19 +3973,46 @@ class GuiCommon2(QMainWindow, GuiCommon):
             is_failed = self.make_gif_helper(
                 gif_filename, icases, scales,
                 phases=phases, isteps=isteps,
+                max_value=max_value, min_value=min_value,
                 time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
                 onesided=onesided, nrepeat=nrepeat,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif)
-        except:
-            pass
+        except Exception as e:
+            self.log_error(str(e))
+            raise
+            #self.log_error(traceback.print_stack(f))
+            #self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+
+        if not is_failed:
+            msg = (
+                'make_gif(%r, %s, istep=%s,\n'
+                '         min_value=%s, max_value=%s,\n'
+                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n'
+                '         icase=%s, icase_start=%s, icase_end=%s, icase_delta=%s,\n'
+                "         time=%s, animation_profile=%r,\n"
+                '         nrepeat=%s, fps=%s, magnify=%s,\n'
+                '         make_images=%s, delete_images=%s, make_gif=%s, stop_animation=%s,\n'
+                '         animate_in_gui=%s)\n' % (
+                    gif_filename, scale, istep, min_value, max_value,
+                    animate_scale, animate_phase, animate_time,
+                    icase, icase_start, icase_end, icase_delta, time, animation_profile,
+                    nrepeat, fps, magnify, make_images, delete_images, make_gif, stop_animation,
+                    animate_in_gui)
+            )
+            self.log_command(msg)
+
         return is_failed
 
     def stop_animation(self):
         """removes the animation timer"""
+        is_failed = False
         if 'TimerEvent' in self.observers:
             observer_name = self.observers['TimerEvent']
             self.iren.RemoveObserver(observer_name)
             del self.observers['TimerEvent']
+            self.setup_mouse_buttons(mode='default', force=True)
+        return is_failed
 
     def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
                         max_value=None, min_value=None,
@@ -4037,11 +4085,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - analysis_time should be one-sided
          - set onesided=False
         """
-        #icase_start = 6
-        #icase_delta = 1
-        min_value = 0.
-        max_value = 1.46862
-
         assert fps >= 1, fps
         nframes = ceil(analysis_time * fps)
         assert nframes >= 2, nframes
@@ -4052,34 +4095,39 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if not os.path.exists(png_dirname):
             os.makedirs(png_dirname)
 
-        phases, icases, isteps, scales = self._update_animation_inputs(
-            phases, icases, isteps, scales)
+        phases, icases, isteps, scales = update_animation_inputs(
+            phases, icases, isteps, scales, analysis_time, fps)
 
-        png_filenames = []
-        fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
+        if gif_filename is not None:
+            png_filenames = []
+            fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
+
         icase0 = -1
+        is_failed = True
         if make_images:
             for istep, icase, scale, phase in zip(isteps, icases, scales, phases):
-                png_filename = fmt % istep
-
                 if icase != icase0:
                     #self.cycle_results(case=icase)
-                    self.cycle_results_explicit(icase, explicit=True)
+                    self.cycle_results_explicit(icase, explicit=True,
+                                                min_value=min_value, max_value=max_value)
                 self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
-                #self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)  # old
-                self.on_take_screenshot(fname=png_filename, magnify=magnify)
-                png_filenames.append(png_filename)
+
+                if gif_filename is not None:
+                    png_filename = fmt % istep
+                    self.on_take_screenshot(fname=png_filename, magnify=magnify)
+                    png_filenames.append(png_filename)
         else:
             for istep in isteps:
                 png_filename = fmt % istep
                 png_filenames.append(png_filename)
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
-        is_failed = write_gif(
-            gif_filename, png_filenames, time=time,
-            onesided=onesided,
-            nrepeat=nrepeat, delete_images=delete_images,
-            make_gif=make_gif)
+        if png_filenames:
+            is_failed = write_gif(
+                gif_filename, png_filenames, time=time,
+                onesided=onesided,
+                nrepeat=nrepeat, delete_images=delete_images,
+                make_gif=make_gif)
         return is_failed
 
     def add_geometry(self):

@@ -15,7 +15,6 @@ from pyNastran.op2.op2 import read_op2
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.utils.log import get_logger
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
-#from pyNastran.f06.test.f06_unit_tests import run_model
 
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 

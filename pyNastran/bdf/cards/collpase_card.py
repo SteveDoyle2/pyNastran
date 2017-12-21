@@ -60,7 +60,6 @@ def collapse_thru(fields, nthru=None):
 
 def collapse_thru_packs(fields):
     assert 'THRU' not in fields, fields
-    fields.sort()
     packs = condense(fields)
     singles, doubles = build_thru_packs(packs, max_dv=1)
 
@@ -70,6 +69,9 @@ def collapse_thru_packs(fields):
 
 def collapse_colon_packs(fields, thru_split=3):
     """
+    Applies colons (:) to packs to represent THRU and BY as is used by
+    Patran.
+
     Parameters
     ----------
     fields : List[int]
@@ -102,7 +104,6 @@ def collapse_colon_packs(fields, thru_split=3):
       singles = [1]
       doubles = [[3, ':', 10], [20, ':', 30]]
     """
-    fields.sort()
     packs = condense(fields)
     singles, doubles = build_thru_packs(packs, max_dv=None, thru_split=thru_split)
     doubles2 = []
@@ -122,6 +123,17 @@ def condense(value_list):
     """
     Builds a list of packs (list of 3 values representing the first, last,
     and delta values for condensing a SET card.
+
+    Parameters
+    ----------
+    value_list : List[int]
+        list of values to pack
+
+    Returns
+    -------
+    packs : List[pack]
+       pack : List[id_low, id_high, delta_id]
+           a list representation of the min/max/delta id values
 
     .. seealso:: build_thru
     """
@@ -167,12 +179,16 @@ def condense(value_list):
 
 def build_thru_packs(packs, max_dv=1, thru_split=3):
     """
+    Applies THRU and BY to packs to shorten output as Nastran does on
+    cards like the SPOINT
+
     Parameters
     ----------
-    packs : ???
-        ???
+    packs : List[pack]
+       pack : List[id_low, id_high, delta_id]
+           a list representation of the min/max/delta id values
     max_dv : int; default=1
-        ???
+        maximum allowed delta between two values
     thru_split : int; default=3
         the length to not write THRU
         3 : [10, 11, 12] will write as '10 THRU 12'
@@ -234,12 +250,12 @@ def build_thru(packs, max_dv=None, nthru=None):
     Parameters
     ----------
     packs : List[pack]
-        pack : List[first, last, delta]
-        first, last, delta are integers
+        pack : List[int first, int last, int delta]
+            the first, last, delta id values
     max_dv : int; default=None -> no limit
         defines the max allowable delta between two values
-    nthru : ???
-        ???
+    nthru : int; default=None
+        don't use this; it will crash
 
     Returns
     -------

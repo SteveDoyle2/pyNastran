@@ -107,12 +107,25 @@ class NastranGuiResults(NastranGuiAttributes):
                 # (itime, nnodes, xyz)
                 # tnorm (901, 3)
                 tnorm = norm(t123, axis=2)   # I think this is wrong...
-                print('tnorm.shape ', tnorm.shape)
+                #print('tnorm.shape ', tnorm.shape)
                 assert len(tnorm) == t123.shape[0]
             else:
                 # (itime, nnodes, xyz)
                 # tnorm (901, 3)
-                tnorm = norm(t123, axis=1)   # I think this is wrong...
+
+                # float32s are apparently buggy in numpy if you have small numbers
+                # see models/elements/loadstep_elememnts.op2
+                try:
+                    tnorm = norm(t123, axis=1)
+                except FloatingPointError:
+                    t123 = t123.astype(dtype='float64')
+                    tnorm = norm(t123, axis=1)
+
+                    #print('skipping %s' % name)
+                    #print(t123.max(axis=1))
+                    #for itime, ti in enumerate(t123):
+                        #print('itime=%s' % itime)
+                        #print(ti.tolist())
                 assert len(tnorm) == t123.shape[0]
 
             assert t123.shape[0] == ntimes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
@@ -1044,15 +1057,28 @@ class NastranGuiResults(NastranGuiAttributes):
             # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
             oxx[i] = case.data[itime, :, 0]
             txy[i] = case.data[itime, :, 2]
-            ovm[i] = np.sqrt(oxx[i]**2 + 3*txy[i]**2) # plane stress
+            try:
+                ovm[i] = np.sqrt(oxx[i]**2 + 3*txy[i]**2) # plane stress
+            except FloatingPointError:
+                ovm[i] = 0.
+                assert np.allclose(oxx[i], 0.)
+                assert np.allclose(txy[i], 0.)
             # max_principal[i] = sqrt(oxx[i]**2 + txy[i]**2)
             # min_principal[i] = max_principal[i] - 2 * txy[i]
             # simplification of:
             #   eig(A) = [oxx, txy]
             #            [txy, 0.0]
             # per Equation 7: http://www.soest.hawaii.edu/martel/Courses/GG303/Eigenvectors.pdf
-            max_principal[i] = (oxx[i] + np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
-            min_principal[i] = (oxx[i] - np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+            try:
+                max_principal[i] = (oxx[i] + np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+                min_principal[i] = (oxx[i] - np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+            except FloatingPointError:
+                # underflow is a thing...we can promote the dtype from float32 to float64
+                # but we'll hold off until there's a real example
+                assert np.allclose(oxx[i], 0.)
+                assert np.allclose(txy[i], 0.)
+                max_principal[i] = 0.
+                min_principal[i] = 0.
         del rods
 
 
@@ -1252,6 +1278,8 @@ class NastranGuiResults(NastranGuiAttributes):
 
             i = np.searchsorted(eids, eidsi)
             if len(i) != len(np.unique(i)):
+                print(case.element_node)
+                print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
                 print('iplate = %s' % i)
                 print('eids = %s' % eids)
                 print('eidsiA = %s' % case.element_node[:, 0])
@@ -1282,8 +1310,11 @@ class NastranGuiResults(NastranGuiAttributes):
             o3i = case.data[itime, j, 6]
             ovmi = case.data[itime, j, 7]
 
+            #print("nlayers_per_element = ", case.element_name, nlayers_per_element)
             for inode in range(1, nlayers_per_element):
                 #print('%s - ilayer = %s' % (case.element_name, inode))
+                #print(case.data[itime, j + inode, 1])
+                #print(case.data[itime, :, 1])
                 oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 1]]), axis=0)
                 oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 2]]), axis=0)
                 txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
@@ -1291,6 +1322,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
                 ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 7]]), axis=0)
                 assert len(oxxi) == len(j)
+                #print('-------')
 
             oxx[i] = oxxi
             oyy[i] = oyyi

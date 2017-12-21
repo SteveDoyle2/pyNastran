@@ -1126,8 +1126,8 @@ class RealCShearForceArray(ScalarObject):
                 ] = vals2
                 f.write('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n'
                         '                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                            eid, f14, f12, f21, f23, f32, f34, f43, f41,
-                            kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
+                            eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
+                            kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -1784,13 +1784,21 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
-        #cen_word = 'CEN/%i' % nnodes
+        cen_word = 'CEN/%i' % nnodes
         if self.element_type  in [64, 82, 144]: # CQUAD8, CQUADR, CQUAD4
-            cyc = cycle([0, 1, 2, 3, 4])
+            cyci = [0, 1, 2, 3, 4]
+            #cyc = cycle([0, 1, 2, 3, 4])  # TODO: this is totally broken...
+            nnodes_per_eid = 5
         elif self.element_type  in [70, 75]: # CTRIAR, CTRIA6
-            cyc = cycle([0, 1, 2, 3])
+            cyci = [0, 1, 2, 3]
+            #cyc = cycle([0, 1, 2, 3])  # TODO: this is totally broken...
+            nnodes_per_eid = 4
         else:
             raise NotImplementedError(self.element_type)
+
+        # TODO: this shouldn't be neccessary
+        cyc = cyci * (len(eids) // nnodes_per_eid)
+        assert len(eids) % nnodes_per_eid == 0
 
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
@@ -1814,7 +1822,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                 # ctria3
                 #          8      -7.954568E+01  2.560061E+03 -4.476376E+01    1.925648E+00  1.914048E+00  3.593237E-01    8.491534E+00  5.596094E-01  #
                 if i == 0:
-                    f.write('0  %8i    CEN/4 %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                    f.write('0  %8i    %s %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
                 else:
                     f.write('            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
             # else:

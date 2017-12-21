@@ -317,7 +317,7 @@ class WriteMesh(BDFAttributes):
 
         eids_written = []  # type: List[int]
         pids = sorted(self.properties.keys())
-        pid_eids = self.get_element_ids_dict_with_pids(pids)
+        pid_eids = self.get_element_ids_dict_with_pids(pids, stop_if_no_eids=False)
 
         msg = []
         #failed_element_types = set([])
