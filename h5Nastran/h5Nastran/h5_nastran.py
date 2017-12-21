@@ -67,6 +67,10 @@ class H5Nastran(object):
 
         cards = get_bdf_cards(bdf)
 
+        # TODO: I'm not quite sure how to interface with card_tables
+        #       but using this should be quite a bit faster
+        #cards = self.bdf._read_bdf_cards(filename)
+
         tables = set()
         unsupported = []
 

@@ -184,7 +184,7 @@ class CHBDYE(ThermalElement):
     def cross_reference(self, model):
         pass
 
-    def safe_cross_reference(self):
+    def safe_cross_reference(self, model):
         pass
 
     def uncross_reference(self):
