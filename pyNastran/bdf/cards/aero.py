@@ -1291,6 +1291,18 @@ class AERO(Aero):
         msg = ' which is required by AERO'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
 
+    def safe_cross_reference(self, model):
+        """
+        Safe cross refernece aerodynamic coordinate system.
+
+        Parameters
+        ----------
+        model : BDF
+            The BDF object.
+        """
+        msg = ' which is required by AERO'
+        self.acsid_ref = model.Coord(self.acsid, msg=msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -1505,6 +1517,19 @@ class AEROS(Aero):
     def cross_reference(self, model):
         """
         Cross refernece aerodynamic coordinate system.
+
+        Parameters
+        ----------
+        model : BDF
+            The BDF object.
+        """
+        msg = ' which is required by AEROS'
+        self.acsid_ref = model.Coord(self.acsid, msg=msg)
+        self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
+
+    def safe_cross_reference(self, model):
+        """
+        Safe cross refernece aerodynamic coordinate system.
 
         Parameters
         ----------
@@ -5942,7 +5967,8 @@ class SPLINE1(Spline):
                 msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
                 msg += str(self)
                 msg += str(self.setg_ref)
-                raise RuntimeError(msg)
+                model.log.warning(msg)
+                msg = ''
         except KeyError:
             model.log.warning('failed to find SETx set_id=%s,%s; allowed_sets=%s' % (
                 self.setg, msg, np.unique(list(model.sets.keys()))))

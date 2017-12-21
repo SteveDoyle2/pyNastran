@@ -153,9 +153,9 @@ class SafeXrefMesh(XrefMesh):
             flutter.safe_cross_reference(self)
 
         if self.aero:
-            self.aero.cross_reference(self)
+            self.aero.safe_cross_reference(self)
         if self.aeros:
-            self.aeros.cross_reference(self)
+            self.aeros.safe_cross_reference(self)
 
         if 0:  # only support CAERO1
             ncaeros = len(self.caeros)
@@ -193,23 +193,21 @@ class SafeXrefMesh(XrefMesh):
         Links the elements to nodes, properties (and materials depending on
         the card).
         """
+        missing_safe_xref = set([])
         for elem in itervalues(self.elements):
-            try:
-                elem.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
-                self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
-                self._stored_xref_errors.append((elem, var))
-                if self._ixref_errors > self._nxref_errors:
-                    self.pop_xref_errors()
-                    #msg = "Couldn't cross reference Element.\n%s" % str(elem)
-                    #self.log.error(msg)
-                    #raise
-        for elem in itervalues(self.rigid_elements):
-            try:
+            if hasattr(elem, 'safe_cross_reference'):
                 elem.safe_cross_reference(self)
-            except AttributeError:
+            else:
                 elem.cross_reference(self)
+
+        for elem in itervalues(self.rigid_elements):
+            if hasattr(elem, 'safe_cross_reference'):
+                elem.safe_cross_reference(self)
+            else:
+                missing_safe_xref.add(elem.type)
+                elem.cross_reference(self)
+         if missing_safe_xref:
+             self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
 
     def _safe_cross_reference_loads(self, debug=True):
         # type: () -> None
@@ -235,6 +233,22 @@ class SafeXrefMesh(XrefMesh):
             darea.safe_cross_reference(self)
         for key, dphase in iteritems(self.dphases):
             dphase.safe_cross_reference(self)
+
+    def safe_empty_nodes(self, nids, msg=''):
+        """safe xref version of self.Nodes(nid, msg='')"""
+        nodes = []
+        missing_nodes = []
+        for nid in nids:
+            try:
+                node = self.EmptyNode(nid)
+            except KeyError:
+                node = nid
+                missing_nodes.append(nid)
+            nodes.append(node)
+        if missing_nodes:
+            missing_nodes.sort()
+            self.log.warning('Nodes %s are missing%s' % (str(missing_nodes), msg))
+        return nodes, missing_nodes
 
     def safe_get_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""
