@@ -576,7 +576,12 @@ class GetCard(GetMethods):
                 # print('no %s for isubcase=%s' % (key, subcase_id))
                 continue
             try:
-                load_case = self.loads[load_case_id]
+                load_case = self.get_reduced_loads(
+                    load_case_id, scale=1.,
+                    consider_load_combinations=True,
+                    skip_scale_factor0=False,
+                    stop_on_failure=False,
+                    msg='')
             except KeyError:
                 self.log.warning('LOAD=%s not found' % load_case_id)
                 continue
@@ -735,8 +740,10 @@ class GetCard(GetMethods):
         """
         if nid_map is None:
             nid_map = self.nid_map
-        if not any(['FORCE' in self.card_count, 'PLOAD2' in self.card_count,
-                    'PLOAD4' in self.card_count, 'SPCD' in self.card_count]):
+        if not any(['FORCE' in self.card_count,
+                    'PLOAD' in self.card_count, 'PLOAD2' in self.card_count,
+                    'PLOAD4' in self.card_count, 'SPCD' in self.card_count,
+                    'SLOAD' in self.card_count]):
             return None, None, None
         nnodes = len(node_ids)
         assert len(nid_map) == len(node_ids), 'len(nid_map)=%s len(node_ids)=%s' % (len(nid_map), len(node_ids))
@@ -751,7 +758,7 @@ class GetCard(GetMethods):
         forces = np.zeros((nnodes, 3), dtype='float32')
         spcd = np.zeros((nnodes, 3), dtype='float32')
         # loop thru scaled loads and plot the pressure
-        cards_ignored = {}
+        cards_ignored = set([])
 
         assert normals is not None
         fail_nids = set()
@@ -768,6 +775,30 @@ class GetCard(GetMethods):
                         print('    nid=%s is a dependent node and has a FORCE applied\n%s' % (
                             nid, str(load)))
                 forces[nid_map[nid]] += load.xyz * scale2
+
+            elif load.type == 'PLOAD':
+                pressure = load.pressure * scale
+                nnodes = len(load.nodes)
+                if nnodes == 4:
+                    n1, n2, n3, n4 = load.nodes
+                    xyz1 = self.nodes[n1].get_position()
+                    xyz2 = self.nodes[n2].get_position()
+                    xyz3 = self.nodes[n3].get_position()
+                    xyz4 = self.nodes[n4].get_position()
+                    normal_area = np.cross(xyz3 - xyz1, xyz4 - xyz2)  # TODO: not validated
+                elif nnodes == 3:
+                    n1, n2, n3 = load.nodes
+                    xyz1 = self.nodes[n1].get_position()
+                    xyz2 = self.nodes[n2].get_position()
+                    xyz3 = self.nodes[n3].get_position()
+                    normal_area = np.cross(xyz2 - xyz1, xyz3 - xyz1)  # TODO: not validated
+                else:
+                    self.log.debug('    case=%s nnodes=%r loadtype=%r not supported' % (
+                        load_case_id, nnodes, load.type))
+                    continue
+                forcei = pressure * normal_area / nnodes
+                for nid in load.nodes:
+                    forces[nid_map[nid]] += forcei
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
@@ -975,10 +1006,12 @@ class GetCard(GetMethods):
                 pass
             elif load.type in ['TEMP']:
                 pass
+            elif load.type == 'SLOAD':
+                for nid, mag in zip(load.nodes, load.mags):
+                    forces[nid_map[nid]] += np.array([mag, 0., 0.])
             else:
-                print(load)
                 if load.type not in cards_ignored:
-                    cards_ignored[load.type] = True
+                    cards_ignored.add(load.type)
                     self.log.warning('  _get_forces_moments_array - unsupported '
                                      'load.type = %s' % load.type)
         if fail_count:
@@ -1011,8 +1044,11 @@ class GetCard(GetMethods):
             ndarray : the centroidal pressures
             None : corresponds to is_pressure=False
         """
-        if 'PLOAD4' not in self.card_count:
+        if not any(['PLOAD' in self.card_count, 'PLOAD2' in self.card_count,
+                    'PLOAD4' in self.card_count]):
             return False, None
+        cards_ignored = set([])
+        pressure_loads = ['PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4']
 
         if not isinstance(load_case_id, integer_types):
             msg = 'load_case_id must be an integer; type=%s, load_case_id=\n%r' % (
@@ -1058,7 +1094,29 @@ class GetCard(GetMethods):
                         #r = centroid - p
                     else:
                         etypes_skipped.add(elem.type)
+            elif load.type == 'PLOAD2':
+                pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
+                for eid in load.eids:
+                    elem = self.elements[eid]
+                    ie = np.searchsorted(eids, elem.eid)
+                    pressures[ie] += pressure
+
+            #elif load.type == 'PLOAD1':
+                #pass
+            #elif load.type == 'PLOAD':
+                # applied to a node, not an element...
+                #pressures[ie] = load.pressure * scale
+            elif load.type not in pressure_loads:
+                continue
+            elif load.type in pressure_loads:
+                if load.type not in cards_ignored:
+                    cards_ignored.add(load.type)
+                    self.log.warning('  get_pressure_array - unsupported '
+                                     'load.type = %s' % load.type)
+            #else:
+                #pass
             iload += 1
+
         if len(etypes_skipped):
             self.log.warning('skipping pressure on %s' % list(etypes_skipped))
         return True, pressures
@@ -1264,22 +1322,22 @@ class GetCard(GetMethods):
                 loads_out.append(load)
         return loads_out, scale_factors_out, is_grav_out
 
-    def _get_loads_and_scale_factors(self, load_case):
-        """account for scale factors"""
-        loads2 = []
-        scale_factors2 = []
-        for load in load_case:
-            if load.type == 'LOAD':
-                scale_factors, loads = load.get_reduced_loads()
-                for scale_factor, loadi in zip(scale_factors, loads):
-                    if scale_factor == 0.0:
-                        continue
-                    scale_factors2.append(scale_factor)
-                    loads2.append(loadi)
-            else:
-                scale_factors2.append(1.)
-                loads2.append(load)
-        return loads2, scale_factors2
+    #def _get_loads_and_scale_factors(self, load_case):
+        #"""account for scale factors"""
+        #loads2 = []
+        #scale_factors2 = []
+        #for load in load_case:
+            #if load.type == 'LOAD':
+                #scale_factors, loads = load.get_reduced_loads()
+                #for scale_factor, loadi in zip(scale_factors, loads):
+                    #if scale_factor == 0.0:
+                        #continue
+                    #scale_factors2.append(scale_factor)
+                    #loads2.append(loadi)
+            #else:
+                #scale_factors2.append(1.)
+                #loads2.append(load)
+        #return loads2, scale_factors2
 
     def get_reduced_dloads(self, dload_id, scale=1., skip_scale_factor0=False, msg=''):
         """
@@ -1374,7 +1432,7 @@ class GetCard(GetMethods):
                 raise RuntimeError(rigid_element.type)
         return rbes
 
-    def get_dependent_nid_to_components(self, mpc_id=None):
+    def get_dependent_nid_to_components(self, mpc_id=None, stop_on_failure=True):
         """
         Gets a dictionary of the dependent node/components.
 
@@ -1382,6 +1440,8 @@ class GetCard(GetMethods):
         ----------
         mpc_id : int; default=None -> no MPCs are checked
             TODO: add
+        stop_on_failure : bool; default=True
+            errors if parsing something new
 
         Returns
         -------
@@ -1400,8 +1460,13 @@ class GetCard(GetMethods):
           - dependent nodes : loads/motions may not be defined
         """
         if mpc_id is not None:
-            raise NotImplementedError('MPCs')
-            #mpcs = self.get_mpcs(mpc_id)
+            mpcs = self.get_mpcs(mpc_id)
+
+            #for mpc in mpcs:
+                #if mpc.type == 'MPC':
+                    #asdf
+                #else:
+                    #raise NotImplementedError(mpc)
 
         dependent_nid_to_components = {}
         for eid, rigid_element in iteritems(self.rigid_elements):
@@ -2426,6 +2491,8 @@ class GetCard(GetMethods):
                     nids.append(nid)
                     comps.append(comp)
             else:
+                if stop_on_failure:
+                    self.log.error('not considering:\n%s' % str(mpc))
+                    raise NotImplementedError(mpc)
                 self.log.warning('not considering:\n%s' % str(mpc))
-                #raise NotImplementedError(mpc.type)
         return nids, comps

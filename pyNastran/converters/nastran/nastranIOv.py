@@ -5329,9 +5329,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         try:
             load_case_id = subcase.get_parameter('LOAD')[0]
         except KeyError:
+            self.log.warning('LOAD not found in subcase_id=%s' % (subcase_id))
             return icase
 
-        if load_case_id not in model.loads:
+        if load_case_id not in model.loads and load_case_id not in model.load_combinations:
             self.log.warning('LOAD=%s not found' % load_case_id)
             return icase
 
