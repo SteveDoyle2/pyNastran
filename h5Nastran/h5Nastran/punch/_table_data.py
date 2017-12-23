@@ -3,6 +3,15 @@ from six import iteritems, itervalues
 from six.moves import range
 
 
+# python 2/3 compatibility for chr, is there a better way?
+_test_chr = b'abcd'
+try:
+    chr(_test_chr[0])
+except TypeError:
+    def chr(x):
+        return x
+
+
 def convert_data(data):
     return data.strip()
 
@@ -102,7 +111,7 @@ class PunchTableData(object):
 
     def _load_data(self, table_data):
         self.header.clear()
-        self.data.clear()
+        del self.data[:]
 
         for line in table_data:
             if chr(line[0]) == '$':
@@ -133,6 +142,6 @@ class PunchTableData(object):
         return list(self.data), self.header.serialize()
 
     def load(self, data):
-        self.data.clear()
+        del self.data[:]
         self.data.extend(data[0])
         self.header.load(data[1])

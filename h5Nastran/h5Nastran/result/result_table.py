@@ -1,4 +1,5 @@
 from __future__ import print_function, absolute_import
+from six import iteritems
 
 from collections import defaultdict
 from copy import deepcopy
@@ -604,7 +605,7 @@ def get_data_dict(data):
 def serialize_data_dict(data_dict):
     data = []
 
-    for key, _data in data_dict.items():
+    for key, _data in iteritems(data_dict):
         _data_ = [key, len(_data)]
         _data_.extend(_data)
         data.extend(_data_)
