@@ -5551,8 +5551,25 @@ class PAERO2(BaseCard):
 
 class PAERO3(BaseCard):
     """
-    Defines the number of Mach boxes in the flow direction and the location of cranks and
-    control surfaces of a Mach box lifting surface.
+    Defines the number of Mach boxes in the flow direction and the
+    location of cranks and control surfaces of a Mach box lifting
+    surface.
+
+    +--------+------+------+-------+------+-----+------+------+------+
+    |    1   |   2  |   3  |   4   |   5  |  6  |   7  |   8  |  9   |
+    +========+======+======+=======+======+=====+======+======+======+
+    | PAERO3 |  PID | NBOX | NCTRL |      |  X5 |  Y5  |  X6  |  Y6  |
+    +--------+------+------+-------+------+-----+------+------+------+
+    |        |  X7  |  Y7  |   X8  |  Y8  |  X9 |  Y9  |  X10 |  Y10 |
+    +--------+------+------+-------+------+-----+------+------+------+
+    |        |  X11 |  Y11 |  X12  |  Y12 |     |      |      |      |
+    +--------+------+------+-------+------+-----+------+------+------+
+    | PAERO3 | 2001 |  15  |   1   |      | 0.  |  65. |      |      |
+    +--------+------+------+-------+------+-----+------+------+------+
+    |        |  78. |  65. |  108. |  65. | 82. | 97.5 | 112. | 97.5 |
+    +--------+------+------+-------+------+-----+------+------+------+
+    |        |  86. | 130. |  116. | 130. |     |      |      |      |
+    +--------+------+------+-------+------+-----+------+------+------+
     """
     type = 'PAERO3'
     _field_map = {
@@ -5606,6 +5623,26 @@ class PAERO3(BaseCard):
             self.y[spot] = value
 
     def __init__(self, pid, nbox, ncontrol_surfaces, x, y, comment=''):
+        """
+        Creates a PAERO3 card, which defines the number of Mach boxes
+        in the flow direction and the location of cranks and control
+        surfaces of a Mach box lifting surface.
+
+        Parameters
+        ----------
+        pid : int
+            PAERO1 id
+        nbox : int
+            Number of Mach boxes in the flow direction; 0 < nbox < 50
+        ncontrol_surfaces : int
+            Number of control surfaces. (0, 1, or 2)
+        x / y : List[float, None]
+            float : locations of points 5 through 12, which are in the
+            aerodynamic coordinate system, to define the cranks and
+            control surface geometry.
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
         #: Property identification number. (Integer > 0)
@@ -5617,6 +5654,10 @@ class PAERO3(BaseCard):
 
     def validate(self):
         assert len(self.x) == len(self.y), 'nx=%s ny=%s' % (len(self.x), len(self.y))
+        assert len(self.x) <= 8, 'nx=%s'  % len(self.x)
+        for i, xi, yi in zip(count(), self.x, self.y):
+            if xi is None or yi is None:
+                assert xi == yi, 'xi=%s yi=%s must be None or floats' % (xi, yi)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -5637,10 +5678,10 @@ class PAERO3(BaseCard):
         y = []
         nfields = card.nfields
 
-        j = 0
-        for i in range(6, nfields, 2):
-            xi = double(card, i, 'x%i' % j)
-            yi = double(card, i + 1, 'y%i' % j)
+        j = 5
+        for i in range(5, nfields, 2):
+            xi = double_or_blank(card, i, 'x%i' % j)
+            yi = double_or_blank(card, i + 1, 'y%i' % j)
             x.append(xi)
             y.append(yi)
             j += 1

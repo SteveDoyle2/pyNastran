@@ -3718,6 +3718,26 @@ class AddCards(AddMethods):
         return paero
 
     def add_paero3(self, pid, nbox, ncontrol_surfaces, x, y, comment=''):
+        """
+        Creates a PAERO3 card, which defines the number of Mach boxes
+        in the flow direction and the location of cranks and control
+        surfaces of a Mach box lifting surface.
+
+        Parameters
+        ----------
+        pid : int
+            PAERO1 id
+        nbox : int
+            Number of Mach boxes in the flow direction; 0 < nbox < 50
+        ncontrol_surfaces : int
+            Number of control surfaces. (0, 1, or 2)
+        x / y : List[float, None]
+            float : locations of points 5 through 12, which are in the
+            aerodynamic coordinate system, to define the cranks and
+            control surface geometry.
+        comment : str; default=''
+            a comment for the card
+        """
         paero = PAERO3(pid, nbox, ncontrol_surfaces, x, y, comment=comment)
         self._add_paero_object(paero)
         return paero

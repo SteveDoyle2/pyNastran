@@ -1024,6 +1024,36 @@ class TestAero(unittest.TestCase):
 
         save_load_deck(model)
 
+
+    def test_paero3(self):
+        """checks the PAERO3"""
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |    1   |   2  |   3  |   4   |   5  |  6  |   7  |   8  |  9   |
+        # +========+======+======+=======+======+=====+======+======+======+
+        # | PAERO3 |  PID | NBOX | NCTRL |      |  X5 |  Y5  |  X6  |  Y6  |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |        |  X7  |  Y7  |   X8  |  Y8  |  X9 |  Y9  |  X10 |  Y10 |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |        |  X11 |  Y11 |  X12  |  Y12 |     |      |      |      |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # | PAERO3 | 2001 |  15  |   1   |      | 0.  |  65. |      |      |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |        |  78. |  65. |  108. |  65. | 82. | 97.5 | 112. | 97.5 |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |        |  86. | 130. |  116. | 130. |     |      |      |      |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        fields = ['PAERO3', 2001, 15, 1, None, 0., 65., None, None,
+                  78., 65., 108., 65., 82., 97.5, 112., 97.5,
+                  86., 130., 116., 130.]
+        card = BDFCard(fields)
+        model = BDF(debug=False)
+        model.add_card(fields, fields[0])
+        paero = model.paeros[2001]
+        assert paero.npoints == 8, paero.npoints
+        paero.raw_fields()
+        print("")
+        print()
+
     def test_paero4(self):
         """checks the PAERO4"""
         # +--------+------+-------+--------+-------+-------+--------+--------+--------+
@@ -1050,6 +1080,7 @@ class TestAero(unittest.TestCase):
         bdf_card = BDFCard(card, has_none=True)
         paero4 = PAERO4.add_card(bdf_card, comment='msg')
         str(paero4)
+        paero4.cross_reference(None)
 
     def test_caero4_1(self):
         """checks the CAERO4/PAERO4"""
