@@ -6368,28 +6368,23 @@ class SPLINE3(Spline):
         if self.components not in [0, 1, 2, 3, 4, 5, 6]:
             msg += 'components=%r must be [0, 1, 2, 3, 4, 5, 6]\n' % (
                 self.components)
-            is_failed = True
 
         if not len(self.nodes) == len(self.displacement_components):
             msg += 'nnodes=%s ndisplacement_components=%s must be equal\n' % (
                 len(self.nodes), len(self.displacement_components))
-            is_failed = True
         if not len(self.nodes) == len(self.coeffs):
             msg += 'nnodes=%s ncoeffs=%s must be equal\n' % (
                 len(self.nodes), len(self.coeffs))
-            is_failed = True
 
         for i, disp_component, coeff  in zip(count(), self.displacement_components, self.coeffs):
             if disp_component not in [0, 1, 2, 3, 4, 5, 6]:
                 msg += 'i=%s displacement_component=%s must be [0, 1, 2, 3, 4, 5, 6]\n' % (
                     i, disp_component)
-                is_failed = True
 
         if self.usage not in ['FORCE', 'DISP', 'BOTH']:
-            msg += 'usage=%r must be in [FORCE, DISP, BOTH]' % self.usage
-            is_failed = True
+            msg += 'usage=%r must be in [FORCE, DISP, BOTH]\n' % self.usage
 
-        if is_failed:
+        if msg:
             msg += str(self)
             raise RuntimeError(msg)
 
@@ -6409,9 +6404,9 @@ class SPLINE3(Spline):
         caero = integer(card, 2, 'caero')
         box_id = integer(card, 3, 'box_id')
         components = integer(card, 4, 'comp')
-        g1 = integer(card, 5, 'G1')
-        c1 = integer(card, 6, 'C1')
-        a1 = double(card, 7, 'A1')
+        node = integer(card, 5, 'G1')
+        coeff = integer(card, 6, 'C1')
+        displacement_component = double(card, 7, 'A1')
         usage = string_or_blank(card, 8, 'usage', 'BOTH')
 
         nfields = len(card) - 1
@@ -6419,28 +6414,30 @@ class SPLINE3(Spline):
         if nfields % 8:
             nrows += 1
 
-        i = 1
-        Gi = [g1]
-        ci = [c1]
-        ai = [a1]
+        nodes = [node]
+        coeffs = [coeff]
+        displacement_components = [displacement_component]
+        i = 2
         for irow in range(1, nrows):
-            j = 1 + nrows * 8
-            gii = integer(card, j, 'Gi_%i' % i)
-            cii = integer(card, j + 1, 'Ci_%i' % i)
-            aii = double(card, j + 2, 'Ai_%i' % i)
-            Gi.append(gii)
-            ci.append(cii)
-            ai.append(aii)
-            if card[j + 3] or card[j + 4] or card[j + 5]:
-                i += 1
-                gii = integer(card, j, 'Gi_%i' % i)
-                cii = parse_components(card, j + 1, 'Ci_%i' % i)
-                aii = double(card, j + 2, 'Ai_%i' % i)
-                Gi.append(gii)
-                ci.append(cii)
-                ai.append(aii)
+            #print('G%i' % i)
+            j = 1 + irow * 8
+            node = integer(card, j, 'G%i' % i)
+            coeff = integer(card, j + 1, 'C%i' % i)
+            displacement_component = double(card, j + 2, 'A%i' % i)
+            nodes.append(node)
+            coeffs.append(coeff)
+            displacement_components.append(displacement_component)
             i += 1
-        return SPLINE3(eid, caero, box_id, components, Gi, ci, ai, usage,
+            if card.field(j + 4) or card.field(j + 5) or card.field(j + 6):
+                node = integer(card, j + 4, 'G%i' % i)
+                coeff = parse_components(card, j + 5, 'C%i' % i)
+                displacement_component = double(card, j + 6, 'A%i' % i)
+                nodes.append(node)
+                coeffs.append(coeff)
+                displacement_components.append(displacement_component)
+                i += 1
+        return SPLINE3(eid, caero, box_id, components,
+                       nodes, coeffs, displacement_components, usage,
                        comment=comment)
 
     def cross_reference(self, model):
