@@ -1253,17 +1253,21 @@ class TestAero(unittest.TestCase):
 
         spline_id = 102
         nids = [5, 6, 7]
-        displacement_components = [3, 7]
+        displacement_components = [3, 6]
         coeffs = [1.0, 2.0]
         spline3b = model.add_spline3(
             spline_id, caero, box_id, components, nids,
             displacement_components, coeffs, usage='failed', comment='spline3')
-
         cref = bref = sref = 1.0
         model.add_aeros(cref, bref, sref)
 
         with self.assertRaises(RuntimeError):
             spline3b.validate()
+        spline3b.usage = 'BOTH'
+        spline3b.displacement_components.append(1)
+        spline3b.coeffs.append(0.1)
+        spline3b.validate()
+
         del model.splines[spline_id]
         model.validate()
 
@@ -1272,13 +1276,17 @@ class TestAero(unittest.TestCase):
         spline3.write_card()
         spline3.raw_fields()
         save_load_deck(model)
-        spline3.eid = 1000
-        spline3.comment = ''
-        lines = [spline3.rstrip()]
+        spline3b.eid = 1000
+
+        spline3b.nodes.append(42)
+        spline3b.displacement_components.append(4)
+        spline3b.coeffs.append(0.5)
+        spline3b.validate()
+        spline3b.comment = ''
+        lines = spline3b.rstrip().split('\n')
         model.add_card(lines, 'SPLINE3', is_list=False)
         spline = model.splines[1000]
-        assert list(model.node_ids) == [5], model.node_ids
-        #print(model.splines)
+        assert spline.node_ids == [5, 6, 7, 42], spline.node_ids
 
         #spline3.raw_fields()
 
