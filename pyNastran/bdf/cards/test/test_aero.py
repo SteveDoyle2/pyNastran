@@ -1277,7 +1277,7 @@ class TestAero(unittest.TestCase):
         lines = [spline3.rstrip()]
         model.add_card(lines, 'SPLINE3', is_list=False)
         spline = model.splines[1000]
-        assert model.node_ids == [5], model.node_ids
+        assert list(model.node_ids) == [5], model.node_ids
         #print(model.splines)
 
         #spline3.raw_fields()
