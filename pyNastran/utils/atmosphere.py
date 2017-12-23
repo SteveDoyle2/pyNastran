@@ -318,7 +318,7 @@ def atm_pressure(alt, SI=False, debug=False):
     if z < 36151.725:
         lnP = 7.657389 + 5.2561258 * log(1 - 6.8634634E-6 * z)
     elif z < 82344.678:
-        lnP = 6.158411 - 4.77916918E-5 * (z-36151.725)
+        lnP = 6.158411 - 4.77916918E-5 * (z - 36151.725)
     elif z < 155347.756:
         lnP = 3.950775 - 11.3882724 * log(1.0 + 4.17276598E-6 * (z - 82344.678))
     elif z < 175346.171:
@@ -760,8 +760,6 @@ def sutherland_viscoscity(T):
 
     .. note ::
         prints a warning if T>5400 deg R
-    .. todo:: Consider raising an error instead of writing to stderr
-               and letting the function return an answer.
 
     Sutherland's Equation\n
     From Aerodynamics for Engineers 4th Edition\n

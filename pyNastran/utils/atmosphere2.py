@@ -415,7 +415,7 @@ def atm_pressure(alt, alt_units='ft', pressure_units='psf', debug=False):
     if z < 36151.725:
         lnP = 7.657389 + 5.2561258 * log(1 - 6.8634634E-6 * z)
     elif z < 82344.678:
-        lnP = 6.158411 - 4.77916918E-5 * (z-36151.725)
+        lnP = 6.158411 - 4.77916918E-5 * (z - 36151.725)
     elif z < 155347.756:
         lnP = 3.950775 - 11.3882724 * log(1.0 + 4.17276598E-6 * (z - 82344.678))
     elif z < 175346.171:
@@ -433,7 +433,7 @@ def atm_pressure(alt, alt_units='ft', pressure_units='psf', debug=False):
     factor = convert_pressure(1., 'psf', pressure_units)
     return p * factor
 
-def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf', debug=False):
+def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf'):
     r"""
     Freestream Dynamic Pressure  \f$ q_{\infty} \f$
 
@@ -469,7 +469,7 @@ def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf', debug=
     q2 = q * factor
     return q2
 
-def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4, debug=False):
+def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
     r"""
     Freestream Speed of Sound  \f$ a_{\infty} \f$
 
@@ -497,20 +497,9 @@ def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4, de
     a = (gamma * R * T) ** 0.5
     factor = convert_velocity(1., 'ft/s', velocity_units) # ft/s to m/s
     a2 = a * factor
-
-    #if debug:
-        #ft_to_m = _feet_to_meters(True)
-        #if SI:
-            #print("z = %s [m]   = %s [ft]" % (alt, z))
-            #print("T = %s [K]   = %s [R]" % (T / 1.8, T))
-            #print("a = %s [m/s] = %s [ft/s]" % (a2, a))
-        #else:
-            #print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, z))
-            #print("T = %s [K]   = %s [R]" % (T / 1.8, T))
-            #print("a = %s [m/s] = %s [ft/s]" % (a * _feet_to_meters(True), a2))
     return a2
 
-def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s', debug=False):
+def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s'):
     r"""
     Freestream Velocity  \f$ V_{\infty} \f$
 
@@ -577,7 +566,7 @@ def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s'):
     eas2 = convert_velocity(eas, 'ft/s', eas_units)
     return eas2
 
-def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s', debug=False):
+def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s'):
     r"""
     Freestream Mach Number
 
@@ -601,21 +590,6 @@ def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s', debug=False):
     """
     a = atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
     mach = V / a
-
-    #if debug:
-        #print("z = %.1f [m] = %.1f [ft] = %.1f [%s]"  % (
-            #convert_altitude(alt, alt_units, 'm'),
-            #z, # ft
-            #alt, alt_units))
-        #print("a = %.3f [m/s] = %.3f [ft/s] = %.3f [%s]"  % (
-            #convert_velocity(a, velocity_units, 'm/s'),
-            #convert_velocity(a, velocity_units, 'ft/s'),
-            #a, velocity_units))
-        #print("V = %.3f [m/s] = %.3f [ft/s] = %.3f [%s]"  % (
-            #convert_velocity(V, velocity_units, 'm/s'),
-            #convert_velocity(V, velocity_units, 'ft/s'),
-            #V, velocity_units))
-        #print("M = %.3f"  % (mach))
     return mach
 
 def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3'):
@@ -833,8 +807,6 @@ def sutherland_viscoscity(T):
 
     .. note ::
         prints a warning if T>5400 deg R
-    .. todo:: Consider raising an error instead of writing to stderr
-               and letting the function return an answer.
 
     Sutherland's Equation\n
     From Aerodynamics for Engineers 4th Edition\n

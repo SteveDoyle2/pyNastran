@@ -197,10 +197,9 @@ class TestAtm(unittest.TestCase):
         self.assertAlmostEqual(mach_a, 0.7, delta=0.01)
         self.assertAlmostEqual(mach_b, 2.0, delta=0.002)
 
-        mach_a = atm_mach2(14., 743.011549709834, alt_units='kft', velocity_units='ft/s',
-                           debug=False)
+        mach_a = atm_mach2(14., 743.011549709834, alt_units='kft', velocity_units='ft/s')
         mach_b = atm_mach2(14., 2122.8901420281, alt_units='kft', velocity_units='ft/s')
-        mach_c = atm_mach2(14., 628.3419, alt_units='kft', velocity_units='knots', debug=True)
+        mach_c = atm_mach2(14., 628.3419, alt_units='kft', velocity_units='knots')
 
         self.assertAlmostEqual(mach_a, 0.7, delta=0.01)
         self.assertAlmostEqual(mach_b, 2.0, delta=0.002)
