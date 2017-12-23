@@ -133,7 +133,7 @@ class WriteMesh(BDFAttributes):
                 eid2 = j + eid
                 pidi = None
                 for aesurf_id, aesurf in iteritems(self.aesurf):
-                    aelist_id = aesurf.AELIST_id1()
+                    aelist_id = aesurf.aelist_id1()
                     aelist = self.aelists[aelist_id]
                     if eid2 in aelist.elements:
                         pidi = aesurf_id

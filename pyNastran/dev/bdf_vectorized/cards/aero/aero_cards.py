@@ -771,9 +771,9 @@ class AESURF(BaseCard):
 #        self.cid1_ref = model.Coord(self.Cid1())
 #        if self.cid2 is not None:
 #            self.cid2_ref = model.Coord(self.Cid2())
-#        self.alid1_ref = model.AELIST(self.AELIST_id1())
+#        self.alid1_ref = model.AELIST(self.aelist_id1())
 #        if self.alid2:
-#            self.alid2_ref = model.AELIST(self.AELIST_id2())
+#            self.alid2_ref = model.AELIST(self.aelist_id2())
 
     def update(self, model, maps):
         coord_map = maps['coord']

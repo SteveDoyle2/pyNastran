@@ -846,33 +846,21 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I):
         # The symmetry flags on the AERO/AEROS must be the same, so
         # it doesn't matter which we one pick.  However, they might
         # not both be defined.
+        #
+        # Anti-symmetry refers to load, not geometry.  Geometry is
+        # always symmetric.
+        #
         if model.aero is not None:
-            if model.aero.is_symmetric_xy():
+            if model.aero.is_symmetric_xy or model.aero.is_anti_symmetric_xy:
                 sym_axis.append('xy')
-            if model.aero.is_symmetric_xz():
-                sym_axis.append('xz')
-            if model.aero.is_anti_symmetric_xy():
-                sym_axis.append('xy')
-                #raise NotImplementedError('%s load is anti-symmetric about the XY plane'
-                                          #% str(aero))
-            if model.aero.is_anti_symmetric_xz():
-                #raise NotImplementedError('%s load is anti-symmetric about the XZ plane'
-                                          #% str(aero))
+            if model.aero.is_symmetric_xz or model.aero.is_anti_symmetric_xz:
                 sym_axis.append('xz')
 
         if model.aeros is not None:
-            if model.aeros.is_symmetric_xy():
+            if model.aeros.is_symmetric_xy or model.aeros.is_anti_symmetric_xy:
                 sym_axis.append('xy')
-            if model.aeros.is_symmetric_xz():
+            if model.aeros.is_symmetric_xz or model.aeros.is_anti_symmetric_xz:
                 sym_axis.append('xz')
-            if model.aeros.is_anti_symmetric_xy():
-                sym_axis.append('xy')
-                #raise NotImplementedError('%s load is anti-symmetric about the XY plane'
-                                          #% str(aeros))
-            if model.aeros.is_anti_symmetric_xz():
-                sym_axis.append('xz')
-                #raise NotImplementedError('%s load is anti-symmetric about the XZ plane' %
-                                          #str(aeros))
 
     sym_axis = list(set(sym_axis))
     short_sym_axis = [sym_axisi.lower() for sym_axisi in sym_axis]

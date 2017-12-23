@@ -72,7 +72,7 @@ class AECOMP(BaseCard):
     allowed_list_types = ['SET1', 'AELIST', 'CAERO']
 
     def __init__(self, name, list_type, lists, comment=''):
-        # type: (str, List[str], List[int], str) -> None
+        # type: (str, List[str], Union[int, List[int]], str) -> None
         """
         Creates an AECOMP card
 
@@ -85,7 +85,7 @@ class AECOMP(BaseCard):
             SET1 for structural components. Aerodynamic components are
             defined on the aerodynamic ks-set mesh while the structural
             components are defined on the g-set mesh.
-        lists : List[int, int, ...]
+        lists : List[int, int, ...]; int
             The identification number of either SET1, AELIST or CAEROi
             entries that define the set of grid points that comprise
             the component
@@ -94,8 +94,10 @@ class AECOMP(BaseCard):
         """
         if comment:
             self.comment = comment
-        if not isinstance(lists, (list, tuple)):
-            raise RuntimeError('AECOMP; type(lists)=%s and must be a list/tuple' % type(lists))
+        if isinstance(lists, integer_types):
+            lists = [lists]
+        elif not isinstance(lists, (list, tuple)):
+            raise TypeError('AECOMP; type(lists)=%s and must be a list/tuple' % type(lists))
 
         self.name = name
         self.list_type = list_type
@@ -449,15 +451,18 @@ class AELIST(BaseCard):
         ----------
         sid : int
             unique id
-        elements : List[int, ..., int]
+        elements : List[int, ..., int]; int
             list of box ids
         comment : str; default=''
             a comment for the card
         """
         if comment:
             self.comment = comment
+
+        if isinstance(elements, integer_types):
+            elements = [elements]
         if not isinstance(elements, (list, tuple)):
-            raise RuntimeError('AECOMP; type(elements)=%s and must be a list/tuple' % type(elements))
+            raise TypeError('AELIST; type(elements)=%s and must be a list/tuple' % type(elements))
 
         #: Set identification number. (Integer > 0)
         self.sid = sid
@@ -724,7 +729,8 @@ class AESURF(BaseCard):
 
     def __init__(self, aesid, label, cid1, alid1, cid2=None, alid2=None, eff=1.0, ldw='LDW',
                  crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
-                 hmllim=None, hmulim=None, tqllim=None, tqulim=None,
+                 hmllim=None, hmulim=None, # hinge moment lower/upper limits
+                 tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
                  comment=''):
         """
         Creates an AESURF card, which defines a control surface
@@ -862,15 +868,22 @@ class AESURF(BaseCard):
             return self.cid2_ref.cid
         return self.cid2
 
-    def AELIST_id1(self):
+    def aelist_id1(self):
         if self.alid1_ref is not None:
             return self.alid1_ref.sid
         return self.alid1
 
-    def AELIST_id2(self):
+    def aelist_id2(self):
         if self.alid2_ref is not None:
             return self.alid2_ref.sid
         return self.alid2
+
+    def AELIST_id1(self):
+        self.deprecated('AESURF.AELIST_id1()', 'AESURF.aelist_id1()', '1.1')
+        return self.aelist_id1()
+    def AELIST_id2(self):
+        self.deprecated('AESURF.AELIST_id2()', 'AESURF.aelist_id2()', '1.1')
+        return self.aelist_id2()
 
     def cross_reference(self, model):
         """
@@ -928,8 +941,8 @@ class AESURF(BaseCard):
         self.cid1_ref = None
         self.cid2_ref = None
 
-        self.alid1 = self.AELIST_id1()
-        self.alid2 = self.AELIST_id2()
+        self.alid1 = self.aelist_id1()
+        self.alid2 = self.aelist_id2()
         self.alid1_ref = None
         self.alid2_ref = None
         #self.tqulim
@@ -957,8 +970,8 @@ class AESURF(BaseCard):
         fieldsreset_camera[int/float/str]
             the fields that define the card
         """
-        list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.AELIST_id1(),
-                       self.Cid2(), self.AELIST_id2(), self.eff, self.ldw,
+        list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.aelist_id1(),
+                       self.Cid2(), self.aelist_id2(), self.eff, self.ldw,
                        self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
                        self.hmulim, self.tqllim, self.tqulim]
         return list_fields
@@ -980,8 +993,8 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -np.pi / 2.)
         pulim = set_blank_if_default(self.pulim, np.pi / 2.)
 
-        list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.AELIST_id1(),
-                       self.Cid2(), self.AELIST_id2(), eff, ldw, crefc, crefs,
+        list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.aelist_id1(),
+                       self.Cid2(), self.aelist_id2(), eff, ldw, crefc, crefs,
                        pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
                        self.tqulim]
         return list_fields
@@ -1169,27 +1182,31 @@ class Aero(BaseCard):
         except AttributeError:
             return self.acsid
 
+    @property
     def is_symmetric_xy(self):
         if self.sym_xy == 1:
             return True
         return False
 
+    @property
     def is_symmetric_xz(self):
         if self.sym_xz == 1:
             return True
         return False
 
+    @property
     def is_anti_symmetric_xy(self):
         if self.sym_xy == -1:
             return True
         return False
 
+    @property
     def is_anti_symmetric_xz(self):
-        if self.sym_xy == -1:
+        if self.sym_xz == -1:
             return True
         return False
 
-    def set_ground_effect(self, enable):
+    def set_ground_effect(self, enable):  # TODO: verify
         if enable:
             self.sym_xy = -1
         else:
@@ -1266,18 +1283,18 @@ class AERO(Aero):
         self.sym_xy = sym_xy
 
     def validate(self):
+        msg = ''
         if not isinstance(self.acsid, integer_types):
-            msg = 'AERO acsid=%s expected int, got %s' % (
+            msg += 'acsid=%r must be an integer; type=%s' % (
                 self.acsid, type(self.acsid))
-            raise TypeError(msg)
         if not isinstance(self.sym_xz, integer_types):
-            msg = 'AERO acsid=%s sym_xz=%s; expected int, got %s' % (
-                self.acsid, self.sym_xz, type(self.sym_xz))
-            raise TypeError(msg)
+            msg = 'sym_xz=%r must be an integer; type=%s' % (
+                self.sym_xz, type(self.sym_xz))
         if not isinstance(self.sym_xy, integer_types):
-            msg = 'AERO acsid=%s sym_xy=%s; expected int, got %s' % (
-                self.acsid, self.sym_xy, type(self.sym_xy))
-            raise TypeError(msg)
+            msg = 'sym_xy=%r must be an integer; type=%s' % (
+                self.sym_xy, type(self.sym_xy))
+        if msg:
+            raise TypeError(msg + str(self))
 
     def cross_reference(self, model):
         """
@@ -1512,7 +1529,7 @@ class AEROS(Aero):
         if not isinstance(self.sym_xy, integer_types):
             msg += 'sym_xy=%s must be an integer; type=%s\n' % (self.sym_xy, type(self.sym_xy))
         if msg:
-            raise RuntimeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
+            raise TypeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
 
     def cross_reference(self, model):
         """
@@ -2292,6 +2309,7 @@ class CAERO1(BaseCard):
             p4 = self.cp_ref.transform_node_to_global(self.p4)
 
         if self.ascid_ref is None:
+            # yes, this really does list + array addition
             p2 = p1 + np.array([self.x12, 0., 0.])
             p3 = p4 + np.array([self.x43, 0., 0.])
         else:
@@ -2890,9 +2908,9 @@ class CAERO2(BaseCard):
         return xy
 
     def set_points(self, points):
-        self.p1 = points[0]
-        self.p2 = points[1]
-        x12 = self.p2 - self.p1
+        self.p1 = np.asarray(points[0])
+        p2 = np.asarray(points[1])
+        x12 = p2 - self.p1
         self.x12 = x12[0]
 
     def raw_fields(self):
@@ -3878,10 +3896,10 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     # shape the vectors so we can multiply them
     x = x.reshape((1, nx))
     y = y.reshape((1, ny))
-    p1 = p1.reshape(1, 3)
-    p2 = p2.reshape(1, 3)
-    p3 = p3.reshape(1, 3)
-    p4 = p4.reshape(1, 3)
+    p1 = np.asarray(p1).reshape(1, 3)
+    p2 = np.asarray(p2).reshape(1, 3)
+    p3 = np.asarray(p3).reshape(1, 3)
+    p4 = np.asarray(p4).reshape(1, 3)
 
     # x repeats ny times and varies slowly
     # y repeats nx times and varies quickly
@@ -4156,7 +4174,13 @@ class FLFACT(BaseCard):
 
     def __init__(self, sid, factors, comment=''):
         """
-        Creates an FLFACT card
+        Creates an FLFACT card, which defines factors used for flutter
+        analysis.  These factors define either:
+         - density
+         - mach
+         - velocity
+         - reduced frequency
+        depending on the FLUTTER method chosen (e.g., PK, PKNL, PKNLS)
 
         Parameters
         ----------
@@ -4171,10 +4195,13 @@ class FLFACT(BaseCard):
                     first value
                 THRU : str
                     the word THRU
-                nf : float
+                fnf : float
                     second value
+                nf : int
+                    number of values
                 fmid : float; default=(f1 + fnf) / 2.
                     the mid point to bias the array
+                TODO: does f1 need be be greater than f2/fnf???
         comment : str; default=''
             a comment for the card
         """
@@ -4393,8 +4420,8 @@ class FLUTTER(BaseCard):
         self.sid = sid
         if method in ['PK', 'PKNL', 'PKNLS']:
             imethod = 'L'
-        else:
-            assert imethod in ['S', 'L', None], imethod
+        #else:
+            #assert imethod in ['S', 'L', None], imethod
         self.method = method
         self.density = density
         self.mach = mach
@@ -4413,12 +4440,13 @@ class FLUTTER(BaseCard):
         self.reduced_freq_velocity_ref = None
 
     def validate(self):
+        msg = ''
         if self.method not in ['K', 'KE', 'PK', 'PKNL', 'PKS', 'PKNLS']:
-            msg = 'method = %r; allowed=[K, KE, PKS, PKNLS, PKNL, PK]' % self.method
-            raise ValueError(msg)
+            msg += 'method = %r; allowed=[K, KE, PKS, PKNLS, PKNL, PK]\n' % self.method
         if self.imethod not in ['L', 'S', 'TCUB']:
-            msg = 'imethod = %r; allowed=[L, S, TCUB]' % self.imethod
-            raise ValueError(msg)
+            msg += 'imethod = %r; allowed=[L, S, TCUB]\n' % self.imethod
+        if msg:
+            raise ValueError(msg + str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -5649,6 +5677,21 @@ class PAERO3(BaseCard):
 class PAERO4(BaseCard):
     """
     Defines properties of each strip element for Strip theory.
+    PAERO4 PID CLA LCLA CIRC LCIRC DOC1 CAOC1 GAPOC1
+    DOC2 CAOC2 GAPOC2 DOC3 CAOC3 GAPOC3 -etc.-
+
+    +--------+------+-------+--------+-------+-------+--------+--------+--------+
+    |    1   |   2  |   3   |   4    |   5   |   6   |    7   |   8    |    9   |
+    +========+======+=======+========+=======+=======+========+========+========+
+    | PAERO4 | PID  | CLA   |  LCLA  |  CIRC | LCIRC |  DOC1  |  CAOC1 | GAPOC1 |
+    +--------+------+-------+--------+-------+-------+--------+--------+--------+
+    |        | DOC2 | CAOC2 | GAPOC2 |  DOC3 | CAOC3 | GAPOC3 |  etc.  |        |
+    +--------+------+-------+--------+-------+-------+--------+--------+--------+
+    | PAERO4 | 6001 |   1   |   501  |   0   |   0   |   0.0  |   0.0  |   0.0  |
+    +--------+------+-------+--------+-------+-------+--------+--------+--------+
+    |        | 0.50 |  0.25 |  0.02  |  0.53 |  0.24 |   0.0  |        |        |
+    +--------+------+-------+--------+-------+-------+--------+--------+--------+
+    ## TODO: what happens for DOC4?
     """
     type = 'PAERO4'
     _field_map = {
@@ -7206,7 +7249,6 @@ class TRIM(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
-
         """
         list_fields = ['TRIM', self.sid, self.mach, self.q]
         nlabels = len(self.labels)
@@ -7218,6 +7260,14 @@ class TRIM(BaseCard):
         if nlabels == 1:
             list_fields += [None, None, self.aeqr]
         return list_fields
+
+    def repr_fields(self):
+        # fixes a Nastran bug
+        aeqr = set_blank_if_default(self.aeqr, 1.0)
+
+        fields = self.raw_fields()
+        fields[8] = aeqr
+        return fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

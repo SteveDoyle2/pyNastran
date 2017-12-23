@@ -4380,7 +4380,13 @@ class AddCards(AddMethods):
 
     def add_flfact(self, sid, factors, comment=''):
         """
-        Creates an FLFACT card
+        Creates an FLFACT card, which defines factors used for flutter
+        analysis.  These factors define either:
+         - density
+         - mach
+         - velocity
+         - reduced frequency
+        depending on the FLUTTER method chosen (e.g., PK, PKNL, PKNLS)
 
         Parameters
         ----------
@@ -4395,10 +4401,13 @@ class AddCards(AddMethods):
                     first value
                 THRU : str
                     the word THRU
-                nf : float
+                fnf : float
                     second value
+                nf : int
+                    number of values
                 fmid : float; default=(f1 + fnf) / 2.
                     the mid point to bias the array
+                TODO: does f1 need be be greater than f2/fnf???
         comment : str; default=''
             a comment for the card
         """
@@ -4407,6 +4416,7 @@ class AddCards(AddMethods):
         return flfact
 
     def add_aecomp(self, name, list_type, lists, comment=''):
+        # type: (str, List[str], Union[int, List[int]], str) -> None
         """
         Creates an AECOMP card
 
@@ -4419,7 +4429,7 @@ class AddCards(AddMethods):
             SET1 for structural components. Aerodynamic components are
             defined on the aerodynamic ks-set mesh while the structural
             components are defined on the g-set mesh.
-        lists : List[int, int, ...]
+        lists : List[int, int, ...]; int
             The identification number of either SET1, AELIST or CAEROi
             entries that define the set of grid points that comprise
             the component
@@ -4555,11 +4565,11 @@ class AddCards(AddMethods):
         return csschd
 
     def add_aesurf(self, aesid, label, cid1, alid1, cid2=None, alid2=None,
-                   eff=1.0, ldw='LDW', crefc=1.0,
-                   crefs=1.0, pllim=-np.pi/2.,
-                   pulim=np.pi/2., hmllim=None,
-                   hmulim=None, tqllim=None,
-                   tqulim=None, comment=''):
+                   eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
+                   pllim=-np.pi/2., pulim=np.pi/2.,
+                   hmllim=None, hmulim=None, # hinge moment lower/upper limits
+                   tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
+                   comment=''):
         """
         Creates an AESURF card, which defines a control surface
 
@@ -4594,11 +4604,10 @@ class AddCards(AddMethods):
             a comment for the card
         """
         aesurf = AESURF(aesid, label, cid1, alid1, cid2=cid2, alid2=alid2,
-                        eff=eff, ldw=ldw, crefc=crefc,
-                        crefs=crefs, pllim=pllim,
-                        pulim=pulim, hmllim=hmllim,
-                        hmulim=hmulim, tqllim=tqllim,
-                        tqulim=tqulim, comment=comment)
+                        eff=eff, ldw=ldw, crefc=crefc, crefs=crefs,
+                        pllim=pllim, pulim=pulim,
+                        hmllim=hmllim, hmulim=hmulim,
+                        tqllim=tqllim, tqulim=tqulim, comment=comment)
         self._add_aesurf_object(aesurf)
         return aesurf
 
