@@ -465,7 +465,7 @@ def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf', debug=
     p = atm_pressure(z)
     q = 0.7 * p * mach ** 2
 
-    factor = convert_pressure('psf', pressure_units)
+    factor = convert_pressure(1., 'psf', pressure_units)
     q2 = q * factor
     return q2
 
