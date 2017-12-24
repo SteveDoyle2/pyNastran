@@ -6,6 +6,7 @@ import tables
 import numpy as np
 
 from .element_force import ElementForce
+from .strain import Strain
 
 
 class Elemental(object):
@@ -14,6 +15,7 @@ class Elemental(object):
         self._result = result
 
         self.element_force = ElementForce(self._h5n, self)
+        self.strain = Strain(self._h5n, self)
 
     def path(self):
         return self._h5n.path() + ['ELEMENTAL']
