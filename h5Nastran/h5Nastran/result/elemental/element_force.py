@@ -17,6 +17,8 @@ class ElementForce(object):
         self.beam = BEAM(self._h5n, self)
         self.bush = BUSH(self._h5n, self)
         self.quad4 = QUAD4(self._h5n, self)
+        # TODO: what is better, quad4_cn or quad4cn?
+        self.quad4_cn = QUAD4_CN(self._h5n, self)
         self.rod = ROD(self._h5n, self)
         self.shear = SHEAR(self._h5n, self)
         self.tria3 = TRIA3(self._h5n, self)
@@ -85,6 +87,22 @@ class QUAD4(ResultTable):
 
     result_type = ['ELEMENT FORCES 33 QUAD4 REAL OUTPUT', 'ELEMENT FORCES 33 QUAD4 MATERIAL REAL OUTPUT']
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4', result_type)
+
+
+########################################################################################################################
+
+class QUAD4_CN(ResultTable):
+    """
+    <dataset name="QUAD4_CN">
+        <field name="EID" type="integer" description="Element identification number"/>
+        <field name="TERM" type="character" size="4" description="Character string &quot;CEN/&quot;"/>
+        <field name="FORCE" type="QUAD4_CN_FORCE" size="5" description="data structure defined in typedef section"/>
+        <field name="DOMAIN_ID" type="integer" description="Domain identifier"/>
+    </dataset>
+    """
+
+    result_type = ['ELEMENT FORCES 144 QUAD4C REAL OUTPUT', 'ELEMENT FORCES 144 QUAD4C BILIN REAL OUTPUT']
+    table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4_CN', result_type)
 
 ########################################################################################################################
 
