@@ -6,6 +6,7 @@ import tables
 import numpy as np
 
 from .element_force import ElementForce
+from .energy import Energy
 from .strain import Strain
 from .stress import Stress
 
@@ -16,6 +17,7 @@ class Elemental(object):
         self._result = result
 
         self.element_force = ElementForce(self._h5n, self)
+        self.energy = Energy(self._h5n, self)
         self.strain = Strain(self._h5n, self)
         self.stress = Stress(self._h5n, self)
 
