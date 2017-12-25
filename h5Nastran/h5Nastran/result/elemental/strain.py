@@ -16,7 +16,7 @@ class Strain(object):
         self.bar = BAR(self._h5n, self)
         self.beam = BEAM(self._h5n, self)
         self.quad4 = QUAD4(self._h5n, self)
-        # self.quad_cn = QUAD_CN(self._h5n, self)
+        self.quad_cn = QUAD4_CN(self._h5n, self)
         self.tria3 = TRIA3(self._h5n, self)
 
     def path(self):
@@ -53,39 +53,41 @@ class QUAD4(ResultTable):
 
 ########################################################################################################################
 
-# QUAD4_CN strain not in spec, need example from F06
+# TODO: QUAD4_CN strain/stress not in spec, format from QRG, guessing column id's for now
 
-# class QUAD4_CN_DEF(object):
-#     name = 'QUAD4_CN'
-#     path = '/NASTRAN/RESULT/ELEMENTAL/STRAIN'
-#     dtype = [
-#         ('EID', '<i8', ()), ('TYPE', 'S4', ()),
-#         ('STRESS',
-#             [
-#                 ('GRID', '<i8', ()), ('FD1', '<f8', ()), ('X1', '<f8', ()), ('Y1', '<f8', ()), ('XY1', '<f8', ()),
-#                 ('FD2', '<f8', ()), ('X2', '<f8', ()), ('Y2', '<f8', ()), ('XY2', '<f8', ())
-#             ],
-#          (5,)
-#          ),
-#         ('DOMAIN_ID', '<i8', ())]
-#     is_subtable = False
-#     subtables = []
-#     same_as = None
-#
-#
-# class QUAD_CN(ResultTable):
-#     # TODO: there has to be a better way of indicating results types for result tables
-#     result_type = [
-#         'ELEMENT STRAINS 144 QUAD4C REAL OUTPUT',
-#         'ELEMENT STRAINS 144 QUAD4C BILIN REAL OUTPUT',
-#         'ELEMENT STRAINS 144 QUAD4C FIBER REAL OUTPUT',
-#         'ELEMENT STRAINS 144 QUAD4C VONM REAL OUTPUT',
-#         'ELEMENT STRAINS 144 QUAD4C VONM FIBER REAL OUTPUT',
-#         'ELEMENT STRAINS 144 QUAD4C VONM BILIN REAL OUTPUT',
-#         'ELEMENT STRAINS 144 QUAD4C FIBER BILIN REAL OUTPUT',
-#         'ELEMENT STRAINS 144 QUAD4C VONM FIBER BILIN REAL OUTPUT'
-#         ]
-#     table_def = TableDef.create(QUAD4_CN_DEF, result_type)
+class QUAD4_CN_DEF(object):
+    name = 'QUAD4_CN'
+    path = '/NASTRAN/RESULT/ELEMENTAL/STRAIN'
+    dtype = [
+        ('EID', '<i8', ()), ('TYPE', 'S4', ()),
+        ('STRESS',
+            [
+                ('GRID', '<i8', ()), ('FD1', '<f8', ()), ('X1', '<f8', ()), ('Y1', '<f8', ()), ('XY1', '<f8', ()),
+                ('A1', '<f8', ()), ('FP1', '<f8', ()), ('FM1', '<f8', ()), ('FVM1', '<f8', ()),
+                ('FD2', '<f8', ()), ('X2', '<f8', ()), ('Y2', '<f8', ()), ('XY2', '<f8', ()),
+                ('A2', '<f8', ()), ('FP2', '<f8', ()), ('FM2', '<f8', ()), ('FVM2', '<f8', ()),
+            ],
+         (5,)
+         ),
+        ('DOMAIN_ID', '<i8', ())]
+    is_subtable = False
+    subtables = []
+    same_as = None
+
+
+class QUAD4_CN(ResultTable):
+    # TODO: there has to be a better way of indicating results types for result tables
+    result_type = [
+        'ELEMENT STRAINS 144 QUAD4C REAL OUTPUT',
+        'ELEMENT STRAINS 144 QUAD4C BILIN REAL OUTPUT',
+        'ELEMENT STRAINS 144 QUAD4C FIBER REAL OUTPUT',
+        'ELEMENT STRAINS 144 QUAD4C VONM REAL OUTPUT',
+        'ELEMENT STRAINS 144 QUAD4C VONM FIBER REAL OUTPUT',
+        'ELEMENT STRAINS 144 QUAD4C VONM BILIN REAL OUTPUT',
+        'ELEMENT STRAINS 144 QUAD4C FIBER BILIN REAL OUTPUT',
+        'ELEMENT STRAINS 144 QUAD4C VONM FIBER BILIN REAL OUTPUT'
+        ]
+    table_def = TableDef.create(QUAD4_CN_DEF, result_type)
 
 
 ########################################################################################################################
