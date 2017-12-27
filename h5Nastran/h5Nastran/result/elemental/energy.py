@@ -31,7 +31,7 @@ def _validator(data):
 # TODO: STRAIN_ELEM tables needs to be sorted properly
 class STRAIN_ELEM(ResultTable):
     result_type = [
-        'ELEMENT STRAIN ENERGIES %s REAL OUTPUT' % etype for etype in
+        'ELEMENT STRAIN ENERGIES %s REAL' % etype for etype in
         ['BAR', 'BEAM', 'QUAD4', 'TRIA3']
     ]
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ENERGY/STRAIN_ELEM', result_type,

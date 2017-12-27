@@ -76,9 +76,36 @@ class PunchHeaderData(object):
             results_type = self._results_type
 
         if self.real_output:
-            return '%s REAL OUTPUT' % results_type
+            return '%s REAL' % results_type
         else:
             return '%s COMPLEX' % results_type
+
+    @property
+    def results_type_no_options(self):
+        results_type = self.results_type
+        try:
+            elem_type = self.other['ELEMENT TYPE']
+        except KeyError:
+            return results_type
+
+        tmp = elem_type.split()
+
+        try:
+            int(tmp[0])
+            del tmp[0]
+        except ValueError:
+            pass
+
+        del tmp[0]
+
+        if len(tmp) == 0:
+            return results_type
+
+        results_type_ = results_type.split()
+        for option in tmp:
+            results_type_.remove(option)
+
+        return ' '.join(results_type_)
 
     @property
     def subcase_id(self):

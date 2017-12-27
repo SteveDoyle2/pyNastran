@@ -45,7 +45,7 @@ class BAR(ResultTable):
     </dataset>
     """
 
-    result_type = 'ELEMENT FORCES 34 BAR REAL OUTPUT'
+    result_type = 'ELEMENT FORCES 34 BAR REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BAR', result_type)
 
 ########################################################################################################################
@@ -60,7 +60,7 @@ class BEAM(ResultTable):
     </dataset>
     """
 
-    result_type = 'ELEMENT FORCES 2 BEAM REAL OUTPUT'
+    result_type = 'ELEMENT FORCES 2 BEAM REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BEAM', result_type)
 
 ########################################################################################################################
@@ -71,7 +71,7 @@ class BUSH(ResultTable):
     <dataset name="BUSH" sameAs="STRESS/BUSH"/>
     """
 
-    result_type = 'ELEMENT FORCES 102 BUSH REAL OUTPUT'
+    result_type = 'ELEMENT FORCES 102 BUSH REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BUSH', result_type)
 
 ########################################################################################################################
@@ -85,7 +85,7 @@ class QUAD4(ResultTable):
     </dataset>
     """
 
-    result_type = ['ELEMENT FORCES 33 QUAD4 REAL OUTPUT', 'ELEMENT FORCES 33 QUAD4 MATERIAL REAL OUTPUT']
+    result_type = 'ELEMENT FORCES 33 QUAD4 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4', result_type)
 
 
@@ -101,7 +101,7 @@ class QUAD4_CN(ResultTable):
     </dataset>
     """
 
-    result_type = ['ELEMENT FORCES 144 QUAD4C REAL OUTPUT', 'ELEMENT FORCES 144 QUAD4C BILIN REAL OUTPUT']
+    result_type = 'ELEMENT FORCES 144 QUAD4C REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4_CN', result_type)
 
 ########################################################################################################################
@@ -117,7 +117,7 @@ class ROD(ResultTable):
     </dataset>
     """
 
-    result_type = 'ELEMENT FORCES 1 ROD REAL OUTPUT'
+    result_type = 'ELEMENT FORCES 1 ROD REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/ROD', result_type)
 
 ########################################################################################################################
@@ -147,7 +147,7 @@ class SHEAR(ResultTable):
     </dataset>
     """
 
-    result_type = 'ELEMENT FORCES 4 SHEAR REAL OUTPUT'
+    result_type = 'ELEMENT FORCES 4 SHEAR REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/SHEAR', result_type)
 
 ########################################################################################################################
@@ -162,5 +162,5 @@ class TRIA3(ResultTable):
     </dataset>
     """
 
-    result_type = ['ELEMENT FORCES 74 TRIA3 REAL OUTPUT', 'ELEMENT FORCES 74 TRIA3 MATERIAL REAL OUTPUT']
+    result_type = 'ELEMENT FORCES 74 TRIA3 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA3', result_type)

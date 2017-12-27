@@ -1,3 +1,8 @@
+"""
+Default and unknown values, for bdf cards in particular.
+If a value is blank or None coming from pyNastran, use the defaults.
+If the h5Nastran developer doesn't know what the value should be, use the unknowns.
+"""
 import numpy as np
 
 

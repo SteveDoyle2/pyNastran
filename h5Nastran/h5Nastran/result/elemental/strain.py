@@ -26,7 +26,7 @@ class Strain(object):
 
 
 class BAR(ResultTable):
-    result_type = 'ELEMENT STRAINS 34 BAR REAL OUTPUT'
+    result_type = 'ELEMENT STRAINS 34 BAR REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/BAR', result_type)
 
 
@@ -34,7 +34,7 @@ class BAR(ResultTable):
 
 
 class BEAM(ResultTable):
-    result_type = 'ELEMENT STRAINS 2 BEAM REAL OUTPUT'
+    result_type = 'ELEMENT STRAINS 2 BEAM REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/BEAM', result_type)
 
 
@@ -42,12 +42,7 @@ class BEAM(ResultTable):
 
 
 class QUAD4(ResultTable):
-    result_type = [
-        'ELEMENT STRAINS 33 QUAD4 REAL OUTPUT',
-        'ELEMENT STRAINS 33 QUAD4 FIBER REAL OUTPUT',
-        'ELEMENT STRAINS 33 QUAD4 VONM REAL OUTPUT',
-        'ELEMENT STRAINS 33 QUAD4 VONM FIBER REAL OUTPUT'
-        ]
+    result_type = 'ELEMENT STRAINS 33 QUAD4 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/QUAD4', result_type)
 
 
@@ -76,17 +71,7 @@ class QUAD4_CN_DEF(object):
 
 
 class QUAD4_CN(ResultTable):
-    # TODO: there has to be a better way of indicating results types for result tables
-    result_type = [
-        'ELEMENT STRAINS 144 QUAD4C REAL OUTPUT',
-        'ELEMENT STRAINS 144 QUAD4C BILIN REAL OUTPUT',
-        'ELEMENT STRAINS 144 QUAD4C FIBER REAL OUTPUT',
-        'ELEMENT STRAINS 144 QUAD4C VONM REAL OUTPUT',
-        'ELEMENT STRAINS 144 QUAD4C VONM FIBER REAL OUTPUT',
-        'ELEMENT STRAINS 144 QUAD4C VONM BILIN REAL OUTPUT',
-        'ELEMENT STRAINS 144 QUAD4C FIBER BILIN REAL OUTPUT',
-        'ELEMENT STRAINS 144 QUAD4C VONM FIBER BILIN REAL OUTPUT'
-        ]
+    result_type = 'ELEMENT STRAINS 144 QUAD4C REAL'
     table_def = TableDef.create(QUAD4_CN_DEF, result_type)
 
 
@@ -94,12 +79,7 @@ class QUAD4_CN(ResultTable):
 
 
 class TRIA3(ResultTable):
-    result_type = [
-        'ELEMENT STRAINS 74 TRIA3 REAL OUTPUT',
-        'ELEMENT STRAINS 74 TRIA3 FIBER REAL OUTPUT',
-        'ELEMENT STRAINS 74 TRIA3 VONM REAL OUTPUT',
-        'ELEMENT STRAINS 74 TRIA3 VONM FIBER REAL OUTPUT'
-        ]
+    result_type = 'ELEMENT STRAINS 74 TRIA3 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/TRIA3', result_type)
 
 ########################################################################################################################

@@ -13,6 +13,7 @@ class Stress(object):
         self._h5n = h5n
         self._elemental = elemental
 
+        self.axif2 = AXIF2(self._h5n, self)
         self.bar = BAR(self._h5n, self)
         self.beam = BEAM(self._h5n, self)
         self.quad4 = QUAD4(self._h5n, self)
@@ -22,11 +23,30 @@ class Stress(object):
     def path(self):
         return self._elemental.path() + ['STRESS']
 
+
+########################################################################################################################
+
+
+# def _make_result_type(elem_code, name, real=True, options=()):
+#     _result_type = 'ELEMENT STRESSES %d %s ' % (elem_code, name)
+#     if real is True:
+#         ending = 'REAL OUTPUT'
+#     else:
+#         ending = 'COMPLEX'
+#     result_type = [_result_type + ending]
+#     for option
+
+
+
+class AXIF2(ResultTable):
+    result_type = 'ELEMENT STRESSES 47 AXIF2 REAL'
+    table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/AXIF2', result_type)
+
 ########################################################################################################################
 
 
 class BAR(ResultTable):
-    result_type = 'ELEMENT STRESSES 34 BAR REAL OUTPUT'
+    result_type = 'ELEMENT STRESSES 34 BAR REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/BAR', result_type)
 
 
@@ -34,7 +54,7 @@ class BAR(ResultTable):
 
 
 class BEAM(ResultTable):
-    result_type = 'ELEMENT STRESSES 2 BEAM REAL OUTPUT'
+    result_type = 'ELEMENT STRESSES 2 BEAM REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/BEAM', result_type)
 
 
@@ -42,12 +62,7 @@ class BEAM(ResultTable):
 
 
 class QUAD4(ResultTable):
-    result_type = [
-        'ELEMENT STRESSES 33 QUAD4 REAL OUTPUT',
-        'ELEMENT STRESSES 33 QUAD4 FIBER REAL OUTPUT',
-        'ELEMENT STRESSES 33 QUAD4 VONM REAL OUTPUT',
-        'ELEMENT STRESSES 33 QUAD4 VONM FIBER REAL OUTPUT'
-        ]
+    result_type = 'ELEMENT STRESSES 33 QUAD4 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/QUAD4', result_type)
 
 
@@ -76,17 +91,7 @@ class QUAD4_CN_DEF(object):
 
 
 class QUAD4_CN(ResultTable):
-    # TODO: there has to be a better way of indicating results types for result tables
-    result_type = [
-        'ELEMENT STRESSES 144 QUAD4C REAL OUTPUT',
-        'ELEMENT STRESSES 144 QUAD4C BILIN REAL OUTPUT',
-        'ELEMENT STRESSES 144 QUAD4C FIBER REAL OUTPUT',
-        'ELEMENT STRESSES 144 QUAD4C VONM REAL OUTPUT',
-        'ELEMENT STRESSES 144 QUAD4C VONM FIBER REAL OUTPUT',
-        'ELEMENT STRESSES 144 QUAD4C VONM BILIN REAL OUTPUT',
-        'ELEMENT STRESSES 144 QUAD4C FIBER BILIN REAL OUTPUT',
-        'ELEMENT STRESSES 144 QUAD4C VONM FIBER BILIN REAL OUTPUT'
-        ]
+    result_type = 'ELEMENT STRESSES 144 QUAD4C REAL'
     table_def = TableDef.create(QUAD4_CN_DEF, result_type)
 
 
@@ -94,12 +99,7 @@ class QUAD4_CN(ResultTable):
 
 
 class TRIA3(ResultTable):
-    result_type = [
-        'ELEMENT STRESSES 74 TRIA3 REAL OUTPUT',
-        'ELEMENT STRESSES 74 TRIA3 FIBER REAL OUTPUT',
-        'ELEMENT STRESSES 74 TRIA3 VONM REAL OUTPUT',
-        'ELEMENT STRESSES 74 TRIA3 VONM FIBER REAL OUTPUT'
-        ]
+    result_type = 'ELEMENT STRESSES 74 TRIA3 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/TRIA3', result_type)
 
 ########################################################################################################################
