@@ -278,11 +278,8 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
 
         elif prop_type == 'PBEAML':
             dim2 = []
-            for dimi in prop.dim:
-                dimi2 = [dim*xyz_scale for dim in dimi]
-                dim2.append(dimi2)
-            prop.dim = dim2
-            prop.nsm = [nsm*nsm_bar_scale for nsm in prop.nsm]
+            prop.dim *= xyz_scale
+            prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PSHELL':
             prop.t *= xyz_scale

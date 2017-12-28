@@ -10,7 +10,7 @@ from codecs import open as codec_open
 from typing import List, Dict, Optional, Union, Set, Any, cast
 from six import StringIO
 
-from pyNastran.utils import object_attributes, print_bad_path, _filename
+from pyNastran.utils import print_bad_path, _filename
 from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.errors import MissingDeckSections

@@ -2,9 +2,8 @@ from __future__ import print_function
 import os
 import unittest
 
-import pyNastran
+#import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 from pyNastran.utils.log import get_logger

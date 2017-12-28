@@ -408,6 +408,37 @@ class TestBeams(unittest.TestCase):
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
+    def test_pbeaml_01(self):
+        model = BDF()
+        model.validate()
+
+        fields = [
+            'PBEAML', '622', '623', None, 'BAR', None, None, None, None,
+            '.238', '.238', None,
+            'NO', '.166', '.238', '.238', None,
+            'NO', '.510', '.126', '.126', None,
+            'NO', '.565', '.117', '.117', None,
+            'NO', '.619', '.126', '.126', None,
+            'NO', '.963', '.238', '.238', None,
+            'NO', '1.0', '.238', '.238', None,
+            'NO']
+        model.add_card(fields, fields[0])
+
+        fields = [
+            'PBEAML', '623', '623', None, 'BAR', None, None, None, None,
+            '.238', '.238', None,
+            'NO', '.166', '.238', '.238', None,
+            'NO', '.510', '.126', '.126', None,
+            'NO', '.565', '.117', '.117', None,
+            'NO', '.619', '.126', '.126', None,
+            'NO', '.963', '.238', '.238', None,
+            'NO', '1.0', '.238', '.238', None,
+        ]
+        model.add_card(fields, fields[0])
+        model.pop_parse_errors()
+        str(model.properties[622])
+        str(model.properties[623])
+
     def test_cbeam_01(self):
         """modification of test_pbeam_05"""
         model = BDF(debug=False)

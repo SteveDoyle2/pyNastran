@@ -120,8 +120,8 @@ CMASS2  (done)
 CMASS3  (done)
 CMASS4  (done)
 PMASS   (done)
-NSM
-NSM1
+NSM     (done)
+NSM1    (done)
 
 ----Solids (Elements/Properties)----:
 CTETRA  (done)
@@ -320,7 +320,7 @@ TF      (done)
 FREQ  (done)
 FREQ1 (done)
 FREQ2 (done)
-FREQ3
+FREQ3 (done)
 FREQ4
 FREQ5
 
@@ -334,7 +334,7 @@ DRESP1   (done)
 DRESP2   (done)
 DRESP3   (done)
 
-DVGRID   (no)
+DVGRID   (done)
 DVCREL1  (done)  # element  DV
 DVCREL2  (done)
 DVPREL1  (done)  # property DV
@@ -347,7 +347,7 @@ DLINK    (done)
 DCONADD  (done)
 
 ---Tables---
-DTABLE
+DTABLE   (done)
 TABLED1  (done)
 TABLED2  (done)
 TABLED3  (done)
@@ -590,8 +590,6 @@ CHACAB
 CHACBR
 
 ----Unclassified----:
-CGEN
-SPCG
 
 -------------------------------------------
 

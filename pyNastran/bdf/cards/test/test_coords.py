@@ -775,7 +775,7 @@ class TestCoords(unittest.TestCase):
         define_coord_e123(model, cord2_type, cid, origin, rid=0,
                           xaxis=xaxis, yaxis=None, zaxis=None,
                           xyplane=xyplane, yzplane=None, xzplane=None, add=True)
-        yaxis = [0., 1., 0.]
+        #yaxis = [0., 1., 0.]
         xyplane = [1., 1., 0.]
         define_coord_e123(model, cord2_type, cid, origin, rid=0,
                           xaxis=xaxis, yaxis=None, zaxis=None,

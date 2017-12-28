@@ -122,8 +122,8 @@ class WriteMesh(BDFAttributes):
                 x, y, z = point
                 bdf_file.write(print_card_8(['GRID', i+ipoint, None, x, y, z]))
 
-            pid = eid
-            mid = eid
+            #pid = eid
+            #mid = eid
             bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
             bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % 1)
 

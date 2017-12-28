@@ -1,8 +1,13 @@
 Most of these are ideas and not officially planned
 
+typing using:
+ - monkeytype (makes Python 3 format)
+ - pyannotate (makes Python 2 format)
+
+
 OP2
  - Sort2
- - HDF5
+ - HDF5 instead of numpy arrays (to HDF5 is supported)
 
 F06 Reader
  - improved table support

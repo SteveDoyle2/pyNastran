@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 
 from pyNastran.converters.tetgen.tetgen import Tetgen
-from pyNastran.gui.gui_objects.gui_result import GuiResult
+#from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.gui_utils.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
@@ -87,7 +87,6 @@ class TetgenIO(object):
         cases = {}
         ID = 1
 
-        #cases = self._fill_tetgen_case(cases, ID, elements)
         self._finish_results_io(cases)
 
     def _fill_tetgen_case(self, cases, ID, elements):
