@@ -6,6 +6,7 @@ import tables
 import numpy as np
 
 from .card_table import CardTable, TableDef, TableData
+from ..data_helper import DataHelper
 
 
 class Property(object):
@@ -269,7 +270,7 @@ class PBAR(CardTable):
 
     @staticmethod
     def from_bdf(card):
-        fe = np.nan  # TODO: what is FE???
+        fe = DataHelper.unknown_double  # TODO: what is FE???
         data = [card.pid, card.mid, card.A, card.i1, card.i2, card.j, card.nsm, fe, card.c1, card.c2, card.d1, card.d2,
                 card.e1, card.e2, card.f1, card.f2, card.k1, card.k2, card.i12]
         return TableData([data])
@@ -371,16 +372,16 @@ class PBEAM(CardTable):
     def from_bdf(card):
         # TODO: PBEAM ccf, cweld
         # Constant cross-section flag: 1=yes and 0=no; 2 is also possible, but no idea
-        ccf = -10
-        cweld = -10
+        ccf = DataHelper.unknown_int
+        cweld = DataHelper.unknown_int
 
         nsegs = len(card.so)
 
         # TODO: PBEAM - verify so is correct
 
         _so = {
-            '': np.nan,
-            None: np.nan,
+            '': DataHelper.default_double,
+            None: DataHelper.default_double,
             'NO': 0.,
             'YES': 1.,
             'YESA': 2.
@@ -442,17 +443,22 @@ class PBEAML(CardTable):
 
     @staticmethod
     def from_bdf(card):
-        # TODO: PBEAML - why is SO a double????
-
         data = [card.pid, card.mid, card.group, card.beam_type]
         data = TableData([data])
 
         data.subdata_len = np.array([[len(card.so)]])
 
-        def _convert_so(_so):
-            return np.nan
+        # TODO: PBEAML - verify so is correct
 
-        so = [_convert_so(_so) for _so in card.so]
+        _so = {
+            '': DataHelper.default_double,
+            None: DataHelper.default_double,
+            'NO': 0.,
+            'YES': 1.,
+            'YESA': 2.
+        }
+
+        so = [_so(_so) for _so in card.so]
 
         subdata = [[so[i], card.xxb[i], card.nsm[i]] for i in range(len(card.so))]
         subdata = TableData(subdata)
@@ -609,8 +615,8 @@ class PCOMP(CardTable):
         # TODO: PCOMP - why is SOUT an integer????
 
         _ft = {
-            None: 0,
-            '': 0,
+            None: DataHelper.default_int,
+            '': DataHelper.default_int,
             'HILL': 1,
             'HOFF': 2,
             'TSAI': 3,
@@ -623,7 +629,7 @@ class PCOMP(CardTable):
         data.subdata_len = np.array([[len(card.material_ids)]])
 
         def _convert_sout(_sout):
-            return -10
+            return DataHelper.unknown_int
 
         subdata = TableData()
         subdata.data = [
