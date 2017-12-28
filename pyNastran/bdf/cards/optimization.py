@@ -2630,12 +2630,6 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             return self.eid
         return self.eid_ref.eid
 
-    @property
-    def desvar_ids(self):
-        if isinstance(self.dvids[0], integer_types):
-            return self.dvids
-        return [desvar.desvar_id for desvar in self.dvids]
-
     def raw_fields(self):
         list_fields = ['DVCREL1', self.oid, self.Type, self.Eid(),
                        self.cp_name, self.cp_min, self.cp_max, self.c0, None]

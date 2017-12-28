@@ -2,7 +2,6 @@
 from __future__ import print_function
 import os
 import unittest
-from numpy import array_equal
 
 import pyNastran
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid, read_avus

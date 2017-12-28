@@ -52,6 +52,7 @@ class InputCntlReader(object):
     def get_post_processing(self):
         section = self.sections['Post_Processing']
         name, comment, table = section
+        imoment = 0
         for line, commenti in table:
             sline = line.split()
             post_processing_type = sline[0]

@@ -156,11 +156,11 @@ class TestGridPointForces(unittest.TestCase):
                 eids, nids, cid, summation_point)
             msg = '%s\ntotal_force_local_expected=%s total_force_local=%s' % (
                 case, total_force_local_expected, total_force_local)
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.005), msg), msg
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.005), msg)
 
             msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s' % (
                 case, total_moment_local_expected, total_moment_local)
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg)
 
     def test_op2_solid_shell_bar_01_gpforce_xyz(self):
         folder = os.path.join(model_path, 'sol_101_elements')
@@ -249,12 +249,12 @@ class TestGridPointForces(unittest.TestCase):
             msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
                 case, total_force_local_expected, total_force_local,
                 np.abs(total_force_local_expected - total_force_local))
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg)
 
             msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
                 case, total_moment_local_expected, total_moment_local,
                 np.abs(total_moment_local_expected - total_moment_local))
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg)
 
     @unittest.expectedFailure
     def test_broken_op2_solid_shell_bar_01_gpforce_radial_global_cd(self):
@@ -335,11 +335,11 @@ class TestGridPointForces(unittest.TestCase):
         op2_1.grid_point_forces[1].write_csv(csv_file)
         #print(csv_file.getvalue())
 
-        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
-        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
-        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
+        assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04)
+        assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1])
+        assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1])
         #print('op2_2.grid_point_forces[1]\n', op2_2.grid_point_forces[1].data)
-        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123)
         return
         #-----------------------------------------------------------------------
         gpforce = op2_1.grid_point_forces[1]
@@ -364,12 +364,12 @@ class TestGridPointForces(unittest.TestCase):
             msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
                 case, total_force_local_expected, total_force_local,
                 np.abs(total_force_local_expected - total_force_local))
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg)
 
             msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
                 case, total_moment_local_expected, total_moment_local,
                 np.abs(total_moment_local_expected - total_moment_local))
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg)
 
     #@unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_radial(self):
@@ -474,12 +474,12 @@ class TestGridPointForces(unittest.TestCase):
             msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
                 case, total_force_local_expected, total_force_local,
                 np.abs(total_force_local_expected - total_force_local))
-            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg)
 
             msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
                 case, total_moment_local_expected, total_moment_local,
                 np.abs(total_moment_local_expected - total_moment_local))
-            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg)
 
 def _get_gpforce_data():
     data = [
