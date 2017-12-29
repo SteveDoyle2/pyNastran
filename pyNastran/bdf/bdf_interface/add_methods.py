@@ -203,6 +203,16 @@ class AddMethods(BDFAttributes):
             self.nsms[key] = [nsm]
             self._type_to_id_map[nsm.type].append(key)
 
+    def _add_nsmadd_object(self, nsmadd, allow_overwrites=False):
+        """adds a nsmadd object to a nsm set"""
+        key = nsmadd.sid
+        assert key > 0, 'sid=%s must be positive; nsmadd=\n%s' % (key, nsmadd)
+        if key in self.nsmadds:
+            self.nsmadds[key].append(nsmadd)
+        else:
+            self.nsmadds[key] = [nsmadd]
+            self._type_to_id_map[nsmadd.type].append(key)
+
     def _add_mass_object(self, mass, allow_overwrites=False):
         key = mass.eid
         assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)

@@ -446,12 +446,12 @@ class BDFMethods(BDFAttributes):
 
     def _mass_properties_new(self, element_ids=None, mass_ids=None,
                              reference_point=None,
-                             sym_axis=None, scale=None, xyz_cid0=None):  # pragma: no cover
+                             sym_axis=None, scale=None, xyz_cid0_dict=None):  # pragma: no cover
         """not done"""
         mass, cg, I = _mass_properties_new(
             self, element_ids=element_ids, mass_ids=mass_ids,
             reference_point=reference_point,
-            sym_axis=sym_axis, scale=scale, xyz_cid0=xyz_cid0)
+            sym_axis=sym_axis, scale=scale, xyz_cid0_dict=xyz_cid0_dict)
         return (mass, cg, I)
 
     #def __gravity_load(self, loadcase_id):

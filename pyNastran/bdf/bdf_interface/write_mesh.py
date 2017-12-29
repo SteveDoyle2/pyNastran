@@ -294,8 +294,11 @@ class WriteMesh(BDFAttributes):
         """
         Writes the nsm in a sorted order
         """
-        if self.nsms:
+        if self.nsms or self.nsmadds:
             msg = ['$NSM\n']
+            for (unused_id, nsmadds) in sorted(iteritems(self.nsmadds)):
+                for nsmadd in nsmadds:
+                    msg.append(str(nsmadd))
             for (key, nsms) in sorted(iteritems(self.nsms)):
                 for nsm in nsms:
                     try:

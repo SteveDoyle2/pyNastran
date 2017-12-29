@@ -1985,7 +1985,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self._add_creep_material_object),
 
-            'NSMADD' : (NSMADD, self._add_nsm_object),
+            'NSMADD' : (NSMADD, self._add_nsmadd_object),
             'NSM1' : (NSM1, self._add_nsm_object),
             'NSML1' : (NSML1, self._add_nsm_object),
 

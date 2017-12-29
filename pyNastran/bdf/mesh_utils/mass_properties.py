@@ -4,6 +4,8 @@ Defines:
       get the mass & moment of inertia of the model
 """
 from __future__ import print_function
+from collections import defaultdict
+from itertools import chain
 from six import string_types, iteritems
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
@@ -324,8 +326,9 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
         cg /= mass
     return (mass, cg, I)
 
-def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point=None,
-                         sym_axis=None, scale=None, xyz_cid0=None):  # pragma: no cover
+def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
+                         reference_point=None,
+                         sym_axis=None, scale=None, xyz_cid0_dict=None):  # pragma: no cover
     """
     half implemented, not tested, should be faster someday...
     don't use this
@@ -341,6 +344,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
         An array of element ids.
     mass_ids : list[int]; (n, ) ndarray, optional
         An array of mass ids.
+    nsm_id : int
+        the NSM id to consider
     reference_point : ndarray/str/int, optional
         type : ndarray
             An array that defines the origin of the frame.
@@ -356,7 +361,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
         The WTMASS scaling value.
         default=None -> PARAM, WTMASS is used
         float > 0.0
-    xyz_cid0 : dict[nid] : xyz; default=None -> auto-calculate
+    xyz_cid0_dict : dict[nid] : xyz; default=None -> auto-calculate
         mapping of the node id to the global position
 
     Returns
@@ -405,12 +410,12 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
     #if reference_point is None:
     reference_point = array([0., 0., 0.])
 
-    if xyz_cid0 is None:
+    if xyz_cid0_dict is None:
         xyz = {}
         for nid, node in iteritems(model.nodes):
             xyz[nid] = node.get_position()
     else:
-        xyz = xyz_cid0
+        xyz = xyz_cid0_dict
 
     elements, masses = _mass_properties_elements_init(model, element_ids, mass_ids)
 
@@ -461,6 +466,49 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
 
     all_mass_ids = np.array(list(model.masses.keys()), dtype='int32')
     all_mass_ids.sort()
+
+    def defaultdict_float():
+        return defaultdict(float)
+
+    #element_nsms = defaultdict(dict)
+    #areas_prop = defaultdict(float)
+    #lengths = defaultdict(float)
+    element_nsms = defaultdict(defaultdict_float)
+    #property_nsms = defaultdict(defaultdict_defaultdict_list)
+    property_nsms = defaultdict(lambda: defaultdict(defaultdict_float))
+    for nsmadd_id in chain(model.nsmadds, model.nsms):
+        # NSM/NMS1/NSML/NSML1:
+        #  Type=[PSHELL, PCOMP, PCOMPG, PBAR, PBARL, PBEAM, PBEAML, PBCOMP, PROD,
+        #        CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D, ELEMENT]
+        nsms = model.get_reduced_nsms(nsmadd_id, consider_nsmadd=True, stop_on_failure=True)
+        for nsm in nsms:
+            if nsm.Type == 'ELEMENT':
+                #print('elem\n%s' % nsm)
+                if nsm.type in ['NSM', 'NSML']:
+                    element_nsms[nsmadd_id][nsm.id] = nsm.value
+                elif nsm.type in ['NSM1', 'NSML1']:
+                    value = nsm.value
+                    for nsm_idi in nsm.ids:
+                        element_nsms[nsmadd_id][nsm_idi] = value
+                else:
+                    raise NotImplementedError(nsm)
+
+            elif nsm.Type == 'CONROD':
+                model.warning('NSM Type=CONROD is not supported\n%s' % str(nsm))
+            else:
+                #print('prop\n%s' % nsm)
+                if nsm.type in ['NSM', 'NSML']:
+                    #print('nsm id=%s' % nsm.id)
+                    property_nsms[nsmadd_id][nsm.Type][nsm.id] = nsm.value
+                elif nsm.type in ['NSM1', 'NSML1']:
+                    #print('nsm ids=%s' % nsm.ids)
+                    #print('nsm value=%s' % nsm.value)
+                    value = nsm.value
+                    for nsm_idi in nsm.ids:
+                        property_nsms[nsmadd_id][nsm.Type][nsm_idi] = value
+                else:
+                    raise NotImplementedError(nsm)
+        #nsms[nsm_id] = nsmsi
 
     #def _increment_inertia0(centroid, reference_point, m, mass, cg, I):
         #"""helper method"""
@@ -617,6 +665,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                 prop = elem.pid_ref
                 centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
                 area = 0.5 * norm(cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
+                #areas_prop[pid] += area
                 if prop.type == 'PSHELL':
                     tflag = elem.tflag
                     ti = prop.Thickness()
@@ -638,6 +687,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                     # m/A = rho * A * t + nsm
                     #mass_per_area = elem.nsm + rho * elem.t
 
+                    #nsm = property_nsms[nsm_id]['PSHELL']
                     mpa = prop.nsm + prop.Rho() * t
                     #mpa = elem.pid_ref.MassPerArea()
                     m = mpa * area
@@ -659,10 +709,14 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
             eids2 = get_sub_eids(all_eids, eids)
+            #eid0 = eids2[0]
+            #elem0 = model.elements[eid0]
+            #pid = elem0.pid
             for eid in eids2:
                 elem = model.elements[eid]
                 n1, n2, n3, n4 = elem.node_ids[:4]
                 prop = elem.pid_ref
+                pid = prop.pid
                 centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
                 area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
 
@@ -689,7 +743,12 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                     # m/A = rho * A * t + nsm
                     #mass_per_area = model.nsm + rho * model.t
 
+                    nsm = property_nsms[nsm_id]['PSHELL'][pid]
+                    #areas_prop[pid] += area
+
                     mpa = prop.nsm + prop.Rho() * t
+                    if nsm:
+                        mpa += nsm
                     #mpa = elem.pid_ref.MassPerArea()
                     #m = mpa * area
                 elif prop.type in ['PCOMP', 'PCOMPG']:
@@ -823,6 +882,12 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, reference_point
                 elif etype not in etypes_skipped:
                     model.log.info('elem.type=%s doesnt have mass' % elem.type)
                     etypes_skipped.add(etype)
+
+
+    #property_nsms[nsm_id][nsm.Type][nsm_idi]
+    #for nsm_id, prop_types in sorted(iteritems(property_nsms)):
+        #for prop_type, prop_id_to_val in sorted(iteritems(prop_types)):
+            #for pid, val in sorted(iteritems(prop_id_to_val)):
 
     if mass:
         cg /= mass

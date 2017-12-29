@@ -620,7 +620,7 @@ class AddCards(AddMethods):
             a comment for the card
         """
         nsmadd = NSMADD(sid, sets, comment=comment)
-        self._add_nsm_object(nsmadd)
+        self._add_nsmadd_object(nsmadd)
         return nsmadd
 
     def add_pmass(self, pid, mass, comment=''):

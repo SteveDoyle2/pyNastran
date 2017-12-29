@@ -2238,7 +2238,7 @@ class GetCard(GetMethods):
                     raise KeyError('mid=%s is invalid for card %s=\n%s' % (mid, msg, str(prop)))
         return mid_to_pids_map
 
-    def get_reduced_nsms(self, nsm_id, consider_nsmadd=False, stop_on_failure=True):
+    def get_reduced_nsms(self, nsm_id, consider_nsmadd=True, stop_on_failure=True):
         """
         Get all traced NSMs that are part of a set
 

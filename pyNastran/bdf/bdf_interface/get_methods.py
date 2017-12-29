@@ -418,8 +418,8 @@ class GetMethods(BDFAttributes):
         else:
             nsm_ids = list(self.nsms.keys())
             nsmadd_ids = list(self.nsmadds.keys())
-            raise KeyError('cannot find NSM ID=%r%s.\nAllowed nsms (e.g., NSM1)=%s; NSM=%s' % (
-                nsm_id, msg, np.unique(loads_ids), np.unique(nsmadd_ids)))
+            raise KeyError('cannot find NSM ID=%r%s.\nAllowed NSMs (e.g., NSM1)=%s; NSMADDs=%s; consider_nsmadd=%s' % (
+                nsm_id, msg, np.unique(nsm_ids), np.unique(nsmadd_ids), consider_nsmadd))
         return nsm
 
     #--------------------

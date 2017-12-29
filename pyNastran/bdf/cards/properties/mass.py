@@ -205,7 +205,15 @@ class NSM1x(Property):
         sid = integer(card, 1, 'sid')
         nsm_type = string(card, 2, 'Type')
         value = double(card, 3, 'value')
-        ids = card[4:]
+
+        # TODO: doesn't support 1 THRU 11 BY 2
+        # TODO: doesn't support ALL
+        ids = []
+        _id = 1
+        for ifield in range(4, len(card), 1):
+            idi = integer(card, ifield, 'ID_%i' % _id)
+            _id += 1
+            ids.append(idi)
         return cls(sid, nsm_type, value, ids, comment=comment)
 
     def cross_reference(self, model):
