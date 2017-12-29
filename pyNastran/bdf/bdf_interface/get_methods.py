@@ -396,6 +396,32 @@ class GetMethods(BDFAttributes):
                 spc_id, msg, np.unique(spc_ids), np.unique(spcadd_ids)))
         return constraint
 
+    def NSM(self, nsm_id, consider_nsmadd=True, msg=''):
+        """
+        Gets an LOAD or FORCE/PLOAD4/etc.
+
+        Parameters
+        ---------
+        sid : int
+            the LOAD id
+        consider_nsmadd : bool; default=True
+            NSMADDs should not be considered when referenced from an NSM card
+            from a case control, True should be used.
+        msg : str
+            additional message to print when failing
+        """
+        assert isinstance(nsm_id, integer_types), 'nsm_id=%s is not an integer\n' % sid
+        if consider_nsmadd and nsm_id in self.nsmadds:
+            nsm = self.nsmadds[nsm_id]
+        elif nsm_id in self.nsms:
+            nsm = self.nsms[nsm_id]
+        else:
+            nsm_ids = list(self.nsms.keys())
+            nsmadd_ids = list(self.nsmadds.keys())
+            raise KeyError('cannot find NSM ID=%r%s.\nAllowed nsms (e.g., NSM1)=%s; NSM=%s' % (
+                nsm_id, msg, np.unique(loads_ids), np.unique(nsmadd_ids)))
+        return nsm
+
     #--------------------
     # Sets
     def SET1(self, set_id, msg=''):

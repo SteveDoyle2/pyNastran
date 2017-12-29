@@ -2262,7 +2262,7 @@ class GetCard(GetMethods):
             raise TypeError(msg)
 
         try:
-            nsms = self.NSM(nsm_id, consider_nsmadd=consider_mpcadd)
+            nsms = self.NSM(nsm_id, consider_nsmadd=consider_nsmadd)
         except KeyError:
             if stop_on_failure:
                 raise
@@ -2270,7 +2270,7 @@ class GetCard(GetMethods):
                 self.log.error("could not find expected NSM id=%s" % nsm_id)
                 return []
 
-        mpcs2 = []
+        nsms2 = []
         for nsm in nsms:
             if nsm.type == 'NSMADD':
                 for nsmi in nsm.nsm_ids:
@@ -2286,7 +2286,7 @@ class GetCard(GetMethods):
                     else:
                         assert isinstance(nsmi, integer_types), nsmi
                         nsms2i = self.get_reduced_nsms(
-                            mpci, consider_mpcadd=False, stop_on_failure=stop_on_failure)
+                            nsmi, consider_nsmadd=False, stop_on_failure=stop_on_failure)
                         nsms2 += nsms2i
             else:
                 nsms2.append(nsm)
