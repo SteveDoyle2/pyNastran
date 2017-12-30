@@ -9,11 +9,10 @@ All mass properties are PointProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
-from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.bdf.cards.base_card import BaseCard, Property
+from six import integer_types, string_types
+from pyNastran.bdf.cards.base_card import expand_thru_by, BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, double_or_blank, string)
+    integer, integer_or_string, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -167,8 +166,20 @@ class NSM1x(Property):
         Property.__init__(self)
         if comment:
             self.comment = comment
+
         if isinstance(ids, integer_types):
             ids = [ids]
+        if isinstance(ids, string_types):
+            assert ids == 'ALL', 'ids=%r is not ALL' % ids
+            ids = [ids]
+        else:
+            # With the 'THRU' and 'THRU', 'BY' forms, blanks fields are
+            # allowed for readability. Any combination of a list of IDs
+            # and 'THRU' and 'THRU', 'BY' is allowed. The "THRU" and "BY"
+            # lists may have missing IDs. That is the list of IDs in a
+            # THRU range need not be continuous.
+            ids = expand_thru_by(ids, allow_blanks=True)
+        assert len(ids) > 0, ids
         self.sid = sid
         self.nsm_type = nsm_type
 
@@ -207,13 +218,19 @@ class NSM1x(Property):
         value = double(card, 3, 'value')
 
         # TODO: doesn't support 1 THRU 11 BY 2
-        # TODO: doesn't support ALL
         ids = []
         _id = 1
-        for ifield in range(4, len(card), 1):
-            idi = integer(card, ifield, 'ID_%i' % _id)
-            _id += 1
-            ids.append(idi)
+        nfields = len(card)
+        if nfields == 5:
+            value = integer_or_string(card, 4, 'ID_1')
+            if value != 'ALL' and not isinstance(value, int):
+                msg = ('*ID_1 = %r (field #4) on card must be an integer or ALL.\n'
+                       'card=%s' % (value, dcard))
+                raise SyntaxError(msg)
+            ids = value
+        else:
+            # we'll handle expansion in the init
+            ids = card[4:]
         return cls(sid, nsm_type, value, ids, comment=comment)
 
     def cross_reference(self, model):
@@ -308,13 +325,37 @@ class NSML1(NSM1x):
     """
     Defines lumped non structural mass entries by VALUE,ID list.
 
-    +-------+-----+------+-------+-----+----+----+----+----+
-    |   1   |  2  |  3   |   4   |  5  | 6  | 7  | 8  | 9  |
-    +=======+=====+======+=======+=====+====+====+====+====+
-    | NSML1 | SID | TYPE | VALUE | ID  | ID | ID | ID | ID |
-    +-------+-----+------+-------+-----+----+----+----+----+
-    |       |  ID |  ID  |  ID   | etc |    |    |    |    |
-    +-------+-----+------+-------+-----+----+----+----+----+
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |   1   |   2   |    3    |   4   |   5   |  6   |   7   |  8   |  9   |
+    +=======+=======+=========+=======+=======+======+=======+======+======+
+    | NSML1 |  SID  |   TYPE  | VALUE |  ID   |  ID  |   ID  |  ID  |  ID  |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |   ID  |    ID   |  ID   |  etc  |      |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |   3   | ELEMENT |  .044 |  1240 | 1500 |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |  SID  |  TYPE   | VALUE |   ID  | THRU |   ID  |  ID  | THRU |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |   ID  |    ID   | THRU  |   ID  |  ID  |  THRU |  ID  |  ID  |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |  THRU |    ID   |  ...  |       |      |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |   15  |  PSHELL |  .067 |  1240 | THRU |  1760 |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |  2567 |   THRU  |  2568 | 35689 | THRU | 40998 |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |   76  |   THRU  |  300  |       |      |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |  SID  |   TYPE  | VALUE |   ID  | THRU |   ID  |  BY  |   N  |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |   ID  |   THRU  |   ID  |   BY  |   N  |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    | NSML1 |   3   |  PSHELL |  .067 |  1240 | THRU |  1760 | 1763 | 1764 |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       |  2567 |   THRU  |  2568 | 35689 |  TO  | 40999 |  BY  |   2  |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
+    |       | 76666 |  76668  | 79834 |       |      |       |      |      |
+    +-------+-------+---------+-------+-------+------+-------+------+------+
     """
     type = 'NSML1'
     def __init__(self, sid, nsm_type, value, ids, comment=''):

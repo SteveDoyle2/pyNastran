@@ -3,7 +3,7 @@ Defines:
   - mass_poperties
       get the mass & moment of inertia of the model
 """
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from collections import defaultdict
 from itertools import chain
 from six import string_types, iteritems
@@ -326,9 +326,162 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
         cg /= mass
     return (mass, cg, I)
 
+
+def _get_nsm_data(model, nsm_id, dev=True):
+    """
+    Gets some info required by the NSM cards.
+
+    per MSC QRG 2018.0.1: Undefined property/element IDs are ignored.
+    """
+    def defaultdict_float():
+        """helper method for _get_nsm_data"""
+        return defaultdict(float)
+
+    #element_nsms = defaultdict(dict)
+    #areas_prop = defaultdict(float)
+    #lengths = defaultdict(float)
+    element_nsms = defaultdict(defaultdict_float)
+    #property_nsms = defaultdict(defaultdict_defaultdict_list)
+    property_nsms = defaultdict(lambda: defaultdict(defaultdict_float))
+
+    # TODO: If TYPE = ELEMENT is used:
+    #           line element (CBAR, CBEAM, CBEND, CROD, CTUBE, and CONROD) IDs
+    #       cannot be mixed with:
+    #           area element (CQUAD4, CQUAD8, CQUADR, CTRIA3, CTRIA6,
+    #                         CTRIAR, CSHEAR, and CRAC2D) IDs.
+    #
+    # 7. Undefined property/element IDs are ignored.
+    #      by default
+    #
+    #all_line_eids = None
+    #all_shell_eids = None
+    #all_line_eids = None
+    #all_shell_pids = None
+
+    all_eids = None # model.elements.keys()
+    all_pids = None # model.properties.keys()
+
+    # 6. PBEAML and PBCOMP are treated as PBEAM, PBARL is treated as PBAR,
+    #    and PCOMP or PCOMPG is treated as PSHELL; therefore a command such as:
+    #       NSML1,12,PCOMP,1.35,ALL
+    #
+    #    would, for example, get all PSHELLs in the file. The converted PCOMPs
+    #    or PCOMPGs plus any existing PSHELLS would have a mass of 1.35 added
+    #    to their nonstructural mass.
+    #
+    nsm_type_map = {
+        'PSHELL' : 'PSHELL',
+        'PCOMP' : 'PSHELL',
+        'PCOMPG' : 'PSHELL',
+
+        'PBAR' : 'PBAR',
+        'PBARL' : 'PBAR',
+
+        'PBEAM' : 'PBEAM',
+        'PBEAML' : 'PBEAM',
+        'PBCOMP' : 'PBEAM',
+        'PROD' : 'PROD',
+        'PBEND' : 'PBEND',
+        'PSHEAR' : 'PSHEAR',
+        'PTUBE' : 'PTUBE',
+        'PCONEAX' : 'PCONEAX',
+        'PRAC2D' : 'PRAC2D',
+        'CONROD' : 'CONROD',
+        'ELEMENT' : 'ELEMENT',
+    }
+    #masses = model.masses.values()
+    for nsmadd_id in chain(model.nsmadds, model.nsms):
+        if nsmadd_id != nsm_id:
+            continue
+        # NSM/NMS1/NSML/NSML1:
+        #  Type=[PSHELL, PCOMP, PCOMPG, PBAR, PBARL, PBEAM, PBEAML, PBCOMP, PROD,
+        #        CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D, ELEMENT]
+        nsms = model.get_reduced_nsms(nsmadd_id, consider_nsmadd=True, stop_on_failure=True)
+
+        all_eid_nsms = []
+        for nsm in nsms:
+            #print(nsm)
+            value = nsm.value
+            nsm_type = nsm_type_map[nsm.nsm_type]
+            if nsm_type == 'ELEMENT':
+                if nsm.type in ['NSM', 'NSML']:
+                    model.log.info('elem NSM/NSML\n%s' % nsm)
+                    model.log.info('  nsm.id=%r nsm.value=%r' % (nsm.id, nsm.value))
+                    if nsm.id == 'ALL':
+                        all_eid_nsms.append(nsm)
+                        if all_eids is None:
+                            all_eids = list(model.elements.keys())
+                        eids = all_eids
+                    else:
+                        eids = [nsm.id]
+                elif nsm.type in ['NSM1', 'NSML1']:
+                    #model.log.info('elem NSM1/NSML1\n%s' % nsm)
+                    #model.log.info('  nsm.ids=%r nsm.value=%r' % (nsm.ids, nsm.value))
+                    if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
+                        all_eid_nsms.append(nsm)
+                        if all_eids is None:
+                            all_eids = list(model.elements.keys())
+                        eids = all_eids
+                    else:
+                        eids = nsm.ids
+                else:
+                    raise NotImplementedError(nsm)
+
+                for eid in eids:
+                    #print('  nsm.nsm_type=%s eid=%s value=%s' % (nsm.nsm_type, eid, value))
+                    assert eid != 'ALL', nsm
+                    element_nsms[nsmadd_id][eid] = value
+
+            elif nsm_type == 'CONROD':
+                property_nsms[nsmadd_id][nsm_type][pid] = value
+            else:
+                if nsm.type in ['NSM', 'NSML']:
+                    #model.log.info('prop NSM/NSML\n%s' % nsm)
+                    #model.log.info('  nsm.id=%r nsm.value=%r' % (nsm.id, nsm.value))
+
+                    if nsm.id == 'ALL':
+                        if all_pids is None:
+                            all_pids = list(model.properties.keys())
+                        else:
+                            pids = all_pids
+
+                elif nsm.type in ['NSM1', 'NSML1']:
+                    #model.log.info('prop NSM1/NSML1\n%s' % nsm)
+                    #model.log.info('  nsm.ids=%r nsm.value=%r' % (nsm.ids, nsm.value))
+
+                    if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
+                        if all_pids is None:
+                            all_pids = list(model.properties.keys())
+                        pids = all_pids
+                    else:
+                        pids = nsm.ids
+
+                for pid in pids:
+                    #print('  nsm.nsm_type=%s pid=%s value=%s' % (nsm_type, pid, value))
+                    assert pid != 'ALL', nsm
+                    property_nsms[nsmadd_id][nsm_type][pid] = value
+
+    line_types = ['CBAR', 'CBEAM', 'CBEND', 'CROD', 'CTUBE', 'CONROD']
+    area_types = ['CQUAD4', 'CQUAD8', 'CQUADR', 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CSHEAR', 'CRAC2D']
+    line_eids = []
+    area_eids = []
+    if all_eids:
+        for eid in eids:
+            elem = model.elements[eid]
+            if elem.type in line_types:
+                line_eids.append(eid)
+            elif elem.type in area_types:
+                area_eids.append(eid)
+    if line_eids and area_eids:
+        msg = 'line elements and area elements are referenced by the ELEMENT/ALL on the NSM cards\n'
+        for nsm in all_eid_nsms:
+            msg += str(nsm)
+        raise RuntimeError(msg)
+    return element_nsms, property_nsms
+
 def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                          reference_point=None,
-                         sym_axis=None, scale=None, xyz_cid0_dict=None):  # pragma: no cover
+                         sym_axis=None, scale=None, xyz_cid0_dict=None, dev=False):  # pragma: no cover
     """
     half implemented, not tested, should be faster someday...
     don't use this
@@ -467,48 +620,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
     all_mass_ids = np.array(list(model.masses.keys()), dtype='int32')
     all_mass_ids.sort()
 
-    def defaultdict_float():
-        return defaultdict(float)
-
-    #element_nsms = defaultdict(dict)
-    #areas_prop = defaultdict(float)
-    #lengths = defaultdict(float)
-    element_nsms = defaultdict(defaultdict_float)
-    #property_nsms = defaultdict(defaultdict_defaultdict_list)
-    property_nsms = defaultdict(lambda: defaultdict(defaultdict_float))
-    for nsmadd_id in chain(model.nsmadds, model.nsms):
-        # NSM/NMS1/NSML/NSML1:
-        #  Type=[PSHELL, PCOMP, PCOMPG, PBAR, PBARL, PBEAM, PBEAML, PBCOMP, PROD,
-        #        CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D, ELEMENT]
-        nsms = model.get_reduced_nsms(nsmadd_id, consider_nsmadd=True, stop_on_failure=True)
-        for nsm in nsms:
-            if nsm.Type == 'ELEMENT':
-                #print('elem\n%s' % nsm)
-                if nsm.type in ['NSM', 'NSML']:
-                    element_nsms[nsmadd_id][nsm.id] = nsm.value
-                elif nsm.type in ['NSM1', 'NSML1']:
-                    value = nsm.value
-                    for nsm_idi in nsm.ids:
-                        element_nsms[nsmadd_id][nsm_idi] = value
-                else:
-                    raise NotImplementedError(nsm)
-
-            elif nsm.Type == 'CONROD':
-                model.warning('NSM Type=CONROD is not supported\n%s' % str(nsm))
-            else:
-                #print('prop\n%s' % nsm)
-                if nsm.type in ['NSM', 'NSML']:
-                    #print('nsm id=%s' % nsm.id)
-                    property_nsms[nsmadd_id][nsm.Type][nsm.id] = nsm.value
-                elif nsm.type in ['NSM1', 'NSML1']:
-                    #print('nsm ids=%s' % nsm.ids)
-                    #print('nsm value=%s' % nsm.value)
-                    value = nsm.value
-                    for nsm_idi in nsm.ids:
-                        property_nsms[nsmadd_id][nsm.Type][nsm_idi] = value
-                else:
-                    raise NotImplementedError(nsm)
-        #nsms[nsm_id] = nsmsi
+    element_nsms, property_nsms = _get_nsm_data(model, nsm_id, dev=dev)
 
     #def _increment_inertia0(centroid, reference_point, m, mass, cg, I):
         #"""helper method"""
@@ -554,33 +666,43 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 length = norm(xyz[n2] - xyz[n1])
                 centroid = (xyz[n1] + xyz[n2]) / 2.
                 mpl = elem.MassPerLength()
-                m = mpl * length
+                if elem.type == 'CONROD':
+                    nsm = property_nsms[nsm_id]['CONROD'][eid] + element_nsms[nsm_id][eid]
+                else:
+                    pid = elem.pid
+                    nsm = property_nsms[nsm_id]['PROD'][pid] + element_nsms[nsm_id][eid]
+                m = (mpl + nsm) * length
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CTUBE':
             eids2 = get_sub_eids(all_eids, eids)
             for eid in eids2:
                 elem = model.elements[eid]
+                pid = elem.pid
                 n1, n2 = elem.node_ids
                 length = norm(xyz[n2] - xyz[n1])
                 centroid = (xyz[n1] + xyz[n2]) / 2.
                 mpl = elem.pid_ref.MassPerLength()
-                m = mpl * length
+                nsm = property_nsms[nsm_id]['PTUBE'][pid] + element_nsms[nsm_id][eid]
+                m = (mpl + nsm) * length
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CBAR':
             eids2 = get_sub_eids(all_eids, eids)
             for eid in eids2:
                 elem = model.elements[eid]
+                pid = elem.pid
                 n1, n2 = elem.node_ids
                 centroid = (xyz[n1] + xyz[n2]) / 2.
                 length = norm(xyz[n2] - xyz[n1])
                 mpl = elem.pid_ref.MassPerLength()
-                m = mpl * length
+                nsm = property_nsms[nsm_id]['PBAR'][pid] + element_nsms[nsm_id][eid]
+                m = (mpl + nsm) * length
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CBEAM':
             eids2 = get_sub_eids(all_eids, eids)
             for eid in eids2:
                 elem = model.elements[eid]
                 prop = elem.pid_ref
+                pid = elem.pid
                 n1, n2 = elem.node_ids
                 node1 = xyz[n1]
                 node2 = xyz[n2]
@@ -605,9 +727,6 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                         nsm_per_lengths.append(nsm)
                     mass_per_length = integrate_positive_unit_line(prop.xxb, mass_per_lengths)
                     nsm_per_length = integrate_positive_unit_line(prop.xxb, nsm_per_lengths)
-                    #nsm = np.mean(prop.nsm)
-                    nsm = nsm_per_length * length
-                    m = mass_per_length * length
                     nsm_n1 = (p1 + jhat * prop.m1a + khat * prop.m2a)
                     nsm_n2 = (p2 + jhat * prop.m1b + khat * prop.m2b)
                     nsm_centroid = (nsm_n1 + nsm_n2) / 2.
@@ -615,15 +734,22 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                         #p1_nsm = p1 + prop.ma
                         #p2_nsm = p2 + prop.mb
                 elif prop.type == 'PBEAML':
-                    #mass_per_lengths = elem.get_mass_per_lengths()
-                    mass_per_length = prop.MassPerLength() # includes simplified nsm
-                    m = mass_per_length * length
-                    nsm_centroid = np.zeros(3)
-                    nsm = prop.nsm[0]  # TODO: simplified
+                    mass_per_lengths = prop.get_mass_per_lengths()
+                    #mass_per_length = prop.MassPerLength() # includes simplified nsm
+
+                    # m1a, m1b, m2a, m2b=0.
+                    nsm_centroid = (p1 + p2) / 2.
+                    nsm_per_lengths = prop.nsm
+                    mass_per_length = integrate_positive_unit_line(prop.xxb, mass_per_lengths)
+                    nsm_per_length = integrate_positive_unit_line(prop.xxb, nsm_per_lengths)
+                    #print('mass_per_lengths=%s nsm_per_lengths=%s' % (mass_per_lengths, nsm_per_lengths))
+                    #print('mass_per_length=%s nsm_per_length=%s' % (mass_per_length, nsm_per_length))
+
+                    #nsm_centroid = np.zeros(3) # TODO: what is this...
+                    #nsm = prop.nsm[0] * length # TODO: simplified
                 elif prop.type == 'PBCOMP':
                     mass_per_length = prop.MassPerLength()
-                    m = mass_per_length * length
-                    nsm = prop.nsm
+                    nsm_per_length = prop.nsm
                     nsm_n1 = (p1 + jhat * prop.m1 + khat * prop.m2)
                     nsm_n2 = (p2 + jhat * prop.m1 + khat * prop.m2)
                     nsm_centroid = (nsm_n1 + nsm_n2) / 2.
@@ -638,6 +764,9 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 #mpl = elem.pid_ref.MassPerLength()
                 #m = mpl * length
 
+                m = mass_per_length * length
+                nsmi = property_nsms[nsm_id]['PBEAM'][pid] + element_nsms[nsm_id][eid] * length
+                nsm = (nsm_per_length + nsmi) * length
                 (x, y, z) = centroid - reference_point
                 (xm, ym, zm) = nsm_centroid - reference_point
                 x2 = x * x
@@ -663,6 +792,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 elem = model.elements[eid]
                 n1, n2, n3 = elem.node_ids[:3]
                 prop = elem.pid_ref
+                pid = elem.pid
                 centroid = (xyz[n1] + xyz[n2] + xyz[n3]) / 3.
                 area = 0.5 * norm(cross(xyz[n1] - xyz[n2], xyz[n1] - xyz[n3]))
                 #areas_prop[pid] += area
@@ -687,7 +817,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                     # m/A = rho * A * t + nsm
                     #mass_per_area = elem.nsm + rho * elem.t
 
-                    #nsm = property_nsms[nsm_id]['PSHELL']
+                    #areas_prop[pid] += area
                     mpa = prop.nsm + prop.Rho() * t
                     #mpa = elem.pid_ref.MassPerArea()
                     m = mpa * area
@@ -705,7 +835,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                     continue
                 else:
                     raise NotImplementedError(prop.type)
-                m = area * mpa
+                nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
+                m = area * (mpa + nsm)
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
             eids2 = get_sub_eids(all_eids, eids)
@@ -743,12 +874,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                     # m/A = rho * A * t + nsm
                     #mass_per_area = model.nsm + rho * model.t
 
-                    nsm = property_nsms[nsm_id]['PSHELL'][pid]
                     #areas_prop[pid] += area
-
                     mpa = prop.nsm + prop.Rho() * t
-                    if nsm:
-                        mpa += nsm
                     #mpa = elem.pid_ref.MassPerArea()
                     #m = mpa * area
                 elif prop.type in ['PCOMP', 'PCOMPG']:
@@ -763,7 +890,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                     #raise NotImplementedError(prop.type)
                 else:
                     raise NotImplementedError(prop.type)
-                m = area * mpa
+                nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
+                m = area * (mpa + nsm)
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CQUAD':
             eids2 = get_sub_eids(all_eids, eids)
@@ -793,10 +921,12 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 elem = model.elements[eid]
                 n1, n2, n3, n4 = elem.node_ids
                 prop = elem.pid_ref
+                pid = elem.pid
                 centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
                 area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
                 mpa = prop.MassPerArea()
-                m = area * mpa
+                nsm = property_nsms[nsm_id]['PSHEAR'][pid] + element_nsms[nsm_id][eid]
+                m = area * (mpa + nsm)
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
             eids2 = get_sub_eids(all_mass_ids, eids)
@@ -860,6 +990,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
 
         elif etype == 'CBEND':
             model.log.info('elem.type=%s doesnt have mass' % etype)
+            #nsm = property_nsms[nsm_id]['PBEND'][pid] + element_nsms[nsm_id][eid]
             continue
         elif etype.startswith('C'):
             eids2 = get_sub_eids(all_eids, eids)
@@ -884,11 +1015,15 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                     etypes_skipped.add(etype)
 
 
-    #property_nsms[nsm_id][nsm.Type][nsm_idi]
+    #property_nsms[nsm_id][nsm.nsm_type][nsm_idi]
     #for nsm_id, prop_types in sorted(iteritems(property_nsms)):
         #for prop_type, prop_id_to_val in sorted(iteritems(prop_types)):
             #for pid, val in sorted(iteritems(prop_id_to_val)):
-
+        #TODO: CRAC2D mass not supported...how does this work???
+        #      I know it's an "area" element similar to a CQUAD4
+        #TODO: CCONEAX mass not supported...how does this work???
+        #TODO: CBEAM/PBCOMP mass not supported...how does this work???
+        #TODO: CBEND mass not supported...how do I calculate the length?
     if mass:
         cg /= mass
     mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)

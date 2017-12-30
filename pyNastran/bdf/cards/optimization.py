@@ -609,7 +609,7 @@ class DDVAL(OptConstraint):
         if isinstance(ddvals, float):
             ddvals = [ddvals]
         else:
-            ddvals = expand_thru_by(ddvals)
+            ddvals = expand_thru_by(ddvals, require_int=False)
             ddvals.sort()
         self.oid = oid
         self.ddvals = ddvals
