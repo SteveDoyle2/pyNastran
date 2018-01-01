@@ -158,7 +158,7 @@ class TestBars(unittest.TestCase):
         pbarl.dim = [2., 1.]
         #with self.assertRaises(ValueError):
             #pbarl.validate()
-        #pbarl.group = 'MSCBMLO'
+        #pbarl.group = 'MSCBML0'
 
         pbarl.validate()
         str(pbarl)
@@ -325,7 +325,7 @@ class TestBars(unittest.TestCase):
         dim = [1., 2., 0.1, 0.1]
         #pbeaml = model.add_pbeaml(pid, mid, Type, xxb, dims, nsm=None,
                                   #so=None, comment='PBEAML')
-        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBMLO', nsm=0.,
+        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
                                 comment='PBARL')
         #---------------------------------------------------------------
         eid = 2
@@ -337,7 +337,7 @@ class TestBars(unittest.TestCase):
                               comment='CBAR')
         Type = 'BOX'
         dim = [1., 2., 0.1, 0.1]
-        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBMLO', nsm=0.,
+        pbarl = model.add_pbarl(pid, mid, Type, dim, group='MSCBML0', nsm=0.,
                                 comment='PBARL')
         #---------------------------------------------------------------
         eid = 3
@@ -417,7 +417,7 @@ class TestBars(unittest.TestCase):
         bar_type = 'BAR'
         dim = [1., 2.]  # area = 2.0
         nsm = 1.
-        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBMLO', nsm=1.,
+        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
                                comment='')
 
         E = 1.0

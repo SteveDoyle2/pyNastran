@@ -798,8 +798,8 @@ class TestAero(unittest.TestCase):
         igid = 0
         p1 = [0., 1., 2.]
         x12 = 10.
-        caero2a = CAERO2.add_card(BDFCard(['CAERO2', eid, pid, cp, nsb, nint,
-                                           lsb, lint, igid, ] + p1 + [x12]))
+        CAERO2.add_card(BDFCard(['CAERO2', eid, pid, cp, nsb, nint,
+                                 lsb, lint, igid, ] + p1 + [x12]))
 
         #---------------
         # nsb=lsb=None=0
@@ -1045,14 +1045,11 @@ class TestAero(unittest.TestCase):
         fields = ['PAERO3', 2001, 15, 1, None, 0., 65., None, None,
                   78., 65., 108., 65., 82., 97.5, 112., 97.5,
                   86., 130., 116., 130.]
-        card = BDFCard(fields)
         model = BDF(debug=False)
         model.add_card(fields, fields[0])
         paero = model.paeros[2001]
         assert paero.npoints == 8, paero.npoints
         paero.raw_fields()
-        print("")
-        print()
 
     def test_paero4(self):
         """checks the PAERO4"""
@@ -1211,7 +1208,7 @@ class TestAero(unittest.TestCase):
         paero5.lxis = lxis
         aefact_sid = lxis
         Di = [0., 0.5, 1.]
-        aefact = model.add_aefact(aefact_sid, Di, comment='aefact')
+        model.add_aefact(aefact_sid, Di, comment='aefact')
 
         ltaus = 44
         paero5.ltaus = ltaus
@@ -1471,7 +1468,7 @@ class TestAero(unittest.TestCase):
         aesurf2.validate()
         log = SimpleLogger(level='warning')
 
-        model = BDF(debug=False)
+        model = BDF(debug=False, log=log)
         model._add_coord_object(coord)
         model._add_aesurf_object(aesurf1)
 

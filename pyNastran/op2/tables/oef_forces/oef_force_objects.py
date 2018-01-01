@@ -1,7 +1,6 @@
 #pylint disable=C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import cycle
 from six import integer_types
 from six.moves import zip, range
 import numpy as np
@@ -16,8 +15,8 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_12e,
     write_float_13e, write_float_12e,
-    _eigenvalue_header, get_key0,
-    )
+    _eigenvalue_header,
+)
 
 
 class RealForceObject(ScalarObject):
@@ -845,11 +844,6 @@ class RealCBeamForceArray(ScalarObject):
         nids = self.element_node[:, 1]
         long_form = False
         if nids.min() == 0:
-            #header = [
-            #    '                         S T R E S S   D I S T R I B U T I O N   I N   B A R   E L E M E N T S       ( C B A R )\n'
-            #    '0    ELEMENT  STATION    SXC           SXD           SXE           SXF            AXIAL          S-MAX         S-MIN         M.S.-T\n'
-            #    '       ID.     (PCT)                                                                                                         M.S.-C\n'
-            #]
             msg = header + [
                 '                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                 '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
@@ -857,7 +851,7 @@ class RealCBeamForceArray(ScalarObject):
 
             long_form = True
 
-        times = self._times
+        #times = self._times
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
             if self.nonlinear_factor is not None:
@@ -2669,14 +2663,12 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
                   nid_b, bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b):
         """unvectorized method for adding SORT1 transient data"""
-        bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
-        bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
 
         self._times[self.itime] = dt
         self.element_node[self.ielement] = [eid, nid_a, nid_b]
         self.data[self.itime, self.ielement, :] = [
             bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,
-            bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b
+            bending_moment_1b, bending_moment_2b, shear_1b, shear_2b, axial_b, torque_b,
         ]
         self.ielement += 1
         if self.ielement == self.nelements:

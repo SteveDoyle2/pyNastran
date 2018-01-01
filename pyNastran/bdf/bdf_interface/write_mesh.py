@@ -122,8 +122,8 @@ class WriteMesh(BDFAttributes):
                 x, y, z = point
                 bdf_file.write(print_card_8(['GRID', i+ipoint, None, x, y, z]))
 
-            pid = eid
-            mid = eid
+            #pid = eid
+            #mid = eid
             bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
             bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % 1)
 
@@ -294,8 +294,11 @@ class WriteMesh(BDFAttributes):
         """
         Writes the nsm in a sorted order
         """
-        if self.nsms:
+        if self.nsms or self.nsmadds:
             msg = ['$NSM\n']
+            for (unused_id, nsmadds) in sorted(iteritems(self.nsmadds)):
+                for nsmadd in nsmadds:
+                    msg.append(str(nsmadd))
             for (key, nsms) in sorted(iteritems(self.nsms)):
                 for nsm in nsms:
                     try:

@@ -7,7 +7,6 @@ import timeit
 
 
 import pyNastran
-from pyNastran.utils import object_attributes
 test_path = pyNastran.__path__[0]
 
 class TestOP2New(unittest.TestCase):
@@ -18,7 +17,7 @@ class TestOP2New(unittest.TestCase):
 
         # op2 = OP2(op2_filename)
         # op2.rdn2cop2()
-        # print(object_attributes(op2))
+        # print(op2.object_attributes())
         # print('dbnames =', op2.dbnames)
         # print('dblist =', op2.dblist)
 
@@ -33,7 +32,7 @@ class TestOP2New(unittest.TestCase):
 
         # op2 = OP2(op2_filename)
         # op2.rdn2cop2()
-        # print(object_attributes(op2))
+        # print(op2.object_attributes())
         # print('dbnames =', op2.dbnames)
         # print('dblist =', op2.dblist)
         o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
@@ -63,7 +62,7 @@ class TestOP2New(unittest.TestCase):
 
         # op2 = OP2(op2_filename)
         # op2.rdn2cop2()
-        # print(object_attributes(op2))
+        # print(op2.object_attributes())
         # print('dbnames =', op2.dbnames)
         # print('dblist =', op2.dblist)
         o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)

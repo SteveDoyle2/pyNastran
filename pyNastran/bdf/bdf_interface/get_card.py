@@ -2238,7 +2238,7 @@ class GetCard(GetMethods):
                     raise KeyError('mid=%s is invalid for card %s=\n%s' % (mid, msg, str(prop)))
         return mid_to_pids_map
 
-    def get_reduced_nsms(self, nsm_id, consider_nsmadd=False, stop_on_failure=True):
+    def get_reduced_nsms(self, nsm_id, consider_nsmadd=True, stop_on_failure=True):
         """
         Get all traced NSMs that are part of a set
 
@@ -2262,7 +2262,7 @@ class GetCard(GetMethods):
             raise TypeError(msg)
 
         try:
-            nsms = self.NSM(nsm_id, consider_nsmadd=consider_mpcadd)
+            nsms = self.NSM(nsm_id, consider_nsmadd=consider_nsmadd)
         except KeyError:
             if stop_on_failure:
                 raise
@@ -2270,7 +2270,7 @@ class GetCard(GetMethods):
                 self.log.error("could not find expected NSM id=%s" % nsm_id)
                 return []
 
-        mpcs2 = []
+        nsms2 = []
         for nsm in nsms:
             if nsm.type == 'NSMADD':
                 for nsmi in nsm.nsm_ids:
@@ -2286,7 +2286,7 @@ class GetCard(GetMethods):
                     else:
                         assert isinstance(nsmi, integer_types), nsmi
                         nsms2i = self.get_reduced_nsms(
-                            mpci, consider_mpcadd=False, stop_on_failure=stop_on_failure)
+                            nsmi, consider_nsmadd=False, stop_on_failure=stop_on_failure)
                         nsms2 += nsms2i
             else:
                 nsms2.append(nsm)

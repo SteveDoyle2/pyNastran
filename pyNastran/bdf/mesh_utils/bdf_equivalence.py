@@ -16,6 +16,7 @@ from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
 from numpy.linalg import norm  # type: ignore
 import scipy
+import scipy.spatial
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import BDF

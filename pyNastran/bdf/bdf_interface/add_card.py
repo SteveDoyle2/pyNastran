@@ -620,7 +620,7 @@ class AddCards(AddMethods):
             a comment for the card
         """
         nsmadd = NSMADD(sid, sets, comment=comment)
-        self._add_nsm_object(nsmadd)
+        self._add_nsmadd_object(nsmadd)
         return nsmadd
 
     def add_pmass(self, pid, mass, comment=''):
@@ -1424,7 +1424,7 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pbarl(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
+    def add_pbarl(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """
         Creates a PBARL card, which defines A, I1, I2, I12, and J using
         dimensions rather than explicit values.
@@ -1444,7 +1444,7 @@ class AddCards(AddMethods):
         dim : List[float]
             dimensions for cross-section corresponding to Type;
             the length varies
-        group : str default='MSCBMLO'
+        group : str default='MSCBML0'
             this parameter can lead to a very broken deck with a very
             bad error message; don't touch it!
         nsm : float; default=0.
@@ -1670,7 +1670,7 @@ class AddCards(AddMethods):
         nsm : List[float]; default=None
             nonstructural mass per unit length
             None : [0.] * len(xxb)
-        group : str; default='MSCBMLO'
+        group : str; default='MSCBML0'
             this parameter can lead to a very broken deck with a very
             bad error message; don't touch it!
         comment : str; default=''
