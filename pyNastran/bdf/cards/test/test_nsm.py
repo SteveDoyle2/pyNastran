@@ -189,12 +189,14 @@ class TestNsm(unittest.TestCase):
         model.add_nsml1(2000, 'PSHELL', 1.0, pid_pshell, comment='nsml1') # correct; 1.0
         model.add_nsml(3000, 'PSHELL', pid_pshell, 1.0, comment='nsml') # correct; 1.0
         model.add_nsml(4000, 'PSHELL', pid_pshell, 1.0, comment='nsml') # correct; 1.0
-        model.add_nsmadd(5000, [1000, 2000, 3000, 4000])
+        model.add_nsmadd(5000, [1000, 2000, 3000, 4000], comment='nsmadd')
         model.cross_reference()
         model.pop_xref_errors()
 
         mass, cg, I = model._mass_properties_new(nsm_id=5000)
         self.assertAlmostEqual(mass, 4.0)
+        model2 = save_load_deck(model)
+        mass, cg, I = model2._mass_properties_new(nsm_id=5000)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
