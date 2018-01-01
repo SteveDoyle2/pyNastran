@@ -328,170 +328,6 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
     return (mass, cg, I)
 
 
-def _get_nsm_data(model, nsm_id, dev=True):
-    """
-    Gets some info required by the NSM cards.
-
-    per MSC QRG 2018.0.1: Undefined property/element IDs are ignored.
-    """
-    def defaultdict_float():
-        """helper method for _get_nsm_data"""
-        return defaultdict(float)
-
-    #element_nsms = defaultdict(dict)
-    #areas_prop = defaultdict(float)
-    #lengths = defaultdict(float)
-    element_nsms = defaultdict(defaultdict_float)
-    #property_nsms = defaultdict(defaultdict_defaultdict_list)
-    property_nsms = defaultdict(lambda: defaultdict(defaultdict_float))
-
-    # TODO: If TYPE = ELEMENT is used:
-    #           line element (CBAR, CBEAM, CBEND, CROD, CTUBE, and CONROD) IDs
-    #       cannot be mixed with:
-    #           area element (CQUAD4, CQUAD8, CQUADR, CTRIA3, CTRIA6,
-    #                         CTRIAR, CSHEAR, and CRAC2D) IDs.
-    #
-    # 7. Undefined property/element IDs are ignored.
-    #      by default
-    #
-    #all_line_eids = None
-    #all_shell_eids = None
-    #all_line_eids = None
-    #all_shell_pids = None
-
-    all_eids = None # model.elements.keys()
-    all_pids = None # model.properties.keys()
-
-    # 6. PBEAML and PBCOMP are treated as PBEAM, PBARL is treated as PBAR,
-    #    and PCOMP or PCOMPG is treated as PSHELL; therefore a command such as:
-    #       NSML1,12,PCOMP,1.35,ALL
-    #
-    #    would, for example, get all PSHELLs in the file. The converted PCOMPs
-    #    or PCOMPGs plus any existing PSHELLS would have a mass of 1.35 added
-    #    to their nonstructural mass.
-    #
-    nsm_type_map = {
-        'PSHELL' : 'PSHELL',
-        'PCOMP' : 'PSHELL',
-        'PCOMPG' : 'PSHELL',
-
-        'PBAR' : 'PBAR',
-        'PBARL' : 'PBAR',
-
-        'PBEAM' : 'PBEAM',
-        'PBEAML' : 'PBEAM',
-        'PBCOMP' : 'PBEAM',
-        'PROD' : 'PROD',
-        'PBEND' : 'PBEND',
-        'PSHEAR' : 'PSHEAR',
-        'PTUBE' : 'PTUBE',
-        'PCONEAX' : 'PCONEAX',
-        'PRAC2D' : 'PRAC2D',
-        'CONROD' : 'CONROD',
-        'ELEMENT' : 'ELEMENT',
-    }
-    #masses = model.masses.values()
-    for nsmadd_id in chain(model.nsmadds, model.nsms):
-        if nsmadd_id != nsm_id:
-            continue
-        # NSM/NMS1/NSML/NSML1:
-        #  Type=[PSHELL, PCOMP, PCOMPG, PBAR, PBARL, PBEAM, PBEAML, PBCOMP, PROD,
-        #        CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D, ELEMENT]
-        # TODO: NSML/NSML1 fix
-        #       VALUE is the total nonstructural mass to be distributed across all IDs.
-        #       - Area element calculation (for example, CQUAD4):
-        #         Mass for a particular element = (Element area) x (VALUE / Σ(Element
-        #         area for all IDs)
-        #       - Line element calculation (for example, CBEAM):
-        #         Mass for a particular element = (Element length) x (VALUE / Σ(Element
-        #         length for all IDs)
-        nsms = model.get_reduced_nsms(nsmadd_id, consider_nsmadd=True, stop_on_failure=True)
-
-        all_eid_nsms = []
-        for nsm in nsms:
-            #print(nsm)
-            value = nsm.value
-            nsm_type = nsm_type_map[nsm.nsm_type]
-            if nsm_type == 'ELEMENT':
-                if nsm.type in ['NSM']:
-                    model.log.info('elem NSM/NSML\n%s' % nsm)
-                    model.log.info('  nsm.id=%r nsm.value=%r' % (nsm.id, nsm.value))
-                    if nsm.id == 'ALL':
-                        all_eid_nsms.append(nsm)
-                        if all_eids is None:
-                            all_eids = list(model.elements.keys())
-                        eids = all_eids
-                    else:
-                        eids = [nsm.id]
-                elif nsm.type in ['NSM1']:
-                    #model.log.info('elem NSM1/NSML1\n%s' % nsm)
-                    #model.log.info('  nsm.ids=%r nsm.value=%r' % (nsm.ids, nsm.value))
-                    if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
-                        all_eid_nsms.append(nsm)
-                        if all_eids is None:
-                            all_eids = list(model.elements.keys())
-                        eids = all_eids
-                    else:
-                        eids = nsm.ids
-                elif nsm.type in ['NSML', 'NSML1']:
-                    continue
-                else:
-                    raise NotImplementedError(nsm)
-
-                for eid in eids:
-                    #print('  nsm.nsm_type=%s eid=%s value=%s' % (nsm.nsm_type, eid, value))
-                    assert eid != 'ALL', nsm
-                    element_nsms[nsmadd_id][eid] = value
-
-            elif nsm_type == 'CONROD':
-                property_nsms[nsmadd_id][nsm_type][pid] = value
-            else:
-                if nsm.type in ['NSM']:
-                    #model.log.info('prop NSM/NSML\n%s' % nsm)
-                    #model.log.info('  nsm.id=%r nsm.value=%r' % (nsm.id, nsm.value))
-
-                    if nsm.id == 'ALL':
-                        if all_pids is None:
-                            all_pids = list(model.properties.keys())
-                        else:
-                            pids = all_pids
-
-                elif nsm.type in ['NSM1']:
-                    #model.log.info('prop NSM1/NSML1\n%s' % nsm)
-                    #model.log.info('  nsm.ids=%r nsm.value=%r' % (nsm.ids, nsm.value))
-
-                    if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
-                        if all_pids is None:
-                            all_pids = list(model.properties.keys())
-                        pids = all_pids
-                    else:
-                        pids = nsm.ids
-                elif nsm.type in ['NSML', 'NSML1']:
-                    continue
-
-                for pid in pids:
-                    #print('  nsm.nsm_type=%s pid=%s value=%s' % (nsm_type, pid, value))
-                    assert pid != 'ALL', nsm
-                    property_nsms[nsmadd_id][nsm_type][pid] = value
-
-    line_types = ['CBAR', 'CBEAM', 'CBEND', 'CROD', 'CTUBE', 'CONROD']
-    area_types = ['CQUAD4', 'CQUAD8', 'CQUADR', 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CSHEAR', 'CRAC2D']
-    line_eids = []
-    area_eids = []
-    if all_eids:
-        for eid in eids:
-            elem = model.elements[eid]
-            if elem.type in line_types:
-                line_eids.append(eid)
-            elif elem.type in area_types:
-                area_eids.append(eid)
-    if line_eids and area_eids:
-        msg = 'line elements and area elements are referenced by the ELEMENT/ALL on the NSM cards\n'
-        for nsm in all_eid_nsms:
-            msg += str(nsm)
-        raise RuntimeError(msg)
-    return element_nsms, property_nsms
-
 def _increment_inertia(centroid, reference_point, m, mass, cg, I):
     """helper method"""
     (x, y, z) = centroid - reference_point
@@ -1177,7 +1013,7 @@ def _combine_weighted_area_length(areas_ipids, nsm_centroidsi, is_area_bool, are
         word = 'length'
 
     for (area, ipid) in areas_ipids:
-        if debug:
+        if debug:  # pragma: no cover
             print("  nsm_centroidsi = ", nsm_centroidsi)
         centroids = nsm_centroidsi[ipid, :]
         for areai, centroid in zip(area, centroids):
@@ -1192,8 +1028,15 @@ def _apply_nsm(model, nsm_id,
                area_eids_pids, areas, nsm_centroids_area,
                length_eids_pids, lengths, nsm_centroids_length,
                mass, cg, I, reference_point, debug=False):
+    """
+    Applies NSM cards to the mass, cg, and inertia.
+
+    per MSC QRG 2018.0.1: Undefined property/element IDs are ignored.
+    TODO: support ALL
+    """
     if not nsm_id:
         return mass
+    #debug = True
 
     #print(length_eids_pids)
     #print(lengths)
@@ -1266,7 +1109,7 @@ def _apply_nsm(model, nsm_id,
                 upids = np.unique(pids_to_apply)
                 pids_to_apply = np.intersect1d(upids, ids)
 
-                if debug:
+                if debug:  # pragma: no cover
                     print("  all_pids = ", all_pids)
                     print("  nsm_pids = ", ids)
                     print("  pids_to_apply = ", pids_to_apply)
@@ -1282,13 +1125,13 @@ def _apply_nsm(model, nsm_id,
 
                     #eids_actual = eids[ipid]
                     #area_actual = area[ipid]
-                    if debug:
+                    if debug:  # pragma: no cover
                         print('  eids =', eids)
                         print('  area =', area)
                     area_sum += area.sum()
                     areas_ipids.append((area, ipid))
 
-                if debug:
+                if debug:  # pragma: no cover
                     print("area_sum =", area_sum)
                 nsm_centroidsi = nsm_centroids_area[nsm_type]
                 is_area_bool = True
@@ -1319,7 +1162,7 @@ def _apply_nsm(model, nsm_id,
                 upids = np.unique(pids_to_apply)
                 pids_to_apply = np.intersect1d(upids, ids)
 
-                if debug:
+                if debug:  # pragma: no cover
                     print("  all_pids = ", all_pids)
                     print("  nsm_pids = ", ids)
                     print("  pids_to_apply = ", pids_to_apply)
@@ -1377,7 +1220,7 @@ def _apply_nsm(model, nsm_id,
                 all_pids = eids_pids[:, 1]
                 is_area_bool = True
                 centroids = nsm_centroids_area[nsm_type]
-                if debug:
+                if debug:  # pragma: no cover
                     print('nsm_centroids_area =', nsm_centroids_area)
                     print('centroids =', centroids)
 
@@ -1398,16 +1241,12 @@ def _apply_nsm(model, nsm_id,
                     continue
 
                 area_all = np.array(lengths[nsm_type])
-                try:
-                    all_eids = eids_pids[:, 0]
-                    all_pids = eids_pids[:, 1]
-                except IndexError:
-                    print('length_eids_pids =', length_eids_pids)
-                    print('eids_pids =', eids_pids)
-                    raise
+                all_eids = eids_pids[:, 0]
+                all_pids = eids_pids[:, 1]
+
                 is_area_bool = False
                 centroids = nsm_centroids_length[nsm_type]
-                if debug:
+                if debug:  # pragma: no cover
                     print('nsm_centroids_length =', nsm_centroids_length)
                     print('centroids =', centroids)
 
@@ -1462,7 +1301,7 @@ def _nsm1_element(nsm, all_eids_pids, area_length, is_area, nsm_centroids,
     #print(nsm.rstrip())
     eids = all_eids_pids[:, 0]
     ids = np.array(nsm.ids, dtype='int32')
-    if debug:
+    if debug:  # pragma: no cover
         print('  ids =', ids)
         print('  eids =', eids)
         print('  is_area =', is_area)
@@ -1472,7 +1311,7 @@ def _nsm1_element(nsm, all_eids_pids, area_length, is_area, nsm_centroids,
     eids_pids = all_eids_pids
     #area = area_length[is_area]
     #length = area_length[~is_area]
-    if debug:
+    if debug:  # pragma: no cover
         print('  area_length =', area_length)
     #print('  area =', area)
     #print('  length =', length)
@@ -1487,14 +1326,14 @@ def _nsm1_element(nsm, all_eids_pids, area_length, is_area, nsm_centroids,
     #print('  length =', length)
 
     ipassed = isort != len(eids)
-    if debug:
+    if debug:  # pragma: no cover
         print('  isort_1 =', isort)
         print('  ipassed =', ipassed)
     isort = isort[ipassed]
     if len(isort) == 0:
         model.log.warning('  *no ids found')
         return mass
-    if debug:
+    if debug:  # pragma: no cover
         print('  isort_2 =', isort)
         print('  eids[isort] =', eids[isort])
     iwhere = eids[isort] == ids
@@ -1520,7 +1359,7 @@ def _nsm1_element(nsm, all_eids_pids, area_length, is_area, nsm_centroids,
     # this is area or length depending on eid type
     cgi = area_length_actual[:, np.newaxis] * nsm_centroid
 
-    if debug:
+    if debug:  # pragma: no cover
         print('  nsm_centroid =', nsm_centroid)
         print('  area_length_actual =', area_length_actual)
         print('  cgi =', cgi)
