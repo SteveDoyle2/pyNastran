@@ -275,9 +275,21 @@ class CBAR(CardTable):
         else:
             x = x.tolist()
 
-        flag = DataHelper.unknown_int
+        # MSC 2018 DMAP p. 209
+        # flag = 0, basic coordinate system
+        # flag = 1, global coordinate system
+        # flag = 2, grid option
+        # TODO: what does *F = FE bit-wise AND with 3 mean in DMAP guide?
 
-        # TODO: CBAR flag
+        g0 = card.g0
+
+        if x[0] is None:
+            flag = 2
+        elif g0 in ('', None):
+            flag = 0
+        else:
+            flag = 1
+
         data = [card.eid, card.pid]
         data += card.node_ids
         data.append(flag)
