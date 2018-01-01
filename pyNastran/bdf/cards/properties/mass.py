@@ -10,7 +10,7 @@ All mass properties are PointProperty and Property objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types, string_types
-from pyNastran.bdf.cards.base_card import expand_thru_by, BaseCard, Property
+from pyNastran.bdf.cards.base_card import expand_thru_by, expand_thru, BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -60,9 +60,15 @@ class NSMx(Property):
         self.nsm_type = nsm_type
         self.id = pid_eid
         self.value = value
+        assert isinstance(pid_eid, int), pid_eid
+        assert isinstance(value, float), value
         if self.nsm_type not in self.valid_properties:
             raise TypeError('nsm_type=%r must be in [%s]' % (
                 self.nsm_type, ', '.join(self.valid_properties)))
+
+    @property
+    def ids(self):
+        return [self.id]
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
@@ -157,7 +163,9 @@ class NSM1x(Property):
                 ELEMENT
             }
         value : float
-            the non-structural pass per unit length/area
+            NSM1:  the non-structural pass per unit length/area
+            NSML1: the total non-structural pass per unit length/area;
+                   the nsm will be broken down based on a weighted area/length
         ids : List[int]
             property ids or element ids depending on nsm_type
         comment : str; default=''

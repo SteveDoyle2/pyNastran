@@ -513,16 +513,28 @@ class AddCards(AddMethods):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        pid_eid : int
+        pid_eid : List[int]; int
             property id or element id depending on nsm_type
-        value : float
+        value : List[float]; float
             the non-structural pass per unit length/area
+            same length as pid_eid
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSM(sid, nsm_type, pid_eid, value, comment=comment)
-        self._add_nsm_object(nsm)
-        return nsm
+        if isinstance(pid_eid, int):
+            pid_eid = [pid_eid]
+        if isinstance(value, float):
+            value = [value]
+        assert isinstance(pid_eid, list), pid_eid
+        assert isinstance(value, list), value
+        assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
+
+        nsms = []
+        for pid_eidi, valuei in zip(pid_eid, value):
+            nsm = NSM(sid, nsm_type, pid_eidi, valuei, comment=comment)
+            self._add_nsm_object(nsm)
+            nsms.append(nsm)
+        return nsms
 
     def add_nsm1(self, sid, nsm_type, value, ids, comment=''):
         # type: (int, str, float, List[int], str) -> NSM1
@@ -567,21 +579,35 @@ class AddCards(AddMethods):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        pid_eid : int
+        pid_eid : List[int]; int
             property id or element id depending on nsm_type
-        value : float
+        value : List[float]; float
             the non-structural pass per unit length/area
+            same length as pid_eid
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSML(sid, nsm_type, pid_eid, value, comment=comment)
-        self._add_nsm_object(nsm)
+        if isinstance(pid_eid, int):
+            pid_eid = [pid_eid]
+        if isinstance(value, float):
+            value = [value]
+        assert isinstance(pid_eid, list), pid_eid
+        assert isinstance(value, list), value
+        assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
+
+        nsms = []
+        for pid_eidi, valuei in zip(pid_eid, value):
+            nsm = NSML(sid, nsm_type, pid_eidi, valuei, comment=comment)
+            self._add_nsm_object(nsm)
+            nsms.append(nsm)
+        return nsms
+
         return nsm
 
     def add_nsml1(self, sid, nsm_type, value, ids, comment=''):
         # type: (int, str, float, List[int], str) -> NSML1
         """
-        Creates an NSM1 card, which defines lumped non-structural mass
+        Creates an NSML1 card, which defines lumped non-structural mass
 
         Parameters
         ----------

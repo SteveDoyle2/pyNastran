@@ -12,6 +12,7 @@ import os
 import sys
 import traceback
 import warnings
+from itertools import chain
 from typing import List, Tuple, Optional
 from six import iteritems
 import numpy as np
@@ -1498,12 +1499,19 @@ def get_element_stats(fem1, fem2, quiet=False):
 
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
-    mass, cg, inertia = fem1.mass_properties(reference_point=None, sym_axis=None)
-    mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None)
+    mass1, cg1, inertia1 = fem1.mass_properties(reference_point=None, sym_axis=None)
+    mass2, cg2, inertia2 = fem1._mass_properties_new(reference_point=None, sym_axis=None)
     if not quiet:
-        print("mass = %s" % mass)
-        print("cg   = %s" % cg)
-        print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s" % tuple(inertia))
+        print("mass = %s" % mass1)
+        print("cg   = %s" % cg1)
+        print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s" % tuple(inertia1))
+    assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
+    assert np.allclose(cg1, cg2), 'cg1=%s cg2=%s' % (cg1, cg2)
+    assert np.allclose(inertia1, inertia2), 'inertia1=%s inertia2=%s' % (inertia1, inertia2)
+
+    for nsm_id in chain(fem1.nsms, fem1.nsmadds):
+        mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None, nsm_id=nsm_id)
+        print('mass[nsm=%i] = %s' % (nsm_id, mass))
         #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
         #print("mass_old =", mass)
         #print("cg_old   =", cg)

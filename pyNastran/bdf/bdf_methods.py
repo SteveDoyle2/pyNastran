@@ -351,7 +351,7 @@ class BDFMethods(BDFAttributes):
         elif isinstance(reference_point, integer_types):
             reference_point = self.nodes[reference_point].get_position()
 
-        elements, masses = _mass_properties_elements_init(self, element_ids, mass_ids)
+        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(self, element_ids, mass_ids)
         mass, cg, I = _mass_properties(
             self, elements, masses,
             reference_point=reference_point)
@@ -434,7 +434,7 @@ class BDFMethods(BDFAttributes):
         elif isinstance(reference_point, integer_types):
             reference_point = self.nodes[reference_point].get_position()
 
-        elements, masses = _mass_properties_elements_init(self, element_ids, mass_ids)
+        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(self, element_ids, mass_ids)
         #nelements = len(elements) + len(masses)
 
         mass, cg, I = _mass_properties_no_xref(
@@ -444,12 +444,12 @@ class BDFMethods(BDFAttributes):
         mass, cg, I = _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
-    def _mass_properties_new(self, element_ids=None, mass_ids=None,
+    def _mass_properties_new(self, element_ids=None, mass_ids=None, nsm_id=None,
                              reference_point=None,
                              sym_axis=None, scale=None, xyz_cid0_dict=None):  # pragma: no cover
         """not done"""
         mass, cg, I = _mass_properties_new(
-            self, element_ids=element_ids, mass_ids=mass_ids,
+            self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,
             reference_point=reference_point,
             sym_axis=sym_axis, scale=scale, xyz_cid0_dict=xyz_cid0_dict)
         return (mass, cg, I)

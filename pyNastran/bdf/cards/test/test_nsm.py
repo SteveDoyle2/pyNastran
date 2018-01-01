@@ -2,11 +2,13 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import unittest
+from six import iteritems
 from six.moves import StringIO
 import numpy as np
 from numpy import array
 
-from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
+from pyNastran.bdf.bdf import BDF
+from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import _mass_properties_new
 
@@ -15,12 +17,14 @@ class TestNsm(unittest.TestCase):
         eid_quad = 1
         eid_tri = 2
         eid_conrod = 3
-        eid_pbeaml = 4
-        eid_pbarl = 5
+        eid_crod = 4
+        eid_pbeaml = 5
+        eid_pbarl = 6
         pid_pbeaml = 40
         pid_pshell = 10
         pid_pbeaml = 21
         pid_pbarl = 31
+        pid_prod = 41
         mid = 100
         E = 3.0e7
         G = None
@@ -41,6 +45,8 @@ class TestNsm(unittest.TestCase):
                        wa=None, wb=None, comment='')
         model.add_cbeam(eid_pbeaml, pid_pbeaml, nids, x, g0, offt='GGG', bit=None,
                         pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+        model.add_crod(eid_crod, pid_prod, [1, 2])
+        model.add_prod(pid_prod, mid, A=0.1)
         model.add_pshell(pid_pshell, mid1=mid, t=0.1) #, nsm=None)
 
         bar_type = 'BAR'
@@ -54,38 +60,89 @@ class TestNsm(unittest.TestCase):
         model.add_pbeaml(pid_pbeaml, mid, beam_type, xxb, dims, so=None, nsm=nsm,
                          group='MSCBML0', comment='')
         model.add_mat1(mid, E, G, nu, rho=0.0)
-        #model.add_nsml1(sid, nsm_type, value, ids)
 
         # TODO: these are correct barring incorrect formulas
-        model.add_nsml1(1000, 'PSHELL', 1.0, pid_pshell) # correct; 1.0
-        model.add_nsml1(1001, 'ELEMENT', 1.0, eid_quad) # correct; 1.0
-        model.add_nsml1(1002, 'ELEMENT', 1.0, [eid_quad, eid_tri]) # correct; 1.5
-        model.add_nsml1(1003, 'ELEMENT', 1.0, [eid_pbeaml]) # correct; 1.0
-        model.add_nsml1(1004, 'ELEMENT', 1.0, eid_pbarl) # correct; 1.0
-        #model.add_nsml1(1005, 'ELEMENT', 1.0, 'ALL') # crash according to QRG b/c mixed type; 2.5
-        model.add_nsml1(1006, 'PSHELL', 1.0, 'ALL') # correct; 1.0
-        model.add_nsml1(1007, 'PSHELL', 1.0, [10, 'THRU', 12]) # correct; 1.5
-        model.add_nsml1(1008, 'PSHELL', 1.0, [10, 'THRU', 12, 'BY', 2]) # correct; 1.5
-        model.add_nsml1(1009, 'PBARL', 1.0, pid_pbarl) # correct; 1.0
-        model.add_nsml1(1010, 'PBEAML', 1.0, pid_pbeaml) # correct; 1.0
-        #model.add_nsml1(1011, 'PSHELL', 1.0, ['1240', 'THRU', '1250', None, None, # correct; 0.0
+        model.add_nsm1(1000, 'PSHELL', 1.0, pid_pshell) # correct; 1.0
+        model.add_nsm1(1001, 'ELEMENT', 1.0, eid_quad) # correct; 1.0
+        model.add_nsm1(1002, 'ELEMENT', 1.0, [eid_quad, eid_tri]) # correct; 1.5
+        model.add_nsm1(1003, 'ELEMENT', 1.0, [eid_pbeaml]) # correct; 1.0
+        model.add_nsm1(1004, 'ELEMENT', 1.0, eid_pbarl) # correct; 1.0
+        model.add_nsm1(1005, 'ELEMENT', 1.0, 'ALL') # crash according to QRG b/c mixed type; 2.5
+        model.add_nsm1(1006, 'PSHELL', 1.0, 'ALL') # correct; 1.0
+        model.add_nsm1(1007, 'PSHELL', 1.0, [10, 'THRU', 12]) # correct; 1.5
+        model.add_nsm1(1008, 'PSHELL', 1.0, [10, 'THRU', 12, 'BY', 2]) # correct; 1.5
+        model.add_nsm1(1009, 'PBARL', 1.0, pid_pbarl) # correct; 1.0
+        model.add_nsm1(1010, 'PBEAML', 1.0, pid_pbeaml) # correct; 1.0
+        model.add_nsm1(1011, 'PROD', 1.0, pid_prod) # correct; 1.0
+        model.add_nsm1(1012, 'CONROD', 1.0, eid_conrod) # correct; 1.0
+
+        #model.add_nsml1(sid, nsm_type, value, ids)
+        model.add_nsml1(2000, 'PSHELL', 1.0, pid_pshell) # correct; 1.0
+        model.add_nsml1(2001, 'ELEMENT', 1.0, eid_quad) # correct; 1.0
+        model.add_nsml1(2002, 'ELEMENT', 1.0, [eid_quad, eid_tri]) # correct; 1.0
+        model.add_nsml1(2003, 'ELEMENT', 1.0, [eid_pbeaml]) # correct; 1.0
+        model.add_nsml1(2004, 'ELEMENT', 1.0, eid_pbarl) # correct; 1.0
+        model.add_nsml1(2005, 'ELEMENT', 1.0, 'ALL') # crash according to QRG b/c mixed type; 1.0
+        model.add_nsml1(2006, 'PSHELL', 1.0, 'ALL') # correct; 1.0
+        model.add_nsml1(2007, 'PSHELL', 1.0, [10, 'THRU', 12]) # correct; 1.0
+        model.add_nsml1(2008, 'PSHELL', 1.0, [10, 'THRU', 12, 'BY', 2]) # correct; 1.0
+        model.add_nsml1(2009, 'PBARL', 1.0, pid_pbarl) # correct; 1.0
+        model.add_nsml1(2010, 'PBEAML', 1.0, pid_pbeaml) # correct; 1.0
+        model.add_nsml1(2011, 'PROD', 1.0, pid_prod) # correct; 1.0
+        model.add_nsml1(2012, 'CONROD', 1.0, eid_conrod) # correct; 1.0
+
+        model.add_nsm(3000, 'PSHELL', pid_pshell, 1.0, ) # correct; 1.0
+        model.add_nsm(3001, 'ELEMENT', eid_quad, 1.0) # correct; 1.0
+        model.add_nsm(3003, 'ELEMENT', [eid_pbeaml], 1.0) # correct; 1.0
+        model.add_nsm(3004, 'ELEMENT', eid_pbarl, 1.0) # correct; 1.0
+        model.add_nsm(3009, 'PBARL', pid_pbarl, 1.0) # correct; 1.0
+        model.add_nsm(3010, 'PBEAML', pid_pbeaml, 1.0) # correct; 1.0
+        model.add_nsm(3011, 'PROD', pid_prod, 1.0) # correct; 1.0
+        model.add_nsm(3012, 'CONROD', eid_conrod, 1.0) # correct; 1.0
+
+        #model.add_nsml1(2011, 'PSHELL', 1.0, ['1240', 'THRU', '1250', None, None, # correct; 0.0
                                               #'2567', 'THRU', '2575',
                                               #'35689', 'THRU', '35700', None, None,
                                               #'76', 'THRU', '85',])
-        #print(model.nsms[1011])
+        #print(model.nsms[2011])
         model.pop_parse_errors()
         model.cross_reference()
         model.pop_xref_errors()
 
+        not_handled = [1005, 1006, 2005, 2006]
         for nsm_id in sorted(model.nsms):
             mass, cg, I = _mass_properties_new(model, nsm_id=nsm_id, dev=True)
+            if nsm_id in not_handled:
+                self.assertEqual(mass, 0.0)
+            else:
+                self.assertTrue(mass > 0)
             print('mass[%s] = %s' % (nsm_id, mass))
             #print('----------------------------------------------')
 
         model2 = save_load_deck(model)
-        #for nsm_id in model2.nsms:  # TODO: totally wrong
-            #mass, cg, I = _mass_properties_new(model2, nsm_id=nsm_id, dev=True)
-            #print('mass2[%s] = %s' % (nsm_id, mass))
+        model2.reset_rslot_map()
+        #print(model2._type_to_slot_map)
+        model2.elements = {}
+
+        type_to_id_map = {}
+        for card_type, ids in iteritems(model2._type_to_id_map):
+            if card_type in ['CQUAD4', 'CTRIA3', 'CBEAM', 'CONROD', 'CBAR', 'CROD']:
+                pass
+            elif card_type in ['NSM', 'NSM1', 'NSML1', 'MAT1',
+                               'PBARL', 'PBEAM', 'PSHELL', 'PCOMP', 'PROD', 'PBEAML', 'GRID']:
+                type_to_id_map[card_type] = ids
+            else:
+                raise NotImplementedError(str((card_type, ids)))
+        model2._type_to_id_map = type_to_id_map
+
+        model2.log = SimpleLogger(level='error')
+
+        # don't crash on the null case
+        for nsm_id in sorted(model2.nsms):
+            mass, cg, I = _mass_properties_new(model2, nsm_id=nsm_id, dev=True)
+            self.assertEqual(mass, 0.0)
+            #print('mass[%s] = %s' % (nsm_id, mass))
+        #print('done with null')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
