@@ -6,6 +6,7 @@ import tables
 import numpy as np
 
 from .card_table import CardTable, TableDef, TableData
+from ..data_helper import DataHelper
 
 
 class Element(object):
@@ -271,17 +272,24 @@ class CBAR(CardTable):
         x = card.x
         if x is None:
             x = [None, None, None]
-            flag = 2
         else:
             x = x.tolist()
-            offt = card.offt
-            if offt == '':
-                offt = 'GGG'
-            if offt.startswith('G'):
-                flag = 1
-            else:
-                flag = 0
-        # TODO: check that flag is correct
+
+        # MSC 2018 DMAP p. 209
+        # flag = 0, basic coordinate system
+        # flag = 1, global coordinate system
+        # flag = 2, grid option
+        # TODO: what does *F = FE bit-wise AND with 3 mean in DMAP guide?
+
+        g0 = card.g0
+
+        if x[0] is None:
+            flag = 2
+        elif g0 in ('', None):
+            flag = 0
+        else:
+            flag = 1
+
         data = [card.eid, card.pid]
         data += card.node_ids
         data.append(flag)
@@ -323,16 +331,10 @@ class CBEAM(CardTable):
         x = card.x
         if x is None:
             x = [None, None, None]
-            flag = 2
-        else:
-            offt = card.offt
-            if offt == '':
-                offt = 'GGG'
-            if offt.startswith('G'):
-                flag = 1
-            else:
-                flag = 0
-        # TODO: CBEAM flag check
+
+        flag = DataHelper.unknown_int
+
+        # TODO: CBEAM flag
         node_ids = card.node_ids
         data = [card.eid, card.pid, node_ids[0], node_ids[1], card.sa, card.sb, x, card.g0, flag, card.pa, card.pb,
                 card.wa, card.wb]
@@ -353,10 +355,10 @@ class CBEND(CardTable):
     @staticmethod
     def from_bdf(card):
         node_ids = card.node_ids
-        # TODO: CBEND flag check
+        # TODO: CBEND flag
         x = card.x
         g0 = card.g0
-        flag = 0
+        flag = DataHelper.unknown_int
         return TableData([[card.eid, card.pid, node_ids[0], node_ids[1], flag, x[0], x[1], x[2], g0, card.geom]])
 
 ########################################################################################################################
@@ -371,21 +373,10 @@ class CBUSH(CardTable):
         if x is None:
             x = [None, None, None]
         cid = card.cid
-        if cid not in ('', None):
-            if cid == 0:
-                if None in x:
-                    flag = 0
-                else:
-                    flag = 1
-            else:
-                flag = -1
-        else:
-            if None in x:
-                flag = 2
-            else:
-                flag = 1
 
-        # TODO: CBUSH flag check
+        flag = DataHelper.unknown_int
+
+        # TODO: CBUSH flag
 
         node_ids = card.node_ids
         si = card.si
@@ -518,8 +509,8 @@ class CGAP(CardTable):
     def from_bdf(card):
         nids = card.node_ids
         x = card.x
-        flag = 0
-        # TODO: CGAP flag check
+        flag = DataHelper.unknown_int
+        # TODO: CGAP flag
         return [card.eid, card.pid, nids[0], nids[1], flag, x[0], x[1], x[2], card.g0, card.cid]
 
 ########################################################################################################################

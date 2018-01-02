@@ -17,6 +17,7 @@ class Ansys(object):
         while i < nlines:
             line = lines[i].strip()
             if line.startswith(r'/nolist'):
+                print('line = %s' % line)
                 i += 4
                 # line = (1i9,3e20.9e3)
                 snodes = []
@@ -49,6 +50,7 @@ class Ansys(object):
                 i -= 1
                 #asdf
             elif line.startswith('/wb,elem,start'):
+                print('line = %s' % line)
                 i += 1
                 line = lines[i]
                 while line.startswith('/com'):

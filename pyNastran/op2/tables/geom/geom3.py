@@ -17,7 +17,6 @@ from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS
 from pyNastran.bdf.cards.thermal.loads import (
     QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL)
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class GEOM3(GeomCommon):

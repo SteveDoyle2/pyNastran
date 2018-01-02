@@ -169,15 +169,19 @@ class GetCard(GetMethods):
         """gets the rslot_map"""
         if (reset_type_to_slot_map or self._type_to_slot_map is None or
                 len(self._type_to_slot_map) == 0):
-            rslot_map = {}
-            for key, values in iteritems(self._slot_to_type_map):
-                for value in values:
-                    rslot_map[value] = key
-            self._type_to_slot_map = rslot_map
-        else:
-            rslot_map = self._type_to_slot_map
+            self.reset_rslot_map()
+
+        rslot_map = self._type_to_slot_map
         assert 'GRID' in rslot_map
         return rslot_map
+
+    def reset_rslot_map(self):
+        """helper method for get_rslot_map"""
+        rslot_map = {}
+        for key, values in iteritems(self._slot_to_type_map):
+            for value in values:
+                rslot_map[value] = key
+        self._type_to_slot_map = rslot_map
 
     @property
     def nid_map(self):
@@ -576,7 +580,12 @@ class GetCard(GetMethods):
                 # print('no %s for isubcase=%s' % (key, subcase_id))
                 continue
             try:
-                load_case = self.loads[load_case_id]
+                load_case = self.get_reduced_loads(
+                    load_case_id, scale=1.,
+                    consider_load_combinations=True,
+                    skip_scale_factor0=False,
+                    stop_on_failure=False,
+                    msg='')
             except KeyError:
                 self.log.warning('LOAD=%s not found' % load_case_id)
                 continue
@@ -604,13 +613,46 @@ class GetCard(GetMethods):
         return is_loads, is_temperatures, temperature_data, load_data
 
     def _get_dvprel_ndarrays(self, nelements, pids, fdtype='float32', idtype='int32'):
-        """creates arrays for dvprel results"""
-        dvprel_t_init = np.zeros(nelements, dtype=fdtype)
-        dvprel_t_min = np.zeros(nelements, dtype=fdtype)
-        dvprel_t_max = np.zeros(nelements, dtype=fdtype)
-        design_region = np.zeros(nelements, dtype=idtype)
+        """
+        creates arrays for dvprel results
 
-        for key, dvprel in iteritems(self.dvprels):
+        Parameters
+        ----------
+        nelements : int
+            the number of elements
+        pids : int ndarray; length=nelements
+            the
+        fdtype : str; default='float32'
+            the type of the init/min/max arrays
+        idtype : str; default='int32'
+            the type of the design_region
+
+        Returns
+        -------
+        dvprel_dict[key] : (design_region, dvprel_init, dvprel_min, dvprel_max)
+            key : str
+                the optimization string
+            design_region : int ndarray; length=nelements
+            dvprel_init : float ndarray; length=nelements
+                the initial values of the variable
+            dvprel_min : float ndarray; length=nelements
+                the min values of the variable
+            dvprel_max : float ndarray; length=nelements
+                the max values of the variable
+        """
+        dvprel_dict = {}
+        def get_dvprel_data(key):
+            if key in dvprel_dict:
+                return dvprel_dict[key]
+
+            dvprel_t_init = np.full(nelements, np.nan, dtype=fdtype)
+            dvprel_t_min = np.full(nelements, np.nan, dtype=fdtype)
+            dvprel_t_max = np.full(nelements, np.nan, dtype=fdtype)
+            design_region = np.zeros(nelements, dtype=idtype)
+            dvprel_dict[key] = (design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max)
+            return design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max
+
+        for dvprel_key, dvprel in iteritems(self.dvprels):
             if dvprel.type == 'DVPREL1':
                 prop_type = dvprel.prop_type
                 desvars = dvprel.dvids
@@ -622,48 +664,70 @@ class GetCard(GetMethods):
                 var_to_change = dvprel.pname_fid
                 assert len(desvars) == 1, len(desvars)
 
+                prop = self.properties[pid]
+                if not prop.type == prop_type:
+                    raise RuntimeError('Property type mismatch\n%s%s' % (str(dvprel), str(prop)))
+
                 if prop_type == 'PSHELL':
-                    i = np.where(pids == pid)
-                    design_region[i] = dvprel.oid
-                    assert len(i) > 0, i
-                    if var_to_change == 'T':
-                        #value = 0.
-                        lower_bound = 0.
-                        upper_bound = 0.
-                        for desvar, coeff in zip(desvars, coeffs):
-                            if isinstance(desvar, integer_types):
-                                desvar_ref = self.desvars[desvar]
-                            else:
-                                desvar_ref = desvar.desvar_ref
-                            xiniti = desvar_ref.xinit
-                            if desvar_ref.xlb != -1e20:
-                                xiniti = max(xiniti, desvar_ref.xlb)
-                                lower_bound = desvar_ref.xlb
-                            if desvar_ref.xub != 1e20:
-                                xiniti = min(xiniti, desvar_ref.xub)
-                                upper_bound = desvar_ref.xub
-
-                            # code validation
-                            if desvar_ref.delx is not None and desvar_ref.delx != 1e20:
-                                pass
-
-                            # TODO: haven't quite decided what to do
-                            if desvar_ref.ddval is not None:
-                                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
-                            assert desvar_ref.ddval is None, desvar_ref
-                            xinit = coeff * xiniti
-                        dvprel_t_init[i] = xinit
-                        dvprel_t_min[i] = lower_bound
-                        dvprel_t_max[i] = upper_bound
+                    if var_to_change in ['T']:
+                        pass
                     elif var_to_change == 6:
-                        # 12I/t3
+                        var_to_change = '12I/t^3'
+                    else:
+                        self.log.warning('prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change))
+                elif prop_type == 'PCOMP':
+                    if var_to_change.startswith('THETA'):
+                        pass
+                    elif var_to_change.startswith('T'):
                         pass
                     else:
-                        msg = 'var_to_change=%r; dvprel=\n%s' % (var_to_change, str(dvprel))
-                        raise NotImplementedError(msg)
+                        self.log.warning('prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change))
+                elif prop_type == 'PBARL':
+                    if var_to_change.startswith('T'):
+                        pass
+                    else:
+                        self.log.warning('prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change))
+                    var_to_change = '%s %s' % (prop.Type, var_to_change)
                 else:
-                    msg = 'prop_type=%r; dvprel=\n%s' % (prop_type, str(dvprel))
-                    raise NotImplementedError(msg)
+                    self.log.warning('prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change))
+                    continue
+                key = '%s %s' % (prop_type, var_to_change)
+
+                i = np.where(pids == pid)[0]
+                if len(i) == 0:
+                    continue
+                assert len(i) > 0, i
+                design_region, dvprel_init, dvprel_min, dvprel_max = get_dvprel_data(key)
+
+                design_region[i] = dvprel.oid
+                #value = 0.
+                lower_bound = 0.
+                upper_bound = 0.
+                for desvar, coeff in zip(desvars, coeffs):
+                    if isinstance(desvar, integer_types):
+                        desvar_ref = self.desvars[desvar]
+                    else:
+                        desvar_ref = desvar.desvar_ref
+                    xiniti = desvar_ref.xinit
+                    if desvar_ref.xlb != -1e20:
+                        xiniti = max(xiniti, desvar_ref.xlb)
+                        lower_bound = desvar_ref.xlb
+                    if desvar_ref.xub != 1e20:
+                        xiniti = min(xiniti, desvar_ref.xub)
+                        upper_bound = desvar_ref.xub
+
+                    # code validation
+                    if desvar_ref.delx is not None and desvar_ref.delx != 1e20:
+                        pass
+
+                    # TODO: haven't quite decided what to do
+                    if desvar_ref.ddval is not None:
+                        msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
+                    assert desvar_ref.ddval is None, desvar_ref
+                    xinit = coeff * xiniti
+                dvprel_init[i] = xinit
+                dvprel_min[i] = lower_bound
+                dvprel_max[i] = upper_bound
             else:
                 msg = 'dvprel.type=%r; dvprel=\n%s' % (dvprel.type, str(dvprel))
                 raise NotImplementedError(msg)
@@ -677,7 +741,7 @@ class GetCard(GetMethods):
                 dvprel.p_min
 
         #dvprel_dict['PSHELL']['T']  = dvprel_t_init, dvprel_t_min, dvprel_t_max
-        return dvprel_t_init, dvprel_t_min, dvprel_t_max, design_region
+        return dvprel_dict
 
     def _get_forces_moments_array(self, p0, load_case_id,
                                   eid_map, node_ids, normals, dependents_nodes,
@@ -735,8 +799,10 @@ class GetCard(GetMethods):
         """
         if nid_map is None:
             nid_map = self.nid_map
-        if not any(['FORCE' in self.card_count, 'PLOAD2' in self.card_count,
-                    'PLOAD4' in self.card_count, 'SPCD' in self.card_count]):
+        if not any(['FORCE' in self.card_count,
+                    'PLOAD' in self.card_count, 'PLOAD2' in self.card_count,
+                    'PLOAD4' in self.card_count, 'SPCD' in self.card_count,
+                    'SLOAD' in self.card_count]):
             return None, None, None
         nnodes = len(node_ids)
         assert len(nid_map) == len(node_ids), 'len(nid_map)=%s len(node_ids)=%s' % (len(nid_map), len(node_ids))
@@ -751,7 +817,7 @@ class GetCard(GetMethods):
         forces = np.zeros((nnodes, 3), dtype='float32')
         spcd = np.zeros((nnodes, 3), dtype='float32')
         # loop thru scaled loads and plot the pressure
-        cards_ignored = {}
+        cards_ignored = set([])
 
         assert normals is not None
         fail_nids = set()
@@ -768,6 +834,30 @@ class GetCard(GetMethods):
                         print('    nid=%s is a dependent node and has a FORCE applied\n%s' % (
                             nid, str(load)))
                 forces[nid_map[nid]] += load.xyz * scale2
+
+            elif load.type == 'PLOAD':
+                pressure = load.pressure * scale
+                nnodes = len(load.nodes)
+                if nnodes == 4:
+                    n1, n2, n3, n4 = load.nodes
+                    xyz1 = self.nodes[n1].get_position()
+                    xyz2 = self.nodes[n2].get_position()
+                    xyz3 = self.nodes[n3].get_position()
+                    xyz4 = self.nodes[n4].get_position()
+                    normal_area = np.cross(xyz3 - xyz1, xyz4 - xyz2)  # TODO: not validated
+                elif nnodes == 3:
+                    n1, n2, n3 = load.nodes
+                    xyz1 = self.nodes[n1].get_position()
+                    xyz2 = self.nodes[n2].get_position()
+                    xyz3 = self.nodes[n3].get_position()
+                    normal_area = np.cross(xyz2 - xyz1, xyz3 - xyz1)  # TODO: not validated
+                else:
+                    self.log.debug('    case=%s nnodes=%r loadtype=%r not supported' % (
+                        load_case_id, nnodes, load.type))
+                    continue
+                forcei = pressure * normal_area / nnodes
+                for nid in load.nodes:
+                    forces[nid_map[nid]] += forcei
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
@@ -975,10 +1065,12 @@ class GetCard(GetMethods):
                 pass
             elif load.type in ['TEMP']:
                 pass
+            elif load.type == 'SLOAD':
+                for nid, mag in zip(load.nodes, load.mags):
+                    forces[nid_map[nid]] += np.array([mag, 0., 0.])
             else:
-                print(load)
                 if load.type not in cards_ignored:
-                    cards_ignored[load.type] = True
+                    cards_ignored.add(load.type)
                     self.log.warning('  _get_forces_moments_array - unsupported '
                                      'load.type = %s' % load.type)
         if fail_count:
@@ -1011,8 +1103,11 @@ class GetCard(GetMethods):
             ndarray : the centroidal pressures
             None : corresponds to is_pressure=False
         """
-        if 'PLOAD4' not in self.card_count:
+        if not any(['PLOAD' in self.card_count, 'PLOAD2' in self.card_count,
+                    'PLOAD4' in self.card_count]):
             return False, None
+        cards_ignored = set([])
+        pressure_loads = ['PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4']
 
         if not isinstance(load_case_id, integer_types):
             msg = 'load_case_id must be an integer; type=%s, load_case_id=\n%r' % (
@@ -1058,7 +1153,29 @@ class GetCard(GetMethods):
                         #r = centroid - p
                     else:
                         etypes_skipped.add(elem.type)
+            elif load.type == 'PLOAD2':
+                pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
+                for eid in load.eids:
+                    elem = self.elements[eid]
+                    ie = np.searchsorted(eids, elem.eid)
+                    pressures[ie] += pressure
+
+            #elif load.type == 'PLOAD1':
+                #pass
+            #elif load.type == 'PLOAD':
+                # applied to a node, not an element...
+                #pressures[ie] = load.pressure * scale
+            elif load.type not in pressure_loads:
+                continue
+            elif load.type in pressure_loads:
+                if load.type not in cards_ignored:
+                    cards_ignored.add(load.type)
+                    self.log.warning('  get_pressure_array - unsupported '
+                                     'load.type = %s' % load.type)
+            #else:
+                #pass
             iload += 1
+
         if len(etypes_skipped):
             self.log.warning('skipping pressure on %s' % list(etypes_skipped))
         return True, pressures
@@ -1264,22 +1381,22 @@ class GetCard(GetMethods):
                 loads_out.append(load)
         return loads_out, scale_factors_out, is_grav_out
 
-    def _get_loads_and_scale_factors(self, load_case):
-        """account for scale factors"""
-        loads2 = []
-        scale_factors2 = []
-        for load in load_case:
-            if load.type == 'LOAD':
-                scale_factors, loads = load.get_reduced_loads()
-                for scale_factor, loadi in zip(scale_factors, loads):
-                    if scale_factor == 0.0:
-                        continue
-                    scale_factors2.append(scale_factor)
-                    loads2.append(loadi)
-            else:
-                scale_factors2.append(1.)
-                loads2.append(load)
-        return loads2, scale_factors2
+    #def _get_loads_and_scale_factors(self, load_case):
+        #"""account for scale factors"""
+        #loads2 = []
+        #scale_factors2 = []
+        #for load in load_case:
+            #if load.type == 'LOAD':
+                #scale_factors, loads = load.get_reduced_loads()
+                #for scale_factor, loadi in zip(scale_factors, loads):
+                    #if scale_factor == 0.0:
+                        #continue
+                    #scale_factors2.append(scale_factor)
+                    #loads2.append(loadi)
+            #else:
+                #scale_factors2.append(1.)
+                #loads2.append(load)
+        #return loads2, scale_factors2
 
     def get_reduced_dloads(self, dload_id, scale=1., skip_scale_factor0=False, msg=''):
         """
@@ -1374,7 +1491,7 @@ class GetCard(GetMethods):
                 raise RuntimeError(rigid_element.type)
         return rbes
 
-    def get_dependent_nid_to_components(self, mpc_id=None):
+    def get_dependent_nid_to_components(self, mpc_id=None, stop_on_failure=True):
         """
         Gets a dictionary of the dependent node/components.
 
@@ -1382,6 +1499,8 @@ class GetCard(GetMethods):
         ----------
         mpc_id : int; default=None -> no MPCs are checked
             TODO: add
+        stop_on_failure : bool; default=True
+            errors if parsing something new
 
         Returns
         -------
@@ -1400,8 +1519,13 @@ class GetCard(GetMethods):
           - dependent nodes : loads/motions may not be defined
         """
         if mpc_id is not None:
-            raise NotImplementedError('MPCs')
-            #mpcs = self.get_mpcs(mpc_id)
+            mpcs = self.get_mpcs(mpc_id)
+
+            #for mpc in mpcs:
+                #if mpc.type == 'MPC':
+                    #asdf
+                #else:
+                    #raise NotImplementedError(mpc)
 
         dependent_nid_to_components = {}
         for eid, rigid_element in iteritems(self.rigid_elements):
@@ -2173,7 +2297,7 @@ class GetCard(GetMethods):
                     raise KeyError('mid=%s is invalid for card %s=\n%s' % (mid, msg, str(prop)))
         return mid_to_pids_map
 
-    def get_reduced_nsms(self, nsm_id, consider_nsmadd=False, stop_on_failure=True):
+    def get_reduced_nsms(self, nsm_id, consider_nsmadd=True, stop_on_failure=True):
         """
         Get all traced NSMs that are part of a set
 
@@ -2197,7 +2321,7 @@ class GetCard(GetMethods):
             raise TypeError(msg)
 
         try:
-            nsms = self.NSM(nsm_id, consider_nsmadd=consider_mpcadd)
+            nsms = self.NSM(nsm_id, consider_nsmadd=consider_nsmadd)
         except KeyError:
             if stop_on_failure:
                 raise
@@ -2205,7 +2329,7 @@ class GetCard(GetMethods):
                 self.log.error("could not find expected NSM id=%s" % nsm_id)
                 return []
 
-        mpcs2 = []
+        nsms2 = []
         for nsm in nsms:
             if nsm.type == 'NSMADD':
                 for nsmi in nsm.nsm_ids:
@@ -2221,7 +2345,7 @@ class GetCard(GetMethods):
                     else:
                         assert isinstance(nsmi, integer_types), nsmi
                         nsms2i = self.get_reduced_nsms(
-                            mpci, consider_mpcadd=False, stop_on_failure=stop_on_failure)
+                            nsmi, consider_nsmadd=False, stop_on_failure=stop_on_failure)
                         nsms2 += nsms2i
             else:
                 nsms2.append(nsm)
@@ -2426,6 +2550,8 @@ class GetCard(GetMethods):
                     nids.append(nid)
                     comps.append(comp)
             else:
+                if stop_on_failure:
+                    self.log.error('not considering:\n%s' % str(mpc))
+                    raise NotImplementedError(mpc)
                 self.log.warning('not considering:\n%s' % str(mpc))
-                #raise NotImplementedError(mpc.type)
         return nids, comps

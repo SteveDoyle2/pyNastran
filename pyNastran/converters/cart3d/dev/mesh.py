@@ -11,8 +11,8 @@ class Cart3d_Mesher(Cart3D):
     def __init__(self, log=None, debug=False):
         Cart3D.__init__(self, log=log, debug=debug)
 
-    def read_cart3d(self, cart3d_filename):
-        Cart3D.read_cart3d(self, cart3d_filename)
+    def read_cart3d(self, cart3d_filename, result_names=None):
+        Cart3D.read_cart3d(self, cart3d_filename, result_names=result_names)
         #self.nodes = nodes
         #self.elements = elements - 1
 

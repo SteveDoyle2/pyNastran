@@ -133,6 +133,16 @@ class TestAero(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             aecomp3.validate()
 
+        name = 'MYCOMP'
+        list_type = 'AELIST'
+        lists = 10
+        model.add_aecomp(name, list_type, lists)
+
+        lists = 42.0
+        with self.assertRaises(TypeError):
+            AECOMP(name, list_type, lists)
+
+
     def test_aefact_1(self):
         """checks the AEFACT card"""
         data = ['AEFACT', 97, .3, 0.7, 1.0]
@@ -249,12 +259,22 @@ class TestAero(unittest.TestCase):
         aelist.clean_ids()
         str(aelist.write_card())
 
+        elements = 42
+        AELIST(76, elements)
+
+        elements = 42.0
+        with self.assertRaises(TypeError):
+            AELIST(77, elements)
+
     def test_aeparm_1(self):
         """checks the AEPARM card"""
         aeparm = AEPARM.add_card(BDFCard(['AEPARM', 100, 'THRUST', 'lb']),
                                  comment='aeparm_comment')
         aeparm = AEPARM(100, 'THRUST', 'lb', comment='aeparm_comment')
         aeparm.validate()
+        aeparm.cross_reference(None)
+        aeparm.uncross_reference()
+        aeparm.safe_cross_reference(None)
         aeparm.write_card()
 
    # def test_aestat_1(self):
@@ -293,6 +313,39 @@ class TestAero(unittest.TestCase):
                     comment='aero card')
         with self.assertRaises(TypeError):
             aero.validate()
+
+        assert aero.is_symmetric_xy is False
+        assert aero.is_symmetric_xz is False
+        assert aero.is_anti_symmetric_xy is False
+        assert aero.is_anti_symmetric_xz is False
+
+        #aero.set_ground_effect(True)
+        #assert aero.is_symmetric_xy is False
+        #assert aero.is_symmetric_xz is False
+        #assert aero.is_anti_symmetric_xy is True
+        #assert aero.is_anti_symmetric_xz is False
+
+        #aero.set_ground_effect(False)
+        #assert aero.is_symmetric_xy is False
+        #assert aero.is_symmetric_xz is False
+        #assert aero.is_anti_symmetric_xy is False
+        #assert aero.is_anti_symmetric_xz is False
+
+        aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=1, sym_xy=1,
+                    comment='aero card')
+        assert aero.is_symmetric_xy is True
+        assert aero.is_symmetric_xz is True
+        assert aero.is_anti_symmetric_xy is False
+        assert aero.is_anti_symmetric_xz is False
+
+        aero = AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=-1, sym_xy=-1,
+                    comment='aero card')
+        assert aero.is_symmetric_xy is False
+        assert aero.is_symmetric_xz is False
+        assert aero.is_anti_symmetric_xy is True
+        assert aero.is_anti_symmetric_xz is True
+
+        aero.set_ground_effect(True)
 
     def test_aero_2(self):
         """checks the AERO card"""
@@ -356,6 +409,16 @@ class TestAero(unittest.TestCase):
         aeros.write_card()
         aeros.raw_fields()
 
+        cref = 1
+        bref = 2
+        sref = 3
+        acsid = 42.
+        rcsid = 43.
+        sym_xz = 44.
+        sym_xy = 45.
+        aeros = AEROS(cref, bref, sref, acsid, rcsid, sym_xz=sym_xz, sym_xy=sym_xy)
+        with self.assertRaises(TypeError):
+            aeros.validate()
 
     def test_caero1_1(self):
         """checks the CAERO1/PAERO1/AEROS/AEFACT card"""
@@ -374,20 +437,25 @@ class TestAero(unittest.TestCase):
 
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        caero = CAERO1.add_card(BDFCard(['CAERO1', eid, pid, cp, nspan, nchord, lspan, lchord,
-                                         igid, ] + p1 + [x12] + p4 + [x43]))
-        caero.validate()
-        caero = CAERO1.add_card(BDFCard(['CAERO1', eid, pid, None, nspan, nchord, lspan, lchord,
-                                         igid, ] + p1 + [x12] + p4 + [x43]))
-        caero.validate()
-        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
-                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
-                       comment='caero1')
-        caero.raw_fields()
-        caero.validate()
-        caero.write_card()
-        model.caeros[eid] = caero
+        caero1a = CAERO1.add_card(BDFCard(['CAERO1', eid, pid, cp, nspan, nchord, lspan, lchord,
+                                           igid, ] + p1 + [x12] + p4 + [x43]))
+        caero1a.validate()
 
+        eid = 2
+        caero1b = CAERO1.add_card(BDFCard(['CAERO1', eid, pid, None, nspan, nchord, lspan, lchord,
+                                           igid, ] + p1 + [x12] + p4 + [x43]))
+        caero1b.validate()
+
+        eid = 1
+        caero1c = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                         nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment='caero1')
+        caero1c.raw_fields()
+        caero1c.validate()
+        caero1c.write_card()
+        model.caeros[eid] = caero1c
+
+        eid = 4
         p1 = [0., 0., 0.]
         p2 = [1., 0., 0.]
         p3 = [0.2, 1., 0.]
@@ -395,18 +463,19 @@ class TestAero(unittest.TestCase):
         nspan = 5
         nchord = 10
         igid = -1
-        caeroq = CAERO1.add_quad(eid, pid, nspan, nchord, igid, p1, p2, p3, p4,
+        caero1d = CAERO1.add_quad(eid, pid, nspan, nchord, igid, p1, p2, p3, p4,
                                  cp=cp, spanwise='y', comment='')
-        caeroq.validate()
+        caero1d.validate()
 
+        eid = 5
         span = 0.1
         chord = 0.05
         igid = -1
-        caeroq = CAERO1.add_quad(eid, pid, span, chord, igid, p1, p2, p3, p4,
-                                 cp=cp, spanwise='y', comment='')
-        caeroq.validate()
+        caero1e = CAERO1.add_quad(eid, pid, span, chord, igid, p1, p2, p3, p4,
+                                  cp=cp, spanwise='y', comment='')
+        caero1e.validate()
 
-
+        eid = 6
         p1 = [0., 0., 0.]
         p2 = [1., 0., 0.]
         p3 = [0.2, 0., 1.]
@@ -414,19 +483,34 @@ class TestAero(unittest.TestCase):
         span = 0.1
         chord = 0.05
         igid = -1
-        caeroq = CAERO1.add_quad(eid, pid, span, chord, igid, p1, p2, p3, p4,
+        caero1f = CAERO1.add_quad(eid, pid, span, chord, igid, p1, p2, p3, p4,
                                  cp=cp, spanwise='z', comment='')
-        caeroq.validate()
-
-        paero = PAERO1(pid, Bi=None, comment='')
-        paero.validate()
-        paero.write_card()
-        model.paeros[pid] = paero
+        caero1f.validate()
+        caero1f.flip_normal()
 
         coord = CORD2R(cp, rid=0, origin=None, zaxis=None, xzplane=None,
                        comment='')
         coord.validate()
         model.coords[cp] = coord
+
+        eid = 7
+        p1 = [0., 0., 0.]
+        p2 = [1., 0., 0.]
+        p3 = [0.2, 0., 1.]
+        p4 = [0.1, 0., 1.]
+        span = 0.1
+        chord = 0.05
+        igid = -1
+        cp = None
+        caero1_no_coord = CAERO1.add_quad(eid, pid, span, chord, igid,
+                                          p1, p2, p3, p4,
+                                          cp=cp, spanwise='z', comment='')
+        caero1_no_coord.get_points()
+
+        paero = PAERO1(pid, Bi=None, comment='')
+        paero.validate()
+        paero.write_card()
+        model.paeros[pid] = paero
 
         #acsid = 0.
         #velocity = None
@@ -448,20 +532,20 @@ class TestAero(unittest.TestCase):
         model.aefacts[lchord] = aefact
 
         paero.cross_reference(model)
-        caero.cross_reference(model)
-        caero.get_npanel_points_elements()
-        caero.get_points()
-        caero.panel_points_elements()
+        caero1c.cross_reference(model)
+        caero1c.get_npanel_points_elements()
+        caero1c.get_points()
+        caero1c.panel_points_elements()
 
-        caero.write_card()
+        caero1c.write_card()
         model.uncross_reference()
         model.cross_reference()
         model.uncross_reference()
         #model.safe_cross_reference()
-        caero.safe_cross_reference(model)
-        caero.panel_points_elements()
-        caero.raw_fields()
-        min_max_eid = caero.min_max_eid
+        caero1c.safe_cross_reference(model)
+        caero1c.panel_points_elements()
+        caero1c.raw_fields()
+        min_max_eid = caero1c.min_max_eid
         self.assertEqual(min_max_eid, [1, 26])
         #print('min_eid, max_eid', min_eid, max_eid)
 
@@ -471,62 +555,74 @@ class TestAero(unittest.TestCase):
             [10., 20., 0.],
             [5., 20., 0.],
         ]
-        caero.set_points(points)
-        caero.get_points()
-        str(caero.write_card())
+        caero1c.set_points(points)
+        caero1c.get_points()
+        str(caero1c.write_card())
 
         nspan = None
         lspan = None
-        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=None,
-                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
-                       comment='caero1')
+        caero1h = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=None,
+                         nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment='caero1')
         with self.assertRaises(ValueError):
-            caero.validate()
+            caero1h.validate()
 
         nspan = 5
         lspan = 5
-        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
-                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
-                       comment='caero1')
+        caero1i = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                         nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment='caero1')
         with self.assertRaises(ValueError):
-            caero.validate()
+            caero1i.validate()
 
         nspan = 5
         nchord = None
         lchord = None
-        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
-                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
-                       comment='caero1')
+        caero1j = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                         nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment='caero1')
         with self.assertRaises(ValueError):
-            caero.validate()
+            caero1j.validate()
 
         nchord = 10
         lchord = 10
-        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
-                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
-                       comment='caero1')
+        caero1k = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                         nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment='caero1')
         with self.assertRaises(ValueError):
-            caero.validate()
+            caero1k.validate()
 
         lspan = None
         lchord = None
         nspan = 10
         nchord = 10
         p1 = [0., 0., 0., 0.]
-        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
-                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
-                       comment='caero1')
+        caero1l = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                         nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment='caero1')
         with self.assertRaises(AssertionError):
-            caero.validate()
+            caero1l.validate()
 
         p1 = [0., 0., 0.]
         p4 = [1., 2., 3., 4.]
-        caero = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
-                       nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
-                       comment='caero1')
+        caero1m = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                         nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                         comment='caero1')
         with self.assertRaises(AssertionError):
-            caero.validate()
+            caero1m.validate()
 
+        p4 = [1., 2., 3.]
+        eid = 8
+        nspan = 1
+        nchord = 1
+        lchord = None
+        lspan = None
+        caero1_1by1 = CAERO1(eid, pid, igid, p1, x12, p4, x43, cp=cp,
+                             nspan=nspan, lspan=lspan, nchord=nchord, lchord=lchord,
+                             comment='caero1')
+        caero1_1by1.validate()
+        assert caero1_1by1.shape == (1, 1)
+        caero1_1by1.get_points()
 
     def test_spline1(self):
         """checks the SPLINE1 card"""
@@ -540,6 +636,7 @@ class TestAero(unittest.TestCase):
                          melements=10, comment='$ spline1')
         spline.validate()
         spline.write_card(size=8, is_double=False)
+        spline.raw_fields()
         model = BDF(debug=False)
         model.splines[eid] = spline
 
@@ -673,6 +770,7 @@ class TestAero(unittest.TestCase):
         bdf_card = BDFCard(card, has_none=True)
         spline_a = SPLINE2.add_card(bdf_card, comment='spline2_a')
         spline_a.write_card()
+        spline_a.raw_fields()
 
         spline_b = SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid, dthx,
                            dthy, usage, comment='spline2_b')
@@ -700,8 +798,8 @@ class TestAero(unittest.TestCase):
         igid = 0
         p1 = [0., 1., 2.]
         x12 = 10.
-        caero2a = CAERO2.add_card(BDFCard(['CAERO2', eid, pid, cp, nsb, nint,
-                                           lsb, lint, igid, ] + p1 + [x12]))
+        CAERO2.add_card(BDFCard(['CAERO2', eid, pid, cp, nsb, nint,
+                                 lsb, lint, igid, ] + p1 + [x12]))
 
         #---------------
         # nsb=lsb=None=0
@@ -840,6 +938,13 @@ class TestAero(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
 
+        caero2_set_points = CAERO2(eid, pid, igid, p1, x12,
+                                   cp=cp, nsb=nsb, nint=nint, lsb=lsb, lint=lint)
+        p1 = [0., 0., 0.]
+        p2 = [1., 2., 3.]
+        caero2_set_points.set_points([p1, p2])
+        assert np.allclose(caero2_set_points.x12, 1.), caero2_set_points.x12
+
     def test_caero3_1(self):
         """checks the CAERO3/PAERO3"""
         eid = 100
@@ -919,6 +1024,60 @@ class TestAero(unittest.TestCase):
 
         save_load_deck(model)
 
+
+    def test_paero3(self):
+        """checks the PAERO3"""
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |    1   |   2  |   3  |   4   |   5  |  6  |   7  |   8  |  9   |
+        # +========+======+======+=======+======+=====+======+======+======+
+        # | PAERO3 |  PID | NBOX | NCTRL |      |  X5 |  Y5  |  X6  |  Y6  |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |        |  X7  |  Y7  |   X8  |  Y8  |  X9 |  Y9  |  X10 |  Y10 |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |        |  X11 |  Y11 |  X12  |  Y12 |     |      |      |      |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # | PAERO3 | 2001 |  15  |   1   |      | 0.  |  65. |      |      |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |        |  78. |  65. |  108. |  65. | 82. | 97.5 | 112. | 97.5 |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        # |        |  86. | 130. |  116. | 130. |     |      |      |      |
+        # +--------+------+------+-------+------+-----+------+------+------+
+        fields = ['PAERO3', 2001, 15, 1, None, 0., 65., None, None,
+                  78., 65., 108., 65., 82., 97.5, 112., 97.5,
+                  86., 130., 116., 130.]
+        model = BDF(debug=False)
+        model.add_card(fields, fields[0])
+        paero = model.paeros[2001]
+        assert paero.npoints == 8, paero.npoints
+        paero.raw_fields()
+
+    def test_paero4(self):
+        """checks the PAERO4"""
+        # +--------+------+-------+--------+-------+-------+--------+--------+--------+
+        # |    1   |   2  |   3   |   4    |   5   |   6   |    7   |   8    |    9   |
+        # +========+======+=======+========+=======+=======+========+========+========+
+        # | PAERO4 | PID  | CLA   |  LCLA  |  CIRC | LCIRC |  DOC1  |  CAOC1 | GAPOC1 |
+        # +--------+------+-------+--------+-------+-------+--------+--------+--------+
+        # |        | DOC2 | CAOC2 | GAPOC2 |  DOC3 | CAOC3 | GAPOC3 |  etc.  |        |
+        # +--------+------+-------+--------+-------+-------+--------+--------+--------+
+        # | PAERO4 | 6001 |   1   |   501  |   0   |   0   |   0.0  |   0.0  |   0.0  |
+        # +--------+------+-------+--------+-------+-------+--------+--------+--------+
+        # |        | 0.50 |  0.25 |  0.02  |  0.53 |  0.24 |   0.0  |        |        |
+        # +--------+------+-------+--------+-------+-------+--------+--------+--------+
+        pid = 6001
+        cla = 1
+        lcla = 501
+        circ = 0
+        lcirc = 0
+        dcg1 = [0., 0., 0.]
+        dcg2 = [0.5, 0.25, 0.02]
+        dcg3 = [0.53, 0.24, 0.]
+        card = ['PAERO4', pid, cla, lcla, circ, lcirc] + dcg1 + dcg2 + dcg3
+
+        bdf_card = BDFCard(card, has_none=True)
+        paero4 = PAERO4.add_card(bdf_card, comment='msg')
+        str(paero4)
+        paero4.cross_reference(None)
 
     def test_caero4_1(self):
         """checks the CAERO4/PAERO4"""
@@ -1049,7 +1208,7 @@ class TestAero(unittest.TestCase):
         paero5.lxis = lxis
         aefact_sid = lxis
         Di = [0., 0.5, 1.]
-        aefact = model.add_aefact(aefact_sid, Di, comment='aefact')
+        model.add_aefact(aefact_sid, Di, comment='aefact')
 
         ltaus = 44
         paero5.ltaus = ltaus
@@ -1122,17 +1281,21 @@ class TestAero(unittest.TestCase):
 
         spline_id = 102
         nids = [5, 6, 7]
-        displacement_components = [3, 7]
+        displacement_components = [3, 6]
         coeffs = [1.0, 2.0]
         spline3b = model.add_spline3(
             spline_id, caero, box_id, components, nids,
             displacement_components, coeffs, usage='failed', comment='spline3')
-
         cref = bref = sref = 1.0
         model.add_aeros(cref, bref, sref)
 
         with self.assertRaises(RuntimeError):
             spline3b.validate()
+        spline3b.usage = 'BOTH'
+        spline3b.displacement_components.append(1)
+        spline3b.coeffs.append(0.1)
+        spline3b.validate()
+
         del model.splines[spline_id]
         model.validate()
 
@@ -1141,6 +1304,19 @@ class TestAero(unittest.TestCase):
         spline3.write_card()
         spline3.raw_fields()
         save_load_deck(model)
+        spline3b.eid = 1000
+
+        spline3b.nodes.append(42)
+        spline3b.displacement_components.append(4)
+        spline3b.coeffs.append(0.5)
+        spline3b.validate()
+        spline3b.comment = ''
+        lines = spline3b.rstrip().split('\n')
+        model.add_card(lines, 'SPLINE3', is_list=False)
+        spline = model.splines[1000]
+        assert spline.node_ids == [5, 6, 7, 42], spline.node_ids
+
+        #spline3.raw_fields()
 
     def test_spline4(self):
         """checks the SPLINE4 card"""
@@ -1216,7 +1392,7 @@ class TestAero(unittest.TestCase):
         #dtor = 47
         spline = model.add_spline5(eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0,
                                    cid=0, usage='BOTH', method='BEAM', ftype='WF2',
-                                   rcore=None, comment='')
+                                   rcore=None, comment='spline5')
         spline.raw_fields()
 
         elements = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -1247,6 +1423,9 @@ class TestAero(unittest.TestCase):
         model.pop_parse_errors()
         model.pop_xref_errors()
         model.validate()
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
         save_load_deck(model)
 
     def test_aesurf_1(self):
@@ -1289,7 +1468,7 @@ class TestAero(unittest.TestCase):
         aesurf2.validate()
         log = SimpleLogger(level='warning')
 
-        model = BDF(debug=False)
+        model = BDF(debug=False, log=log)
         model._add_coord_object(coord)
         model._add_aesurf_object(aesurf1)
 
@@ -1300,6 +1479,26 @@ class TestAero(unittest.TestCase):
         elements = [11, 22, 33, 44, 55, 66, 77, 88, 99]
         aelist = AELIST(aelist_id2, elements)
         model._add_aelist_object(aelist)
+
+        aesid += 1
+        model.add_aesurf(
+            aesid, label, cid1, aelist_id2, cid2=None, alid2=None,
+            eff=1.0, ldw='LDW',
+            crefc=1.0, crefs=1.2,
+            pllim=--np.pi/2, pulim=np.pi/2.,
+            hmllim=-42., hmulim=42.,  # hinge moment limits in force/disp
+            tqllim=10, tqulim=11,  # TABLEDi deflection limits vs. dynamic pressure
+        )
+        # lower
+        table_id = 10
+        x = np.linspace(0.1, 1.)
+        y = np.log(np.linspace(1.1, 2.))[::-1]
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
+        # upper
+        table_id = 11
+        y2 = -y
+        model.add_tabled1(table_id, x, y2, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
 
         aesurf1.cross_reference(model)
         aesurf1.write_card()
@@ -1319,6 +1518,29 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
+        save_load_deck(model)
+
+    def test_flfact(self):
+        """checks the FLFACT card"""
+        #List[f1, THRU, fnf, nf, fmid]
+            #f1 : float
+                #first value
+            #THRU : str
+                #the word THRU
+            #nf : float
+                #second value
+            #fmid : float; default=(f1 + fnf) / 2.
+                #the mid point to bias the array
+
+        sid = 42
+        factors = [0.200, 'THRU', 0.100, 11, 0.1333]
+        flfact = FLFACT(sid, factors)
+        assert len(flfact.factors) == 11
+        #print(flfact)
+
+        factors = [0.200, 'THRU', 0.100, 11]
+        flfact = FLFACT(sid, factors)
+        assert len(flfact.factors) == 11
 
     def test_flutter(self):
         """checks the FLUTTER/FLFACT cards"""
@@ -1418,9 +1640,24 @@ class TestAero(unittest.TestCase):
         flutter = model.Flutter(85)
         assert flutter.headers == ['density', 'mach', 'reduced_frequency'], flutter.headers
         flutter.write_card()
+        flutter.raw_fields()
 
         model.uncross_reference()
         model.safe_cross_reference()
+
+    def test_flutter_2(self):
+        """validates the FLUTTER card"""
+        method = 'TEST'
+        imethod = 'TEST2'
+        sid = 1
+        idensity = 10
+        imach = 20
+        ivelocity = 30
+        flutter = FLUTTER(sid, method, idensity, imach, ivelocity,
+                          imethod=imethod, nvalue=None,
+                          omax=None, epsilon=1.0e-3)
+        with self.assertRaises(ValueError):
+            flutter.validate()
 
     def test_mkaero1(self):
         """checks the MKAERO1 card"""

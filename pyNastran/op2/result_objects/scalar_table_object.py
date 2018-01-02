@@ -4,7 +4,7 @@ from six.moves import zip, range
 
 import numpy as np
 from numpy import zeros, float32, searchsorted, unique, where
-from numpy import allclose, asarray, vstack, array_equal
+from numpy import allclose, asarray, vstack
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.op2.result_objects.table_object import append_sort1_sort2

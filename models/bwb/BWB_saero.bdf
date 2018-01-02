@@ -19652,6 +19652,18 @@ PCOMP*             30802                  0.00000000E+00                *
 *                      1  3.70000005E-02 -4.50000000E+01             YES*   
 *                      1  3.70000005E-02  4.50000000E+01             YES*   
 *                      1  3.70000005E-02  0.00000000E+00             YES    
+DESVAR	1	T1	1.0	0.001	1000.
+$
+$DVPRE	ID	TYPE	PID	PNAME	PMIN	PMAX	C0
+$        DVID1	COEF1	DVID2	COEF2	DVID3	-etc.-
+DVPREL1	10001	PCOMP	10601	T1
+	1	1.0
+
+DVPREL1	10002	PBARL	4	DIM2
+	1	1.0
+DVPREL1	10003	PSHELL	5	T
+	1	1.0
+PSHELL	5	1	1.0
 PCOMP*             20601                  0.00000000E+00                *   
 *                         0.00000000E+00  0.00000000E+00                *   
 *                      1  8.88946503E-02  0.00000000E+00             YES*   

@@ -6,17 +6,18 @@ from six import PY2, StringIO
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, get_logger2
-from pyNastran.bdf.test.test_case_control_deck import compare_lines
+from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy
 from pyNastran.bdf.bdf_interface.include_file import (
     split_filename_into_tokens, get_include_filename,
     PurePosixPath, PureWindowsPath,
 ) # ,_split_to_tokens
 from pyNastran.utils import print_bad_path
+from pyNastran.bdf.test.test_case_control_deck import compare_lines
 
-root_path = pyNastran.__path__[0]
-test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
-mesh_utils_path = os.path.join(root_path, 'bdf', 'mesh_utils', 'test')
-model_path = os.path.join(root_path, '../', 'models')
+ROOT_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(ROOT_PATH, 'bdf', 'test', 'unit')
+MESH_UTILS_PATH = os.path.join(ROOT_PATH, 'bdf', 'mesh_utils', 'test')
+MODEL_PATH = os.path.join(ROOT_PATH, '../', 'models')
 
 log = get_logger2(debug=None)
 
@@ -29,48 +30,48 @@ class TestReadWrite(unittest.TestCase):
         """
         model = BDF(log=log, debug=False)
 
-        bdf_name = os.path.join(mesh_utils_path, 'test_mass.dat')
+        bdf_name = os.path.join(MESH_UTILS_PATH, 'test_mass.dat')
         model.read_bdf(bdf_name)
-        model.write_bdf(os.path.join(mesh_utils_path, 'test_mass1a.out'), size=8)
-        model.write_bdf(os.path.join(mesh_utils_path, 'test_mass2a.out'), size=8)
+        model.write_bdf(os.path.join(MESH_UTILS_PATH, 'test_mass1a.out'), size=8)
+        model.write_bdf(os.path.join(MESH_UTILS_PATH, 'test_mass2a.out'), size=8)
         msg = model.get_bdf_stats(return_type='list')
         str('\n'.join(msg))
 
-        model.write_bdf(os.path.join(mesh_utils_path, 'test_mass1b.out'), size=8, interspersed=False)
-        model.write_bdf(os.path.join(mesh_utils_path, 'test_mass2b.out'), size=8, interspersed=True)
-        os.remove(os.path.join(mesh_utils_path, 'test_mass1a.out'))
-        os.remove(os.path.join(mesh_utils_path, 'test_mass2a.out'))
-        os.remove(os.path.join(mesh_utils_path, 'test_mass1b.out'))
-        os.remove(os.path.join(mesh_utils_path, 'test_mass2b.out'))
+        model.write_bdf(os.path.join(MESH_UTILS_PATH, 'test_mass1b.out'), size=8, interspersed=False)
+        model.write_bdf(os.path.join(MESH_UTILS_PATH, 'test_mass2b.out'), size=8, interspersed=True)
+        os.remove(os.path.join(MESH_UTILS_PATH, 'test_mass1a.out'))
+        os.remove(os.path.join(MESH_UTILS_PATH, 'test_mass2a.out'))
+        os.remove(os.path.join(MESH_UTILS_PATH, 'test_mass1b.out'))
+        os.remove(os.path.join(MESH_UTILS_PATH, 'test_mass2b.out'))
 
     def test_punch_1(self):
         """Tests punch file reading"""
         model = BDF(log=log, debug=False)
-        bdf_name = os.path.join(test_path, 'include_dir', 'include_alt.inc')
+        bdf_name = os.path.join(TEST_PATH, 'include_dir', 'include_alt.inc')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         model2 = BDF(log=log, debug=False)
-        #bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
+        #bdf_name = os.path.join(TEST_PATH, 'include_dir', 'include.inc')
         model2.read_bdf(bdf_name, xref=False, punch=True)
 
     def test_read_include_dir_1(self):
         """Tests various read methods using various include files"""
         # fails correctly
         model = BDF(log=log, debug=False)
-        bdf_name = os.path.join(test_path, 'test_include.bdf')
+        bdf_name = os.path.join(TEST_PATH, 'test_include.bdf')
         model.read_bdf(bdf_name, xref=True, punch=False)
         #self.assertRaises(IOError, model.read_bdf, bdf_name, xref=True, punch=False)
 
         # passes
-        #full_path = os.path.join(test_path, 'include_dir')
+        #full_path = os.path.join(TEST_PATH, 'include_dir')
         model2 = BDF(log=log, debug=False)
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
-            bdf_filename = os.path.join(test_path, 'test_include.bdf')
+            bdf_filename = os.path.join(TEST_PATH, 'test_include.bdf')
         model2.read_bdf(bdf_filename, xref=True, punch=False)
 
     def test_read_include_dir_2(self):
-        full_path = os.path.join(test_path)
+        full_path = os.path.join(TEST_PATH)
         model = BDF(log=log, debug=False)
         bdf_filename = 'test_include2.bdf'
         if not os.path.exists(bdf_filename):
@@ -86,7 +87,7 @@ class TestReadWrite(unittest.TestCase):
 
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
-            bdf_filename = os.path.join(test_path, bdf_filename)
+            bdf_filename = os.path.join(TEST_PATH, bdf_filename)
         model2.read_bdf(bdf_filename, xref=True, punch=False)
 
         cases = [
@@ -95,7 +96,7 @@ class TestReadWrite(unittest.TestCase):
             ('enddata3.bdf', False, False),
         ]
         for out_filename, is_enddata, write_flag in cases:
-            out_filename = os.path.join(test_path, out_filename)
+            out_filename = os.path.join(TEST_PATH, out_filename)
             bdf_filename_out = out_filename + '.out'
             model2.write_bdf(out_filename=bdf_filename_out, interspersed=True, size=8,
                              is_double=False, enddata=write_flag)
@@ -114,7 +115,7 @@ class TestReadWrite(unittest.TestCase):
         There is no ENDDATA is in the baseline BDF, so None -> no ENDDATA
         """
         model2 = BDF(log=log, debug=False)
-        bdf_name = os.path.join(mesh_utils_path, 'test_mass.dat')
+        bdf_name = os.path.join(MESH_UTILS_PATH, 'test_mass.dat')
         model2.read_bdf(bdf_name, xref=True, punch=False)
 
         cases = [
@@ -373,7 +374,10 @@ class TestReadWrite(unittest.TestCase):
 
     def test_read_bad_01(self):
         """tests you can't read the same file twice"""
-        model = BDF(log=log, debug=False)
+        read_includes = True
+        dumplines = False
+        encoding = 'ascii'
+        model = BDFInputPy(read_includes, dumplines, encoding, log=log, debug=False)
         model.active_filenames = ['fake.file']
         with self.assertRaises(IOError):
             model._open_file('fake.file')
@@ -399,7 +403,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_disable_cards(self):
         """tests disabling cards"""
-        bdf_filename = os.path.join(root_path, '..', 'models',
+        bdf_filename = os.path.join(ROOT_PATH, '..', 'models',
                                     'solid_bending', 'solid_bending.bdf')
         model = BDF(log=log, debug=False)
         model.disable_cards(['CTETRA'])
@@ -407,9 +411,9 @@ class TestReadWrite(unittest.TestCase):
         assert len(model.elements) == 0, len(model.elements)
 
     def test_solid_shell_bar_buckling(self):
-        bdf_filename = os.path.join(root_path, '..', 'models',
+        bdf_filename = os.path.join(ROOT_PATH, '..', 'models',
                                     'sol_101_elements', 'buckling_solid_shell_bar.bdf')
-        bdf_filename2 = os.path.join(root_path, '..', 'models',
+        bdf_filename2 = os.path.join(ROOT_PATH, '..', 'models',
                                      'sol_101_elements', 'buckling_solid_shell_bar2.bdf')
         model = BDF(debug=False)
         model.read_bdf(bdf_filename)
@@ -493,7 +497,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_paths_sat(self):
         """runs through the various satellite includes on windows and linux"""
-        sat_path = os.path.abspath(os.path.join(model_path, 'Satellite_V02'))
+        sat_path = os.path.abspath(os.path.join(MODEL_PATH, 'Satellite_V02'))
         os.environ['Satellite_V02_base'] = sat_path
         os.environ['Satellite_V02_bddm'] = os.path.join(sat_path, 'BULK', 'MATERIAUX')
         os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
@@ -542,7 +546,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_paths_sat_02(self):
         """the satellite model should work"""
-        sat_path = os.path.abspath(os.path.join(model_path, 'Satellite_V02'))
+        sat_path = os.path.abspath(os.path.join(MODEL_PATH, 'Satellite_V02'))
         os.environ['Satellite_V02_base'] = sat_path
         os.environ['Satellite_V02_bddm'] = os.path.join(sat_path, 'BULK', 'MATERIAUX')
         os.environ['Satellite_V02_BULK'] = os.path.join(sat_path, 'BULK')
@@ -552,7 +556,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_two_envs(self):
         """fails for two environment variables"""
-        sat_path = os.path.abspath(os.path.join(model_path, 'Satellite_V02'))
+        sat_path = os.path.abspath(os.path.join(MODEL_PATH, 'Satellite_V02'))
         os.environ['Satellite_V02_base'] = sat_path
         os.environ['Satellite_V02_bddm'] = os.path.join('BULK', 'MATERIAUX')
         #os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')
@@ -568,7 +572,7 @@ class TestReadWrite(unittest.TestCase):
 
     def test_dollar_envs(self):
         """tests sane environment variables"""
-        sat_path = os.path.abspath(os.path.join(model_path, 'Satellite_V02'))
+        sat_path = os.path.abspath(os.path.join(MODEL_PATH, 'Satellite_V02'))
         os.environ['Satellite_V02_base'] = sat_path
         os.environ['Satellite_V02_bddm'] = os.path.join('BULK', 'MATERIAUX')
         #os.environ['Satellite_V02_INCLUDE'] = os.path.join(sat_path, 'INCLUDE')

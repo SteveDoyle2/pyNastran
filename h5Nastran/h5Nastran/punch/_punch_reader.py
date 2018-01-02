@@ -6,6 +6,15 @@ from ._file_reader import FileReader
 from ._table_data import PunchTableData
 
 
+# python 2/3 compatibility for chr, is there a better way?
+_test_chr = b'abcd'
+try:
+    chr(_test_chr[0])
+except TypeError:
+    def chr(x):
+        return x
+
+
 def _default_callback(table_data):
     print(table_data.header)
 

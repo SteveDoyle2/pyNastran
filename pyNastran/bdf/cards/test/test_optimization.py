@@ -548,7 +548,7 @@ class TestOpt(unittest.TestCase):
 
         mid = 1000
         dim = [1., 2., 0.1, 0.2]
-        model.add_pbarl(pid, mid, 'T', dim, group='MSCBMLO', nsm=0.1,
+        model.add_pbarl(pid, mid, 'T', dim, group='MSCBML0', nsm=0.1,
                         comment='pbarl')
         E = 30.e7
         G = None

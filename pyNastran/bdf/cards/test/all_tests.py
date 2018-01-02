@@ -17,6 +17,7 @@ from pyNastran.bdf.cards.test.test_contact import TestContact
 from pyNastran.bdf.cards.test.test_dmig import TestDMIG
 from pyNastran.bdf.cards.test.test_elements import TestElements
 from pyNastran.bdf.cards.test.test_mass_elements import TestMassElements
+from pyNastran.bdf.cards.test.test_nsm import TestNsm
 from pyNastran.bdf.cards.test.test_loads import TestLoads
 from pyNastran.bdf.cards.test.test_materials import TestMaterials
 from pyNastran.bdf.cards.test.test_other import TestOther
