@@ -669,8 +669,6 @@ def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s', debug=F
     rho = atm_density(z)
     mu = atm_dynamic_viscosity_mu(z)
     nu = mu / rho
-    if debug:  # doesnt work unless US units
-        print("atm_nu - rho=%g [slug/ft^3] mu=%e [lb*s/ft^2] nu=%e [ft^2/s]" % (rho, mu, nu))
 
     if visc_units == 'ft^2/s':
         factor = 1.
