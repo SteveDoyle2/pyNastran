@@ -4,21 +4,28 @@ import numpy as np
 
 from pyNastran.utils.atmosphere import (
     atm_density, atm_temperature, atm_pressure,
-    atm_dynamic_viscosity_mu, #atm_dynamic_pressure,
+    atm_dynamic_viscosity_mu, atm_dynamic_pressure,
     atm_velocity, atm_mach, get_alt_for_q_with_constant_mach,
     atm_unit_reynolds_number,
     atm_equivalent_airspeed,
+    atm_kinematic_viscosity_nu,
+    get_alt_for_density,
+    get_alt_for_pressure,
+    get_alt_for_q_with_constant_mach,
 )
 from pyNastran.utils.atmosphere2 import (
     atm_density as atm_density2,
-    #atm_dynamic_pressure as atm_dynamic_pressure2,
+    atm_dynamic_pressure as atm_dynamic_pressure2,
     atm_temperature as atm_temperature2,
     atm_pressure as atm_pressure2,
     atm_velocity as atm_velocity2,
     atm_mach as atm_mach2,
     atm_dynamic_viscosity_mu as atm_dynamic_viscosity_mu2,
+    atm_kinematic_viscosity_nu as atm_kinematic_viscosity_nu2,
     atm_equivalent_airspeed as atm_equivalent_airspeed2,
-    #get_alt_for_mach_q as get_alt_for_mach_q2,
+    get_alt_for_density as get_alt_for_density2,
+    get_alt_for_pressure as get_alt_for_pressure2,
+    get_alt_for_q_with_constant_mach as get_alt_for_q_with_constant_mach2,
     #atm_unit_reynolds_number as atm_unit_reynolds_number2,
 )
 
@@ -205,15 +212,6 @@ class TestAtm(unittest.TestCase):
         self.assertAlmostEqual(mach_b, 2.0, delta=0.002)
         self.assertAlmostEqual(mach_c, 1.0, delta=0.002)
 
-    def test_get_q(self):
-        """tests get_alt_for_q_with_constant_mach for various altitudes"""
-        get_alt_for_q_with_constant_mach(534.2, 0.8)
-        alt_a = get_alt_for_q_with_constant_mach(600., 0.8, tol=0.01)
-        alt_b = get_alt_for_q_with_constant_mach(400., 0.8, tol=0.01)
-
-        self.assertAlmostEqual(alt_a, 12144.30, delta=1.5)  # TODO: should be 0.01
-        self.assertAlmostEqual(alt_b, 22058.47, delta=2.5)  # TODO: should be 0.01
-
     def test_reynolds(self):
         """tests reynolds number"""
         reynolds = atm_unit_reynolds_number(55000., 2.4)
@@ -240,6 +238,68 @@ class TestAtm(unittest.TestCase):
         veq2 = atm_equivalent_airspeed2(alt, mach, alt_units='ft', eas_units='m/s')
         assert np.allclose(veq1, veq2)
 
+    def test_atm_kinematic_viscosity_nu(self):
+        """tests atm_kinematic_viscosity_mu"""
+        mu1 = atm_kinematic_viscosity_nu(10000.)
+        mu2 = atm_kinematic_viscosity_nu2(10., alt_units='kft', visc_units='ft^2/s')
+        self.assertEqual(mu1, mu2)
+
+        mu1 = atm_kinematic_viscosity_nu(5000., SI=True)
+        mu2 = atm_kinematic_viscosity_nu2(5000., alt_units='m', visc_units='m^2/s')
+        self.assertEqual(mu1, mu2)
+
+    def test_get_alt_for_density(self):
+        """tests get_alt_for_density"""
+        alt_targets = [0., 10., 20., 30., 40., 50.]
+        for alt_target in alt_targets:
+            rho1 = atm_density(alt_target * 1000.)
+            alt1 = get_alt_for_density(rho1)
+            #self.assertAlmostEqual(alt, alt_target)
+            assert np.allclose(alt1, alt_target*1000, atol=1.), 'alt1=%s alt_target=%s' % (alt1, alt_target*1000)
+
+            rho2 = atm_density2(alt_target, alt_units='kft', density_units='kg/m^3')
+            alt2 = get_alt_for_density2(rho2, density_units='kg/m^3', alt_units='kft')
+            #self.assertAlmostEqual(alt, alt_target)
+            assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+
+    def test_get_alt_for_pressure(self):
+        """tests get_alt_for_pressure"""
+        alt_targets = [0., 10., 20., 30., 40., 50.]
+        for alt_target in alt_targets:
+            pressure1 = atm_pressure(alt_target*1000.)
+            alt1 = get_alt_for_pressure(pressure1, tol=5., SI=False, nmax=20)
+            #self.assertAlmostEqual(alt, alt_target)
+            assert np.allclose(alt1, alt_target*1000, atol=1.), 'alt1=%s alt_target=%s' % (alt1, alt_target*1000)
+
+            pressure2 = atm_pressure2(alt_target, alt_units='kft', pressure_units='Pa')
+            alt2 = get_alt_for_pressure2(pressure2, pressure_units='Pa', alt_units='kft')
+            assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+
+
+    def test_get_alt_for_q_with_constant_mach(self):
+        """tests get_alt_for_q_with_constant_mach for various altitudes"""
+        get_alt_for_q_with_constant_mach(534.2, 0.8)
+        alt_a = get_alt_for_q_with_constant_mach(600., 0.8, tol=0.01)
+        alt_b = get_alt_for_q_with_constant_mach(400., 0.8, tol=0.01)
+
+        self.assertAlmostEqual(alt_a, 12144.30, delta=1.5)  # TODO: should be 0.01
+        self.assertAlmostEqual(alt_b, 22058.47, delta=2.5)  # TODO: should be 0.01
+
+    def test_get_alt_for_q_with_constant_mach2(self):
+        """tests get_alt_for_q_with_constant_mach"""
+        mach = 0.8
+        alt_targets = [0., 10., 20., 30., 40., 50.]
+        for alt_target in alt_targets:
+            pressure1 = atm_dynamic_pressure(alt_target*1000., mach)
+            alt1 = get_alt_for_q_with_constant_mach(pressure1, mach)
+            #self.assertAlmostEqual(alt, alt_target)
+            assert np.allclose(alt1, alt_target*1000, atol=1.), 'alt1=%s alt_target=%s' % (alt1, alt_target*1000)
+
+            pressure2 = atm_dynamic_pressure2(alt_target, mach, alt_units='kft', pressure_units='psi')
+            alt2 = get_alt_for_q_with_constant_mach2(pressure2, mach, pressure_units='psi', alt_units='kft')
+            assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+
+        #get_alt_for_q_mach(q, mach, pressure_units='psf', alt_units='ft')
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
