@@ -4973,7 +4973,7 @@ class MONPNT1(BaseCard):
             loads are to be monitored.
             None : [0., 0., 0.]
         cp : int, CORDx; default=0
-           int : coordinate system
+           coordinate system of XYZ
         cd : int; default=None -> cp
             the coordinate system for load outputs
         comment : str; default=''
@@ -5042,6 +5042,7 @@ class MONPNT1(BaseCard):
     def __repr__(self):
         return self.write_card()
 
+
 class MONPNT2(BaseCard):
     """MSC Nastran specific card"""
     type = 'MONPNT2'
@@ -5091,6 +5092,7 @@ class MONPNT2(BaseCard):
 
     def __repr__(self):
         return self.write_card()
+
 
 class MONPNT3(BaseCard):
     """MSC Nastran specific card"""
