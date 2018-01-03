@@ -43,6 +43,7 @@ from six import string_types, iteritems, iterkeys, itervalues
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.get_methods import GetMethods
+from pyNastran.bdf.cards.optimization import get_dvprel_key
 #from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils import integer_types
 
@@ -668,30 +669,10 @@ class GetCard(GetMethods):
                 if not prop.type == prop_type:
                     raise RuntimeError('Property type mismatch\n%s%s' % (str(dvprel), str(prop)))
 
-                if prop_type == 'PSHELL':
-                    if var_to_change in ['T']:
-                        pass
-                    elif var_to_change == 6:
-                        var_to_change = '12I/t^3'
-                    else:
-                        self.log.warning('prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change))
-                elif prop_type == 'PCOMP':
-                    if var_to_change.startswith('THETA'):
-                        pass
-                    elif var_to_change.startswith('T'):
-                        pass
-                    else:
-                        self.log.warning('prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change))
-                elif prop_type == 'PBARL':
-                    if var_to_change.startswith('T'):
-                        pass
-                    else:
-                        self.log.warning('prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change))
-                    var_to_change = '%s %s' % (prop.Type, var_to_change)
-                else:
-                    self.log.warning('prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change))
+                key, msg = get_dvprel_key(dvprel, prop)
+                if msg:
+                    self.log.warning(msg)
                     continue
-                key = '%s %s' % (prop_type, var_to_change)
 
                 i = np.where(pids == pid)[0]
                 if len(i) == 0:

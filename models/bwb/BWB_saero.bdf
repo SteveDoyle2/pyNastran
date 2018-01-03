@@ -19661,9 +19661,16 @@ DVPREL1	10001	PCOMP	10601	T1
 
 DVPREL1	10002	PBARL	4	DIM2
 	1	1.0
-DVPREL1	10003	PSHELL	5	T
+DVPREL1	10003	PBEAML	5	DIM2
 	1	1.0
-PSHELL	5	1	1.0
+DVPREL1	10004	PSHELL	6	T
+	1	1.0
+PBEAML	5	1		BAR
+$	dim1	dim2	nsm	SO1	XXB1 DIM1	DIM2	NSM
+	1.	2.		YES	0.5	1.	2.		
+$	SO2	XXB2	dim1	dim2	nsm
+	YES	1.0	1.	2.
+PSHELL	6	1	1.0
 PCOMP*             20601                  0.00000000E+00                *   
 *                         0.00000000E+00  0.00000000E+00                *   
 *                      1  8.88946503E-02  0.00000000E+00             YES*   

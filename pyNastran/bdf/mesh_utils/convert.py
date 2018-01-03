@@ -690,6 +690,11 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
                     scale = xyz_scale
                 else:
                     raise NotImplementedError(dvprel)
+            elif prop_type == 'PBEAML':
+                if var_to_change.startswith('DIM'):
+                    scale = xyz_scale
+                else:
+                    raise NotImplementedError(dvprel)
             else:
                 raise NotImplementedError(dvprel)
 

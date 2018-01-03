@@ -1,5 +1,5 @@
 """
-All constraint cards are defined in this file.  This includes:
+All set cards are defined in this file.  This includes:
 
 * sets
   * SET1, SET3, RADSET # ??? RADSET
