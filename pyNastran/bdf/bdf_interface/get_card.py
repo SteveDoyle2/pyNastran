@@ -1459,16 +1459,18 @@ class GetCard(GetMethods):
           - independent nodes : loads/motions may be defined
           - dependent nodes : loads/motions may not be defined
         """
+        dependent_nid_to_components = {}
+
         if mpc_id is not None:
             mpcs = self.get_mpcs(mpc_id)
+            #asfd
+            for mpc in mpcs:
+                if mpc.type == 'MPC':
+                    for nid, component in zip(mpc.node_ids, mpc.components):
+                        dependent_nid_to_components[nid] = component
+                else:
+                    raise NotImplementedError(mpc)
 
-            #for mpc in mpcs:
-                #if mpc.type == 'MPC':
-                    #asdf
-                #else:
-                    #raise NotImplementedError(mpc)
-
-        dependent_nid_to_components = {}
         for eid, rigid_element in iteritems(self.rigid_elements):
             if rigid_element.type == 'RBE2':
                 dependent_nodes = set(rigid_element.dependent_nodes)
