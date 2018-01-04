@@ -218,6 +218,7 @@ class PGAP(Property):
         10 : 'tmax',
         11 : 'mar',
         12 : 'trmin',
+        'KA' : 'ka',
     }
 
     def __init__(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0., kt=None, mu2=None,

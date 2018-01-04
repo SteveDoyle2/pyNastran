@@ -942,7 +942,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
             filename = os.path.basename(inspect.getfile(code))
         except:
             print(code)
-        print(code)
+        #print(code)
 
         source_lines, line_no0 = inspect.getsourcelines(code)
         di = line_no - line_no0

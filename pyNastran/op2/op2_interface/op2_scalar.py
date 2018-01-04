@@ -2028,5 +2028,5 @@ def main():  # pragma: no cover
     #o.write_f06(f06_outname)
 
 
-if __name__ == '__main__':  # pragma: no conver
+if __name__ == '__main__':  # pragma: no cover
     main()

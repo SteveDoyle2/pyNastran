@@ -13,7 +13,6 @@
 
 import sys
 import os.path
-import re
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 

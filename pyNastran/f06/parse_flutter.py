@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from pyNastran.utils.atmosphere import get_alt_for_density
+from pyNastran.utils.atmosphere2 import (
+    convert_altitude, convert_density, convert_pressure, convert_velocity,
+)
 from pyNastran.utils.log import get_logger2
 from pyNastran.utils import object_attributes, object_methods
 
@@ -186,9 +189,9 @@ class FlutterResponse(object):
             altitude_units = self.out_units['altitude']
             #density_units1 = self.out_units['density']
 
-            kdensity = self._get_density_unit_factor(density_units1, 'slug/ft^3')
+            kdensity = convert_density(1., density_units1, 'slug/ft^3')
             #kdensity = self._get_altitude_unit_factor(density_units2, 'slug/ft^3')
-            kalt = self._get_altitude_unit_factor('ft', altitude_units)
+            kalt = convert_altitude(1., 'ft', altitude_units)
             kvel = self._get_unit_factor('velocity')[0]
             #kpressure = self._get_unit_factor('dynamic_pressure')[0]
             kpressure = kdensity * kvel ** 2
@@ -256,13 +259,13 @@ class FlutterResponse(object):
 
         #print('unit_f06=%r unit_out=%r' % (unit_f06, unit_out))
         if name == 'velocity':
-            factor = self._get_velocity_unit_factor(unit_f06, unit_out)
+            factor = convert_velocity(1., unit_f06, unit_out)
         elif name == 'altitude':
-            factor = self._get_altitude_unit_factor(unit_f06, unit_out)
+            factor = convert_alt(1., unit_f06, unit_out)
         elif name == 'density':
-            factor = self._get_altitude_unit_factor(unit_f06, unit_out)
+            factor = convert_density(1., unit_f06, unit_out)
         elif name in ['pressure', 'dynamic_pressure']:
-            factor = self._get_pressure_unit_factor(unit_f06, unit_out)
+            factor = convert_pressure(1., unit_f06, unit_out)
         else:
             raise NotImplementedError(name)
 
@@ -271,139 +274,6 @@ class FlutterResponse(object):
         else:
             units = 'units'
         return factor, units
-
-    @staticmethod
-    def _get_velocity_unit_factor(unit_in, unit_out):
-        """TODO: simplify this..."""
-        if unit_in not in ['in/s', 'ft/s', 'knots', 'm/s']:
-            msg = 'unit_in=%r not in [in/s, ft/s, knots, m/s]' % unit_in
-            raise NotImplementedError(msg)
-        if unit_out not in ['in/s', 'ft/s', 'knots', 'm/s']:
-            msg = 'unit_out=%r not in [in/s, ft/s, knots, m/s]' % unit_out
-            raise NotImplementedError(msg)
-
-        if unit_in == unit_out:
-            factor = 1.
-        elif unit_in == 'in/s':
-            if unit_out == 'ft/s':
-                factor = 1./12.
-            elif unit_out == 'knots':
-                factor = 1./20.2537
-            elif unit_out == 'm/s':
-                factor = 1./39.3700432322835
-            else:
-                raise NotImplementedError('unit_out=%r not in [in/s, ft/s, knots, m/s]' % unit_out)
-        elif unit_in == 'ft/s':
-            if unit_out == 'in/s':
-                factor = 12.
-            elif unit_out == 'knots':
-                factor = 1./1.687808333407337269
-            elif unit_out == 'm/s':
-                factor = 1./3.2808369360236246948
-            else:
-                raise NotImplementedError('unit_out=%r not in [in/s, ft/s, knots, m/s]' % unit_out)
-        elif unit_in == 'knots':
-            if unit_out == 'in/s':
-                factor = 20.253700000888049004
-            elif unit_out == 'ft/s':
-                factor = 1.687808333407337269
-            elif unit_out == 'm/s':
-                factor = 1/1.9438427409666045875
-            else:
-                raise NotImplementedError('unit_out=%r not in [in/s, ft/s, knots, m/s]' % unit_out)
-        elif unit_in == 'm/s':
-            if unit_out == 'in/s':
-                factor = 39.37004323228349989
-            elif unit_out == 'ft/s':
-                factor = 3.2808369360236246948
-            elif unit_out == 'knots':
-                factor = 1.9438427409666045875
-            else:
-                raise NotImplementedError('unit_out=%r not in [in/s, ft/s, knots, m/s]' % unit_out)
-        else:
-            raise NotImplementedError('unit_in=%r not in [in/s, ft/s, knots, m/s]' % unit_in)
-        return factor
-
-    @staticmethod
-    def _get_altitude_unit_factor(unit_in, unit_out):
-        """TODO: simplify this..."""
-        if unit_in not in ['ft', 'm']:
-            msg = 'unit_in=%r not in [ft, m]' % unit_in
-            raise NotImplementedError(msg)
-        if unit_out not in ['ft', 'm']:
-            msg = 'unit_out=%r not in [ft, m]' % unit_out
-            raise NotImplementedError(msg)
-
-        if unit_in == unit_out:
-            factor = 1.
-        elif unit_in == 'm':
-            if unit_out == 'ft':
-                factor = 0.3048
-            else:
-                raise NotImplementedError('unit_out=%r not in [ft, m]' % unit_out)
-        elif unit_in == 'ft':
-            if unit_out == 'm':
-                factor = 1./0.3048
-            else:
-                raise NotImplementedError('unit_out=%r not in [ft, m]' % unit_out)
-        else:
-            raise NotImplementedError('unit_in=%r not in [ft, m]' % unit_in)
-        return factor
-
-    @staticmethod
-    def _get_pressure_unit_factor(unit_in, unit_out):
-        """TODO: simplify this..."""
-        if unit_in not in ['psi', 'psf']:
-            msg = 'unit_in=%r not in [psi, psf]' % unit_in
-            raise NotImplementedError(msg)
-        if unit_out not in ['psi', 'psf']:
-            msg = 'unit_out=%r not in [psi, psf]' % unit_out
-            raise NotImplementedError(msg)
-
-        if unit_in == unit_out:
-            factor = 1.
-        elif unit_in == 'psi':
-            if unit_out == 'psf':
-                factor = 1./144.
-            else:
-                raise NotImplementedError('unit_out=%r not in [psi, psf]' % unit_out)
-        elif unit_in == 'psi':
-            if unit_out == 'psf':
-                factor = 144.
-            else:
-                raise NotImplementedError('unit_out=%r not in [psi, psf]' % unit_out)
-        else:
-            raise NotImplementedError('unit_in=%r not in [psi, psf]' % unit_in)
-        return factor
-
-    @staticmethod
-    def _get_density_unit_factor(unit_in, unit_out):
-        """TODO: simplify this..."""
-        if unit_in not in ['slinch/in^3', 'slug/ft^3']:
-            msg = 'unit_in=%r not in [slinch/in^3, slug/ft^3]' % unit_in
-            raise NotImplementedError(msg)
-        if unit_out not in ['slinch/in^3', 'slug/ft^3']:
-            msg = 'unit_out=%r not in [slinch/in^3, slug/ft^3]' % unit_out
-            raise NotImplementedError(msg)
-
-        if unit_in == unit_out:
-            factor = 1.
-        elif unit_in == 'slinch/in^3':
-            if unit_out == 'slug/ft^3':
-                factor = 12.**4.
-            else:
-                msg = 'unit_out=%r not in [slinch/in^3, slug/ft^3]' % unit_out
-                raise NotImplementedError(msg)
-        elif unit_in == 'slug/ft^3':
-            if unit_out == 'slinch/in^3':
-                factor = 1./12.**4.
-            else:
-                msg = 'unit_out=%r not in [slinch/in^3, slug/ft^3]' % unit_out
-                raise NotImplementedError(msg)
-        else:
-            msg = 'unit_in=%r not in [slinch/in^3, slug/ft^3]' % unit_in
-            raise NotImplementedError(msg)
-        return factor
 
     @property
     def symbols(self):
@@ -937,5 +807,5 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
     if show:
         plt.show()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     plot_flutter_f06('bah_plane.f06')

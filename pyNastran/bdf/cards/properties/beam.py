@@ -14,6 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six.moves import zip, range
+import numpy as np
 from numpy import array, unique, argsort, mean, allclose, ndarray
 
 from pyNastran.bdf.utils import to_fields
@@ -27,7 +28,7 @@ from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
-
+from pyNastran.utils import float_types
 
 class PBEAM(IntegratedLineProperty):
     """
@@ -1093,6 +1094,8 @@ class PBEAML(IntegratedLineProperty):
         ndim = self.valid_types[self.beam_type]
 
         nxxb = len(xxb)
+        if nxxb == 0:
+            raise IndexError('pid=%s; len(xxb)=0; at least 1 station must be defined' % pid)
         if nsm is None:
             nsm = [0.] * nxxb
         elif not isinstance(nsm, (list, tuple, ndarray)):
@@ -1106,16 +1109,29 @@ class PBEAML(IntegratedLineProperty):
                 pid, so, type(so))
             raise TypeError(msg)
 
-        self.dim = dims
-        for xxbi, dim in zip(xxb, dims):
+        for istation, xxbi, nsmi, dim in zip(count(), xxb, nsm, dims):
             if not isinstance(dim, (list, ndarray)):
                 msg = 'dims = List[dim]; dim=List[floats]; type(dim)=%s' % (type(dim))
                 raise TypeError(msg)
             assert len(dim) == ndim, 'Type=%s ndim=%s len(dim)=%s xxb=%s dim=%s' % (
                 Type, ndim, len(dim), xxbi, dim)
-        self.xxb = xxb
+
+            if not isinstance(xxbi, float_types):
+                raise TypeError('istation=%i xxb=%s and must be a float' % (
+                    istation, xxbi))
+            if not isinstance(nsmi, float_types):
+                raise TypeError('istation=%i nsm=%s and must be a float' % (
+                    istation, nsmi))
+
+            for idim, dimi in enumerate(dim):
+                if not isinstance(dimi, float_types):
+                    raise TypeError('istation=%i dim%i=%s and must be a float' % (
+                        istation, idim+1, dimi))
+
+        self.dim = np.asarray(dims)
+        self.xxb = np.asarray(xxb)
         self.so = so
-        self.nsm = nsm
+        self.nsm = np.asarray(nsm)
         self.mid_ref = None
         A = self.Area()
 
@@ -1154,6 +1170,10 @@ class PBEAML(IntegratedLineProperty):
 
         i = 9
         n = 0
+
+        #n_so = (len(card) - 9) // (ndim + 2) #- 1
+        #n_extra = (len(card) - 9) % (ndim + 2)
+        xxbi = 0.0
         while i < len(card):
             if n > 0:
                 soi = string_or_blank(card, i, 'so_n=%i' % n, 'YES')
@@ -1164,7 +1184,16 @@ class PBEAML(IntegratedLineProperty):
 
             dim = []
             for ii in range(ndim):
-                dimi = double(card, i, 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1))
+                field_name = 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1)
+                if xxbi == 0.0:
+                    dimi = double(card, i, field_name)
+                elif xxbi == 1.0:
+                    dims0 = dims[0]
+                    dimi = double_or_blank(card, i, field_name, dims0[ii])
+                else:
+                    ## TODO: use linear interpolation
+                    dimi = double(card, i, field_name)
+
                 dim.append(dimi)
                 i += 1
             dims.append(dim)
@@ -1300,6 +1329,8 @@ class PBEAML(IntegratedLineProperty):
         except ValueError:
             print('PBEAML integration error; pid=%s x/xb=%s areas=%s' % (
                 self.pid, self.xxb, areas))
+            assert len(self.xxb) == len(areas)
+            raise
             A = mean(areas)
         return A
 
@@ -1372,9 +1403,9 @@ class PBEAML(IntegratedLineProperty):
         for (i, xxb, so, dim, nsm) in zip(count(), self.xxb, self.so,
                                           self.dim, self.nsm):
             if i == 0:
-                list_fields += dim + [nsm]
+                list_fields += dim.tolist() + [nsm]
             else:
-                list_fields += [so, xxb] + dim + [nsm]
+                list_fields += [so, xxb] + dim.tolist() + [nsm]
         #raise NotImplementedError('verify PBEAML...')
         return list_fields
 

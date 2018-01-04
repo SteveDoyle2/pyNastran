@@ -40,7 +40,7 @@ def _update_alt(alt, SI=False, debug=False):
     factor = _feet_to_meters(SI) # ft/s to m/s
     alt2 = alt / factor
 
-    if debug:
+    if debug:  # pragma: no cover
         if SI:
             print("z = %s [m] = %s [ft]"  % (alt, alt2))
         else:
@@ -62,7 +62,7 @@ def get_alt_for_density(density, nmax=20):
     alt : float
         the altitude in feet
     """
-    dalt = 500.
+    dalt = 500. # ft
     alt_old = 0.
     alt_final = 5000.
     n = 0
@@ -264,15 +264,15 @@ def atm_temperature(alt, SI=False, debug=False):
     """
     z = _update_alt(alt, SI)
     if z < 36151.725:
-        T = 518.0-0.003559996 * z
+        T = 518.0 - 0.003559996 * z
     elif z < 82344.678:
         T = 389.988
     elif z < 155347.756:
-        T = 389.988+.0016273286 * (z - 82344.678)
+        T = 389.988 + .0016273286 * (z - 82344.678)
     elif z < 175346.171:
         T = 508.788
     elif z < 249000.304:
-        T = 508.788-.0020968273 * (z - 175346.171)
+        T = 508.788 - .0020968273 * (z - 175346.171)
     elif z < 299515.564:
         T = 354.348
     else:
@@ -282,7 +282,7 @@ def atm_temperature(alt, SI=False, debug=False):
 
     factor = _rankine_to_kelvin(SI)
     T2 = T * factor
-    if debug:
+    if debug:  # pragma: no cover
         if SI:
             print("z = %s [m] = %s [ft]"  % (alt, z))
             print("T = %s [K] = %s [R]"  % (T2, T))
@@ -318,7 +318,7 @@ def atm_pressure(alt, SI=False, debug=False):
     if z < 36151.725:
         lnP = 7.657389 + 5.2561258 * log(1 - 6.8634634E-6 * z)
     elif z < 82344.678:
-        lnP = 6.158411 - 4.77916918E-5 * (z-36151.725)
+        lnP = 6.158411 - 4.77916918E-5 * (z - 36151.725)
     elif z < 155347.756:
         lnP = 3.950775 - 11.3882724 * log(1.0 + 4.17276598E-6 * (z - 82344.678))
     elif z < 175346.171:
@@ -334,7 +334,7 @@ def atm_pressure(alt, SI=False, debug=False):
     p = exp(lnP)
     factor = _psf_to_pascals(SI)
 
-    if debug:
+    if debug:  # pragma: no cover
         ft_to_m = _feet_to_meters(True)
         if SI:
             print("z    = %s [m]  = %s [ft]" % (alt, z))
@@ -378,7 +378,7 @@ def atm_dynamic_pressure(alt, mach, SI=False, debug=False):
     factor = _psf_to_pascals(SI)
     q2 = q * factor
 
-    if debug:
+    if debug:  # pragma: no cover
         ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m]   = %s [ft]" % (alt, z))
@@ -406,6 +406,7 @@ def atm_speed_of_sound(alt, SI=False, gamma=1.4, debug=False):
     -------
     speed_of_sound, a : float
         Returns speed of sound in ft/s or m/s (SI).
+
    \f[  \large a = \sqrt{\gamma R T}  \f]
     """
     # converts everything to English units first
@@ -417,7 +418,7 @@ def atm_speed_of_sound(alt, SI=False, gamma=1.4, debug=False):
     factor = _feet_to_meters(SI) # ft/s to m/s
     a2 = a * factor
 
-    if debug:
+    if debug:  # pragma: no cover
         ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m]   = %s [ft]" % (alt, z))
@@ -453,7 +454,7 @@ def atm_velocity(alt, mach, SI=False, debug=False):
     a = atm_speed_of_sound(alt, SI)
     V = mach * a # units=ft/s or m/s
 
-    if debug:
+    if debug:  # pragma: no cover
         ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m]   = %s [ft]"  % (alt, alt))
@@ -491,7 +492,7 @@ def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
         ft_to_m = _feet_to_meters(True)
         eas *= ft_to_m
 
-    if debug:
+    if debug:  # pragma: no cover
         if SI:
             print("z = %s [m]   = %s [ft]"  % (alt, z))
             print("a = %s [m/s] = %s [ft/s]"  % (a * ft_to_m, a))
@@ -529,7 +530,7 @@ def atm_mach(alt, V, SI=False, debug=False):
     a = atm_speed_of_sound(z)
     mach = V2 / a
 
-    if debug:
+    if debug:  # pragma: no cover
         ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m] = %s [ft]"  % (alt, z))
@@ -574,7 +575,7 @@ def atm_density(alt, R=1716., SI=False, debug=False):
     else:
         factor = 1.
 
-    if debug:
+    if debug:  # pragma: no cover
         rho = P / (R * T)
         ft_to_m = _feet_to_meters(True)
         if SI:
@@ -667,6 +668,7 @@ def atm_unit_reynolds_number2(alt, mach, SI=False, debug=False):
     Returns
     -------
     ReynoldsNumber/L : float
+        the Reynolds Number per unit length
         1/ft or 1/m (SI)
 
     \f[ \large Re_L = \frac{ \rho V}{\mu} = \frac{p M a}{\mu R T} \f]
@@ -676,7 +678,6 @@ def atm_unit_reynolds_number2(alt, mach, SI=False, debug=False):
         calls to atm_press and atm_temp are not made
     """
     z = _update_alt(alt, SI)
-    #print("z = ",z)
     gamma = 1.4
     R = 1716.
     p = atm_pressure(z)
@@ -686,7 +687,7 @@ def atm_unit_reynolds_number2(alt, mach, SI=False, debug=False):
     mu = sutherland_viscoscity(T)
     ReL = p * a * mach / (mu * R * T)
 
-    if debug:
+    if debug:  # pragma: no cover
         print("---atm_UnitReynoldsNumber2---")
         print("z  = %s [m]   = %s [ft]"  % (alt * _feet_to_meters(not SI), z))
         print("a  = %s [m/s] = %s [ft/s]"  % (a * _feet_to_meters(True), a))
@@ -698,7 +699,7 @@ def atm_unit_reynolds_number2(alt, mach, SI=False, debug=False):
         print("mu = %s [(N*s)/m^2] = %s [(lbf*s)/ft^2]" % (mu * 47.88026, mu))
         print("Re = %s [1/m] = %s [1/ft]" % (ReL / 0.3048, ReL))
 
-    if SI is True:
+    if SI:
         return ReL / .3048  # convert ReL in 1/ft to 1/m
     return ReL
 
@@ -731,7 +732,7 @@ def atm_unit_reynolds_number(alt, mach, SI=False, debug=False):
 
     ReL = (rho * V) / mu
 
-    if debug:
+    if debug:  # pragma: no cover
         print("---atm_UnitReynoldsNumber---")
         print("z  = %s [m]   = %s [ft]"  % (alt * _feet_to_meters(not SI), z))
         print("rho = %s [kg/m^3] = %s [slug/ft^3]"  % (rho * 515.378818, rho))
@@ -761,8 +762,6 @@ def sutherland_viscoscity(T):
 
     .. note ::
         prints a warning if T>5400 deg R
-    .. todo:: Consider raising an error instead of writing to stderr
-               and letting the function return an answer.
 
     Sutherland's Equation\n
     From Aerodynamics for Engineers 4th Edition\n

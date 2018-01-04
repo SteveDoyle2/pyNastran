@@ -43,6 +43,7 @@ from six import string_types, iteritems, iterkeys, itervalues
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.get_methods import GetMethods
+from pyNastran.bdf.cards.optimization import get_dvprel_key
 #from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils import integer_types
 
@@ -169,15 +170,19 @@ class GetCard(GetMethods):
         """gets the rslot_map"""
         if (reset_type_to_slot_map or self._type_to_slot_map is None or
                 len(self._type_to_slot_map) == 0):
-            rslot_map = {}
-            for key, values in iteritems(self._slot_to_type_map):
-                for value in values:
-                    rslot_map[value] = key
-            self._type_to_slot_map = rslot_map
-        else:
-            rslot_map = self._type_to_slot_map
+            self.reset_rslot_map()
+
+        rslot_map = self._type_to_slot_map
         assert 'GRID' in rslot_map
         return rslot_map
+
+    def reset_rslot_map(self):
+        """helper method for get_rslot_map"""
+        rslot_map = {}
+        for key, values in iteritems(self._slot_to_type_map):
+            for value in values:
+                rslot_map[value] = key
+        self._type_to_slot_map = rslot_map
 
     @property
     def nid_map(self):
@@ -609,13 +614,46 @@ class GetCard(GetMethods):
         return is_loads, is_temperatures, temperature_data, load_data
 
     def _get_dvprel_ndarrays(self, nelements, pids, fdtype='float32', idtype='int32'):
-        """creates arrays for dvprel results"""
-        dvprel_t_init = np.zeros(nelements, dtype=fdtype)
-        dvprel_t_min = np.zeros(nelements, dtype=fdtype)
-        dvprel_t_max = np.zeros(nelements, dtype=fdtype)
-        design_region = np.zeros(nelements, dtype=idtype)
+        """
+        creates arrays for dvprel results
 
-        for key, dvprel in iteritems(self.dvprels):
+        Parameters
+        ----------
+        nelements : int
+            the number of elements
+        pids : int ndarray; length=nelements
+            the
+        fdtype : str; default='float32'
+            the type of the init/min/max arrays
+        idtype : str; default='int32'
+            the type of the design_region
+
+        Returns
+        -------
+        dvprel_dict[key] : (design_region, dvprel_init, dvprel_min, dvprel_max)
+            key : str
+                the optimization string
+            design_region : int ndarray; length=nelements
+            dvprel_init : float ndarray; length=nelements
+                the initial values of the variable
+            dvprel_min : float ndarray; length=nelements
+                the min values of the variable
+            dvprel_max : float ndarray; length=nelements
+                the max values of the variable
+        """
+        dvprel_dict = {}
+        def get_dvprel_data(key):
+            if key in dvprel_dict:
+                return dvprel_dict[key]
+
+            dvprel_t_init = np.full(nelements, np.nan, dtype=fdtype)
+            dvprel_t_min = np.full(nelements, np.nan, dtype=fdtype)
+            dvprel_t_max = np.full(nelements, np.nan, dtype=fdtype)
+            design_region = np.zeros(nelements, dtype=idtype)
+            dvprel_dict[key] = (design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max)
+            return design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max
+
+        for dvprel_key, dvprel in iteritems(self.dvprels):
             if dvprel.type == 'DVPREL1':
                 prop_type = dvprel.prop_type
                 desvars = dvprel.dvids
@@ -627,48 +665,50 @@ class GetCard(GetMethods):
                 var_to_change = dvprel.pname_fid
                 assert len(desvars) == 1, len(desvars)
 
-                if prop_type == 'PSHELL':
-                    i = np.where(pids == pid)
-                    design_region[i] = dvprel.oid
-                    assert len(i) > 0, i
-                    if var_to_change == 'T':
-                        #value = 0.
-                        lower_bound = 0.
-                        upper_bound = 0.
-                        for desvar, coeff in zip(desvars, coeffs):
-                            if isinstance(desvar, integer_types):
-                                desvar_ref = self.desvars[desvar]
-                            else:
-                                desvar_ref = desvar.desvar_ref
-                            xiniti = desvar_ref.xinit
-                            if desvar_ref.xlb != -1e20:
-                                xiniti = max(xiniti, desvar_ref.xlb)
-                                lower_bound = desvar_ref.xlb
-                            if desvar_ref.xub != 1e20:
-                                xiniti = min(xiniti, desvar_ref.xub)
-                                upper_bound = desvar_ref.xub
+                prop = self.properties[pid]
+                if not prop.type == prop_type:
+                    raise RuntimeError('Property type mismatch\n%s%s' % (str(dvprel), str(prop)))
 
-                            # code validation
-                            if desvar_ref.delx is not None and desvar_ref.delx != 1e20:
-                                pass
+                key, msg = get_dvprel_key(dvprel, prop)
+                if msg:
+                    self.log.warning(msg)
+                    continue
 
-                            # TODO: haven't quite decided what to do
-                            if desvar_ref.ddval is not None:
-                                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
-                            assert desvar_ref.ddval is None, desvar_ref
-                            xinit = coeff * xiniti
-                        dvprel_t_init[i] = xinit
-                        dvprel_t_min[i] = lower_bound
-                        dvprel_t_max[i] = upper_bound
-                    elif var_to_change == 6:
-                        # 12I/t3
-                        pass
+                i = np.where(pids == pid)[0]
+                if len(i) == 0:
+                    continue
+                assert len(i) > 0, i
+                design_region, dvprel_init, dvprel_min, dvprel_max = get_dvprel_data(key)
+
+                design_region[i] = dvprel.oid
+                #value = 0.
+                lower_bound = 0.
+                upper_bound = 0.
+                for desvar, coeff in zip(desvars, coeffs):
+                    if isinstance(desvar, integer_types):
+                        desvar_ref = self.desvars[desvar]
                     else:
-                        msg = 'var_to_change=%r; dvprel=\n%s' % (var_to_change, str(dvprel))
-                        raise NotImplementedError(msg)
-                else:
-                    msg = 'prop_type=%r; dvprel=\n%s' % (prop_type, str(dvprel))
-                    raise NotImplementedError(msg)
+                        desvar_ref = desvar.desvar_ref
+                    xiniti = desvar_ref.xinit
+                    if desvar_ref.xlb != -1e20:
+                        xiniti = max(xiniti, desvar_ref.xlb)
+                        lower_bound = desvar_ref.xlb
+                    if desvar_ref.xub != 1e20:
+                        xiniti = min(xiniti, desvar_ref.xub)
+                        upper_bound = desvar_ref.xub
+
+                    # code validation
+                    if desvar_ref.delx is not None and desvar_ref.delx != 1e20:
+                        pass
+
+                    # TODO: haven't quite decided what to do
+                    if desvar_ref.ddval is not None:
+                        msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
+                    assert desvar_ref.ddval is None, desvar_ref
+                    xinit = coeff * xiniti
+                dvprel_init[i] = xinit
+                dvprel_min[i] = lower_bound
+                dvprel_max[i] = upper_bound
             else:
                 msg = 'dvprel.type=%r; dvprel=\n%s' % (dvprel.type, str(dvprel))
                 raise NotImplementedError(msg)
@@ -682,7 +722,7 @@ class GetCard(GetMethods):
                 dvprel.p_min
 
         #dvprel_dict['PSHELL']['T']  = dvprel_t_init, dvprel_t_min, dvprel_t_max
-        return dvprel_t_init, dvprel_t_min, dvprel_t_max, design_region
+        return dvprel_dict
 
     def _get_forces_moments_array(self, p0, load_case_id,
                                   eid_map, node_ids, normals, dependents_nodes,
@@ -2240,7 +2280,7 @@ class GetCard(GetMethods):
                     raise KeyError('mid=%s is invalid for card %s=\n%s' % (mid, msg, str(prop)))
         return mid_to_pids_map
 
-    def get_reduced_nsms(self, nsm_id, consider_nsmadd=False, stop_on_failure=True):
+    def get_reduced_nsms(self, nsm_id, consider_nsmadd=True, stop_on_failure=True):
         """
         Get all traced NSMs that are part of a set
 
@@ -2264,7 +2304,7 @@ class GetCard(GetMethods):
             raise TypeError(msg)
 
         try:
-            nsms = self.NSM(nsm_id, consider_nsmadd=consider_mpcadd)
+            nsms = self.NSM(nsm_id, consider_nsmadd=consider_nsmadd)
         except KeyError:
             if stop_on_failure:
                 raise
@@ -2272,7 +2312,7 @@ class GetCard(GetMethods):
                 self.log.error("could not find expected NSM id=%s" % nsm_id)
                 return []
 
-        mpcs2 = []
+        nsms2 = []
         for nsm in nsms:
             if nsm.type == 'NSMADD':
                 for nsmi in nsm.nsm_ids:
@@ -2288,7 +2328,7 @@ class GetCard(GetMethods):
                     else:
                         assert isinstance(nsmi, integer_types), nsmi
                         nsms2i = self.get_reduced_nsms(
-                            mpci, consider_mpcadd=False, stop_on_failure=stop_on_failure)
+                            nsmi, consider_nsmadd=False, stop_on_failure=stop_on_failure)
                         nsms2 += nsms2i
             else:
                 nsms2.append(nsm)

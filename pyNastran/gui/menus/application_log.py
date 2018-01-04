@@ -241,7 +241,7 @@ def main():  # pragma: no cover
     import pyNastran
     app = QApplication(sys.argv)
     url = pyNastran.__website__
-    version = '1.0.0'
+    #version = '1.0.0'
     main_window = ApplicationLogWidget()
     log_widget = main_window.log_widget
     msg = 'This is a message asdf'

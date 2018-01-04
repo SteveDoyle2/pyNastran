@@ -1,3 +1,7 @@
+"""
+defines:
+ - RealNonlinearPlateArray
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
@@ -188,6 +192,7 @@ class RealNonlinearPlateArray(OES_Object):
                     # vm stress can be NaN for some reason...
                     if not np.array_equal(t1, t2):
                         msg += (
+                            # eid   fd  ox  oy  oz  txy ex  ey  ez  exy es  eps ecs1
                             '%s    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
                             '%s    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
@@ -356,186 +361,190 @@ class RealNonlinearPlateArray(OES_Object):
                             write_float_13e(exxi), write_float_13e(eyyi),
                             #write_float_13e(ezzi),
                             write_float_13e(exyi),
-                    ))
+                        )
+                    )
 
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
-class NonlinearQuad(StressObject):
+#class NonlinearQuad(StressObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        StressObject.__init__(self, data_code, isubcase)
-        #self.eType = 'QUAD4FD' # or CTRIA3
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #StressObject.__init__(self, data_code, isubcase)
+        ##self.eType = 'QUAD4FD' # or CTRIA3
 
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        self.eType = {}
-        self.fiberDistance = {}
-        self.oxx = {}
-        self.oyy = {}
-        self.ozz = {}
-        self.txy = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+        #self.eType = {}
+        #self.fiber_distance = {}
+        #self.oxx = {}
+        #self.oyy = {}
+        #self.ozz = {}
+        #self.txy = {}
 
-        self.exx = {}
-        self.eyy = {}
-        self.ezz = {}
-        self.exy = {}
+        #self.exx = {}
+        #self.eyy = {}
+        #self.ezz = {}
+        #self.exy = {}
 
-        self.es = {}
-        self.eps = {}
-        self.ecs = {}
+        #self.es = {}
+        #self.eps = {}
+        #self.ecs = {}
 
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            #self.add = self.add_sort2
-            #self.add_new_eid = self.add_new_eid_sort2
+        #self.dt = dt
+        #if is_sort1:
+            #if dt is not None:
+                #self.add = self.add_sort1
+                #self.add_new_eid = self.add_new_eid_sort1
+        #else:
+            #assert dt is not None
+            ##self.add = self.add_sort2
+            ##self.add_new_eid = self.add_new_eid_sort2
 
-    def get_stats(self, short=False):
-        nelements = len(self.eType)
+    #def get_stats(self, short=False):
+        #nelements = len(self.eType)
 
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.oxx)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, fiberDistance, oxx, oyy, ozz, txy, '
-                   'exx, eyy, ezz, exy, es, eps, ecs\n')
-        return msg
+        #msg = self.get_data_code()
+        #if self.nonlinear_factor is not None:  # transient
+            #ntimes = len(self.oxx)
+            #msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       #% (self.__class__.__name__, ntimes, nelements))
+        #else:
+            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     #nelements))
+        #msg.append('  eType, fiber_distance, oxx, oyy, ozz, txy, '
+                   #'exx, eyy, ezz, exy, es, eps, ecs\n')
+        #return msg
 
-    def delete_transient(self, dt):
-        del self.fiberDistance[dt]
-        del self.oxx[dt]
-        del self.oyy[dt]
-        del self.ozz[dt]
-        del self.txy[dt]
+    #def delete_transient(self, dt):
+        #del self.fiber_distance[dt]
+        #del self.oxx[dt]
+        #del self.oyy[dt]
+        #del self.ozz[dt]
+        #del self.txy[dt]
 
-        del self.exx[dt]
-        del self.eyy[dt]
-        del self.ezz[dt]
-        del self.exy[dt]
+        #del self.exx[dt]
+        #del self.eyy[dt]
+        #del self.ezz[dt]
+        #del self.exy[dt]
 
-        del self.es[dt]
-        del self.eps[dt]
-        del self.ecs[dt]
+        #del self.es[dt]
+        #del self.eps[dt]
+        #del self.ecs[dt]
 
-    def get_transients(self):
-        k = self.oxx.keys()
-        k.sort()
-        return k
+    #def get_transients(self):
+        #k = self.oxx.keys()
+        #k.sort()
+        #return k
 
-    def add_new_transient(self, dt):
-        self.fiberDistance[dt] = {}
-        self.oxx[dt] = {}
-        self.oyy[dt] = {}
-        self.ozz[dt] = {}
-        self.txy[dt] = {}
+    #def add_new_transient(self, dt):
+        #self.fiber_distance[dt] = {}
+        #self.oxx[dt] = {}
+        #self.oyy[dt] = {}
+        #self.ozz[dt] = {}
+        #self.txy[dt] = {}
 
-        self.exx[dt] = {}
-        self.eyy[dt] = {}
-        self.ezz[dt] = {}
-        self.exy[dt] = {}
+        #self.exx[dt] = {}
+        #self.eyy[dt] = {}
+        #self.ezz[dt] = {}
+        #self.exy[dt] = {}
 
-        self.es[dt] = {}
-        self.eps[dt] = {}
-        self.ecs[dt] = {}
+        #self.es[dt] = {}
+        #self.eps[dt] = {}
+        #self.ecs[dt] = {}
 
-    def add_new_eid_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
-        if dt not in self.oxx:
-            self.add_new_transient(dt)
-        self.fiberDistance[dt][eid] = [fd]
-        if isnan(sz):
-            sz = 0.
-        if isnan(ez):
-            ez = 0.
-        self.oxx[dt][eid] = [sx]
-        self.oyy[dt][eid] = [sy]
-        self.ozz[dt][eid] = [sz]
-        self.txy[dt][eid] = [txy]
+    #def add_new_eid_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        #if dt not in self.oxx:
+            #self.add_new_transient(dt)
+        #self.fiber_distance[dt][eid] = [fd]
+        #if isnan(sz):
+            #sz = 0.
+        #if isnan(ez):
+            #ez = 0.
+        #self.oxx[dt][eid] = [sx]
+        #self.oyy[dt][eid] = [sy]
+        #self.ozz[dt][eid] = [sz]
+        #self.txy[dt][eid] = [txy]
 
-        self.exx[dt][eid] = [ex]
-        self.eyy[dt][eid] = [ey]
-        self.ezz[dt][eid] = [ez]
-        self.exy[dt][eid] = [exy]
+        #self.exx[dt][eid] = [ex]
+        #self.eyy[dt][eid] = [ey]
+        #self.ezz[dt][eid] = [ez]
+        #self.exy[dt][eid] = [exy]
 
-        self.es[dt][eid] = [es]
-        self.eps[dt][eid] = [eps]
-        self.ecs[dt][eid] = [ecs]
+        #self.es[dt][eid] = [es]
+        #self.eps[dt][eid] = [eps]
+        #self.ecs[dt][eid] = [ecs]
 
-    def add_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
-        """unvectorized method for adding SORT1 transient data"""
-        self.fiberDistance[dt][eid].append(fd)
-        if isnan(sz):
-            sz = 0.
-        if isnan(ez):
-            ez = 0.
+    #def add_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        #"""unvectorized method for adding SORT1 transient data"""
+        #self.fiber_distance[dt][eid].append(fd)
+        #if isnan(sz):
+            #sz = 0.
+        #if isnan(ez):
+            #ez = 0.
 
-        self.oxx[dt][eid].append(sx)
-        self.oyy[dt][eid].append(sy)
-        self.ozz[dt][eid].append(sz)
-        self.txy[dt][eid].append(txy)
+        #self.oxx[dt][eid].append(sx)
+        #self.oyy[dt][eid].append(sy)
+        #self.ozz[dt][eid].append(sz)
+        #self.txy[dt][eid].append(txy)
 
-        self.exx[dt][eid].append(ex)
-        self.eyy[dt][eid].append(ey)
-        self.ezz[dt][eid].append(ez)
-        self.exy[dt][eid].append(exy)
+        #self.exx[dt][eid].append(ex)
+        #self.eyy[dt][eid].append(ey)
+        #self.ezz[dt][eid].append(ez)
+        #self.exy[dt][eid].append(exy)
 
-        self.es[dt][eid].append(es)
-        self.eps[dt][eid].append(eps)
-        self.ecs[dt][eid].append(ecs)
+        #self.es[dt][eid].append(es)
+        #self.eps[dt][eid].append(eps)
+        #self.ecs[dt][eid].append(ecs)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
-        if header is None:
-            header = []
-        msg_start = [
-            '      ELEMENT-ID =     129\n'
-            '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
-            ' \n',
-            '    TIME         FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
-            '               DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
-        ]
-        #0 5.000E-05  -5.000000E-01  -4.484895E+01  -1.561594E+02                 -2.008336E-02   1.392609E+02   0.0            0.0
-        msg_element = {}
-        msg_time = {}
-        for (dt, Oxxs) in sorted(iteritems(self.oxx)):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        #if header is None:
+            #header = []
+        #msg_start = [
+            #'      ELEMENT-ID =     129\n'
+            #'               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
+            #' \n',
+            #'    TIME         FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
+            #'               DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
+        #]
+        ##0 5.000E-05  -5.000000E-01  -4.484895E+01  -1.561594E+02                 -2.008336E-02   1.392609E+02   0.0            0.0
+        #msg_element = {}
+        #msg_time = {}
+        #for (dt, oxxs) in sorted(iteritems(self.oxx)):
+            #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
 
-            for (eid, oxxs) in sorted(iteritems(Oxxs)):
-                msg_element[eid] = header + ['      ELEMENT-ID = %8i\n' % (eid)]
-                if eid not in msg_time:
-                    msg_time[eid] = []
-                for i, oxx in enumerate(oxxs):
-                    fd = self.fiberDistance[dt][eid][i]
-                    oxx = self.oxx[dt][eid][i]
-                    oyy = self.oyy[dt][eid][i]
-                    ozz = self.ozz[dt][eid][i]
-                    txy = self.txy[dt][eid][i]
+            #for (eid, oxxs) in sorted(iteritems(oxxs)):
+                #msg_element[eid] = header + ['      ELEMENT-ID = %8i\n' % (eid)]
+                #if eid not in msg_time:
+                    #msg_time[eid] = []
+                #for i, oxx in enumerate(oxxs):
+                    #fd = self.fiber_distance[dt][eid][i]
+                    #oxx = self.oxx[dt][eid][i]
+                    #oyy = self.oyy[dt][eid][i]
+                    #ozz = self.ozz[dt][eid][i]
+                    #txy = self.txy[dt][eid][i]
 
-                    exx = self.exx[dt][eid][i]
-                    eyy = self.eyy[dt][eid][i]
-                    ezz = self.ezz[dt][eid][i]
-                    exy = self.exy[dt][eid][i]
+                    #exx = self.exx[dt][eid][i]
+                    #eyy = self.eyy[dt][eid][i]
+                    #ezz = self.ezz[dt][eid][i]
+                    #exy = self.exy[dt][eid][i]
 
-                    es = self.es[dt][eid][i]
-                    eps = self.eps[dt][eid][i]
-                    ecs = self.ecs[dt][eid][i]
-                    [oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy] = write_floats_13e([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy])
-                    if i == 0:
-                        msg_time[eid].append('0 %9.3E %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (dt, fd, oxx, oyy, ozz, txy, es, eps, ecs))
-                    else:
-                        msg_time[eid].append('     %9s %-13s  %-13s  %-13s  %-13s  %-13s\n' % ('', '', exx, eyy, ezz, exy))
+                    #es = self.es[dt][eid][i]
+                    #eps = self.eps[dt][eid][i]
+                    #ecs = self.ecs[dt][eid][i]
+                    #[oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy] = write_floats_13e(
+                        #[oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy])
+                    #if i == 0:
+                        #msg_time[eid].append('0 %9.3E %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            #dt, fd, oxx, oyy, ozz, txy, es, eps, ecs))
+                    #else:
+                        #msg_time[eid].append('     %9s %-13s  %-13s  %-13s  %-13s  %-13s\n' % (
+                            #'', '', exx, eyy, ezz, exy))
 
-        msg = []
-        for eid, e in sorted(iteritems(msg_element)):
-            msg += header + e + msg_start + msg_time[eid]
-            msg.append(page_stamp % page_num)
-            page_num += 1
-        f.write(''.join(msg))
-        return page_num - 1
+        #msg = []
+        #for eid, e in sorted(iteritems(msg_element)):
+            #msg += header + e + msg_start + msg_time[eid]
+            #msg.append(page_stamp % page_num)
+            #page_num += 1
+        #f.write(''.join(msg))
+        #return page_num - 1

@@ -4,11 +4,12 @@ from copy import deepcopy
 import numpy as np
 import tables
 
-from h5Nastran.msc import data_tables
+from ..msc import data_tables
+from ..data_helper import DataHelper
 
 _defaults = {
-    '<f8': np.nan,
-    '<i8': -10
+    '<f8': DataHelper.default_double,
+    '<i8': DataHelper.default_int
 }
 
 
@@ -101,7 +102,7 @@ class TableDef(object):
                 name = self.attrs[i]
                 _type = _dtypes[name][0]
                 if _type.startswith('S'):
-                    self.defaults[name] = ''
+                    self.defaults[name] = DataHelper.default_str
                 else:
                     self.defaults[name] = _defaults[_type]
 

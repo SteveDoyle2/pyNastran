@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 
 import pyNastran
-from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
+from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom, create_res_obj
 from pyNastran.gui.gui_utils.write_gif import setup_animation
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
@@ -24,7 +24,6 @@ class GuiUtils(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_deflection_csv(csv_filename) # bad shape
         load_csv(csv_filename)
-
 
     def test_gui_csv_03a(self):
         """tests solid_bending_multi_node.csv with deflection loader"""
@@ -46,7 +45,17 @@ class GuiUtils(unittest.TestCase):
     def test_gui_deflection_csv_01b(self):
         """tests solid_bending_multi_deflection_node.txt with deflection loader"""
         csv_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
-        load_deflection_csv(csv_filename)
+        A, fmt_dict, headers = load_deflection_csv(csv_filename)
+        result_type = 'node'
+
+        header0 = headers[0]
+        result0 = A[header0]
+        nrows = result0.shape[0]
+        #assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
+        header = header0
+        islot = 0
+        create_res_obj(islot, headers, header, A, fmt_dict, result_type,
+                       dim_max=1.0, xyz_cid0=None)
 
     def test_gui_custom_geom_01(self):
         """tests custom_geom.csv"""
