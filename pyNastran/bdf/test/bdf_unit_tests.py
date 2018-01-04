@@ -4,6 +4,7 @@ import os
 import unittest
 from numpy import allclose, array
 from numpy.linalg import norm  # type: ignore
+from six import StringIO
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
@@ -198,6 +199,50 @@ class TestBDF(Tester):
         #self._compare_mass_cg_I(fem1, reference_point=u'cg')
 
         #self.run_bdf(folder, bdf_filename, xref=True, debug=False) # PBEAML is not supported
+
+    def test_bdf_slash(self):
+        """tests a / in a deck"""
+        lines = [
+            '$ DEC/CMS REPLACEMENT HISTORY, Element D10912R.DAT',
+            '$ *1    15-JUN-1990 17:41:35 CMSMGR "66B PLUS/G 66B/ Initial installation of TPL test problems"',
+            '$ DEC/CMS REPLACEMENT HISTORY, Element D10912R.DAT',
+            'RESTART VERSION=LAST,KEEP $ RESTART FROM D10911R DBS=D10911D',
+            'ID EDS, D10912R  $',
+            '$ID EDS, D2712R   $',
+            '$ID EDS,D27D12R',
+            'SOL 109 $',
+            '$SOL 27,0',
+            '$DIAG 8,14',
+            'TIME 5',
+            '$READ 10 $ D27D11',
+            'CEND',
+            'TITLE=NEW RIGID FORMATS - CANTILEVER BEAM                      D10912R',
+            'SUBTITLE=DIRECT TRANSIENT',
+            'SET 1000=10,30,40',
+            'SET 2000=111,200',
+            'METHOD=1',
+            'DISP(SORT2)=2000',
+            'SPC=200',
+            'MPC=100',
+            'TSTEP=100',
+            'FORCE=1000',
+            'SUBCASE 1',
+            'DLOAD=10',
+            'BEGIN BULK',
+            '/       47',
+            'TLOAD1,10,2,0,0,10',
+            'ENDDATA',
+        ]
+        bdf_file = StringIO()
+        bdf_file.writelines(lines)
+        bdf_file.seek(0)
+        #with self.assertRaises(NotImplementedError):
+        model = read_bdf(bdf_file, validate=True, xref=True,
+                         punch=False, skip_cards=None,
+                         read_cards=None,
+                         encoding=None, log=None,
+                         debug=True, mode='msc')
+
 
     def test_bdf_05(self):
         bdf_filename = 'testA.bdf'

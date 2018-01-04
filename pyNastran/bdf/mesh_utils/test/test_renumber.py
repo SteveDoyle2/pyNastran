@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from pyNastran.bdf.bdf import BDF, get_logger2
+from pyNastran.bdf.bdf import BDF, SimpleLogger
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 #from pyNastran.utils.dev import get_files_of_type
 
@@ -83,7 +83,7 @@ class TestRenumber(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm.dat')
         bdf_filename_renumber = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm_renumber.dat')
         bdf_filename_check = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm_check.dat')
-        log = get_logger2(debug=None)
+        log = SimpleLogger('error')
         check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check, log=log)
 
     def test_renumber_03(self):
