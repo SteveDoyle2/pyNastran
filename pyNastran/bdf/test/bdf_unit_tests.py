@@ -200,7 +200,7 @@ class TestBDF(Tester):
 
         #self.run_bdf(folder, bdf_filename, xref=True, debug=False) # PBEAML is not supported
 
-    def test_bdf_slash(self):
+    def _test_bdf_slash(self):
         """tests a / in a deck"""
         lines = [
             '$ DEC/CMS REPLACEMENT HISTORY, Element D10912R.DAT',

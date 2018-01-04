@@ -372,9 +372,7 @@ class CHEXA8(SolidElement):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
-        #print('  centroid1=%s centroid2=%s' % (str(c1), str(c2)))
         volume = (area1 + area2) / 2. * norm(c1 - c2)
-        #print('  area1=%s area2=%s length=%s' % (area1, area2, norm(c1 - c2)))
         return abs(volume)
 
     @property
@@ -666,7 +664,6 @@ class CHEXA20(SolidElement):
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
         volume = (area1 + area2) / 2. * norm(c1 - c2)
-        #print('area1=%s area2=%s length=%s' % (area1, area2, norm(c1 - c2)))
         return abs(volume)
 
     @property
@@ -1497,7 +1494,6 @@ class CPYRAM5(SolidElement):
         (n1, n2, n3, n4, n5) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
         volume = area1 / 3. * norm(c1 - n5)
-        #print('area1=%s c1=%s c5=%s' % (area1, str(c1), str(n5)))
         return abs(volume)
 
     @property
