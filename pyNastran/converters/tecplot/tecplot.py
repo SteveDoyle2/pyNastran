@@ -449,29 +449,36 @@ class Tecplot(FortranFormat):
             word, = unpack(b'8s', data)
             self.log.debug('word = %r' % word)
 
-            values = []
-            ii = 0
-            for ii in range(100):
-                datai = self.f.read(4)
-                vali, = unpack(b'i', datai)
-                valf, = unpack(b'f', datai)
-                self.n += 4
-                values.append((vali, valf))
-                if vali == 9999:
-                    break
-            assert ii < 100, ii
-            #for vals in values:
-                #print('  ', vals)
+            #self.show(100, endian='<')
 
-            nbytes = 3 * 4
-            data = self.f.read(nbytes)
-            self.n += nbytes
-            self.show_data(data, types='if', endian='<')
+            # http://home.ustc.edu.cn/~cbq/360_data_format_guide.pdf
+            # page 151
+            if 1:
+                values = []
+                ii = 0
+                for ii in range(100):
+                    datai = self.f.read(4)
+                    vali, = unpack(b'i', datai)
+                    valf, = unpack(b'f', datai)
+                    self.n += 4
+                    values.append((vali, valf))
+                    if vali == 9999:
+                        print('breaking...')
+                        break
+                #for j, vals in enumerate(values):
+                    #print('  ', j, vals)
+                assert ii < 100, ii
+
+                nbytes = 3 * 4
+                data = self.f.read(nbytes)
+                self.n += nbytes
+                self.show_data(data, types='if', endian='<')
 
             nbytes = 1 * 4
             data = self.f.read(nbytes)
             self.n += nbytes
             zone_type, = unpack(b'i', data)
+            self.log.debug('zone_type = %s' % zone_type)
             self.show(100, types='if', endian='<')
 
             nbytes = 11 * 4
@@ -487,6 +494,8 @@ class Tecplot(FortranFormat):
             data = self.f.read(nbytes)
             self.n += nbytes
             nnodes2, nelements2 = unpack('2i', data)
+            assert nnodes2 > 0, nnodes2
+            assert nelements2 > 0, nelements2
             #self.show_data(data, types='if', endian='<') # 'if'?
             if nnodes and nelements:
                 self.log.debug('nnodes=%s nelements=%s' % (nnodes, nelements))
@@ -523,11 +532,15 @@ class Tecplot(FortranFormat):
             # 5 - FEBRICK
             assert zone_type in [0, 1, 2, 3, 4, 5], zone_type
 
-            # p.98
+            # p.93
             # zone_title
             # zone_type
-            #   0=ORDERED, 1=FELINESEG, 2=FETRIANGLE,
-            #   3=FEQUADRILATERAL, 4=FETETRAHEDRON, 5=FEBRICK
+            #   0 = ORDERED
+            #   1 = FELINESEG
+            #   2 = FETRIANGLE
+            #   3 = FEQUADRILATERAL
+            #   4 = FETETRAHEDRON
+            #   5 = FEBRICK
             # i_max_or_num_points
             # j_max_or_num_elements
             # k_max
@@ -566,6 +579,7 @@ class Tecplot(FortranFormat):
 
                 ni = nnodes * nvars
                 nbytes = ni * 4
+                #print('nbytes =', nbytes)
                 data = self.f.read(nbytes)
                 self.n += nbytes
                 xyzvals = unpack(b'%sf' % ni, data)
@@ -587,11 +601,15 @@ class Tecplot(FortranFormat):
                     # CHEXA
                     nnodes_per_element = 8 # 8 nodes/elements
                     nvals = nnodes_per_element * nelements
+                #elif zone_type == 1:
+                    #asdf
                 elif zone_type == 0:
                     # CQUAD4
                     nnodes_per_element = 4
                     nvals = nnodes_per_element * nelements
                     self.log.debug('nvals = %s' % nvals)
+                else:
+                    raise NotImplementedError('zone_type=%s' % zone_type)
 
                 nbytes = nvals * 4
                 node_ids = unpack(b'%ii' % nvals, self.f.read(nbytes))
@@ -1264,5 +1282,5 @@ def _header_lines_to_header_dict(header_lines):
     return headers_dict
 
 if __name__ == '__main__':
-    main2()
+    main()
 
