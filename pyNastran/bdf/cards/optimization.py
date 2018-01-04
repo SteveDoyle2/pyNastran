@@ -4557,8 +4557,18 @@ def get_dvprel_key(dvprel, prop=None):
     if prop_type == 'PROD':
         if var_to_change in ['A', 'J']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PTUBE':
+        if var_to_change in ['OD', 'T']:
+            pass
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PSHELL':
         if var_to_change in ['T']:
@@ -4567,39 +4577,55 @@ def get_dvprel_key(dvprel, prop=None):
             var_to_change = '12I/t^3'
         elif var_to_change == 8:
             var_to_change = 'Ts/T'
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PCOMP':
-        if var_to_change.startswith('THETA') or var_to_change.startswith('T'):
+        if isinstance(var_to_change, int):
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+        elif var_to_change.startswith('THETA') or var_to_change.startswith('T'):
             pass
         elif var_to_change in ['Z0', 'SB', 'TREF', 'GE']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PCOMP':
-        if var_to_change.startswith('THETA') or var_to_change.startswith('T'):
+        if isinstance(var_to_change, int):
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        elif var_to_change.startswith('THETA') or var_to_change.startswith('T'):
             pass
         elif var_to_change in ['Z0', 'SB', 'TREF', 'GE']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBAR':
         if var_to_change in ['A', 'I1', 'I2', 'J']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBEAM':
         if var_to_change in ['A', 'I1', 'I2']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBARL':
-        if var_to_change.startswith('DIM'):
+        if isinstance(var_to_change, int):
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        elif var_to_change.startswith('DIM'):
             pass
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
@@ -4609,7 +4635,9 @@ def get_dvprel_key(dvprel, prop=None):
             var_to_change = '%s %s' % (prop.Type, var_to_change)
 
     elif prop_type == 'PBEAML':
-        if var_to_change.startswith('DIM'):
+        if isinstance(var_to_change, int):
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        elif var_to_change.startswith('DIM'):
             pass
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
@@ -4621,20 +4649,34 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PSHEAR':
         if var_to_change in ['T']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PELAS':
-        if var_to_change in ['K1']:
+        if var_to_change in ['K1', 'GE1']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PDAMP':
         if var_to_change in ['B1']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PWELD':
+        if var_to_change in ['D']:
+            pass
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBUSH':
         if var_to_change in ['K1', 'K2', 'K3', 'K4', 'K5', 'K6',
@@ -4642,32 +4684,43 @@ def get_dvprel_key(dvprel, prop=None):
                              'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
                              'GE1', 'GE3', 'GE4', 'GE5', 'GE6',]:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBUSH1D':
         if var_to_change in ['K', 'C', 'M']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PGAP':
         if var_to_change in ['KA',]:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PVISC':
         if var_to_change in ['CE1']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PFAST':
         if var_to_change in ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS']:
             pass
-        else:  # pragma: no cover
+        elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
     else:  # pragma: no cover
         msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
     key = '%s %s' % (prop_type, var_to_change)

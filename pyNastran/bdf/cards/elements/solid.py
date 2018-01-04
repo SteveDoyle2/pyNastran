@@ -1296,7 +1296,7 @@ class CPENTA15(SolidElement):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()[:6]
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        centroid = (c1 - c2) / 2.
+        centroid = (c1 + c2) / 2.
         return centroid
 
     def Volume(self):
@@ -1308,7 +1308,6 @@ class CPENTA15(SolidElement):
         area2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
 
