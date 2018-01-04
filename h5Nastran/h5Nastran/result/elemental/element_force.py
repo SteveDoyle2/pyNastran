@@ -50,7 +50,7 @@ class ElementForce(object):
         self.fast = FAST(self._h5n, self)
         self.fast_cplx = FAST_CPLX(self._h5n, self)
         self.gap = GAP(self._h5n, self)
-        self.grad_flux = None  # TODO: looks like msc is only partially supporting this for now
+        self.grad_flux = None  # skipping for now
         self.hbdye = HBDYE(self._h5n, self)
         self.hbdyg = HBDYG(self._h5n, self)
         self.hbdyp = HBDYP(self._h5n, self)
@@ -119,7 +119,7 @@ class BARS(ResultTable):
 
 
 class BARS_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 100 BARS_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 100 BARS COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BARS_CPLX', result_type)
 
 
@@ -127,7 +127,7 @@ class BARS_CPLX(ResultTable):
 
 
 class BAR_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 34 BAR_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 34 BAR COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BAR_CPLX', result_type)
 
 
@@ -151,7 +151,7 @@ class BEAM3(ResultTable):
 
 
 class BEAM3_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 184 BEAM3_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 184 BEAM3 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BEAM3_CPLX', result_type)
 
 
@@ -159,7 +159,7 @@ class BEAM3_CPLX(ResultTable):
 
 
 class BEAM_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 2 BEAM_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 2 BEAM COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BEAM_CPLX', result_type)
 
 
@@ -175,7 +175,7 @@ class BEND(ResultTable):
 
 
 class BEND_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 69 BEND_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 69 BEND COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BEND_CPLX', result_type)
 
 
@@ -199,7 +199,7 @@ class BUSH1D(ResultTable):
 
 
 class BUSH_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 102 BUSH_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 102 BUSH COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/BUSH_CPLX', result_type)
 
 
@@ -223,7 +223,7 @@ class CONROD(ResultTable):
 
 
 class CONROD_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 10 CONROD_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 10 CONROD COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/CONROD_CPLX', result_type)
 
 
@@ -255,7 +255,7 @@ class DAMP1(ResultTable):
 
 
 class DAMP1_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 20 DAMP1_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 20 DAMP1 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/DAMP1_CPLX', result_type)
 
 
@@ -271,7 +271,7 @@ class DAMP2(ResultTable):
 
 
 class DAMP2_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 21 DAMP2_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 21 DAMP2 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/DAMP2_CPLX', result_type)
 
 
@@ -287,7 +287,7 @@ class DAMP3(ResultTable):
 
 
 class DAMP3_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 22 DAMP3_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 22 DAMP3 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/DAMP3_CPLX', result_type)
 
 
@@ -303,7 +303,7 @@ class DAMP4(ResultTable):
 
 
 class DAMP4_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 23 DAMP4_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 23 DAMP4 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/DAMP4_CPLX', result_type)
 
 
@@ -319,7 +319,7 @@ class ELAS1(ResultTable):
 
 
 class ELAS1_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 11 ELAS1_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 11 ELAS1 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/ELAS1_CPLX', result_type)
 
 
@@ -335,7 +335,7 @@ class ELAS2(ResultTable):
 
 
 class ELAS2_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 12 ELAS2_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 12 ELAS2 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/ELAS2_CPLX', result_type)
 
 
@@ -351,7 +351,7 @@ class ELAS3(ResultTable):
 
 
 class ELAS3_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 13 ELAS3_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 13 ELAS3 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/ELAS3_CPLX', result_type)
 
 
@@ -367,7 +367,7 @@ class ELAS4(ResultTable):
 
 
 class ELAS4_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 14 ELAS4_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 14 ELAS4 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/ELAS4_CPLX', result_type)
 
 
@@ -383,7 +383,7 @@ class FAST(ResultTable):
 
 
 class FAST_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 126 FAST_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 126 FAST COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/FAST_CPLX', result_type)
 
 
@@ -431,7 +431,7 @@ class QUAD4(ResultTable):
 
 
 class QUAD4_CN(ResultTable):
-    result_type = 'ELEMENT FORCES 144 QUAD4_CN REAL'
+    result_type = 'ELEMENT FORCES 144 QUAD4C REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4_CN', result_type)
 
 
@@ -439,7 +439,7 @@ class QUAD4_CN(ResultTable):
 
 
 class QUAD4_CN_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 144 QUAD4_CN_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 144 QUAD4C COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4_CN_CPLX', result_type)
 
 
@@ -447,7 +447,7 @@ class QUAD4_CN_CPLX(ResultTable):
 
 
 class QUAD4_COMP(ResultTable):
-    result_type = 'ELEMENT FORCES 95 QUAD4_COMP REAL'
+    result_type = 'ELEMENT FORCES 95 QUAD4LC REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4_COMP', result_type)
 
 
@@ -455,7 +455,7 @@ class QUAD4_COMP(ResultTable):
 
 
 class QUAD4_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 33 QUAD4_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 33 QUAD4 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4_CPLX', result_type)
 
 
@@ -471,7 +471,7 @@ class QUAD8(ResultTable):
 
 
 class QUAD8_COMP(ResultTable):
-    result_type = 'ELEMENT FORCES 96 QUAD8_COMP REAL'
+    result_type = 'ELEMENT FORCES 96 QUAD8LC REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD8_COMP', result_type)
 
 
@@ -479,7 +479,7 @@ class QUAD8_COMP(ResultTable):
 
 
 class QUAD8_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 64 QUAD8_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 64 QUAD8 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD8_CPLX', result_type)
 
 
@@ -495,7 +495,7 @@ class QUADR(ResultTable):
 
 
 class QUADR_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 82 QUADR_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 82 QUADR COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUADR_CPLX', result_type)
 
 
@@ -511,7 +511,7 @@ class RAC2D(ResultTable):
 
 
 class RAC2D_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 60 RAC2D_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 60 RAC2D COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/RAC2D_CPLX', result_type)
 
 
@@ -527,7 +527,7 @@ class RAC3D(ResultTable):
 
 
 class RAC3D_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 61 RAC3D_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 61 RAC3D COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/RAC3D_CPLX', result_type)
 
 
@@ -559,7 +559,7 @@ class ROD(ResultTable):
 
 
 class ROD_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 1 ROD_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 1 ROD COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/ROD_CPLX', result_type)
 
 
@@ -575,7 +575,7 @@ class SEAM(ResultTable):
 
 
 class SEAM_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 119 SEAM_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 119 SEAM COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/SEAM_CPLX', result_type)
 
 
@@ -591,7 +591,7 @@ class SHEAR(ResultTable):
 
 
 class SHEAR_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 4 SHEAR_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 4 SHEAR COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/SHEAR_CPLX', result_type)
 
 
@@ -607,7 +607,7 @@ class TRIA3(ResultTable):
 
 
 class TRIA3_COMP(ResultTable):
-    result_type = 'ELEMENT FORCES 97 TRIA3_COMP REAL'
+    result_type = 'ELEMENT FORCES 97 TRIA3LC REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA3_COMP', result_type)
 
 
@@ -615,7 +615,7 @@ class TRIA3_COMP(ResultTable):
 
 
 class TRIA3_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 74 TRIA3_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 74 TRIA3 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA3_CPLX', result_type)
 
 
@@ -631,7 +631,7 @@ class TRIA6(ResultTable):
 
 
 class TRIA6_COMP(ResultTable):
-    result_type = 'ELEMENT FORCES 98 TRIA6_COMP REAL'
+    result_type = 'ELEMENT FORCES 98 TRIA6LC REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA6_COMP', result_type)
 
 
@@ -639,7 +639,7 @@ class TRIA6_COMP(ResultTable):
 
 
 class TRIA6_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 75 TRIA6_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 75 TRIA6 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA6_CPLX', result_type)
 
 
@@ -655,7 +655,7 @@ class TRIAR(ResultTable):
 
 
 class TRIAR_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 70 TRIAR_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 70 TRIAR COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIAR_CPLX', result_type)
 
 
@@ -671,7 +671,7 @@ class TUBE(ResultTable):
 
 
 class TUBE_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 3 TUBE_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 3 TUBE COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TUBE_CPLX', result_type)
 
 
@@ -687,7 +687,7 @@ class VISC(ResultTable):
 
 
 class VISC_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 24 VISC_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 24 VISC COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/VISC_CPLX', result_type)
 
 
@@ -711,7 +711,7 @@ class WELDC(ResultTable):
 
 
 class WELDC_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 117 WELDC_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 117 WELDC COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/WELDC_CPLX', result_type)
 
 
@@ -727,7 +727,7 @@ class WELDP(ResultTable):
 
 
 class WELDP_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 118 WELDP_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 118 WELDP COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/WELDP_CPLX', result_type)
 
 
@@ -735,7 +735,7 @@ class WELDP_CPLX(ResultTable):
 
 
 class WELD_CPLX(ResultTable):
-    result_type = 'ELEMENT FORCES 200 WELD_CPLX COMPLEX'
+    result_type = 'ELEMENT FORCES 200 WELD COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/WELD_CPLX', result_type)
 
 

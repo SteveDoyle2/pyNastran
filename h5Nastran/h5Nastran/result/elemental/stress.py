@@ -68,7 +68,7 @@ class QUAD4(ResultTable):
 
 ########################################################################################################################
 
-# TODO: QUAD4_CN strain/stress not in spec, format from QRG, guessing column id's for now
+# TODO: QUAD4_CN strain/stress not in spec
 
 class QUAD4_CN_DEF(object):
     name = 'QUAD4_CN'
@@ -77,10 +77,10 @@ class QUAD4_CN_DEF(object):
         ('EID', '<i8', ()), ('TYPE', 'S4', ()),
         ('STRESS',
             [
-                ('GRID', '<i8', ()), ('FD1', '<f8', ()), ('X1', '<f8', ()), ('Y1', '<f8', ()), ('XY1', '<f8', ()),
-                ('A1', '<f8', ()), ('FP1', '<f8', ()), ('FM1', '<f8', ()), ('FVM1', '<f8', ()),
-                ('FD2', '<f8', ()), ('X2', '<f8', ()), ('Y2', '<f8', ()), ('XY2', '<f8', ()),
-                ('A2', '<f8', ()), ('FP2', '<f8', ()), ('FM2', '<f8', ()), ('FVM2', '<f8', ()),
+                ('GRID', '<i8', ()), ('FD1', '<f8', ()), ('EX1', '<f8', ()), ('EY1', '<f8', ()), ('ETXY1', '<f8', ()),
+                ('A1', '<f8', ()), ('EMJRP1', '<f8', ()), ('EMNRP1', '<f8', ()), ('ETMAX1', '<f8', ()),
+                ('FD2', '<f8', ()), ('EX2', '<f8', ()), ('EY2', '<f8', ()), ('ETXY2', '<f8', ()),
+                ('A2', '<f8', ()), ('EMJRP2', '<f8', ()), ('EMNRP2', '<f8', ()), ('ETMRP2', '<f8', ()),
             ],
          (5,)
          ),
