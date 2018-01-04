@@ -198,7 +198,7 @@ class ShellElement(Element):
         try:
             return mpa * A
         except TypeError:
-            msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid_ref.type)
+            msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
             raise TypeError(msg)
 
     def Mass_no_xref(self, model):
@@ -541,9 +541,9 @@ class CTRIA3(TriShell):
             theta_mcid = 0.0
             zoffset = 0.0
             tflag = 0
-            T1 = 1.0
-            T2 = 1.0
-            T3 = 1.0
+            T1 = None
+            T2 = None
+            T3 = None
         return CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
@@ -924,9 +924,9 @@ class CTRIA6(TriShell):
         else:
             theta_mcid = 0.0
             zoffset = 0.0
-            T1 = 1.0
-            T2 = 1.0
-            T3 = 1.0
+            T1 = None
+            T2 = None
+            T3 = None
             tflag = 0
         return CTRIA6(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, comment=comment)
@@ -1911,10 +1911,10 @@ class CQUAD4(QuadShell):
             theta_mcid = 0.0
             zoffset = 0.0
             tflag = 0
-            T1 = 1.0
-            T2 = 1.0
-            T3 = 1.0
-            T4 = 1.0
+            T1 = None
+            T2 = None
+            T3 = None
+            T4 = None
 
         return CQUAD4(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
@@ -3554,10 +3554,10 @@ class CQUAD8(QuadShell):
         else:
             theta_mcid = 0.0
             zoffset = 0.0
-            T1 = 1.0
-            T2 = 1.0
-            T3 = 1.0
-            T4 = 1.0
+            T1 = None
+            T2 = None
+            T3 = None
+            T4 = None
             tflag = 0
         return CQUAD8(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4,

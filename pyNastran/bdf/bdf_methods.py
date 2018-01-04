@@ -673,8 +673,8 @@ class BDFMethods(BDFAttributes):
             for coeff, desvar_idi in zip(dlink.coeffs, dlink.IDv):
                 valuei = desvar_values[desvar_idi]
                 value += coeff * valuei
-            value2 = min(max(value + 0.1, desvar.xlb))
-            desvar_values[desvar_id] = value
+            value2 = min(max(value, desvar.xlb), desvar.xub)
+            desvar_values[desvar_id] = value2
 
         # calculates the real delta to be used by DVGRID
         desvar_delta = {key : (desvar_init[key] - desvar_values[key])

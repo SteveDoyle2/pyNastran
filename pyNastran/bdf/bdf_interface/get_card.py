@@ -1191,6 +1191,15 @@ class GetCard(GetMethods):
         loads, scale_factors = self.get_reduced_loads(load_case_id)[:2]
         tempd = self.tempds[load_case_id].temperature if load_case_id in self.tempds else 0.
         temperatures = np.ones(len(nid_map), dtype=dtype) * tempd
+
+        skip_loads = [
+            'FORCE', 'FORCE1', 'FORCE2',
+            'MOMENT', 'MOMENT1', 'MOMENT2',
+            'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+            'GRAV', 'ACCEL', 'ACCEL1', 'GMLOAD',
+            'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+            'RFORCE', 'RFORCE1',
+        ]
         for load, scale in zip(loads, scale_factors):
             assert scale == 1.0, str(load)
             if load.type == 'TEMP':
@@ -1198,8 +1207,10 @@ class GetCard(GetMethods):
                 for nid, val in iteritems(temps_dict):
                     nidi = nid_map[nid]
                     temperatures[nidi] = val
+            elif load.type in skip_loads:
+                pass
             else:
-                self.log.debug(load.type)
+                self.log.debug(load)
         return is_temperatures, temperatures
 
     def _get_rigid(self):
@@ -1503,7 +1514,7 @@ class GetCard(GetMethods):
 
         if mpc_id is not None:
             mpcs = self.get_mpcs(mpc_id)
-            #asfd
+            asfd
             for mpc in mpcs:
                 if mpc.type == 'MPC':
                     for nid, component in zip(mpc.node_ids, mpc.components):

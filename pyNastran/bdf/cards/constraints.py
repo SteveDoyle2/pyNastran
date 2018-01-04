@@ -888,6 +888,9 @@ class SPCAX(Constraint):
         #self.rid = model.ring[self.rid]
         #self.hid = model.harmonic[self.hid]
 
+    def safe_cross_reference(self, model):
+        self.cross_reference(model)
+
     def uncross_reference(self):
         pass
 

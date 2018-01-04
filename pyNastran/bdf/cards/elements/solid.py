@@ -87,20 +87,9 @@ def area_centroid(n1, n2, n3, n4):
       | /   |
       4-----3
     """
-    area1 = 0.5 * norm(cross(n1 - n2, n2 - n4))
-    c1 = (n1 + n2 + n4) / 3.
-
-    area2 = 0.5 * norm(cross(n2 - n4, n2 - n3))
-    c2 = (n2 + n3 + n4) / 3.
-
-    area = area1 + area2
-    try:
-        centroid = (c1 * area1 + c2 * area2) / area
-    except FloatingPointError:
-        msg = '\nc1=%r\narea1=%r\n' % (c1, area1)
-        msg += 'c2=%r\narea2=%r' % (c2, area2)
-        raise FloatingPointError(msg)
-    return(area, centroid)
+    area = 0.5 * norm(cross(n3 - n1, n4 - n2))
+    centroid = (n1 + n2 + n3 + n4) / 4.
+    return area, centroid
 
 
 class SolidElement(Element):
@@ -151,7 +140,7 @@ class SolidElement(Element):
         Calculates the mass of the solid element
         Mass = Rho * Volume
         """
-        #print('rho=%e volume=%e' % (self.Rho(), self.Volume()))
+        #print('  rho=%e volume=%e' % (self.Rho(), self.Volume()))
         return self.Rho() * self.Volume()
 
     def Mid(self):
@@ -383,7 +372,9 @@ class CHEXA8(SolidElement):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
+        #print('  centroid1=%s centroid2=%s' % (str(c1), str(c2)))
         volume = (area1 + area2) / 2. * norm(c1 - c2)
+        #print('  area1=%s area2=%s length=%s' % (area1, area2, norm(c1 - c2)))
         return abs(volume)
 
     @property
@@ -675,6 +666,7 @@ class CHEXA20(SolidElement):
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
         volume = (area1 + area2) / 2. * norm(c1 - c2)
+        #print('area1=%s area2=%s length=%s' % (area1, area2, norm(c1 - c2)))
         return abs(volume)
 
     @property
@@ -1498,10 +1490,14 @@ class CPYRAM5(SolidElement):
     def Volume(self):
         """
         .. seealso:: CPYRAM5.Volume
+
+        V = (l * w) * h / 3
+        V = A * h / 3
         """
         (n1, n2, n3, n4, n5) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
         volume = area1 / 3. * norm(c1 - n5)
+        #print('area1=%s c1=%s c5=%s' % (area1, str(c1), str(n5)))
         return abs(volume)
 
     @property
@@ -1690,12 +1686,15 @@ class CPYRAM13(SolidElement):
     def Volume(self):
         """
         .. seealso:: CPYRAM5.Volume
+
+        V = (l * w) * h / 3
+        V = A * h / 3
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
-        volume = area1 / 2. * norm(c1 - n5)
+        volume = area1 / 3. * norm(c1 - n5)
         return abs(volume)
 
     @property

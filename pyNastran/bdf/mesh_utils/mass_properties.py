@@ -158,6 +158,7 @@ def _mass_properties(model, elements, masses, reference_point, nsm_id=None):
 
             try:
                 m = element.Mass()
+                #print('eid=%s type=%s mass=%s'  %(element.eid, element.type, m))
                 (x, y, z) = p - reference_point
                 x2 = x * x
                 y2 = y * y
@@ -424,6 +425,11 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
 
     for pid, eids in sorted(iteritems(pid_eids)):
         mass, cg, I = mass_properties(model, element_ids=eids)
+
+    TODO
+    ----
+     - fix NSML
+     - fix CG for F:\work\pyNastran\examples\Dropbox\move_tpl\ac11102g.bdf
     """
     #if reference_point is None:
     reference_point = array([0., 0., 0.])
@@ -776,6 +782,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
                 #m = area * (mpa + nsm)
                 m = area * mpa
+                #print('eid=%s type=%s mass=%s; area=%s mpa=%s'  %(elem.eid, elem.type, m, area, mpa))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CQUAD':
             eids2 = get_sub_eids(all_eids, eids)
@@ -843,9 +850,17 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 centroid1 = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
                 area1 = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
                 centroid5 = xyz[n5]
+
+                #V = (l * w) * h / 3
+                #V = A * h / 3
                 centroid = (centroid1 + centroid5) / 2.
+
+                #(n1, n2, n3, n4, n5) = self.get_node_positions()
+                #area1, c1 = area_centroid(n1, n2, n3, n4)
+                #volume = area1 / 3. * norm(c1 - n5)
                 volume = area1 / 3. * norm(centroid1 - centroid5)
                 m = elem.Rho() * volume
+                #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (elem.eid, 'CPYRAM', m, elem.Rho(), volume))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CPENTA':
             eids2 = get_sub_eids(all_eids, eids)
@@ -859,6 +874,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 centroid = (centroid1 + centroid2) / 2.
                 volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                 m = elem.Rho() * volume
+                #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (elem.eid, 'CPENTA', m, elem.Rho(), volume))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
         elif etype == 'CHEXA':
@@ -875,7 +891,10 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
 
                 volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                 m = elem.Rho() * volume
+                #print('*centroid1=%s centroid2=%s' % (str(centroid1), str(centroid2)))
+                #print('*area1=%s area2=%s length=%s' % (area1, area2, norm(centroid1 - centroid2)))
                 centroid = (centroid1 + centroid2) / 2.
+                #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (elem.eid, 'CHEXA', m, elem.Rho(), volume))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
         elif etype == 'CBEND':

@@ -1,7 +1,8 @@
 from __future__ import print_function
 import os
 import unittest
-from pyNastran.bdf.bdf import BDF, SimpleLogger
+from pyNastran.bdf.bdf import BDF
+from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 #from pyNastran.utils.dev import get_files_of_type
 

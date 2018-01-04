@@ -641,6 +641,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         cds = np.unique(nid_cp_cd[:, 2])
         cd_coords = []
         for cd in cds:
+            if cd == -1:
+                continue
             coord = fem1.coords[cd]
             # coordRs work in op2 extraction
             if coord.type not in ['CORD2R', 'CORD1R']:
@@ -1506,8 +1508,8 @@ def get_element_stats(fem1, fem2, quiet=False):
         print("cg   = %s" % cg1)
         print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s" % tuple(inertia1))
     assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
-    assert np.allclose(cg1, cg2), 'cg1=%s cg2=%s' % (cg1, cg2)
-    assert np.allclose(inertia1, inertia2), 'inertia1=%s inertia2=%s' % (inertia1, inertia2)
+    assert np.allclose(cg1, cg2), 'mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
+    assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
 
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
         mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None, nsm_id=nsm_id)
