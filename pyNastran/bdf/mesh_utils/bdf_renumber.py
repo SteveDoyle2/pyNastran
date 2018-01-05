@@ -532,13 +532,14 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             set_map[sidi] = set_id
             set_id += 1
 
-    spline_id_map = {}
     if 'spline_id' in starting_id_dict and spline_id is not None:
-        # sets
+        # set up spline1 box mapping
+        delta_box1_map = {}
+        delta_box2_map = {}
         for sidi, spline in sorted(iteritems(model.splines)):
-            spline.eid = spline_id
-            spline_id_map[sidi] = spline_id
-            spline_id += 1
+            if spline.type == 'SPLINE1':
+                delta_box1_map[sidi] = spline.box1 - spline.caero
+                delta_box2_map[sidi] = spline.box2 - spline.caero
 
     caero_id_map = {}
     if 'caero_id' in starting_id_dict and caero_id is not None:
@@ -547,6 +548,18 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             caero.eid = caero_id
             caero_id_map[caero_idi] = caero_id
             caero_id += caero.shape[0] * caero.shape[1]
+
+    spline_id_map = {}
+    if 'spline_id' in starting_id_dict and spline_id is not None:
+        # splines
+        for sidi, spline in sorted(iteritems(model.splines)):
+            spline.eid = spline_id
+            #spline.cross_reference(model)
+            if spline.type == 'SPLINE1':
+                spline.box1 = caero_id_map[spline.caero] + delta_box1_map[sidi]
+                spline.box2 = caero_id_map[spline.caero] + delta_box2_map[sidi]
+            spline_id_map[sidi] = spline_id
+            spline_id += 1
 
     nlparm_map = {}
     nlpci_map = {}

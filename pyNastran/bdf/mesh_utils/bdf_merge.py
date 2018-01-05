@@ -108,7 +108,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     data_members = [
         'coords', 'nodes', 'elements', 'masses', 'properties', 'properties_mass',
-        'materials', 'sets', 'rigid_elements', 'mpcs', 'caeros',
+        'materials', 'sets', 'rigid_elements', 'mpcs', 'caeros', 'splines',
     ]
     mappers = []
     for bdf_filename in bdf_filenames[1:]:

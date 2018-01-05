@@ -376,6 +376,7 @@ class BDFAttributes(object):
         #: SETy
         self.sets = {}  # type: Dict[int, Any]
         self.asets = []  # type: List[Any]
+        self.omits = []  # type: List[Any]
         self.bsets = []  # type: List[Any]
         self.csets = []  # type: List[Any]
         self.qsets = []  # type: List[Any]

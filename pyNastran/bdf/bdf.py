@@ -1027,6 +1027,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         for aset in self.asets:
             aset.validate()
+        for omit in self.omits:
+            omit.validate()
         for bset in self.bsets:
             bset.validate()
         for cset in self.csets:

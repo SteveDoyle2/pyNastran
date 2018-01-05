@@ -402,6 +402,8 @@ class ABQSet1(Set):
         self.ids = expand_thru(ids)
         self.ids_ref = None
 
+        self.use_thru = True
+
     @classmethod
     def add_card(cls, card, comment=''):
         components = fcomponents_or_blank(card, 1, 'components', 0)
@@ -459,7 +461,11 @@ class ABQSet1(Set):
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = [self.type, self.components] + collapse_thru(self.node_ids)
+        if self.use_thru:
+            node_ids_list = collapse_thru(self.node_ids)
+        else:
+            node_ids_list = self.node_ids
+        list_fields = [self.type, self.components] + self.node_ids
         return list_fields
 
     def __repr__(self):
@@ -584,6 +590,36 @@ class ASET1(ABQSet1):
         ----------
         components : str
             the degree of freedoms to be retained (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+        """
+        ABQSet1.__init__(self, components, ids, comment)
+
+class OMIT1(ABQSet1):
+    """
+    Defines degrees-of-freedom to be excluded (o-set) from the analysis set (a-set).
+
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+======+=====+=====+=====+=====+=====+
+    | OMIT  |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |       | ID8 | ID9 |      |     |     |     |     |     |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    | OMIT1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    """
+    type = 'OMIT1'
+
+    def __init__(self, components, ids, comment=''):
+        """
+        Creates an OMIT1 card, which defines the degree of freedoms that
+        will be excluded (o-set) from the analysis set (a-set).
+
+        Parameters
+        ----------
+        components : str
+            the degree of freedoms to be omitted (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
         """
