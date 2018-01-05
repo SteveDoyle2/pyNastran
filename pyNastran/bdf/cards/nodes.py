@@ -548,6 +548,10 @@ class GRDSET(BaseCard):
         #: Superelement ID
         self.seid = seid
 
+        self.cp_ref = None
+        self.cd_ref = None
+        self.seid_ref = None
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -584,17 +588,17 @@ class GRDSET(BaseCard):
             the BDF object
         """
         msg = ' which is required by the GRDSET'
-        self.cp = model.Coord(self.cp, msg=msg)
-        self.cp_ref = self.cp
-        self.cd = model.Coord(self.cd, msg=msg)
-        self.cd_ref = self.cd
+        self.cp_ref = model.Coord(self.cp, msg=msg)
+        self.cd_ref = model.Coord(self.cd, msg=msg)
         #self.seid = model.SuperElement(self.seid, msg)
         #self.seid_ref = self.seid
 
     def uncross_reference(self):
         self.cp = self.Cp()
         self.cd = self.Cd()
-        del self.cp_ref, self.cd_ref
+        self.cp_ref = None
+        self.cd_ref = None
+        self.seid_ref = None
 
     def Cd(self):
         """
@@ -605,10 +609,9 @@ class GRDSET(BaseCard):
         cd : int
             the output coordinate system
         """
-        if isinstance(self.cd, integer_types):
+        if self.cd_ref is None:
             return self.cd
-        else:
-            return self.cd.cid
+        return self.cd.cid
 
     def Cp(self):
         """
@@ -619,10 +622,9 @@ class GRDSET(BaseCard):
         cp : int
             the analysis coordinate system
         """
-        if isinstance(self.cp, integer_types):
+        if self.cp_ref is None:
             return self.cp
-        else:
-            return self.cp.cid
+        return self.cp.cid
 
     def Ps(self):
         """
@@ -644,10 +646,9 @@ class GRDSET(BaseCard):
         seid : int
             the Superelement ID
         """
-        if isinstance(self.seid, integer_types):
+        if self.seid_ref is None:
             return self.seid
-        else:
-            return self.seid.seid
+        return self.seid_ref.seid
 
     def _verify(self, xref):
         """
@@ -738,6 +739,7 @@ class GRIDB(BaseCard):
         assert self.cd >= 0, 'cd=%s' % self.cd
         assert self.ps >= 0, 'ps=%s' % self.ps
         assert self.idf >= 0, 'idf=%s' % self.idf
+        self.cd_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -797,10 +799,9 @@ class GRIDB(BaseCard):
         cd : int
             the output coordinate system
         """
-        if isinstance(self.cd, integer_types):
+        if self.cd_ref is None:
             return self.cd
-        else:
-            return self.cd.cid
+        return self.cd_ref.cid
 
     def raw_fields(self):
         """
@@ -819,10 +820,10 @@ class GRIDB(BaseCard):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
+        Returns
+        -------
+        fields : List[varies]
           the fields that define the card
-        :type fields:
-          LIST
         """
         #phi = set_blank_if_default(self.phi, 0.0)
         cd = set_blank_if_default(self.Cd(), 0)
@@ -861,6 +862,47 @@ class GRID(BaseCard):
     +======+=====+====+====+====+====+====+====+======+
     | GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
     +------+-----+----+----+----+----+----+----+------+
+
+    Attributes:
+    =================== =====================================================
+    Name                 Description
+    =================== =====================================================
+    ``nid``             node id
+    ``xyz``             Raw location <:math:`x_1, x_2, x_3`> in the BDF
+    ``cp``              reference coordinate system
+    ``cd``              analysis coordinate system
+    ``ps``              nodal-based constraints
+    ``seid``            superelement id
+    ``cp_ref``          cross-referenced cp (or None)
+    ``cd_ref``          cross-referenced cd (or None)
+    =================== =====================================================
+
+    Attribute Methods:
+    =================== =====================================================
+    Name                 Description
+    =================== =====================================================
+    ``xyz``             Raw location <:math:`x_1, x_2, x_3`> in the BDF
+    ``Nid()``           gets nid
+    ``Cp()``            gets cp_ref.cid or cp depending on cross-referencing
+    ``Cd()``            gets cd_ref.cid or cd depending on cross-referencing
+    ``Ps()``            gets ps
+    ``SEid()``          superelement id
+    =================== =====================================================
+
+    Using the GRID object::
+
+     model = read_bdf(bdf_filename)
+     node = model.Node(nid)
+
+     # gets the position of the node in the global frame
+     node.get_position()
+     node.get_position_wrt(model, cid=0)
+
+     # gets the position of the node in a local frame
+     node.get_position_wrt(model, cid=1)
+
+     # change the location of the node
+     node.set_position(model, array([1.,2.,3.]), cid=3)
     """
     type = 'GRID'
 
@@ -1261,10 +1303,10 @@ class GRID(BaseCard):
         if grdset:
             # update using a grdset object
             if not self.cp:
-                self.cp_ref = grdset.cp
+                self.cp_ref = grdset.cp_ref
             if not self.cd:
                 self.cd = grdset.cd
-                self.cd_ref = self.cd
+                self.cd_ref = self.cd_ref
             if not self.ps:
                 self.ps_ref = grdset.ps
             if not self.seid:
