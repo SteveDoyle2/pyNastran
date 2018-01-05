@@ -342,7 +342,7 @@ def _get_mapper_0(model):
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,
         'FMETHOD' : flutter_map,
-        'caero' : caero_map,
+        'caeros' : caero_map,
         'FREQUENCY' : freq_map,
 
         'DLOAD' : dload_map,
