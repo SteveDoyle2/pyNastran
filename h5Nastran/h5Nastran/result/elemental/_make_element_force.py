@@ -33,6 +33,9 @@ lines = [lines]
 
 
 def make_class(name, num, real_complex):
+
+    result_name = name.upper().replace('_CPLX', '').replace('_CN', 'C').replace('_COMP', 'LC')
+
     _lines = """########################################################################################################################
     
     
@@ -42,7 +45,7 @@ class %s(ResultTable):
         
 
 """ % \
-             (name.upper(), num, name.upper(), real_complex, name.upper())
+             (name.upper(), num, result_name, real_complex, name.upper())
 
     lines[0] += _lines
     _data_.append('        self.%s = %s(self._h5n, self)' % (name.lower(), name.upper()))
@@ -52,6 +55,7 @@ for i in range(len(_data)):
     name, num = _data[i]
     num = int(num)
     if num == -1:
+        _data_.append('        self.%s = None  # skipping for now' % name.lower())
         continue
 
     if 'CPLX' in name:
