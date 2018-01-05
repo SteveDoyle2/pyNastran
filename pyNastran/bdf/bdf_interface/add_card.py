@@ -514,16 +514,28 @@ class AddCards(AddMethods):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        pid_eid : int
+        pid_eid : List[int]; int
             property id or element id depending on nsm_type
-        value : float
+        value : List[float]; float
             the non-structural pass per unit length/area
+            same length as pid_eid
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSM(sid, nsm_type, pid_eid, value, comment=comment)
-        self._add_nsm_object(nsm)
-        return nsm
+        if isinstance(pid_eid, int):
+            pid_eid = [pid_eid]
+        if isinstance(value, float):
+            value = [value]
+        assert isinstance(pid_eid, list), pid_eid
+        assert isinstance(value, list), value
+        assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
+
+        nsms = []
+        for pid_eidi, valuei in zip(pid_eid, value):
+            nsm = NSM(sid, nsm_type, pid_eidi, valuei, comment=comment)
+            self._add_nsm_object(nsm)
+            nsms.append(nsm)
+        return nsms
 
     def add_nsm1(self, sid, nsm_type, value, ids, comment=''):
         # type: (int, str, float, List[int], str) -> NSM1
@@ -568,21 +580,35 @@ class AddCards(AddMethods):
                 PROD, CONROD, PBEND, PSHEAR, PTUBE, PCONEAX, PRAC2D,
                 ELEMENT
             }
-        pid_eid : int
+        pid_eid : List[int]; int
             property id or element id depending on nsm_type
-        value : float
+        value : List[float]; float
             the non-structural pass per unit length/area
+            same length as pid_eid
         comment : str; default=''
             a comment for the card
         """
-        nsm = NSML(sid, nsm_type, pid_eid, value, comment=comment)
-        self._add_nsm_object(nsm)
+        if isinstance(pid_eid, int):
+            pid_eid = [pid_eid]
+        if isinstance(value, float):
+            value = [value]
+        assert isinstance(pid_eid, list), pid_eid
+        assert isinstance(value, list), value
+        assert len(pid_eid) == len(value), 'len(pid_eid)=%s len(value)=%s' % (len(pid_eid), len(value))
+
+        nsms = []
+        for pid_eidi, valuei in zip(pid_eid, value):
+            nsm = NSML(sid, nsm_type, pid_eidi, valuei, comment=comment)
+            self._add_nsm_object(nsm)
+            nsms.append(nsm)
+        return nsms
+
         return nsm
 
     def add_nsml1(self, sid, nsm_type, value, ids, comment=''):
         # type: (int, str, float, List[int], str) -> NSML1
         """
-        Creates an NSM1 card, which defines lumped non-structural mass
+        Creates an NSML1 card, which defines lumped non-structural mass
 
         Parameters
         ----------
@@ -621,7 +647,7 @@ class AddCards(AddMethods):
             a comment for the card
         """
         nsmadd = NSMADD(sid, sets, comment=comment)
-        self._add_nsm_object(nsmadd)
+        self._add_nsmadd_object(nsmadd)
         return nsmadd
 
     def add_omit1(self, components, ids, comment=''):
@@ -1441,7 +1467,7 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pbarl(self, pid, mid, Type, dim, group='MSCBMLO', nsm=0., comment=''):
+    def add_pbarl(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """
         Creates a PBARL card, which defines A, I1, I2, I12, and J using
         dimensions rather than explicit values.
@@ -1461,7 +1487,7 @@ class AddCards(AddMethods):
         dim : List[float]
             dimensions for cross-section corresponding to Type;
             the length varies
-        group : str default='MSCBMLO'
+        group : str default='MSCBML0'
             this parameter can lead to a very broken deck with a very
             bad error message; don't touch it!
         nsm : float; default=0.
@@ -1687,7 +1713,7 @@ class AddCards(AddMethods):
         nsm : List[float]; default=None
             nonstructural mass per unit length
             None : [0.] * len(xxb)
-        group : str; default='MSCBMLO'
+        group : str; default='MSCBML0'
             this parameter can lead to a very broken deck with a very
             bad error message; don't touch it!
         comment : str; default=''
@@ -3735,6 +3761,26 @@ class AddCards(AddMethods):
         return paero
 
     def add_paero3(self, pid, nbox, ncontrol_surfaces, x, y, comment=''):
+        """
+        Creates a PAERO3 card, which defines the number of Mach boxes
+        in the flow direction and the location of cranks and control
+        surfaces of a Mach box lifting surface.
+
+        Parameters
+        ----------
+        pid : int
+            PAERO1 id
+        nbox : int
+            Number of Mach boxes in the flow direction; 0 < nbox < 50
+        ncontrol_surfaces : int
+            Number of control surfaces. (0, 1, or 2)
+        x / y : List[float, None]
+            float : locations of points 5 through 12, which are in the
+            aerodynamic coordinate system, to define the cranks and
+            control surface geometry.
+        comment : str; default=''
+            a comment for the card
+        """
         paero = PAERO3(pid, nbox, ncontrol_surfaces, x, y, comment=comment)
         self._add_paero_object(paero)
         return paero
@@ -4397,7 +4443,13 @@ class AddCards(AddMethods):
 
     def add_flfact(self, sid, factors, comment=''):
         """
-        Creates an FLFACT card
+        Creates an FLFACT card, which defines factors used for flutter
+        analysis.  These factors define either:
+         - density
+         - mach
+         - velocity
+         - reduced frequency
+        depending on the FLUTTER method chosen (e.g., PK, PKNL, PKNLS)
 
         Parameters
         ----------
@@ -4412,10 +4464,13 @@ class AddCards(AddMethods):
                     first value
                 THRU : str
                     the word THRU
-                nf : float
+                fnf : float
                     second value
+                nf : int
+                    number of values
                 fmid : float; default=(f1 + fnf) / 2.
                     the mid point to bias the array
+                TODO: does f1 need be be greater than f2/fnf???
         comment : str; default=''
             a comment for the card
         """
@@ -4424,6 +4479,7 @@ class AddCards(AddMethods):
         return flfact
 
     def add_aecomp(self, name, list_type, lists, comment=''):
+        # type: (str, List[str], Union[int, List[int]], str) -> None
         """
         Creates an AECOMP card
 
@@ -4436,7 +4492,7 @@ class AddCards(AddMethods):
             SET1 for structural components. Aerodynamic components are
             defined on the aerodynamic ks-set mesh while the structural
             components are defined on the g-set mesh.
-        lists : List[int, int, ...]
+        lists : List[int, int, ...]; int
             The identification number of either SET1, AELIST or CAEROi
             entries that define the set of grid points that comprise
             the component
@@ -4572,11 +4628,11 @@ class AddCards(AddMethods):
         return csschd
 
     def add_aesurf(self, aesid, label, cid1, alid1, cid2=None, alid2=None,
-                   eff=1.0, ldw='LDW', crefc=1.0,
-                   crefs=1.0, pllim=-np.pi/2.,
-                   pulim=np.pi/2., hmllim=None,
-                   hmulim=None, tqllim=None,
-                   tqulim=None, comment=''):
+                   eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
+                   pllim=-np.pi/2., pulim=np.pi/2.,
+                   hmllim=None, hmulim=None, # hinge moment lower/upper limits
+                   tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
+                   comment=''):
         """
         Creates an AESURF card, which defines a control surface
 
@@ -4611,11 +4667,10 @@ class AddCards(AddMethods):
             a comment for the card
         """
         aesurf = AESURF(aesid, label, cid1, alid1, cid2=cid2, alid2=alid2,
-                        eff=eff, ldw=ldw, crefc=crefc,
-                        crefs=crefs, pllim=pllim,
-                        pulim=pulim, hmllim=hmllim,
-                        hmulim=hmulim, tqllim=tqllim,
-                        tqulim=tqulim, comment=comment)
+                        eff=eff, ldw=ldw, crefc=crefc, crefs=crefs,
+                        pllim=pllim, pulim=pulim,
+                        hmllim=hmllim, hmulim=hmulim,
+                        tqllim=tqllim, tqulim=tqulim, comment=comment)
         self._add_aesurf_object(aesurf)
         return aesurf
 

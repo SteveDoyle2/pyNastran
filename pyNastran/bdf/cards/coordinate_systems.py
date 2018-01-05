@@ -1702,8 +1702,7 @@ class Cord2x(Coord):
             raise RuntimeError('this method is very confusing...xyz is not defined...is that origin?')
         else:
             self.rid = 0
-            if hasattr(self, 'rid_ref'):
-                del self.rid_ref
+            self.rid_ref = None
             self.rid_trace = [0]
             #beta = self.beta()
             #self.e1 = copy.deepcopy(self.origin)

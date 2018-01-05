@@ -10,7 +10,7 @@ from codecs import open as codec_open
 from typing import List, Dict, Optional, Union, Set, Any, cast
 from six import StringIO
 
-from pyNastran.utils import object_attributes, print_bad_path, _filename
+from pyNastran.utils import print_bad_path, _filename
 from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.errors import MissingDeckSections
@@ -31,6 +31,7 @@ class BDFInputPy(object):
         self.log = get_logger2(log, debug)
 
     def _get_lines(self, bdf_filename, punch=False):
+        # type: (Union[str, StringIO], bool) -> List[str]
         """
         Opens the bdf and extracts the lines by group
 
@@ -54,14 +55,14 @@ class BDFInputPy(object):
         bulk_data_lines : List[str]
             the bulk data lines (stores geometry, boundary conditions, loads, etc.)
         """
-        main_lines = self._get_main_lines(bdf_filename, punch)
+        main_lines = self._get_main_lines(bdf_filename)
         all_lines = self._lines_to_deck_lines(main_lines)
         out = _lines_to_decks(all_lines, punch)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
         return system_lines, executive_control_lines, case_control_lines, bulk_data_lines
 
     def _get_main_lines(self, bdf_filename):
-        # type: (Union[str, StringIO], bool) -> List[str]
+        # type: (Union[str, StringIO]) -> List[str]
         """
         Opens the bdf and extracts the lines
 
@@ -95,7 +96,7 @@ class BDFInputPy(object):
         return lines
 
     def _lines_to_deck_lines(self, lines):
-        # type: (List[str], bool) -> List[str], int
+        # type: (List[str]) -> List[str], int
         """
         Merges the includes into the main deck.
 
@@ -571,6 +572,7 @@ def _check_valid_deck(flag):
         msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
         raise MissingDeckSections(msg)
 
+
 def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
     # type: (Union[str, StringIO]) -> None
     """
@@ -610,3 +612,33 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
                 raise RuntimeError('20 blank lines')
             iline += 1
             lines.append(line)
+
+
+def _clean_comment_bulk(comment):
+    # type: (str) -> str
+    """
+    Removes specific pyNastran comment lines so duplicate lines aren't
+    created.
+
+    Parameters
+    ----------
+    comment : str
+        the comment to possibly remove
+
+    Returns
+    -------
+    updated_comment : str
+        the comment
+    """
+    if comment == '':
+        pass
+    elif comment in IGNORE_COMMENTS:
+        comment = ''
+    elif 'pynastran' in comment.lower():
+        csline = comment.lower().split('pynastran', 1)
+        if csline[1].strip() == ':':
+            comment = ''
+
+    #if comment:
+        #print(comment)
+    return comment

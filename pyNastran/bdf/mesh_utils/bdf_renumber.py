@@ -7,7 +7,7 @@ from __future__ import print_function
 from itertools import chain
 
 import io
-from six import PY2, PY3, iteritems, string_types, StringIO
+from six import PY2, PY3, iteritems, StringIO
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
@@ -619,7 +619,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         else:
             param_id = 1
         for idi, param in sorted(iteritems(dict_obj)):
-            print('working on id=%s param=%s' % (str(idi), str(param)))
+            #print('working on id=%s param=%s' % (str(idi), str(param)))
             try:
                 msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
             except AttributeError:

@@ -87,20 +87,9 @@ def area_centroid(n1, n2, n3, n4):
       | /   |
       4-----3
     """
-    area1 = 0.5 * norm(cross(n1 - n2, n2 - n4))
-    c1 = (n1 + n2 + n4) / 3.
-
-    area2 = 0.5 * norm(cross(n2 - n4, n2 - n3))
-    c2 = (n2 + n3 + n4) / 3.
-
-    area = area1 + area2
-    try:
-        centroid = (c1 * area1 + c2 * area2) / area
-    except FloatingPointError:
-        msg = '\nc1=%r\narea1=%r\n' % (c1, area1)
-        msg += 'c2=%r\narea2=%r' % (c2, area2)
-        raise FloatingPointError(msg)
-    return(area, centroid)
+    area = 0.5 * norm(cross(n3 - n1, n4 - n2))
+    centroid = (n1 + n2 + n3 + n4) / 4.
+    return area, centroid
 
 
 class SolidElement(Element):
@@ -151,7 +140,7 @@ class SolidElement(Element):
         Calculates the mass of the solid element
         Mass = Rho * Volume
         """
-        #print('rho=%e volume=%e' % (self.Rho(), self.Volume()))
+        #print('  rho=%e volume=%e' % (self.Rho(), self.Volume()))
         return self.Rho() * self.Volume()
 
     def Mid(self):
@@ -1307,7 +1296,7 @@ class CPENTA15(SolidElement):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()[:6]
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        centroid = (c1 - c2) / 2.
+        centroid = (c1 + c2) / 2.
         return centroid
 
     def Volume(self):
@@ -1319,7 +1308,6 @@ class CPENTA15(SolidElement):
         area2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
 
@@ -1498,6 +1486,9 @@ class CPYRAM5(SolidElement):
     def Volume(self):
         """
         .. seealso:: CPYRAM5.Volume
+
+        V = (l * w) * h / 3
+        V = A * h / 3
         """
         (n1, n2, n3, n4, n5) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
@@ -1690,12 +1681,15 @@ class CPYRAM13(SolidElement):
     def Volume(self):
         """
         .. seealso:: CPYRAM5.Volume
+
+        V = (l * w) * h / 3
+        V = A * h / 3
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13) = self.get_node_positions()
         area1, c1 = area_centroid(n1, n2, n3, n4)
-        volume = area1 / 2. * norm(c1 - n5)
+        volume = area1 / 3. * norm(c1 - n5)
         return abs(volume)
 
     @property

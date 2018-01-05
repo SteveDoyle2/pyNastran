@@ -285,8 +285,11 @@ class BDFAttributes(object):
         self.masses = {}  # type: Dict[int, Any]
         #: stores PMASS
         self.properties_mass = {}  # type: Dict[int, Any]
-        #: stores NSM, NSM1
+
+        #: stores NSM, NSM1, NSML, NSML1
         self.nsms = {}  # type: Dict[int, List[Any]]
+        #: stores NSMADD
+        self.nsmadds = {}  # type: Dict[int, List[Any]]
 
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}  # type: Dict[int, Any]
@@ -342,11 +345,12 @@ class BDFAttributes(object):
         self.suport1 = {}  # type: Dict[int, Any]
         self.se_suport = []  # type: List[Any]
 
-        #: stores SPCADD, SPC, SPC1, SPCAX, GMSPC
+        #: stores SPC, SPC1, SPCAX, GMSPC
         self.spcs = {}  # type: Dict[int, List[Any]]
+        #: stores SPCADD
         self.spcadds = {}  # type: Dict[int, List[Any]]
-
         self.spcoffs = {}  # type: Dict[int, List[Any]]
+
         self.mpcs = {}  # type: Dict[int, List[Any]]
         self.mpcadds = {}  # type: Dict[int, List[Any]]
 
@@ -569,7 +573,8 @@ class BDFAttributes(object):
                 # thermal
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
             ],
-            'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1', 'NSMADD'],
+            'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1'],
+            'nsmadds' : ['NSMADD'],
             'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE'],
             'plotels' : ['PLOTEL',],
 

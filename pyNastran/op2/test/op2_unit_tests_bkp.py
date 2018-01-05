@@ -14,7 +14,7 @@ from pyNastran.op2.op2_geom import read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
-from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateForceArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
 
@@ -79,7 +79,7 @@ class TestOP2(Tester):
         write_f06 = True
         debug = False
         #debug_file = 'solid_bending.debug.out'
-        model, ext = os.path.splitext(op2_filename)
+        model = os.path.splitext(op2_filename)[0]
         debug_file = model + '.debug.out'
 
         if os.path.exists(debug_file):

@@ -101,6 +101,9 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 #)
 from pyNastran.bdf.errors import DuplicateIDsError, CrossReferenceError
 
+from pyNastran.bdf.bdf_interface.pybdf import (
+    BDFInputPy, _show_bad_file)
+
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              encoding=None, log=None, debug=True, mode='msc'):
@@ -179,7 +182,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
             #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_tempd', 'add_TF', 'add_TRIM',
             #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
 
-            #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
+            #'add_card', 'add_card_fields', 'add_cmethod', 'add_constraint',
             #'add_constraint_MPC', 'add_constraint_MPCADD',
             #'add_constraint_SPC', 'add_constraint_SPCADD',
             #'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper',
@@ -896,8 +899,15 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         self._parse_primary_file_header(bdf_filename)
 
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-        executive_control_lines, case_control_lines, \
-            bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+
+        #executive_control_lines, case_control_lines, \
+            #bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+        obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
+                         log=self.log, debug=self.debug)
+        out = obj._get_lines(bdf_filename, punch=self.punch)
+        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        self._set_pybdf_attributes(obj)
+
 
         self.case_control_lines = case_control_lines
         self.executive_control_lines = executive_control_lines
@@ -937,6 +947,13 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
         #self.pop_xref_errors()
+
+    def _set_pybdf_attributes(self, obj):
+        """common method for all functions that use BDFInputPy"""
+        self.reject_lines += obj.reject_lines
+        self.active_filenames += obj.active_filenames
+        self.active_filename = obj.active_filename
+        self.include_dir = obj.include_dir
 
     def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
         """creates the file loading if bdf_filename is None"""
@@ -2271,27 +2288,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                                                  is_list=True, has_none=has_none)
         self._add_card_helper(card_obj, card, card_name, comment)
 
-    def add_card_lines(self, card_lines, card_name, comment='', has_none=True):
-        """
-        Adds a card object to the BDF object.
-
-        Parameters
-        ----------
-        card_lines: list[str]
-            the list of the card fields
-            input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
-        card_name : str
-            the card_name -> 'GRID'
-        comment : str; default=''
-            an optional the comment for the card
-        has_none : bool; default=True
-            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
-        """
-        card_name = card_name.upper()
-        card_obj, card = self.create_card_object(card_lines, card_name,
-                                                 is_list=False, has_none=has_none)
-        self._add_card_helper(card_obj, card, card_name, comment)
-
     @property
     def nodes(self):
         ngrids = len(self.grid)
@@ -2928,186 +2924,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             raise CardParseSyntaxError(msg)
         return card_name.upper()
 
-    def _show_bad_file(self, bdf_filename):
-        """
-        Prints the 10 lines before the UnicodeDecodeError occurred.
-
-        Parameters
-        ----------
-        bdf_filename : str
-            the filename to print the lines of
-        """
-        lines = []
-        self.log.error('ENCODING - show_bad_file=%r' % self._encoding)
-
-        with codec_open(_filename(bdf_filename), 'r', encoding=self._encoding) as bdf_file:
-            iline = 0
-            nblank = 0
-            while 1:
-                try:
-                    line = bdf_file.readline().rstrip()
-                except UnicodeDecodeError:
-                    iline0 = max([iline - 10, 0])
-                    self.log.error('filename=%s' % self.bdf_filename)
-                    for iline1, line in enumerate(lines[iline0:iline]):
-                        self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
-                    msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
-                        self._encoding, iline, bdf_filename, self._encoding)
-                    raise RuntimeError(msg)
-                if line:
-                    nblank = 0
-                else:
-                    nblank += 1
-                if nblank == 20:
-                    raise RuntimeError('20 blank lines')
-                iline += 1
-                lines.append(line)
-
-    def _get_lines(self, bdf_filename, punch=False):
-        """
-        Opens the bdf and extracts the lines
-
-        Parameters
-        ----------
-        bdf_filename : str
-            the main bdf_filename
-        punch : bool, optional
-            is this a punch file (default=False; no executive/case control decks)
-
-        Returns
-        -------
-        executive_control_lines : list[str]
-            the executive control deck as a list of strings
-        case_control_lines : list[str]
-            the case control deck as a list of strings
-        bulk_data_lines : list[str]
-            the bulk data deck as a list of strings
-        """
-        #: the directory of the 1st BDF (include BDFs are relative to this one)
-        self.include_dir = os.path.dirname(os.path.abspath(bdf_filename))
-
-        with self._open_file(bdf_filename, basename=True) as bdf_file:
-            try:
-                lines = bdf_file.readlines()
-            except:
-                self._show_bad_file(bdf_filename)
-
-        nlines = len(lines)
-
-        i = 0
-        while i < nlines:
-            try:
-                line = lines[i].rstrip('\r\n\t')
-            except IndexError:
-                break
-            uline = line.upper()
-            if uline.startswith('INCLUDE'):
-                j = i + 1
-                line_base = line.split('$')[0]
-                include_lines = [line_base.strip()]
-                #self.log.debug('----------------------')
-
-                line_base = line_base[8:].strip()
-                if line_base.startswith("'") and line_base.endswith("'"):
-                    pass
-                else:
-                    while not line.split('$')[0].endswith("'") and j < nlines:
-                        #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
-                        try:
-                            line = lines[j].split('$')[0].strip()
-                        except IndexError:
-                            #print('bdf_filename=%r' % bdf_filename)
-                            crash_name = 'pyNastran_crash.bdf'
-                            self._dump_file(crash_name, lines, i+1)
-                            msg = 'There was an invalid filename found while parsing (index).\n'
-                            msg += 'Check the end of %r\n' % crash_name
-                            msg += 'bdf_filename2 = %r' % bdf_filename
-                            raise IndexError(msg)
-                         #print('endswith_quote=%s; %r' % (
-                             #line.split('$')[0].strip().endswith(""), line.strip()))
-                        include_lines.append(line.strip())
-                        j += 1
-                    #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
-
-                    #print('*** %s' % line)
-                    #bdf_filename2 = line[7:].strip(" '")
-                    #include_lines = [line] + lines[i+1:j]
-                #print(include_lines)
-                bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
-                if self.read_includes:
-                    try:
-                        self._open_file_checks(bdf_filename2)
-                    except IOError:
-                        crash_name = 'pyNastran_crash.bdf'
-                        self._dump_file(crash_name, lines, j)
-                        msg = 'There was an invalid filename found while parsing.\n'
-                        msg += 'Check the end of %r\n' % crash_name
-                        msg += 'bdf_filename2 = %r\n' % bdf_filename2
-                        msg += 'abs_filename2 = %r\n' % os.path.abspath(bdf_filename2)
-                        #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
-                        print(msg)
-                        raise
-                        #raise IOError(msg)
-
-                    with self._open_file(bdf_filename2, basename=False) as bdf_file:
-                        #print('bdf_file.name = %s' % bdf_file.name)
-                        try:
-                            lines2 = bdf_file.readlines()
-                        except UnicodeDecodeError:
-                            msg = 'Invalid Encoding: encoding=%r.  Fix it by:\n' % self._encoding
-                            msg += '  1.  try a different encoding (e.g., latin1)\n'
-                            msg += "  2.  call read_bdf(...) with `encoding`'\n"
-                            msg += ("  3.  Add '$ pyNastran : encoding=latin1"
-                                    ' (or other encoding) to the top of the main file\n')
-                            raise RuntimeError(msg)
-
-                    #print('lines2 = %s' % lines2)
-                    nlines += len(lines2)
-
-                    #line2 = lines[j].split('$')
-                    #if not line2[0].isalpha():
-                        #print('** %s' % line2)
-
-                    include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
-                    #for line in lines2:
-                        #print("  ?%s" % line.rstrip())
-                    lines = lines[:i] + [include_comment] + lines2 + lines[j:]
-                    #for line in lines:
-                        #print("  *%s" % line.rstrip())
-                else:
-                    lines = lines[:i] + lines[j:]
-                    self.reject_lines.append(include_lines)
-                    #self.reject_lines.append(write_include(bdf_filename2))
-            i += 1
-
-        if self.dumplines:
-            self._dump_file('pyNastran_dump.bdf', lines, i)
-        return _lines_to_decks(lines, punch)
-
-    def _dump_file(self, bdf_dump_filename, lines, i):
-        """
-        Writes a BDF up to some failed line index
-
-        Parameters
-        ----------
-        bdf_dump_filename : str
-            the bdf filename to dump
-        lines : List[str]
-            the entire list of lines
-        i : int
-            the last index to write
-        """
-        with codec_open(_filename(bdf_dump_filename),
-                        'w', encoding=self._encoding) as crash_file:
-            for line in lines[:i]:
-                crash_file.write(line)
-
-    def _increase_card_count(self, card_name, count_num=1):  # pragma: no cover
-        """deprecated"""
-        self.deprecated('model._increase_card_count(card_name, count_num=1)',
-                        'model.increase_card_count(card_name, count_num=1)', '1.1')
-        self._increase_card_count(card_name, count_num=count_num)
-
     def increase_card_count(self, card_name, count_num=1):
         """
         Used for testing to check that the number of cards going in is the
@@ -3129,114 +2945,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         else:
             self.card_count[card_name] = count_num
 
-    def _open_file_checks(self, bdf_filename, basename=False):
-        """
-        Verifies that the BDF about to be opened:
-           1.  Exists
-           2.  Is Unique
-           3.  Isn't an OP2
-           4.  Is a File
-        """
-        if basename:
-            bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
-        else:
-            bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
-
-        if not os.path.exists(_filename(bdf_filename_inc)):
-            msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
-            msg += 'cwd: %r\n' % os.getcwd()
-            msg += 'include_dir: %r\n' % self.include_dir
-            msg += print_bad_path(bdf_filename_inc)
-            print(msg)
-            raise IOError(msg)
-        elif bdf_filename_inc.endswith('.op2'):
-            print(msg)
-            msg = 'Invalid filetype: bdf_filename=%r' % bdf_filename_inc
-            raise IOError(msg)
-        bdf_filename = bdf_filename_inc
-
-        if bdf_filename in self.active_filenames:
-            msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
-                % (bdf_filename, self.active_filenames)
-            print(msg)
-            raise RuntimeError(msg)
-        elif os.path.isdir(_filename(bdf_filename)):
-            current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
-            msg = 'Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
-                bdf_filename_inc, current_filename)
-            print(msg)
-            raise IOError(msg)
-        elif not os.path.isfile(_filename(bdf_filename)):
-            msg = 'Not a file: bdf_filename=%r' % bdf_filename
-            print(msg)
-            raise IOError(msg)
-
-    def _open_file(self, bdf_filename, basename=False, check=True):
-        """
-        Opens a new bdf_filename with the proper encoding and include directory
-
-        Parameters
-        ----------
-        bdf_filename : str
-            the filename to open
-        basename : bool (default=False)
-            should the basename of bdf_filename be appended to the include directory
-        """
-        if basename:
-            bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
-        else:
-            bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
-
-        self._validate_open_file(bdf_filename, bdf_filename_inc, check)
-
-
-        self.log.debug('opening %r' % bdf_filename_inc)
-        self.active_filenames.append(bdf_filename_inc)
-
-        #print('ENCODING - _open_file=%r' % self._encoding)
-        bdf_file = codec_open(_filename(bdf_filename_inc), 'r', encoding=self._encoding)
-        return bdf_file
-
-    def _validate_open_file(self, bdf_filename, bdf_filename_inc, check):
-        """
-        checks that the file doesn't have obvious errors
-         - hasn't been used
-         - not a directory
-         - is a file
-
-        Parameters
-        ----------
-        bdf_filename : str
-           the current bdf filename
-        bdf_filename_inc : str
-           the next bdf filename
-
-        Raises
-        ------
-        RuntimeError : file is active
-        IOError : Invalid file type
-        """
-        if check:
-            if not os.path.exists(_filename(bdf_filename_inc)):
-                msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
-                msg += 'cwd: %r\n' % os.getcwd()
-                msg += 'include_dir: %r\n' % self.include_dir
-                msg += print_bad_path(bdf_filename_inc)
-                raise IOError(msg)
-            elif bdf_filename_inc.endswith('.op2'):
-                raise IOError('Invalid filetype: bdf_filename=%r' % bdf_filename_inc)
-
-            bdf_filename = bdf_filename_inc
-            if bdf_filename in self.active_filenames:
-                msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
-                    % (bdf_filename, self.active_filenames)
-                raise RuntimeError(msg)
-            elif os.path.isdir(_filename(bdf_filename)):
-                current_fname = self.active_filename if len(self.active_filenames) > 0 else 'None'
-                raise IOError('Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
-                    bdf_filename_inc, current_fname))
-            elif not os.path.isfile(_filename(bdf_filename)):
-                raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
 
     def _parse_spc1(self, card_name, cards):
         """adds SPC1s"""

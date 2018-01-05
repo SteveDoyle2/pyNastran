@@ -174,7 +174,7 @@ def load_deflection_csv(out_filename, encoding='latin1'):
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
     with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
-        names, _fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
+        names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
 
         try:
             #A = np.loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
@@ -186,6 +186,8 @@ def load_deflection_csv(out_filename, encoding='latin1'):
             raise RuntimeError(msg)
 
     names_without_index = names[1:]
+    fmt_dict_without_index = {key:fmt_dict[key] for key in names_without_index}
+
     nnames_without_index = len(names_without_index)
     nexpected_results = 1 + 3 * nnames_without_index
 
@@ -205,7 +207,10 @@ def load_deflection_csv(out_filename, encoding='latin1'):
     B = {}
     for i, name in enumerate(names_without_index):
         B[name] = A[:, 3*i:3*i+3]
-    return B
+
+    assert len(B) == len(fmt_dict_without_index), 'B.keys()=%s fmt_dict.keys()=%s' % (list(B.keys()), list(fmt_dict_without_index.keys()))
+    assert len(B) == len(names_without_index), 'B.keys()=%s names.keys()=%s' % (list(B.keys()), names_without_index)
+    return B, fmt_dict_without_index, names_without_index
 
 def load_csv(out_filename, encoding='latin1'):
     """

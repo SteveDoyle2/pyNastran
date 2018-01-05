@@ -21,7 +21,7 @@ class Nodal(object):
         self.spc_force = SPCForce(self._h5n, self)
 
     def path(self):
-        return self._h5n.path() + ['ELEMENTAL']
+        return self._h5n.path() + ['NODAL']
 
 
 ########################################################################################################################
@@ -41,7 +41,7 @@ class Displacement(ResultTable):
     </dataset>
     """
 
-    result_type = 'DISPLACEMENTS REAL OUTPUT'
+    result_type = 'DISPLACEMENTS REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/DISPLACEMENT', result_type)
 
 
@@ -52,6 +52,8 @@ def _validator(data):
     if data[1] == b'':
         data[1] = 0
 
+    # this is done so that when doing grid point force summation, only nids and eids need
+    # to be considered
     eids = {
         b'F-OF-SPC': -1,
         b'F-OF-MPC': -2,
@@ -80,7 +82,7 @@ class GridForce(ResultTable):
     </dataset>
     """
 
-    result_type = 'GRID POINT FORCE BALANCE REAL OUTPUT'
+    result_type = 'GRID POINT FORCE BALANCE REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/GRID_FORCE', result_type,
                                 indices=DataGetter(indices=[0, 2, 3, 5, 6, 7, 8, 9, 10]),
                                 validator=_validator
@@ -103,7 +105,7 @@ class MPCForce(ResultTable):
     </dataset>
     """
 
-    result_type = 'MPCF REAL OUTPUT'
+    result_type = 'MPCF REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/MPC_FORCE', result_type)
 
 ########################################################################################################################
@@ -123,7 +125,7 @@ class AppliedLoad(ResultTable):
     </dataset>
     """
 
-    result_type = 'OLOADS REAL OUTPUT'
+    result_type = 'OLOADS REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/APPLIED_LOAD', result_type)
 
 ########################################################################################################################
@@ -143,7 +145,7 @@ class SPCForce(ResultTable):
     </dataset>
     """
 
-    result_type = 'SPCF REAL OUTPUT'
+    result_type = 'SPCF REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/SPC_FORCE', result_type)
 
 ########################################################################################################################

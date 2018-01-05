@@ -200,6 +200,53 @@ class CREEP(Material):
         return self.comment + print_card_16(card)
 
 
+class NXSTRAT(object):
+    """
+    Strategy Parameters for SOLs 601 and 701
+
+    Defines parameters for solution control and strategy in advanced nonlinear
+    structural analysis.
+
+    +---------+--------+--------+--------+--------+--------+--------+--------+
+    |    1    |    2   |    3   |    4   |    5   |    6   |    7   |    8   |
+    +=========+========+========+========+========+========+========+========+
+    | NXSTRAT |   ID   | Param1 | Value1 | Param2 | Value2 | Param3 | Value3 |
+    +---------+--------+--------+--------+--------+--------+--------+--------+
+    |         | Param4 | Value4 | Param5 | Value5 |   etc  |        |        |
+    +---------+--------+--------+--------+--------+--------+--------+--------+
+    | NXSTRAT |    1   |  AUTO  |    1   | MAXITE |   30   |  RTOL  |  0.005 |
+    +---------+--------+--------+--------+--------+--------+--------+--------+
+    | ATSNEXT |    3   |        |        |        |        |        |        |
+    +---------+--------+--------+--------+--------+--------+--------+--------+
+    """
+    type = 'NXSTRAT'
+    def __init__(self, params):
+        self.params = params
+
+    def raw_fields(self):
+        list_fields = ['NXSTRAT']
+        for key, value in sorted(iteritems(self.params)):
+            list_fields += [key, value]
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
+        """
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
 class MAT1(IsotropicMaterial):
     """
     Defines the material properties for linear isotropic materials.
@@ -265,8 +312,8 @@ class MAT1(IsotropicMaterial):
         If E, G, or nu is None (only 1), it will be calculated
         """
         IsotropicMaterial.__init__(self)
-        self.mats1 = None
-        self.matt1 = None
+        self.mats1_ref = None
+        self.matt1_ref = None
         if comment:
             self.comment = comment
         E, G, nu = self.set_E_G_nu(E, G, nu)
@@ -355,7 +402,7 @@ class MAT1(IsotropicMaterial):
         nu = self.Nu()
         assert isinstance(mid, integer_types), 'mid=%r' % mid
         if xref:
-            if [self.matt1, self.mats1] == [None, None]:
+            if [self.matt1_ref, self.mats1_ref] == [None, None]:
                 assert isinstance(E, float), 'E=%r' % E
                 assert isinstance(G, float), 'G=%r' % G
                 assert isinstance(nu, float), 'nu=%r' % nu
@@ -377,7 +424,7 @@ class MAT1(IsotropicMaterial):
 
     def E_stress(self, stress):
         if self.mats1 is not None:
-            E = self.matt1.E(self.e, stress)
+            E = self.matt1_ref.E(self.e, stress)
         else:
             E = self.e
         return E
@@ -427,17 +474,13 @@ class MAT1(IsotropicMaterial):
         msg = ' which is required by MAT1 mid=%s' % self.mid
         #self.mcsid = model.Coord(self.mcsid, msg=msg)  # used only for PARAM,CURVPLOT
         if self.mid in model.MATS1:
-            self.mats1 = model.MATS1[self.mid]  # not using a method...
-            self.mats1_ref = self.mats1
+            self.mats1_ref = model.MATS1[self.mid]  # not using a method...
         if self.mid in model.MATT1:
-            self.matt1 = model.MATT1[self.mid]  # not using a method...
-            self.matt1_ref = self.matt1
+            self.matt1_ref = model.MATT1[self.mid]  # not using a method...
 
     def uncross_reference(self):
-        if hasattr(self, 'mats1_ref'):
-            del self.mats1_ref
-        if hasattr(self, 'matt1_ref'):
-            del self.matt1_ref
+        self.mats1_ref = None
+        self.matt1_ref = None
 
     def Mats1(self):
         return self.mats1
@@ -590,12 +633,30 @@ class MAT2(AnisotropicMaterial):
         8:'rho', 9:'a1', 10:'a2', 11:'a3', 12:'tref', 13:'ge',
         14: 'St', 15:'Sc', 16:'Ss', 17:'mcsid',
     }
+    mp_name_map = {
+        'G11' : 'G11',
+        'G12' : 'G12',
+        'G13' : 'G13',
+        'G22' : 'G22',
+        'G23' : 'G23',
+        'G33' : 'G33',
+        'RHO' : 'rho',
+        # TODO: is this correct...I doubt it...
+        'A1' : 'a1',
+        'A2' : 'a2',
+        'A3' : 'a3',
+        #'A4' : 'A[3]',
+        #'A5' : 'A[4]',
+        #'A6' : 'A[5]',
+        'TREF' : 'tref', #8 : 'tref',
+        #'GE' : 'ge', #9 : 'ge',
+    }
 
     def __init__(self, mid, G11, G12, G13, G22, G23, G33,
                  rho=0., a1=None, a2=None, a3=None, tref=0., ge=0.,
                  St=None, Sc=None, Ss=None, mcsid=None, comment=''):
         AnisotropicMaterial.__init__(self)
-        self.matt2 = None
+        self.matt2_ref = None
         if comment:
             self.comment = comment
         self.mid = mid
@@ -702,13 +763,10 @@ class MAT2(AnisotropicMaterial):
         """
         msg = ' which is required by MAT2 mid=%s' % self.mid
         if self.mid in model.MATT2:
-            self.matt2 = model.MATT2[self.mid]  # not using a method...
-            self.matt2_ref = self.matt2
+            self.matt2_ref = model.MATT2[self.mid]  # not using a method...
 
     def uncross_reference(self):
-        if hasattr(self, 'matt2_ref'):
-            del self.matt2
-            del self.matt2_ref
+        self.matt2_ref = None
 
     def _verify(self, xref):
         """
@@ -828,8 +886,6 @@ class MAT3(OrthotropicMaterial):
     def __init__(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=0.0, gzx=None,
                  ax=0., ath=0., az=0., tref=0., ge=0., comment=''):
         OrthotropicMaterial.__init__(self)
-        self.mats3 = None
-        self.matt3 = None
         if comment:
             self.comment = comment
         self.mid = mid
@@ -846,6 +902,8 @@ class MAT3(OrthotropicMaterial):
         self.az = az
         self.tref = tref
         self.ge = ge
+        self.mats3_ref = None
+        self.matt3_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -937,12 +995,11 @@ class MAT3(OrthotropicMaterial):
         """
         #msg = ' which is required by MAT3 mid=%s' % self.mid
         if self.mid in model.MATT3:
-            self.matt3 = model.MATT3[self.mid]  # not using a method...
-            self.matt3_ref = self.matt3
+            self.matt3_ref = model.MATT3[self.mid]  # TODO: not using a method...
 
     def uncross_reference(self):
-        if hasattr(self, 'matt3_ref'):
-            del self.matt3_ref
+        #self.matt3 = self.Mid()
+        self.matt3_ref = None
 
     def raw_fields(self):
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
@@ -1168,7 +1225,6 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             a comment for the card
         """
         ThermalMaterial.__init__(self)
-        self.matt5 = None
         if comment:
             self.comment = comment
         self.mid = mid
@@ -1253,7 +1309,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     def uncross_reference(self):
         #self.matt5 = self.Matt5()
-        del self.matt5_ref
+        self.matt5_ref = None
 
     def get_density(self):
         return self.rho
@@ -1361,6 +1417,7 @@ class MAT8(OrthotropicMaterial):
         self.ge = ge
         self.F12 = F12
         self.strn = strn
+        self.matt8_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1450,9 +1507,8 @@ class MAT8(OrthotropicMaterial):
             self.matt8_ref = self.matt8
 
     def uncross_reference(self):
-        self.matt8 = self.Matt8()
-        if self.matt8 is not None:
-            del self.matt8_ref
+        #self.matt8 = self.Matt8()
+        self.matt8_ref = None
 
     def Matt8(self):
         return self.matt8
@@ -1603,7 +1659,14 @@ class MAT9(AnisotropicMaterial):
         'G55' : 'G55',
         'G56' : 'G56',
         'G66' : 'G66',
-        # rho
+        'RHO' : 'rho',
+        # TODO: is this correct...I doubt it...
+        'A1' : 'A[0]',
+        'A2' : 'A[1]',
+        'A3' : 'A[2]',
+        'A4' : 'A[3]',
+        'A5' : 'A[4]',
+        'A6' : 'A[5]',
         # a1
         # a2
         # a3

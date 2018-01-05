@@ -2854,8 +2854,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         nrows = result0.shape[0]
 
         assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
-        result_type2 = 'node'
-        self._add_cases_to_form(A, fmt_dict, headers, result_type2,
+        result_type = 'node'
+        self._add_cases_to_form(A, fmt_dict, headers, result_type,
                                 out_filename_short, update=True, is_scalar=False,
                                 is_deflection=is_deflection, is_force=is_deflection)
 

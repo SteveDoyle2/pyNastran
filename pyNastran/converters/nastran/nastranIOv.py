@@ -5276,7 +5276,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
              - DV Region
              - DVPREL Init - t
              - DVPREL Min - t
-             - DVPREL Max - ts
+             - DVPREL Max - t
         """
         if upids is None:
             return icase
@@ -5284,32 +5284,38 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             # len(model.dvprels) + len(model.dvcrels) + len(model.dvmrels) + len(model.desvars)
             #dvmrel_init = np.zeros(nelements, dtype='int32')
             #dvgrel_init = np.zeros(nelements, dtype='int32')
-            out = model._get_dvprel_ndarrays(nelements, pids)
-            dvprel_t_init, dvprel_t_min, dvprel_t_max, design_region = out
+            out_dict = model._get_dvprel_ndarrays(nelements, pids)
 
-            region_res = GuiResult(
-                0, header='DV Region', title='DV Region',
-                location='centroid', scalar=design_region)
-            t_init_res = GuiResult(
-                0, header='DVPREL Init - t', title='DVPREL Init - t',
-                location='centroid', scalar=dvprel_t_init)
-            t_min_res = GuiResult(
-                0, header='DVPREL Min - t', title='DVPREL Min - t',
-                location='centroid', scalar=dvprel_t_min)
-            t_max_res = GuiResult(
-                0, header='DVPREL Max - t', title='DVPREL Max - t',
-                location='centroid', scalar=dvprel_t_max)
-            cases[icase] = (region_res, (0, 'DV Region'))
-            cases[icase + 1] = (t_init_res, (0, 'DVPREL Init - t'))
-            cases[icase + 2] = (t_min_res, (0, 'DVPREL Min - t'))
-            cases[icase + 3] = (t_max_res, (0, 'DVPREL Max - t'))
-            opt = []
-            opt.append(('DV Region', icase, []))
-            opt.append(('DVPREL Init - t', icase + 1, []))
-            opt.append(('DVPREL Min - t', icase + 2, []))
-            opt.append(('DVPREL Max - t', icase + 3, []))
-            form0.append(('Optimization', '', opt))
-            icase += 4
+            optimization_cases = []
+            for key, dvprel_data in iteritems(out_dict):
+                dvprel_init, dvprel_min, dvprel_max, design_region = dvprel_data
+                if design_region.max() == 0:
+                    continue
+
+                region_res = GuiResult(
+                    0, header='DV Region', title='DV Region',
+                    location='centroid', scalar=design_region)
+                t_init_res = GuiResult(
+                    0, header='DVPREL Init - %s' % key, title='DVPREL Init - %s' % key,
+                    location='centroid', scalar=dvprel_init)
+                t_min_res = GuiResult(
+                    0, header='DVPREL Min - %s' % key, title='DVPREL Min - %s' % key,
+                    location='centroid', scalar=dvprel_min)
+                t_max_res = GuiResult(
+                    0, header='DVPREL Max - %s' % key, title='DVPREL Max - %s' % key,
+                    location='centroid', scalar=dvprel_max)
+                cases[icase] = (region_res, (0, 'DV Region'))
+                cases[icase + 1] = (t_init_res, (0, 'DVPREL Init - %s' % key))
+                cases[icase + 2] = (t_min_res, (0, 'DVPREL Min - %s' % key))
+                cases[icase + 3] = (t_max_res, (0, 'DVPREL Max - %s' % key))
+                opt_cases = []
+                opt_cases.append(('DV Region', icase, []))
+                opt_cases.append(('DVPREL Init - %s' % key, icase + 1, []))
+                opt_cases.append(('DVPREL Min - %s' % key, icase + 2, []))
+                opt_cases.append(('DVPREL Max - %s' % key, icase + 3, []))
+                optimization_cases.append((key, '', opt_cases))
+                icase += 4
+            form0.append(('Optimization', '', optimization_cases))
         return icase
 
     def _plot_pressures(self, model, cases, form0, icase, subcase_id):
@@ -5329,9 +5335,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         try:
             load_case_id = subcase.get_parameter('LOAD')[0]
         except KeyError:
+            self.log.warning('LOAD not found in subcase_id=%s' % (subcase_id))
             return icase
 
-        if load_case_id not in model.loads:
+        if load_case_id not in model.loads and load_case_id not in model.load_combinations:
             self.log.warning('LOAD=%s not found' % load_case_id)
             return icase
 

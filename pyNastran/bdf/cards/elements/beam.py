@@ -155,7 +155,6 @@ class CBEAM(CBAR):
         self.wb = wb
         self.sa = sa
         self.sb = sb
-        self._validate_input()
         self.ga_ref = None
         self.gb_ref = None
         self.pid_ref = None
@@ -272,9 +271,14 @@ class CBEAM(CBAR):
         return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
-    def _validate_input(self):
+    def validate(self):
+        if self.g0 is not None:
+            assert isinstance(self.g0, integer_types), 'g0=%s must be an integer' % self.g0
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
+            raise RuntimeError(msg)
+        if self.bit is None and self.offt is None:
+            msg = 'OFFT/BIT must not be None; offt=%r bit=%s' % (self.offt, self.bit)
             raise RuntimeError(msg)
 
     def Nodes(self):
@@ -531,10 +535,11 @@ class CBEAM(CBAR):
     @property
     def is_offt(self):
         """is the offt flag active?"""
-        if isinstance(self.offt, string_types):
-            return True
-        assert isinstance(self.bit, float), 'bit=%s type=%s' % (self.bit, type(self.bit))
-        return False
+        if self.bit is not None:
+            assert isinstance(self.bit, float), 'bit=%r type=%s' % (self.bit, type(self.bit))
+            return False
+        assert isinstance(self.offt, string_types), 'offt=%r' % self.offt
+        return True
 
     @property
     def is_bit(self):

@@ -277,12 +277,8 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
 
 
         elif prop_type == 'PBEAML':
-            dim2 = []
-            for dimi in prop.dim:
-                dimi2 = [dim*xyz_scale for dim in dimi]
-                dim2.append(dimi2)
-            prop.dim = dim2
-            prop.nsm = [nsm*nsm_bar_scale for nsm in prop.nsm]
+            prop.dim *= xyz_scale
+            prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PSHELL':
             prop.t *= xyz_scale
@@ -672,38 +668,56 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     for key, dvprel in iteritems(model.dvprels):
         if dvprel.type == 'DVPREL1':
             #print(dvprel)
-            prop_type = dvprel.Type
-            desvars = dvprel.dvids
-            var_to_change = dvprel.pNameFid
+            prop_type = dvprel.prop_type
+            desvars = dvprel.dvids_ref
+            var_to_change = dvprel.pname_fid
             assert len(desvars) == 1, len(desvars)
 
             if prop_type == 'PSHELL':
                 if var_to_change == 'T':
                     scale = xyz_scale
-                    for desvar in desvars:
-
-                        desvar.xinit *= scale
-                        if desvar.xlb != -1e20:
-                            desvar.xlb *= scale
-                        if desvar.xub != 1e20:
-                            desvar.xub *= scale
-                        #if desvar.delx != 1e20:
-                        if desvar.delx is not None and desvar.delx != 1e20:
-                            desvar.delx *= scale
-                        if desvar.ddval is not None:
-                            msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
-                            raise RuntimeError(msg)
-                        assert desvar.ddval is None, desvar
+                else:
+                    raise NotImplementedError(dvprel)
+            elif prop_type == 'PCOMP':
+                if var_to_change.startswith('THETA'):
+                    continue
+                if var_to_change.startswith('T'):
+                    scale = xyz_scale
+                else:
+                    raise NotImplementedError(dvprel)
+            elif prop_type == 'PBARL':
+                if var_to_change.startswith('DIM'):
+                    scale = xyz_scale
+                else:
+                    raise NotImplementedError(dvprel)
+            elif prop_type == 'PBEAML':
+                if var_to_change.startswith('DIM'):
+                    scale = xyz_scale
                 else:
                     raise NotImplementedError(dvprel)
             else:
                 raise NotImplementedError(dvprel)
+
+            for desvar in desvars:
+                desvar.xinit *= scale
+                if desvar.xlb != -1e20:
+                    desvar.xlb *= scale
+                if desvar.xub != 1e20:
+                    desvar.xub *= scale
+                #if desvar.delx != 1e20:
+                if desvar.delx is not None and desvar.delx != 1e20:
+                    desvar.delx *= scale
+                if desvar.ddval is not None:
+                    msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
+                    raise RuntimeError(msg)
+                assert desvar.ddval is None, desvar
+
         else:
             raise NotImplementedError(dvprel)
-        if dvprel.pMax != 1e20:
-            dvprel.pMax *= scale
-        if dvprel.pMin is not None:
-            dvprel.pMin *= scale
+        if dvprel.p_max != 1e20:
+            dvprel.p_max *= scale
+        if dvprel.p_min is not None:
+            dvprel.p_min *= scale
         #print('------------')
         #print(dvprel)
         #pass

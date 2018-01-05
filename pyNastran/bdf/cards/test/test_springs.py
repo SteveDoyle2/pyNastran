@@ -106,6 +106,15 @@ class TestSprings(unittest.TestCase):
 
         save_load_deck(model)
 
+    def test_springs_05(self):
+        fields = ['CELAS2', '615', '-7.39E6', '613', '1', '613', '5', '0.01']
+        model = BDF()
+        model.add_card(fields, fields[0])
+        model.pop_parse_errors()
+        model.validate()
+        e = model.elements[615]
+        str(e)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -940,6 +940,19 @@ class RBE2(RigidElement):
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
+    def safe_cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by RBE2 eid=%s' % (self.eid)
+        self.Gmi_ref, missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
+        self.gn_ref = model.Node(self.Gn(), msg=msg)
+
     def uncross_reference(self):
         self.Gmi = self.Gmi_node_ids
         self.gn = self.Gn()
@@ -1273,6 +1286,21 @@ class RBE3(RigidElement):
         for i, Gij in enumerate(self.Gijs):
             self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
+    def safe_cross_reference(self, model, debug=True):
+        msg = ' which is required by RBE3 eid=%s nid=%%s' % (self.eid)
+        assert self.Gmi is not None
+        self.Gmi_ref, missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
+
+        assert self.Gmi_ref is not None
+        self.refgrid_ref = model.Node(self.ref_grid_id, msg=msg)
+
+        self.Gijs_ref = []
+        for i, Gij in enumerate(self.Gijs):
+            nodes, msgi = model.safe_empty_nodes(Gij, msg=msg)
+            if msgi:
+                model.log.warning(msgi)
+            self.Gijs_ref.append(nodes)
+
     def uncross_reference(self):
         self.Gijs = self.Gijs_node_ids
         self.Gmi = self.Gmi_node_ids
@@ -1286,18 +1314,6 @@ class RBE3(RigidElement):
             gij = self._node_ids(nodes=gij, allow_empty_nodes=True)
             Gij.append(gij)
         self.Gijs = Gij
-
-    def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by RBE3 eid=%s' % (self.eid)
-        assert self.Gmi is not None
-        self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
-
-        assert self.Gmi_ref is not None
-        self.refgrid_ref = model.Node(self.ref_grid_id, msg=msg)
-
-        self.Gijs_ref = []
-        for i, Gij in enumerate(self.Gijs):
-            self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
     @property
     def independent_nodes(self):

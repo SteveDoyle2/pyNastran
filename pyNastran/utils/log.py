@@ -190,6 +190,8 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        if self.level in ('error', ):
+            return
         assert msg is not None, msg
         self.msg_typ('WARNING', msg)
 
@@ -228,6 +230,10 @@ class SimpleLogger(object):
         """
         assert msg is not None, msg
         self.msg_typ('CRITICAL', msg)
+
+    def __repr__(self):
+        return 'SimpleLogger(level=%r, encoding=%r)' % (self.level, self.encoding)
+
 
 def properties(nframe=3):
     """
@@ -283,9 +289,9 @@ def get_logger2(log=None, debug=True, encoding='utf-8'):
         settings the logging object has
     debug : bool / None
        used to set the logger if no logger is passed in
-           True:  logs debug/info/error messages
-           False: logs info/error messages
-           None:  logs error messages
+           True:  logs debug/info/warning/error messages
+           False: logs info/warning/error messages
+           None:  logs warning/error messages
 
     Returns
     -------

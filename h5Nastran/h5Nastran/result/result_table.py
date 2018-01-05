@@ -1,4 +1,5 @@
 from __future__ import print_function, absolute_import
+from six import iteritems
 
 from collections import defaultdict
 from copy import deepcopy
@@ -97,7 +98,7 @@ class DefinedValue(object):
 
 
 class DataGetter(object):
-    def __init__(self, dtype=None, indices=None):
+    def __init__(self, dtype=None, indices=None, indices_len=None):
         self.indices = []
 
         if dtype is not None:
@@ -106,8 +107,13 @@ class DataGetter(object):
         if indices is not None:
             self.indices = deepcopy(indices)
 
+        self._indices_len = indices_len
+
     def __len__(self):
-        return len(self.indices)
+        if self._indices_len is None:
+            return len(self.indices)
+        else:
+            return self._indices_len
 
     def make_indices_from_dtype(self, dtype):
         del self.indices[:]
@@ -300,7 +306,7 @@ class TableDef(object):
 
         assert isinstance(self.indices, DataGetter)
 
-        assert len(self.indices) == len(self.dtype.names) - 1
+        assert len(self.indices) == len(self.dtype.names) - 1, str((len(self.indices), len(self.dtype.names)))
 
         self.domain_count = 0
 
@@ -314,6 +320,8 @@ class TableDef(object):
         self._index_data = []
         self._subcase_index = []
         self._index_offset = 0
+
+        self._subcase_ids = set()
 
     def __deepcopy__(self, memodict=None):
         from copy import copy
@@ -416,7 +424,11 @@ class TableDef(object):
 
         table = self.get_table()
 
-        self.domain_count += 1
+        subcase_id = data.header.subcase_id
+
+        if subcase_id not in self._subcase_ids:
+            self.domain_count += 1
+            self._subcase_ids.add(subcase_id)
 
         data = self.to_numpy(data.data)
         table.append(data)
@@ -604,7 +616,7 @@ def get_data_dict(data):
 def serialize_data_dict(data_dict):
     data = []
 
-    for key, _data in data_dict.items():
+    for key, _data in iteritems(data_dict):
         _data_ = [key, len(_data)]
         _data_.extend(_data)
         data.extend(_data_)
