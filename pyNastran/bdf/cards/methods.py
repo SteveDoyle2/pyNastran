@@ -598,6 +598,15 @@ class EIGP(Method):
     """
     Defines poles that are used in complex eigenvalue extraction by the
     Determinant method.
+
+    +------+-------+--------+--------+-------+--------+--------+-----+
+    |   1  |   2   |   3    |   4    |   5   |   6    |   7    |  8  |
+    +======+=======+========+========+=======+========+========+=====+
+    | EIGP |  SID  | ALPHA1 | OMEGA1 |   M1  | ALPHA2 | OMEGA2 |  M2 |
+    +------+-------+--------+--------+-------+--------+--------+-----+
+    | EIGP |  15   |  -5.2  |  0.0   |   2   |  6.3   |  5.5   |  3  |
+    +------+-------+--------+--------+-------+--------+--------+-----+
+
     """
     type = 'EIGP'
 
@@ -651,7 +660,7 @@ class EIGP(Method):
         pass
 
     def raw_fields(self):
-        list_fields = ['EIGP', self.alpha1, self.omega1, self.m1,
+        list_fields = ['EIGP', self.sid, self.alpha1, self.omega1, self.m1,
                        self.alpha2, self.omega2, self.m2]
         return list_fields
 
@@ -783,6 +792,7 @@ class EIGR(Method):
         if method == 'SINV':
             nd = integer_or_blank(card, 6, 'nd', 600)
         elif method == 'INV':
+            ne = integer(card, 5, 'ne')
             nd = integer_or_blank(card, 6, 'nd', 3 * ne)
         elif method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
             nd = integer_or_blank(card, 6, 'nd', 0)
@@ -790,7 +800,7 @@ class EIGR(Method):
             nd = integer(card, 6, 'nd')
         norm = string_or_blank(card, 9, 'norm', 'MASS')
 
-        if method == 'POINT':
+        if norm == 'POINT':
             G = integer(card, 10, 'G')
             C = parse_components(card, 11, 'C')
         else:
