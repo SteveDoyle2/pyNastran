@@ -6,7 +6,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import print_int_card_blocks
 from pyNastran.bdf.cards.bdf_sets import (
-    SET1, SET3, ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1,
+    SET1, SET3, ASET, ASET1, OMIT1, BSET, BSET1, CSET, CSET1, QSET, QSET1,
 )
 
 class TestSets(unittest.TestCase):
@@ -113,6 +113,22 @@ class TestSets(unittest.TestCase):
         aseta.write_card()
         asetb.write_card()
 
+    def test_omit(self):
+        """checks the OMIT/OMIT1 cards"""
+        omit1a = OMIT1(4, [1, 'THRU', 10])
+        omit1b = OMIT1.add_card(BDFCard(['OMIT1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
+        omit1a.write_card()
+        omit1b.write_card()
+        #| OMIT1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
+
+        #aseta = ASET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+        #asetb = ASET.add_card(BDFCard(['ASET',
+                                       #1, 2, 3, 4, 5,
+                                       #5, 4, 3, 2, 1]))
+        #aseta.validate()
+        #asetb.validate()
+        #aseta.write_card()
+        #asetb.write_card()
 
     def test_bset(self):
         """checks the BSET/BSET1 cards"""

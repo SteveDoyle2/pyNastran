@@ -535,6 +535,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # sets
             'SET1', 'SET3',  ## sets
             'ASET', 'ASET1',  ## asets
+            #'OMIT', #TODO add OMIT
+            'OMIT1',  ## omits
             'BSET', 'BSET1',  ## bsets
             'CSET', 'CSET1',  ## csets
             'QSET', 'QSET1',  ## qsets

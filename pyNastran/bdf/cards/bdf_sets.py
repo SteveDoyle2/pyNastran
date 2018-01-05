@@ -4,6 +4,7 @@ All set cards are defined in this file.  This includes:
 * sets
   * SET1, SET3, RADSET # ??? RADSET
 * asets - aset, aset1
+* omits - omit, omit1
 * bsets - bset, bset1
 * csets - cset, cset1
 * qsets - qset, qset1
