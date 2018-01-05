@@ -1540,6 +1540,7 @@ class POINT(BaseCard):
         #: node location in local frame
         self.xyz = np.asarray(xyz, dtype='float64')
         assert self.xyz.size == 3, self.xyz.shape
+        self.cp_ref = None
 
     def validate(self):
         # type: () -> None
@@ -1658,10 +1659,9 @@ class POINT(BaseCard):
         cp : int
             the analysis coordinate system
         """
-        if isinstance(self.cp, integer_types):
+        if self.cp_ref is None:
             return self.cp
-        else:
-            return self.cp_ref.cid
+        return self.cp_ref.cid
 
     def cross_reference(self, model):
         # type: (Any) -> None
@@ -1673,13 +1673,11 @@ class POINT(BaseCard):
         model : BDF()
             the BDF object
         """
-        self.cp = model.Coord(self.cp)
-        self.cp_ref = self.cp
+        self.cp_ref = model.Coord(self.cp)
 
     def uncross_reference(self):
         # type: () -> None
-        self.cp = self.Cp()
-        del self.cp_ref
+        self.cp_ref = self.Cp()
 
     def raw_fields(self):
         # type: () -> List[Union[str, int, float]]

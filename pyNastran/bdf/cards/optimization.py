@@ -3387,25 +3387,19 @@ class DVMREL2(OptConstraint):
         """
         msg = ', which is required by DVMREL2 oid=%r' % self.oid
         if self.mat_type in self.allowed_materials:
-            self.mid = model.Material(self.mid, msg=msg)
-        #elif self.mat_type in self.allowed_elements:
-            #self.mid = model.Element(self.mid, msg=msg)
-        #elif self.mat_type in self.allowed_masses:
-            #self.mid = model.masses[self.mid]
-        #elif self.mat_type in self.allowed_properties_mass:
-            #self.mid = model.properties_mass[self.mid]
+            self.mid_ref = model.Material(self.mid, msg=msg)
         else:
             raise NotImplementedError('mat_type=%r is not supported' % self.mat_type)
         self.dequation = model.DEQATN(self.dequation)
 
-        self.mid_ref = self.mid
         self.dequation_ref = self.dequation
         #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.dequation = self.DEquation()
-        del self.mid_ref, self.dequation_ref
+        self.mid_ref = None
+        self.dequation_ref = None
 
     #def OptValue(self):  #: .. todo:: not implemented
         #self.pid_ref.OptValue(self.mp_name)
@@ -4139,7 +4133,7 @@ class DVPREL2(OptConstraint):
         self.pid = self.Pid()
         self.dequation = self.DEquation()
         self.pid_ref = None
-        del self.dequation_ref
+        self.dequation_ref = None
 
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""

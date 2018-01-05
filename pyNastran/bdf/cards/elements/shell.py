@@ -526,7 +526,7 @@ class CTRIA3(TriShell):
             integer(card, 4, 'n2'),
             integer(card, 5, 'n3'),
         ]
-        if len(card) > 5:
+        if len(card) > 6:
             theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', 0.0)
             zoffset = double_or_blank(card, 7, 'zoffset', 0.0)
             blank(card, 8, 'blank')
@@ -1498,7 +1498,8 @@ class QuadShell(ShellElement):
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        self.nodes_ref = None
+        self.pid_ref = None
 
     def material_coordinate_system(self, normal=None, xyz1234=None):
         """
@@ -1897,7 +1898,7 @@ class CQUAD4(QuadShell):
                 integer(card, 4, 'n2'),
                 integer(card, 5, 'n3'),
                 integer(card, 6, 'n4'),]
-        if len(card) > 6:
+        if len(card) > 7:
             theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
             zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
             blank(card, 9, 'blank')

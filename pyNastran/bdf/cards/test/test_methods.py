@@ -3,11 +3,8 @@ tests dynamic cards and dynamic load cards
 """
 from __future__ import print_function
 import unittest
-from six.moves import StringIO
-import numpy as np
 
-import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 

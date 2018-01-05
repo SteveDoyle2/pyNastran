@@ -194,6 +194,7 @@ class PCOMPS(SolidProperty):
         self.failure_theories = failure_theories
         self.interlaminar_failure_theories = interlaminar_failure_theories
         self.souts = souts
+        self.mids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -284,7 +285,7 @@ class PCOMPS(SolidProperty):
             self.mids_ref.append(mid_ref)
 
     def uncross_reference(self):
-        del self.mids_ref
+        self.mids_ref = None
 
     def raw_fields(self):
         fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,

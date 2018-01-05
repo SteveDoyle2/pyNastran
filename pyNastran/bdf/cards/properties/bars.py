@@ -1820,7 +1820,7 @@ class PBRSECT(LineProperty):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _verify(self, xref=False):
         pid = self.pid
