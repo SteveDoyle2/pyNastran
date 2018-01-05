@@ -663,6 +663,7 @@ class CSET1(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.ids = expand_thru(ids)
         self.components = components
+        self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

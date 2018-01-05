@@ -618,6 +618,8 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=42, pb=5, wa=None, wb=None,
                                 sa=0, sb=0, comment='CBEAM')
+        assert cbeam.is_offt is True, cbeam.is_offt
+        assert cbeam.is_bit is False, cbeam.is_bit
 
         #pid : int
             #property id
@@ -692,7 +694,61 @@ class TestBeams(unittest.TestCase):
         model.safe_cross_reference()
         model.uncross_reference()
 
+    def test_cbeam_03(self):
+        """tests an BIT field on the CBEAM"""
+        model = BDF(debug=False)
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+
+        eid = 1
+        pid = 1
+        bit = 42
+        nids = [1, 2]
+        x = [0., 0., 1.]
+        g0 = None
+        bit = None
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
+                                pb=0, wa=None, wb=None, sa=0,
+                                sb=0, comment='')
+        with self.assertRaises(RuntimeError):
+            cbeam.validate()
+        del model.elements[eid]
+
+        bit = 12
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
+                                pb=0, wa=None, wb=None, sa=0,
+                                sb=0, comment='')
+        with self.assertRaises(AssertionError):
+            cbeam.raw_fields()
+        del model.elements[eid]
+
+        bit = 42.
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt=None, bit=bit, pa=0,
+                                pb=0, wa=None, wb=None, sa=0,
+                                sb=0, comment='')
+        assert cbeam.is_offt is False, cbeam.is_offt
+        assert cbeam.is_bit is True, cbeam.is_bit
+        mid = 1
+        beam_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        xxb = [0., 1.]
+        dims = [dim, dim]
+        model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
+                         nsm=[1.0],
+                         group='MSCBML0',
+                         comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+        save_load_deck(model)
+
+
     def test_beam_mass_01(self):
+        """tests a CBEAM/PBEAM and gets the mass_properties"""
         model = BDF(debug=False)
         #model.case_control_deck = CaseControlDeck(case_control_lines)
         spc = ['SPC1', 123456, 123456, 1]
@@ -807,6 +863,7 @@ class TestBeams(unittest.TestCase):
             print('cg =', op2_cg)
 
     def test_pbeam_nsm(self):
+        """tests a PBEAM with nonstructural mass"""
         model = BDF(debug=False)
         pid = 1
         mid = 1
@@ -856,6 +913,7 @@ class TestBeams(unittest.TestCase):
         assert pbeam2.MassPerLength() == 21.0, pbeam2.MassPerLength()
 
     def test_pbeaml_nsm(self):
+        """tests the PBEAML with non structural mass"""
         model = BDF(debug=False)
         pid = 1
         mid = 1
@@ -920,6 +978,9 @@ class TestBeams(unittest.TestCase):
         cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
                                 pa=0, pb=0, wa=None, wb=None, sa=0, sb=0,
                                 comment='')
+        cbeam.raw_fields()
+        cbeam.write_card_16()
+
         E = 3.0e7
         G = None
         nu = 0.3

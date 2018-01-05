@@ -30,9 +30,9 @@ class MaterialDependence(BaseCard):
         self.mid = None
 
     def Mid(self):
-        if isinstance(self.mid, integer_types):
+        if self.mid_ref is None:
             return self.mid
-        return self.mid.mid  # TODO: is this something that should be supported?
+        return self.mid_ref.mid  # TODO: is this something that should be supported?
 
     def _get_table(self, key):
         """internal method for accessing tables"""
@@ -87,6 +87,8 @@ class MATS1(MaterialDependence):
         #: Internal friction angle, measured in degrees, for the
         #: Mohr-Coulomb and Drucker-Prager yield criteria
         self.limit2 = limit2
+        self.tid_ref = None
+        self.mid_ref = None
 
     def validate(self):
         if self.Type not in ['NLELAST', 'PLASTIC']:
@@ -196,23 +198,21 @@ class MATS1(MaterialDependence):
             the BDF object
         """
         msg = ', which is required by MATS1 mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
         if self.tid:  # then self.h is used
-            self.tid = model.Table(self.tid, msg=msg) # TABLES1 or TABLEST
-            self.tid_ref = self.tid
+            self.tid_ref = model.Table(self.tid, msg=msg) # TABLES1 or TABLEST
 
     def uncross_reference(self):
         self.mid = self.Mid()
         if self.tid:
             self.tid = self.Tid()
-            del self.tid_ref
-        del self.mid_ref
+        self.tid_ref = None
+        self.mid_ref = None
 
     def Tid(self):
-        if isinstance(self.tid, Table):
-            return self.tid_ref.tid
-        return self.tid
+        if self.tid_ref is None:
+            return self.tid
+        return self.tid_ref.tid
 
     def raw_fields(self):
         list_fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
@@ -278,6 +278,7 @@ class MATT1(MaterialDependence):
         self._st_table = st_table
         self._sc_table = sc_table
         self._ss_table = ss_table
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -380,8 +381,7 @@ class MATT1(MaterialDependence):
             the BDF object
         """
         msg = ', which is required by MATT1 mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
         ## TODO: add refs
         self._xref_table(model, '_E_table', msg=msg)
@@ -407,7 +407,7 @@ class MATT1(MaterialDependence):
         self._st_table = self.st_table()
         self._sc_table = self.sc_table()
         self._ss_table = self.ss_table()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
@@ -496,6 +496,7 @@ class MATT2(MaterialDependence):
         self._st_table = st_table
         self._sc_table = sc_table
         self._ss_table = ss_table
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -542,8 +543,7 @@ class MATT2(MaterialDependence):
             the BDF object
         """
         msg = ', which is required by MATT2 mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
         ## TODO: add refs
         self._xref_table(model, '_G11_table', msg=msg)
@@ -577,7 +577,7 @@ class MATT2(MaterialDependence):
         self._st_table = self.st_table()
         self._sc_table = self.sc_table()
         self._ss_table = self.ss_table()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
@@ -696,6 +696,7 @@ class MATT3(MaterialDependence):
         self.ath_table_ref = None
         self.az_table_ref = None
         self.ge_table_ref = None
+        self.mid_ref = None
 
     def cross_reference(self, model):
         msg = ', which is required by MATT3 mid=%s' % self.mid
@@ -895,6 +896,7 @@ class MATT4(MaterialDependence):
         self._h_table = h_table
         self._mu_table = mu_table
         self._hgen_table = hgen_table
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -946,8 +948,7 @@ class MATT4(MaterialDependence):
             the BDF object
         """
         msg = ', which is required by MATT4 mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
         ## TODO: add refs
         self._xref_table(model, '_k_table', msg=msg)
@@ -956,8 +957,6 @@ class MATT4(MaterialDependence):
         self._xref_table(model, '_mu_table', msg=msg)
         self._xref_table(model, '_hgen_table', msg=msg)
 
-        self.mid_ref = self.mid
-
     def uncross_reference(self):
         self.mid = self.Mid()
         self._k_table = self.K_table()
@@ -965,7 +964,7 @@ class MATT4(MaterialDependence):
         self._h_table = self.H_table()
         self._mu_table = self.mu_table()
         self._hgen_table = self.Hgen_table()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
@@ -1035,6 +1034,7 @@ class MATT5(MaterialDependence):
         self._kzz_table = kzz_table
         self._cp_table = cp_table
         self._hgen_table = hgen_table
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1109,8 +1109,7 @@ class MATT5(MaterialDependence):
             the BDF object
         """
         msg = ', which is required by MATT5 mid=%s' % self.mid
-        self.mid = model.Material(self.mid, msg=msg)
-        self.mid_ref = self.mid
+        self.mid_ref = model.Material(self.mid, msg=msg)
 
         ## TODO: add refs
         self._xref_table(model, '_kxx_table', msg=msg)
@@ -1132,7 +1131,7 @@ class MATT5(MaterialDependence):
         self._kzz_table = self.Kzz_table()
         self._cp_table = self.Cp_table()
         self._hgen_table = self.Hgen_table()
-        del self.mid_ref
+        self.mid_ref = None
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)

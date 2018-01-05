@@ -5692,6 +5692,9 @@ class PAERO3(BaseCard):
     def cross_reference(self, model):
         pass
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def uncross_reference(self):
         pass
 
@@ -6696,6 +6699,17 @@ class SPLINE4(Spline):
             msg += str(self)
             msg += str(self.setg_ref)
             raise ValueError(msg)
+
+    def safe_cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.caero = self.CAero()
