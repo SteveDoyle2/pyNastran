@@ -158,6 +158,7 @@ def _mass_properties(model, elements, masses, reference_point, nsm_id=None):
 
             try:
                 m = element.Mass()
+                #print('eid=%s type=%s mass=%s'  %(element.eid, element.type, m))
                 (x, y, z) = p - reference_point
                 x2 = x * x
                 y2 = y * y
@@ -424,6 +425,11 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
 
     for pid, eids in sorted(iteritems(pid_eids)):
         mass, cg, I = mass_properties(model, element_ids=eids)
+
+    TODO
+    ----
+     - fix NSML
+     - fix CG for F:\work\pyNastran\examples\Dropbox\move_tpl\ac11102g.bdf
     """
     #if reference_point is None:
     reference_point = array([0., 0., 0.])
@@ -536,6 +542,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                     lengths['PROD'].append(length)
                 #m = (mpl + nsm) * length
                 m = mpl * length
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CTUBE':
             eids2 = get_sub_eids(all_eids, eids)
@@ -551,6 +558,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 #nsm = property_nsms[nsm_id]['PTUBE'][pid] + element_nsms[nsm_id][eid]
                 #m = (mpl + nsm) * length
                 m = mpl * length
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CBAR':
             eids2 = get_sub_eids(all_eids, eids)
@@ -567,6 +575,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 #nsm = property_nsms[nsm_id]['PBAR'][pid] + element_nsms[nsm_id][eid]
                 #m = (mpl + nsm) * length
                 m = mpl * length
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CBEAM':
             eids2 = get_sub_eids(all_eids, eids)
@@ -639,6 +649,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 lengths['PBEAM'].append(length)
                 nsm_centroids_length['PBEAM'].append(nsm_centroid)
                 m = mass_per_length * length
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
                 #nsmi = property_nsms[nsm_id]['PBEAM'][pid] + element_nsms[nsm_id][eid] * length
                 #nsm = (nsm_per_length + nsmi) * length
                 nsm = nsm_per_length * length
@@ -717,6 +729,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
                 #m = area * (mpa + nsm)
                 m = area * mpa
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
             eids2 = get_sub_eids(all_eids, eids)
@@ -776,6 +789,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
                 #m = area * (mpa + nsm)
                 m = area * mpa
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
+                #print('eid=%s type=%s mass=%s; area=%s mpa=%s'  %(elem.eid, elem.type, m, area, mpa))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CQUAD':
             eids2 = get_sub_eids(all_eids, eids)
@@ -797,6 +812,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 else:
                     raise NotImplementedError(prop.type)
                 m = area * mpa
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
         elif etype == 'CSHEAR':
@@ -817,6 +834,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 #nsm = property_nsms[nsm_id]['PSHEAR'][pid] + element_nsms[nsm_id][eid]
                 #m = area * (mpa + nsm)
                 m = area * mpa
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
             eids2 = get_sub_eids(all_mass_ids, eids)
@@ -834,6 +853,8 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 #V = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
                 volume = -dot(xyz[n1] - xyz[n4], cross(xyz[n2] - xyz[n4], xyz[n3] - xyz[n4])) / 6.
                 m = elem.Rho() * volume
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CPYRAM':
             eids2 = get_sub_eids(all_eids, eids)
@@ -843,9 +864,19 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 centroid1 = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
                 area1 = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
                 centroid5 = xyz[n5]
+
+                #V = (l * w) * h / 3
+                #V = A * h / 3
                 centroid = (centroid1 + centroid5) / 2.
+
+                #(n1, n2, n3, n4, n5) = self.get_node_positions()
+                #area1, c1 = area_centroid(n1, n2, n3, n4)
+                #volume = area1 / 3. * norm(c1 - n5)
                 volume = area1 / 3. * norm(centroid1 - centroid5)
                 m = elem.Rho() * volume
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
+                #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (elem.eid, 'CPYRAM', m, elem.Rho(), volume))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CPENTA':
             eids2 = get_sub_eids(all_eids, eids)
@@ -859,6 +890,9 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 centroid = (centroid1 + centroid2) / 2.
                 volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                 m = elem.Rho() * volume
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
+                #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (elem.eid, 'CPENTA', m, elem.Rho(), volume))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
         elif etype == 'CHEXA':
@@ -876,6 +910,11 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
                 volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                 m = elem.Rho() * volume
                 centroid = (centroid1 + centroid2) / 2.
+                assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+                assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
+                #print('*centroid1=%s centroid2=%s' % (str(centroid1), str(centroid2)))
+                #print('*area1=%s area2=%s length=%s' % (area1, area2, norm(centroid1 - centroid2)))
+                #print('*eid=%s type=%s mass=%s rho=%s V=%s' % (elem.eid, 'CHEXA', m, elem.Rho(), volume))
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
         elif etype == 'CBEND':

@@ -999,13 +999,15 @@ class WriteMesh(BDFAttributes):
     def _write_sets(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
         """Writes the SETx cards sorted by ID"""
-        is_sets = (self.sets or self.asets or self.bsets or self.csets or self.qsets
+        is_sets = (self.sets or self.asets or self.omits or self.bsets or self.csets or self.qsets
                    or self.usets)
         if is_sets:
             msg = ['$SETS\n']  # type: List[str]
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.asets:  # list
+                msg.append(set_obj.write_card(size, is_double))
+            for set_obj in self.omits:  # list
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.bsets:  # list
                 msg.append(set_obj.write_card(size, is_double))

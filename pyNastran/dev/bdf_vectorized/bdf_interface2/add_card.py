@@ -447,6 +447,10 @@ class AddCard(BDFAttributes):
         """adds an ASET/ASET1 object"""
         self.asets.append(set_obj)
 
+    def _add_omit_object(self, set_obj):
+        """adds an OMIT/OMIT1 object"""
+        self.omits.append(set_obj)
+
     def _add_bset_object(self, set_obj):
         """adds an BSET/BSET1 object"""
         self.bsets.append(set_obj)

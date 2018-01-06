@@ -199,6 +199,10 @@ class PELAST(SpringProperty):
         #: Identification number of a TABELDi entry that defines the nonlinear
         #: force vs. displacement relationship. (Integer > 0; Default = 0)
         self.tknid = tknid
+        self.pid_ref = None
+        self.tkid_ref = None
+        self.tgeid_ref = None
+        self.tknid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -243,27 +247,26 @@ class PELAST(SpringProperty):
         model : BDF()
             the BDF object
         """
-        self.pid = model.Property(self.pid)
-        self.pid_ref = self.pid
+        self.pid_ref = model.Property(self.pid)
         if self.tkid > 0:
-            self.tkid = model.TableD(self.tkid)
-            self.tkid_ref = self.tkid
+            self.tkid_ref = model.TableD(self.tkid)
         if self.tgeid > 0:
-            self.tgeid = model.TableD(self.tgeid)
-            self.tgeid_ref = self.tgeid
+            self.tgeid_ref = model.TableD(self.tgeid)
         if self.tknid > 0:
-            self.tknid = model.TableD(self.tknid)
-            self.tknid_ref = self.tknid
+            self.tknid_ref = model.TableD(self.tknid)
 
     def uncross_reference(self, model):
         self.pid = self.Pid()
         self.tkid = self.Tkid()
         self.tgeid = self.Tgeid()
         self.tknid = self.Tknid()
-        del self.pid_ref, self.tkid_ref, self.tgeid_ref, self.tknid_ref
+        self.pid_ref = None
+        self.tkid_ref = None
+        self.tgeid_ref = None
+        self.tknid_ref = None
 
     def Pid(self):
-        if isinstance(self.pid, integer_types):
+        if self.pid_ref is None:
             return self.pid
         return self.pid_ref.pid
 
@@ -272,7 +275,7 @@ class PELAST(SpringProperty):
         Returns the table ID for force per unit displacement vs frequency
         (k=F/d vs freq)
         """
-        if isinstance(self.tkid, integer_types):
+        if self.tkid_ref is None:
             return self.tkid
         return self.tkid_ref.tid
 
@@ -280,7 +283,7 @@ class PELAST(SpringProperty):
         """
         Returns the table ID for nondimensional force vs. displacement
         """
-        if isinstance(self.tknid, integer_types):
+        if self.tknid_ref is None:
             return self.tknid
         return self.tknid_ref.tid
 
@@ -289,7 +292,7 @@ class PELAST(SpringProperty):
         Returns the table ID for nondimensional structural damping
         coefficient vs. frequency (c/c0 vs freq)
         """
-        if isinstance(self.tgeid, integer_types):
+        if self.tgeid_ref is None:
             return self.tgeid
         return self.tgeid_ref.tid
 

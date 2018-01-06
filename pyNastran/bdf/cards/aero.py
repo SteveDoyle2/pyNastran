@@ -154,7 +154,38 @@ class AECOMP(BaseCard):
             # AEQUAD4,/AETRIA3
         else:
             raise NotImplementedError(self.list_type)
-        self.lists_ref = self.lists
+        #self.lists_ref = self.lists
+
+    def safe_cross_reference(self, model):
+        msg = ', which is required by AECOMP name=%r' % self.name
+        #return
+        self.lists_ref = []
+        if self.list_type == 'SET1':
+            for key in self.lists:
+                try:
+                    ref = model.SET1(key, msg)
+                except KeyError:
+                    ref = None
+                self.lists_ref.append(ref)
+        elif self.list_type == 'AELIST':
+            for key in self.lists:
+                try:
+                    ref = model.AELIST(key, msg)
+                except KeyError:
+                    ref = None
+                self.lists_ref.append(ref)
+        elif self.list_type == 'CAERO':
+            for key in self.lists:
+                try:
+                    ref = model.CAero(key, msg)
+                except KeyError:
+                    ref = None
+                self.lists_ref.append(ref)
+        #elif self.list_type == 'CMPID':
+            # AEQUAD4,/AETRIA3
+        else:
+            raise NotImplementedError(self.list_type)
+        #self.lists_ref = self.lists
 
     def uncross_reference(self):
         self.lists = self.get_lists()
@@ -5690,6 +5721,9 @@ class PAERO3(BaseCard):
     def cross_reference(self, model):
         pass
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def uncross_reference(self):
         pass
 
@@ -6694,6 +6728,17 @@ class SPLINE4(Spline):
             msg += str(self)
             msg += str(self.setg_ref)
             raise ValueError(msg)
+
+    def safe_cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.caero = self.CAero()

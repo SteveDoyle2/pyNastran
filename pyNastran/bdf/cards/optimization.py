@@ -160,13 +160,27 @@ def validate_dvprel(prop_type, pname_fid, validate):
         assert pname_fid in [4, 'A', 5, 'J', 'NSM'], msg
 
     elif prop_type == 'PTUBE':
-        options = [4, 5, 'T']
+        if pname_fid == 4:
+            pname_fid = 'OD'
+        elif pname_fid == 5:
+            pname_fid = 'T'
+        #options = [4, 5, 'T']
+        options = ['T', 'OD']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CBAR':
         #assert pname_fid in ['X1', 'X2'], msg
     elif prop_type == 'PBAR':
-        options = [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J']
+        if pname_fid == 4:
+            pname_fid = 'A' # I1 I2 J
+        elif pname_fid == 5:
+            pname_fid = 'I1'
+        elif pname_fid == 6:
+            pname_fid = 'I2'
+        elif pname_fid == 7:
+            pname_fid = 'J'
+        #options = [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J']
+        options = [12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'I2', 'J']
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBARL':
@@ -2630,15 +2644,15 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by DVCREL1 name=%r' % self.type
+        msg = ', which is required by DVCREL1 oid=%r' % self.oid
         self.eid_ref = self._get_element(model, msg=msg)
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
     @property
     def desvar_ids(self):
-        if isinstance(self.dvids[0], integer_types):
+        if self.dvids_ref is None:
             return self.dvids
-        return [desvar.desvar_id for desvar in self.dvids]
+        return [desvar.desvar_id for desvar in self.dvids_ref]
 
     def _get_element(self, model, msg=''):
         if self.element_type in ['CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM',
@@ -3007,6 +3021,7 @@ class DVMREL1(OptConstraint):
 
         validate_dvmrel(validate, mat_type, mp_name)
         self.mid_ref = None
+        self.dvids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3055,9 +3070,9 @@ class DVMREL1(OptConstraint):
 
     @property
     def desvar_ids(self):
-        if isinstance(self.dvids[0], integer_types):
+        if self.dvids_ref is None:
             return self.dvids
-        return [desvar.desvar_id for desvar in self.dvids]
+        return [desvar.desvar_id for desvar in self.dvids_ref]
 
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
@@ -3075,7 +3090,7 @@ class DVMREL1(OptConstraint):
             mp_name_map = mat.mp_name_map
         except AttributeError:
             raise NotImplementedError('mat_type=%r, mp_name=%r has not implemented mp_name_map' % (
-                self.mat_type, self.self.mp_name))
+                self.mat_type, self.mp_name))
 
         try:
             key = mp_name_map[self.mp_name]
@@ -3093,11 +3108,15 @@ class DVMREL1(OptConstraint):
         model : BDF()
             the BDF object
         """
-        self.mid_ref = model.Material(self.mid)
+        msg = ', which is required by DVMREL1 oid=%r' % (self.oid)
+        self.mid_ref = model.Material(self.mid, msg=msg)
+        self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.dvids = self.desvar_ids
+        self.mid_ref = None
+        self.dvids_ref = None
 
     def _verify(self, xref):
         """
@@ -3366,27 +3385,21 @@ class DVMREL2(OptConstraint):
 
         .. todo:: add support for DEQATN cards to finish DVMREL2 xref
         """
-        msg = ', which is required by DVMREL2 name=%r' % self.type
+        msg = ', which is required by DVMREL2 oid=%r' % self.oid
         if self.mat_type in self.allowed_materials:
-            self.mid = model.Material(self.mid, msg=msg)
-        #elif self.mat_type in self.allowed_elements:
-            #self.mid = model.Element(self.mid, msg=msg)
-        #elif self.mat_type in self.allowed_masses:
-            #self.mid = model.masses[self.mid]
-        #elif self.mat_type in self.allowed_properties_mass:
-            #self.mid = model.properties_mass[self.mid]
+            self.mid_ref = model.Material(self.mid, msg=msg)
         else:
             raise NotImplementedError('mat_type=%r is not supported' % self.mat_type)
         self.dequation = model.DEQATN(self.dequation)
 
-        self.mid_ref = self.mid
         self.dequation_ref = self.dequation
         #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
     def uncross_reference(self):
         self.mid = self.Mid()
         self.dequation = self.DEquation()
-        del self.mid_ref, self.dequation_ref
+        self.mid_ref = None
+        self.dequation_ref = None
 
     #def OptValue(self):  #: .. todo:: not implemented
         #self.pid_ref.OptValue(self.mp_name)
@@ -3541,8 +3554,8 @@ class DVPREL1(OptConstraint):
 
         # scale factor for DESVAR
         self.coeffs = coeffs
-
         self.pid_ref = None
+        self.dvids_ref = None
 
         if len(coeffs) == 0:
             msg = 'len(coeffs)=%s len(dvids)=%s\n' % (len(coeffs), len(dvids))
@@ -3555,7 +3568,6 @@ class DVPREL1(OptConstraint):
 
         pname_fid = validate_dvprel(prop_type, pname_fid, validate)
         self.pname_fid = pname_fid
-        self.pid_ref = None
 
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
@@ -3709,9 +3721,9 @@ class DVPREL1(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by DVPREL1 name=%r' % self.type
+        msg = ', which is required by DVPREL1 oid=%r' % self.oid
         self.pid_ref = self._get_property(model, self.pid, msg=msg)
-        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+        self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
     def _get_property(self, model, pid, msg=''):
         assert isinstance(self.pid, int), type(self.pid)
@@ -3736,6 +3748,7 @@ class DVPREL1(OptConstraint):
         self.pid = self.Pid()
         self.pid_ref = None
         self.dvids = self.desvar_ids
+        self.dvids_ref = None
 
     def calculate(self, op2_model, subcase_id):
         raise NotImplementedError('\n' + str(self))
@@ -3759,9 +3772,9 @@ class DVPREL1(OptConstraint):
 
     @property
     def desvar_ids(self):
-        if isinstance(self.dvids[0], integer_types):
+        if self.dvids_ref is None:
             return self.dvids
-        return [desvar.desvar_id for desvar in self.dvids]
+        return [desvar.desvar_id for desvar in self.dvids_ref]
 
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.prop_type, self.Pid(),
@@ -4093,7 +4106,7 @@ class DVPREL2(OptConstraint):
 
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
-        msg = ', which is required by DVPREL2 name=%r' % self.type
+        msg = ', which is required by DVPREL2 oid=%r' % self.oid
         self.pid_ref = self._get_property(model, self.pid, msg=msg)
         self.dequation_ref = model.DEQATN(self.dequation)
 
@@ -4120,7 +4133,7 @@ class DVPREL2(OptConstraint):
         self.pid = self.Pid()
         self.dequation = self.DEquation()
         self.pid_ref = None
-        del self.dequation_ref
+        self.dequation_ref = None
 
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
@@ -4280,21 +4293,21 @@ class DVGRID(BaseCard):
 
     @property
     def node_id(self):
-        if self.nid_ref is not None:
-            return self.nid_ref.nid
-        return self.nid
+        if self.nid_ref is None:
+            return self.nid
+        return self.nid_ref.nid
 
     @property
     def coord_id(self):
-        if self.cid_ref is not None:
-            return self.cid_ref.cid
-        return self.cid
+        if self.cid_ref is None:
+            return self.cid
+        return self.cid_ref.cid
 
     @property
     def desvar_id(self):
-        if self.dvid_ref is not None:
-            return self.dvid_ref.dvid
-        return self.dvid
+        if self.dvid_ref is None:
+            return self.dvid
+        return self.dvid_ref.dvid
 
     def uncross_reference(self):
         self.nid = self.node_id
@@ -4538,7 +4551,17 @@ def get_dvprel_key(dvprel, prop=None):
     if prop_type == 'PROD':
         if var_to_change in ['A', 'J']:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PTUBE':
+        if var_to_change in ['OD', 'T']:
+            pass
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PSHELL':
@@ -4548,32 +4571,70 @@ def get_dvprel_key(dvprel, prop=None):
             var_to_change = '12I/t^3'
         elif var_to_change == 8:
             var_to_change = 'Ts/T'
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PCOMP':
-        if var_to_change.startswith('THETA') or var_to_change.startswith('T'):
+        if isinstance(var_to_change, int):
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+        elif var_to_change.startswith('THETA') or var_to_change.startswith('T'):
             pass
         elif var_to_change in ['Z0', 'SB', 'TREF', 'GE']:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PCOMP':
+        if isinstance(var_to_change, int):
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        elif var_to_change.startswith('THETA') or var_to_change.startswith('T'):
+            pass
+        elif var_to_change in ['Z0', 'SB', 'TREF', 'GE']:
+            pass
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PBAR':
+        if var_to_change in ['A', 'I1', 'I2', 'J']:
+            pass
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PBEAM':
+        if var_to_change in ['A', 'I1', 'I2']:
+            pass
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBARL':
-        if var_to_change.startswith('DIM'):
+        if isinstance(var_to_change, int):
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        elif var_to_change.startswith('DIM'):
             pass
-        else:
-            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         if prop is None:
             var_to_change = '??? %s' % (var_to_change)
         else:
             var_to_change = '%s %s' % (prop.Type, var_to_change)
 
     elif prop_type == 'PBEAML':
-        if var_to_change.startswith('DIM'):
+        if isinstance(var_to_change, int):
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        elif var_to_change.startswith('DIM'):
             pass
-        else:
-            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         if prop is None:
             var_to_change = '??? %s' % (var_to_change)
         else:
@@ -4582,13 +4643,33 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PSHEAR':
         if var_to_change in ['T']:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PELAS':
+        if var_to_change in ['K1', 'GE1']:
+            pass
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PDAMP':
         if var_to_change in ['B1']:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
+    elif prop_type == 'PWELD':
+        if var_to_change in ['D']:
+            pass
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBUSH':
@@ -4597,34 +4678,44 @@ def get_dvprel_key(dvprel, prop=None):
                              'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
                              'GE1', 'GE3', 'GE4', 'GE5', 'GE6',]:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBUSH1D':
         if var_to_change in ['K', 'C', 'M']:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PGAP':
         if var_to_change in ['KA',]:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PVISC':
         if var_to_change in ['CE1']:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PFAST':
         if var_to_change in ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS']:
             pass
-        else:
+        elif isinstance(var_to_change, int):  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
-    else:
-        msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+    else:  # pragma: no cover
+        msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
     key = '%s %s' % (prop_type, var_to_change)
     return key, msg

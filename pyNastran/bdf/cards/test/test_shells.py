@@ -50,6 +50,8 @@ class TestShells(unittest.TestCase):
         model.mass_properties()
         model._verify_bdf(xref=True)
         cquad4 = model.Element(eid)
+        cquad4.get_edge_axes()
+        cquad4.center_of_mass()
         pshell = model.Property(pid)
         node_ids = cquad4.node_ids
         assert node_ids == [n1, n2, n3, n4], node_ids
@@ -110,6 +112,8 @@ class TestShells(unittest.TestCase):
 
         # ctria3 / pshell
         ctria3 = model.Element(eid)
+        ctria3.get_edge_axes()
+        ctria3.center_of_mass()
         node_ids = ctria3.node_ids
         assert node_ids == [n1, n2, n3], node_ids
         mass = A * (t * rho + nsm)
@@ -830,17 +834,23 @@ class TestShells(unittest.TestCase):
         eid = 3
         nids = [1, 2, 3, 4]
         cplstn4 = model.add_cplstn4(eid, pid, nids, comment='cplstn4')
+        cplstn4.flip_normal()
 
         eid = 5
         nids = [1, 2, 3]
         mid = 10
         cplstn3 = model.add_cplstn3(eid, pid, nids, comment='cplstn3')
+        cplstn3.flip_normal()
+
         pplane = model.add_pplane(pid, mid, t=0.1, nsm=0.,
                                   formulation_option=0, comment='pplane')
         E = 1e7
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
+
+        cplstn3.repr_fields()
+        cplstn4.repr_fields()
 
         cplstn3.raw_fields()
         cplstn4.raw_fields()
@@ -1035,8 +1045,10 @@ class TestShells(unittest.TestCase):
         model.add_grid(4, [0., 1., 0.])
         model.add_grid(8, [0., .5, 0.])
         model.add_grid(9, [.5, .5, 0.])
+
         nids = [1, 2, 3, 4, 5, 6, 7, 8]
         cquad8 = model.add_cquad8(eid, pid, nids, theta_mcid=0., comment='cquad8')
+        cquad8.flip_normal()
 
         eid = 2
         nids = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -1046,6 +1058,28 @@ class TestShells(unittest.TestCase):
         eid = 3
         nids = [1, 2, 3, 5, 6, 9]
         ctria6 = model.add_ctria6(eid, pid, nids, theta_mcid=0., comment='ctria6')
+        ctria6.flip_normal()
+
+        eid = 4
+        cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4])
+        cquad4.flip_normal()
+        print(cquad4)
+
+        eid = 5
+        cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4],
+                                  tflag=1, T1=2., T2=2., T3=2., T4=2.)
+        print(cquad4)
+
+        eid = 6
+        ctria3 = model.add_ctria3(eid, pid, [1, 2, 3])
+        ctria3.flip_normal()
+        print(ctria3)
+
+        eid = 7
+        ctria3 = model.add_ctria3(eid, pid, [1, 2, 3],
+                                  tflag=1, T1=2., T2=2., T3=2.)
+        print(ctria3)
+        print(ctria3)
 
         E = 3.0e7
         G = None
@@ -1054,6 +1088,14 @@ class TestShells(unittest.TestCase):
 
         model.cross_reference()
         model.pop_xref_errors()
+
+        ctria3.flip_normal()
+        cquad4.flip_normal()
+        ctria6.flip_normal()
+        cquad8.flip_normal()
+
+        assert len(ctria6.Centroid()) == 3, ctria6.Centroid()
+        assert len(ctria6.center_of_mass()) == 3, ctria6.center_of_mass()
 
         assert np.allclose(cquad8.Mass(), 0.1), cquad8.Mass()
         assert np.allclose(cquad.Mass(), 0.1), cquad.Mass()

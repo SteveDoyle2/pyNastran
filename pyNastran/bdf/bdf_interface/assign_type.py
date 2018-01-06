@@ -837,8 +837,9 @@ def string_or_blank(card, ifield, fieldname, default=None):
             raise SyntaxError('%s = %r (field #%s) on card must be an string without a space.\n'
                               'card=%s' % (fieldname, svalue, ifield, card))
         if svalue[0].isdigit() or '.' in svalue or '+' in svalue or '-' in svalue[0]:
-            raise SyntaxError('%s = %r (field #%s) on card must not have the following characters .+-\n'
-                              'card=%s' % (fieldname, svalue, ifield, card))
+            chars = ''.join(list(set('%s.+-' % svalue[0] if svalue[0].isdigit() else '')))
+            raise SyntaxError('%s = %r (field #%s) on card must not have the following characters %s\n'
+                              'card=%s' % (fieldname, svalue, ifield, chars, card))
     else:
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\n'

@@ -543,6 +543,8 @@ class XrefMesh(BDFAttributes):
         """cross references the SET objects"""
         for set_obj in self.asets:
             set_obj.cross_reference(self)
+        for set_obj in self.omits:
+            set_obj.cross_reference(self)
         for set_obj in self.bsets:
             set_obj.cross_reference(self)
         for set_obj in self.csets:

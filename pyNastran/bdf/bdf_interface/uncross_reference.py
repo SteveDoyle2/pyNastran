@@ -216,6 +216,8 @@ class UnXrefMesh(SafeXrefMesh):
         """uncross references the set objects"""
         for set_obj in self.asets:
             set_obj.uncross_reference()
+        for set_obj in self.omits:
+            set_obj.uncross_reference()
         for set_obj in self.bsets:
             set_obj.uncross_reference()
         for set_obj in self.csets:

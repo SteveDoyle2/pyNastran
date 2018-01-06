@@ -50,10 +50,12 @@ def setup_animation(scale, istep=None,
             scale,
             icase, time, animation_profile, fps)
     elif animate_phase:
+        onesided = True
         phases, icases, isteps, scales, analysis_time, fps = setup_animate_phase(
             scale, icase,
             time, fps)
     elif animate_time:
+        onesided = True
         icases, isteps, scales, analysis_time, fps = setup_animate_time(
             scale, time,
             icase_start, icase_end, icase_delta,

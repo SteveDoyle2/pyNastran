@@ -84,6 +84,7 @@ class PFAST(Property):
         assert self.d > 0
         assert mflag in [0, 1]
         assert self.mcid >= -1
+        self.mcid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -149,16 +150,15 @@ class PFAST(Property):
         """
         msg = ' which is required by PFAST pid=%s' % self.pid
         if self.mcid != -1:
-            self.mcid = model.Coord(self.Mcid(), msg)
-            self.mcid_ref = self.mcid
+            self.mcid_ref = model.Coord(self.Mcid(), msg)
 
     def uncross_reference(self):
         self.mcid = self.Mcid()
-        if self.mcid != -1:
-            del self.mcid_ref
+        #if self.mcid != -1:
+        self.mcid_ref = None
 
     def Mcid(self):
-        if isinstance(self.mcid, integer_types):
+        if self.mcid_ref is None:
             return self.mcid
         return self.mcid_ref.cid
 
@@ -398,7 +398,10 @@ class PRAC2D(CrackProperty):
         #: (Real; Default = 180.0)
         self.phi = phi
 
-        if iplane not in [0, 1]:
+        self.mid_ref = None
+
+    def validate(self):
+        if self.iplane not in [0, 1]:
             raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
                                'only be 0,1 iPlane=%r' % iplane)
 
@@ -444,7 +447,7 @@ class PRAC2D(CrackProperty):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def raw_fields(self):
         fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
@@ -485,6 +488,7 @@ class PRAC3D(CrackProperty):
         #: stress intensity factors are to be calculated. See Remark 4.
         #: (Real; Default = 180.0)
         self.phi = phi
+        self.mid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -524,7 +528,7 @@ class PRAC3D(CrackProperty):
 
     def uncross_reference(self):
         self.mid = self.Mid()
-        del self.mid_ref
+        self.mid_ref = None
 
     def raw_fields(self):
         fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]

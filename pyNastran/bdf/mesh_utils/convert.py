@@ -672,7 +672,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         if dvprel.type == 'DVPREL1':
             #print(dvprel)
             prop_type = dvprel.prop_type
-            desvars = dvprel.dvids
+            desvars = dvprel.dvids_ref
             var_to_change = dvprel.pname_fid
             assert len(desvars) == 1, len(desvars)
 

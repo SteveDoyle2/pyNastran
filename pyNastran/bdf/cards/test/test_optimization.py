@@ -445,6 +445,8 @@ class TestOpt(unittest.TestCase):
     def test_dvmrel1(self):
         """tests a DVMREL1"""
         model = BDF(debug=False)
+
+        model.add_desvar(11, 'X11', 1.0)
         oid = 10
         mid1 = 4
         mp_min = 1e6
