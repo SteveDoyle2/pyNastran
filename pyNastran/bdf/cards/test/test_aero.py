@@ -115,6 +115,9 @@ class TestAero(unittest.TestCase):
         #model.add_aefact(aefact_mach)
         #model.add_aefact(aefact_delta)
 
+        aecomp1.safe_cross_reference(model)
+        aecomp1.uncross_reference()
+
         aecomp1.cross_reference(model)
         aecomp1.write_card()
         aecomp1.uncross_reference()

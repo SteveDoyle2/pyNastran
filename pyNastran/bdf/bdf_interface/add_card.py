@@ -98,6 +98,7 @@ from pyNastran.bdf.cards.optimization import (
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
+    OMIT1,
     SET1, SET3, #RADSET,
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
@@ -648,6 +649,22 @@ class AddCards(AddMethods):
         nsmadd = NSMADD(sid, sets, comment=comment)
         self._add_nsmadd_object(nsmadd)
         return nsmadd
+
+    def add_omit1(self, components, ids, comment=''):
+        """
+        Creates an OMIT1 card, which defines the degree of freedoms that
+        will be excluded (o-set) from the analysis set (a-set).
+
+        Parameters
+        ----------
+        components : str
+            the degree of freedoms to be omitted (e.g., '1', '123')
+        ids : List[int]
+            the GRID/SPOINT ids
+        """
+        omit1 = OMIT1(components, ids, comment=comment)
+        self._add_omit_object(omit1)
+        return omit1
 
     def add_pmass(self, pid, mass, comment=''):
         # type: (int, float, str) -> PMASS
