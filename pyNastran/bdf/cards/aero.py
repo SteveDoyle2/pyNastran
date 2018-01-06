@@ -164,21 +164,21 @@ class AECOMP(BaseCard):
             for key in self.lists:
                 try:
                     ref = model.SET1(key, msg)
-                except:
+                except KeyError:
                     ref = None
                 self.lists_ref.append(ref)
         elif self.list_type == 'AELIST':
             for key in self.lists:
                 try:
                     ref = model.AELIST(key, msg)
-                except:
+                except KeyError:
                     ref = None
                 self.lists_ref.append(ref)
         elif self.list_type == 'CAERO':
             for key in self.lists:
                 try:
                     ref = model.CAero(key, msg)
-                except:
+                except KeyError:
                     ref = None
                 self.lists_ref.append(ref)
         #elif self.list_type == 'CMPID':

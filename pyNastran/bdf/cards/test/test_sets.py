@@ -116,6 +116,7 @@ class TestSets(unittest.TestCase):
     def test_omit(self):
         """checks the OMIT/OMIT1 cards"""
         omit1a = OMIT1(4, [1, 'THRU', 10])
+        self.assertEqual(omit1a.components, 4)
         omit1b = OMIT1.add_card(BDFCard(['OMIT1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         omit1a.write_card()
         omit1b.write_card()
