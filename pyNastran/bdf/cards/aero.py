@@ -143,7 +143,6 @@ class AECOMP(BaseCard):
             the BDF object
         """
         msg = ', which is required by AECOMP name=%r' % self.name
-        #return
         if self.list_type == 'SET1':
             self.lists_ref = [model.SET1(key, msg) for key in self.lists]
         elif self.list_type == 'AELIST':
@@ -154,38 +153,37 @@ class AECOMP(BaseCard):
             # AEQUAD4,/AETRIA3
         else:
             raise NotImplementedError(self.list_type)
-        #self.lists_ref = self.lists
 
     def safe_cross_reference(self, model):
         msg = ', which is required by AECOMP name=%r' % self.name
         #return
-        self.lists_ref = []
+        lists_ref = []
         if self.list_type == 'SET1':
             for key in self.lists:
                 try:
                     ref = model.SET1(key, msg)
                 except KeyError:
                     ref = None
-                self.lists_ref.append(ref)
+                lists_ref.append(ref)
         elif self.list_type == 'AELIST':
             for key in self.lists:
                 try:
                     ref = model.AELIST(key, msg)
                 except KeyError:
                     ref = None
-                self.lists_ref.append(ref)
+                lists_ref.append(ref)
         elif self.list_type == 'CAERO':
             for key in self.lists:
                 try:
                     ref = model.CAero(key, msg)
                 except KeyError:
                     ref = None
-                self.lists_ref.append(ref)
+                lists_ref.append(ref)
         #elif self.list_type == 'CMPID':
             # AEQUAD4,/AETRIA3
         else:
             raise NotImplementedError(self.list_type)
-        #self.lists_ref = self.lists
+        self.lists_ref = lists_ref
 
     def uncross_reference(self):
         self.lists = self.get_lists()

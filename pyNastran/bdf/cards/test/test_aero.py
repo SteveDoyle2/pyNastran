@@ -220,7 +220,7 @@ class TestAero(unittest.TestCase):
         assert model.aelinks[idi][0].comment == '$cat\n', 'comment=%r' % str(model.aelinks[idi][0].comment)
 
         idi = 11
-        lable = 'LABEL'
+        label = 'LABEL'
         independent_labels = ['pig', 'frog', 'dog']
         Cis = []
         aelink2 = model.add_aelink(idi, label, independent_labels, Cis)

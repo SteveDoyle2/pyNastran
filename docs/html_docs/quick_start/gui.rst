@@ -105,14 +105,11 @@ If you download the source, make sure you follow the `Installation Guide
 <https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use
 **setup.py develop** and not **setup.py install**.
 
-Python 2.7 with ``vtk==5.10.1`` or ``vtk==6.3.0`` will give you the best looking
-GUI.
+Python 2.7 with ``vtk==5.10.1`` or ``vtk==6.3.0`` with PyQt4 will give you the
+best looking GUI with v1.0; ``vtk==7`` will work though.
 
-VTK 7 issues:
- - edges can't be colored black.
-
-Python 3 issues:
- - the GUI in Python 3 won't save your settings (e.g., background color).
+The master **requires** ``vtk==7`` or ``vtk==8`` and works in either
+Python 2.7/3.5+ and PyQt4/5.
 
 
 Running the GUI

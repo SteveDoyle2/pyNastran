@@ -1,7 +1,7 @@
 from __future__ import print_function
 from codecs import open as codec_open
 from six import iteritems
-from numpy import zeros, ones, arange, array, searchsorted, array_equal
+from numpy import zeros, arange, array, array_equal
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D

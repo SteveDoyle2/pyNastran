@@ -202,7 +202,7 @@ class CROD(RodElement):
         self.model.log.debug('grids\n%s' % grid_cid0)
         p1 = grid_cid0[n1i, :]
         p2 = grid_cid0[n2i, :]
-        v1 = p1 - p2
+        #v1 = p1 - p2
         L = norm(p1 - p2, axis=1)
         assert L.shape == (n,), L.shape
         return L
@@ -504,8 +504,8 @@ class CROD(RodElement):
             #G = self.G()
 
             #print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
-            k_axial = A * E / L
-            k_torsion = G * J / L
+            #k_axial = A * E / L
+            #k_torsion = G * J / L
             #k_axial = 1.0
             #k_torsion = 2.0
 

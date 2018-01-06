@@ -504,8 +504,8 @@ class CTUBE(RodElement):
             #G = self.G()
 
             #print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
-            k_axial = A * E / L
-            k_torsion = G * J / L
+            #k_axial = A * E / L
+            #k_torsion = G * J / L
             #k_axial = 1.0
             #k_torsion = 2.0
 
