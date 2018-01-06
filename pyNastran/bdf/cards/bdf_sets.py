@@ -466,7 +466,7 @@ class ABQSet1(Set):
             node_ids_list = collapse_thru(self.node_ids)
         else:
             node_ids_list = self.node_ids
-        list_fields = [self.type, self.components] + self.node_ids
+        list_fields = [self.type, self.components] + node_ids_list
         return list_fields
 
     def __repr__(self):
