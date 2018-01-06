@@ -18,14 +18,16 @@ All cards are Material objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 import numpy as np
 from numpy import zeros, array
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Material
+from pyNastran.bdf.cards.base_card import Material, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, string_or_blank, blank)
+    integer, integer_or_blank, double, double_or_blank,
+    string, string_or_blank, integer_or_double, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -200,31 +202,61 @@ class CREEP(Material):
         return self.comment + print_card_16(card)
 
 
-class NXSTRAT(object):
+class NXSTRAT(BaseCard):
     """
     Strategy Parameters for SOLs 601 and 701
 
     Defines parameters for solution control and strategy in advanced nonlinear
     structural analysis.
 
-    +---------+--------+--------+--------+--------+--------+--------+--------+
-    |    1    |    2   |    3   |    4   |    5   |    6   |    7   |    8   |
-    +=========+========+========+========+========+========+========+========+
-    | NXSTRAT |   ID   | Param1 | Value1 | Param2 | Value2 | Param3 | Value3 |
-    +---------+--------+--------+--------+--------+--------+--------+--------+
-    |         | Param4 | Value4 | Param5 | Value5 |   etc  |        |        |
-    +---------+--------+--------+--------+--------+--------+--------+--------+
-    | NXSTRAT |    1   |  AUTO  |    1   | MAXITE |   30   |  RTOL  |  0.005 |
-    +---------+--------+--------+--------+--------+--------+--------+--------+
-    | ATSNEXT |    3   |        |        |        |        |        |        |
-    +---------+--------+--------+--------+--------+--------+--------+--------+
+    +---------+---------+--------+--------+--------+--------+--------+--------+
+    |    1    |    2    |    3   |    4   |    5   |    6   |    7   |    8   |
+    +=========+=========+========+========+========+========+========+========+
+    | NXSTRAT |    ID   | Param1 | Value1 | Param2 | Value2 | Param3 | Value3 |
+    +---------+---------+--------+--------+--------+--------+--------+--------+
+    |         |  Param4 | Value4 | Param5 | Value5 |   etc  |        |        |
+    +---------+---------+--------+--------+--------+--------+--------+--------+
+    | NXSTRAT |    1    |  AUTO  |    1   | MAXITE |   30   |  RTOL  |  0.005 |
+    +---------+---------+--------+--------+--------+--------+--------+--------+
+    |         | ATSNEXT |    3   |        |        |        |        |        |        |
+    +---------+---------+--------+--------+--------+--------+--------+--------+
     """
     type = 'NXSTRAT'
-    def __init__(self, params):
+    def __init__(self, sid, params, comment=''):
+        self.sid = sid
         self.params = params
 
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a NXSTRAT card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+        nfields = len(card)
+        iparam = 1
+        params = {}
+        for ifield in range(2, nfields, 2):
+            param_name = string(card, ifield, 'param_%i' % iparam)
+            value = integer_or_double(card, ifield+1, 'value_%i' % iparam)
+            params[param_name] = value
+            iparam += 1
+
+        nparams = (nfields - 2) // 2
+        nleftover = (nfields - 2) % 2
+        assert nleftover == 0, 'nparams=%s nleftover=%s card=%s' % (nparams, nleftover, card)
+
+        #assert len(card) <= 13, 'len(NXSTRAT card) = %i\ncard=%s' % (len(card), card)
+        return NXSTRAT(sid, params, comment=comment)
+
     def raw_fields(self):
-        list_fields = ['NXSTRAT']
+        list_fields = ['NXSTRAT', self.sid]
         for key, value in sorted(iteritems(self.params)):
             list_fields += [key, value]
         return list_fields

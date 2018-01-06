@@ -316,6 +316,7 @@ class BDFAttributes(object):
         self.MATT5 = {}  # type: Dict[int, Any]
         self.MATT8 = {}  # type: Dict[int, Any]
         self.MATT9 = {}  # type: Dict[int, Any]
+        self.nxstrats = {}  # type: Dict[int, Any]
 
         #: stores the CREEP card
         self.creep_materials = {}  # type: Dict[int, Any]
@@ -611,6 +612,7 @@ class BDFAttributes(object):
             'MATS1' : ['MATS1'],
             'MATS3' : ['MATS3'],
             'MATS8' : ['MATS8'],
+            'nxstrats' : ['NXSTRAT'],
 
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...

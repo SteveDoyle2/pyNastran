@@ -1012,7 +1012,7 @@ class TestBeams(unittest.TestCase):
         model.pop_parse_errors()
         model.cross_reference()
         model.pop_xref_errors()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_pbmsect(self):
         """tests a PBMSECT"""

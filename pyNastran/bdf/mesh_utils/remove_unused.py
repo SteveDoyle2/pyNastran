@@ -85,7 +85,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'MONPNT1', 'MONPNT2', 'MONPNT3',
         'DSCREEN', 'DTI', 'NSMADD',
         'AESURFS', 'CSSCHD',
-        'CGEN',
+        'CGEN', 'NXSTRAT',
     ]
     set_types = [
         'SET1', 'SET3',
@@ -626,18 +626,20 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     pids_mass_to_remove = list(pids_mass - pids_mass_used)
     mids_to_remove = list(mids - mids_used)
     cids_to_remove = list(cids - cids_used)
+    if 0 in cids_to_remove:
+        cids_to_remove.remove(0)
 
-    if remove_nids:
+    if remove_nids and nids_to_remove:
         for nid in nids_to_remove:
             del model.nodes[nid]
         model.log.debug('removed nodes %s' % nids_to_remove)
 
-    if remove_cids:
+    if remove_cids and cids_to_remove:
         for cid in cids_to_remove:
             del model.coords[cid]
         model.log.debug('removing coords %s' % cids_to_remove)
 
-    if remove_pids:
+    if remove_pids and pids_to_remove:
         for pid in pids_mass_to_remove:
             del model.properties_mass[pid]
         model.log.debug('removing properties_mass %s' % pids_mass_to_remove)
@@ -646,7 +648,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             del model.properties[pid]
         model.log.debug('removing properties %s' % pids_to_remove)
 
-    if remove_mids:
+    if remove_mids and mids_to_remove:
         for mid in mids_to_remove:
             del model.materials[mid]
         model.log.debug('removing materials %s' % mids_to_remove)

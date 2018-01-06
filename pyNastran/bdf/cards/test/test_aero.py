@@ -1025,7 +1025,7 @@ class TestAero(unittest.TestCase):
         caero3b.get_points()
         caero3b.panel_points_elements()
 
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
 
     def test_paero3(self):
@@ -1238,7 +1238,7 @@ class TestAero(unittest.TestCase):
 
         read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
 
         #caero5.raw_fields()

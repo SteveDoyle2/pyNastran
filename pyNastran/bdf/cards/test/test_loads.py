@@ -264,7 +264,7 @@ class TestLoads(unittest.TestCase):
         gmload.raw_fields()
         model.validate()
         model.cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_pload4_01(self):
         """tests a PLOAD4"""
@@ -831,7 +831,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
-        save_load_deck(model2)
+        save_load_deck(model2, run_convert=False)
 
     def test_loads_combo(self):
         r"""
@@ -1129,7 +1129,7 @@ class TestLoads(unittest.TestCase):
         model2.write_skin_solid_faces('skin.bdf', write_solids=False,
                                       write_shells=True)
         os.remove('skin.bdf')
-        save_load_deck(model2)
+        save_load_deck(model2, run_convert=False)
 
     def test_load(self):
         """makes sure LOAD cards don't get sorted"""

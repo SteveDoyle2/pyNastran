@@ -418,7 +418,7 @@ class TestOpt(unittest.TestCase):
         grid.nid = 200
         assert '200' in str(dresp3), dresp3
 
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_dvprel1_02(self):
         model = BDF()
@@ -531,7 +531,7 @@ class TestOpt(unittest.TestCase):
         dvmrel2_1.raw_fields()
         mat8.raw_fields()
         mat10.raw_fields()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_dvcrel1(self):
         """tests a DVCREL1, DVCREL2, DVGRID"""

@@ -92,7 +92,8 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, F
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
-                                           MATG, MATHE, MATHP, CREEP, EQUIV)
+                                           MATG, MATHE, MATHP, CREEP, EQUIV,
+                                           NXSTRAT)
 # TODO: add MATT3, MATT8, MATT9
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATS1
 
@@ -431,6 +432,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'MATS1', #'MATS3', 'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
+
+            ## nxstrats
+            'NXSTRAT',
 
             ## thermal_materials
             'MAT4', 'MAT5',
@@ -1985,6 +1989,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'MATT5' : (MATT5, self._add_material_dependence_object),
             'MATT8' : (MATT8, self._add_material_dependence_object),
             #'MATT9' : (MATT9, self._add_material_dependence_object),
+            'NXSTRAT' : (NXSTRAT, self._add_nxstrat_object),
 
             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self._add_creep_material_object),

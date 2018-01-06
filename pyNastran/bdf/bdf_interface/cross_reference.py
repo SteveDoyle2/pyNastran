@@ -434,6 +434,16 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
+        for mat in itervalues(self.creep_materials):  # CREEP
+            try:
+                mat.cross_reference(self)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                self._ixref_errors += 1
+                var = traceback.format_exception_only(type(e), e)
+                self._stored_xref_errors.append((mat, var))
+                if self._ixref_errors > self._nxref_errors:
+                    self.pop_xref_errors()
+
         # CREEP - depends on MAT1
         data = [self.MATS1, self.MATS3, self.MATS8,
                 self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,

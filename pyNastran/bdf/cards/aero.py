@@ -2036,6 +2036,8 @@ class CAERO1(BaseCard):
             nchord = 0
         if lchord is None:
             lchord = 0
+        p1 = np.asarray(p1)
+        p4 = np.asarray(p4)
 
         if comment:
             self.comment = comment
@@ -2609,6 +2611,8 @@ class CAERO2(BaseCard):
 
         if comment:
             self.comment = comment
+        p1 = np.asarray(p1)
+
         #: Element identification number
         self.eid = eid
 
@@ -5057,6 +5061,8 @@ class MONPNT1(BaseCard):
             self.comment = comment
         if cd is None:
             cd = cp
+        xyz = np.asarray(xyz)
+
         self.name = name
         self.label = label
         self.axes = axes
@@ -5094,7 +5100,7 @@ class MONPNT1(BaseCard):
     def raw_fields(self):
         list_fields = [
             'MONPNT1', self.name, self.label.strip(), self.axes, self.comp,
-            self.cp,] + self.xyz + [self.cd]
+            self.cp,] + list(self.xyz) + [self.cd]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -5173,6 +5179,8 @@ class MONPNT3(BaseCard):
             self.comment = comment
         if cd is None:
             cd = cp
+        xyz = np.asarray(xyz)
+
         self.name = name
         self.label = label
         self.axes = axes
@@ -5212,7 +5220,8 @@ class MONPNT3(BaseCard):
     def raw_fields(self):
         list_fields = [
             'MONPNT3', self.name, self.label.strip(),
-            self.axes, self.grid_set, self.elem_set, self.cp] + self.xyz + [self.xflag, self.cd]
+            self.axes, self.grid_set, self.elem_set, self.cp
+            ] + list(self.xyz) + [self.xflag, self.cd]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
