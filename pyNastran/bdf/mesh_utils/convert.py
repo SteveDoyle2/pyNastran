@@ -286,13 +286,16 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             prop.z1 *= xyz_scale
             prop.z2 *= xyz_scale
             prop.twelveIt3 /= xyz_scale ** 3
+
         elif prop_type in ['PCOMP', 'PCOMPG']:
             prop.thicknesses = [t * xyz_scale for t in prop.thicknesses]
             prop.nsm *= nsm_plate_scale
             prop.z0 *= xyz_scale
             prop.sb *= stress_scale
+
         elif prop_type == 'PELAS':
             prop.k *= stiffness_scale
+
         elif prop_type == 'PBUSH':
             for var in prop.vars:
                 if var == 'K':

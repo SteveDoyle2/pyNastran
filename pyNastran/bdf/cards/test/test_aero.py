@@ -1485,7 +1485,7 @@ class TestAero(unittest.TestCase):
             aesid, label, cid1, aelist_id2, cid2=None, alid2=None,
             eff=1.0, ldw='LDW',
             crefc=1.0, crefs=1.2,
-            pllim=--np.pi/2, pulim=np.pi/2.,
+            pllim=-np.pi/2, pulim=np.pi/2.,
             hmllim=-42., hmulim=42.,  # hinge moment limits in force/disp
             tqllim=10, tqulim=11,  # TABLEDi deflection limits vs. dynamic pressure
         )
