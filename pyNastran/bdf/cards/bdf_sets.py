@@ -314,7 +314,7 @@ class BSET(ABCQSet):
         ids : List[int]
             the GRID/SPOINT ids
         components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be fixed (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
 
@@ -350,7 +350,7 @@ class CSET(ABCQSet):
         ids : List[int]
             the GRID/SPOINT ids
         components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be free (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
 
@@ -385,7 +385,7 @@ class QSET(ABCQSet):
         ids : List[int]
             the GRID/SPOINT ids
         components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be created (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
         """
@@ -681,7 +681,7 @@ class BSET1(ABQSet1):
         ids : List[int]
             the GRID/SPOINT ids
         components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be fixed (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
         """
@@ -719,7 +719,7 @@ class CSET1(Set):
         ids : List[int]
             the GRID/SPOINT ids
         components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be free (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
         """
@@ -807,7 +807,7 @@ class QSET1(ABQSet1):
         ids : List[int]
             the GRID/SPOINT ids
         components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be created (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
         """
@@ -824,7 +824,7 @@ class SET1(Set):
     +======+========+========+=====+======+=====+=====+======+=====+
     | SET1 |  SID   |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
     +------+--------+--------+-----+------+-----+-----+------+-----+
-    |      |  ID8   | -etc.- |     |      |     |     |      |     |
+    |      |  ID8   |  etc.  |     |      |     |     |      |     |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     | SET1 |   3    |   31   | 62  |  93  | 124 | 16  |  17  | 18  |
     +------+--------+--------+-----+------+-----+-----+------+-----+
@@ -832,7 +832,7 @@ class SET1(Set):
     +------+--------+--------+-----+------+-----+-----+------+-----+
     | SET1 |   6    |   29   | 32  | THRU | 50  | 61  | THRU | 70  |
     +------+--------+--------+-----+------+-----+-----+------+-----+
-    |      |   17   |  57    |     |      |     |     |      |     |
+    |      |   17   |   57   |     |      |     |     |      |     |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     """
     type = 'SET1'
@@ -920,7 +920,7 @@ class SET1(Set):
         ids = self.get_ids()
         return ['SET1', self.sid] + skin + self.get_ids()
 
-    def cross_reference(self, model, xref_type, msg='', allow_empty_nodes=False):
+    def cross_reference_set(self, model, xref_type, msg='', allow_empty_nodes=False):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -929,7 +929,7 @@ class SET1(Set):
         model : BDF()
             the BDF object
         xref_type : str
-            {'Node'}
+            {'Node', 'Point'}
         allow_empty_nodes : bool; default=False
             do all nodes need to exist?
 
@@ -1113,7 +1113,7 @@ class SET3(Set):
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
         return ids
 
-    def cross_reference(self, model, xref_type, msg=''):
+    def cross_reference_set(self, model, xref_type, msg=''):
         msg = ' which is required by SET3 sid=%s%s' % (self.sid, msg)
         #if xref_type == 'Node':
             #self.ids = model.Nodes(self.get_ids(), msg=msg)
@@ -1445,6 +1445,21 @@ class USET(Set):
     """
     type = 'USET'
     def __init__(self, name, ids, components, comment=''):
+        """
+        Creates a USET card, which defines a degrees-of-freedom set.
+
+        Parameters
+        ----------
+        name : str
+            SNAME Set name. (One to four characters or the word 'ZERO'
+            followed by the set name.)
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+        """
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -1552,6 +1567,21 @@ class USET1(ABQSet1):
     type = 'USET1'
 
     def __init__(self, name, ids, components, comment=''):
+        """
+        Creates a USET1 card, which defines a degrees-of-freedom set.
+
+        Parameters
+        ----------
+        name : str
+            SNAME Set name. (One to four characters or the word 'ZERO'
+            followed by the set name.)
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+        """
         ABQSet1.__init__(self)
         if comment:
             self.comment = comment

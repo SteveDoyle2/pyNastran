@@ -3,10 +3,10 @@ Brief Project Overview
 ========================
 
 Since the 1960's `NASTRAN <http://en.wikipedia.org/wiki/Nastran>`_ (NASA
-Structural ANalysis) has been used to solve structural, thermal, aerodynamic, 
-dynamics, etc. problems.  The file formats were originally developed by MSC 
-for a product now called MSC Nastran.  There have been many spinoff version 
-of NASTRAN that have been created based on the 2001 source code release of 
+Structural ANalysis) has been used to solve structural, thermal, aerodynamic,
+dynamics, etc. problems.  The file formats were originally developed by MSC
+for a product now called MSC Nastran.  There have been many spinoff version
+of NASTRAN that have been created based on the 2001 source code release of
 MSC Nastran in 2002 after settlement with the FTC (Federal Trade Commisson).
 There is now NX Nastran and NEi Nastran, which are developed independently as well
 as the 1995 Natran `source code <https://github.com/nasa/NASTRAN-95>`_.
@@ -31,7 +31,7 @@ Target Audience
 to be familiar with the software.  This has greatly reduced the necessity of
 documenting every variable exhaustively as users can easily reference existing
 Nastran documentation. The BDF file has roughly 700 cards availble to a user
-with 278 being currently supported by pyNastran.  The majority of the cards,
+with 331 being currently supported by pyNastran.  The majority of the cards,
 defined as separate Python classes, are not documented.  However, the Quick
 Reference Guide (QRG) defines each input to the card.  A user with the QRG
 should have little effort in understanding what the various objects do.

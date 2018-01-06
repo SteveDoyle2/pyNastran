@@ -119,8 +119,9 @@ class PBEAM(IntegratedLineProperty):
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
 
-    def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                 c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
+    def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+                 c1=None, c2=None, d1=None, d2=None,
+                 e1=None, e2=None, f1=None, f2=None,
                  k1=1., k2=1., s1=0., s2=0.,
                  nsia=0., nsib=None, cwa=0., cwb=None,
                  m1a=0., m2a=None, m1b=0., m2b=None,
@@ -147,7 +148,7 @@ class PBEAM(IntegratedLineProperty):
             moments of inertia
         nsm : List[float]
             nonstructural mass per unit length
-        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
+        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]; default=None -> [0.]*nxxb
            the y/z locations of the stress recovery points
            c1 - point C.y
            c2 - point C.z
@@ -192,6 +193,8 @@ class PBEAM(IntegratedLineProperty):
         if n2b is None:
             n2b = n1b
 
+        if nsm is None:
+            nsm = [0.] * len(xxb)
         if c1 is None:
             c1 = [None] * len(xxb)
         if c2 is None:
@@ -1580,12 +1583,12 @@ class PBMSECT(LineProperty):
         self.mid_ref = model.Material(self.mid, msg=msg)
 
         self.outp_ref = model.Set(self.outp)
-        self.outp_ref.cross_reference(model, 'Point', msg=msg)
+        self.outp_ref.cross_reference_set(model, 'Point', msg=msg)
 
         if len(self.brps):
             ## TODO: not done
             self.brp1_ref = model.Set(self.brp1)
-            self.brp1_ref.cross_reference(model, 'Point', msg=msg)
+            self.brp1_ref.cross_reference_set(model, 'Point', msg=msg)
 
     @property
     def outp_id(self):

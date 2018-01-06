@@ -3069,6 +3069,16 @@ class DVMREL1(OptConstraint):
                        mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
 
     @property
+    def Type(self):
+        self.deprecated('Type', 'mat_type', '1.1')
+        return self.mat_type
+
+    @Type.setter
+    def Type(self, mat_type):
+        self.deprecated('Type', 'mat_type', '1.1')
+        self.mat_type = mat_type
+
+    @property
     def desvar_ids(self):
         if self.dvids_ref is None:
             return self.dvids
@@ -3337,6 +3347,16 @@ class DVMREL2(OptConstraint):
         else:
             raise NotImplementedError('mat_type=%r is not supported' % self.mat_type)
         return mid
+
+    @property
+    def Type(self):
+        self.deprecated('Type', 'mat_type', '1.1')
+        return self.mat_type
+
+    @Type.setter
+    def Type(self, mat_type):
+        self.deprecated('Type', 'mat_type', '1.1')
+        self.mat_type = mat_type
 
     def DEquation(self):
         if self.dequation_ref is None:

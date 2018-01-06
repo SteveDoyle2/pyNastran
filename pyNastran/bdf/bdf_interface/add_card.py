@@ -9,6 +9,7 @@ That said, there are still a few bugs.
 from __future__ import print_function
 
 from typing import Any, Optional, List, Union
+from six import string_types
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
@@ -1578,7 +1579,8 @@ class AddCards(AddMethods):
         return elem
 
     def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                  c1, c2, d1, d2, e1, e2, f1, f2,
+                  c1=None, c2=None, d1=None, d2=None,
+                  e1=None, e2=None, f1=None, f2=None,
                   k1=1., k2=1., s1=0., s2=0.,
                   nsia=0., nsib=None, cwa=0., cwb=None,
                   m1a=0., m2a=None, m1b=0., m2b=None,
@@ -1603,9 +1605,9 @@ class AddCards(AddMethods):
             area
         i1, i2, i12, j : List[float]
             moments of inertia
-        nsm : List[float]
+        nsm : List[float]; default=None -> [0.]*nxxb
             nonstructural mass per unit length
-        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
+        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]; default=None -> [0.]*nxxb
            the y/z locations of the stress recovery points
            c1 - point C.y
            c2 - point C.z
@@ -4263,7 +4265,7 @@ class AddCards(AddMethods):
 
         ..note :: the length of components and ids must be the same
         """
-        if isinstance(components, str):
+        if isinstance(components, string_types):
             aset = ASET1(ids, components, comment=comment)
         else:
             aset = ASET(ids, components, comment=comment)
@@ -4285,7 +4287,7 @@ class AddCards(AddMethods):
         ids : List[int]
             the GRID/SPOINT ids
         components : List[str]; str
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be fixed (e.g., '1', '123')
             if a list is passed in, a ASET is made
             if a str is passed in, a ASET1 is made
         comment : str; default=''
@@ -4293,7 +4295,7 @@ class AddCards(AddMethods):
 
         ..note :: the length of components and ids must be the same
         """
-        if isinstance(components, str):
+        if isinstance(components, string_types):
             bset = BSET1(ids, components, comment=comment)
         else:
             bset = BSET(ids, components, comment=comment)
@@ -4315,7 +4317,7 @@ class AddCards(AddMethods):
         ids : List[int]
             the GRID/SPOINT ids
         components : List[str]; str
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be free (e.g., '1', '123')
             if a list is passed in, a CSET is made
             if a str is passed in, a CSET1 is made
         comment : str; default=''
@@ -4323,7 +4325,7 @@ class AddCards(AddMethods):
 
         ..note :: the length of components and ids must be the same
         """
-        if isinstance(components, str):
+        if isinstance(components, string_types):
             cset = CSET1(ids, components, comment=comment)
         else:
             cset = CSET(ids, components, comment=comment)
@@ -4354,7 +4356,7 @@ class AddCards(AddMethods):
         #comment : str; default=''
             #a comment for the card
         #"""
-        #if isinstance(components, str):
+        #if isinstance(components, string_types):
             #omit = OMIT1(ids, components, comment=comment)
         #else:
             #omit = OMIT(ids, components, comment=comment)
@@ -4390,13 +4392,13 @@ class AddCards(AddMethods):
         ids : List[int]
             the GRID/SPOINT ids
         components : List[str]; str
-            the degree of freedoms to be retained (e.g., '1', '123')
+            the degree of freedoms to be created (e.g., '1', '123')
             if a list is passed in, a QSET is made
             if a str is passed in, a QSET1 is made
         comment : str; default=''
             a comment for the card
         """
-        if isinstance(components, str):
+        if isinstance(components, string_types):
             qset = QSET1(ids, components, comment=comment)
         else:
             qset = QSET(ids, components, comment=comment)
@@ -4408,14 +4410,33 @@ class AddCards(AddMethods):
         return self.add_qset(ids, components, comment=comment)
 
     def add_uset(self, name, ids, components, comment=''):
-        uset = USET(name, ids, components, comment=comment)
+        """
+        Creates a USET card, which defines a degrees-of-freedom set.
+
+        Parameters
+        ----------
+        name : str
+            SNAME Set name. (One to four characters or the word 'ZERO'
+            followed by the set name.)
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms (e.g., '1', '123')
+            if a list is passed in, a USET is made
+            if a str is passed in, a USET1 is made
+        comment : str; default=''
+            a comment for the card
+        """
+        if isinstance(components, string_types):
+            uset = USET1(ids, components, comment=comment)
+        else:
+            uset = USET(ids, components, comment=comment)
         self._add_uset_object(uset)
         return uset
 
     def add_uset1(self, name, ids, components, comment=''):
-        uset = USET1(name, ids, components, comment=comment)
-        self._add_uset_object(uset)
-        return uset
+        """.. see:: ``add_uset``"""
+        return self.add_uset(name, ids, components, comment=comment)
 
     def add_sebset(self, seid, ids, components, comment=''):
         sebset = SEBSET(seid, ids, components, comment=comment)
@@ -5385,7 +5406,8 @@ class AddCards(AddMethods):
         }
         """
         dresp = DRESP2(dresp_id, label, dequation, region, params,
-                       method=method, c1=c1, c2=c2, c3=c3, comment=comment, validate=validate)
+                       method=method, c1=c1, c2=c2, c3=c3, comment=comment,
+                       validate=validate)
         self._add_dresp_object(dresp)
         return dresp
 

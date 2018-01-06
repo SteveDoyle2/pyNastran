@@ -2866,6 +2866,10 @@ class PLOADX1(BaseCard):
         self.gb_ref = model.Node(self.gb, msg=msg)
 
     @property
+    def node_ids(self):
+        return [self.Ga(), self.Gb()]
+
+    @property
     def nodes(self):
         return [self.ga, self.gb]
 

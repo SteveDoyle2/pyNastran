@@ -70,7 +70,7 @@ try:
     ver = scipy.version.short_version
     if ver < '0.18.1':
         print("scipy.version.short_version = %r < '0.18.1'" % scipy.version.short_version)
-        py_packages.append('scipy >= 0.17.0')
+        py_packages.append('scipy >= 0.18.1')
 except ImportError:
     py_packages.append('scipy >= 0.18.1')  # 0.18.1 used
 

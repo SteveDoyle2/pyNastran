@@ -740,6 +740,26 @@ class TestBeams(unittest.TestCase):
                          group='MSCBML0',
                          comment='')
 
+        pid += 1
+
+        so = ['YES', 'YESA', 'NO', 'YES']
+        xxb = [0., 0.5, 0.75, 1.]
+        area = [1., 2., 3., 4.]
+        i1 = [2., 3., 4., 5.]
+        i2 = [3., 4., .5, .6]
+        i12 = [0.1, 0.2, 0.3, 0.4]
+        j = [5., 6., 6.5, 7.0]
+        nsm = None
+        pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                                c1=None, c2=None, d1=None, d2=None,
+                                e1=None, e2=None, f1=None, f2=None,
+                                k1=1., k2=1., s1=0., s2=0.,
+                                nsia=0., nsib=None, cwa=0., cwb=None,
+                                m1a=0., m2a=None, m1b=0., m2b=None,
+                                n1a=0., n2a=None, n1b=0., n2b=None,
+                                comment='')
+        str(pbeam)
+
         E = 3.0e7
         G = None
         nu = 0.3

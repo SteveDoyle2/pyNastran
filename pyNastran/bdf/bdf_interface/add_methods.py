@@ -770,7 +770,7 @@ class AddMethods(BDFAttributes):
     def _add_aestat_object(self, aestat):
         # type: (Any) -> None
         """adds an AESTAT object"""
-        key = aestat.id
+        key = aestat.aestat_id
         assert key not in self.aestats, '\naestat=\n%s old=\n%s' % (
             aestat, self.aestats[key])
         assert key >= 0

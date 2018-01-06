@@ -12,7 +12,7 @@ Install Procedure - From a Release
 Overview
 ========
  * Install Python
- * Install numpy, scipy, pandas, vtk, PyQt4 (GUI)
+ * Install numpy, scipy, pandas, vtk, PyQt4/5 (GUI)
  * Install numpy, scipy, pandas (no GUI)
  * Download pyNastran from Github
  * Navigate to pyNastran directory on the command line
@@ -22,7 +22,7 @@ Overview
 Download Python
 ===============
 The software is tested against:
- - Python 2.7.13 (Windows/Linux)
+ - Python 2.7.14 (Windows/Linux)
  - Python 3.4 (Linux)
  - Python 3.5 (Windows/Linux)
  - Python 3.6 (Linux)
@@ -36,20 +36,21 @@ Options include:
 
 Make sure to get 64-bit Python, so memory usage becomes a non-issue.  It
 shouldn't matter too much as long as your packages versions (e.g. numpy/scipy)
-are consistent.  **With either distribution, both Python and all 3rd party
-packages will be installed.  With base Python, you need to do that yourself.**
+are consistent.  With either distribution, both Python and all 3rd party
+packages will be installed.  **With base Python, you need to install the packages
+by yourself.**
 
 Additional packages
 ===================
 The following packages are required.
 
- * `scipy 0.17.0+ <http://scipy.org/>`_
+ * `scipy 0.18.1+ <http://scipy.org/>`_
  * `numpy 1.11+ <http://numpy.org/>`_
- * `vtk 5.x, 6.x, 7.x <http://www.vtk.org/VTK/resources/software.html>`_ (for the GUI)
+ * `VTK 7.x, 8.x <http://www.vtk.org/VTK/resources/software.html>`_ (for the GUI)
  * `wxPython <http://wxpython.org/download.php#stable>`_ (for BDF/OP2/OP4 popups)
- * `PyQt4/PyQt5 <http://www.riverbankcomputing.com/software/pyqt/download>`_ (for the GUI; BDF/OP2/OP4 popups in v0.7)
- * `pandas <http://pandas.pydata.org/>`_ (optional way to use the OP2 in iPython; v0.8=)
- * imageio 2.1.2 (for the GUI; animations)
+ * `PyQt4/PyQt5 <http://www.riverbankcomputing.com/software/pyqt/download>`_ (for the GUI; BDF/OP2/OP4 popups)
+ * `pandas <http://pandas.pydata.org/>`_ (optional way to use the OP2 in the Jupyter Notebook)
+ * imageio 2.2.0 (for the GUI; animations)
 
 PyNastran's package requirements are tested with packages no older than 1 year
 at the time of release.  If you require an older version, try changing version
@@ -57,8 +58,9 @@ requirements in ``setup.py``.  It shouldn't be that different, but pyNastran doe
 make use of numpy's "new" axis option in ``numpy.linalg.norm`` and there was a
 major bug fix in Python 2.7.7, so buyer beware.
 
-Regarding the GUI, Python 2.7 with ``vtk==5.10.1`` will give you the best
-looking GUI.
+Regarding the GUI, for the master, ``VTK 7.x`` or ``8.x`` is required and PyQt4/5 are fine.
+For the v1.0 release, Python 2.7 with ``vtk==5.10.1`` is best (``6.x`` and ``7.x`` will work) and PyQt4 is
+recommended.
 
 Download pyNastran
 ==================
@@ -148,8 +150,8 @@ Right-click in a folder and select ``Git Clone``.
 
 .. image:: clone.png
 
-Enter the above information.  If desired, click the branch box and and enter a branch name.
-Then click ``OK`` to clone the dev version.
+Enter the above information.  If desired, click the branch box and and enter a branch name
+and click ``OK``.
 
 
 Cloning pyNastran Using Command Line
@@ -182,5 +184,5 @@ Navigate to ``pyNastran/docs_sphinx`` directory on the command line.
 
 Use Web docs
 ------------
-`web docs <http://pynastran-git.readthedocs.org/en/latest/>`_
+The `web docs <http://pynastran-git.readthedocs.org/en/latest/>`_ aren't nearly as nice.
 

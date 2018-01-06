@@ -98,7 +98,7 @@ class TestSets(unittest.TestCase):
 
     def test_aset(self):
         """checks the ASET/ASET1 cards"""
-        aset1a = ASET1(4, [1, 'THRU', 10])
+        aset1a = ASET1([1, 'THRU', 10], 4)
         aset1b = ASET1.add_card(BDFCard(['ASET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         aset1a.write_card()
         aset1b.write_card()
@@ -115,7 +115,7 @@ class TestSets(unittest.TestCase):
 
     def test_omit(self):
         """checks the OMIT/OMIT1 cards"""
-        omit1a = OMIT1(4, [1, 'THRU', 10])
+        omit1a = OMIT1([1, 'THRU', 10], 4)
         self.assertEqual(omit1a.components, 4)
         omit1b = OMIT1.add_card(BDFCard(['OMIT1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         omit1a.write_card()
@@ -133,7 +133,7 @@ class TestSets(unittest.TestCase):
 
     def test_bset(self):
         """checks the BSET/BSET1 cards"""
-        bset1a = BSET1(4, [1, 'THRU', 10])
+        bset1a = BSET1([1, 'THRU', 10], 4)
         bset1b = BSET1.add_card(BDFCard(['BSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         bset1a.write_card()
         bset1b.write_card()
@@ -150,7 +150,7 @@ class TestSets(unittest.TestCase):
 
     def _test_cset(self):
         """checks the CSET/CSET1 cards"""
-        cset1a = CSET1(4, [1, 'THRU', 10])
+        cset1a = CSET1([1, 'THRU', 10], 4)
         cset1b = CSET1.add_card(BDFCard(['CSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         cset1a.write_card()
         cset1b.write_card()
@@ -168,7 +168,7 @@ class TestSets(unittest.TestCase):
 
     def test_qset(self):
         """checks the QSET/QSET1 cards"""
-        qset1a = QSET1(4, [1, 'THRU', 10])
+        qset1a = QSET1([1, 'THRU', 10], 4)
         qset1b = QSET1.add_card(BDFCard(['QSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         qset1a.write_card()
         qset1b.write_card()

@@ -685,7 +685,7 @@ class AESTAT(BaseCard):
         """
         if comment:
             self.comment = comment
-        self.id = aestat_id
+        self.aestat_id = aestat_id
         self.label = label
 
     @classmethod
@@ -738,7 +738,7 @@ class AESTAT(BaseCard):
         fields : List[int/str]
             the fields that define the card
         """
-        list_fields = ['AESTAT', self.id, self.label]
+        list_fields = ['AESTAT', self.aestat_id, self.label]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1144,22 +1144,22 @@ class AESURFS(BaseCard):  # not integrated
         """
         msg = ' which is required by AESURFS aesid=%s' % self.aesid
         self.list1_ref = model.Set(self.list1, msg)
-        self.list1_ref.cross_reference(model, 'Node', msg)
+        self.list1_ref.cross_reference_set(model, 'Node', msg)
 
         self.list2_ref = model.Set(self.list1, msg=msg)
-        self.list2_ref.cross_reference(model, 'Node', msg)
+        self.list2_ref.cross_reference_set(model, 'Node', msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by AESURFS aesid=%s' % self.aesid
         try:
             self.list1_ref = model.Set(self.list1, msg=msg)
-            self.list1_ref.cross_reference(model, 'Node', msg)
+            self.list1_ref.cross_reference_set(model, 'Node', msg)
         except KeyError:
             pass
 
         try:
             self.list2_ref = model.Set(self.list1, msg=msg)
-            self.list2_ref.cross_reference(model, 'Node', msg)
+            self.list2_ref.cross_reference_set(model, 'Node', msg)
         except KeyError:
             pass
 
@@ -6068,7 +6068,7 @@ class SPLINE1(Spline):
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node', msg=msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -6264,7 +6264,7 @@ class SPLINE2(Spline):
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
-        self.setg_ref.cross_reference(model, 'Node', msg=msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 2:
@@ -6287,7 +6287,7 @@ class SPLINE2(Spline):
 
         try:
             self.setg_ref = model.Set(self.Set(), msg=msg)
-            self.setg_ref.cross_reference(model, 'Node', msg=msg)
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 2:
@@ -6731,7 +6731,7 @@ class SPLINE4(Spline):
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node', msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -6914,7 +6914,7 @@ class SPLINE5(Spline):
         self.cid_ref = model.Coord(self.cid, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node', msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
 
         nnodes = len(self.setg_ref.ids)
@@ -6947,7 +6947,7 @@ class SPLINE5(Spline):
             pass
 
         try:
-            self.setg_ref.cross_reference(model, 'Node', msg)
+            self.setg_ref.cross_reference_set(model, 'Node', msg)
             self.aelist_ref = model.AEList(self.aelist, msg=msg)
         except KeyError:
             pass
