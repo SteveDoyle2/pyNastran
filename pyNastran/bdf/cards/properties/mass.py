@@ -602,7 +602,7 @@ class PMASS(Property):
     def uncross_reference(self):
         pass
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mass = self.Mass()
         assert isinstance(pid, integer_types), 'pid=%r' % pid

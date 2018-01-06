@@ -298,7 +298,7 @@ class CBARAO(BaseCard):
         assert len(card) <= 9, 'len(CBARAO card) = %i\ncard=%s' % (len(card), card)
         return CBARAO(eid, scale, x, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pass
 
     def raw_fields(self):
@@ -520,7 +520,7 @@ class CBAR(LineElement):
         return CBAR(eid, pid, [ga, gb], x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
@@ -924,7 +924,7 @@ class CBEAM3(LineElement):  # was CBAR
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         edges = self.get_edge_ids()
 
 

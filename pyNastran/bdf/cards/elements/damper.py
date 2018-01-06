@@ -116,7 +116,7 @@ class CDAMP1(LineDamper):
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         assert len(self.nodes) == 2
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -311,7 +311,7 @@ class CDAMP2(LineDamper):
         self.nodes = self.node_ids
         self.nodes_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         b = self.B()
         nids = self.node_ids
@@ -413,7 +413,7 @@ class CDAMP3(LineDamper):
         nids = [data[2], data[3]]
         return CDAMP3(eid, pid, nids, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         b = self.B()
@@ -531,7 +531,7 @@ class CDAMP4(LineDamper):
         nids = [data[2], data[3]]
         return CDAMP4(eid, b, nids, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         b = self.B()
         nids = self.node_ids
@@ -657,7 +657,7 @@ class CDAMP5(LineDamper):
         nids = [data[2], data[3]]
         return CDAMP5(eid, pid, nids, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -810,7 +810,7 @@ class CVISC(LineDamper):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         b = self.B()

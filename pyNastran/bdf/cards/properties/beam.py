@@ -855,7 +855,7 @@ class PBEAM(IntegratedLineProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
@@ -1222,7 +1222,7 @@ class PBEAML(IntegratedLineProperty):
         return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         nsm = self.Nsm()
         area = self.Area()
@@ -1605,7 +1605,7 @@ class PBMSECT(LineProperty):
         self.outp_ref = None
         self.brp1_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         #A = self.Area()
@@ -1861,7 +1861,7 @@ class PBCOMP(LineProperty):
                       k1, k2, m1, m2, n1, n2,
                       symopt, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int)
 

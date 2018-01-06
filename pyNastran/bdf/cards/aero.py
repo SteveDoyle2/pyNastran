@@ -718,6 +718,17 @@ class AESTAT(BaseCard):
     #def uncross_reference(self):
         #pass
 
+
+    @property
+    def id(self):
+        self.deprecated('id', 'aestat_id', '1.1')
+        return self.aestat_id
+
+    @id.setter
+    def id(self, aestat_id):
+        self.deprecated('id', 'aestat_id', '1.1')
+        self.aestat_id = aestat_id
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -1530,6 +1541,8 @@ class AEROS(Aero):
             self.sym_xz = 0
         if self.sym_xy is None:
             self.sym_xy = 0
+        self.acsid_ref = None
+        self.rcsid_ref = None
 
     def Acsid(self):
         try:
@@ -3023,6 +3036,7 @@ class CAERO3(BaseCard):
         self.x43 = x43
         self.pid_ref = None
         self.cp_ref = None
+        self.ascid_ref = None
         self.list_w_ef = None
         self.list_c1_ref = None
         self.list_c2_ref = None
@@ -3131,7 +3145,6 @@ class CAERO3(BaseCard):
         self.pid_ref = None
         self.cp_ref = None
         self.ascid_ref = None
-
         self.list_w_ef = None
         self.list_c1_ref = None
         self.list_c2_ref = None
@@ -3420,12 +3433,12 @@ class CAERO4(BaseCard):
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
         except KeyError:
-            self.model.warning('cannot find PAERO4=%r' % self.pid)
+            model.warning('cannot find PAERO4=%r' % self.pid)
 
         try:
             self.cp_ref = model.Coord(self.cp, msg=msg)
         except KeyError:
-            self.model.warning('cannot find CORDx=%r' % self.cp)
+            model.warning('cannot find CORDx=%r' % self.cp)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
@@ -4252,7 +4265,8 @@ class FLFACT(BaseCard):
                 (f1, _thru, fnf, nf) = factors
                 fmid = (f1 + fnf) / 2.
             elif nfactors == 5:
-                (f1, thru, fnf, nf, fmid) = factors
+                (f1, _thru, fnf, nf, fmid) = factors
+                #assert _thru.upper() == 'THRU', 'factors=%s' % str(factors)
             else:
                 raise RuntimeError('factors must be length 4/5; factors=%s' % factors)
             i = np.linspace(0, nf, nf, endpoint=False) + 1
@@ -4294,11 +4308,14 @@ class FLFACT(BaseCard):
             fmid_default = (f1 + fnf) / 2.
             fmid = double_or_blank(card, 6, 'fmid', fmid_default)
             assert len(card) <= 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
-            i = np.linspace(0, nf, nf, endpoint=False) + 1
-            factors = (
-                (f1*(fnf - fmid) * (nf-i) + fnf * (fmid - f1) * (i-1)) /
-                (   (fnf - fmid) * (nf-i) +       (fmid - f1) * (i-1))
-            )
+
+            #(f1, thru, fnf, nf, fmid) = factors
+            factors = [f1, 'THRU', fnf, nf, fmid]
+            #i = np.linspace(0, nf, nf, endpoint=False) + 1
+            #factors = (
+                #(f1*(fnf - fmid) * (nf-i) + fnf * (fmid - f1) * (i-1)) /
+                #(   (fnf - fmid) * (nf-i) +       (fmid - f1) * (i-1))
+            #)
         else:
             raise SyntaxError('expected a float or string for FLFACT field 3; value=%r' % field3)
         return FLFACT(sid, factors, comment=comment)
@@ -4334,8 +4351,7 @@ class FLFACT(BaseCard):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        else:
-            return self.comment + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 
 class FLUTTER(BaseCard):
@@ -4610,8 +4626,7 @@ class FLUTTER(BaseCard):
             return(self.imethod, self.nvalue)
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
-        else:
-            return(self.imethod, self.nvalue)
+        return(self.imethod, self.nvalue)
 
     def _get_repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
@@ -4620,8 +4635,7 @@ class FLUTTER(BaseCard):
             return (imethod, self.nvalue)
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
-        else:
-            return(self.imethod, self.nvalue)
+        return(self.imethod, self.nvalue)
 
     def raw_fields(self):
         """
@@ -4641,7 +4655,7 @@ class FLUTTER(BaseCard):
         (imethod, nvalue) = self._get_repr_nvalue_omax()
         epsilon = set_blank_if_default(self.epsilon, 0.001)
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
-                 self.get_rfreq_vel(), imethod, nvalue, epsilon]
+                       self.get_rfreq_vel(), imethod, nvalue, epsilon]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -4874,7 +4888,7 @@ class MKAERO1(BaseCard):
 
         machs = [None] * 8
         reduced_freqs = [None] * 8
-        cards = []
+        #cards = []
         if not 0 < len(self.machs) <= 8:
             msg = 'MKAERO1; nmachs=%s machs=%s' % (len(self.machs), self.machs)
             raise ValueError(msg)
@@ -4935,7 +4949,6 @@ class MKAERO2(BaseCard):
                 len(self.machs), len(self.reduced_freqs))
             raise ValueError(msg)
 
-
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -4967,7 +4980,7 @@ class MKAERO2(BaseCard):
             the fields that define the card
         """
         list_fields = ['MKAERO2']
-        for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
+        for (mach, rfreq) in zip(self.machs, self.reduced_freqs):
             list_fields += [mach, rfreq]
         return list_fields
 
@@ -5752,8 +5765,6 @@ class PAERO3(BaseCard):
 class PAERO4(BaseCard):
     """
     Defines properties of each strip element for Strip theory.
-    PAERO4 PID CLA LCLA CIRC LCIRC DOC1 CAOC1 GAPOC1
-    DOC2 CAOC2 GAPOC2 DOC3 CAOC3 GAPOC3 -etc.-
 
     +--------+------+-------+--------+-------+-------+--------+--------+--------+
     |    1   |   2  |   3   |   4    |   5   |   6   |    7   |   8    |    9   |
@@ -6864,7 +6875,7 @@ class SPLINE5(Spline):
         usage = string_or_blank(card, 12, 'usage', 'BOTH')
         assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
         return SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
-                         usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
+                       usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
     @property
     def aero_element_ids(self):
         return self.aelist_ref.elements
@@ -7088,8 +7099,7 @@ class TRIM(BaseCard):
         self.uxs = uxs
 
         #: Flag to request a rigid trim analysis (Real > 0.0 and < 1.0;
-        #: Default = 1.0. A value of 0.0 provides a rigid trim analysis,
-        #: not supported
+        #: Default = 1.0. A value of 0.0 provides a rigid trim analysis.
         self.aeqr = aeqr
 
     def validate(self):
@@ -7104,7 +7114,7 @@ class TRIM(BaseCard):
                 len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
             raise RuntimeError(msg)
 
-    def _verify(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
+    def verify_trim(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
         """
         Magic function that makes TRIM cards not frustrating.
 
@@ -7348,9 +7358,9 @@ class TRIM(BaseCard):
         # fixes a Nastran bug
         aeqr = set_blank_if_default(self.aeqr, 1.0)
 
-        fields = self.raw_fields()
-        fields[8] = aeqr
-        return fields
+        list_fields = self.raw_fields()
+        list_fields[8] = aeqr
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

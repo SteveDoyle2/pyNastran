@@ -344,7 +344,7 @@ class CHEXA8(SolidElement):
         y /= np.linalg.norm(y)
         return centroid, xe, y, z
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         assert isinstance(eid, integer_types)
@@ -629,7 +629,7 @@ class CHEXA20(SolidElement):
         nids = self.node_ids[:8]
         return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:8])
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
@@ -946,7 +946,7 @@ class CPENTA6(SolidElement):
             area = 0.5 * norm(cross(p1 - p3, p2 - p4))
         return [face_node_ids, area]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1274,7 +1274,7 @@ class CPENTA15(SolidElement):
             tuple(sorted([node_ids[2], node_ids[5]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1459,7 +1459,7 @@ class CPYRAM5(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1652,7 +1652,7 @@ class CPYRAM13(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1869,7 +1869,7 @@ class CTETRA4(SolidElement):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -2138,7 +2138,7 @@ class CTETRA10(SolidElement):
             tuple(sorted([node_ids[2], node_ids[3]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids

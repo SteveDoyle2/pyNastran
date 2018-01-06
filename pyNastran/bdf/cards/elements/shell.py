@@ -570,7 +570,7 @@ class CTRIA3(TriShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         # type: (bool) -> None
         eid = self.eid
         pid = self.Pid()
@@ -767,7 +767,7 @@ class CPLSTN3(TriShell):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -983,7 +983,7 @@ class CTRIA6(TriShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1294,7 +1294,7 @@ class CTRIAR(TriShell):
         return (theta_mcid, zoffset, tflag, T1, T2, T3)
 
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1711,7 +1711,7 @@ class CSHEAR(QuadShell):
         # type: () -> np.ndarray
         return self.Centroid()
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         # type: (bool) -> None
         eid = self.eid
         pid = self.Pid()
@@ -2248,7 +2248,7 @@ class CQUAD4(QuadShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -2423,7 +2423,7 @@ class CPLSTN4(QuadShell):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -2565,7 +2565,7 @@ class CPLSTN6(TriShell):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -2766,7 +2766,7 @@ class CPLSTN8(QuadShell):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -3029,7 +3029,7 @@ class CQUADR(QuadShell):
         """
         return self.pid_ref.Thickness()
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -3221,7 +3221,7 @@ class CPLSTS3(TriShell):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -3437,7 +3437,7 @@ class CQUAD(QuadShell):
     def node_ids(self):
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
     def raw_fields(self):
@@ -3617,7 +3617,7 @@ class CQUAD8(QuadShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids

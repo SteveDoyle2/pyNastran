@@ -806,7 +806,7 @@ class PCOMP(CompositeShellProperty):
             #self.souts[i] = sout
             #i += 1
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         is_sym = self.is_symmetrical()
         nplies = self.nplies
@@ -1072,7 +1072,7 @@ class PCOMPG(CompositeShellProperty):
                       global_ply_ids, mids, thicknesses, thetas, souts,
                       nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         is_sym = self.is_symmetrical()
         nplies = self.nplies
@@ -1257,7 +1257,7 @@ class PLPLANE(ShellProperty):
         self.mid_ref = None
         self.cid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         cid = self.Cid()
@@ -1354,7 +1354,7 @@ class PPLANE(ShellProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         #stress_strain_output_location = self.stress_strain_output_location
@@ -1512,7 +1512,7 @@ class PSHEAR(ShellProperty):
         mass_per_area = self.nsm + rho * self.t
         return mass_per_area
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         midi = self.Mid()
 
@@ -1725,7 +1725,7 @@ class PSHELL(ShellProperty):
                       mid3, tst, nsm,
                       z1, z2, mid4, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         mid1 = self.Mid1()

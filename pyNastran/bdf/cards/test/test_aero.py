@@ -1917,10 +1917,10 @@ class TestAero(unittest.TestCase):
 
         # why doesn't this work?
         with self.assertRaises(RuntimeError):
-            trim1._verify(model.suport, model.suport1, model.aestats, model.aeparams,
+            trim1.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                              model.aelinks, model.aesurf, xref=True)
+        trim2.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
                           model.aelinks, model.aesurf, xref=True)
-        trim2._verify(model.suport, model.suport1, model.aestats, model.aeparams,
-                      model.aelinks, model.aesurf, xref=True)
         model.write_bdf('trim.bdf')
         model2 = read_bdf('trim.bdf', debug=None)
         model2._verify_bdf(xref=True)

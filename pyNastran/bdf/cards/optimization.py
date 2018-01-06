@@ -1393,7 +1393,7 @@ class DRESP1(OptConstraint):
         return DRESP1(oid, label, response_type, property_type, region, atta, attb, atti,
                       comment=comment, validate=False)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
     def calculate(self, op2_model, subcase_id):
@@ -1826,7 +1826,7 @@ class DRESP2(OptConstraint):
     def DRespID(self):
         return self.dresp_id
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
         #for (j, name), value_list in sorted(iteritems(self.params)):
             #print('  DRESP2 verify - key=%s values=%s' % (name,
@@ -2297,7 +2297,7 @@ class DRESP3(OptConstraint):
         #if isinstance(self.dequation, integer_types):
             #del self.dequation_ref
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
     def raw_fields(self):
@@ -4332,7 +4332,7 @@ class DVGRID(BaseCard):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
 def parse_table_fields(card_type, card, fields):
