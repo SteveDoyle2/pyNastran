@@ -1246,10 +1246,8 @@ class PLPLANE(ShellProperty):
             the BDF object
         """
         msg = ' which is required by PLPLANE pid=%s' % self.pid
-        self.mid = model.HyperelasticMaterial(self.mid, msg=msg)
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.mid_ref = self.mid
-        self.cid_ref = self.cid
+        self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
