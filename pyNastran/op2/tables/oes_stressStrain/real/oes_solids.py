@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from struct import Struct, pack
-from six import b, integer_types
+from six import integer_types
 from six.moves import zip, range
 
 import numpy as np

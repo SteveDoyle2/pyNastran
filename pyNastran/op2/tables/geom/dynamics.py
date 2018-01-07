@@ -3,7 +3,6 @@ defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table
 """
 from __future__ import print_function
 from struct import unpack, Struct
-from six import b
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import EPOINTs
@@ -141,17 +140,17 @@ class DYNAMICS(GeomCommon):
         4  LI  I Load set identification number i
         Words 3 through 4 repeat until (-1,-1) occurs
         """
-        ndata = len(data)
+        #ndata = len(data)
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.fromstring(data[n:], self.idtype)
-        floats = np.fromstring(data[n:], self.fdtype)
+        ints = np.fromstring(datan, self.idtype)
+        floats = np.fromstring(datan, self.fdtype)
         istart = 0
         iminus1_delta = get_iend_from_ints(ints)
         nentries = 0
         for iend in iminus1_delta:
-            datai = data[n+istart*4 : n+iend*4]
+            #datai = data[n+istart*4 : n+iend*4]
             sid = ints[istart]
             global_scale = floats[istart + 1]
             #print('  sid=%s global_scale=%s' % (sid, global_scale))
@@ -254,12 +253,12 @@ class DYNAMICS(GeomCommon):
             nentries = (len(data) - n) // ntotal
             self.increase_card_count('EIGB', nentries)
             struct1 = Struct(self._endian + b'i 4s 4s 2i f 2i')
-            struct2 = Struct(self._endian + b'5f2i')
+            #struct2 = Struct(self._endian + b'5f2i')
             for i in range(nentries):
                 edata = data[n:n+ntotal]
                 #self.show_data(edata[44:])
                 # int, 8s, 2f, 3i, i, 8s, 4i
-                out = struc.unpack(edata)
+                out = struct1.unpack(edata)
                 sid, method, L1, L2, nep, ndp, ndn, dunno, norm, g, c, dunno_a, dunno_b = out
                 if self.is_debug_file:
                     self.binary_debug.write('EIGC=%s\n' % str(out))
@@ -405,15 +404,15 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('EIGP', nentries)
-        s = Struct('i2fi')
+        struct1 = Struct('i2fi')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = s.unpack(edata)
+            out = struct1.unpack(edata)
             sid, alpha, omega, m = out
             if self.is_debug_file:
                 self.binary_debug.write('EIGP=%s\n' % str(out))
             #print('out = %s' % str(out))
-            eigp = self.add_eigp(sid, alpha, omega, m, alpha2=None, omega2=None, m2=None)
+            self.add_eigp(sid, alpha, omega, m, alpha2=None, omega2=None, m2=None)
             n += ntotal
         return n
 
@@ -439,10 +438,10 @@ class DYNAMICS(GeomCommon):
         #return len(data)
         ntotal = 72
         nentries = (len(data) - n) // ntotal
-        s = Struct('i 8s 2f 4i 8s 7i')
+        struct1 = Struct('i 8s 2f 4i 8s 7i')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = s.unpack(edata)
+            out = struct1.unpack(edata)
             (sid, method, f1, f2, ne, nd, null_a, null_b, norm, g, c,
              null_c, null_d, null_e, null_f, null_g) = out
             if self.is_debug_file:
@@ -998,10 +997,10 @@ class DYNAMICS(GeomCommon):
         5 V0 RS Initial velocity
         """
         ntotal = 20  # 5*4
-        s = Struct(self._endian + b'3i 2f')
+        struct1 = Struct(self._endian + b'3i 2f')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
-            out = s.unpack(data[n:n+ntotal])
+            out = struct1.unpack(data[n:n+ntotal])
             if self.is_debug_file:
                 self.binary_debug.write('  TIC=%s\n' % str(out))
             sid, nid, comp, u0, v0 = out

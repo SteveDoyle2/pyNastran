@@ -4,7 +4,6 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 # pylint: disable=W0612,C0103
 ### pyldint: disable=W0612,C0103,C0302,W0613,R0914,R0201
 from struct import unpack, Struct
-from six import b
 from six.moves import range
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
@@ -568,10 +567,10 @@ class GEOM2(GeomCommon):
         CDAMP1(201,2,69) - the marker for Record 16
         """
         nelements = (len(data) - n) // 24
-        s = Struct(self._endian + b'6i')
+        struct_6i = Struct(self._endian + b'6i')
         for i in range(nelements):
             edata = data[n:n + 24]  # 6*4
-            out = s.unpack(edata)
+            out = struct_6i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CDAMP1=%s\n' % str(out))
             (eid, pid, g1, g2, c1, c2) = out
@@ -603,11 +602,11 @@ class GEOM2(GeomCommon):
         """
         CDAMP3(401,4,71) - the marker for Record 18
         """
-        s = Struct(self._endian + b'4i')
+        struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CDAMP3=%s\n' % str(out))
             (eid, pid, s1, s2) = out
@@ -667,11 +666,11 @@ class GEOM2(GeomCommon):
         CELAS1(601,6,73) - the marker for Record 29
         """
         ntotal = 24  # 6*4
-        s = Struct(self._endian + b'6i')
+        struct_4i = Struct(self._endian + b'6i')
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
             edata = data[n:n+24]
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CELAS1=%s\n' % str(out))
             (eid, pid, g1, g2, c1, c2) = out
@@ -705,11 +704,11 @@ class GEOM2(GeomCommon):
         CELAS3(801,8,75) - the marker for Record 31
         """
         ntotal = 16  # 4*4
-        s = Struct(self._endian + b'4i')
+        struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
             edata = data[n:n+16]
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CELAS3=%s\n' % str(out))
             (eid, pid, s1, s2) = out
@@ -912,11 +911,11 @@ class GEOM2(GeomCommon):
         """
         CMASS1(1001,10,65) - the marker for Record 51
         """
-        s = Struct(self._endian + b'6i')
+        struct_6i = Struct(self._endian + b'6i')
         nelements = (len(data) - n) // 24
         for i in range(nelements):
             edata = data[n:n + 24]  # 6*4
-            out = s.unpack(edata)
+            out = struct_6i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CMASS1=%s\n' % str(out))
             #(eid, pid, g1, g2, c1, c2) = out
@@ -948,11 +947,11 @@ class GEOM2(GeomCommon):
         """
         CMASS3(1201,12,67) - the marker for Record 53
         """
-        s = Struct(self._endian + b'4i')
+        struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CMASS3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
@@ -967,10 +966,10 @@ class GEOM2(GeomCommon):
         CMASS4(1301,13,68) - the marker for Record 54
         """
         nelements = (len(data) - n) // 16
-        s = Struct(self._endian + b'ifii')
+        struct_if2i = Struct(self._endian + b'ifii')
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
-            out = s.unpack(edata)
+            out = struct_if2i.unpack(edata)
             #(eid, m,s 1, s2) = out
             elem = CMASS4.add_op2_data(out)
             self._add_mass_object(elem)
@@ -1175,11 +1174,11 @@ class GEOM2(GeomCommon):
         """
         #return len(data)
         ntotal = 24  # 7*4
-        s = Struct(self._endian + b'6i')
+        struct_6i = Struct(self._endian + b'6i')
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
             edata = data[n:n+24]
-            out = s.unpack(edata)
+            out = struct_6i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
@@ -1198,11 +1197,11 @@ class GEOM2(GeomCommon):
 
         Specific to NX Nastran
         """
-        s = Struct(self._endian + b'16i')
+        struct_16i = Struct(self._endian + b'16i')
         nelements = (len(data) - n) // 64
         for i in range(nelements):
             edata = data[n:n + 64]  # 15*4
-            out = s.unpack(edata)
+            out = struct_16i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CPENTA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
@@ -1420,11 +1419,11 @@ class GEOM2(GeomCommon):
         """
         CROD(3001,30,48)    - the marker for Record 81
         """
-        s = Struct(self._endian + b'4i')
+        struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16  # 4*4
         for i in range(nelements):
             edata = data[n:n + 16]
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CROD=%s\n' % str(out))
             (eid, pid, n1, n2) = out
@@ -1441,11 +1440,11 @@ class GEOM2(GeomCommon):
         """
         CSHEAR(3101,31,61)    - the marker for Record 84
         """
-        s = Struct(self._endian + b'6i')
+        struct_6i = Struct(self._endian + b'6i')
         nelements = (len(data) - n) // 24  # 6*4
         for i in range(nelements):
             edata = data[n:n + 24]
-            out = s.unpack(edata)
+            out = struct_6i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CSHEAR=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4) = out
@@ -1464,10 +1463,10 @@ class GEOM2(GeomCommon):
         .. todo:: needs work
         """
         nelements = (len(data) - n) // 108  # 27*4
-        s = Struct(self._endian + b'27i')
+        struct_27i = Struct(self._endian + b'27i')
         for i in range(nelements):
             edata = data[n:n+108]
-            out = s.unpack(edata)
+            out = struct_27i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTETP=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
@@ -1493,7 +1492,7 @@ class GEOM2(GeomCommon):
         CTETR4FD(16100,161,9999) - the marker for Record 91
         """
         s = Struct(self._endian + b'12i')
-        nelements = (len(data) - n)// 48  # 12*4
+        nelements = (len(data) - n) // 48  # 12*4
         for i in range(nelements):
             edata = data[n:n + 48]
             out = s.unpack(edata)
@@ -1645,11 +1644,11 @@ class GEOM2(GeomCommon):
         """
         CTUBE(3701,37,49) - the marker for Record 104
         """
-        s = Struct(self._endian + b'4i')
+        struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTUBE=%s\n' % str(out))
             #(eid, pid, n1, n2) = out
@@ -1661,11 +1660,11 @@ class GEOM2(GeomCommon):
 
     def _read_cvisc(self, data, n):
         """CVISC(3901,39,50) - the marker for Record 105"""
-        s = Struct(self._endian + b'4i')
+        struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CVISC=%s\n' % str(out))
             #(eid, pid, n1, n2) = out
@@ -1708,12 +1707,12 @@ class GEOM2(GeomCommon):
 # GMINTC
 # GMINTS
     def _read_plotel(self, data, n):  # 114
-        s = Struct(self._endian + b'3i')
+        struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
             edata = data[n:n + ntotal]  # 4*4
-            out = s.unpack(edata)
+            out = struct_3i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOTEL=%s\n' % str(out))
             #(eid,n1,n2) = out

@@ -3,8 +3,7 @@ defines readers for BDF objects in the OP2 GEOM3/GEOM3S table
 """
 #pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326
 from __future__ import print_function
-from struct import unpack, Struct
-from six import b
+from struct import Struct
 from six.moves import range
 import numpy as np
 
@@ -275,15 +274,14 @@ class GEOM3(GeomCommon):
 
     def _read_lseq(self, data, n):
         ntotal = 20  # 5*4
-        s = Struct(self._endian + b'5i')
+        struct_5i = Struct(self._endian + b'5i')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
-            out = s.unpack(data[n:n + ntotal])
+            out = struct_5i.unpack(data[n:n + ntotal])
             (sid, darea, load_id, temperature_id, undef) = out
             if self.is_debug_file:
                 self.binary_debug.write('  LSEQ=%s\n' % str(out))
             load = LSEQ.add_op2_data(out)
-            self._add_lseq_object(load)
             n += ntotal
         self.card_count['LSEQ'] = nentries
         return n
@@ -390,10 +388,10 @@ class GEOM3(GeomCommon):
         """
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
-        s = Struct('ifi')
+        struct_ifi = Struct('ifi')
         for i in range(nentries):
             edata = data[n:n + 12]
-            out = s.unpack(edata)
+            out = struct_ifi.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD2=%s\n' % str(out))
             (sid, p, eid) = out
@@ -540,10 +538,10 @@ class GEOM3(GeomCommon):
         """
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
-        s = Struct('ifi')
+        struct_ifi = Struct('ifi')
         for i in range(nentries):
             edata = data[n:n + 12]
-            out = s.unpack(edata)
+            out = struct_ifi.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  QBDY1=%s\n' % str(out))
             (sid, q0, eid) = out
@@ -559,10 +557,10 @@ class GEOM3(GeomCommon):
         """
         ntotal = 40  # 10*4
         nentries = (len(data) - n) // ntotal
-        s = Struct('ii8f')
+        struct_2i8f = Struct('ii8f')
         for i in range(nentries):
             edata = data[n:n + 40]
-            out = s.unpack(edata)
+            out = struct_2i8f.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  QBDY2=%s\n' % str(out))
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
@@ -578,10 +576,10 @@ class GEOM3(GeomCommon):
         """
         ntotal = 16  # 4*4
         nentries = (len(data) - n) // ntotal
-        s = Struct('ifii')
+        struct_if2i = Struct('ifii')
         for i in range(nentries):
             edata = data[n:n + 16]
-            out = s.unpack(edata)
+            out = struct_if2i.unpack(edata)
             (sid, q0, cntrlnd, eid) = out
             load = QBDY3.add_op2_data(out)
             self._add_thermal_load_object(load)
@@ -596,10 +594,10 @@ class GEOM3(GeomCommon):
         """
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
-        s = Struct('iif')
+        struct_2if = Struct('iif')
         for i in range(nentries):
             edata = data[n:n + 12]
-            out = s.unpack(edata)
+            out = struct_2if.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  TEMP=%s\n' % str(out))
             (sid, g, T) = out
@@ -619,10 +617,10 @@ class GEOM3(GeomCommon):
         """
         ntotal = 8  # 2*4
         nentries = (len(data) - n) // ntotal
-        s = Struct('if')
+        struct_if = Struct('if')
         for i in range(nentries):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            out = struct_if.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  TEMPD=%s\n' % str(out))
             (sid, T) = out

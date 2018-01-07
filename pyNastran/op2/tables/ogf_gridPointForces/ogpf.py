@@ -3,7 +3,6 @@ Defines the Real/Complex Forces created by:
     GPFORCE = ALL
 """
 from __future__ import print_function
-from six import b
 from six.moves import range
 from struct import Struct
 from numpy import fromstring

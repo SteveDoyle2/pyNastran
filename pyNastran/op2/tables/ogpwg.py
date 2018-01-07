@@ -1,8 +1,6 @@
+from __future__ import print_function
 from struct import unpack
-
-
 from numpy import array
-
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 

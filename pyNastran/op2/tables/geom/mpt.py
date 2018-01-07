@@ -5,7 +5,6 @@ defines readers for BDF objects in the OP2 MPT/MPTS table
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import Struct
-from six import b
 from six.moves import range
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
@@ -317,7 +316,7 @@ class MPT(GeomCommon):
                 data_in.append(out2)
             mat = MATHP.add_op2_data(data_in)
             if self.is_debug_file:
-                self.binary_debug.write('  MATHP=%s\n' % str(out))
+                self.binary_debug.write('  MATHP=%s\n' % str(out1))
             self._add_hyperelastic_material_object(mat)
             nmaterials += 1
         assert nmaterials > 0, 'MATP nmaterials=%s' % nmaterials
@@ -376,12 +375,12 @@ class MPT(GeomCommon):
         MATT4(2303,23,237)
         checked NX-10.1, MSC-2016
         """
-        s = Struct(self._endian + b'7i')
+        struct_7i = Struct(self._endian + b'7i')
         ntotal = 28 # 7*4
         ncards = (len(data) - n) // ntotal
         for i in range(ncards):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            out = struct_7i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  MATT4=%s\n' % str(out))
             #(mid, tk, tcp, null, th, tmu, thgen) = out

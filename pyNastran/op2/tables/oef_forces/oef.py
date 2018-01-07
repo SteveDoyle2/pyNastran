@@ -5,7 +5,6 @@ Defines the Real/Complex Forces created by:
 """
 from __future__ import print_function
 from struct import Struct
-from six import b
 from six.moves import range
 import numpy as np
 from numpy import fromstring, vstack, sin, cos, radians, array
