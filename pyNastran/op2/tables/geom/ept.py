@@ -118,7 +118,7 @@ class EPT(GeomCommon):
         NSM(3201,32,55) - the marker for Record 2
         .. todo:: this isnt a property...
         """
-        s = Struct(b(self._endian + 'i4sif'))
+        s = Struct(self._endian + b'i4sif')
         while len(data) >= 16:  # 4*4
             edata = data[:16]
             data = data[16:]
@@ -167,7 +167,7 @@ class EPT(GeomCommon):
         19 I12 RS Area product of inertia for plane 1 and 2
         """
         ntotal = 76  # 19*4
-        s = Struct(b(self._endian + '2i17f'))
+        s = Struct(self._endian + b'2i17f')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             edata = data[n:n+76]
@@ -210,7 +210,7 @@ class EPT(GeomCommon):
         }  # for GROUP="MSCBML0"
 
         ntotal = 28  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
-        s = Struct(b(self._endian + '2i8s8sf'))
+        s = Struct(self._endian + b'2i8s8sf')
         #nentries = (len(data) - n) // ntotal
         #print(self.show_ndata(80))
         ndata = len(data)
@@ -249,8 +249,8 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbcomp(self, data, n):
-        struct1 = Struct(b(self._endian + '2i 12f i'))
-        struct2 = Struct(b(self._endian + '3f 2i'))
+        struct1 = Struct(self._endian + b'2i 12f i')
+        struct2 = Struct(self._endian + b'3f 2i')
         nproperties = 0
         ndata = len(data)
         while n < ndata:
@@ -301,9 +301,9 @@ class EPT(GeomCommon):
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
         """
-        struct1 = Struct(b(self._endian + '4if'))
-        struct2 = Struct(b(self._endian + '16f'))
-        struct3 = Struct(b(self._endian + '16f'))
+        struct1 = Struct(self._endian + b'4if')
+        struct2 = Struct(self._endian + b'16f')
+        struct3 = Struct(self._endian + b'16f')
         ntotal = 1072  # 44+12*84+20
         nproperties = (len(data) - n) // ntotal
         #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
@@ -402,7 +402,7 @@ class EPT(GeomCommon):
         istart = [0] + list(iminus1[:-1] + 1)
         iend = iminus1
 
-        struct1 = Struct(self._endian + '2i8s8s')
+        struct1 = Struct(self._endian + b'2i8s8s')
         for i, (istarti, iendi) in enumerate(zip(istart, iend)):
             idata = data[n+istarti*4 : n+(istarti+6)*4]
             pid, mid, group, beam_type = struct1.unpack(idata)
@@ -460,7 +460,7 @@ class EPT(GeomCommon):
                      centroid
         """
         ntotal = 104  # 26*4
-        s = Struct(b(self._endian + '2i 4f i 18f f'))  # delta_n is a float, not an integer
+        s = Struct(self._endian + b'2i 4f i 18f f')  # delta_n is a float, not an integer
         nproperties = (len(data) - n) // ntotal
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
@@ -539,7 +539,7 @@ class EPT(GeomCommon):
         #self.log.info('skipping PBEND in EPT\n')
         #return len(data)
         ntotal = 132  # 33*4
-        s = Struct(b(self._endian + '2i 4f i 21f i 4f'))
+        s = Struct(self._endian + b'2i 4f i 21f i 4f')
         nproperties = (len(data) - n) // ntotal
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
@@ -589,7 +589,7 @@ class EPT(GeomCommon):
         """PBUSH(1402,14,37) - 18 fields"""
         #if self.table_name == ['EPTS', 'EPT']:
         ntotal = 72
-        s = Struct(b(self._endian + 'i17f'))
+        s = Struct(self._endian + b'i17f')
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         props = []
@@ -609,7 +609,7 @@ class EPT(GeomCommon):
     def _read_pbush_msc(self, data, n):
         """PBUSH(1402,14,37)"""
         ntotal = 92  # 23*4
-        s = Struct(b(self._endian + 'i22f'))
+        s = Struct(self._endian + b'i22f')
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         props = []
@@ -636,8 +636,8 @@ class EPT(GeomCommon):
         PCOMP(2706,27,287) - the marker for Record 22
         """
         nproperties = 0
-        s1 = Struct(b(self._endian + '2i3fi2f'))
-        s2 = Struct(b(self._endian + 'i2fi'))
+        s1 = Struct(self._endian + b'2i3fi2f')
+        s2 = Struct(self._endian + b'i2fi')
 
         ndata = len(data)
         while n < (ndata - 32):
@@ -710,7 +710,7 @@ class EPT(GeomCommon):
         (11001,110,411)- NX version
         """
         ntotal = 16  # 4*4
-        s = Struct(b(self._endian + '3if'))
+        s = Struct(self._endian + b'3if')
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
@@ -731,7 +731,7 @@ class EPT(GeomCommon):
         (11001,110,411)- MSC version - Record 25
         """
         ntotal = 56  # 14*4
-        s = Struct(b(self._endian + '3if 4i fii 3f'))
+        s = Struct(self._endian + b'3if 4i fii 3f')
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
@@ -756,7 +756,7 @@ class EPT(GeomCommon):
         PDAMP(202,2,45) - the marker for Record ???
         """
         ntotal = 8  # 2*4
-        s = Struct(b(self._endian + 'if'))
+        s = Struct(self._endian + b'if')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
@@ -787,7 +787,7 @@ class EPT(GeomCommon):
 
     def _read_pelas(self, data, n):
         """PELAS(302,3,46) - the marker for Record 39"""
-        s = Struct(b(self._endian + 'i3f'))
+        s = Struct(self._endian + b'i3f')
         ntotal = 16  # 4*4
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
@@ -804,7 +804,7 @@ class EPT(GeomCommon):
 
     def _read_pfast_msc(self, data, n):
         ntotal = 92 # 23*4
-        s = Struct(b(self._endian + 'ifii 4f'))
+        s = Struct(self._endian + b'ifii 4f')
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             edata = data[n:n+ntotal]
@@ -829,7 +829,7 @@ class EPT(GeomCommon):
         NX only
         """
         ntotal = 48
-        s = Struct(b(self._endian + 'ifii 8f'))
+        s = Struct(self._endian + b'ifii 8f')
         nproperties = (len(data) - n) // ntotal
         delta = (len(data) - n) % ntotal
         assert delta == 0, 'len(data)-n=%s n=%s' % (len(data) - n, (len(data) - n) / 48.)
@@ -859,7 +859,7 @@ class EPT(GeomCommon):
         4 TKNID I TABLEDi entry
         """
         ntotal = 16
-        s = Struct(b(self._endian + '4i'))
+        s = Struct(self._endian + b'4i')
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             edata = data[n:n+ntotal]
@@ -878,7 +878,7 @@ class EPT(GeomCommon):
         PGAP(3201,32,55) - the marker for Record 42
         """
         ntotal = 44
-        s = Struct(b(self._endian + 'i10f'))
+        s = Struct(self._endian + b'i10f')
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             edata = data[n:n+ntotal]
@@ -896,7 +896,7 @@ class EPT(GeomCommon):
         """
         PHBDY(2802,28,236) - the marker for Record 43
         """
-        s = Struct(b(self._endian + 'ifff'))
+        s = Struct(self._endian + b'ifff')
         nproperties = (len(data) - n) // 16
         for i in range(nproperties):
             edata = data[n:n+16]
@@ -941,7 +941,7 @@ class EPT(GeomCommon):
         .. warning:: CSOPT ad T are not supported
         """
         ntotal = 44  # 4*11
-        s = Struct(b(self._endian + '3i 4s f 6i'))
+        s = Struct(self._endian + b'3i 4s f 6i')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
@@ -972,7 +972,7 @@ class EPT(GeomCommon):
         .. warning:: CSOPT is not supported
         """
         ntotal = 28  # 4*7
-        s = Struct(b(self._endian + '2i 4s 4i'))
+        s = Struct(self._endian + b'2i 4s 4i')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
@@ -988,7 +988,7 @@ class EPT(GeomCommon):
         """
         PMASS(402,4,44) - the marker for Record 48
         """
-        s = Struct(b(self._endian + 'if'))
+        s = Struct(self._endian + b'if')
         nentries = (len(data) - n) // 8  # 2*4
         for i in range(nentries):
             edata = data[n:n + 8]
@@ -1006,7 +1006,7 @@ class EPT(GeomCommon):
         PROD(902,9,29) - the marker for Record 49
         """
         ntotal = 24  # 6*4
-        s = Struct(b(self._endian + '2i4f'))
+        s = Struct(self._endian + b'2i4f')
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             edata = data[n:n+24]
@@ -1024,7 +1024,7 @@ class EPT(GeomCommon):
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
-        s = Struct(b(self._endian + '2i4f'))
+        s = Struct(self._endian + b'2i4f')
         nproperties = (len(data) - n) // 24
         for i in range(nproperties):
             edata = data[n:n+24]
@@ -1043,7 +1043,7 @@ class EPT(GeomCommon):
         PSHELL(2302,23,283) - the marker for Record 51
         """
         ntotal = 44  # 11*4
-        s = Struct(b(self._endian + 'iififi4fi'))
+        s = Struct(self._endian + b'iififi4fi')
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             edata = data[n:n+44]
@@ -1068,7 +1068,7 @@ class EPT(GeomCommon):
         """
         #print("reading PSOLID")
         ntotal = 28  # 7*4
-        s = Struct(b(self._endian + '6i4s'))
+        s = Struct(self._endian + b'6i4s')
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             edata = data[n:n+28]
@@ -1098,7 +1098,7 @@ class EPT(GeomCommon):
 
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
-        s = Struct(b(self._endian + '2i3f'))
+        s = Struct(self._endian + b'2i3f')
         nproperties = (len(data) - n) // 20
         for i in range(nproperties):
             edata = data[n:n+20]  # or 24???
@@ -1123,7 +1123,7 @@ class EPT(GeomCommon):
 
     def _read_pvisc(self, data, n):
         """PVISC(1802,18,31) - the marker for Record 39"""
-        s = Struct(b(self._endian + 'i2f'))
+        s = Struct(self._endian + b'i2f')
         nproperties = (len(data) - n) // 12
         for i in range(nproperties):
             edata = data[n:n+12]

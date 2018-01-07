@@ -321,15 +321,6 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self.itotal += 1
         #self.itime += 1
 
-#def two_dee_string_add(string_lists):
-    #string0 = string_lists[0]
-    #n, m = string0.shape
-
-    #s = []
-    #for string_list in string_lists:
-        #for string in string_list:
-            #pass
-    #return sumned
 
 class RealScalarTableArray(ScalarTableArray):  # temperature style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -420,8 +411,8 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        #format_table4_1 = Struct(b(self._endian + '15i'))
-        #format_table4_2 = Struct(b(self._endian + '3i'))
+        #format_table4_1 = Struct(self._endian + b'15i')
+        #format_table4_2 = Struct(self._endian + b'3i')
 
         # table 4 info
         #ntimes = self.data.shape[0]

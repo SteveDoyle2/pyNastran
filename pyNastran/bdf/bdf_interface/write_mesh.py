@@ -100,7 +100,7 @@ class WriteMesh(BDFAttributes):
         mid = 1
         bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
         for aesurf_id, aesurf in iteritems(self.aesurf):
-            cid = aesurf.cid1
+            #cid = aesurf.cid1
             bdf_file.write('PSHELL,%s,%s,0.1\n' % (aesurf_id, aesurf_id))
             #print(cid)
             #ax, ay, az = cid.i

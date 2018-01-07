@@ -77,38 +77,38 @@ class OES(OP2Common):
         self.parse_approach_code(data)  # 3
 
         ## element type
-        self.element_type = self.add_data_parameter(data, 'element_type', 'i', 3, False)
+        self.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
 
         ## load set ID
-        self.load_set = self.add_data_parameter(data, 'load_set', 'i', 8, False)
+        self.load_set = self.add_data_parameter(data, 'load_set', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
-        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## stress/strain codes
-        self.s_code = self.add_data_parameter(data, 's_code', 'i', 11, False)
+        self.s_code = self.add_data_parameter(data, 's_code', b'i', 11, False)
 
         ## thermal flag; 1 for heat ransfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
+        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics / displacement / heat flux
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
             #: mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             #: eigenvalue
-            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
+            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             #: mode or cycle TODO confused on the type - F1 means float/int???
-            self.mode2 = self.add_data_parameter(data, 'mode2', 'i', 7, False)
-            self.cycle = self.add_data_parameter(data, 'cycle', 'f', 7, False)
+            self.mode2 = self.add_data_parameter(data, 'mode2', b'i', 7, False)
+            self.cycle = self.add_data_parameter(data, 'cycle', b'f', 7, False)
             self.update_mode_cycle('cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle'])
         #elif self.analysis_code==3: # differential stiffness
@@ -118,40 +118,40 @@ class OES(OP2Common):
         #    self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysis_code == 5:   # frequency
             ## frequency
-            self.freq = self.add_data_parameter(data, 'freq', 'f', 5)
+            self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['freq'])
         elif self.analysis_code == 6:  # transient
             ## time step
-            self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
+            self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['dt'])
         elif self.analysis_code == 7:  # pre-buckling
             ## load set
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             ## mode number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)  # real eigenvalue
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)  # real eigenvalue
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## imaginary eigenvalue
-            self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
-            self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
+            self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## Time step ??? --> straight from DMAP
-            self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
+            self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['dt'])
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
@@ -264,51 +264,51 @@ class OES(OP2Common):
         self.parse_approach_code(data)  # 3
 
         ## element type
-        self.element_type = self.add_data_parameter(data, 'element_type', 'i', 3, False)
+        self.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
 
         ## load set ID
-        self.load_set = self.add_data_parameter(data, 'load_set', 'i', 8, False)
+        self.load_set = self.add_data_parameter(data, 'load_set', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
-        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## stress/strain codes
-        self.s_code = self.add_data_parameter(data, 's_code', 'i', 11, False)
+        self.s_code = self.add_data_parameter(data, 's_code', b'i', 11, False)
 
         ## thermal flag; 1 for heat ransfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
+        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         if self.analysis_code == 2:  # real eigenvalues
-            self._analysis_code_fmt = 'i'
-            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
+            self._analysis_code_fmt = b'i'
+            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
             self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eign', 'mode_cycle'])
         elif self.analysis_code == 5:   # frequency
-            self._analysis_code_fmt = 'f'
+            self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 6:  # transient
-            self._analysis_code_fmt = 'f'
+            self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 7:  # pre-buckling
-            self._analysis_code_fmt = 'i'
+            self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 8:  # post-buckling
-            self._analysis_code_fmt = 'f'
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self._analysis_code_fmt = b'f'
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             # mode number
-            self._analysis_code_fmt = 'i'
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self._analysis_code_fmt = b'i'
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             # load step
-            self._analysis_code_fmt = 'f'
+            self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             # load set number
@@ -1037,7 +1037,7 @@ class OES(OP2Common):
                         self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
                         self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                    struct1 = Struct(b(self._endian + 'i4f'))
+                    struct1 = Struct(self._endian + b'i4f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = struct1.unpack(edata)
@@ -1077,7 +1077,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i4f'))
+                    struct1 = Struct(self._endian + b'i4f')
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)
@@ -1145,8 +1145,8 @@ class OES(OP2Common):
                 ntotal = self.num_wide * 4
                 n1 = 44
                 n2 = 40
-                s1 = Struct(b(self._endian + 'ii9f'))
-                s2 = Struct(b(self._endian + 'i9f'))
+                s1 = Struct(self._endian + b'ii9f')
+                s2 = Struct(self._endian + b'i9f')
                 nelements = ndata // ntotal
                 for i in range(nelements):
                     edata = data[n:n+n1]
@@ -1225,8 +1225,8 @@ class OES(OP2Common):
                     n1 = 44
                     n2 = 40
 
-                    s1 = Struct(b(self._endian + 'ii9f'))
-                    s2 = Struct(b(self._endian + 'i9f'))
+                    s1 = Struct(self._endian + b'ii9f')
+                    s2 = Struct(self._endian + b'i9f')
 
                     for i in range(nelements):
                         edata = data[n:n+n1]
@@ -1335,7 +1335,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i3f'))
+                    struct1 = Struct(self._endian + b'i3f')
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)  # num_wide=5
@@ -1376,7 +1376,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i4f'))
+                    struct1 = Struct(self._endian + b'i4f')
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)  # num_wide=5
@@ -1465,7 +1465,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'if'))
+                    struct1 = Struct(self._endian + b'if')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = struct1.unpack(edata)
@@ -1516,7 +1516,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i2f'))
+                    struct1 = Struct(self._endian + b'i2f')
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)
@@ -1598,7 +1598,7 @@ class OES(OP2Common):
                     obj.itotal = ielement2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i15f'))
+                    struct1 = Struct(self._endian + b'i15f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = struct1.unpack(edata)
@@ -1656,7 +1656,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i18f'))
+                    struct1 = Struct(self._endian + b'i18f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         n += ntotal
@@ -1829,8 +1829,8 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = itotali
                 else:
-                    struct1 = Struct(b(self._endian + 'ii4si'))
-                    struct2 = Struct(b(self._endian + 'i20f'))
+                    struct1 = Struct(self._endian + b'ii4si')
+                    struct2 = Struct(self._endian + b'i20f')
                     if self.is_debug_file:
                         msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
                             self.element_name, self.element_type, nelements, nnodes_expected)
@@ -1934,8 +1934,8 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + '2i4si'))
-                    s2 = Struct(b(self._endian + 'i12f'))
+                    s1 = Struct(self._endian + b'2i4si')
+                    s2 = Struct(self._endian + b'i12f')
                     for i in range(nelements):
                         edata = data[n:n+16]
                         n += 16
@@ -2014,8 +2014,8 @@ class OES(OP2Common):
 
                 ## cid, coord_type, nactive_pnts,
                 ##      nid, oxx, oyy, ozz, txy, tyz, txz
-                #struct1 = Struct(b('2i 4s'))
-                #struct2 = Struct(b('i6f'))
+                #struct1 = Struct(self._endian + b'2i 4s')
+                #struct2 = Struct(self._endian + b'i6f')
                 #for i in range(nelements):
                     #edata = data[n:n+12]
                     #out = struct1.unpack(edata)
@@ -2094,7 +2094,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i16f'))
+                    struct1 = Struct(self._endian + b'i16f')
                     cen = 0 # CEN/4
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
@@ -2161,8 +2161,8 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + 'i14f'))
-                    s2 = Struct(b(self._endian + 'i14f'))
+                    s1 = Struct(self._endian + b'i14f')
+                    s2 = Struct(self._endian + b'i14f')
 
                     cen = 0 # 'CEN/4'
                     for i in range(nelements):
@@ -2287,7 +2287,7 @@ class OES(OP2Common):
                     n = nbytes
                 else:
                     cen = 0 # 'CEN/3'
-                    struct1 = Struct(b(self._endian + 'i16f'))
+                    struct1 = Struct(self._endian + b'i16f')
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)
@@ -2347,7 +2347,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i14f'))
+                    struct1 = Struct(self._endian + b'i14f')
                     cen = 0 # CEN/3
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
@@ -2521,8 +2521,8 @@ class OES(OP2Common):
                     obj.data[obj.itime, istart:iend, :] = results
                 else:
                     n = 0
-                    center_format = b'i4si16f'
-                    node_format = b'i16f'
+                    center_format = self._endian + b'i4si16f'
+                    node_format = self._endian + b'i16f'
                     cs = Struct(center_format)
                     ns = Struct(node_format)
 
@@ -2623,7 +2623,7 @@ class OES(OP2Common):
                 else:
                     grid_center = 0
                     s1 = self.struct_2i  # 2
-                    s2 = Struct(b(self._endian + 'i14f')) # 15
+                    s2 = Struct(self._endian + b'i14f') # 15
                     for i in range(nelements):
                         (eid_device, _) = s1.unpack(data[n:n+8])
                         n += 8
@@ -2761,7 +2761,7 @@ class OES(OP2Common):
                     obj.ielement = ielement2
                     obj.itotal = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i12f'))  # 1+12=13
+                    struct1 = Struct(self._endian + b'i12f')  # 1+12=13
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)
@@ -2849,7 +2849,7 @@ class OES(OP2Common):
                 else:
                     #print(len(data))
                     etype = self.element_type
-                    struct1 = Struct(b(self._endian + 'i24f')) # 1+24=25
+                    struct1 = Struct(self._endian + b'i24f') # 1+24=25
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)
@@ -2952,7 +2952,7 @@ class OES(OP2Common):
                     #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 2:]
                 else:
-                    struct1 = Struct(b(self._endian + 'ii9f')) # 11
+                    struct1 = Struct(self._endian + b'ii9f') # 11
                     eid_old = 0
                     if hasattr(self, 'eid_old'):
                         eid_old = self.eid_old
@@ -2992,8 +2992,8 @@ class OES(OP2Common):
                 ntotal = 36
                 nelements = ndata // ntotal
                 s = self.struct_i
-                s2 = Struct(b(self._endian + '8si3fi4s'))
-                s3 = Struct(b(self._endian + '8si4f4s'))
+                s2 = Struct(self._endian + b'8si3fi4s')
+                s3 = Struct(self._endian + b'8si4f4s')
                 for i in range(nelements):
                     #out = s.unpack(data[n:n + ntotal])
                     eid_device, = s.unpack(data[n:n+4])
@@ -3071,8 +3071,8 @@ class OES(OP2Common):
                     obj.ielement = ielement2
                     obj.itotal = itotal2
                 else:
-                    s1 = Struct(b(self._endian + '2i7f'))  # 36
-                    s2 = Struct(b(self._endian + 'i7f'))
+                    s1 = Struct(self._endian + b'2i7f')  # 36
+                    s2 = Struct(self._endian + b'i7f')
                     for i in range(nelements):
                         out = s1.unpack(data[n:n + 36])
                         (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
@@ -3153,8 +3153,8 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + 'ii8f')) # 10*4 = 40
-                    s2 = Struct(b(self._endian + 'i8f'))  #  9*4 = 36
+                    s1 = Struct(self._endian + b'ii8f') # 10*4 = 40
+                    s2 = Struct(self._endian + b'i8f')  #  9*4 = 36
 
 
                     for i in range(nelements):
@@ -3243,7 +3243,7 @@ class OES(OP2Common):
                     #[tx, ty, tz, rx, ry, rz]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
                 else:
-                    struct1 = Struct(b(self._endian + 'i6f'))
+                    struct1 = Struct(self._endian + b'i6f')
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)  # num_wide=7
@@ -3291,7 +3291,7 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i12f'))
+                    struct1 = Struct(self._endian + b'i12f')
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)  # num_wide=7
@@ -3370,7 +3370,7 @@ class OES(OP2Common):
                     obj.ielement = itotal2
                     obj.itotal = itotal2
                 else:
-                    struct1 = Struct(b(self._endian + 'i6fi'))
+                    struct1 = Struct(self._endian + b'i6fi')
                     for i in range(nelements):
                         edata = data[n:n + 32]
                         out = struct1.unpack(edata)  # num_wide=25
@@ -3422,7 +3422,7 @@ class OES(OP2Common):
                     obj.ielement = itotal2
                     obj.itotal = itotal2
                 else:
-                    struct1 = Struct(b(self._endian + 'i8f'))
+                    struct1 = Struct(self._endian + b'i8f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
 
@@ -3509,7 +3509,7 @@ class OES(OP2Common):
                     # eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
                 else:
-                    struct1 = Struct(b(self._endian + 'i6f'))  # 1+6=7
+                    struct1 = Struct(self._endian + b'i6f')  # 1+6=7
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = struct1.unpack(edata)
@@ -3575,7 +3575,7 @@ class OES(OP2Common):
                     obj.itotal = ielement2
                     obj.ielement = ielement2
                 else:
-                    struct1 = Struct(b(self._endian + 'i2f'))
+                    struct1 = Struct(self._endian + b'i2f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = struct1.unpack(edata)  # num_wide=3
@@ -3638,7 +3638,7 @@ class OES(OP2Common):
                     #[cpx, shy, shz, au, shv, shw, slv, slp]
                     obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:9]
                 else:
-                    struct1 = Struct(b(self._endian + 'i8f4s4s'))
+                    struct1 = Struct(self._endian + b'i8f4s4s')
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
 
@@ -3690,7 +3690,7 @@ class OES(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
 
-                struct1 = Struct(b(self._endian + '2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f'))  # 2 + 6*8 + 1 = 51
+                struct1 = Struct(self._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
                 for i in range(nelements):  # num_wide=51
                     edata = data[n:n + 204]
                     out = struct1.unpack(edata)
@@ -3781,8 +3781,8 @@ class OES(OP2Common):
                     #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
 
                 n = 0
-                s1 = Struct(b(self._endian + 'i4s'))
-                s2 = Struct(b(self._endian + 'i15f'))
+                s1 = Struct(self._endian + b'i4s')
+                s2 = Struct(self._endian + b'i15f')
                 nelements = ndata // ntotal
                 for i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
                     edata = data[n:n+8]
@@ -3866,7 +3866,7 @@ class OES(OP2Common):
                     #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
                 else:
-                    struct1 = Struct(b(self._endian + 'i9f'))
+                    struct1 = Struct(self._endian + b'i9f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = struct1.unpack(edata)
@@ -3919,7 +3919,7 @@ class OES(OP2Common):
                 if self.num_wide == numwide_a:
                     ntotal = numwide_a * 4
                     s1 = self.struct_2i
-                    s2 = Struct(b(self._endian + 'i11f'))
+                    s2 = Struct(self._endian + b'i11f')
                     nelements = ndata // ntotal  # 2+16*9 = 146 -> 146*4 = 584
                     for i in range(nelements):
                         edata = data[n:n+8]
@@ -4012,8 +4012,8 @@ class OES(OP2Common):
                 else:
                     n = 0
                     # (2 + 7*4)*4 = 30*4 = 120
-                    s1 = Struct(b(self._endian + 'i4s i6f'))  # 1 + 4+1+6 = 12
-                    s2 = Struct(b(self._endian + 'i6f'))
+                    s1 = Struct(self._endian + b'i4s i6f')  # 1 + 4+1+6 = 12
+                    s2 = Struct(self._endian + b'i6f')
                     for i in range(nelements):
                         edata = data[n:n+36]  # 4*9
                         out = s1.unpack(edata)
@@ -4072,8 +4072,8 @@ class OES(OP2Common):
 
             if self.format_code == 1 and self.num_wide == numwide_real:  # real???
                 ntotal = numwide_real * 4
-                s2 = Struct(b(self._endian + '3i4s2i'))
-                s3 = Struct(b(self._endian + 'i16f'))
+                s2 = Struct(self._endian + b'3i4s2i')
+                s3 = Struct(self._endian + b'i16f')
                 nelements = ndata // ntotal
                 for i in range(nelements):
                     out = s2.unpack(data[n:n + 24])
@@ -4324,7 +4324,7 @@ class OES(OP2Common):
         ntotal = 36  # 4*9
 
         n = 0
-        struct1 = Struct(b(self._endian + 'i8si3fi4s'))
+        struct1 = Struct(self._endian + b'i8si3fi4s')
         nelements = ndata // ntotal
         #obj = self.obj
         for i in range(nelements):

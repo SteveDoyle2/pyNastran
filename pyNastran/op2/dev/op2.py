@@ -265,7 +265,7 @@ class OP2(object):
             self._swap = False
             self._endian = '='
 
-        self._Str4 = struct.Struct(self._endian + 'i')
+        self._Str4 = struct.Struct(self._endian + b'i')
         if reclen == 4:
             self._bit64 = False
             self._intstr = self._endian + 'i4'
@@ -277,7 +277,7 @@ class OP2(object):
             self._intstr = self._endian + 'i8'
             self._intstru = self._endian + '%dq'
             self._ibytes = 8
-            self._Str = struct.Struct(self._endian + 'q')
+            self._Str = struct.Struct(self._endian + b'q')
         #print('bit64 = ', self._bit64)
 
         self._rowsCutoff = 3000
@@ -614,10 +614,10 @@ class OP2(object):
         """
         key = self._get_key()
         if self._ibytes == 4:
-            header_str = struct.Struct(self._endian + 'iii')
+            header_str = struct.Struct(self._endian + b'iii')
             hbytes = 12
         else:
-            header_str = struct.Struct(self._endian + 'qqq')
+            header_str = struct.Struct(self._endian + b'qqq')
             hbytes = 24
 
         eot = 0
@@ -916,14 +916,14 @@ class OP2(object):
         Can currently only read a real eigenvalue table (ACODE,4 = 2,
         TCODE,1 = 1, TCODE,2 = 7, and TCODE,7 in [0, 2]).
         """
-        float2_str = struct.Struct(self._endian + 'ff')
+        float2_str = struct.Struct(self._endian + b'ff')
         iif6_int = np.dtype(self._endian+'i4')
         iif6_bytes = 32
         if self._ibytes == 4:
-            i4_Str = struct.Struct(self._endian + 'iiii')
+            i4_Str = struct.Struct(self._endian + b'iiii')
             i4_bytes = 16
         else:
-            i4_Str = struct.Struct(self._endian + 'qqqq')
+            i4_Str = struct.Struct(self._endian + b'qqqq')
             i4_bytes = 32
         pos = self._fileh.tell()
         key = self._get_key()
@@ -1089,12 +1089,12 @@ class OP2(object):
         See :func:`rdn2cop2`.
         """
         if self._ibytes == 4:
-            Str = struct.Struct(self._endian + 'iiiiiiddd')
+            Str = struct.Struct(self._endian + b'iiiiiiddd')
             sbytes = 24 + 24
             wpg = 12  # words per grid
             wpd = 2   # words per double
         else:
-            Str = struct.Struct(self._endian + 'qqqqqqddd')
+            Str = struct.Struct(self._endian + b'qqqqqqddd')
             sbytes = 48 + 24
             wpg = 9   # words per grid
             wpd = 1   # words per double
@@ -1182,7 +1182,7 @@ class OP2(object):
 
         The x, y, z values are the grid location in basic.
         """
-        struc = struct.Struct(self._endian + 'ifff')
+        struc = struct.Struct(self._endian + b'ifff')
         sbytes = 16
         wpg = 4  # words per grid
         wpd = 1  # words per single
@@ -1290,7 +1290,7 @@ class OP2(object):
         T is transformation from local to basic for the coordinate
         system.
         """
-        Str = struct.Struct(self._endian + 'ii' + 'f'*12)
+        Str = struct.Struct(self._endian + b'ii' + b'f'*12)
         sbytes = 4 *14
         wpg = 14   # words per grid
         wpd = 1    # words per single
@@ -1365,16 +1365,16 @@ class OP2(object):
 
     def _read_op2_geom1_cord2(self):
         if self._ibytes == 4:
-            header_Str = struct.Struct(self._endian + 'iii')
-            cord2_Str = struct.Struct(self._endian + '4i9f')
-            sebulk_Str = struct.Struct(self._endian + '4if3i')
+            header_Str = struct.Struct(self._endian + b'iii')
+            cord2_Str = struct.Struct(self._endian + b'4i9f')
+            sebulk_Str = struct.Struct(self._endian + b'4if3i')
             hbytes = 12
             cbytes = 4*13
             bbytes = 4*8
         else:
-            header_Str = struct.Struct(self._endian + 'qqq')
-            cord2_Str = struct.Struct(self._endian + '4q9d')
-            sebulk_Str = struct.Struct(self._endian + '4qd3q')
+            header_Str = struct.Struct(self._endian + b'qqq')
+            cord2_Str = struct.Struct(self._endian + b'4q9d')
+            sebulk_Str = struct.Struct(self._endian + b'4qd3q')
             hbytes = 24
             cbytes = 8*13
             bbytes = 8*8
@@ -1589,10 +1589,10 @@ class OP2(object):
         Reads and returns the MAPS information for :func:`read_nas2cam_op2`.
         """
         if self._ibytes == 4:
-            id_Str = struct.Struct(self._endian + 'id')
+            id_Str = struct.Struct(self._endian + b'id')
             id_bytes = 12
         else:
-            id_Str = struct.Struct(self._endian + 'qd')
+            id_Str = struct.Struct(self._endian + b'qd')
             id_bytes = 16
         key = 1
         maps = np.zeros((0, 2))
@@ -1631,10 +1631,10 @@ class OP2(object):
                 ints_rec2 = 2
             if ints_rec2 != iprev:
                 if self._bit64:
-                    ir_str = struct.Struct(self._endian + 'q'*ints_rec2)
+                    ir_str = struct.Struct(self._endian + b'q'*ints_rec2)
                     ir_bytes = 8*ints_rec2
                 else:
-                    ir_str = struct.Struct(self._endian + 'i'*ints_rec2)
+                    ir_str = struct.Struct(self._endian + b'i'*ints_rec2)
                     ir_bytes = 4*ints_rec2
             return ir_str, ir_bytes, ints_rec2
 

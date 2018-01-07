@@ -495,8 +495,8 @@ class RealTableArray(TableArray):
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        #format_table4_1 = Struct(b(self._endian + '15i'))
-        #format_table4_2 = Struct(b(self._endian + '3i'))
+        #format_table4_1 = Struct(self._endian + b'15i')
+        #format_table4_2 = Struct(self._endian + b'3i')
 
         # table 4 info
         #ntimes = self.data.shape[0]

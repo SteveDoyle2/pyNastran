@@ -54,7 +54,7 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 28:
-            subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
+            subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
@@ -226,13 +226,13 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         ndata = len(data)
-        subtable_name_raw, = unpack(b(self._endian + '8s'), data[:8])
+        subtable_name_raw, = self.struct_8s.unpack(data[:8])
         subtable_name = subtable_name_raw.strip()
         assert subtable_name == b'FOL', 'subtable_name=%r' % subtable_name
 
         nfloats = (ndata - 8) // 4
         assert nfloats * 4 == (ndata - 8)
-        fmt = b(self._endian + '%sf' % nfloats)
+        fmt = self._endian + b'%sf' % nfloats
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
         self._frequencies = freqs
         if self.is_debug_file:
@@ -461,7 +461,7 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
         if ndata == 16:
-            subtable_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
+            subtable_name, dummy_a, dummy_b = unpack(self._endian + b'8sii', data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (
                     subtable_name, dummy_a, dummy_b))
@@ -573,7 +573,7 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if self.read_mode == 2:
-            word, = unpack(b('%s8s' % self._endian), data)
+            word, = self.struct_8s.unpack(data)
             assert word == b'STCFMON ', word
         #self.show_data(data)
         #print('-----------------------')
@@ -639,7 +639,7 @@ class MinorTables(OP2Common):
         if self.read_mode == 1:
             assert data is not None, data
             assert len(data) > 12, len(data)
-            response_type, = unpack(self._endian + 'i', data[8:12])
+            response_type, = self.struct_i.unpack(data[8:12])
             #assert response_type in [1, 6, 10, 84], response_type
             if response_type == 1:
                 if self.weight_response is None:
@@ -809,7 +809,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
 
         (design_iter, iconvergence, conv_result, obj_intial, obj_final,
-         constraint_max, row_constraint_max) = unpack(b(self._endian + '3i3fi'), data[:28])
+         constraint_max, row_constraint_max) = unpack(self._endian + b'3i3fi', data[:28])
         if iconvergence == 1:
             iconvergence = 'soft'
         elif iconvergence == 2:

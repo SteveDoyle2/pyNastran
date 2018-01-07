@@ -1831,6 +1831,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #raise CardParseSyntaxError(card)
                 raise NotImplementedError(card)
 
+        #: a storage of card_name to (card_class, add_method)
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),

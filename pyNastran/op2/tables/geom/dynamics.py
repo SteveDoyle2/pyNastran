@@ -97,7 +97,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('DAREA', nentries)
-        struc = Struct('3if')
+        struc = Struct(self._endian + b'3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -119,7 +119,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('DELAY', nentries)
-        struc = Struct('3if')
+        struc = Struct(self._endian + b'3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -188,7 +188,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('DPHASE', nentries)
-        struc = Struct('3if')
+        struc = Struct(self._endian + b'3if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -207,7 +207,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 60
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('EIGB', nentries)
-        struc = Struct('i8s ff 3i i 8s 4i')
+        struc = Struct(self._endian + b'i8s ff 3i i 8s 4i')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             #self.show_data(edata[44:])
@@ -253,8 +253,8 @@ class DYNAMICS(GeomCommon):
             ntotal = 60
             nentries = (len(data) - n) // ntotal
             self.increase_card_count('EIGB', nentries)
-            struct1 = Struct('i 4s 4s 2i f 2i')
-            struct2 = Struct('5f2i')
+            struct1 = Struct(self._endian + b'i 4s 4s 2i f 2i')
+            struct2 = Struct(self._endian + b'5f2i')
             for i in range(nentries):
                 edata = data[n:n+ntotal]
                 #self.show_data(edata[44:])
@@ -275,9 +275,9 @@ class DYNAMICS(GeomCommon):
         ndata = len(data)
         nfields = (ndata - n) // 4
         datan = data[n:]
-        ints = unpack(b(self._endian + '%ii' % nfields), datan)
-        floats = unpack(b(self._endian + '%if' % nfields), datan)
-        strings = unpack(b(self._endian + '4s'* nfields), datan)
+        ints = unpack(self._endian + b'%ii' % nfields, datan)
+        floats = unpack(self._endian + b'%if' % nfields, datan)
+        strings = unpack(self._endian + b'4s'* nfields, datan)
         #print('ints = ', ints)
         #print('floats = ', floats)
         #print('strings = ', strings)
@@ -405,9 +405,10 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('EIGP', nentries)
+        s = Struct('i2fi')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('i2fi', edata)
+            out = s.unpack(edata)
             sid, alpha, omega, m = out
             if self.is_debug_file:
                 self.binary_debug.write('EIGP=%s\n' % str(out))
@@ -438,9 +439,10 @@ class DYNAMICS(GeomCommon):
         #return len(data)
         ntotal = 72
         nentries = (len(data) - n) // ntotal
+        s = Struct('i 8s 2f 4i 8s 7i')
         for i in range(nentries):
             edata = data[n:n+ntotal]
-            out = unpack('i 8s 2f 4i 8s 7i', edata)
+            out = s.unpack(edata)
             (sid, method, f1, f2, ne, nd, null_a, null_b, norm, g, c,
              null_c, null_d, null_e, null_f, null_g) = out
             if self.is_debug_file:
@@ -481,9 +483,10 @@ class DYNAMICS(GeomCommon):
         #self.show_data(data[n+36:n+100], 'ifs')
         #print(len(data[n:]) / 4.)
         #ndata = len(data)
+        #s = Struct('i 2f 3i f 2i 8s f i')
         #while n < ndata:
             #edata = data[n:n+52] # 13*52
-            #out = unpack('i 2f 3i f 2i 8s f i', edata)
+            #out = s.unpack(edata)
             #sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
             #norm = norm.strip().decode('latin1')
             #print("norm = %r" % norm)
@@ -506,7 +509,7 @@ class DYNAMICS(GeomCommon):
     def _read_epoint(self, data, n):
         """EPOINT(707,7,124) - Record 12"""
         npoints = (len(data) - n) // 4
-        fmt = b(self._endian + '%ii' % npoints)
+        fmt = self._endian + b'%ii' % npoints
         nids = unpack(fmt, data[n:])
         if self.is_debug_file:
             self.binary_debug.write('EPOINT=%s\n' % str(nids))
@@ -541,7 +544,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        struc = Struct('iffi')
+        struc = Struct(self._endian + b'iffi')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -566,7 +569,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        struc = Struct('iffi')
+        struc = Struct(self._endian + b'iffi')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -592,7 +595,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 24 # 4*6
         nentries = (len(data) - n) // ntotal
-        struc = Struct(b('i 2f 4s if'))
+        struc = Struct(self._endian + b'i 2f 4s if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -621,7 +624,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 20 # 4*5
         nentries = (len(data) - n) // ntotal
-        struc = Struct(b('i 3f i'))
+        struc = Struct(self._endian + b'i 3f i')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -664,7 +667,7 @@ class DYNAMICS(GeomCommon):
 
         #ntotal = 20 # 4*5
         #nentries = (len(data) - n) // ntotal
-        #struc = Struct(b('i 3f'))
+        #struc = Struct(self._endian + b'i 3f')
         #for i in range(nentries):
             #edata = data[n:n+ntotal]
             #out = struc.unpack(edata)
@@ -703,7 +706,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 28
         nentries = (len(data) - n) // ntotal
-        struc = Struct(b('3i 2f if'))
+        struc = Struct(self._endian + b'3i 2f if')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -743,7 +746,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 24
         nentries = (len(data) - n) // ntotal
-        struc = Struct(b('3i2fi'))
+        struc = Struct(self._endian + b'3i2fi')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -784,7 +787,7 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 44
         nentries = (len(data) - n) // ntotal
-        struc = Struct('7i 4f')
+        struc = Struct(self._endian + b'7i 4f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -829,7 +832,7 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 36
         nentries = (len(data) - n) // ntotal
-        struc = Struct('2i 2f 3i 2f')
+        struc = Struct(self._endian + b'2i 2f 3i 2f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -873,7 +876,7 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 44
         nentries = (len(data) - n) // ntotal
-        struc = Struct('7i 4f')
+        struc = Struct(self._endian + b'7i 4f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -916,7 +919,7 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 36
         nentries = (len(data) - n) // ntotal
-        struc = Struct('7i 2f')
+        struc = Struct(self._endian + b'7i 2f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -946,8 +949,8 @@ class DYNAMICS(GeomCommon):
         #nid1, component1, a0, a1, a2
 
         ndata = len(data)
-        struct1 = Struct(b'3i3f')
-        struct2 = Struct(b'2i3f')
+        struct1 = Struct(self._endian + b'3i3f')
+        struct2 = Struct(self._endian + b'2i3f')
         while n < ndata:
             n2 = n + 24 # 20=4*6
             sid, nid, component, b0, b1, b2 = struct1.unpack(data[n:n2])
@@ -995,7 +998,7 @@ class DYNAMICS(GeomCommon):
         5 V0 RS Initial velocity
         """
         ntotal = 20  # 5*4
-        s = Struct(b(self._endian + '3i 2f'))
+        s = Struct(self._endian + b'3i 2f')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
@@ -1026,7 +1029,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 8*4
         #self.show_data(data[n:], 'if')
         nentries = (len(data) - n) // ntotal
-        struc = Struct('5i 3f')
+        struc = Struct(self._endian + b'5i 3f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1068,7 +1071,7 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 52
         nentries = (len(data) - n) // ntotal
-        struc = Struct('4i 7f 2f')
+        struc = Struct(self._endian + b'4i 7f 2f')
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)

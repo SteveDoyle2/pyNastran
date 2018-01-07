@@ -34,7 +34,7 @@ class LAMA(OP2Common):
         #self.show_data(data)
 
         three = self.parse_approach_code(data)
-        self.six = self.add_data_parameter(data, 'six', 'i', 10, False)  # seven
+        self.six = self.add_data_parameter(data, 'six', b'i', 10, False)  # seven
         self._read_title(data)
 
     def _read_buckling_eigenvalue_3(self, data, ndata):
@@ -54,11 +54,11 @@ class LAMA(OP2Common):
 
         three = self.parse_approach_code(data)
 
-        self.seven = self.add_data_parameter(data, 'seven', 'i', 10, False)  # seven
+        self.seven = self.add_data_parameter(data, 'seven', b'i', 10, False)  # seven
         #: residual vector augmentation flag
-        self.residual_flag = self.add_data_parameter(data, 'residual_flag', 'i', 11, False)
+        self.residual_flag = self.add_data_parameter(data, 'residual_flag', b'i', 11, False)
         #: fluid modes flag
-        self.fluid_flag = self.add_data_parameter(data, 'fluid_flag', 'i', 12, False)
+        self.fluid_flag = self.add_data_parameter(data, 'fluid_flag', b'i', 12, False)
 
         self._read_title(data)
 
@@ -74,7 +74,7 @@ class LAMA(OP2Common):
         clama = ComplexEigenvalues(self.title, nmodes)
         self.eigenvalues[self.title] = clama
         #self.eigenvalues[self.isubcase] = lama
-        structi = Struct(b(self._endian + 'ii4f'))
+        structi = Struct(self._endian + b'ii4f')
         for i in range(nmodes):
             edata = data[n:n+ntotal]
             out = structi.unpack(edata)
@@ -103,7 +103,7 @@ class LAMA(OP2Common):
         blama = BucklingEigenvalues(self.title, nmodes)
         self.eigenvalues[self.title] = blama
         #self.eigenvalues[self.isubcase] = lama
-        structi = Struct(b(self._endian + 'ii5f'))
+        structi = Struct(self._endian + b'ii5f')
         for i in range(nmodes):
             edata = data[n:n+ntotal]
             out = structi.unpack(edata)
@@ -130,11 +130,11 @@ class LAMA(OP2Common):
 
         three = self.parse_approach_code(data)
 
-        self.seven = self.add_data_parameter(data, 'seven', 'i', 10, False)  # seven
+        self.seven = self.add_data_parameter(data, 'seven', b'i', 10, False)  # seven
         ## residual vector augmentation flag
-        self.residual_flag = self.add_data_parameter(data, 'residual_flag', 'i', 11, False)
+        self.residual_flag = self.add_data_parameter(data, 'residual_flag', b'i', 11, False)
         ## fluid modes flag
-        self.fluid_flag = self.add_data_parameter(data, 'fluid_flag', 'i', 12, False)
+        self.fluid_flag = self.add_data_parameter(data, 'fluid_flag', b'i', 12, False)
         self.title = None
 
         #print(self.data_code)
@@ -165,7 +165,7 @@ class LAMA(OP2Common):
         #assert self.isubcase != 0, self.isubcase
         lama = RealEigenvalues(self.title, nmodes=nmodes)
         self.eigenvalues[self.title] = lama
-        structi = Struct('ii5f')
+        structi = Struct(self._endian + b'ii5f')
         for i in range(nmodes):
             edata = data[n:n+28]
             out = structi.unpack(edata)

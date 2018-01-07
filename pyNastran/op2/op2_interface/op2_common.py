@@ -233,10 +233,12 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             raise RuntimeError(msg)
 
     def add_data_parameter(self, data, var_name, Type, field_num,
-                           apply_nonlinear_factor=True, fix_device_code=False, add_to_dict=True):
+                           apply_nonlinear_factor=True, fix_device_code=False,
+                           add_to_dict=True):
         datai = data[4 * (field_num - 1) : 4 * (field_num)]
         assert len(datai) == 4, len(datai)
-        value, = unpack(b(self._endian + Type), datai)
+        #assert type(self._endian) == type(Type), 'endian=%r Type=%r' % (self._endian, Type)
+        value, = unpack(self._endian + Type, datai)
         if fix_device_code:
             value = (value - self.device_code) // 10
         if self.is_debug_file:
@@ -475,7 +477,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         if not self.make_geom:
             return ndata
         n = 0
-        keys = unpack(b'3i', data[n:n+12])
+        keys = self.struct_3i.unpack(data[n:n+12])
         n += 12
         if len(data) == 12:
             #print('*self.istream = %s' % self.istream)
@@ -872,7 +874,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         else:
             dt = None
             n = 0
-            s = Struct(b(self._endian + '2i6f'))
+            s = Struct(self._endian + b'2i6f')
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 eid_device, grid_type, tx = out[:3]
@@ -917,7 +919,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         else:
             n = 0
             assert nnodes > 0, nnodes
-            s = Struct(b(self._endian + '2i6f'))
+            s = Struct(self._endian + b'2i6f')
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 eid_device, grid_type, tx = out[:3]
@@ -964,7 +966,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             assert nnodes > 0
 
             flag = 'freq/dt/mode'
-            s = Struct(b(self._endian + self._analysis_code_fmt + 'i6f'))
+            s = Struct(self._endian + self._analysis_code_fmt + b'i6f')
             assert eid > 0, self.code_information()
             for inode in range(nnodes):
                 edata = data[n:n+32]
@@ -1008,7 +1010,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         else:
             n = 0
             dt = None
-            s = Struct(b(self._endian + '2i6f'))
+            s = Struct(self._endian + b'2i6f')
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
@@ -1058,7 +1060,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         else:
             n = 0
             assert nnodes > 0, nnodes
-            s = Struct(b(self._endian + '2i6f'))
+            s = Struct(self._endian + b'2i6f')
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+32])
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
@@ -1105,7 +1107,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             assert nnodes > 0
 
             flag = 'freq/dt/mode'
-            s = Struct(b(self._endian + self._analysis_code_fmt + 'i6f'))
+            s = Struct(self._endian + self._analysis_code_fmt + b'i6f')
             if 'RMS' != self.table_name[-4:-1] and 'NO' != self.table_name[-3:-1]:
                 #table_cap = self.table_name[-4:-1]
                 #print('table_cap = %r' % table_cap)
@@ -1128,7 +1130,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         n = 0
         obj = self.obj
-        s = Struct(b(self._endian + '2i12f'))
+        s = Struct(self._endian + b'2i12f')
 
         if self.use_vector and is_vectorized:
             n = nnodes * 4 * 14
@@ -1199,7 +1201,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         else:
         #if 1:
             n = 0
-            s = Struct(b(self._endian + '2i12f'))
+            s = Struct(self._endian + b'2i12f')
 
             assert self.obj is not None
             assert nnodes > 0
@@ -1936,21 +1938,22 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html#arrays-dtypes-constructing
         """
-        self.fdtype = npdtype(self._endian + 'f4')
-        self.idtype = npdtype(self._endian + 'i4')
-        self.double_dtype = npdtype(self._endian + 'd')
-        self.long_dtype = npdtype(self._endian + 'i8')
+        self.fdtype = npdtype(self._uendian + 'f4')
+        self.idtype = npdtype(self._uendian + 'i4')
+        self.double_dtype = npdtype(self._uendian + 'd')
+        self.long_dtype = npdtype(self._uendian + 'i8')
         #self.idtype = npdtype(self._endian + 'i8')
 
         #self.sdtype = npdtype(self._endian + '4s')
-        self.struct_i = Struct(b(self._endian + 'i'))
-        self.struct_8s = Struct(b(self._endian + '8s'))
-        self.struct_2i = Struct(b(self._endian + 'ii'))
+        self.struct_i = Struct(self._endian + b'i')
+        self.struct_3i = Struct(self._endian + b'3i')
+        self.struct_8s = Struct(self._endian + b'8s')
+        self.struct_2i = Struct(self._endian + b'ii')
 
     def del_structs(self):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
-        del self.struct_i, self.struct_2i, self.struct_8s
+        del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s
 
 def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
     if is_magnitude_phase:

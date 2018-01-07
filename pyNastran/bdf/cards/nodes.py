@@ -863,31 +863,47 @@ class GRID(BaseCard):
     | GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
     +------+-----+----+----+----+----+----+----+------+
 
-    Attributes:
-    =================== =====================================================
-    Name                 Description
-    =================== =====================================================
-    ``nid``             node id
-    ``xyz``             Raw location <:math:`x_1, x_2, x_3`> in the BDF
-    ``cp``              reference coordinate system
-    ``cd``              analysis coordinate system
-    ``ps``              nodal-based constraints
-    ``seid``            superelement id
-    ``cp_ref``          cross-referenced cp (or None)
-    ``cd_ref``          cross-referenced cd (or None)
-    =================== =====================================================
+    Attributes
+    ----------
+    nid : int
+        node id
+    xyz : float ndarray
+        Raw location <:math:`x_1, x_2, x_3`>
+    cp : int
+        reference coordinate system
+    cd : int
+        analysis coordinate system
+    ps : str
+        nodal-based constraints
+    seid : int
+        superelement id
+    cp_ref : Coord() or None
+        cross-referenced cp
+    cd_ref : Coord() or None
+        cross-referenced cd
 
-    Attribute Methods:
-    =================== =====================================================
-    Name                 Description
-    =================== =====================================================
-    ``xyz``             Raw location <:math:`x_1, x_2, x_3`> in the BDF
-    ``Nid()``           gets nid
-    ``Cp()``            gets cp_ref.cid or cp depending on cross-referencing
-    ``Cd()``            gets cd_ref.cid or cd depending on cross-referencing
-    ``Ps()``            gets ps
-    ``SEid()``          superelement id
-    =================== =====================================================
+    Methods
+    -------
+    Nid()
+        gets nid
+    Cp()
+        gets cp_ref.cid or cp depending on cross-referencing
+    Cd()
+        gets cd_ref.cid or cd depending on cross-referencing
+    Ps()
+        gets ps
+    SEid()
+        superelement id
+    get_position()
+        gets xyz in the global frame
+    get_position_wrt(model, cid)
+        gets xyz in a local frame
+    cross_reference(model)
+        cross-references the card
+    uncross_reference()
+        uncross-references the card
+    set_position(model, xyz, cid=0, xref=True)
+        updates the coordinate system
 
     Using the GRID object::
 
@@ -1175,7 +1191,7 @@ class GRID(BaseCard):
         """
         return 6
 
-    def set_position(self, model, xyz, cid=0):
+    def set_position(self, model, xyz, cid=0, xref=True):
         # type: (Any, np.ndarray, int) -> None
         """
         Updates the GRID location
@@ -1186,10 +1202,14 @@ class GRID(BaseCard):
             the location of the node.
         cp : int; default=0 (global)
             the analysis coordinate system
+        xref : bool; default=True
+            cross-references the coordinate system
         """
         self.xyz = xyz
         msg = ' which is required by GRID nid=%s' % self.nid
-        self.cp = model.Coord(cid, msg=msg)
+        self.cp = cid
+        if xref:
+            self.cp_ref = model.Coord(cid, msg=msg)
 
     def get_position_no_xref(self, model):
         # type: (Any) -> np.ndarray

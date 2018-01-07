@@ -107,7 +107,7 @@ class FortranFormat(object):
         longs = None
 
         if endian is None:
-            endian = self._endian
+            endian = self._uendian
             assert endian is not None, endian
 
         f.write('\nndata = %s:\n' % n)
@@ -115,29 +115,29 @@ class FortranFormat(object):
             assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
 
         if 's' in types:
-            strings = unpack(b('%s%is' % (endian, n)), data)
+            strings = unpack('%s%is' % (endian, n), data)
             f.write("  strings = %s\n" % str(strings))
         if 'i' in types:
-            ints = unpack(b('%s%ii' % (endian, nints)), data)
+            ints = unpack('%s%ii' % (endian, nints), data)
             f.write("  ints    = %s\n" % str(ints))
         if 'f' in types:
-            floats = unpack(b('%s%if' % (endian, nints)), data)
+            floats = unpack('%s%if' % (endian, nints), data)
             f.write("  floats  = %s\n" % str(floats))
         if 'd' in types:
-            doubles = unpack(b('%s%id' % (endian, ndoubles)), data[:ndoubles*8])
+            doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
             f.write("  doubles (float64) = %s\n" % str(doubles))
 
         if 'l' in types:
-            longs = unpack(b('%s%il' % (endian, nints)), data)
+            longs = unpack('%s%il' % (endian, nints), data)
             f.write("  long  = %s\n" % str(longs))
         if 'I' in types:
-            ints2 = unpack(b('%s%iI' % (endian, nints)), data)
+            ints2 = unpack('%s%iI' % (endian, nints), data)
             f.write("  unsigned int = %s\n" % str(ints2))
         if 'L' in types:
-            longs2 = unpack(b('%s%iL' % (endian, nints)), data)
+            longs2 = unpack('%s%iL' % (endian, nints), data)
             f.write("  unsigned long = %s\n" % str(longs2))
         if 'q' in types:
-            longs = unpack(b('%s%iq' % (endian, ndoubles)), data[:ndoubles*8])
+            longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
             f.write("  long long (int64) = %s\n" % str(longs))
         f.write('\n')
         return strings, ints, floats
@@ -226,8 +226,11 @@ class FortranFormat(object):
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
-        These are used to indicate position in the file as well as
-        the number of bytes to read.
+        These are used to indicate position in the file as well as the number
+        of bytes to read.
+
+        Because we're checking the markers vs. what we expect, we just throw
+        the data away.
 
         Parameters
         ----------
@@ -237,6 +240,25 @@ class FortranFormat(object):
         for i, marker in enumerate(markers):
             data = self.read_block()
             imarker, = self.struct_i.unpack(data)
+            if marker != imarker:
+                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (
+                    marker, imarker, markers, i, self.table_name)
+                raise FortranMarkerError(msg)
+            if self.is_debug_file:
+                self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
+
+    def read_3_markers(self, markers, macro_rewind=True):
+        """
+        Micro-optimizes ``read_markers`` for 3 markers.
+
+        Parameters
+        ----------
+        markers : List[int, int, int]
+            markers to get; markers = [-10, 1, 0]
+        """
+        data = self.read_block() + self.read_block() + self.read_block()
+        imarkers = self.struct_3i.unpack(data)
+        for i, marker in enumerate(markers):
             if marker != imarker:
                 msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (
                     marker, imarker, markers, i, self.table_name)
@@ -482,8 +504,9 @@ class FortranFormat(object):
 
         Returns
         -------
-        n : int
-            the number of bytes that have been read
+        n : None / int
+            None : an error occurred or we're in read_mode=1/array sizeing (???)
+            int : the number of bytes that have been read
         """
         datai = b''
         n = 0
@@ -512,57 +535,57 @@ class FortranFormat(object):
             # 0 - non-vectorized
             # 1 - 1st pass to size the array (vectorized)
             # 2 - 2nd pass to read the data  (vectorized)
-            if self.read_mode == 2:
-                # vectorized objects are stored as self.obj
-                # they have obj.itime which is their table3 counter
-                if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
-                    #ntotal = record_len // (self.num_wide * 4) * self._data_factor
 
-                    # we reset the itime counter when we fill up the
-                    # total number of nodes/elements/layers in the
-                    # result, where ntotal is the critical length of
-                    # interest.  This let's us start back at the correct
-                    # spot the next time we read table3
-                    #
-                    # For displacements, ntotal=nnodes
-                    #
-                    # For a CBAR, it's ntotal=nelements*2, where 2 is
-                    # the number of nodes; points A/B
-                    #
-                    # For a CTRIA3 / linear CQUAD4, it's
-                    # ntotal=nelements*2, where 2 is the number of
-                    # layers (top/btm) and we only get a centroidal
-                    # result.
-                    #
-                    # For a CQUAD4 bilinear, it's
-                    # ntotal=nelements*(nnodes+1)*2, where 2 is the
-                    # number of layers and nnodes is 4 (we get an extra
-                    # result at the centroid).
-                    #
-                    # For a PCOMP, it's ntotal=sum(nelements*nlayers),
-                    # where each element can have a different number
-                    # of layers
-                    if self.obj.ntotal == self.obj.data.shape[1]:
-                        #print('resetting %r indicies; itime=%s; shape=%s' % (
-                        #    self.obj.class_name, self.obj.itime, self.obj.data.shape))
-                        self.obj._reset_indices()
-                        self.obj.words = self.words
-                        self.obj.itime += 1
-                    else:
-                        # This happens when self._data_factor hasn't been reset
-                        # or is set wrong.
-                        # can it happen any other time?
-                        msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
-                        self.log.debug(msga)
-                        msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (
-                            self.obj.ntotal, str(self.obj.data.shape),
-                            self.obj.data.shape[1], self._data_factor)
-                        msgb += 'obj._ntotals=%s' % self.obj._ntotals
-                        self.log.error(msgb)
-                        raise RuntimeError(msga + '\n' + msgb)
+            # vectorized objects are stored as self.obj
+            # they have obj.itime which is their table3 counter
+            if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
+                #ntotal = record_len // (self.num_wide * 4) * self._data_factor
 
-                #else:
-                    #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
+                # we reset the itime counter when we fill up the
+                # total number of nodes/elements/layers in the
+                # result, where ntotal is the critical length of
+                # interest.  This let's us start back at the correct
+                # spot the next time we read table3
+                #
+                # For displacements, ntotal=nnodes
+                #
+                # For a CBAR, it's ntotal=nelements*2, where 2 is
+                # the number of nodes; points A/B
+                #
+                # For a CTRIA3 / linear CQUAD4, it's
+                # ntotal=nelements*2, where 2 is the number of
+                # layers (top/btm) and we only get a centroidal
+                # result.
+                #
+                # For a CQUAD4 bilinear, it's
+                # ntotal=nelements*(nnodes+1)*2, where 2 is the
+                # number of layers and nnodes is 4 (we get an extra
+                # result at the centroid).
+                #
+                # For a PCOMP, it's ntotal=sum(nelements*nlayers),
+                # where each element can have a different number
+                # of layers
+                if self.obj.ntotal == self.obj.data.shape[1]:
+                    #print('resetting %r indicies; itime=%s; shape=%s' % (
+                    #    self.obj.class_name, self.obj.itime, self.obj.data.shape))
+                    self.obj._reset_indices()
+                    self.obj.words = self.words
+                    self.obj.itime += 1
+                else:
+                    # This happens when self._data_factor hasn't been reset
+                    # or is set wrong.
+                    # can it happen any other time?
+                    msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
+                    self.log.debug(msga)
+                    msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (
+                        self.obj.ntotal, str(self.obj.data.shape),
+                        self.obj.data.shape[1], self._data_factor)
+                    msgb += 'obj._ntotals=%s' % self.obj._ntotals
+                    self.log.error(msgb)
+                    raise RuntimeError(msga + '\n' + msgb)
+
+            #else:
+                #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
 
         elif self.read_mode == 1:
             # if we're checking the array size

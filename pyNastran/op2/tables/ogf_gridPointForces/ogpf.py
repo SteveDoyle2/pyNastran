@@ -110,7 +110,7 @@ class OGPF(OP2Common):
                                 floats[i, 4], floats[i, 5], floats[i, 6],
                                 floats[i, 7], floats[i, 8], floats[i, 9], ))
                 else:
-                    s = Struct(b(self._endian + 'ii8s6f'))
+                    s = Struct(self._endian + b'ii8s6f')
                     for i in range(nnodes):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
@@ -158,7 +158,7 @@ class OGPF(OP2Common):
                     #[f1, f2, f3, m1, m2, m3]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
                 else:
-                    s = Struct(b(self._endian + 'ii8s12f'))
+                    s = Struct(self._endian + b'ii8s12f')
 
                     #if self.is_debug_file:
                         #self.binary_debug.write('  GPFORCE\n')

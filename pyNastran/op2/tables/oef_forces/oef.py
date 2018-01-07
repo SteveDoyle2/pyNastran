@@ -206,34 +206,34 @@ class OEF(OP2Common):
         self.parse_approach_code(data)
 
         #: element type
-        self.element_type = self.add_data_parameter(data, 'element_type', 'i', 3, False)
+        self.element_type = self.add_data_parameter(data, 'element_type', b'i', 3, False)
 
         # dynamic load set ID/random code
-        #self.dLoadID = self.add_data_parameter(data, 'dLoadID', 'i', 8, False)
+        #self.dLoadID = self.add_data_parameter(data, 'dLoadID', b'i', 8, False)
 
         #: format code
-        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         #: number of words per entry in record
         #: .. note: is this needed for this table ???
-        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         #: undefined in DMAP...
-        self.o_code = self.add_data_parameter(data, 'o_code', 'i', 11, False)
+        self.o_code = self.add_data_parameter(data, 'o_code', b'i', 11, False)
 
         #: thermal flag; 1 for heat ransfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
+        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics
-            self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5, False)  # load set ID number
+            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5, False)  # load set ID number
             self.data_names = self.apply_data_code_value('data_names', ['loadID'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             #: mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             #: eigenvalue
-            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
+            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             self.cycle = 0.
             self.update_mode_cycle('cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'cycle'])
@@ -241,44 +241,44 @@ class OEF(OP2Common):
             #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         elif self.analysis_code == 3:  # differential stiffness 0
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
+            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['loadID'])
         elif self.analysis_code == 4:  # differential stiffness 1
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
+            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['loadID'])
         elif self.analysis_code == 5:   # frequency
-            self.freq = self.add_data_parameter(data, 'freq', 'f', 5)  # frequency
+            self.freq = self.add_data_parameter(data, 'freq', b'f', 5)  # frequency
             self.data_names = self.apply_data_code_value('data_names', ['freq'])
         elif self.analysis_code == 6:  # transient
-            self.time = self.add_data_parameter(data, 'time', 'f', 5)  # time step
+            self.time = self.add_data_parameter(data, 'time', b'f', 5)  # time step
             self.data_names = self.apply_data_code_value('data_names', ['time'])
         elif self.analysis_code == 7:  # pre-buckling
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
+            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
             #self.apply_data_code_value('data_names',['lsdvmn'])
             self.data_names = self.apply_data_code_value('data_names', ['loadID'])
         elif self.analysis_code == 8:  # post-buckling
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
+            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
             #: real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             self.data_names = self.apply_data_code_value('data_names', ['loadID', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             #: mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             #: real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             #: imaginary eigenvalue
-            self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             #: load step
-            self.load_step = self.add_data_parameter(data, 'load_step', 'f', 5)
+            self.load_step = self.add_data_parameter(data, 'load_step', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['load_step'])
         elif self.analysis_code == 11:  # geometric nonlinear statics
             #: load set ID number
-            self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
+            self.loadID = self.add_data_parameter(data, 'loadID', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['loadID'])
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % str(self.analysis_code)
@@ -412,7 +412,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i8s6f'))
+                    s = Struct(self._endian + b'i8s6f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
@@ -500,7 +500,7 @@ class OEF(OP2Common):
                     obj.ielement = ielement2
                 else:
                     # no zed on this element for some reason...
-                    s = Struct(b(self._endian + 'i8s6f'))
+                    s = Struct(self._endian + b'i8s6f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         n += ntotal
@@ -540,7 +540,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i8s6fi'))
+                    s = Struct(self._endian + b'i8s6fi')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         n += ntotal
@@ -619,7 +619,7 @@ class OEF(OP2Common):
                         obj.itotal = itotal2
                         obj.ielement = ielement2
                     else:
-                        s1 = Struct(b(self._endian + 'i8s5f'))
+                        s1 = Struct(self._endian + b'i8s5f')
                         for i in range(nelements):
                             edata = data[n:n+32]
                             n += ntotal
@@ -684,7 +684,7 @@ class OEF(OP2Common):
                     obj.itotal = ielement2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + 'ifif'))
+                    s1 = Struct(self._endian + b'ifif')
                     for i in range(nelements):
                         edata = data[n:n+16]
                         n += 16
@@ -763,7 +763,7 @@ class OEF(OP2Common):
                     obj.ielement = ielement2
                 else:
                     s1 = self.struct_2i
-                    s2 = Struct(b(self._endian + 'i6f'))
+                    s2 = Struct(self._endian + b'i6f')
                     grad_fluxes = []
                     for i in range(nelements):
                         out = s1.unpack(data[n:n+8])
@@ -843,8 +843,8 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + '3i4s2i'))
-                    s2 = Struct(b(self._endian + 'i6f'))
+                    s1 = Struct(self._endian + b'3i4s2i')
+                    s2 = Struct(self._endian + b'i6f')
                     for i in range(nelements):
                         edata = data[n:n+24]  # 6*4
                         n += 24
@@ -924,8 +924,8 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + 'iii4s'))
-                    s2 = Struct(b(self._endian + 'i6f'))
+                    s1 = Struct(self._endian + b'iii4s')
+                    s2 = Struct(self._endian + b'i6f')
                     for i in range(nelements):
                         edata = data[n:n+16]  # 4*4
                         n += 16
@@ -1116,7 +1116,7 @@ class OEF(OP2Common):
                         return nelements * self.num_wide * 4
 
                     obj = self.obj
-                    s = Struct(b(self._endian + 'iff'))  # 3
+                    s = Struct(self._endian + b'iff')  # 3
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
@@ -1164,7 +1164,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i4f'))  # 5
+                    s = Struct(self._endian + b'i4f')  # 5
                     for i in range(nelements):
                         edata = data[n:n+20]
 
@@ -1224,7 +1224,7 @@ class OEF(OP2Common):
                     #obj.itotal = itotal2
                     #obj.ielement = ielement2
                 #else:
-                    #s = Struct(b(self._endian + 'i8f'))  # 36
+                    #s = Struct(self._endian + b'i8f')  # 36
                     #ntotal = 36
                     #nelements = ndata // ntotal
                     #obj = self.obj
@@ -1284,7 +1284,7 @@ class OEF(OP2Common):
                     obj.ielement = ielement2
                 else:
                     s1 = self.struct_i
-                    s2 = Struct(b(self._endian + 'i8f'))  # 36
+                    s2 = Struct(self._endian + b'i8f')  # 36
                     for i in range(nelements):
                         edata = data[n:n+4]
                         eid_device, = s1.unpack(edata)
@@ -1361,7 +1361,7 @@ class OEF(OP2Common):
                         #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                     s1 = self.struct_i
-                    s2 = Struct(b(self._endian + 'i15f'))
+                    s2 = Struct(self._endian + b'i15f')
                     ntotal = 708  # (16*11+1)*4 = 177*4
                     nelements = ndata // ntotal
                     for i in range(nelements):
@@ -1500,7 +1500,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'if'))  # 2
+                    s = Struct(self._endian + b'if')  # 2
                     for i in range(nelements):
                         edata = data[n:n + 8]
                         out = s.unpack(edata)
@@ -1546,7 +1546,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i2f'))
+                    s = Struct(self._endian + b'i2f')
                     for i in range(nelements):
                         edata = data[n:n + 12]
                         out = s.unpack(edata)
@@ -1603,7 +1603,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'iff'))
+                    s = Struct(self._endian + b'iff')
                     for i in range(nelements):
                         edata = data[n:n+12]
 
@@ -1651,7 +1651,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i4f'))  # 5
+                    s = Struct(self._endian + b'i4f')  # 5
                     for i in range(nelements):
                         edata = data[n:n+20]
 
@@ -1714,7 +1714,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i8f'))  # 9
+                    s = Struct(self._endian + b'i8f')  # 9
                     for i in range(nelements):
                         edata = data[n:n + 36]
 
@@ -1739,7 +1739,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
-                s = Struct(b(self._endian + 'i16f'))
+                s = Struct(self._endian + b'i16f')
                 for i in range(nelements):
                     edata = data[n:n + 68]
 
@@ -1812,7 +1812,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i7f'))
+                    s = Struct(self._endian + b'i7f')
                     for i in range(nelements):
                         edata = data[n:n+32]
 
@@ -1871,7 +1871,7 @@ class OEF(OP2Common):
                     obj.itotal = ielement2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i8f'))
+                    s = Struct(self._endian + b'i8f')
                     for i in range(nelements):
                         edata = data[n:n+36]
                         out = s.unpack(edata)
@@ -1914,7 +1914,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i16f'))
+                    s = Struct(self._endian + b'i16f')
                     for i in range(nelements):
                         edata = data[n:n+68]
                         out = s.unpack(edata)
@@ -2030,8 +2030,8 @@ class OEF(OP2Common):
                     #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                     obj.data[obj.itime, istart:iend, :] = results
                 else:
-                    s1 = Struct(b(self._endian + 'i4si8f'))  # 8+36
-                    s2 = Struct(b(self._endian + 'i8f')) # 36
+                    s1 = Struct(self._endian + b'i4si8f')  # 8+36
+                    s2 = Struct(self._endian + b'i8f') # 36
 
                     for i in range(nelements):
                         edata = data[n:n + 44]
@@ -2096,8 +2096,8 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + 'i4s17f'))  # 2+17=19 * 4 = 76
-                    s2 = Struct(b(self._endian + 'i16f'))  # 17 * 4 = 68
+                    s1 = Struct(self._endian + b'i4s17f')  # 2+17=19 * 4 = 76
+                    s2 = Struct(self._endian + b'i16f')  # 17 * 4 = 68
                     ntotal = 8 + (nnodes + 1) * 68
                     nelements = ndata // ntotal
                     obj = self.obj
@@ -2179,8 +2179,8 @@ class OEF(OP2Common):
                 ntotal = 36
                 nelements = ndata // ntotal
 
-                s1 = Struct(b('i8sifffif'))
-                s2 = Struct(b('i8sifffff'))
+                s1 = Struct(self._endian + b'i8sifffif')
+                s2 = Struct(self._endian + b'i8sifffff')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]  # 4*9
                     out = s1.unpack(edata)
@@ -2217,7 +2217,7 @@ class OEF(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 #eid_old = 0
-                #s = Struct(b(self._endian + 'i8si4f4s'))
+                #s = Struct(self._endian + b'i8si4f4s')
                 #for i in range(nelements):
                     #if i % 10000 == 0:
                         #print 'i = ', i
@@ -2308,7 +2308,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i16f'))
+                    s = Struct(self._endian + b'i16f')
                     for i in range(nelements):
                         edata = data[n:n+68]
 
@@ -2374,7 +2374,7 @@ class OEF(OP2Common):
                     obj.ielement = ielement2
                 else:
                     #self.create_transient_object(self.cshear_force, ComplexCShearForce)
-                    s = Struct(b(self._endian + 'i32f'))
+                    s = Struct(self._endian + b'i32f')
 
                     for i in range(nelements):
                         edata = data[n:n+132]
@@ -2467,7 +2467,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i6f'))
+                    s = Struct(self._endian + b'i6f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
@@ -2517,7 +2517,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i8f'))
+                    s = Struct(self._endian + b'i8f')
                     for i in range(nelements):
                         edata = data[n:n+36]
 
@@ -2575,7 +2575,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i i6fi6f'))
+                    s = Struct(self._endian + b'i i6fi6f')
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
 
@@ -2647,7 +2647,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i i12f i12f'))
+                    s = Struct(self._endian + b'i i12f i12f')
                     for i in range(nelements):
                         edata = data[n:n+108]
                         n += ntotal
@@ -2755,7 +2755,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i8s7f'))
+                    s = Struct(self._endian + b'i8s7f')
                     for i in range(nelements):
                         edata = data[n : n + 40]
                         n += 40
@@ -2816,7 +2816,7 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i8s13f'))
+                    s = Struct(self._endian + b'i8s13f')
                     for i in range(nelements):
                         edata = data[n:n+64]
                         n += 64
@@ -2891,7 +2891,7 @@ class OEF(OP2Common):
                     #[fx, fy, fz, mx, my, mz]
                     obj.data[obj.itime, istart:iend, :] = results[:, 1:]
                 else:
-                    s = Struct(b(self._endian + 'i6f'))
+                    s = Struct(self._endian + b'i6f')
                     for i in range(nelements):
                         edata = data[n:n+28]
                         out = s.unpack(edata)
@@ -2911,7 +2911,7 @@ class OEF(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b(self._endian + 'i12f'))
+                s = Struct(self._endian + b'i12f')
 
                 obj = self.obj
                 for i in range(nelements):
@@ -3021,8 +3021,8 @@ class OEF(OP2Common):
                         obj.data[obj.itime, istart:iend, :] = results[:, 1:]
                     else:
                         # 6+n*13
-                        s1 = Struct(b(self._endian + '3i4s2i')) # 6
-                        s2 = Struct(b(self._endian + 'i3f3i5fi')) # 13
+                        s1 = Struct(self._endian + b'3i4s2i') # 6
+                        s2 = Struct(self._endian + b'i3f3i5fi') # 13
                         for i in range(nelements):
                             edata = data[n:n+24]  # 6*4
                             n += 24
@@ -3063,8 +3063,8 @@ class OEF(OP2Common):
                     nelements = ndata // ntotal
                     obj = self.obj
 
-                    s1 = Struct(b(self._endian + '3i4s2i'))
-                    s2 = Struct(b(self._endian + 'i3f3i5fi'))
+                    s1 = Struct(self._endian + b'3i4s2i')
+                    s2 = Struct(self._endian + b'i3f3i5fi')
                     for i in range(nelements):
                         edata = data[n:n+24]  # 6*4
                         n += 24
@@ -3179,8 +3179,8 @@ class OEF(OP2Common):
                             #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
 
                         n = 0
-                        s1 = Struct(b(self._endian + 'iii4sii'))
-                        s2 = Struct(b(self._endian + 'i3f3i5fi3f3i5fi'))
+                        s1 = Struct(self._endian + b'iii4sii')
+                        s2 = Struct(self._endian + b'i3f3i5fi3f3i5fi')
                         nelements = ndata // ntotal
                         for i in range(nelements):
                             edata = data[n:n+24]  # 6*4
@@ -3240,8 +3240,8 @@ class OEF(OP2Common):
                     self.create_transient_object(slot, ComplexForce_VU_2D)
                     obj = self.obj
                     ntotal = 24 + 100 * nnodes
-                    s1 = Struct(b(self._endian + 'iii4sii'))
-                    s2 = Struct(b(self._endian + 'i3f3i5fi3f3i5fi'))
+                    s1 = Struct(self._endian + b'iii4sii')
+                    s2 = Struct(self._endian + b'i3f3i5fi3f3i5fi')
                     nelements = ndata // ntotal
                     for i in range(nelements):
                         edata = data[n:n+24]  # 6*4
@@ -3371,8 +3371,8 @@ class OEF(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s1 = Struct(b(self._endian + '3i 4s'))
-                    s2 = Struct(b(self._endian + 'i7f'))
+                    s1 = Struct(self._endian + b'3i 4s')
+                    s2 = Struct(self._endian + b'i7f')
                     nnodes = 2
                     for i in range(nelements):
                         edata = data[n:n+16]  # 8*4
@@ -3474,8 +3474,8 @@ class OEF(OP2Common):
                     obj.data[obj.itime, itotal:itotal2, 1:] = real_imag
                 else:
                     nnodes = 2
-                    s1 = Struct(b(self._endian + 'i2i4s'))
-                    s2 = Struct(b(self._endian + 'i13f'))
+                    s1 = Struct(self._endian + b'i2i4s')
+                    s2 = Struct(self._endian + b'i13f')
                     n = 0
                     obj._times[obj.itime] = dt
                     for i in range(nelements):

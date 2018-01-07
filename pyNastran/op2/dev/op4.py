@@ -136,7 +136,8 @@ class OP4(object):
         """
         self._fileh = open(filename, 'rb')
         bytes = self._fileh.read(16)
-        self._endian = ''
+        self._endian = b''
+        self._uendian = ''
         self._dformat = False
 
         # Assuming binary, check for a zero byte in the 'type' field;
@@ -145,41 +146,43 @@ class OP4(object):
             self._ascii = False
             if sys.byteorder == 'little':
                 if bytes[12] == 0:
-                    self._endian = '>'
+                    self._endian = b'>'
+                    self._uendian = '>'
             else:
                 if bytes[12] != 0:
-                    self._endian = '<'
-            self._Str_i4 = struct.Struct(self._endian + 'i')
+                    self._endian = b'<'
+                    self._uendian = '<'
+            self._Str_i4 = struct.Struct(self._endian + b'i')
             reclen = self._Str_i4.unpack(bytes[:4])[0]
             if reclen == 48:
                 self._bit64 = True
-                self._Str_i = struct.Struct(self._endian + 'q')
+                self._Str_i = struct.Struct(self._endian + b'q')
                 self._bytes_i = 8
-                self._Str_ii = struct.Struct(self._endian + 'qq')
+                self._Str_ii = struct.Struct(self._endian + b'qq')
                 self._bytes_ii = 16
-                self._Str_iii = struct.Struct(self._endian + '3q')
+                self._Str_iii = struct.Struct(self._endian + b'3q')
                 self._bytes_iii = 24
-                self._Str_iiii = struct.Struct(self._endian + '4q')
+                self._Str_iiii = struct.Struct(self._endian + b'4q')
                 self._bytes_iiii = 32
                 self._str_sr = self._endian + '%dd'
-                self._str_sr_fromfile = np.dtype(self._endian + 'f8')
+                self._str_sr_fromfile = np.dtype(self._uendian + 'f8')
                 self._bytes_sr = 8
                 self._wordsperdouble = 1
             else:
                 self._bit64 = False
                 self._Str_i = self._Str_i4
                 self._bytes_i = 4
-                self._Str_ii = struct.Struct(self._endian + 'ii')
+                self._Str_ii = struct.Struct(self._endian + b'ii')
                 self._bytes_ii = 8
-                self._Str_iii = struct.Struct(self._endian + '3i')
+                self._Str_iii = struct.Struct(self._endian + b'3i')
                 self._bytes_iii = 12
-                self._Str_iiii = struct.Struct(self._endian + '4i')
+                self._Str_iiii = struct.Struct(self._endian + b'4i')
                 self._bytes_iiii = 16
                 self._str_sr = self._endian + '%df'
-                self._str_sr_fromfile = np.dtype(self._endian + 'f4')
+                self._str_sr_fromfile = np.dtype(self._uendian + 'f4')
                 self._bytes_sr = 4
                 self._wordsperdouble = 2
-            self._str_dr = self._endian + '%dd'
+            self._str_dr = self._endian + b'%dd'
             self._str_dr_fromfile = np.dtype(self._endian + 'f8')
             self._fileh.seek(0)
         else:
