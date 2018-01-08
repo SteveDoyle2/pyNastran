@@ -275,9 +275,9 @@ class DYNAMICS(GeomCommon):
         ndata = len(data)
         nfields = (ndata - n) // 4
         datan = data[n:]
-        ints = unpack(self._endian + b'%ii' % nfields, datan)
-        floats = unpack(self._endian + b'%if' % nfields, datan)
-        strings = unpack(self._endian + b'4s'* nfields, datan)
+        ints = unpack(b(self._uendian + '%ii' % nfields), datan)
+        floats = unpack(b(self._uendian + '%if' % nfields), datan)
+        strings = unpack(b(self._uendian + '4s'* nfields), datan)
         #print('ints = ', ints)
         #print('floats = ', floats)
         #print('strings = ', strings)
