@@ -412,13 +412,19 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'nid' in starting_id_dict and nid is not None:
         #spoints2 = arange(1, len(spoints) + 1)
+        #nid = _create_dict_mapper(model.nodes, nid_map, 'nid', nid)
+
         for nid, node in sorted(iteritems(model.nodes)):
             nid_new = nid_map[nid]
-            #print('nid=%s -> %s' % (nid,nid_new))
+            #print('nid=%s -> %s' % (nid, nid_new))
             node.nid = nid_new
 
     if 'pid' in starting_id_dict and pid is not None:
         # properties
+        #pid = _create_dict_mapper(model.properties, properties_map, 'pid', pid)
+        #pid = _create_dict_mapper(model.properties_mass, properties_mass_map, 'pid', pid)
+        #pid = _update(model.convection_properties, properties_mass_map, pid)
+
         for pidi, prop in sorted(iteritems(model.properties)):
             prop.pid = pid
             properties_map[pidi] = pid
@@ -439,6 +445,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'eid' in starting_id_dict and eid is not None:
         # elements
+        #eid = _create_dict_mapper(model.elements, eid_map, 'eid', eid)
+
         for eidi, element in sorted(iteritems(model.elements)):
             element.eid = eid
             eid_map[eidi] = eid
@@ -540,6 +548,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             if spline.type == 'SPLINE1':
                 delta_box1_map[sidi] = spline.box1 - spline.caero
                 delta_box2_map[sidi] = spline.box2 - spline.caero
+            else:
+                raise NotImplementedError(spline)
 
     caero_id_map = {}
     if 'caero_id' in starting_id_dict and caero_id is not None:
@@ -558,6 +568,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             if spline.type == 'SPLINE1':
                 spline.box1 = caero_id_map[spline.caero] + delta_box1_map[sidi]
                 spline.box2 = caero_id_map[spline.caero] + delta_box2_map[sidi]
+            else:
+                raise NotImplementedError(spline)
             spline_id_map[sidi] = spline_id
             spline_id += 1
 
@@ -928,3 +940,10 @@ def _update_case_control(model, mapper):
                 raise RuntimeError(key)
                     #if value ==
         #print()
+
+#def _create_dict_mapper(properties, properties_map, pid_name, pid):
+    #for pidi, prop in sorted(iteritems(mydict)):
+        #setattr(prop, pid_name, pid)
+        #properties_map[pidi] = pid
+        #pid += 1
+    #return pid

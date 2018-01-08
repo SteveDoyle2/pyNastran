@@ -4433,9 +4433,9 @@ class AddCards(AddMethods):
             a comment for the card
         """
         if isinstance(components, string_types):
-            uset = USET1(ids, components, comment=comment)
+            uset = USET1(name, ids, components, comment=comment)
         else:
-            uset = USET(ids, components, comment=comment)
+            uset = USET(name, ids, components, comment=comment)
         self._add_uset_object(uset)
         return uset
 
