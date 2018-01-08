@@ -218,12 +218,12 @@ class GEOM3(GeomCommon):
         ntotal = 16  # 4*4
         nentries = (len(data) - n) // ntotal
         count = 0
-        s1 = Struct('iffi')
-        s2 = Struct('fi')
+        struct_i2fi = Struct('iffi')
+        struct_fi = Struct('fi')
         while (len(data) - n) >= 16:
             edata = data[n:n+16]
             n += 16
-            out = s1.unpack(edata)
+            out = struct_i2fi.unpack(edata)
             (sid, s, si, l1) = out
             if self.is_debug_file:
                 self.binary_debug.write('  LOAD=%s\n' % str(out))
@@ -233,7 +233,7 @@ class GEOM3(GeomCommon):
             while 1:
                 edata = data[n:n+8]
                 n += 8
-                (si, l1) = s.unpack(edata)
+                (si, l1) = struct_fi.unpack(edata)
                 siTest, = self.struct_i.unpack(edata[0:4])
                 #print(si,siTest, l1)
                 #print(type(si))
