@@ -75,6 +75,10 @@ except ImportError:
         'scipy', 'scipy.linalg', 'scipy.sparse', #'scipy.weave',
         'scipy.integrate', 'scipy.interpolate', 'scipy.spatial',
     ]
+try:
+    import qtpy
+except ImportError:
+    MOCK_MODULES += ['qtpy']
 
 #MOCK_MODULES += ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas']
 
