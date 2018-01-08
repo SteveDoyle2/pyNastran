@@ -50,8 +50,6 @@ class BaseCard(object):
      - object_methods(self, mode='public', keys_to_skip=None)
      - comment
      - update_field(self, n, value)
-
-
     """
     def __init__(self):
         pass
@@ -81,7 +79,7 @@ class BaseCard(object):
         pass
 
     def object_attributes(self, mode='public', keys_to_skip=None):
-        """..see:: `pyNastran.utils.object_attributes(...)`"""
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -90,7 +88,7 @@ class BaseCard(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
-        """..see:: `pyNastran.utils.object_methods(...)`"""
+        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
@@ -538,8 +536,8 @@ class Element(BaseCard):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
         Example
         =======

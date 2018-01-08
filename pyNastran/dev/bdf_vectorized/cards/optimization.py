@@ -25,10 +25,8 @@ def validate_dvcrel(validate, Type, cp_name):
     """
     Valdiates the DVCREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note::  words that start with integers (e.g., 12I/T**3) doesn't
+               support strings
     """
     if validate:
         msg = 'DVCRELx: Type=%r cp_name=%r is invalid' % (Type, cp_name)
@@ -54,10 +52,8 @@ def validate_dvmrel(validate, mat_type, mp_name):
     """
     Valdiates the DVMREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note::  words that start with integers (e.g., 12I/T**3) doesn't
+               support strings
     """
     if validate:
         msg = 'DVMRELx: mat_type=%r mp_name=%r is invalid' % (mat_type, mp_name)
@@ -84,10 +80,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
     """
     Valdiates the DVPREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note::  words that start with integers (e.g., 12I/T**3) doesn't
+               support strings
     """
     if validate:
         msg = 'DVPREL1: prop_type=%r pname_fid=%r is invalid' % (prop_type, pname_fid)

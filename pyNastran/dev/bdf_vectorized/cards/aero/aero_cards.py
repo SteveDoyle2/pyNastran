@@ -5791,9 +5791,7 @@ class TRIM(BaseCard):
         """
         Magic function that makes TRIM cards not frustrating.
 
-        Warning
-        -------
-        TODO: This probably gets AELINKs/AEPARMs/AESURFSs wrong.
+        .. warning ::  This probably gets AELINKs/AEPARMs/AESURFSs wrong.
 
         The TRIM equality
         -----------------

@@ -71,7 +71,7 @@ class LOAD(LoadCombination):
         comment : str; default=''
             a comment for the card
 
-        Note: MSC can handle self-referencing loads, NX cannot
+        .. note::  MSC can handle self-referencing loads, NX cannot
         """
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)

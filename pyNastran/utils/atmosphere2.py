@@ -662,7 +662,7 @@ def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s', debug=F
 
     \f[ \large \nu = \frac{\mu}{\rho} \f]
 
-    .. see ::  SutherlandVisc
+    .. seealso::  sutherland_viscoscity
     .. todo:: better debug
     """
     z = _update_alt(alt, alt_units)
@@ -696,7 +696,7 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
     mu : float
         dynamic viscosity  \f$ \mu_{\infty} \f$ in (lbf*s)/ft^2 or (N*s)/m^2 (SI)
 
-    .. see ::  SutherlandVisc
+    .. seealso::  sutherland_viscoscity
     """
     z = _update_alt(alt, alt_units)
     T = atm_temperature(z)

@@ -42,10 +42,8 @@ def validate_dvcrel(validate, element_type, cp_name):
     """
     Valdiates the DVCREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note:: words that start with integers (e.g., 12I/T**3) doesn't
+              support strings
     """
     if not validate:
         return
@@ -88,10 +86,8 @@ def validate_dvmrel(validate, mat_type, mp_name):
     """
     Valdiates the DVMREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note::  words that start with integers (e.g., 12I/T**3) doesn't
+               support strings
     """
     if not validate:
         return
@@ -119,12 +115,10 @@ def validate_dvprel(prop_type, pname_fid, validate):
     """
     Valdiates the DVPREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
-    2.  FID > 0 --> references the Property Card
-    3.  FID < 0 --> references the EPT card
+    .. note:: words that start with integers (e.g., 12I/T**3) doesn't
+              support strings
+    .. note:: FID > 0 --> references the Property Card
+    .. note:: FID < 0 --> references the EPT card
     """
     if not validate:
         return pname_fid

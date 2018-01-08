@@ -1226,7 +1226,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._xref = xref
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
-        self.pop_xref_errors()
 
     def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
         """creates the file loading if bdf_filename is None"""
@@ -2817,9 +2816,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 class_instance = card_class.add_card(card_obj, comment=comment)
                 add_card_function(class_instance)
             except TypeError:
+                # this should never be turned on, but is useful for testing
                 msg = 'problem adding %s' % card_obj
-                #print(msg)
-                #raise
+                print(msg)
+                raise
                 #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise

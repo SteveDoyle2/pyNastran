@@ -1985,7 +1985,7 @@ class CQUAD4(QuadShell):
 
         #- `x (float)`: The x-coordinate within the element.
 
-        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+        #.. note:: Xi and eta can both vary between -1 and 1 respectively.
 
         #per AeroComBAT
         #"""
@@ -2009,7 +2009,7 @@ class CQUAD4(QuadShell):
 
         #- `y (float)': The y-coordinate within the element.
 
-        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+        #.. note:: Xi and eta can both vary between -1 and 1 respectively.
 
         #per AeroComBAT
         #"""
@@ -2034,7 +2034,7 @@ class CQUAD4(QuadShell):
 
         #- `Z (3x6 np.array[float])`: The stress-resutlant transformation array.
 
-        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+        #.. note:: Xi and eta can both vary between -1 and 1 respectively.
 
         #per AeroComBAT
         #"""
@@ -2060,7 +2060,7 @@ class CQUAD4(QuadShell):
         #- `Jmat (3x3 np.array[float])`: The stress-resutlant transformation
             #array.
 
-        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+        #.. note:: Xi and eta can both vary between -1 and 1 respectively.
 
         #per AeroComBAT
         #"""
@@ -2191,7 +2191,7 @@ class CQUAD4(QuadShell):
         #- `dNdxi_mat (3x12 np.array[float])`: The gradient of the shape-
             #function value weighting matrix with respect to xi.
 
-        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+        #.. note:: Xi and eta can both vary between -1 and 1 respectively.
 
         #per AeroComBAT
         #"""
@@ -2225,7 +2225,7 @@ class CQUAD4(QuadShell):
         #- `dNdeta_mat (3x12 np.array[float])`: The gradient of the shape-
             #function value weighting matrix with respect to eta.
 
-        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+        #.. note:: Xi and eta can both vary between -1 and 1 respectively.
 
         #per AeroComBAT
         #"""

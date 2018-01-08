@@ -43,10 +43,10 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
     etype : int
         VTK cell type
 
-        1  = vtk.vtkVertex().GetCellType()
-        3  = vtkLine().GetCellType()
-        5  = vtkTriangle().GetCellType()
-        9  = vtk.vtkQuad().GetCellType()
+        1 = vtk.vtkVertex().GetCellType()
+        3 = vtkLine().GetCellType()
+        5 = vtkTriangle().GetCellType()
+        9 = vtk.vtkQuad().GetCellType()
         10 = vtkTetra().GetCellType()
         #vtkPenta().GetCellType()
         #vtkHexa().GetCellType()

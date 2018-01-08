@@ -4278,7 +4278,7 @@ class AddCards(AddMethods):
         return aset
 
     def add_aset1(self, ids, components, comment=''):
-        """.. see:: ``add_aset``"""
+        """.. .. seealso:: ``add_aset``"""
         return self.add_aset(ids, components, comment=comment)
 
     def add_bset(self, ids, components, comment=''):
@@ -4308,7 +4308,7 @@ class AddCards(AddMethods):
         return bset
 
     def add_bset1(self, ids, components, comment=''):
-        """.. see:: ``add_bset``"""
+        """.. .. seealso:: ``add_bset``"""
         return self.add_bset(ids, components, comment=comment)
 
     def add_cset(self, ids, components, comment=''):
@@ -4338,11 +4338,11 @@ class AddCards(AddMethods):
         return cset
 
     def add_cset1(self, ids, components, comment=''):
-        """.. see:: ``add_cset``"""
+        """.. seealso:: ``add_cset``"""
         return self.add_cset(ids, components, comment=comment)
 
     #def add_omit1(self, ids, components, comment=''):
-        #""".. see:: ``add_omit``"""
+        #""".. seealso:: ``add_omit``"""
         #return self.add_omit(ids, components, comment=comment)
 
     #def add_omit(self, ids, components, comment=''):
@@ -4411,7 +4411,7 @@ class AddCards(AddMethods):
         return qset
 
     def add_qset1(self, ids, components, comment=''):
-        """.. see:: ``add_qset``"""
+        """.. seealso:: ``add_qset``"""
         return self.add_qset(ids, components, comment=comment)
 
     def add_uset(self, name, ids, components, comment=''):
@@ -4440,7 +4440,7 @@ class AddCards(AddMethods):
         return uset
 
     def add_uset1(self, name, ids, components, comment=''):
-        """.. see:: ``add_uset``"""
+        """.. seealso:: ``add_uset``"""
         return self.add_uset(name, ids, components, comment=comment)
 
     def add_sebset(self, seid, ids, components, comment=''):

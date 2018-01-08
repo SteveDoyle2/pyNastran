@@ -203,10 +203,8 @@ class CaseControlDeck(object):
         subcase : Subcase()
             the new subcase
 
-        Warning
-        -------
-        - be careful you dont add data to the global subcase
-          after running this...is this True???
+        .. warning ::  be careful you dont add data to the global subcase
+                       after running this...is this True???
         """
         #print("creating subcase=%s" % isubcase)
         if self.has_subcase(isubcase):

@@ -8,7 +8,7 @@ from pyNastran.bdf.cards.base_card import _format_comment
 
 class BaseMethods(object):
     def object_attributes(self, mode='public', keys_to_skip=None):
-        """..see:: `pyNastran.utils.object_attributes(...)`"""
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -17,7 +17,7 @@ class BaseMethods(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
-        """..see:: `pyNastran.utils.object_methods(...)`"""
+        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []

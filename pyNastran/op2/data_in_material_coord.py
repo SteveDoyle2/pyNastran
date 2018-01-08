@@ -176,11 +176,9 @@ def data_in_material_coord(bdf, op2, in_place=False):
     op2_new : :class:`.OP2` object
         A :class:`.OP2` object with the abovementioned changes.
 
-    Warning
-    -------
-     - doesn't handle composite stresses/strains/forces
-     - doesn't handle solid stresses/strains/forces (e.g. MAT11)
-     - zeros out data for CQUAD8s
+    .. warning ::  doesn't handle composite stresses/strains/forces
+    .. warning ::  doesn't handle solid stresses/strains/forces (e.g. MAT11)
+    .. warning ::  zeros out data for CQUAD8s
     """
     if in_place:
         op2_new = op2
@@ -442,6 +440,4 @@ def data_in_material_coord(bdf, op2, in_place=False):
             if 'quad8' in vecname:
                 for i in [2, 3, 4, 5, 6, 7, 8, 9]:
                     new_vector.data[:, i, :] = 0
-
     return op2_new
-

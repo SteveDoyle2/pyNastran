@@ -313,10 +313,9 @@ class OP4(object):
             mtype : integer
                 Nastran matrix type.
 
-        Notes:
-        - All outputs will be None if reached EOF.
-        - The `matrix` output will be [rows, cols] of the matrix if
-          the matrix is skipped.
+        .. note::  All outputs will be None if reached EOF.
+        .. note::  The `matrix` output will be [rows, cols] of the
+                   matrix if the matrix is skipped.
         """
         while 1:
             line = self._fileh.readline()
@@ -502,10 +501,9 @@ class OP4(object):
             mtype : integer
                 Nastran matrix type.
 
-        Notes:
-        - All outputs will be None if reached EOF.
-        - The `matrix` output will be [rows, cols] of the matrix if
-          the matrix is skipped.
+        .. note::  All outputs will be None if reached EOF.
+        .. note::  The `matrix` output will be [rows, cols] of the matrix
+                   if the matrix is skipped.
         """
         fp = self._fileh
         while 1:
@@ -784,9 +782,9 @@ class OP4(object):
             Number of significant digits after the decimal to include
             in the ascii output.
 
-        Note: if rows > 65535, bigmat is turned on and the
-        :func:`write_ascii_sparse_bigmat` function is called ...
-        that's a Nastran rule.
+        .. note:: if rows > 65535, bigmat is turned on and the
+                  :func:`write_ascii_sparse_bigmat` function is
+                  called ...that's a Nastran rule.
         """
         rows, cols = matrix.shape
         if rows >= self._rows4bigmat:
@@ -975,9 +973,9 @@ class OP4(object):
             Endian setting for binary output:  '' for native, '>' for
             big-endian and '<' for little-endian.
 
-        Note: if rows > 65535, bigmat is turned on and the
-        :func:`write_binary_sparse_bigmat` function is called ...
-        that's a Nastran rule.
+        .. note::  if rows > 65535, bigmat is turned on and the
+                   :func:`write_binary_sparse_bigmat` function is
+                   called ...that's a Nastran rule.
         """
         rows, cols = matrix.shape
         if rows >= self._rows4bigmat:
@@ -1239,12 +1237,10 @@ class OP4(object):
         -------
         None.
 
-        Notes
-        -----
-        To write multiple matrices that have the same name or to write
-        the matrices in a specific order, `names` must be a list, not
-        a dictionary.  If a dictionary, the matrices are written in
-        alphabetical order.
+        .. note::  To write multiple matrices that have the same name
+                   or to write the matrices in a specific order, `names`
+                   must be a list, not a dictionary.  If a dictionary,
+                   the matrices are written in alphabetical order.
 
         See also :func:`dctload`, :func:`listload`, :func:`dir`.
 

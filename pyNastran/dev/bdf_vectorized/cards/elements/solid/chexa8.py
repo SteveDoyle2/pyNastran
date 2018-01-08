@@ -447,8 +447,8 @@ class CHEXA8(SolidElement):
         total : bool; default=False
             should the volume be summed; centroid be averaged
 
-        ..see:: CHEXA8.get_volume_by_element_id() and
-                CHEXA8.get_centroid_by_element_id() for more information.
+        .. seealso:: CHEXA8.get_volume_by_element_id() and
+                     CHEXA8.get_centroid_by_element_id() for more information.
         """
         n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)

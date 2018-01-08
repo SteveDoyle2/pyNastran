@@ -140,8 +140,9 @@ class OP2Common(Op2Codes, F06Writer):
         the analysis_code (1 is like SOL 101, but really means static), we
         can switch mag/phase results to real static results.
 
-        Note that a case of 4 is not used and is used below as a placeholder,
-        while a case of -1 is some bizarre unhandled, undocumented case.
+        .. note:: A case of 4 is not used and is used below as a placeholder,
+                  while a case of -1 is some bizarre unhandled,
+                  undocumented case.
         """
         self._set_times_dtype()
         self.format_code_original = self.format_code
