@@ -89,7 +89,7 @@ class GetCard(GetMethods):
             'CQUAD4' : [4],
         }
 
-        # shell elements
+        **shell elements**
 
           >>> out_dict = model.get_card_ids_by_card_types(
               card_types=['CTRIA3', 'CQUAD4'], combine=True)

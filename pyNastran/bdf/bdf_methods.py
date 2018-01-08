@@ -641,7 +641,6 @@ class BDFMethods(BDFAttributes):
         write_shells : bool; default=False
             write newly created shell elements
             if there are shells in the model, doesn't write these
-
         size : int; default=8
             the field width
         is_double : bool; default=False

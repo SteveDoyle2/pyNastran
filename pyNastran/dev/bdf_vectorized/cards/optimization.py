@@ -1128,7 +1128,8 @@ class DRESP1(OptConstraint):
 
         Examples
         --------
-        **stress/pshell**
+        **stress/PSHELL**
+
         >>> dresp_id = 103
         >>> label = 'resp1'
         >>> response_type = 'STRESS'
@@ -1140,7 +1141,8 @@ class DRESP1(OptConstraint):
         >>> atti = [pid]
         >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
-        # stress/pcomp
+        **stress/PCOMP**
+
         >>> dresp_id = 104
         >>> label = 'resp2'
         >>> response_type = 'STRESS'

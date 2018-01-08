@@ -73,16 +73,17 @@ class SurfReader(object):
         +---------+--------------------------------------------------------------+
         |    -5   | embedded/transparent surface with BL volume grid             |
         +---------+--------------------------------------------------------------+
-        |    -1   | standard surface with BL volume grid                         |  *** wall
+        |    -1   | standard surface with BL volume grid; **wall**               |
         +---------+--------------------------------------------------------------+
         |     0   | standard surface                                             |
         +---------+--------------------------------------------------------------+
-        |     1   | standard surface                                             |  *** farfield
+        |     1   | standard surface; **farfield**                               |
         +---------+--------------------------------------------------------------+
-        |     2   | standard surface that intersects the BL region               |  *** boundary layer
+        |     2   | standard surface that intersects the BL region;              |
+        |         | **boundary layer**                                           |
         +---------+--------------------------------------------------------------+
-        |     3   | embedded/transparent surface or source surface that will be  |  *** source
-        |         | converted to source nodes                                    |
+        |     3   | embedded/transparent surface or source surface that will be  |
+        |         | converted to source nodes; **source**                        |
         +---------+--------------------------------------------------------------+
         |     4   | embedded/transparent surface that intersects the BL region   |
         +---------+--------------------------------------------------------------+
@@ -91,8 +92,8 @@ class SurfReader(object):
         |     6   | internal embedded/transparent surface that will be converted |
         |         | to internal/interior/volume faces                            |
         +---------+--------------------------------------------------------------+
-        |     7   | fixed surface that intersects and directly connects to the   |  *** transparent
-        |         | BL region                                                    |
+        |     7   | fixed surface that intersects and directly connects to the   |
+        |         | BL region; **transparent**                                   |
         +---------+--------------------------------------------------------------+
         """
         #basename = os.path.splitext(surf_filename)[0]

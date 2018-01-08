@@ -744,9 +744,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Takes a dictionary of list of times in a transient case and
         gets the output closest to those times.
 
-        .. code-block:: python
-          times = {subcase_id_1: [time1, time2],
-                   subcase_id_2: [time3, time4]}
+        Examples
+        --------
+        >>> times = {subcase_id_1: [time1, time2],
+                     subcase_id_2: [time3, time4]}
 
         .. warning:: I'm not sure this still works...
         """
