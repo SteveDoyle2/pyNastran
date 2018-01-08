@@ -4,6 +4,7 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 # pylint: disable=W0612,C0103
 ### pyldint: disable=W0612,C0103,C0302,W0613,R0914,R0201
 from struct import unpack, Struct
+from six import b
 from six.moves import range
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
@@ -1734,7 +1735,7 @@ class GEOM2(GeomCommon):
         (5551,49,105)    - the marker for Record 118
         """
         npoints = (len(data) - n) // 4
-        fmt = self._endian + b'%ii' % npoints
+        fmt = b(self._uendian + '%ii' % npoints)
         nids = unpack(fmt, data[n:])
         if self.is_debug_file:
             self.binary_debug.write('SPOINT=%s\n' % str(nids))
