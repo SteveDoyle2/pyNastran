@@ -1650,8 +1650,9 @@ class MAT8(OrthotropicMaterial):
 class MAT9(AnisotropicMaterial):
     """
     Defines the material properties for linear, temperature-independent,
-    anisotropic materials for solid isoparametric elements (see PSOLID entry
-    description).
+    anisotropic materials for solid isoparametric elements
+
+    .. seealso::  PSOLID entry description
 
     +------+-----+-----+-----+-----+-----+------+-----+-----+
     |   1  |  2  | 3   | 4   |  5  |  6  |  7   | 8   |  9  |

@@ -143,13 +143,16 @@ if PY2:
         py_packages.append('scandir >= 1.4.0')  # 1.4.0 used
 
 
-try:
-    import imageio
-    if imageio.__version__ < '2.2.0':
-        #print("imageio.version = %r < '2.2.0'" % imageio.__version__)
+if is_rtd:
+    pass
+else:
+    try:
+        import imageio
+        if imageio.__version__ < '2.2.0':
+            #print("imageio.version = %r < '2.2.0'" % imageio.__version__)
+            py_packages.append('imageio >= 2.2.0')
+    except ImportError:
         py_packages.append('imageio >= 2.2.0')
-except ImportError:
-    py_packages.append('imageio >= 2.2.0')
 
 #py_packages = [
 #    'numpy >= 1.9.2',

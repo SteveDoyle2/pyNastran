@@ -1802,13 +1802,12 @@ class SPCDv(BaseLoad):
         self.add(sid, nodes, constraints, enforced, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
-        bbb
         assert bdf_file is not None
         self.make_current()
         msg = ''
         for i, sid, nid, comp, mag in zip(count(), self.sid, self.nid, self.comp, self.mag):
             list_fields = ['SPCD', sid]
-            list_fields += [nid, constraint, enforced]
+            list_fields += [nid, comp, mag]
 
             msgi = print_card_8(list_fields)
             msg += self.comment[i] + msgi
@@ -1817,7 +1816,6 @@ class SPCDv(BaseLoad):
 
     def make_current(self):
         """creates an array of the elements"""
-        aaa
         if not self.is_current:
             if len(self.sid) > 0: # there are already elements in self.eid
                 self.sid = np.hstack([self.sid, self._sid])

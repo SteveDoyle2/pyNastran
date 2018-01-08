@@ -75,6 +75,12 @@ except ImportError:
         'scipy', 'scipy.linalg', 'scipy.sparse', #'scipy.weave',
         'scipy.integrate', 'scipy.interpolate', 'scipy.spatial',
     ]
+
+try:
+    import imageio
+except ImportError:
+    MOCK_MODULES += ['imageio']
+
 try:
     import qtpy
 except ImportError:

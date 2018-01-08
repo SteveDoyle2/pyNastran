@@ -2479,7 +2479,7 @@ class AddCards(AddMethods):
 
     def add_pihex(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                   fctn='SMECH', comment=''):
-        """see PSOLID"""
+        """.. seealso:: PSOLID"""
         prop = PIHEX(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
                      fctn=fctn, comment=comment)
         self._add_property_object(prop)
