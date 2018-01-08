@@ -89,6 +89,8 @@ GUI:
     - no longer a subset of the legend menu (not done)
  - nominal geometry (useful for deflection plots)
  - single click menus
+ - improved optimization support
+ - improved picking display
 
   --->
   
