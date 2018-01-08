@@ -108,14 +108,17 @@ except ImportError:
     py_packages.append('docopt == 0.6.2')  # 0.6.2 used
 
 
-try:
-    import qtpy
-    sver = [int(val) for val in qtpy.__version__.split('-')[0].split('.')]
-    if sver < [1, 3, 1]:
-        print("qtpy.__version__ = %r < '1.3.1'" % qtpy.__version__)
-        py_packages.append('qtpy >= 1.3.1')
-except ImportError:
-    py_packages.append('qtpy >= 1.3.1')  # 1.3.1 used
+if is_rtd:
+    pass
+else:
+    try:
+        import qtpy
+        sver = [int(val) for val in qtpy.__version__.split('-')[0].split('.')]
+        if sver < [1, 3, 1]:
+            print("qtpy.__version__ = %r < '1.3.1'" % qtpy.__version__)
+            py_packages.append('qtpy >= 1.3.1')
+    except ImportError:
+        py_packages.append('qtpy >= 1.3.1')  # 1.3.1 used
 
 
 try:
