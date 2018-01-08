@@ -393,7 +393,7 @@ class OEF(OP2Common):
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 9)
                     obj._times[obj.itime] = dt
 
-                    strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 9)
+                    strings = fromstring(data, dtype=self._uendian + 'S4').reshape(nelements, 9)
                     s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
                     #print(s)
                     #print('itime = ', obj.itime)
@@ -490,7 +490,7 @@ class OEF(OP2Common):
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
-                    strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 9)
+                    strings = fromstring(data, dtype=self._uendian + 'S4').reshape(nelements, 9)
                     obj.element_data_type[itotal:itotal2] = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
 
                     #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux]
@@ -531,7 +531,7 @@ class OEF(OP2Common):
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
-                        strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 10)
+                        strings = fromstring(data, dtype=self._uendian + 'S4').reshape(nelements, 10)
                         obj.element_data_type[itotal:itotal2] = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
 
                     #[etype, xgrad, ygrad, zgrad, xflux, yflux, zflux, zed]

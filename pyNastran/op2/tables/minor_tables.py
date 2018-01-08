@@ -496,7 +496,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
         #self.show_data(data)
         if self.read_mode == 2:
-            a, bi, c, d, e, f, g = unpack(b('%s7i'% self._endian), data)
+            a, bi, c, d, e, f, g = unpack(self._endian + b'7i', data)
             assert a == 101, a
             assert bi == 1, bi
             assert c == 27, c
@@ -509,7 +509,7 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         #if self.read_mode == 2:
-        word, = unpack(b('%s8s' % self._endian), data)
+        word, = unpack(self._endian + b'8s', data)
         assert word == b'AECFMON ', word
         #self.show_data(data)
         #print('-----------------------')
@@ -523,7 +523,7 @@ class MinorTables(OP2Common):
             assert ndata == 108, ndata
             n = 8 + 56 + 20 + 12 + 12
             (aero, name, comps, cp, bi, c, d, coeff, word,
-             e, f, g) = unpack(b('8s 56s 5i 4s 8s 3i'), data[:n])
+             e, f, g) = unpack(self._endian + b'8s 56s 5i 4s 8s 3i', data[:n])
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
@@ -560,7 +560,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
         #self.show_data(data)
         if self.read_mode == 2:
-            a, bi, c, d, e, f, g = unpack(b('%s7i' % self._endian), data)
+            a, bi, c, d, e, f, g = unpack(self._endian + b'%s7i', data)
             assert a == 101, a
             assert bi == 1, bi
             assert c == 27, c
@@ -741,7 +741,7 @@ class MinorTables(OP2Common):
                 pass
             elif response_type == 84:
                 # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
-                out = unpack(self._endian + 'iii 8s iii fff i fff', data)
+                out = unpack(self._endian + b'iii 8s iii fff i fff', data)
                 mode = out[6]
                 mach = out[7]
                 velocity = out[8]
@@ -1327,10 +1327,10 @@ class MinorTables(OP2Common):
         data = self._read_record()
 
         # old-bad
-        #matrix_num, form, mrows, ncols, tout, nvalues, g = unpack(self._endian + '7i', data)
+        #matrix_num, form, mrows, ncols, tout, nvalues, g = unpack(self._endian + b'7i', data)
 
         #           good   good   good  good  ???    ???
-        matrix_num, ncols, mrows, form, tout, nvalues, g = unpack(self._endian + '7i', data)
+        matrix_num, ncols, mrows, form, tout, nvalues, g = unpack(self._endian + b'7i', data)
         #print('g =', g)
 
         m = Matrix(table_name, form=form)
@@ -1391,7 +1391,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
 
         if len(data) == 16:
-            name, ai, bi = unpack(self._endian + '8s 2i', data)
+            name, ai, bi = unpack(self._endian + b'8s 2i', data)
             assert ai == 170, ai
             assert bi == 170, bi
         else:

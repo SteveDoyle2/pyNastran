@@ -82,7 +82,7 @@ class OGPF(OP2Common):
 
                         nids = ints[:, 0] // 10
                         eids = ints[:, 1]
-                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)#[:, 2:3]
+                        strings = fromstring(data, dtype=self._uendian + 'S8').reshape(nnodes, 5)#[:, 2:3]
                         if obj.is_unique:
                             obj.node_element[itime, istart:iend, 0] = nids
                             obj.node_element[itime, istart:iend, 1] = eids
@@ -101,7 +101,7 @@ class OGPF(OP2Common):
                     if self.is_debug_file:
                         if itime != 0:
                             ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 10)
-                            strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)
+                            strings = fromstring(data, dtype=self._uendian + 'S8').reshape(nnodes, 5)
                         for i in range(iend - istart):
                             self.binary_debug.write('  nid=%s - (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 ints[i, 0] // 10,
@@ -150,7 +150,7 @@ class OGPF(OP2Common):
                         eids = ints[:, 1]
                         obj.node_element[istart:iend, 0] = nids
                         obj.node_element[istart:iend, 1] = eids
-                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 8)
+                        strings = fromstring(data, dtype=self._uendian + 'S8').reshape(nnodes, 8)
                         obj.element_names[istart:iend] = strings[:, 1]
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 16)

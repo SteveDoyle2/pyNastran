@@ -94,7 +94,7 @@ class WeightResponse(object):
             #'6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r seid=%r' % (
             #response_type, response_label, row_id, column_id,
             #dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, seid))
-        #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
+        #out = unpack(self._endian + b'iii 8s iiff f fffff', data)
         #print(out)
         #msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
             #response_label, region, subcase, row_id, column_id)

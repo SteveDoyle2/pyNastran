@@ -333,7 +333,7 @@ class ONR(OP2Common):
                 floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
-                strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 5)
+                strings = fromstring(data, dtype=self._uendian + 'S4').reshape(nelements, 5)
                 #print(strings)
                 if obj.itime == 0:
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
@@ -441,7 +441,7 @@ class ONR(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 6)
+                    strings = fromstring(data, dtype=self._uendian + 'S4').reshape(nelements, 6)
                     s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
 
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 6)

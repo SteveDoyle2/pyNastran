@@ -269,7 +269,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _read_title_helper(self, data):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
-        title, subtitle, label = unpack(b(self._endian + b'128s128s128s'), data[200:])
+        title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
         self.title = title.decode(self.encoding).strip()
         subtitle = subtitle.decode(self.encoding)
         self.label = label.decode(self.encoding).strip()
