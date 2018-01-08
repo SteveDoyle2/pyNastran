@@ -269,7 +269,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _read_title_helper(self, data):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
-        title, subtitle, label = unpack(b(self._endian + '128s128s128s'), data[200:])
+        title, subtitle, label = unpack(b(self._endian + b'128s128s128s'), data[200:])
         self.title = title.decode(self.encoding).strip()
         subtitle = subtitle.decode(self.encoding)
         self.label = label.decode(self.encoding).strip()
@@ -1488,7 +1488,7 @@ class OP2Common(Op2Codes, F06Writer):
           TCODE1/1000 = 0
           TCODE = f1(TCODE1)
         """
-        (approach_code, tCode, int3, isubcase) = unpack(b(self._endian + '4i'), data[:16])
+        (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4i', data[:16])
         self.approach_code = approach_code
         self.tCode = tCode
         self.int3 = int3
@@ -1935,9 +1935,9 @@ class OP2Common(Op2Codes, F06Writer):
         self.idtype = npdtype(self._uendian + 'i4')
         self.double_dtype = npdtype(self._uendian + 'd')
         self.long_dtype = npdtype(self._uendian + 'i8')
-        #self.idtype = npdtype(self._endian + 'i8')
+        #self.idtype = npdtype(self._uendian + 'i8')
 
-        #self.sdtype = npdtype(self._endian + '4s')
+        #self.sdtype = npdtype(self._uendian + '4s')
         self.struct_i = Struct(self._endian + b'i')
         self.struct_3i = Struct(self._endian + b'3i')
         self.struct_8s = Struct(self._endian + b'8s')

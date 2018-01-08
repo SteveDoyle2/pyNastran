@@ -268,21 +268,21 @@ class OP2(object):
         self._Str4 = struct.Struct(self._endian + b'i')
         if reclen == 4:
             self._bit64 = False
-            self._intstr = self._endian + 'i4'
-            self._intstru = self._endian + '%di'
+            self._intstr = self._endian + b'i4'
+            self._intstru = self._endian + b'%di'
             self._ibytes = 4
             self._Str = self._Str4
         else:
             self._bit64 = True
-            self._intstr = self._endian + 'i8'
-            self._intstru = self._endian + '%dq'
+            self._intstr = self._endian + b'i8'
+            self._intstru = self._endian + b'%dq'
             self._ibytes = 8
             self._Str = struct.Struct(self._endian + b'q')
         #print('bit64 = ', self._bit64)
 
         self._rowsCutoff = 3000
-        self._int32str = self._endian + 'i4'
-        self._int32stru = self._endian + '%di'
+        self._int32str = self._endian + b'i4'
+        self._int32stru = self._endian + b'%di'
         self._read_op2_header()
         self._postheaderpos = self._fileh.tell()
         self.directory(verbose=False)
@@ -424,8 +424,8 @@ class OP2(object):
         else:
             intsize = 4
         col = 0
-        frm = self._endian + '%dd'
-        print('frm =', frm)
+        frm = self._endian + b'%dd'
+        #print('frm =', frm)
         while dtype > 0:  # read in matrix columns
             # key is number of elements in next record (row # followed
             # by key-1 real numbers)
@@ -729,12 +729,12 @@ class OP2(object):
             frmu = self._intstru.replace('i', 'I')
             bytes_per = self._ibytes
         elif form == 'double':
-            frm = self._endian + 'f8'
-            frmu = self._endian + '%dd'
+            frm = self._endian + b'f8'
+            frmu = self._endian + b'%dd'
             bytes_per = 8
         elif form == 'single':
-            frm = self._endian + 'f4'
-            frmu = self._endian + '%df'
+            frm = self._endian + b'f4'
+            frmu = self._endian + b'%df'
             bytes_per = 4
         elif form == 'bytes':
             data = b''
@@ -1027,8 +1027,8 @@ class OP2(object):
         # read 2nd record:
         key = self._get_key()
         data2 = np.zeros(0, dtype='u4')
-        frm = self._endian + 'u4'
-        frmu = self._endian + '%dI'
+        frm = self._uendian + 'u4'
+        frmu = self._endian + b'%dI'
         if self._ibytes == 8:
             mult = 2
         else:
@@ -1098,7 +1098,7 @@ class OP2(object):
             sbytes = 48 + 24
             wpg = 9   # words per grid
             wpd = 1   # words per double
-        rfrm = self._endian + '%dd'
+        rfrm = self._endian + b'%dd'
         key = self._get_key()
 
         datarec = []
@@ -1186,7 +1186,7 @@ class OP2(object):
         sbytes = 16
         wpg = 4  # words per grid
         wpd = 1  # words per single
-        rfrm = self._endian + '%df'
+        rfrm = self._endian + b'%df'
         key = self._get_key()
 
         datarec = []
@@ -1295,7 +1295,7 @@ class OP2(object):
         wpg = 14   # words per grid
         wpd = 1    # words per single
         key = self._get_key()
-        rfrm = self._endian + '%df'
+        rfrm = self._endian + b'%df'
         datarec = []
         ileft = 0    # integers to read that are left over
         dleft = 0    # singles left
@@ -1639,12 +1639,12 @@ class OP2(object):
             return ir_str, ir_bytes, ints_rec2
 
         if self._bit64:
-            rfrm = self._endian + 'f8'
-            rfrmu = self._endian + '%dd'
+            rfrm = self._endian + b'f8'
+            rfrmu = self._endian + b'%dd'
             rsize = 8
         else:
-            rfrm = self._endian + 'f4'
-            rfrmu = self._endian + '%df'
+            rfrm = self._endian + b'f4'
+            rfrmu = self._endian + b'%df'
             rsize = 4
         u1 = self.read_op2_record()
         elemtype = u1[1]

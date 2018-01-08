@@ -124,13 +124,13 @@ class OP4(object):
         _bytes_i : integer
             Either 4 or 8, to go with Str_i.
         _str_sr : string
-            Either self._endian + '%df' or self._endian + '%dd',
+            Either self._endian + b'%df' or self._endian + b'%dd',
             depending on self._bit64; for reading single precision
             reals.
         _bytes_sr : integer
             Number of bytes in single real.
         _str_dr : string
-            self._endian + '%dd', for reading double precision reals.
+            self._endian + b'%dd', for reading double precision reals.
         _wordsperdouble : integer
             Either 1 or 2; 2 if self._bit64 is False.
         """
@@ -164,7 +164,7 @@ class OP4(object):
                 self._bytes_iii = 24
                 self._Str_iiii = struct.Struct(self._endian + b'4q')
                 self._bytes_iiii = 32
-                self._str_sr = self._endian + '%dd'
+                self._str_sr = self._endian + b'%dd'
                 self._str_sr_fromfile = np.dtype(self._uendian + 'f8')
                 self._bytes_sr = 8
                 self._wordsperdouble = 1
@@ -178,12 +178,12 @@ class OP4(object):
                 self._bytes_iii = 12
                 self._Str_iiii = struct.Struct(self._endian + b'4i')
                 self._bytes_iiii = 16
-                self._str_sr = self._endian + '%df'
+                self._str_sr = self._endian + b'%df'
                 self._str_sr_fromfile = np.dtype(self._uendian + 'f4')
                 self._bytes_sr = 4
                 self._wordsperdouble = 2
             self._str_dr = self._endian + b'%dd'
-            self._str_dr_fromfile = np.dtype(self._endian + 'f8')
+            self._str_dr_fromfile = np.dtype(self._yendian + 'f8')
             self._fileh.seek(0)
         else:
             self._ascii = True

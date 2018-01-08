@@ -674,7 +674,7 @@ class MinorTables(OP2Common):
         read_r1tabrg = True
         if read_r1tabrg:
             #self.show_data(data, types='ifs', endian=None)
-            out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
+            out = unpack(self._endian + b'iii 8s iiii i iiiii', data)
             # per the R1TAB DMAP page:
             #   all indicies are downshift by 1
             #   indices above out[3] are off by +2 because of the 2 field response_label
@@ -899,19 +899,19 @@ class MinorTables(OP2Common):
         if tout == 1:
             nfloats = nvalues
             nterms = nvalues
-            fmt = self._endian + 'i %if' % nfloats
+            fmt = self._endian + b'i %if' % nfloats
         elif tout == 2:
             nfloats = nvalues // 2
             nterms = nvalues // 2
-            fmt = self._endian + 'i %id' % nfloats
+            fmt = self._endian + b'i %id' % nfloats
         elif tout == 3:
             nfloats = nvalues
             nterms = nvalues // 2
-            fmt = self._endian + 'i %if' % nfloats
+            fmt = self._endian + b'i %if' % nfloats
         elif tout == 4:
             nfloats = nvalues // 2
             nterms = nvalues // 4
-            fmt = self._endian + 'i %id' % nfloats
+            fmt = self._endian + b'i %id' % nfloats
         else:
             raise RuntimeError('tout = %s' % tout)
         return fmt, nfloats, nterms
