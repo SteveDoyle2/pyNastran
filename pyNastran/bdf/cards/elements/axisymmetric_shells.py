@@ -138,7 +138,7 @@ class CTRAX3(AxisymmetricTri):
         assert len(card) <= 7, 'len(CTRAX3 card) = %i\ncard=%s' % (len(card), card)
         return CTRAX3(eid, pid, nids, theta=theta, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -284,7 +284,7 @@ class CTRAX6(AxisymmetricTri):
         assert len(card) <= 10, 'len(CTRAX6 card) = %i\ncard=%s' % (len(card), card)
         return CTRAX6(eid, pid, nids, theta=theta, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -427,7 +427,7 @@ class CTRIAX(AxisymmetricTri):
         assert len(card) <= 10, 'len(CTRIAX card) = %i\ncard=%s' % (len(card), card)
         return CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -608,7 +608,7 @@ class CTRIAX6(TriShell):
         self.nodes_ref = None  # type: Optional[List[Any]]
         self.mid_ref = None  # type: Optional[Any]
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         nids = self.node_ids
         edges = self.get_edge_ids()

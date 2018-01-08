@@ -2,7 +2,7 @@
 defines readers for BDF objects in the OP2 DIT/DITS table
 """
 from __future__ import print_function
-from struct import unpack
+from struct import Struct
 from six.moves import range
 import numpy as np
 
@@ -58,16 +58,16 @@ class DIT(GeomCommon):
         Words 9 through 10 repeat until (-1,-1) occurs
         """
         ndata = len(data)
-        nfields = (ndata - n) // 4
+        #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.fromstring(data[n:], self.idtype)
-        floats = np.fromstring(data[n:], self.fdtype)
+        ints = np.fromstring(datan, self.idtype)
+        floats = np.fromstring(datan, self.fdtype)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
         for iend in iminus1_delta:
-            datai = data[n+istart*4 : n+iend*4]
+            #datai = data[n+istart*4 : n+iend*4]
             tid = ints[istart]
             deltai = iend - istart - 8 # subtract 2 for sid, global scale
             assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
@@ -98,9 +98,10 @@ class DIT(GeomCommon):
         GUST(1005,10,174) - the marker for Record 1
         """
         nentries = (len(data) - n) // 20  # 5*4
+        struct_2i3f = Struct('ii3f')
         for i in range(nentries):
             edata = data[n:n + 20]
-            out = unpack('ii3f', edata)
+            out = struct_2i3f.unpack(edata)
             # (sid, dload, wg, x0, V) = out
             gust = GUST.add_op2_data(out)
             self._add_gust_object(gust)
@@ -120,9 +121,12 @@ class DIT(GeomCommon):
     def _read_table1(self, cls, add_method, data, n, table_name, add_codes=True):
         nentries = 0
         ndata = len(data)
+        struct_8i2f = Struct('8iff')
+        struct_ff = Struct('ff')
+        struct_2i = self.struct_2i
         while ndata - n >= 40:
             edata = data[n:n + 40]
-            out = unpack('8iff', edata)
+            out = struct_8i2f.unpack(edata)
             (tid, code_x, code_y, a, a, a, a, a, x, y) = out
             if tid > 100000000:
                 tid = -(tid - 100000000)
@@ -133,8 +137,8 @@ class DIT(GeomCommon):
 
             n += 40
             while 1:
-                (xint, yint) = unpack('ii', data[n:n + 8])
-                (x, y) = unpack('ff', data[n:n + 8])
+                (xint, yint) = struct_2i.unpack(data[n:n + 8])
+                (x, y) = struct_ff.unpack(data[n:n + 8])
 
                 n += 8
                 if [xint, yint] == [-1, -1]:
@@ -168,15 +172,18 @@ class DIT(GeomCommon):
         """
         ndata = len(data)
         nentries = 0
+        struct1 = Struct('ifiiiiiiff')
+        struct_ff = Struct('ff')
+        struct_2i = self.struct_2i
         while n < ndata:
             edata = data[n:n + 40]
-            out = unpack('ifiiiiiiff', edata)
+            out = struct1.unpack(edata)
             (tid, x1, a, a, a, a, a, a, x, y) = out
             data_in = [tid, x1, x, y]
             n += 40
             while 1:
-                (xint, yint) = unpack('ii', data[n:n + 8])
-                (x, y) = unpack('ff', data[n:n + 8])
+                (xint, yint) = struct_2i.unpack(data[n:n + 8])
+                (x, y) = struct_ff.unpack(data[n:n + 8])
 
                 n += 8
                 if [xint, yint] == [-1, -1]:
@@ -236,15 +243,18 @@ class DIT(GeomCommon):
     def _read_table3(self, cls, add_method, data, n, table_name):
         nentries = 0
         ndata = len(data)
+        struct1 = Struct('iffiiiiiff')
+        struct_2i = self.struct_2i
+        struct_ff = Struct('ff')
         while ndata - n >= 40:
             edata = data[n:n + 40]
-            out = unpack('iffiiiiiff', edata)
+            out = struct1.unpack(edata)
             (tid, x1, x2, a, a, a, a, a, x, y) = out
             data_in = [tid, x1, x2, x, y]
             n += 40
             while 1:
-                (xint, yint) = unpack('ii', data[n:n + 8])
-                (x, y) = unpack('ff', data[n:n + 8])
+                (xint, yint) = struct_2i.unpack(data[n:n + 8])
+                (x, y) = struct_ff.unpack(data[n:n + 8])
 
                 n += 8
                 if [xint, yint] == [-1, -1]:
@@ -270,15 +280,18 @@ class DIT(GeomCommon):
         """
         nentries = 0
         ndata = len(data)
+        struct1 = Struct('i 4f 3i f')
+        struct_i = self.struct_i
+        struct_f = Struct('f')
         while ndata - n >= 36:
             edata = data[n:n + 36]
-            out = unpack('i 4f 3i f', edata)
+            out = struct1.unpack(edata)
             (tid, x1, x2, x3, x4, a, b, c, x) = out
             data_in = [tid, x1, x2, x3, x4, x]
             n += 40
             while 1:
-                xint, = unpack('i', data[n:n + 4])
-                x, = unpack('f', data[n:n + 4])
+                xint, = struct_i.unpack(data[n:n + 4])
+                x, = struct_f.unpack(data[n:n + 4])
 
                 n += 4
                 if xint == -1:
@@ -305,11 +318,11 @@ class DIT(GeomCommon):
         Words 9 through 10 repeat until (-1,-1) occurs
         """
         ndata = len(data)
-        nfields = (ndata - n) // 4
+        #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.fromstring(data[n:], self.idtype)
-        floats = np.fromstring(data[n:], self.fdtype)
+        ints = np.fromstring(datan, self.idtype)
+        floats = np.fromstring(datan, self.fdtype)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
@@ -350,7 +363,7 @@ def get_iend_from_ints(ints):
     istart = iend + 2
     for (-1, -1) flag to end a table
     """
-    debug = True
+    #debug = True
     iminus1 = np.where(ints == -1)[0]
     delta = iminus1[1:] - iminus1[:-1]
     #if debug:

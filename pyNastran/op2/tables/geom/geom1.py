@@ -2,8 +2,7 @@
 defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 """
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
-from struct import unpack, Struct
-from six import b
+from struct import Struct
 from six.moves import range
 import numpy as np
 
@@ -106,11 +105,11 @@ class GEOM1(GeomCommon):
         """
         (1701,17,6) - the marker for Record 1
         """
-        s = Struct(b(self._endian + '6i'))
+        struct_6i = Struct(self._endian + b'6i')
         nentries = (len(data) - n) // 24
         for i in range(nentries):
             edata = data[n:n + 24]  # 6*4
-            out = s.unpack(edata)
+            out = struct_6i.unpack(edata)
             (cid, one, two, g1, g2, g3) = out
             assert one in [1, 2], one
             assert two in [1, 2], two
@@ -127,11 +126,11 @@ class GEOM1(GeomCommon):
         """
         (1801,18,5) - the marker for Record 2
         """
-        s = Struct(b(self._endian + '6i'))
+        struct_6i = Struct(self._endian + b'6i')
         nentries = (len(data) - n) // 24
         for i in range(nentries):
             edata = data[n:n + 24]  # 6*4
-            out = s.unpack(edata)
+            out = struct_6i.unpack(edata)
             (cid, one1, one2, g1, g2, g3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CORD1R=%s\n' % str(out))
@@ -148,11 +147,11 @@ class GEOM1(GeomCommon):
         """
         (1901,19,7) - the marker for Record 3
         """
-        s = Struct(b(self._endian + '6i'))
+        struct_6i = Struct(self._endian + b'6i')
         nentries = (len(data) - n) // 24
         for i in range(nentries):
             edata = data[n:n + 24]  # 6*4
-            out = s.unpack(edata)
+            out = struct_6i.unpack(edata)
             (cid, three, one, g1, g2, g3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CORD1S=%s\n' % str(out))
@@ -169,7 +168,7 @@ class GEOM1(GeomCommon):
         """
         (2001,20,9) - the marker for Record 4
         """
-        s = Struct(b(self._endian + '4i9f'))
+        s = Struct(self._endian + b'4i9f')
         nentries = (len(data) - n) // 52
         for i in range(nentries):
             edata = data[n:n + 52]  # 13*4
@@ -191,10 +190,11 @@ class GEOM1(GeomCommon):
         (2101,21,8) - the marker for Record 5
         """
         nentries = (len(data) - n) // 52
+        s = Struct(self._endian + b'4i9f')
         for i in range(nentries):
             edata = data[n:n + 52]  # 13*4
             (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1,
-             c2, c3) = unpack(b(self._endian + '4i9f'), edata)
+             c2, c3) = s.unpack(edata)
             assert one == 1, one
             assert two == 2, two
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
@@ -212,7 +212,7 @@ class GEOM1(GeomCommon):
         """
         (2201,22,10) - the marker for Record 6
         """
-        s = Struct(b(self._endian + '4i9f'))
+        s = Struct(self._endian + b'4i9f')
         nentries = (len(data) - n) // 52
         for i in range(nentries):
             edata = data[n:n + 52]  # 13*4
@@ -232,11 +232,11 @@ class GEOM1(GeomCommon):
         (14301,143,651) - the marker for Record 7
         .. todo:: isnt this a CORD3G, not a CORD3R ???
         """
-        s = Struct(b(self._endian + '4i'))
+        struct_4i = Struct(self._endian + b'4i')
         nentries = (len(data) - n) // 16
         for i in range(nentries):
             edata = data[n:n + 16]  # 4*4
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             (cid, n1, n2, n3) = out
             coord = CORD3G.add_op2_data(out)
             if self.is_debug_file:
@@ -248,7 +248,7 @@ class GEOM1(GeomCommon):
 
     def _read_grid(self, data, n):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
-        s = Struct(b(self._endian + 'ii3f3i'))
+        s = Struct(self._endian + b'ii3f3i')
         ntotal = 32
         nentries = (len(data) - n) // ntotal
         nfailed = 0
@@ -281,11 +281,11 @@ class GEOM1(GeomCommon):
 
     def _read_seqgp(self, data, n):
         """(5301,53,4) - the marker for Record 27"""
-        s = Struct(b(self._endian + '2i'))
+        struct_2i = Struct(self._endian + b'2i')
         nentries = (len(data) - n) // 8
         for i in range(nentries):
             edata = data[n:n + 8]  # 2*4
-            out = s.unpack(edata)
+            out = struct_2i.unpack(edata)
             # (nid, seid) = out
             if self.is_debug_file:
                 self.binary_debug.write('  SEQGP=%s\n' % str(out))
@@ -299,7 +299,7 @@ class GEOM1(GeomCommon):
         """
         POINT(6001,60,377)
         """
-        s = Struct(b(self._endian + '2i3f'))
+        s = Struct(self._endian + b'2i3f')
         nentries = (len(data) - n) // 20
         for i in range(nentries):
             edata = data[n:n + 20]  # 5*4
@@ -314,11 +314,11 @@ class GEOM1(GeomCommon):
         return n
 
     def _read_cmass2(self, data, n):
-        s = Struct(b(self._endian + 'if4i'))
+        struct_i4fi = Struct(self._endian + b'if4i')
         nentries = (len(data) - n) // 24
         for i in range(nentries):
             edata = data[n:n + 24]  # 6*4
-            out = s.unpack(edata)
+            out = struct_i4fi.unpack(edata)
             # (eid, mass, g1, g2, c1, c2) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CMASS2=%s\n' % str(out))
@@ -330,11 +330,11 @@ class GEOM1(GeomCommon):
         #return len(data)
 
     def _read_cvisc(self, data, n):
-        s = Struct(b(self._endian + '4i'))
+        struct_4i = Struct(self._endian + b'4i')
         nentries = (len(data) - n) // 16
         for i in range(nentries):
             edata = data[n:n + 16]  # 4*4
-            out = s.unpack(edata)
+            out = struct_4i.unpack(edata)
             # (eid, pid, n1, n2) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CVISC=%s\n' % str(out))

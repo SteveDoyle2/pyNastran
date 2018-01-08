@@ -4,6 +4,7 @@ All set cards are defined in this file.  This includes:
 * sets
   * SET1, SET3, RADSET # ??? RADSET
 * asets - aset, aset1
+* omits - omit, omit1
 * bsets - bset, bset1
 * csets - cset, cset1
 * qsets - qset, qset1
@@ -275,10 +276,12 @@ class ASET(ABCQSet):
 
         Parameters
         ----------
-        components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to be retained (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
 
         ..note :: the length of components and ids must be the same
         """
@@ -308,10 +311,12 @@ class BSET(ABCQSet):
 
         Parameters
         ----------
-        components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to be fixed (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
 
         ..note :: the length of components and ids must be the same
         """
@@ -320,9 +325,9 @@ class BSET(ABCQSet):
 
 class CSET(ABCQSet):
     """
-    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set)
-    during generalized dynamic reduction or component mode synthesis
-    calculations.
+    Defines the degree of freedoms that will be free during a
+    generalized dynamic reduction or component model synthesis
+    calculation.
 
     +------+-----+----+-----+------+-----+----+-----+----+
     |  1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
@@ -342,10 +347,12 @@ class CSET(ABCQSet):
 
         Parameters
         ----------
-        components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to be free (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
 
         ..note :: the length of components and ids must be the same
         """
@@ -354,8 +361,8 @@ class CSET(ABCQSet):
 
 class QSET(ABCQSet):
     """
-    Defines generalized degrees-of-freedom (q-set) to be used for dynamic
-    reduction or component mode synthesis.
+    Defines generalized degrees-of-freedom (q-set) to be used for
+    dynamic reduction or component mode synthesis.
 
     +------+-----+----+-----+------+-----+----+-----+----+
     |  1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
@@ -368,6 +375,20 @@ class QSET(ABCQSet):
     type = 'QSET'
 
     def __init__(self, ids, components, comment=''):
+        """
+        Creates a QSET card, which defines generalized degrees of
+        freedom (q-set) to be used for dynamic reduction or component
+        mode synthesis.
+
+        Parameters
+        ----------
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms to be created (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+        """
         ABCQSet.__init__(self, ids, components, comment)
 
 
@@ -388,7 +409,7 @@ class ABQSet1(Set):
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     """
     type = 'ABQSet1'
-    def __init__(self, components, ids, comment=''):
+    def __init__(self, ids, components, comment=''):
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -402,6 +423,8 @@ class ABQSet1(Set):
         self.ids = expand_thru(ids)
         self.ids_ref = None
 
+        self.use_thru = True
+
     @classmethod
     def add_card(cls, card, comment=''):
         components = fcomponents_or_blank(card, 1, 'components', 0)
@@ -414,7 +437,7 @@ class ABQSet1(Set):
             if idi:
                 i += 1
                 ids.append(idi)
-        return cls(components, ids, comment=comment)
+        return cls(ids, components, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -428,7 +451,7 @@ class ABQSet1(Set):
             ids = list(range(data[2], data[3]+1))
         else:
             raise NotImplementedError('thru_flag=%s data=%s' % (thru_flag, data))
-        return cls(components, ids, comment=comment)
+        return cls(ids, components, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -459,7 +482,11 @@ class ABQSet1(Set):
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = [self.type, self.components] + collapse_thru(self.node_ids)
+        if self.use_thru:
+            node_ids_list = collapse_thru(self.node_ids)
+        else:
+            node_ids_list = self.node_ids
+        list_fields = [self.type, self.components] + node_ids_list
         return list_fields
 
     def __repr__(self):
@@ -484,7 +511,7 @@ class SuperABQSet1(Set):
     +----------+------+-----+------+------+-----+-----+-----+-----+
     """
     type = 'SuperABQSet1'
-    def __init__(self, seid, components, ids, comment=''):
+    def __init__(self, seid, ids, components, comment=''):
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -515,7 +542,7 @@ class SuperABQSet1(Set):
                 i += 1
                 ids.append(idi)
         ids = expand_thru(ids)
-        return cls(seid, components, ids, comment=comment)
+        return cls(seid, ids, components, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -575,19 +602,54 @@ class ASET1(ABQSet1):
     """
     type = 'ASET1'
 
-    def __init__(self, components, ids, comment=''):
+    def __init__(self, ids, components, comment=''):
         """
         Creates an ASET1 card, which defines the degree of freedoms that
         will be retained during an ASET modal reduction.
 
         Parameters
         ----------
-        components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : str
+            the degree of freedoms to be retained (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
         """
-        ABQSet1.__init__(self, components, ids, comment)
+        ABQSet1.__init__(self, ids, components, comment)
+
+
+class OMIT1(ABQSet1):
+    """
+    Defines degrees-of-freedom to be excluded (o-set) from the analysis set (a-set).
+
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+======+=====+=====+=====+=====+=====+
+    | OMIT  |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |       | ID8 | ID9 |      |     |     |     |     |     |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    | OMIT1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    """
+    type = 'OMIT1'
+
+    def __init__(self, ids, components, comment=''):
+        """
+        Creates an OMIT1 card, which defines the degree of freedoms that
+        will be excluded (o-set) from the analysis set (a-set).
+
+        Parameters
+        ----------
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : str
+            the degree of freedoms to be omitted (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+        """
+        ABQSet1.__init__(self, ids, components, comment)
 
 
 class BSET1(ABQSet1):
@@ -608,7 +670,7 @@ class BSET1(ABQSet1):
     """
     type = 'BSET1'
 
-    def __init__(self, components, ids, comment=''):
+    def __init__(self, ids, components, comment=''):
         """
         Creates an BSET1 card, which defines the degree of freedoms that
         will be fixed during a generalized dynamic reduction or component
@@ -616,19 +678,21 @@ class BSET1(ABQSet1):
 
         Parameters
         ----------
-        components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : str
+            the degree of freedoms to be fixed (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
         """
-        ABQSet1.__init__(self, components, ids, comment)
+        ABQSet1.__init__(self, ids, components, comment)
 
 
 class CSET1(Set):
     """
-    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set)
-    during generalized dynamic reduction or component mode synthesis
-    calculations.
+    Defines the degree of freedoms that will be free during a
+    generalized dynamic reduction or component model synthesis
+    calculation.
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     |   1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
@@ -652,10 +716,12 @@ class CSET1(Set):
 
         Parameters
         ----------
-        components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : str
+            the degree of freedoms to be free (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
         """
         Set.__init__(self)
         if comment:
@@ -725,13 +791,27 @@ class CSET1(Set):
 
 class QSET1(ABQSet1):
     """
-    Defines generalized degrees-of-freedom (q-set) to be used for dynamic
-    reduction or component mode synthesis.
+    Defines generalized degrees-of-freedom (q-set) to be used for
+    dynamic reduction or component mode synthesis.
     """
     type = 'QSET1'
 
-    def __init__(self, components, ids, comment=''):
-        ABQSet1.__init__(self, components, ids, comment)
+    def __init__(self, ids, components, comment=''):
+        """
+        Creates a QSET1 card, which defines generalized degrees of
+        freedom (q-set) to be used for dynamic reduction or component
+        mode synthesis.
+
+        Parameters
+        ----------
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : str
+            the degree of freedoms to be created (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+        """
+        ABQSet1.__init__(self, ids, components, comment)
 
 
 class SET1(Set):
@@ -744,7 +824,7 @@ class SET1(Set):
     +======+========+========+=====+======+=====+=====+======+=====+
     | SET1 |  SID   |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
     +------+--------+--------+-----+------+-----+-----+------+-----+
-    |      |  ID8   | -etc.- |     |      |     |     |      |     |
+    |      |  ID8   |  etc.  |     |      |     |     |      |     |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     | SET1 |   3    |   31   | 62  |  93  | 124 | 16  |  17  | 18  |
     +------+--------+--------+-----+------+-----+-----+------+-----+
@@ -752,7 +832,7 @@ class SET1(Set):
     +------+--------+--------+-----+------+-----+-----+------+-----+
     | SET1 |   6    |   29   | 32  | THRU | 50  | 61  | THRU | 70  |
     +------+--------+--------+-----+------+-----+-----+------+-----+
-    |      |   17   |  57    |     |      |     |     |      |     |
+    |      |   17   |   57   |     |      |     |     |      |     |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     """
     type = 'SET1'
@@ -773,6 +853,8 @@ class SET1(Set):
             ``ids = [1, 3, 5, THRU, 10]``
         is_skin : bool; default=False
             if is_skin is used; ids must be empty
+        comment : str; default=''
+            a comment for the card
         """
         Set.__init__(self)
         if comment:
@@ -838,7 +920,7 @@ class SET1(Set):
         ids = self.get_ids()
         return ['SET1', self.sid] + skin + self.get_ids()
 
-    def cross_reference(self, model, xref_type, msg='', allow_empty_nodes=False):
+    def cross_reference_set(self, model, xref_type, msg='', allow_empty_nodes=False):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -847,7 +929,7 @@ class SET1(Set):
         model : BDF()
             the BDF object
         xref_type : str
-            {'Node'}
+            {'Node', 'Point'}
         allow_empty_nodes : bool; default=False
             do all nodes need to exist?
 
@@ -868,7 +950,7 @@ class SET1(Set):
         elif xref_type == 'Point':
             self.ids_ref = model.Points(self.get_ids(), msg=msg)
         else:
-            raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
+            raise NotImplementedError("xref_type=%r and must be ['Node', 'Point']" % xref_type)
         self.xref_type = xref_type
 
     def safe_cross_reference(self, model, xref_type, msg='', allow_empty_nodes=False):
@@ -904,7 +986,7 @@ class SET1(Set):
         elif xref_type == 'Point':
             self.ids_ref, out = model.SafePoints(self.get_ids(), msg=msg)
         else:
-            raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
+            raise NotImplementedError("xref_type=%r and must be ['Node', 'Point']" % xref_type)
         self.xref_type = xref_type
 
     def uncross_reference(self):
@@ -1031,7 +1113,7 @@ class SET3(Set):
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
         return ids
 
-    def cross_reference(self, model, xref_type, msg=''):
+    def cross_reference_set(self, model, xref_type, msg=''):
         msg = ' which is required by SET3 sid=%s%s' % (self.sid, msg)
         #if xref_type == 'Node':
             #self.ids = model.Nodes(self.get_ids(), msg=msg)
@@ -1137,6 +1219,7 @@ class SET3(Set):
     def write_card(self, size=8, is_double=False):
         return str(self)
 
+
 class SESET(SetSuper):
     """
     Defines interior grid points for a superelement.
@@ -1221,21 +1304,21 @@ class SEBSET(SuperABCQSet):
 class SEBSET1(SuperABQSet1):
     type = 'SEBSET1'
 
-    def __init__(self, seid, components, ids, comment=''):
-        SuperABQSet1.__init__(self, seid, components, ids, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABQSet1.__init__(self, seid, ids, components, comment)
 
 
 class SECSET(SuperABCQSet):
     type = 'SECSET'
 
-    def __init__(self, seid, components, ids, comment=''):
-        SuperABCQSet.__init__(self, seid, components, ids, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SECSET1(SuperABQSet1):
     type = 'SECSET1'
 
-    def __init__(self, seid, components, ids, comment=''):
-        SuperABQSet1.__init__(self, seid, components, ids, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABQSet1.__init__(self, seid, ids, components, comment)
 
 
 class SEQSET(SuperABCQSet):
@@ -1247,15 +1330,15 @@ class SEQSET(SuperABCQSet):
 class SEQSET1(SuperABQSet1):
     type = 'SEQSET1'
 
-    def __init__(self, seid, components, ids, comment=''):
-        SuperABQSet1.__init__(self, seid, components, ids, comment)
+    def __init__(self, seid, ids, components, comment=''):
+        SuperABQSet1.__init__(self, seid, ids, components, comment)
 
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     """
     Used with the CSUPER entry to define the correspondence of the
-    exterior grid points between an identical or mirror-image superelement
-    and its primary superelement.
+    exterior grid points between an identical or mirror-image
+    superelement and its primary superelement.
     """
     type = 'SEQSEP'
 
@@ -1361,7 +1444,22 @@ class USET(Set):
     +------+-------+-----+------+-----+----+-----+----+
     """
     type = 'USET'
-    def __init__(self, name, components, ids, comment=''):
+    def __init__(self, name, ids, components, comment=''):
+        """
+        Creates a USET card, which defines a degrees-of-freedom set.
+
+        Parameters
+        ----------
+        name : str
+            SNAME Set name. (One to four characters or the word 'ZERO'
+            followed by the set name.)
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+        """
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -1394,7 +1492,7 @@ class USET(Set):
             component = parse_components(card, i + 1, 'component' + str(iset))
             components.append(component)
             ids.append(idi)
-        return USET(name, components, ids, comment=comment)
+        return USET(name, ids, components, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1417,7 +1515,7 @@ class USET(Set):
         component = str(data[2])
         for componenti in component:
             assert componenti in '0123456', component
-        return USET(name, [component], [nid], comment=comment)
+        return USET(name, [nid], [component], comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1451,9 +1549,10 @@ class USET(Set):
             list_fields += [idi, component]
         return list_fields
 
+
 class USET1(ABQSet1):
     """
-    Defines degrees-of-freedom in the analysis set (a-set)
+    Defines a degree-of-freedom set.
 
     +-------+-------+-----+------+------+-----+-----+-----+-----+
     |   1   |   2   |  3  |  4   |  5   |  6  |  7  |  8  |  9  |
@@ -1467,7 +1566,22 @@ class USET1(ABQSet1):
     """
     type = 'USET1'
 
-    def __init__(self, name, components, ids, comment=''):
+    def __init__(self, name, ids, components, comment=''):
+        """
+        Creates a USET1 card, which defines a degrees-of-freedom set.
+
+        Parameters
+        ----------
+        name : str
+            SNAME Set name. (One to four characters or the word 'ZERO'
+            followed by the set name.)
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+        """
         ABQSet1.__init__(self)
         if comment:
             self.comment = comment
@@ -1505,7 +1619,7 @@ class USET1(ABQSet1):
             if idi:
                 i += 1
                 ids.append(idi)
-        return USET1(name, components, ids, comment=comment)
+        return USET1(name, ids, components, comment=comment)
 
     def cross_reference(self, model):
         """

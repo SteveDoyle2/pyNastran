@@ -26,6 +26,8 @@ class Geom(object):
             x, y, z = self.xyz[ni, :]
             card = ['GRID', nid0 + ni, cp, x, y, z]
             bdf_file.write(print_card_8(card))
+        ni = nxy - 1
+
         #print('ni', ni, self.xyz.shape)
         eidi = 0
         for i in range(nx - 1):
@@ -44,7 +46,7 @@ class Geom(object):
     @property
     def elements(self):  # pragma: no cover
         nid0 = 1
-        eidi = 0
+        #eidi = 0
         k = 0
 
         nx = self.nx
@@ -110,7 +112,7 @@ class DegenGeom(object):
         i = 0
         pan.nNetworks = 1
         kt = 1
-        cpNorm = 1
+        cp_norm = 1
         for name, comps in sorted(iteritems(self.components)):
             #panair_file.write('$ name = %r\n' % name)
             for comp in comps:
@@ -121,7 +123,10 @@ class DegenGeom(object):
                 x = x.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
                 y = y.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
                 z = z.reshape((comp.lifting_surface_nx, comp.lifting_surface_ny))
-                patch = PanairPatch(pan.nNetworks, namei, kt, cpNorm, x, y, z, self.log)
+
+                xyz = np.dstack([x, y, z])
+                assert xyz.shape[2] == 3
+                patch = PanairPatch(pan.nNetworks, namei, kt, cp_norm, xyz, self.log)
                 pan.patches[i] = patch
                 pan.nNetworks += 1
                 i += 1
@@ -160,8 +165,10 @@ class DegenGeom(object):
                     z = z.reshape((2, imid+1))
 
                     #print(xend)
-                    patch = PanairPatch(pan.nNetworks, namei, kt, cpNorm,
-                                        x.T, y.T, z.T, self.log)
+                    xyz = np.dstack([x, y, z])
+                    assert xyz.shape[2] == 3
+                    patch = PanairPatch(pan.nNetworks, namei, kt, cp_norm,
+                                        xyz, self.log)
                     pan.patches[i] = patch
                     pan.nNetworks += 1
                     i += 1
@@ -176,7 +183,7 @@ class DegenGeom(object):
         ncomponents = int(line)
         degen_geom_file.readline()
 
-        for i in range(ncomponents):
+        for icomp in range(ncomponents):
             line = degen_geom_file.readline().strip().split(',')
             lifting_surface, name = line
             if lifting_surface == 'LIFTING_SURFACE':
@@ -200,20 +207,20 @@ class DegenGeom(object):
 
                 # x, y, z, u, v
                 degen_geom_file.readline()
-                for i in range(npoints):
+                for ipoint in range(npoints):
                     line = degen_geom_file.readline()
                     x, y, z, u, v = line.split(',')
-                    lifting_surface_xyz[i, :] = [x, y, z]
+                    lifting_surface_xyz[ipoint, :] = [x, y, z]
 
                 # SURFACE_FACE,5,32
                 surface_node, nx, ny = degen_geom_file.readline().strip().split(',')
                 line = degen_geom_file.readline() # nx,ny,nz,area
                 print(line)
-                for i in range(nelements):
+                for ielem in range(nelements):
                     line = degen_geom_file.readline()
                     nx, ny, nz, areai = line.split(',')
-                    normals[i, :] = [nx, ny, nz]
-                    area[i] = areai
+                    normals[ielem, :] = [nx, ny, nz]
+                    area[ielem] = areai
 
                 # TODO: the plate is very unclear...it's 6 lines with 3 normals on each line
                 #       but 6*17?

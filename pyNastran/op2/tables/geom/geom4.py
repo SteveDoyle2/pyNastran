@@ -1,7 +1,7 @@
 """
 defines readers for BDF objects in the OP2 GEOM4/GEOM4S table
 """
-#pylint: disable=C0111,C0103
+#pylint: disable=C0111,C0103,C1801
 from __future__ import print_function
 from struct import unpack, Struct
 from six import b
@@ -133,13 +133,13 @@ class GEOM4(GeomCommon):
 
     def _read_xset(self, data, n, card_name, cls, add_method):
         """common method for ASET, QSET; not USET"""
-        s = Struct(b(self._endian + '2i'))
+        struct_2i = Struct(self._endian + b'2i')
         #self.show_data(data, types='ifs')
         ntotal = 8
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            out = struct_2i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
             #(id, component) = out
@@ -306,8 +306,8 @@ class GEOM4(GeomCommon):
         ndata = len(data)
         nfields = (ndata - n) // 4
         datan = data[n:]
-        ints = unpack(b(self._endian + '%ii' % nfields), datan)
-        floats = unpack(b(self._endian + '%if' % nfields), datan)
+        ints = unpack(b(self._uendian + '%ii' % nfields), datan)
+        floats = unpack(b(self._uendian + '%if' % nfields), datan)
 
         i = 0
         nentries = 0
@@ -335,6 +335,7 @@ class GEOM4(GeomCommon):
                 self.binary_debug.write('  MPC=%s\n' % str(mpc_data))
             mpci = MPC.add_op2_data((sid, nodes, components, coefficients))
             self._add_constraint_mpc_object(mpci)
+
             nentries += 1
         self.increase_card_count('MPC', nentries)
         return len(data)
@@ -343,7 +344,7 @@ class GEOM4(GeomCommon):
         """
         MPCADD(4891,60,83) - Record 17
         """
-        nentries = (len(data) - n) // 4
+        #nentries = (len(data) - n) // 4
         datai = np.fromstring(data[n:], self.idtype)
         _read_spcadd_mpcadd(self, 'MPCADD', datai)
         return len(data)
@@ -377,7 +378,7 @@ class GEOM4(GeomCommon):
         6 CMA I Component numbers of dependent degrees-of-freedom at end A
         7 CMB I Component numbers of dependent degrees-of-freedom at end B
         """
-        s = Struct(b(self._endian + '7i'))
+        s = Struct(self._endian + b'7i')
         ntotal = 28
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -400,7 +401,7 @@ class GEOM4(GeomCommon):
 
     def _read_rbar_msc(self, data, n):
         """RBAR(6601,66,292) - Record 22 - MSC version"""
-        s = Struct(b(self._endian + '7if'))
+        s = Struct(self._endian + b'7if')
         ntotal = 32
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -468,8 +469,7 @@ class GEOM4(GeomCommon):
             #print(idata[i+3:])
             #idata
             #print(idata[i:])
-            rbe1 = self.add_rbe1(eid, Gni, Cni, Gmi, Cmi, alpha=0.)
-            #print(rbe1)
+            self.add_rbe1(eid, Gni, Cni, Gmi, Cmi, alpha=0.)
 
             nelements += 1
         self.card_count['RBE1'] = nelements
@@ -484,8 +484,8 @@ class GEOM4(GeomCommon):
           data = (1, 1, 123456, 10000, -1, 0.0,
                   2, 2, 123456, 20000, -1, 0.0,
                   3, 3, 12345,  30000, 30001, 30002, 30003, 30004, 30005, -1, 0.0,
-                  4, 4, 123,    40000, 40001, 40010, 40011, 40020, 40021, 40030, 40031, 40040, 40041, 40050, 40051, -1, 0.0,
-                  5, 5, 123,    50000, 50001, 50010, 50011, 50020, 50021, 50030, 50031, 50040, 50041, 50050, 50051, -1, 0.0)
+                  4, 4, 123,    40000, 40001, 40010, 40011, 40020, 40021, -1, 0.0,
+                  5, 5, 123,    50000, 50001, 50010, 50011, 50020, 50021, -1, 0.0)
         """
         idata = np.fromstring(data[n:], self.idtype)
         iminus1 = np.where(idata == -1)[0]
@@ -593,13 +593,13 @@ class GEOM4(GeomCommon):
 
     def _read_rrod_nx(self, data, n):
         """RROD(6501,65,291) - Record 30"""
-        s = Struct(b(self._endian + '5i'))
+        struct_5i = Struct(self._endian + b'5i')
         ntotal = 20
         nelements = (len(data) - n) // ntotal
         elements = []
         for i in range(nelements):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            out = struct_5i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  RROD=%s\n' % str(out))
             (eid, ga, gb, cma, cmb) = out
@@ -611,7 +611,7 @@ class GEOM4(GeomCommon):
 
     def _read_rrod_msc(self, data, n):
         """RROD(6501,65,291) - Record 30"""
-        s = Struct(b(self._endian + '5if'))
+        s = Struct(self._endian + b'5if')
         ntotal = 24
         nelements = (len(data) - n) // ntotal
         elements = []
@@ -694,9 +694,10 @@ class GEOM4(GeomCommon):
         """SPCOFF(5501,55,16) - Record 44"""
         ntotal = 16
         nentries = (len(data) - n) // ntotal
+        struct_3if = Struct(self._endian + b'iiif')
         for i in range(nentries):
             edata = data[n:n + 16]
-            (sid, ID, c, dx) = unpack(b(self._endian + 'iiif'), edata)
+            (sid, ID, c, dx) = struct_3if.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('SPCOFF sid=%s id=%s c=%s dx=%s\n' % (sid, ID, c, dx))
             constraint = SPCOFF.add_op2_data([sid, ID, c, dx])
@@ -726,7 +727,7 @@ class GEOM4(GeomCommon):
         #self.show_data(data, types='if')
 
         constraints = []
-        struc = Struct(b(self._endian + 'iiiif'))
+        struc = Struct(self._endian + b'iiiif')
         for i in range(nentries):
             edata = data[n:n + 20]
             (sid, nid, comp, xxx, dx) = struc.unpack(edata)
@@ -755,7 +756,7 @@ class GEOM4(GeomCommon):
         assert (len(data) - n) % ntotal == 0
         #self.show_data(data, types='if')
 
-        struc = Struct(b(self._endian + 'iiif'))
+        struc = Struct(self._endian + b'iiif')
         constraints = []
         for i in range(nentries):
             edata = data[n:n + 16]
@@ -919,7 +920,7 @@ class GEOM4(GeomCommon):
 
     def _read_spcadd(self, data, n):
         """SPCADD(5491,59,13) - Record 46"""
-        nentries = (len(data) - n) // 4
+        #nentries = (len(data) - n) // 4
         datai = np.fromstring(data[n:], self.idtype)
         _read_spcadd_mpcadd(self, 'SPCADD', datai)
         return len(data)
@@ -932,7 +933,7 @@ class GEOM4(GeomCommon):
 
     def _read_spcd_nx(self, data, n):
         """SPCD(5110,51,256) - NX specific"""
-        s = Struct(b(self._endian + '3if'))
+        struct_3if = Struct(self._endian + b'3if')
         ntotal = 16 # 4*4
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries
@@ -941,7 +942,7 @@ class GEOM4(GeomCommon):
         for i in range(nentries):
             edata = data[n:n + ntotal]
             #self.show_data(edata)
-            out = s.unpack(edata)
+            out = struct_3if.unpack(edata)
             (sid, ID, c, dx) = out
             #print(out)
             if self.is_debug_file:
@@ -962,7 +963,7 @@ class GEOM4(GeomCommon):
         4 UNDEF none Not used
         5 D     RX   Enforced displacement
         """
-        s = Struct(b(self._endian + '4if'))
+        struct_4if = Struct(self._endian + b'4if')
         ntotal = 20 # 5*4
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries
@@ -970,7 +971,7 @@ class GEOM4(GeomCommon):
         constraints = []
         for i in range(nentries):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            out = struct_4if.unpack(edata)
             (sid, ID, c, xxx, dx) = out
             assert xxx == 0, xxx
 
@@ -1016,9 +1017,9 @@ class GEOM4(GeomCommon):
     def _read_suport(self, data, n):
         """SUPORT(5601,56, 14) - Record 59"""
         nentries = (len(data) - n) // 8 # 2*4
-        s = Struct(b(self._endian + '2i'))
+        struct_2i = Struct(self._endian + b'2i')
         for i in range(nentries):
-            out = list(s.unpack(data[n:n + 8]))
+            out = list(struct_2i.unpack(data[n:n + 8]))
             if self.is_debug_file:
                 self.binary_debug.write('  SUPORT=%s\n' % str(out))
                 #self.log.info(out)
@@ -1030,7 +1031,7 @@ class GEOM4(GeomCommon):
     def _read_suport1(self, data, n):
         """SUPORT1(10100,101,472) - Record 60"""
         nfields = (len(data) - n) // 4 - 2
-        out = unpack(b(self._endian + '%ii' % nfields), data[n:n+nfields*4])
+        out = unpack(b(self._uendian + '%ii' % nfields), data[n:n+nfields*4])
 
         i = 0
         nsuports = 0
@@ -1070,13 +1071,13 @@ class GEOM4(GeomCommon):
         USET(2010,20,193) - Record 63
         (sid, nid, comp), ...
         """
-        s = Struct(b(self._endian + '3i'))
+        struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
         #self.show_data(data, types='is')
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            out = struct_3i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  USET=%s\n' % str(out))
             #(sid, id, component) = out
@@ -1102,9 +1103,10 @@ class GEOM4(GeomCommon):
         i = 0
         #print('idata = %s' % idata)
         nidata = len(idata)
+        struct_4s = Struct('4s')
         while i < nidata:
             sname = data[n+i*(4) : n+(i+1)*4]
-            sname_str = unpack('4s', sname)
+            sname_str = struct_4s.unpack(sname)
             #print('sname_str = %r' % sname_str)
             comp, thru_flag = idata[i+1:i+3]
             i += 3

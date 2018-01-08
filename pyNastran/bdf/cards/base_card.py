@@ -50,8 +50,6 @@ class BaseCard(object):
      - object_methods(self, mode='public', keys_to_skip=None)
      - comment
      - update_field(self, n, value)
-
-
     """
     def __init__(self):
         pass
@@ -81,7 +79,7 @@ class BaseCard(object):
         pass
 
     def object_attributes(self, mode='public', keys_to_skip=None):
-        """..see:: `pyNastran.utils.object_attributes(...)`"""
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -90,7 +88,7 @@ class BaseCard(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
-        """..see:: `pyNastran.utils.object_methods(...)`"""
+        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
@@ -535,11 +533,13 @@ class Element(BaseCard):
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
-        .. note::  The order of the nodes are consistent with normals that point outwards
-                   The face numbering is meaningless
+        Notes
+        -----
+        The order of the nodes are consistent with normals that point outwards
+        The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
         Example
         =======
@@ -594,8 +594,8 @@ def _format_comment(comment):
 
     Empty comments or just spaces are returned as an empty string.
 
-    Examples:
-
+    Examples
+    --------
     >>> _format_comment('a comment\ntaking two lines')
     $a comment
     $taking two lines
@@ -726,7 +726,10 @@ def expand_thru_by(fields, set_fields=True, sort_fields=True,
         False : crash
 
     .. todo:: not tested
-    .. note:: used for QBDY3 and what else ???
+
+    Notes
+    -----
+    used for QBDY3 and what else ???
     """
     if require_int:
         func = int

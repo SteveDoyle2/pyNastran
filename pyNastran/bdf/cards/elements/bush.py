@@ -241,7 +241,7 @@ class CBUSH(BushElement):
     def node_ids(self):
         return [self.Ga(), self.Gb()]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -406,7 +406,7 @@ class CBUSH1D(BushElement):
         self.cid_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -509,7 +509,7 @@ class CBUSH2D(BushElement):
         #raise NotImplementedError(data)
         #return CBUSH2D(eid, pid, [ga, gb], cid, plane, sptid, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()

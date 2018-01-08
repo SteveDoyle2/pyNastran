@@ -42,19 +42,19 @@ class OQG(OP2Common):
             '???', 'Title', 'subtitle', 'label']
 
         ## random code
-        self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
+        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
-        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## acoustic pressure flag
-        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', 'f', 13, False)
+        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', b'f', 13, False)
 
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
+        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
@@ -63,62 +63,62 @@ class OQG(OP2Common):
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics / displacement / heat flux
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             ## eigenvalue
-            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
+            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
             self.update_mode_cycle('mode_cycle')
             self.data_names = self.apply_data_code_value('data_names',
                                                          ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
-            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
             #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
         #elif self.analysis_code == 4: # differential stiffness
-            #self.lsdvmn = self.get_values(data,'i',5) ## load set number
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
         elif self.analysis_code == 5:   # frequency
             ## frequency
-            self.freq = self.add_data_parameter(data, 'freq', 'f', 5)
+            self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['freq'])
         elif self.analysis_code == 6:  # transient
             ## time step
-            self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
+            self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['dt'])
         elif self.analysis_code == 7:  # pre-buckling
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## imaginary eigenvalue
-            self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
-            self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
+            self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif self.analysis_code == 12:
             # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
@@ -158,92 +158,92 @@ class OQG(OP2Common):
             '???', 'Title', 'subtitle', 'label']
 
         ## random code
-        self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
+        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
-        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## acoustic pressure flag
-        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', 'f', 13, False)
+        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', b'f', 13, False)
 
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
+        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
 
         #assert self.isThermal() == False, self.thermal
 
-        self.node_id = self.add_data_parameter(data, 'node_id', 'i', 5, fix_device_code=True)
+        self.node_id = self.add_data_parameter(data, 'node_id', b'i', 5, fix_device_code=True)
         #if self.analysis_code == 1:  # statics / displacement / heat flux
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
             #self.setNullNonlinearFactor()
         if self.analysis_code == 1:  # static...because reasons.
-            self._analysis_code_fmt = 'i'
+            self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 2:  # real eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
-            self._analysis_code_fmt = 'i'
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            self._analysis_code_fmt = b'i'
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names',
                                                          ['node_id', 'eigr', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
-            #self.lsdvmn = self.get_values(data, 'i', 5) ## load set number
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
             #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
         #elif self.analysis_code == 4: # differential stiffness
-            #self.lsdvmn = self.get_values(data, 'i', 5) ## load set number
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
         elif self.analysis_code == 5:   # frequency
             ## frequency
-            #self.freq = self.add_data_parameter(data, 'freq', 'f', 5)
-            self._analysis_code_fmt = 'f'
+            #self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
+            self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 6:  # transient
             ## time step
-            #self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
-            self._analysis_code_fmt = 'f'
+            #self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 7:  # pre-buckling
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self._analysis_code_fmt = 'i'
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 8:  # post-buckling
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self._analysis_code_fmt = 'i'
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self._analysis_code_fmt = b'i'
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
-            self._analysis_code_fmt = 'i'
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            self._analysis_code_fmt = b'i'
             ## real eigenvalue
-            #self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## imaginary eigenvalue
-            self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
-            #self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
-            self._analysis_code_fmt = 'f'
+            #self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self._analysis_code_fmt = 'f'
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         elif self.analysis_code == 12:
             # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self._analysis_code_fmt = 'i'
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['node_id'])
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code

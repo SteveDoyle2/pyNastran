@@ -92,7 +92,8 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, F
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
-                                           MATG, MATHE, MATHP, CREEP, EQUIV)
+                                           MATG, MATHE, MATHP, CREEP, EQUIV,
+                                           NXSTRAT)
 # TODO: add MATT3, MATT8, MATT9
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATS1
 
@@ -432,6 +433,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
 
+            ## nxstrats
+            'NXSTRAT',
+
             ## thermal_materials
             'MAT4', 'MAT5',
 
@@ -535,6 +539,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             # sets
             'SET1', 'SET3',  ## sets
             'ASET', 'ASET1',  ## asets
+            #'OMIT', #TODO add OMIT
+            'OMIT1',  ## omits
             'BSET', 'BSET1',  ## bsets
             'CSET', 'CSET1',  ## csets
             'QSET', 'QSET1',  ## qsets
@@ -695,8 +701,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         in order to update your BDF with the optimized geometry.
 
         .. todo:: only does a subset of cards.
-        .. note:: loads/spcs (not supported) are tricky because you
-                  can't replace cards one-to-one...not sure what to do
+
+        Notes
+        -----
+        loads/spcs (not supported) are tricky because you can't replace
+        cards one-to-one...not sure what to do
         """
         for nid, node in iteritems(replace_model.nodes):
             self.nodes[nid] = node
@@ -1017,6 +1026,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         for aset in self.asets:
             aset.validate()
+        for omit in self.omits:
+            omit.validate()
         for bset in self.bsets:
             bset.validate()
         for cset in self.csets:
@@ -1218,7 +1229,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._xref = xref
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
-        self.pop_xref_errors()
 
     def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
         """creates the file loading if bdf_filename is None"""
@@ -1684,9 +1694,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           >>> bdf.set_dynamic_syntax(dict_of_vars)
           >>> bdf.read_bdf(bdf_filename, xref=True)
 
-        .. note:: Case sensitivity is supported.
-        .. note:: Variables should be 7 characters or less to fit in an
-          8-character field.
+        Notes
+        -----
+        Case sensitivity is supported.
+        Variables should be 7 characters or less to fit in an
+        8-character field.
 
         .. warning:: Type matters!
         """
@@ -1823,6 +1835,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 #raise CardParseSyntaxError(card)
                 raise NotImplementedError(card)
 
+        #: a storage of card_name to (card_class, add_method)
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
@@ -1981,6 +1994,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'MATT5' : (MATT5, self._add_material_dependence_object),
             'MATT8' : (MATT8, self._add_material_dependence_object),
             #'MATT9' : (MATT9, self._add_material_dependence_object),
+            'NXSTRAT' : (NXSTRAT, self._add_nxstrat_object),
 
             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self._add_creep_material_object),
@@ -2807,9 +2821,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 class_instance = card_class.add_card(card_obj, comment=comment)
                 add_card_function(class_instance)
             except TypeError:
+                # this should never be turned on, but is useful for testing
                 msg = 'problem adding %s' % card_obj
-                #print(msg)
-                #raise
+                print(msg)
+                raise
                 #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
@@ -4035,12 +4050,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
               ]
           >>> model.add_card(card_lines, 'CONM2', comment, is_list=True)
 
-        .. note:: this is a very useful method for interfacing with the code
-        .. note:: the card_object is not a card-type object...so not a GRID
-                  card or CQUAD4 object.  It's a BDFCard Object.  However,
-                  you know the type (assuming a GRID), so just call the
-                  *mesh.Node(nid)* to get the Node object that was just
-                  created.
+        Notes
+        -----
+        This is a very useful method for interfacing with the code.
+
+        The card_object is not a card-type object...so not a GRID
+        card or CQUAD4 object.  It's a BDFCard Object.  However,
+        you know the type (assuming a GRID), so just call the
+        *mesh.Node(nid)* to get the Node object that was just
+        created.
         """
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,

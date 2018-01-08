@@ -139,7 +139,7 @@ class CMASS1(PointMassElement):
     def Mass(self):
         return self.pid_ref.mass
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         mass = self.Mass()
@@ -334,7 +334,7 @@ class CMASS2(PointMassElement):
     def validate(self):
         assert len(self.nodes) == 2, self.nodes
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         mass = self.Mass()
@@ -858,7 +858,7 @@ class CONM1(PointMassElement):
         m[5, 5] = m6f  # M66
         return CONM1(eid, nid, m, cid=cid, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         assert isinstance(eid, integer_types), 'eid=%r' % eid
 
@@ -1121,7 +1121,7 @@ class CONM2(PointMassElement):
         I = data[7:]
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         nid = self.Nid()
         cid = self.Cid()

@@ -221,10 +221,46 @@ class PGAP(Property):
         'KA' : 'ka',
     }
 
-    def __init__(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0., kt=None, mu2=None,
-                 tmax=0., mar=100., trmin=0.001, comment=''):
+    def __init__(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
+                 kt=None, mu2=None, tmax=0., mar=100., trmin=0.001,
+                 comment=''):
         """
         Defines the properties of the gap element (CGAP entry).
+
+        Parameters
+        ----------
+        pid : int
+            property id for a CGAP
+        u0 : float; default=0.
+            Initial gap opening
+        f0 : float; default=0.
+            Preload
+        ka : float; default=1.e8
+            Axial stiffness for the closed gap
+        kb : float; default=None -> 1e-14 * ka
+            Axial stiffness for the open gap
+        mu1 : float; default=0.
+            Coefficient of static friction for the adaptive gap element
+            or coefficient of friction in the y transverse direction
+            for the nonadaptive gap element
+        kt : float; default=None -> mu1*ka
+            Transverse stiffness when the gap is closed
+        mu2 : float; default=None -> mu1
+            Coefficient of kinetic friction for the adaptive gap element
+            or coefficient of friction in the z transverse direction
+            for the nonadaptive gap element
+        tmax : float; default=0.
+            Maximum allowable penetration used in the adjustment of
+            penalty values. The positive value activates the penalty
+            value adjustment
+        mar : float; default=100.
+            Maximum allowable adjustment ratio for adaptive penalty
+            values KA and KT
+        trmin : float; default=0.001
+            Fraction of TMAX defining the lower bound for the allowable
+            penetration
+        comment : str; default=''
+            a comment for the card
         """
         Property.__init__(self)
         if comment:
@@ -309,7 +345,7 @@ class PGAP(Property):
         return PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
 
@@ -428,7 +464,7 @@ class PRAC2D(CrackProperty):
         return PRAC2D(pid, mid, thick, iplane, nsm, gamma, phi,
                       comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int)
 
@@ -509,7 +545,7 @@ class PRAC3D(CrackProperty):
         assert len(card) <= 5, 'len(PRAC3D card) = %i\ncard=%s' % (len(card), card)
         return PRAC3D(pid, mid, gamma, phi, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int)
 

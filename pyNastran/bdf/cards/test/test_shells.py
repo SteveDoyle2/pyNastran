@@ -783,7 +783,7 @@ class TestShells(unittest.TestCase):
         #pcomp.write_card(size=8)
         #pcomp.write_card(size=16)
         #pcomp.write_card(size=16, is_double=True)
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
     def test_ctriar_cquadr(self):
         """tests a CTRIAR/PSHELL/MAT8"""

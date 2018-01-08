@@ -8,7 +8,7 @@ from pyNastran.bdf.cards.base_card import _format_comment
 
 class BaseMethods(object):
     def object_attributes(self, mode='public', keys_to_skip=None):
-        """..see:: `pyNastran.utils.object_attributes(...)`"""
+        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -17,7 +17,7 @@ class BaseMethods(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
-        """..see:: `pyNastran.utils.object_methods(...)`"""
+        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
@@ -86,11 +86,6 @@ class VectorizedCard(object):
         if self.n:
             msg.append('  %-8s: %i' % (self.type, self.n))
         return msg
-
-    def __repr__(self):
-        f = StringIO()
-        self.write_card(f)
-        return f.getvalue().rstrip()
 
     def print_card(self, i=None, size=8):
         #i = self._validate_slice(i)
@@ -183,6 +178,11 @@ class VectorizedCard(object):
         if isinstance(i, (int64, integer_types)):
             i = array([i], dtype='int32')
         return i
+
+    #def __repr__(self):
+        #f = StringIO()
+        #self.write_card(f)
+        #return f.getvalue().rstrip()
 
     def __repr__(self):
         return '<%s object; n=%s>' % (self.type, self.n)

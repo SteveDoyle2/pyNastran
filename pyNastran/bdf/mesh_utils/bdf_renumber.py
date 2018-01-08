@@ -130,22 +130,24 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
        - SUBCASE
        - global SET cards won't be renumbered properly
 
-    Example 1 - Renumber Everything; Start from 1
-    ---------------------------------------------
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 round_ids=False)
+    Examples
+    --------
+    **Renumber Everything; Start from 1**
 
-    Example 2 - Renumber Everything; Start Material IDs from 100
-    ------------------------------------------------------------
-    starting_id_dict = {
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     round_ids=False)
+
+    **Renumber Everything; Start Material IDs from 100**
+
+    >>> starting_id_dict = {
         'mid' : 100,
     }
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_ids_dict=starting_ids_dict, round_ids=False)
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     starting_ids_dict=starting_ids_dict, round_ids=False)
 
-    Example 3 - Only Renumber Material IDs
-    --------------------------------------
-    starting_id_dict = {
+    **Only Renumber Material IDs**
+
+    >>> starting_id_dict = {
         'cid' : None,
         'nid' : None,
         'eid' : None,
@@ -169,8 +171,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'suport1_id' : None,
         'tf_id' : None,
     }
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_ids_dict=starting_ids_dict, round_ids=False)
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     starting_ids_dict=starting_ids_dict, round_ids=False)
     """
     starting_id_dict_default = {
         'cid' : 1,
@@ -187,6 +189,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'method_id' : 1,
         'cmethod_id' : 1,
         'spline_id' : 1,
+        'caero_id' : 1,
         'table_id' : 1,
         'flfact_id' : 1,
         'flutter_id' : 1,
@@ -280,6 +283,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             cmethod_id = int(value)
         elif key == 'spline_id':
             spline_id = int(value)
+        elif key == 'caero_id':
+            caero_id = int(value)
         elif key == 'table_id':
             table_id = int(value)
         elif key == 'flfact_id':
@@ -409,13 +414,19 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'nid' in starting_id_dict and nid is not None:
         #spoints2 = arange(1, len(spoints) + 1)
+        #nid = _create_dict_mapper(model.nodes, nid_map, 'nid', nid)
+
         for nid, node in sorted(iteritems(model.nodes)):
             nid_new = nid_map[nid]
-            #print('nid=%s -> %s' % (nid,nid_new))
+            #print('nid=%s -> %s' % (nid, nid_new))
             node.nid = nid_new
 
     if 'pid' in starting_id_dict and pid is not None:
         # properties
+        #pid = _create_dict_mapper(model.properties, properties_map, 'pid', pid)
+        #pid = _create_dict_mapper(model.properties_mass, properties_mass_map, 'pid', pid)
+        #pid = _update(model.convection_properties, properties_mass_map, pid)
+
         for pidi, prop in sorted(iteritems(model.properties)):
             prop.pid = pid
             properties_map[pidi] = pid
@@ -436,6 +447,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if 'eid' in starting_id_dict and eid is not None:
         # elements
+        #eid = _create_dict_mapper(model.elements, eid_map, 'eid', eid)
+
         for eidi, element in sorted(iteritems(model.elements)):
             element.eid = eid
             eid_map[eidi] = eid
@@ -529,11 +542,36 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             set_map[sidi] = set_id
             set_id += 1
 
+    if 'spline_id' in starting_id_dict and spline_id is not None:
+        # set up spline1 box mapping
+        delta_box1_map = {}
+        delta_box2_map = {}
+        for sidi, spline in sorted(iteritems(model.splines)):
+            if spline.type == 'SPLINE1':
+                delta_box1_map[sidi] = spline.box1 - spline.caero
+                delta_box2_map[sidi] = spline.box2 - spline.caero
+            else:
+                raise NotImplementedError(spline)
+
+    caero_id_map = {}
+    if 'caero_id' in starting_id_dict and caero_id is not None:
+        # caeros
+        for caero_idi, caero in sorted(iteritems(model.caeros)):
+            caero.eid = caero_id
+            caero_id_map[caero_idi] = caero_id
+            caero_id += caero.shape[0] * caero.shape[1]
+
     spline_id_map = {}
     if 'spline_id' in starting_id_dict and spline_id is not None:
-        # sets
+        # splines
         for sidi, spline in sorted(iteritems(model.splines)):
             spline.eid = spline_id
+            #spline.cross_reference(model)
+            if spline.type == 'SPLINE1':
+                spline.box1 = caero_id_map[spline.caero] + delta_box1_map[sidi]
+                spline.box2 = caero_id_map[spline.caero] + delta_box2_map[sidi]
+            else:
+                raise NotImplementedError(spline)
             spline_id_map[sidi] = spline_id
             spline_id += 1
 
@@ -682,6 +720,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'FREQUENCY' : freq_map,
         'sets' : set_map,
         'splines' : spline_id_map,
+        'caeros' : caero_id_map,
 
         'DLOAD' : dload_map,
         'LOAD' : load_map,
@@ -903,3 +942,10 @@ def _update_case_control(model, mapper):
                 raise RuntimeError(key)
                     #if value ==
         #print()
+
+#def _create_dict_mapper(properties, properties_map, pid_name, pid):
+    #for pidi, prop in sorted(iteritems(mydict)):
+        #setattr(prop, pid_name, pid)
+        #properties_map[pidi] = pid
+        #pid += 1
+    #return pid

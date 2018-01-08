@@ -58,7 +58,7 @@ def make_xy(table_id, table_type, xy):
 
 class Table(BaseCard):
     def __init__(self):
-        pass
+        BaseCard.__init__(self)
 
     #def parse_fields(self, xy, nrepeated, is_data=False):
         #self.table = TableObj(xy, nrepeated, is_data)
@@ -97,6 +97,7 @@ class DTABLE(BaseCard):
         comment : str; default=''
             a comment for the card
         """
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.default_values = default_values
@@ -1376,7 +1377,7 @@ class RandomTable(Table):
     type = 'TABLE??'
 
     def __init__(self):
-        pass
+        Table.__init__(self)
 
 
 class TABRND1(RandomTable):

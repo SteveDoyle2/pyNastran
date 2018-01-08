@@ -100,7 +100,7 @@ class WriteMesh(BDFAttributes):
         mid = 1
         bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
         for aesurf_id, aesurf in iteritems(self.aesurf):
-            cid = aesurf.cid1
+            #cid = aesurf.cid1
             bdf_file.write('PSHELL,%s,%s,0.1\n' % (aesurf_id, aesurf_id))
             #print(cid)
             #ax, ay, az = cid.i
@@ -731,7 +731,7 @@ class WriteMesh(BDFAttributes):
         is_materials = (self.materials or self.hyperelastic_materials or self.creep_materials or
                         self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
                         self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
-                        self.MATT8 or self.MATT9)
+                        self.MATT8 or self.MATT9 or self.nxstrats)
         if is_materials:
             msg = ['$MATERIALS\n']  # type: List[str]
             for (unused_mid, material) in sorted(iteritems(self.materials)):
@@ -762,6 +762,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(material.write_card(size, is_double))
             for (unused_mid, material) in sorted(iteritems(self.MATT9)):
                 msg.append(material.write_card(size, is_double))
+            for (unused_sid, nxstrat) in sorted(iteritems(self.nxstrats)):
+                msg.append(nxstrat.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
     def _write_nodes(self, bdf_file, size=8, is_double=False):
@@ -999,13 +1001,15 @@ class WriteMesh(BDFAttributes):
     def _write_sets(self, bdf_file, size=8, is_double=False):
         # type: (Any, int, bool) -> None
         """Writes the SETx cards sorted by ID"""
-        is_sets = (self.sets or self.asets or self.bsets or self.csets or self.qsets
+        is_sets = (self.sets or self.asets or self.omits or self.bsets or self.csets or self.qsets
                    or self.usets)
         if is_sets:
             msg = ['$SETS\n']  # type: List[str]
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.asets:  # list
+                msg.append(set_obj.write_card(size, is_double))
+            for set_obj in self.omits:  # list
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.bsets:  # list
                 msg.append(set_obj.write_card(size, is_double))

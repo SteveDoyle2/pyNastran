@@ -48,8 +48,6 @@ cards Package
 :mod:`collpase_card` Module
 ---------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.cards.collpase_card
-
 .. automodule:: pyNastran.bdf.cards.collpase_card
     :members:
     :private-members:
@@ -201,8 +199,6 @@ cards Package
 
 :mod:`utils` Module
 -------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.utils
 
 .. automodule:: pyNastran.bdf.cards.utils
     :members:

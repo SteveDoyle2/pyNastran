@@ -500,8 +500,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         in order to update your BDF with the optimized geometry.
 
         .. todo:: only does a subset of cards.
-        .. note:: loads/spcs (not supported) are tricky because you
-                  can't replace cards one-to-one...not sure what to do
+
+        Notes
+        -----
+        loads/spcs (not supported) are tricky because you
+        can't replace cards one-to-one...not sure what to do.
         """
         for nid, node in iteritems(replace_model.nodes):
             self.nodes[nid] = node
@@ -790,6 +793,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         for aset in self.asets:
             aset.validate()
+        for omit in self.omits:
+            omit.validate()
         for bset in self.bsets:
             bset.validate()
         for cset in self.csets:
@@ -1341,9 +1346,12 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
           >>> bdf.set_dynamic_syntax(dict_of_vars)
           >>> bdf,read_bdf(bdf_filename, xref=True)
 
-        .. note:: Case sensitivity is supported.
-        .. note:: Variables should be 7 characters or less to fit in an
-          8-character field.
+        Notes
+        -----
+        Case sensitivity is supported.
+
+        Variables should be 7 characters or less to fit in an
+        8-character field.
 
         .. warning:: Type matters!
         """
@@ -2247,12 +2255,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
               ]
           >>> model.add_card(card_lines, 'CONM2', comment, is_list=True)
 
-        .. note:: this is a very useful method for interfacing with the code
-        .. note:: the card_object is not a card-type object...so not a GRID
-                  card or CQUAD4 object.  It's a BDFCard Object.  However,
-                  you know the type (assuming a GRID), so just call the
-                  *mesh.Node(nid)* to get the Node object that was just
-                  created.
+          Notes
+        -----
+        This is a very useful method for interfacing with the code.
+        The card_object is not a card-type object...so not a GRID
+        card or CQUAD4 object.  It's a BDFCard Object.  However,
+        you know the type (assuming a GRID), so just call the
+        *mesh.Node(nid)* to get the Node object that was just
+        created.
         """
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
@@ -2447,8 +2457,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         return_data : str, optional
             the output data
 
-        .. note:: if a card is not supported and not added to the proper
-                  lists, this method will fail
+            Notes
+        -----
+        If a card is not supported and not added to the proper
+        lists, this method will fail.
         """
         return ''
         card_stats = [

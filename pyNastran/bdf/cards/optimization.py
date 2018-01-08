@@ -42,10 +42,8 @@ def validate_dvcrel(validate, element_type, cp_name):
     """
     Valdiates the DVCREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note:: words that start with integers (e.g., 12I/T**3) doesn't
+              support strings
     """
     if not validate:
         return
@@ -88,10 +86,8 @@ def validate_dvmrel(validate, mat_type, mp_name):
     """
     Valdiates the DVMREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
+    .. note::  words that start with integers (e.g., 12I/T**3) doesn't
+               support strings
     """
     if not validate:
         return
@@ -119,12 +115,10 @@ def validate_dvprel(prop_type, pname_fid, validate):
     """
     Valdiates the DVPREL1/2
 
-    Notes
-    -----
-    1.  words that start with integers (e.g., 12I/T**3) doesn't support
-        strings
-    2.  FID > 0 --> references the Property Card
-    3.  FID < 0 --> references the EPT card
+    .. note:: words that start with integers (e.g., 12I/T**3) doesn't
+              support strings
+    .. note:: FID > 0 --> references the Property Card
+    .. note:: FID < 0 --> references the EPT card
     """
     if not validate:
         return pname_fid
@@ -1274,54 +1268,58 @@ class DRESP1(OptConstraint):
         validate : bool; default=False
             should the card be validated when it's created
 
-        Example 1
-        ---------
-        dresp_id = 103
-        label = 'resp1'
-        response_type = 'STRESS'
-        property_type = 'PSHELL'
-        pid = 3
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = None
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        Examples
+        --------
+        **stress/PSHELL**
 
-        Example 2
-        ---------
-        dresp_id = 104
-        label = 'resp2'
-        response_type = 'STRESS'
-        property_type = 'PCOMP'
-        pid = 3
-        layer = 4
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = layer
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> dresp_id = 103
+        >>> label = 'resp1'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PSHELL'
+        >>> pid = 3
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = None
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
-        Example 3 (???)
-        ---------------
-        dresp_id = 105
-        label = 'resp3'
-        response_type = 'DISP'
-        #atta = ???
-        #region = ???
-        #attb = ???
-        atti = [nid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
-        Example 4 (???)
-        ---------------
-        dresp_id = 105
-        label = 'resp3'
-        response_type = 'ELEM'
-        #atta = ???
-        #region = ???
-        #attb = ???
-        atti = [eid???]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        **stress/PCOMP**
+
+        >>> dresp_id = 104
+        >>> label = 'resp2'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PCOMP'
+        >>> pid = 3
+        >>> layer = 4
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = layer
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+
+        **displacement - not done**
+
+        >>> dresp_id = 105
+        >>> label = 'resp3'
+        >>> response_type = 'DISP'
+        >>> #atta = ???
+        >>> #region = ???
+        >>> #attb = ???
+        >>> atti = [nid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+
+        **not done**
+        >>> dresp_id = 105
+        >>> label = 'resp3'
+        >>> response_type = 'ELEM'
+        >>> #atta = ???
+        >>> #region = ???
+        >>> #attb = ???
+        >>> atti = [eid???]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         if comment:
             self.comment = comment
@@ -1393,7 +1391,7 @@ class DRESP1(OptConstraint):
         return DRESP1(oid, label, response_type, property_type, region, atta, attb, atti,
                       comment=comment, validate=False)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
     def calculate(self, op2_model, subcase_id):
@@ -1826,7 +1824,7 @@ class DRESP2(OptConstraint):
     def DRespID(self):
         return self.dresp_id
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
         #for (j, name), value_list in sorted(iteritems(self.params)):
             #print('  DRESP2 verify - key=%s values=%s' % (name,
@@ -2297,7 +2295,7 @@ class DRESP3(OptConstraint):
         #if isinstance(self.dequation, integer_types):
             #del self.dequation_ref
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
     def raw_fields(self):
@@ -3069,6 +3067,16 @@ class DVMREL1(OptConstraint):
                        mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
 
     @property
+    def Type(self):
+        self.deprecated('Type', 'mat_type', '1.1')
+        return self.mat_type
+
+    @Type.setter
+    def Type(self, mat_type):
+        self.deprecated('Type', 'mat_type', '1.1')
+        self.mat_type = mat_type
+
+    @property
     def desvar_ids(self):
         if self.dvids_ref is None:
             return self.dvids
@@ -3337,6 +3345,16 @@ class DVMREL2(OptConstraint):
         else:
             raise NotImplementedError('mat_type=%r is not supported' % self.mat_type)
         return mid
+
+    @property
+    def Type(self):
+        self.deprecated('Type', 'mat_type', '1.1')
+        return self.mat_type
+
+    @Type.setter
+    def Type(self, mat_type):
+        self.deprecated('Type', 'mat_type', '1.1')
+        self.mat_type = mat_type
 
     def DEquation(self):
         if self.dequation_ref is None:
@@ -4332,7 +4350,7 @@ class DVGRID(BaseCard):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
 def parse_table_fields(card_type, card, fields):

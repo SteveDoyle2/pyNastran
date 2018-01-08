@@ -131,7 +131,6 @@ def write_skin_solid_faces(model, skin_filename,
         write solid elements that have skinned faces
     write_shells : bool; default=False
         write shell elements
-
     size : int; default=8
         the field width
     is_double : bool; default=False
@@ -140,11 +139,9 @@ def write_skin_solid_faces(model, skin_filename,
         the string encoding
     log : logger; default=None
         a python logging object
-
-    Unused Parameters
-    -----------------
     punch : bool; default=False
         is this a punch file; should  be used by the read_bdf if model is a string
+        unused
     """
     if isinstance(model, string_types):
         model = read_bdf(model, log=log)
@@ -223,31 +220,25 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
     ----------
     model : BDF()
         the BDF object
-
-    Parameters
-    ----------
     skin_filename : str
         the file to write
     face_map : dict[sorted_face] : face
         sorted_face : List[int, int, int] / List[int, int, int, int]
         face : List[int, int, int] / List[int, int, int, int]
-
     nids_to_write : List[int, int, ...]
         list of node ids to write
     eids_to_write : List[int, int, ...]
         list of element ids to write
     mids_to_write : List[int, int, ...]
         list of material ids to write
-    eid_set : ???
-        ???
-
+    eid_set : Set[int]
+        is the type right???
     eid_shell : int
         the next id to use for the shell id
     pid_shell : int
         the next id to use for the shell property
     mid_shell : int
         the next id to use for the shell material
-
     write_solids : bool; default=False
         write solid elements that have skinned faces
     write_shells : bool; default=True

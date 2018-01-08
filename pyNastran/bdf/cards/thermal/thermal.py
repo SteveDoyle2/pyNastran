@@ -208,7 +208,7 @@ class CHBDYE(ThermalElement):
         # TODO: not implemented
         return []
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         eid2 = self.Eid2()
         pid = self.Pid()
@@ -414,7 +414,7 @@ class CHBDYG(ThermalElement):
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         assert isinstance(eid, integer_types)
 
@@ -734,7 +734,7 @@ class CHBDYP(ThermalElement):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.Eid()
         pid = self.Pid()
         assert isinstance(eid, integer_types)

@@ -143,7 +143,7 @@ class CGEN(BaseCard):
                     t_abcd=t_abcd, direction=direction,
                     comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
     def cross_reference(self, model):

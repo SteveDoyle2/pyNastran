@@ -131,7 +131,7 @@ class CROD(RodElement):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
@@ -334,7 +334,7 @@ class CTUBE(RodElement):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         edges = self.get_edge_ids()
         assert isinstance(pid, int), 'pid=%r' % pid
@@ -559,7 +559,7 @@ class CONROD(RodElement):
         self.nodes_ref = None
         self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         assert pid == -10, 'pid=%r' % pid
         edges = self.get_edge_ids()

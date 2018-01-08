@@ -17,6 +17,8 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     """
     extracts the OML faces (outer mold line)
 
+    Parameters
+    ----------
     bdf_filename : str or BDF()
         the bdf filename
     eid_start : int
@@ -131,5 +133,5 @@ def main():
     eid_start = 2810
     eids_oml = get_oml_eids(bdf_filename, eid_start)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

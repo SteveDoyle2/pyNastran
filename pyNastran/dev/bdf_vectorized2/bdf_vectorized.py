@@ -23,7 +23,7 @@ from pyNastran.dev.bdf_vectorized2.cards.loads import (
     Loads, PLOADv, PLOAD1v, PLOAD2v, PLOAD4v,
     FORCEv, FORCE1v, FORCE2v,
     MOMENTv, MOMENT1v, MOMENT2v,
-    SLOADv)
+    SLOADv, SPCDv)
 from pyNastran.dev.bdf_vectorized2.cards.bars import CBARv, Bars
 from pyNastran.dev.bdf_vectorized2.cards.beams import CBEAMv, Beams
 from pyNastran.dev.bdf_vectorized2.cards.shears import CSHEARv, Shears
@@ -134,6 +134,9 @@ class BDF(BDF_):
         self.moment = MOMENTv(model)
         self.moment1 = MOMENT1v(model)
         self.moment2 = MOMENT2v(model)
+
+        self.spcd = SPCDv(model)
+        self.temp = None
 
         self.load_combinations = {}
         self.loads = Loads(model)
@@ -295,6 +298,12 @@ class BDF(BDF_):
     def _prepare_pload4(self, card, card_obj, comment=''):
         self.pload4.add_card(card_obj, comment=comment)
 
+    def _prepare_spcd(self, card, card_obj, comment=''):
+        self.spcd.add_card(card_obj, comment=comment)
+    def _prepare_temp(self, card, card_obj, comment=''):
+        self.log.warning('skipping %s' % str(card))
+
+
     def _update_card_parser(self):
         del self._card_parser['GRID']
         self._card_parser_prepare['GRID'] = self._prepare_grid
@@ -387,6 +396,8 @@ class BDF(BDF_):
         del self._card_parser['MOMENT']
         del self._card_parser['MOMENT1']
         del self._card_parser['MOMENT2']
+        del self._card_parser['SPCD']
+        del self._card_parser['TEMP']
         self._card_parser_prepare['LOAD'] = self._prepare_load
         self._card_parser_prepare['SLOAD'] = self._prepare_sload
         #self._card_parser_prepare['GRAV'] = self._prepare_grav
@@ -400,6 +411,8 @@ class BDF(BDF_):
         self._card_parser_prepare['MOMENT'] = self._prepare_moment
         self._card_parser_prepare['MOMENT1'] = self._prepare_moment1
         self._card_parser_prepare['MOMENT2'] = self._prepare_moment2
+        self._card_parser_prepare['SPCD'] = self._prepare_spcd
+        self._card_parser_prepare['TEMP'] = self._prepare_temp
 
 
     #def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):

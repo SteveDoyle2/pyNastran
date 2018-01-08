@@ -471,7 +471,7 @@ class GetMethods(BDFAttributes):
                            % (aesurf_id, msg, np.unique(list(self.aesurf.keys()))))
 
     def Acsid(self, msg=''):
-        """gets the aerodynamic system coordinate"""
+        """gets the aerodynamic coordinate system"""
         if self.aero is not None:
             acsid_aero = self.aero.Acsid()
         if self.aeros is not None:

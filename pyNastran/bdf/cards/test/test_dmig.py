@@ -158,7 +158,7 @@ class TestDMIG(unittest.TestCase):
         size = 8
         dmi = DMIG.add_card(card_obj)
         dmi.write_card(size, 'dummy')
-        #dmi.rawFields()
+        #dmi.raw_fields()
 
     def test_dmig_07(self):
         cards = [
@@ -256,7 +256,7 @@ class TestDMIG(unittest.TestCase):
         size = 8
         dmi = DMI.add_card(card_obj)
         dmi.write_card(size, 'dummy')
-        #dmi.rawFields()
+        #dmi.raw_fields()
 
     def test_dmi_02(self):
         data = """

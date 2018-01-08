@@ -606,7 +606,7 @@ class CBEAM(CBAR):
         self.gb_ref = None
         self.pid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()

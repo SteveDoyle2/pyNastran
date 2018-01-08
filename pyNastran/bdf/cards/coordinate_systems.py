@@ -548,8 +548,10 @@ class Coord(BaseCard):
         p3 : (1,3) ndarray
             the vector in the global frame
 
-        .. note:: Shifting the load application point of a force creates
-                  a moment, but the force will be the same.
+        Notes
+        -----
+        Shifting the load application point of a force creates
+        a moment, but the force will be the same.
         """
         if self.cid == 0:
             return p
@@ -713,12 +715,14 @@ class Coord(BaseCard):
         xyz : (1,3) ndarray
             the point to transform
 
-        .. note::  uses the matrix as there is no linking from a global
-                   coordinate system to the local
+        Notes
+        -----
+        Uses the matrix as there is no linking from a global
+        coordinate system to the local.
 
-        .. note::  the matrix that comes in is the local to global, so we need
-                   to invert the matrix. The inverse of the tranformation
-                   matrix :math:`[\beta]` is the transpose of the matrix.
+        The matrix that comes in is the local to global, so we need
+        to invert the matrix. The inverse of the tranformation
+        matrix :math:`[\beta]` is the transpose of the matrix.
 
         .. math:: p_{global} = (p_{coord})[\beta] + p_{origin}
 
@@ -885,7 +889,9 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
     phis:  List[float, ...]
         list of phis (in radians)
 
-    .. note:: creates 1 CORD2S and ncid CORD2R coordinate systems
+    Notes
+    -----
+    creates 1 CORD2S and ncid CORD2R coordinate systems
 
     .. todo:: hasn't been tested...
     """
@@ -949,12 +955,15 @@ def define_coord_e123(model, cord2_type, cid, origin, rid=0,
     coord : CORD2R, CORD2C, CORD2S
         the coordinate system
 
-    .. note:: one axis (xaxis, yaxis, zaxis) and one plane
-              (xyplane, yzplane, xz plane) must be defined; the others
-              must be None
-    .. note:: the axes and planes are defined in the rid coordinate system
+    Notes
+    -----
+    One axis (xaxis, yaxis, zaxis) and one plane
+    (xyplane, yzplane, xz plane) must be defined; the others
+    must be None.
 
-    TODO: hasn't been tested...
+    The axes and planes are defined in the rid coordinate system
+
+    .. todo:: hasn't been tested...
     """
     assert cord2_type in ['CORD2R', 'CORD2C', 'CORD2S'], cord2_type
     origin = _fix_xyz_shape(origin, 'origin')
@@ -1471,10 +1480,13 @@ class Cord2x(Coord):
         zaxis : (3,) ndarray
             defines the z axis (default=None)
 
-        .. note:: one axis (xaxis, yaxis, zaxis) and one plane
-                  (xyplane, yzplane, xz plane) must be defined; the others
-                  must be None
-        .. note:: the axes and planes are defined in the rid coordinate system
+        Notes
+        -----
+        One axis (xaxis, yaxis, zaxis) and one plane
+        (xyplane, yzplane, xz plane) must be defined; the others
+        must be None
+
+        The axes and planes are defined in the rid coordinate system
         """
         assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
         if origin is None:

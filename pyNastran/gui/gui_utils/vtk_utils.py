@@ -32,10 +32,10 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
 
 def create_vtk_cells_of_constant_element_type(grid, elements, etype):
     """
-    Adding constant type elements is overly complicated.  Note that
-    some of the documentation in this method is likely triangle-specific
-    as it was developed for a tri mesh.
+    Adding constant type elements is overly complicated.
 
+    Parameters
+    ----------
     grid : vtk.vtkUnstructuredGrid()
         the unstructured grid
     elements : (nelements, nnodes_per_element) int ndarray
@@ -43,14 +43,19 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
     etype : int
         VTK cell type
 
-        1  = vtk.vtkVertex().GetCellType()
-        3  = vtkLine().GetCellType()
-        5  = vtkTriangle().GetCellType()
-        9  = vtk.vtkQuad().GetCellType()
-        10 = vtkTetra().GetCellType()
-        #vtkPenta().GetCellType()
-        #vtkHexa().GetCellType()
-        #vtkPyram().GetCellType()
+    Notes
+    -----
+    The documentation in this method is triangle-specific as it was
+    developed for a tri mesh.  It's more general than that though.
+
+    1 = vtk.vtkVertex().GetCellType()
+    3 = vtkLine().GetCellType()
+    5 = vtkTriangle().GetCellType()
+    9 = vtk.vtkQuad().GetCellType()
+    10 = vtkTetra().GetCellType()
+    #vtkPenta().GetCellType()
+    #vtkHexa().GetCellType()
+    #vtkPyram().GetCellType()
     """
     nelements, nnodes_per_element = elements.shape
     # We were careful about how we defined the arrays, so the data

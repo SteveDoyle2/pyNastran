@@ -5,7 +5,6 @@ defines readers for BDF objects in the OP2 MPT/MPTS table
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import Struct
-from six import b
 from six.moves import range
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
@@ -73,7 +72,7 @@ class MPT(GeomCommon):
         CREEP(1003,10,245) - record 1
         """
         nmaterials = (len(data) - n) // 64
-        s = Struct(b(self._endian + 'i2f4ifi7f'))
+        s = Struct(self._endian + b'i2f4ifi7f')
         for i in range(nmaterials):
             edata = data[n:n+64]
             out = s.unpack(edata)
@@ -92,7 +91,7 @@ class MPT(GeomCommon):
         MAT1(103,1,77) - record 2
         """
         ntotal = 48  # 12*4
-        s = Struct(b(self._endian + 'i10fi'))
+        s = Struct(self._endian + b'i10fi')
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             edata = data[n:n+48]
@@ -109,7 +108,7 @@ class MPT(GeomCommon):
         MAT2(203,2,78) - record 3
         """
         ntotal = 68  # 17*4
-        s = Struct(b(self._endian + 'i15fi'))
+        s = Struct(self._endian + b'i15fi')
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             edata = data[n:n+68]
@@ -133,7 +132,7 @@ class MPT(GeomCommon):
         """
         MAT3(1403,14,122) - record 4
         """
-        s = Struct(b(self._endian + 'i8fi5fi'))
+        s = Struct(self._endian + b'i8fi5fi')
         nmaterials = (len(data) - n) // 64
         for i in range(nmaterials):
             out = s.unpack(data[n:n+64])
@@ -152,7 +151,7 @@ class MPT(GeomCommon):
         """
         MAT4(2103,21,234) - record 5
         """
-        s = Struct(b(self._endian + 'i10f'))
+        s = Struct(self._endian + b'i10f')
         nmaterials = (len(data) - n) // 44
         for i in range(nmaterials):
             out = s.unpack(data[n:n+44])
@@ -167,7 +166,7 @@ class MPT(GeomCommon):
         """
         MAT5(2203,22,235) - record 6
         """
-        s = Struct(b(self._endian + 'i9f'))
+        s = Struct(self._endian + b'i9f')
         nmaterials = (len(data) - n) // 40
         for i in range(nmaterials):
             out = s.unpack(data[n:n+40])
@@ -184,7 +183,7 @@ class MPT(GeomCommon):
         """
         MAT8(2503,25,288) - record 7
         """
-        s = Struct(b(self._endian + 'i18f'))
+        s = Struct(self._endian + b'i18f')
         nmaterials = (len(data) - n) // 76
         for i in range(nmaterials):
             out = s.unpack(data[n:n+76])
@@ -201,7 +200,7 @@ class MPT(GeomCommon):
         MAT9(2603,26,300) - record 9
         """
         ntotal = 140
-        s = Struct(b(self._endian + 'i 30f iiii'))
+        s = Struct(self._endian + b'i 30f iiii')
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             out = s.unpack(data[n:n+ntotal])
@@ -228,7 +227,7 @@ class MPT(GeomCommon):
         MAT10(2801,28,365) - record 9
         """
         ntotal = 20  # 5*4
-        s = Struct(b(self._endian + 'i4f'))
+        s = Struct(self._endian + b'i4f')
         nmaterials = (len(data) - n) // ntotal
         assert nmaterials > 0, nmaterials
         for i in range(nmaterials):
@@ -250,7 +249,7 @@ class MPT(GeomCommon):
         MAT11(2903,29,371)
         """
         ntotal = 128  # 23*4
-        struc = Struct(b(self._endian + 'i 15f 16i'))
+        struc = Struct(self._endian + b'i 15f 16i')
         nmaterials = (len(data) - n) // ntotal
         assert nmaterials > 0, nmaterials
         for i in range(nmaterials):
@@ -272,7 +271,7 @@ class MPT(GeomCommon):
         MAT11(2903,29,371)
         """
         ntotal = 80  # 20*4
-        s = Struct(b(self._endian + 'i 15f 4s 4s 4s 4s'))
+        s = Struct(self._endian + b'i 15f 4s 4s 4s 4s')
         nmaterials = (len(data) - n) // ntotal
         assert nmaterials > 0, nmaterials
         for i in range(nmaterials):
@@ -293,8 +292,8 @@ class MPT(GeomCommon):
     def _read_mathp(self, data, n):
         """MATHP(4506,45,374) - Record 11"""
         nmaterials = 0
-        s1 = Struct(b(self._endian + 'i7f3i23fi'))
-        s2 = Struct(b(self._endian + '8i'))
+        s1 = Struct(self._endian + b'i7f3i23fi')
+        s2 = Struct(self._endian + b'8i')
         n2 = len(data)
         while n < n2:
             edata = data[n:n+140]
@@ -317,7 +316,7 @@ class MPT(GeomCommon):
                 data_in.append(out2)
             mat = MATHP.add_op2_data(data_in)
             if self.is_debug_file:
-                self.binary_debug.write('  MATHP=%s\n' % str(out))
+                self.binary_debug.write('  MATHP=%s\n' % str(out1))
             self._add_hyperelastic_material_object(mat)
             nmaterials += 1
         assert nmaterials > 0, 'MATP nmaterials=%s' % nmaterials
@@ -329,7 +328,7 @@ class MPT(GeomCommon):
         MATS1(503,5,90) - record 12
         """
         ntotal = 44  # 11*4
-        s = Struct(b(self._endian + '3ifiiff3i'))
+        s = Struct(self._endian + b'3ifiiff3i')
         nmaterials = (len(data) - n) // ntotal
         for i in range(nmaterials):
             edata = data[n:n+44]
@@ -348,7 +347,7 @@ class MPT(GeomCommon):
         MATT1(703,7,91)
         checked NX-10.1, MSC-2016
         """
-        s = Struct(b(self._endian + '12i'))
+        s = Struct(self._endian + b'12i')
         ntotal = 48 # 12*4
         ncards = (len(data) - n) // ntotal
         for i in range(ncards):
@@ -376,12 +375,12 @@ class MPT(GeomCommon):
         MATT4(2303,23,237)
         checked NX-10.1, MSC-2016
         """
-        s = Struct(b(self._endian + '7i'))
+        struct_7i = Struct(self._endian + b'7i')
         ntotal = 28 # 7*4
         ncards = (len(data) - n) // ntotal
         for i in range(ncards):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            out = struct_7i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  MATT4=%s\n' % str(out))
             #(mid, tk, tcp, null, th, tmu, thgen) = out
@@ -396,7 +395,7 @@ class MPT(GeomCommon):
         MATT5(2403,24,238)
         checked NX-10.1, MSC-2016
         """
-        s = Struct(b(self._endian + '10i'))
+        s = Struct(self._endian + b'10i')
         ntotal = 40 # 10*4
         ncards = (len(data) - n) // ntotal
         for i in range(ncards):
@@ -448,8 +447,8 @@ class MPT(GeomCommon):
             number, = struct_i.unpack(edata)
             n += 4
 
-            iformat = 'i %if' % (number)
-            struct_i_nf = Struct(b(self._endian + iformat))
+            iformat = b'i %if' % (number)
+            struct_i_nf = Struct(self._endian + iformat)
             #mid, absorb, emiss1, emiss2, ...
             ndata_per_pack = 1 + number
             nstr_per_pack = ndata_per_pack * 4
@@ -477,7 +476,7 @@ class MPT(GeomCommon):
         NLPARM(3003,30,286) - record 27
         """
         ntotal = 76  # 19*4
-        s = Struct(b(self._endian + 'iif5i3f3iffiff'))
+        s = Struct(self._endian + b'iif5i3f3iffiff')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             edata = data[n:n+76]
@@ -500,7 +499,7 @@ class MPT(GeomCommon):
         TSTEPNL(3103,31,337) - record 29
         """
         ntotal = 88  # 19*4
-        s = Struct(b(self._endian + 'iif5i3f3if3i4f'))
+        s = Struct(self._endian + b'iif5i3f3if3i4f')
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             edata = data[n:n+88]

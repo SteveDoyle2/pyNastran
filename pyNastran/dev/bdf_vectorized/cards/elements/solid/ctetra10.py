@@ -166,7 +166,7 @@ class CTETRA10(SolidElement):
         total : bool; default=False
             should the volume be summed
 
-        ..see:: CTETRA10.volume() and CTETRA10.centroid() for more information.
+        .. seealso:: CTETRA10.volume() and CTETRA10.centroid() for more information.
         """
         if element_id is None:
             element_id = self.element_id

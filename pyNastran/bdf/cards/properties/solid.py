@@ -145,7 +145,7 @@ class PLSOLID(SolidProperty):
         """
         return self.mid_ref.rho
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pass
 
     def raw_fields(self):
@@ -478,7 +478,7 @@ class PSOLID(SolidProperty):
         """
         return self.mid_ref.rho
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid

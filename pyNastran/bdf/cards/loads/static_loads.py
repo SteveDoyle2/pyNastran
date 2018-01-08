@@ -71,7 +71,7 @@ class LOAD(LoadCombination):
         comment : str; default=''
             a comment for the card
 
-        Note: MSC can handle self-referencing loads, NX cannot
+        .. note::  MSC can handle self-referencing loads, NX cannot
         """
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
@@ -2864,6 +2864,10 @@ class PLOADX1(BaseCard):
         self.eid_ref = model.Element(self.eid, msg=msg)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
+
+    @property
+    def node_ids(self):
+        return [self.Ga(), self.Gb()]
 
     @property
     def nodes(self):

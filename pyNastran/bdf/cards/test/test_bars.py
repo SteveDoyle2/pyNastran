@@ -24,10 +24,10 @@ class TestBars(unittest.TestCase):
         card = model.process_card(lines)
         cardi = BDFCard(card)
         pbar = PBAR.add_card(cardi)
-        self.assertEqual(pbar.A, 0.), pbar.A
-        self.assertEqual(pbar.i12, 0.), pbar.i12
-        self.assertEqual(pbar.k1, None), pbar.k1
-        self.assertEqual(pbar.k2, None), pbar.k2
+        self.assertEqual(pbar.A, 0.)
+        self.assertEqual(pbar.i12, 0.)
+        self.assertEqual(pbar.k1, None)
+        self.assertEqual(pbar.k2, None)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
             #pbar = PBAR(card2)
 

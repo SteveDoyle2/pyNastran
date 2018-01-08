@@ -12,8 +12,8 @@ def extract_bodies(bdf_filename, mpc_id=0):
     """
     Finds the isolated bodies
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     bdf_filename : str/BDF
         str : the path the the *.bdf file
         BDF : a BDF() boject
@@ -23,16 +23,19 @@ def extract_bodies(bdf_filename, mpc_id=0):
         not supported
 
     Considers:
+    ----------
      - elements
      - rigid_elements
 
     Doesn't consider:
+    -----------------
       - elements_mass
       - MPC
       - MPCADD
       - DMIx
 
     Doesn't support:
+    ----------------
       - xref
       - duplicate element ids
       - large values

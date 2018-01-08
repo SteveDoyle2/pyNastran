@@ -45,7 +45,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         should the nodes be renumbered (default=False)
     neq_max : int
         the number of "close" points (default=4)
-    xref bool: bool
+    xref : bool
         does the model need to be cross_referenced
         (default=True; only applies to model option)
     node_set : List[int] / (n, ) ndarray
@@ -54,12 +54,6 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         the bdf write precision
     is_double : bool; default=False
         the field precision to write
-    crash_on_collapse : bool; default=False
-        stop if nodes have been collapsed
-           False: blindly move on
-           True: rereads the BDF which catches doubled nodes (temporary);
-                 in the future collapse=True won't need to double read;
-                 an alternative is to do Patran's method of avoiding collapse)
     remove_collapsed_elements : bool; default=False (unsupported)
         True  : 1D/2D/3D elements will not be collapsed;
                 CELASx/CDAMP/MPC/etc. are not considered
@@ -68,6 +62,12 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         True  : only collapses that don't break 1D/2D/3D elements will be considered;
                 CELASx/CDAMP/MPC/etc. are considered
         False : element can be collapsed
+    crash_on_collapse : bool; default=False
+        stop if nodes have been collapsed
+           False: blindly move on
+           True: rereads the BDF which catches doubled nodes (temporary);
+                 in the future collapse=True won't need to double read;
+                 an alternative is to do Patran's method of avoiding collapse)
     debug : bool
         bdf debugging
     log : logger(); default=None

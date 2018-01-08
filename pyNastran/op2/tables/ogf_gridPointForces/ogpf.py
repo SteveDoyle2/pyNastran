@@ -3,7 +3,6 @@ Defines the Real/Complex Forces created by:
     GPFORCE = ALL
 """
 from __future__ import print_function
-from six import b
 from six.moves import range
 from struct import Struct
 from numpy import fromstring
@@ -83,7 +82,7 @@ class OGPF(OP2Common):
 
                         nids = ints[:, 0] // 10
                         eids = ints[:, 1]
-                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)#[:, 2:3]
+                        strings = fromstring(data, dtype=self._uendian + 'S8').reshape(nnodes, 5)#[:, 2:3]
                         if obj.is_unique:
                             obj.node_element[itime, istart:iend, 0] = nids
                             obj.node_element[itime, istart:iend, 1] = eids
@@ -102,7 +101,7 @@ class OGPF(OP2Common):
                     if self.is_debug_file:
                         if itime != 0:
                             ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 10)
-                            strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)
+                            strings = fromstring(data, dtype=self._uendian + 'S8').reshape(nnodes, 5)
                         for i in range(iend - istart):
                             self.binary_debug.write('  nid=%s - (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 ints[i, 0] // 10,
@@ -110,7 +109,7 @@ class OGPF(OP2Common):
                                 floats[i, 4], floats[i, 5], floats[i, 6],
                                 floats[i, 7], floats[i, 8], floats[i, 9], ))
                 else:
-                    s = Struct(b(self._endian + 'ii8s6f'))
+                    s = Struct(self._endian + b'ii8s6f')
                     for i in range(nnodes):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
@@ -151,14 +150,14 @@ class OGPF(OP2Common):
                         eids = ints[:, 1]
                         obj.node_element[istart:iend, 0] = nids
                         obj.node_element[istart:iend, 1] = eids
-                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 8)
+                        strings = fromstring(data, dtype=self._uendian + 'S8').reshape(nnodes, 8)
                         obj.element_names[istart:iend] = strings[:, 1]
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 16)
                     #[f1, f2, f3, m1, m2, m3]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
                 else:
-                    s = Struct(b(self._endian + 'ii8s12f'))
+                    s = Struct(self._endian + b'ii8s12f')
 
                     #if self.is_debug_file:
                         #self.binary_debug.write('  GPFORCE\n')
