@@ -33,8 +33,10 @@ def rigid_body_geom(grids, refpoint=np.array([[0, 0, 0]])):
     rb : ndarray
         Rigid-body modes; rows(grids)*6 x 6.
 
-    Note:  all grids are assumed to be in the same rectangular
-    coordinate system.  For a much more sophisticated routine, see
+    Notes
+    -----
+    All grids are assumed to be in the same rectangular coordinate
+    system.  For a much more sophisticated routine, see
     n2y.rigid_body_geom_uset().
 
     Examples
@@ -518,7 +520,9 @@ def mkusetmask(nasset=None):
         indexed by the lowercase set letter(s).  Otherwise, `mask` is
         the bit mask for the specific set(s).
 
-    Note that the analyst rarely needs to use this function directly;
+    Notes
+    -----
+    The analyst rarely needs to use this function directly;
     other routines will call this routine automatically and use the
     resulting vector or mask internally.
 
@@ -537,7 +541,7 @@ def mkusetmask(nasset=None):
 
     User-defined sets: U1, U2, U3, U4, U5, and U6.
 
-    Note: MSC.Nastran apparently changes the B-set bitmask not only
+    MSC.Nastran apparently changes the B-set bitmask not only
     between different versions but also between different machines.
     Sometimes the 2nd bit goes to the B-set and sometimes it goes to
     the S-set.  However, so far, the S-set always has other bits set
@@ -547,7 +551,9 @@ def mkusetmask(nasset=None):
     assume that the 2nd bit belongs to the B-set and no manual changes
     are required.
 
-    See also n2y.mksetpv, op2.read_nas2cam, op2.read_nas2cam_op2, n2y.usetprt.
+    See Also
+    --------
+    n2y.mksetpv, op2.read_nas2cam, op2.read_nas2cam_op2, n2y.usetprt.
 
     Examples
     --------
@@ -1882,7 +1888,9 @@ def add_grid_to_uset(uset, gid, nasset, coordin, xyz, coordout, coordref=None):
     and the locations of A, B, and C are given in the coordinate
     system indicated by 'reference_id'.
 
-    Note: in the demo below, the uset matrix is expanded each call.
+    Notes
+    -----
+    In the demo below, the uset matrix is expanded each call.
     For a large number of nodes, it is more efficient to allocate the
     matrix first and then fill in every 6 rows.  For example, if there
     are n nodes::
@@ -1894,7 +1902,9 @@ def add_grid_to_uset(uset, gid, nasset, coordin, xyz, coordout, coordref=None):
             uset[j:j+6] = n2y.addgrid(None, ids[i], 'b', cdin[i],
                                         xyz[i], cdout[i], coordref)
 
-    See also nastran.bulk2uset, n2y.rbgeom_uset, n2y.formrbe3,
+    See Also
+    --------
+    nastran.bulk2uset, n2y.rbgeom_uset, n2y.formrbe3,
     op2.rdnas2cam, op2.rdn2cop2, n2y.usetprt.
 
     Raises

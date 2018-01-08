@@ -106,7 +106,9 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
         the list of list of ints of the element IDs
         with the same normal that are touching
 
-    .. note:: modifies elements
+    Notes
+    -----
+    modifies elements
     """
     elements -= 1
     #npoints = points.shape[0]

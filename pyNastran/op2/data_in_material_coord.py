@@ -138,8 +138,8 @@ def calc_imat(normals, csysi):
     jhat = j / |j|
     i = jhat x k
 
-    Note
-    ----
+    Notes
+    -----
     i is not a unit vector because k (the element normal)
     is not a unit vector.
     """

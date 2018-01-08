@@ -182,8 +182,10 @@ class CAERO1(VectorizedCard):
         grids_cid0 : (nnodes, 3) float ndarray; (default=None -> computes)
             the GRIDs in CORD2R=0
 
-        .. note:: If node_ids is None, the positions of all the GRID cards
-                  must be calculated
+            Notes
+        -----
+        If node_ids is None, the positions of all the GRID cards
+        must be calculated
         """
         area, _normal = self._area_normal(element_id=element_id,
             node_ids=node_ids, grids_cid0=grids_cid0,
@@ -208,8 +210,10 @@ class CAERO1(VectorizedCard):
         grids_cid0 : (nnodes, 3) float ndarray; (None -> computes)
             the GRIDs in CORD2R=0
 
-        .. note:: If node_ids is None, the positions of all the GRID cards
-                  must be calculated
+        Notes
+        -----
+        If node_ids is None, the positions of all the GRID cards
+        must be calculated.
         """
         area, normal = self._area_normal(element_id=element_id,
             node_ids=node_ids, grids_cid0=grids_cid0,
@@ -243,8 +247,10 @@ class CAERO1(VectorizedCard):
         calculate_normal : bool; default=True
             should the normals be calculated
 
-        .. note:: If node_ids is None, the positions of all the GRID cards
-                  must be calculated
+        Notes
+        -----
+        If node_ids is None, the positions of all the GRID cards
+        must be calculated.
         """
         if nodes_cid0 is None:
             node_ids = self.model.grid.node_ids

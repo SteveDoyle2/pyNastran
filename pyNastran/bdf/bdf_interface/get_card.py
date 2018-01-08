@@ -79,23 +79,23 @@ class GetCard(GetMethods):
             value=the ID of the card object
             useful
 
-        Example 1
+        Examples
         ---------
-        out_dict = model.get_card_ids_by_card_types(
+        >>> out_dict = model.get_card_ids_by_card_types(
             card_types=['GRID', 'CTRIA3', 'CQUAD4'], combine=False)
-        out_dict = {
+        >>> out_dict = {
             'GRID' : [1, 2, 10, 42, 1000],
             'CTRIA3' : [1, 2, 3, 5],
             'CQUAD4' : [4],
         }
 
-        Example 2 - Shell Elements
-        --------------------------
-        out_dict = model.get_card_ids_by_card_types(
-            card_types=['CTRIA3', 'CQUAD4'], combine=True)
-        out_dict = {
-            [1, 2, 3, 4, 5],
-        }
+        # shell elements
+
+          >>> out_dict = model.get_card_ids_by_card_types(
+              card_types=['CTRIA3', 'CQUAD4'], combine=True)
+          >>> out_dict = {
+              [1, 2, 3, 4, 5],
+          }
         """
         if card_types is None:
             card_types = list(self.cards_to_read)
@@ -2116,8 +2116,8 @@ class GetCard(GetMethods):
           # consider all properties
           eids_dict = model.get_element_ids_dict_with_pids()
 
-        Note
-        ----
+        Notes
+        -----
         What happens with CONRODs?
         """
         if pids is None:

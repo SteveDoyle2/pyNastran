@@ -302,7 +302,9 @@ def _bar_areaL(class_name, beam_type, dim, prop):
     Area : float
         Area of the given cross section defined by **self.beam_type**
 
-    .. note:: internal method
+    Notes
+    -----
+    internal method
     """
     if beam_type == 'ROD':
         # This is a circle if you couldn't tell...

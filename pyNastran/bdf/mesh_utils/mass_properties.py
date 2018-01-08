@@ -410,21 +410,18 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
        If you're trying to get the mass of a single element, it
        will be wrong, but for real models will be correct.
 
-    Example 1
-    ---------
+    Examples
+    --------
     # mass properties of entire structure
-    mass, cg, I = model.mass_properties()
-    Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+    >>> mass, cg, I = model.mass_properties()
+    >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
 
 
-    Example 2
-    ---------
     # mass properties of model based on Property ID
-    pids = list(model.pids.keys())
-    pid_eids = model.get_element_ids_dict_with_pids(pids)
-
-    for pid, eids in sorted(iteritems(pid_eids)):
-        mass, cg, I = mass_properties(model, element_ids=eids)
+    >>> pids = list(model.pids.keys())
+    >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
+    >>> for pid, eids in sorted(iteritems(pid_eids)):
+    >>>     mass, cg, I = mass_properties(model, element_ids=eids)
 
     TODO
     ----

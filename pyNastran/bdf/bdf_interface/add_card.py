@@ -3419,7 +3419,10 @@ class AddCards(AddMethods):
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
 
-        .. note:: len(gids) == len(components) == len(enforced)
+        Notes
+        -----
+        len(gids) == len(components) == len(enforced)
+
         .. warning:: non-zero enforced deflection requires an SPCD as well
         """
         spc = SPC(conid, gids, components, enforced, comment=comment)
@@ -3460,7 +3463,10 @@ class AddCards(AddMethods):
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
 
-        .. note:: len(nodes) == len(constraints) == len(enforced)
+        Notes
+        -----
+        len(nodes) == len(constraints) == len(enforced)
+
         .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
                      Yes, you really want to constrain the deflection to 0.0
                      with an SPC1 card and then reset the deflection using an
@@ -5052,9 +5058,11 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        .. note:: FREQ5 is only valid in modal frequency-response
-                  solutions (SOLs 111, 146, and 200) and is ignored in
-                  direct frequency response solutions.
+        Notes
+        -----
+        FREQ5 is only valid in modal frequency-response solutions
+        (SOLs 111, 146, and 200) and is ignored in direct frequency
+        response solutions.
         """
         freq = FREQ5(sid, fractions, f1=f1, f2=f2, comment=comment)
         self._add_freq_object(freq)
@@ -5323,32 +5331,32 @@ class AddCards(AddMethods):
         validate : bool; default=True
             should the card be validated when it's created
 
-        Example 1
-        ---------
-        dresp_id = 103
-        label = 'resp1'
-        response_type = 'STRESS'
-        property_type = 'PSHELL'
-        pid = 3
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = None
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        Examples
+        -------
+        # stress/pshell
+        >>> dresp_id = 103
+        >>> label = 'resp1'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PSHELL'
+        >>> pid = 3
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = None
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
-        Example 2
-        ---------
-        dresp_id = 104
-        label = 'resp2'
-        response_type = 'STRESS'
-        property_type = 'PCOMP'
-        pid = 3
-        layer = 4
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = layer
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        # stress/pcomp
+        >>> dresp_id = 104
+        >>> label = 'resp2'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PCOMP'
+        >>> pid = 3
+        >>> layer = 4
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = layer
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         dresp = DRESP1(dresp_id, label, response_type, property_type, region,
                        atta, attb, atti, validate=validate, comment=comment)
@@ -5506,7 +5514,9 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        .. note:: either dvids or labels is required
+        Notes
+        -----
+        either dvids or labels is required
         """
         dvprel = DVPREL2(oid, prop_type, pid, pname_fid, deqation, dvids, labels,
                          p_min=p_min, p_max=p_max, validate=validate, comment=comment)
@@ -5578,7 +5588,9 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        .. note:: either dvids or labels is required
+        Notes
+        -----
+        either dvids or labels is required
         """
         dvmrel = DVMREL2(oid, mat_type, mid, mp_name, deqation, dvids, labels,
                          mp_min=mp_min, mp_max=mp_max,

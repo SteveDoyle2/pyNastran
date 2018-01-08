@@ -318,8 +318,12 @@ class CaseControlDeck(object):
         param : str
             the variable to add
 
-        .. note:: dont worry about overbounding the line
+        Notes
+        -----
+        dont worry about overbounding the line
 
+        Examples
+        --------
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
@@ -344,8 +348,12 @@ class CaseControlDeck(object):
         param_name : List[str]
             the parameter name to add
 
-        .. note::  dont worry about overbounding the line
+        Notes
+        -----
+        dont worry about overbounding the line
 
+        Examples
+        --------
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_local_subcase(1, 'DISP=ALL')
@@ -381,7 +389,10 @@ class CaseControlDeck(object):
         """
         Reads the case control deck
 
-        .. note::    supports comment lines
+        Notes
+        -----
+        supports comment lines
+
         .. warning:: doesnt check for 72 character width lines, but will
                      follow that when it's written out
         """

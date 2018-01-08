@@ -948,8 +948,8 @@ class OP2_F06_Common(object):
         Gets info about the contents of the different attributes of the
         OP2 class.
 
-        Example 1
-        ---------
+        Examples
+        --------
         >>> self.get_op2_stats()
 
         displacements[1]
@@ -978,8 +978,7 @@ class OP2_F06_Common(object):
           sort1
           lsdvmns = [1]
 
-        Example 1
-        ---------
+
         >>> self.get_op2_stats(short=True)
         displacements[1]; RealDisplacementArray; [1, 72, 6]; [t1, t2, t3, r1, r2, r3]
         """

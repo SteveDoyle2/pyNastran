@@ -391,8 +391,10 @@ class CHEXA8(SolidElement):
         total : bool; default=False
             should the volume be summed
 
-        .. note:: Volume for a CHEXA is the average area of two opposing faces
-                  times the length between the centroids of those points
+        Notes
+        -----
+        Volume for a CHEXA is the average area of two opposing faces
+        times the length between the centroids of those points
         """
         n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         volume = volume8(n1, n2, n3, n4, n5, n6, n7, n8)

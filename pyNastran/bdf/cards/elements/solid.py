@@ -569,11 +569,11 @@ class CHEXA20(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         (n1, n2, n3, n4, n5, n6, n7, n8,

@@ -63,7 +63,9 @@ def comp2tri(in_filenames, out_filename,
     float_fmt : str; default='%6.7f'
         the format string to use for ascii writing
 
-    .. note:: assumes loads is None
+    Notes
+    -----
+    assumes loads is None
     """
     points = []
     elements = []
@@ -613,7 +615,9 @@ class Cart3D(Cart3dIO):
         """
         Makes a half model from a full model
 
-        ... note:: Cp is really loads['Cp'] and was meant for loads analysis only
+        Notes
+        -----
+        Cp is really loads['Cp'] and was meant for loads analysis only
         """
         nodes = self.nodes
         elements = self.elements

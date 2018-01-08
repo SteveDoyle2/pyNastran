@@ -24,10 +24,10 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
         'location' : 'node',   # node, centroid
     }
 
-    TODO: this isn't part of OP2() because it's not done
-    TODO: doesn't support transient, frequency, real/imaginary data
-    TODO: add 'sum', 'difference' for 'layers'?
-    TODO: hasn't been tested
+    .. todo:  this isn't part of OP2() because it's not done
+    .. todo:  doesn't support transient, frequency, real/imaginary data
+    .. todo:  add 'sum', 'difference' for 'layers'?
+    .. todo:  hasn't been tested
     """
     raise NotImplementedError()
     assert options['mode'] in ['derive/avg', 'avg/derive'], options['mode']

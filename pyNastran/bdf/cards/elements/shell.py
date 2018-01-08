@@ -2157,7 +2157,9 @@ class CQUAD4(QuadShell):
         #- `Nmat (3x12 np.array[float])`: The shape-function value weighting
             #matrix.
 
-        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+        #Notes
+        #-----
+        #Xi and eta can both vary between -1 and 1 respectively.
 
         #per AeroComBAT
         #"""

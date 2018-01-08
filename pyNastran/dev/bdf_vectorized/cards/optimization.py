@@ -1126,32 +1126,32 @@ class DRESP1(OptConstraint):
         validate : bool; default=False
             should the card be validated when it's created
 
-        Example 1
-        ---------
-        dresp_id = 103
-        label = 'resp1'
-        response_type = 'STRESS'
-        property_type = 'PSHELL'
-        pid = 3
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = None
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        Examples
+        --------
+        # stress/pshell
+        >>> dresp_id = 103
+        >>> label = 'resp1'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PSHELL'
+        >>> pid = 3
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = None
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
-        Example 2
-        ---------
-        dresp_id = 104
-        label = 'resp2'
-        response_type = 'STRESS'
-        property_type = 'PCOMP'
-        pid = 3
-        layer = 4
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = layer
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        # stress/pcomp
+        >>> dresp_id = 104
+        >>> label = 'resp2'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PCOMP'
+        >>> pid = 3
+        >>> layer = 4
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = layer
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         if comment:
             self.comment = comment

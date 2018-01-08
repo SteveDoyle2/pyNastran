@@ -533,8 +533,10 @@ class Element(BaseCard):
             key = face number
             value = a list of nodes (integer pointers) as the values.
 
-        .. note::  The order of the nodes are consistent with normals that point outwards
-                   The face numbering is meaningless
+        Notes
+        -----
+        The order of the nodes are consistent with normals that point outwards
+        The face numbering is meaningless
 
         .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
         .. warning:: higher order element ids not verified with ANSYS; is this current?
@@ -592,8 +594,8 @@ def _format_comment(comment):
 
     Empty comments or just spaces are returned as an empty string.
 
-    Examples:
-
+    Examples
+    --------
     >>> _format_comment('a comment\ntaking two lines')
     $a comment
     $taking two lines
@@ -724,7 +726,10 @@ def expand_thru_by(fields, set_fields=True, sort_fields=True,
         False : crash
 
     .. todo:: not tested
-    .. note:: used for QBDY3 and what else ???
+
+    Notes
+    -----
+    used for QBDY3 and what else ???
     """
     if require_int:
         func = int

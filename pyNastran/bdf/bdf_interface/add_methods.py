@@ -463,8 +463,10 @@ class AddMethods(BDFAttributes):
         """
         Adds a CREEP material
 
-        .. note:: May be removed in the future.  Are CREEP cards materials?
-                  They have an MID, but reference structural materials.
+        Notes
+        -----
+        May be removed in the future.  Are CREEP cards materials?
+        They have an MID, but reference structural materials.
         """
         key = material.mid
         if key in self.thermal_materials and not allow_overwrites:

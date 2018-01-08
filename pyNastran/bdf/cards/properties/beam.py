@@ -1339,7 +1339,9 @@ class PBEAML(IntegratedLineProperty):
 
         .. math:: A = \int \, A(x) dx
 
-        .. note:: a spline is fit to :math:`A(x)` and then integrated.
+        Notes
+        -----
+        a spline is fit to :math:`A(x)` and then integrated.
         """
         areas = []
         for dim in self.dim:

@@ -1949,7 +1949,7 @@ class OP2(object):
               BGPDTS
               MAPS     (if required)
 
-        Note: The 2nd bit for the DOF column of all USET tables is
+        .. note:: The 2nd bit for the DOF column of all USET tables is
         cleared for all S-set.  See :func:`n2y.mkusetmask` for more
         information.
 
@@ -2604,7 +2604,7 @@ def _get_tinr(iddof, idj):
 
     Returns tuple of (type, start row)
 
-    Note: start row return value starts at 0, not at 1.
+    .. note:: start row return value starts at 0, not at 1.
     """
     i = np.nonzero(iddof[1] == idj)[0]
     tinr = iddof[:, i]

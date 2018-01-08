@@ -118,22 +118,21 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
        - SUBCASE
        - global SET cards won't be renumbered properly
 
-    Example 1 - Renumber Everything; Start from 1
-    ---------------------------------------------
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 round_ids=False)
+    Examples
+    --------
+    # Renumber Everything; Start from 1
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     round_ids=False)
 
-    Example 2 - Renumber Everything; Start Material IDs from 100
-    ------------------------------------------------------------
-    starting_id_dict = {
+    # Renumber Everything; Start Material IDs from 100
+    >>> starting_id_dict = {
         'mid' : 100,
     }
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_ids_dict=starting_ids_dict, round_ids=False)
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     starting_ids_dict=starting_ids_dict, round_ids=False)
 
-    Example 3 - Only Renumber Material IDs
-    --------------------------------------
-    starting_id_dict = {
+    # Only Renumber Material IDs
+    >>> starting_id_dict = {
         'cid' : None,
         'nid' : None,
         'eid' : None,
@@ -157,8 +156,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'suport1_id' : None,
         'tf_id' : None,
     }
-    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_ids_dict=starting_ids_dict, round_ids=False)
+    >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                     starting_ids_dict=starting_ids_dict, round_ids=False)
     """
     starting_id_dict_default = {
         'cid' : 1,
