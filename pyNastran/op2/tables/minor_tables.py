@@ -28,7 +28,7 @@ Defines various tables that don't fit in other sections:
                               make_matrix_symmetric)
 """
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from struct import unpack
 from six import b
 import numpy as np
@@ -232,7 +232,7 @@ class MinorTables(OP2Common):
 
         nfloats = (ndata - 8) // 4
         assert nfloats * 4 == (ndata - 8)
-        fmt = self._endian + b'%sf' % nfloats
+        fmt = b(self._uendian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
         self._frequencies = freqs
         if self.is_debug_file:
@@ -899,19 +899,19 @@ class MinorTables(OP2Common):
         if tout == 1:
             nfloats = nvalues
             nterms = nvalues
-            fmt = self._endian + b'i %if' % nfloats
+            fmt = b(self._uendian + 'i %if' % nfloats)
         elif tout == 2:
             nfloats = nvalues // 2
             nterms = nvalues // 2
-            fmt = self._endian + b'i %id' % nfloats
+            fmt = b(self._uendian + 'i %id' % nfloats)
         elif tout == 3:
             nfloats = nvalues
             nterms = nvalues // 2
-            fmt = self._endian + b'i %if' % nfloats
+            fmt = b(self._uendian + 'i %if' % nfloats)
         elif tout == 4:
             nfloats = nvalues // 2
             nterms = nvalues // 4
-            fmt = self._endian + b'i %id' % nfloats
+            fmt = b(self._uendian + 'i %id' % nfloats)
         else:
             raise RuntimeError('tout = %s' % tout)
         return fmt, nfloats, nterms
@@ -986,7 +986,7 @@ class MinorTables(OP2Common):
         #nvalues = len(data) // 4
         assert len(data) % 4 == 0, len(data) / 4.
 
-        header = unpack('3i 8s 7i', data[:48]) # 48=4*12
+        header = unpack(self._endian + b'3i 8s 7i', data[:48]) # 48=4*12
         assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
 
         # ncols_gset is needed for form=9
