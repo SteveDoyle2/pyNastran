@@ -87,11 +87,6 @@ class VectorizedCard(object):
             msg.append('  %-8s: %i' % (self.type, self.n))
         return msg
 
-    def __repr__(self):
-        f = StringIO()
-        self.write_card(f)
-        return f.getvalue().rstrip()
-
     def print_card(self, i=None, size=8):
         #i = self._validate_slice(i)
         string_io = StringIO()
@@ -183,6 +178,11 @@ class VectorizedCard(object):
         if isinstance(i, (int64, integer_types)):
             i = array([i], dtype='int32')
         return i
+
+    #def __repr__(self):
+        #f = StringIO()
+        #self.write_card(f)
+        #return f.getvalue().rstrip()
 
     def __repr__(self):
         return '<%s object; n=%s>' % (self.type, self.n)

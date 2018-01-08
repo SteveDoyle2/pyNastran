@@ -175,6 +175,7 @@ class XrefMesh(BDFAttributes):
         if xref_nodes_with_elements:
             self._cross_reference_nodes_with_elements()
         #self.case_control_deck.cross_reference(self)
+        self.pop_xref_errors()
 
     def _cross_reference_constraints(self):
         # type: () -> None
@@ -465,7 +466,6 @@ class XrefMesh(BDFAttributes):
         Links the loads to nodes, coordinate systems, and other loads.
         """
         for (lid, load_combinations) in iteritems(self.load_combinations):
-            #self.log.debug("load lid=%s load_combinations=%s" %(lid, load_combinations))
             for load_combination in load_combinations:
                 try:
                     load_combination.cross_reference(self)
@@ -477,7 +477,6 @@ class XrefMesh(BDFAttributes):
                         self.pop_xref_errors()
 
         for (lid, loads) in iteritems(self.loads):
-            #self.log.debug("load lid=%s loads=%s" %(lid, loads))
             for load in loads:
                 try:
                     load.cross_reference(self)
@@ -489,7 +488,6 @@ class XrefMesh(BDFAttributes):
                         self.pop_xref_errors()
 
         for (lid, sid) in iteritems(self.dloads):
-            #self.log.debug("dload lid=%s sid=%s" % (lid, sid))
             for load in sid:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
@@ -502,7 +500,6 @@ class XrefMesh(BDFAttributes):
                         self.pop_xref_errors()
 
         for (lid, sid) in iteritems(self.dload_entries):
-            #self.log.debug("dload_entries lid=%s sid=%s" % (lid, sid))
             for load in sid:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:

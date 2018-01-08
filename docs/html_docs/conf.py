@@ -43,10 +43,8 @@ sys.path.append(os.path.join(pkg_path, 'f06'))
 # ---3rd party modules don't work, so we hack them in --------------------------
 MOCK_MODULES = [
     #'numpy', 'numpy.linalg','numpy.__version__',
-    #'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.weave',
-    #'scipy.integrate', 'scipy.interpolate',
     'pandas',
-    'numpydoc',
+    #'numpydoc',
     'numpy.distutils.core',
     'numpy.distutils',
     'matplotlib',
@@ -67,6 +65,14 @@ MOCK_MODULES = [
     #'nastranwrapper',
     #'nastranwrapper.test.nastranwrapper_test_utils',
     ]
+try:
+    import scipy
+except ImportError:
+    MOCK_MODULES += [
+        'scipy', 'scipy.linalg', 'scipy.sparse', #'scipy.weave',
+        'scipy.integrate', 'scipy.interpolate', 'scipy.spatial',
+    ]
+
 #MOCK_MODULES += ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas']
 
 ## requires the mock module in Python 2.x

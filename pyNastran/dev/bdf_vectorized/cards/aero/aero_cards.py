@@ -1781,7 +1781,7 @@ class CAERO1(BaseCard):
                 msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
                     self.eid, ichord, ispan, nchord)
                 raise OverflowError(msg)
-            self._init_ids(dtype='int64')
+            self._init_ids(model, dtype='int64')
 
     def update(self, maps):
         """
@@ -3301,8 +3301,7 @@ class FLFACT(BaseCard):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        else:
-            return self.comment + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 
 class FLUTTER(BaseCard):
@@ -3533,21 +3532,19 @@ class FLUTTER(BaseCard):
     def _get_raw_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethod
-            return(self.imethod, self.nvalue)
+            return self.imethod, self.nvalue
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
-        else:
-            return(self.imethod, self.nvalue)
+        return self.imethod, self.nvalue
 
     def _repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             imethod = set_blank_if_default(self.imethod, 'L')
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethods
-            return (imethod, self.nvalue)
+            return imethod, self.nvalue
         elif self.method in ['PKS', 'PKNLS']:
-            return(self.imethod, self.omax)
-        else:
-            return(self.imethod, self.nvalue)
+            return self.imethod, self.omax
+        return self.imethod, self.nvalue
 
     def raw_fields(self):
         """
@@ -4459,6 +4456,7 @@ class PAERO2(BaseCard):
 
     def update(self, maps):
         #msg = ' which is required by PAERO2 eid=%s' % self.pid
+        aefact_map = maps['aefact']
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             #lrsb_ref = aefact_map[self.lrsb]
             self.lrsb = aefact_map[self.lrsb]
@@ -5048,7 +5046,7 @@ class SPLINE2(Spline):
         return SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid,
                        dthx, dthy, usage, comment=comment)
 
-    def cross_reference(self, model):
+    def update(self, model, maps):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -5057,6 +5055,9 @@ class SPLINE2(Spline):
         model : BDF()
             the BDF object
         """
+        coord_map = maps['coord']
+        caero_map = maps['caero']
+        set_map = maps['set']
         self.cid = coord_map[self.cid]
         self.caero = caero_map[self.caero]
         self.setg = set_map[self.setg]
@@ -5071,7 +5072,7 @@ class SPLINE2(Spline):
         if nnodes < 2:
             msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
             msg += str(self)
-            msg += str(self.setg_ref)
+            msg += str(setg_ref)
             raise RuntimeError(msg)
 
     @property
@@ -5269,7 +5270,7 @@ class SPLINE3(Spline):
             if card[j + 3] or card[j + 4] or card[j + 5]:
                 i += 1
                 gii = integer(card, j, 'Gi_' % i)
-                cii = components(card, j + 1, 'Ci_' % i)
+                cii = parse_components(card, j + 1, 'Ci_' % i)
                 aii = double(card, j + 2, 'Ai_' % i)
                 Gi.append(gii)
                 ci.append(cii)
@@ -5322,8 +5323,8 @@ class SPLINE3(Spline):
         """
         list_fields = [
             'SPLINE3', self.eid, self.caero, self.box_id, self.components,
-            self.nids[0], self.displacement_components[0], self.coeffs[0], self.usage]
-        for nid, disp_c, coeff in zip(self.nids[1:], self.displacement_components[1:],
+            self.nodes[0], self.displacement_components[0], self.coeffs[0], self.usage]
+        for nid, disp_c, coeff in zip(self.nodes[1:], self.displacement_components[1:],
                                       self.coeffs[1:]):
             list_fields += [nid, disp_c, coeff, None]
         return list_fields
