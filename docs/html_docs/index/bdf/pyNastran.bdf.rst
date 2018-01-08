@@ -1,4 +1,4 @@
-6#############
+6############
 pyNastran/bdf
 #############
 
@@ -12,17 +12,6 @@ This is the pyNastran.bdf.rst file.
 
 .. automodule:: pyNastran.bdf.bdf
     :inherited-members:
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-*************************
-:mod:`bdf_methods` Module
-*************************
-
-.. inheritance-diagram:: pyNastran.bdf.bdf_methods
-
-.. automodule:: pyNastran.bdf.bdf_methods
     :members:
     :undoc-members:
     :show-inheritance:
@@ -146,8 +135,9 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
+***********
 Subpackages
------------
+***********
 
 .. toctree::
 
