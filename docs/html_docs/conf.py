@@ -45,6 +45,7 @@ MOCK_MODULES = [
     #'numpy', 'numpy.linalg','numpy.__version__',
     'pandas',
     #'numpydoc',
+    'PySide',
     'numpy.distutils.core',
     'numpy.distutils',
     'matplotlib',
