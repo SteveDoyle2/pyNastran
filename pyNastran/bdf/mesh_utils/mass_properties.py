@@ -412,12 +412,13 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
 
     Examples
     --------
-    # mass properties of entire structure
+    **mass properties of entire structure**
+
     >>> mass, cg, I = model.mass_properties()
     >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
 
 
-    # mass properties of model based on Property ID
+    **mass properties of model based on Property ID**
     >>> pids = list(model.pids.keys())
     >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
     >>> for pid, eids in sorted(iteritems(pid_eids)):

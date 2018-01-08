@@ -1128,7 +1128,7 @@ class DRESP1(OptConstraint):
 
         Examples
         --------
-        # stress/pshell
+        **stress/pshell**
         >>> dresp_id = 103
         >>> label = 'resp1'
         >>> response_type = 'STRESS'

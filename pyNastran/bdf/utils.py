@@ -450,10 +450,14 @@ def parse_patran_syntax(node_sets, pound=None):
 
     Examples
     --------
+    **Example 1**
+
     >>> node_sets = "1 2 3 5:10 12:20:2"
     >>> data = parse_patran_syntax(node_sets)
     >>> data
     data = [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20]
+
+    **Example 2**
 
     >>> node_sets = "1 2 3:#"
     >>> data = parse_patran_syntax(node_sets, pound=10)
@@ -553,6 +557,8 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
         values : the integer values for that key
 
     Examples
+    --------
+    **Example 1**
 
     >>> node_sets = "e 1:3 n 2:6:2 Node 10:13"
     >>> data = parse_patran_syntax_dict(node_sets)
@@ -562,6 +568,8 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
           'Node' : [10, 11, 12, 13],
     }
 
+
+    **Example 2**
 
     >>> node_sets = "e 1:3 n 2:6:2 Node 10:#"
 
@@ -680,29 +688,31 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
         str : the key
         values : the integer values for that key
 
-    Example 1
-    ---------
+    Examples
+    --------
+    **Example 1**
     .. code-block:: python
 
       # we drop the coordinate systems because we didn't request them
       # (coord is not referenced)
       #
-      node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
-      type_map = {
+      >>> node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
+      >>> type_map = {
           'n' : 'Node',
           'Node' : 'Node',
           'e' : 'Element',
           'Elm' : 'Element',
           'Element' : 'Element',
       }
-      data = parse_patran_syntax_dict(node_sets, type_map)
-      data = {
+
+      **Example 2**
+      >>> data = parse_patran_syntax_dict(node_sets, type_map)
+      >>> data = {
           'Element' : [1, 2, 3],
           'Node' : [2, 4, 6, 10, 11, 12, 13, 15],
       }
 
     .. todo:: doesn't support pound_dict
-    .. todo:: doesn't support msg
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
     update_type_map = {}  # type: Dict[str, str]

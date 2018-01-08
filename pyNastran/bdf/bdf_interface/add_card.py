@@ -5332,8 +5332,9 @@ class AddCards(AddMethods):
             should the card be validated when it's created
 
         Examples
-        -------
-        # stress/pshell
+        --------
+        **Stress/PSHELL**
+
         >>> dresp_id = 103
         >>> label = 'resp1'
         >>> response_type = 'STRESS'
@@ -5345,7 +5346,9 @@ class AddCards(AddMethods):
         >>> atti = [pid]
         >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
-        # stress/pcomp
+
+        **Stress/PCOMP**
+
         >>> dresp_id = 104
         >>> label = 'resp2'
         >>> response_type = 'STRESS'

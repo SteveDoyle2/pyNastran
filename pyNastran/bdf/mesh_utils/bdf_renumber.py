@@ -132,18 +132,21 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     Examples
     --------
-    # Renumber Everything; Start from 1
+    **Renumber Everything; Start from 1**
+
     >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                      round_ids=False)
 
-    # Renumber Everything; Start Material IDs from 100
+    **Renumber Everything; Start Material IDs from 100**
+
     >>> starting_id_dict = {
         'mid' : 100,
     }
     >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                      starting_ids_dict=starting_ids_dict, round_ids=False)
 
-    # Only Renumber Material IDs
+    **Only Renumber Material IDs**
+
     >>> starting_id_dict = {
         'cid' : None,
         'nid' : None,

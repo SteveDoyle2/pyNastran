@@ -92,8 +92,10 @@ class Tecplot(FortranFormat):
         """
         reads a tecplot header
 
-        Example 1
-        =========
+        Examples
+        --------
+        **Example 1**
+
         TITLE     = "tecplot geometry and solution file"
         VARIABLES = "x"
         "y"
@@ -107,8 +109,8 @@ class Tecplot(FortranFormat):
         n=522437, e=1000503, ZONETYPE=FEBrick
         DATAPACKING=BLOCK
 
-        Example 2
-        =========
+        **Example 2**
+
         title="Force and Momment Data for forces"
         variables="Iteration"
         "C_L","C_D","C_M_x","C_M_y","C_M_z""C_x","C_y","C_z","C_Lp","C_Dp", "C_Lv", "C_Dv""C_M_xp"
