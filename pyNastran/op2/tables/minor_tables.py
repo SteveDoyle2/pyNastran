@@ -560,7 +560,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
         #self.show_data(data)
         if self.read_mode == 2:
-            a, bi, c, d, e, f, g = unpack(self._endian + b'%s7i', data)
+            a, bi, c, d, e, f, g = unpack(self._endian + b'7i', data)
             assert a == 101, a
             assert bi == 1, bi
             assert c == 27, c
@@ -586,7 +586,7 @@ class MinorTables(OP2Common):
             ndata = len(data)
             assert ndata == 108, ndata
             (aero, name, comps, cp, x, y, z, coeff, word, column, cd,
-             ind_dof) = unpack(b'8s 56s 2i 3f 4s 8s 3i', data[:108])
+             ind_dof) = unpack(self._endian + b'8s 56s 2i 3f 4s 8s 3i', data[:108])
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
