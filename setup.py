@@ -65,14 +65,17 @@ else:
     except ImportError:
         py_packages.append('numpy >= 1.11.0') # ,<1.13.0
 
-try:
-    import scipy
-    ver = scipy.version.short_version
-    if ver < '0.18.1':
-        print("scipy.version.short_version = %r < '0.18.1'" % scipy.version.short_version)
-        py_packages.append('scipy >= 0.18.1')
-except ImportError:
-    py_packages.append('scipy >= 0.18.1')  # 0.18.1 used
+if is_rtd:
+    py_packages.append('scipy')
+else:
+    try:
+        import scipy
+        ver = scipy.version.short_version
+        if ver < '0.18.1':
+            print("scipy.version.short_version = %r < '0.18.1'" % scipy.version.short_version)
+            py_packages.append('scipy >= 0.18.1')
+    except ImportError:
+        py_packages.append('scipy >= 0.18.1')  # 0.18.1 used
 
 try:
     import six
