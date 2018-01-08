@@ -76,16 +76,17 @@ except ImportError:
         'scipy.integrate', 'scipy.interpolate', 'scipy.spatial',
     ]
 
-try:
-    import imageio
-except ImportError:
-    MOCK_MODULES += ['imageio']
+#try:
+#    import imageio
+#except ImportError:
+#    MOCK_MODULES += ['imageio']
+#
+#try:
+#    import qtpy
+#except ImportError:
+#    MOCK_MODULES += ['qtpy']
 
-try:
-    import qtpy
-except ImportError:
-    MOCK_MODULES += ['qtpy']
-
+MOCK_MODULES += ['qtpy', 'imageio']
 #MOCK_MODULES += ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas']
 
 ## requires the mock module in Python 2.x
