@@ -2,7 +2,7 @@
 from __future__ import print_function, unicode_literals
 from six.moves import range
 from struct import Struct
-from numpy import fromstring, array
+from numpy import fromstring, frombuffer, array
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
 from pyNastran.op2.op2_interface.op2_common import OP2Common
@@ -288,16 +288,16 @@ class ONR(OP2Common):
                 itotal = obj.itotal
                 itotal2 = obj.itotal + nelements * 4
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 4)
                 obj._times[itime] = dt
                 #if obj.itime == 0:
-                ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, eids.min()
                 obj.element[itime, ielement:ielement2] = eids
 
                 #[energy, percent, density]
-                obj.data[itime, ielement:ielement2, :] = floats[:, 1:]
+                obj.data[itime, ielement:ielement2, :] = floats[:, 1:].copy()
                 obj.itotal2 = itotal2
                 obj.ielement = ielement2
             else:
@@ -330,7 +330,7 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5).copy()
                 obj._times[obj.itime] = dt
 
                 strings = fromstring(data, dtype=self._uendian + 'S4').reshape(nelements, 5)
@@ -350,11 +350,11 @@ class ONR(OP2Common):
                         obj.element_type[obj.itime, itotal:itotal2, :] = s
 
                 #[energy, percent, density]
-                print(floats)
-                print(floats[:, 2:])
-                print(floats[:, 3:])
-                print(obj.data[obj.itime, itotal:itotal2, :])
-                print(obj.data[obj.itime, itotal:itotal2, :].shape)
+                #print(floats)
+                #print(floats[:, 2:])
+                #print(floats[:, 3:])
+                #print(obj.data[obj.itime, itotal:itotal2, :])
+                #print(obj.data[obj.itime, itotal:itotal2, :].shape)
                 if obj.element_name == 'DMIG':
                     obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
                 else:

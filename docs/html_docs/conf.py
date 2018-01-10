@@ -522,7 +522,6 @@ def maybe_skip_member(app, what, name, obj, skip, options):
                   'TestTables',
                   'TestThermal',
                   'TestAxi',
-                  'RestMsgMesh',
 
                   'TestBdfUtils',
                   'Testfield_writer_8',
@@ -539,6 +538,11 @@ def maybe_skip_member(app, what, name, obj, skip, options):
                   'TestOpenMDAO',
                   'TestAssignType',
                   'DevUtils',
+
+                  'TestFastGUI',
+                  'TestNastranGUI',
+                  'TestUgridGui',
+                  'TestMsgMesh',
 
                   '_make_card_parser',
                   '_reduce_dload_case',
@@ -816,7 +820,8 @@ def maybe_skip_member(app, what, name, obj, skip, options):
                   )
     exclude = name in exclusions
     if not exclude:
-        print(app, what, name, obj, skip, options)
+        #print(app, what, name, obj, skip, options)
+        print(what, name, obj, skip, options)
     return skip or exclude
 
 def setup(app):
