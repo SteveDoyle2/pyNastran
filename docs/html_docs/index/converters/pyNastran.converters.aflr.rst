@@ -1,16 +1,6 @@
 ugrid Package
 =============
 
-:mod:`surf_io` Module
----------------------
-
-.. inheritance-diagram:: pyNastran.converters.ugrid.surf_io
-
-.. automodule:: pyNastran.converters.aflr.surf.surf_io
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`surf_reader` Module
 -------------------------

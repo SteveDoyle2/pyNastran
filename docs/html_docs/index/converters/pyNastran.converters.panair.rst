@@ -51,13 +51,3 @@ panair Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`to_p3d` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.converters.panair.to_p3d
-
-.. automodule:: pyNastran.converters.panair.to_p3d
-    :members:
-    :undoc-members:
-    :show-inheritance:

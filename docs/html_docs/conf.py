@@ -839,6 +839,13 @@ def maybe_skip_member(app, what, name, obj, skip, options):
                   '_write_sort2_as_sort1',
                   '_write_sort2_as_sort2',
                   'OP2Common', 'Op2Codes', 'F06Writer', 'OP2_Scalar',
+                  'deprecated',
+                  'print_raw_card',
+                  'print_repr_card',
+                  'TestF06Formatting',
+                  '_parse_results',
+                  '_read_inviscid_pressure',
+                  '_fill_abaqus_case',
                   )
     exclude = name in exclusions
     if not on_rtd and not exclude:

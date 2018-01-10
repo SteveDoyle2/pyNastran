@@ -12,15 +12,6 @@ cart3d Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`cart3d_io` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.cart3d_io
-
-.. automodule:: pyNastran.converters.cart3d.cart3d_io
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`cart3d_result` Module
 ---------------------------
