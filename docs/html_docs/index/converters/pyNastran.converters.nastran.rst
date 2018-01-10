@@ -23,16 +23,6 @@ nastran Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`nastranIOv` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.converters.nastran.nastranIOv
-
-.. automodule:: pyNastran.converters.nastran.nastranIOv
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`nastran_to_cart3d` Module
 -------------------------------
 
@@ -79,26 +69,6 @@ nastran Package
 .. inheritance-diagram:: pyNastran.converters.nastran.results_helper
 
 .. automodule:: pyNastran.converters.nastran.results_helper
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`test_nastran` Module
---------------------------
-
-.. inheritance-diagram:: pyNastran.converters.nastran.test_nastran
-
-.. automodule:: pyNastran.converters.nastran.test_nastran
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`test_nastran_gui` Module
-------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.nastran.test_nastran_gui
-
-.. automodule:: pyNastran.converters.nastran.test_nastran_gui
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,15 +1,6 @@
 LaWGS Package
 =============
 
-:mod:`test_wgs_gui` Module
---------------------------
-
-.. inheritance-diagram:: pyNastran.converters.lawgs.test_wgs_gui
-
-.. automodule:: pyNastran.converters.lawgs.test_wgs_gui
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`wgs_io` Module
 --------------------

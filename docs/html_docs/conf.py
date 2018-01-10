@@ -809,17 +809,39 @@ def maybe_skip_member(app, what, name, obj, skip, options):
                   '_write_thermal',
                   '_write_thermal_materials',
 
+                  '_eq_nodes_build_tree',
+                  '_eq_nodes_find_pairs',
+                  '_eq_nodes_setup',
+                  '_transform_node_to_global_array',
+                  '_transform_node_to_local',
+                  '_transform_node_to_local_array',
+                  'transform_node_from_local_to_local',
+                  'transform_node_from_local_to_local_array',
+                  'transform_node_to_global',
+                  'transform_node_to_global_assuming_rectangular',
+                  'transform_node_to_global_no_xref',
+                  'transform_node_to_local',
+                  'transform_node_to_local_array',
+                  'transform_vector_to_global',
+                  'transform_vector_to_global_array',
+                  'transform_vector_to_global_assuming_rectangular',
+                  'transform_vector_to_global_no_xref',
+                  'transform_vector_to_local',
 
                   'add_op2_data',
                   'deprecated',
                   '_add_column',
                   '_add_column_uaccel',
                   '_get_dtype',
-
+                  '_reset_indices',
+                  '_write_sort1_as_sort1',
+                  '_write_sort1_as_sort2',
+                  '_write_sort2_as_sort1',
+                  '_write_sort2_as_sort2',
                   'OP2Common', 'Op2Codes', 'F06Writer', 'OP2_Scalar',
                   )
     exclude = name in exclusions
-    if not exclude:
+    if not on_rtd and not exclude:
         #print(app, what, name, obj, skip, options)
         print(what, name, obj, skip, options)
     return skip or exclude
