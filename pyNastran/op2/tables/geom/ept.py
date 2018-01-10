@@ -397,8 +397,8 @@ class EPT(GeomCommon):
         Word 7 repeats until (-1) occurs
         """
         #strs = numpy.core.defchararray.reshapesplit(data, sep=",")
-        ints = np.frombuffer(data[n:], self._uendian + 'i')
-        floats = np.frombuffer(data[n:], self._uendian + 'f')
+        ints = np.fromstring(data[n:], self._uendian + 'i')
+        floats = np.fromstring(data[n:], self._uendian + 'f')
         iminus1 = np.where(ints == -1)[0]
 
         istart = [0] + list(iminus1[:-1] + 1)

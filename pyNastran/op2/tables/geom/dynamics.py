@@ -145,8 +145,8 @@ class DYNAMICS(GeomCommon):
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.frombuffer(datan, self.idtype)
-        floats = np.frombuffer(datan, self.fdtype)
+        ints = np.fromstring(datan, self.idtype)
+        floats = np.fromstring(datan, self.fdtype)
         istart = 0
         iminus1_delta = get_iend_from_ints(ints)
         nentries = 0
@@ -521,8 +521,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_freq(self, data, n):
         """FREQ(1307,13,126) - Record 13"""
-        ints = np.frombuffer(data[n:], self.idtype)
-        floats = np.frombuffer(data[n:], self.fdtype)
+        ints = np.fromstring(data[n:], self.idtype)
+        floats = np.fromstring(data[n:], self.fdtype)
         iminus1 = np.where(ints == -1)[0]
         istart = 0
         for iend in iminus1:
@@ -645,8 +645,8 @@ class DYNAMICS(GeomCommon):
         3 F2  RS Upper bound of modal frequency range
         4 FRI RS Fractions of natural frequencies
         """
-        ints = np.frombuffer(data, dtype='int32')
-        floats = np.frombuffer(data, dtype='float32')
+        ints = np.fromstring(data, dtype='int32')
+        floats = np.fromstring(data, dtype='float32')
         i_minus_1s = np.where(ints == -1)[0]
         nentries = len(i_minus_1s)
 

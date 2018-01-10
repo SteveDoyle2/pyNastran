@@ -61,8 +61,8 @@ class DIT(GeomCommon):
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.frombuffer(datan, self.idtype)
-        floats = np.frombuffer(datan, self.fdtype)
+        ints = np.fromstring(datan, self.idtype)
+        floats = np.fromstring(datan, self.fdtype)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
@@ -321,8 +321,8 @@ class DIT(GeomCommon):
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.frombuffer(datan, self.idtype)
-        floats = np.frombuffer(datan, self.fdtype)
+        ints = np.fromstring(datan, self.idtype)
+        floats = np.fromstring(datan, self.fdtype)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0

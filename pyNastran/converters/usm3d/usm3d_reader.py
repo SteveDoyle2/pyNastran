@@ -377,8 +377,8 @@ class Usm3d(object):
                 else:
                     data = cogsg_file.read(3 * data_length)
                     assert self.precision == 'single', self.precision
-                    nodes = np.frombuffer(data, '>4f').reshape(3, nnodes).T
-                    #nodes = np.frombuffer(data, '>4f').reshape(nnodes, 3)
+                    nodes = np.fromstring(data, '>4f').reshape(3, nnodes).T
+                    #nodes = np.fromstring(data, '>4f').reshape(nnodes, 3)
 
 
             cogsg_file.read(nnodes * 3 * 8)  # 3 -> xyz, 8 -> double precision ???
@@ -425,7 +425,7 @@ class Usm3d(object):
             data = cogsg_file.read(ndata)
 
             # the 4 means that we make a (nelements, 4) array?
-            elements = np.frombuffer(data, dtype='>4f') - 1
+            elements = np.fromstring(data, dtype='>4f') - 1
         else:
             elements = np.zeros((nelements, 4), 'int32')
             for i in range(4): #  tets
@@ -456,7 +456,7 @@ class Usm3d(object):
             data_length = 8 * nnodes
             data = cogsg_file.read(3 * data_length)
             assert self.precision == 'double', self.precision
-            nodes = np.frombuffer(data, '>d').reshape(3, nnodes).T
+            nodes = np.fromstring(data, '>d').reshape(3, nnodes).T
 
             # the ravel creates a copy that we can then use to put in
             # a contigous order

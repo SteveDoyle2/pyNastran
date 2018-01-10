@@ -5,7 +5,7 @@ from six import string_types
 from six.moves import range
 
 import numpy as np
-from numpy import radians, sin, cos, frombuffer, ones, dtype as npdtype
+from numpy import radians, sin, cos, fromstring, ones, dtype as npdtype
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
@@ -844,8 +844,8 @@ class OP2Common(Op2Codes, F06Writer):
             n = nnodes * 4 * 8
             itotal2 = obj.itotal + nnodes
             #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
-            ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[obj.itime] = dt
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -899,13 +899,13 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
             assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj._times[itime] = dt
@@ -943,14 +943,14 @@ class OP2Common(Op2Codes, F06Writer):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
                 #nids = ints[:, 0] // 10
                 nids = ones(nnodes, dtype='int32') * eid
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[itime] = floats[:, 0]
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2]
             assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
@@ -989,8 +989,8 @@ class OP2Common(Op2Codes, F06Writer):
             n = nnodes * 4 * 8
             itotal2 = obj.itotal + nnodes
             #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
-            ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[obj.itime] = dt
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -1040,14 +1040,14 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
 
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:]
             obj._times[itime] = dt
             obj.itotal = itotal2
@@ -1085,14 +1085,14 @@ class OP2Common(Op2Codes, F06Writer):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
                 #nids = ints[:, 0] // 10
                 nids = ones(nnodes, dtype='int32') * eid
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[itime] = floats[:, 0]
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
             obj.itotal = itotal2
@@ -1131,13 +1131,13 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = obj.itotal + nnodes
 
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[obj.itotal:itotal2, 0] = nids
                 obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 14)
             mag = floats[:, 2:8]
             phase = floats[:, 8:]
             rtheta = radians(phase)
@@ -1178,14 +1178,14 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 14)
                 #print(ints[:, :2])
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 14)
             real = floats[:, 2:8]
             imag = floats[:, 8:]
 

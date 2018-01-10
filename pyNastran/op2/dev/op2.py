@@ -980,7 +980,7 @@ class OP2(object):
                 data = self.read_op2_record('bytes')  # 1st column
                 n = len(data) // iif6_bytes
                 print('iif6_int =', iif6_int)  # int32
-                data = np.frombuffer(data, iif6_int)
+                data = np.fromstring(data, iif6_int)
                 data1 = (data.reshape(n, 8))[:, :2]
                 pvgrids = data1[:, 1] == 1
                 dof = expand_dof(data1[:, 0] // 10, pvgrids)

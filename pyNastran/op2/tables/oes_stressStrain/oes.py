@@ -8,7 +8,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import Struct
 from six.moves import range
-from numpy import frombuffer, radians, sin, cos, vstack, repeat, array
+from numpy import fromstring, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
 from pyNastran.op2.op2_interface.op2_common import OP2Common, apply_mag_phase
@@ -1307,16 +1307,16 @@ class OES(OP2Common):
                     obj._times[obj.itime] = dt
 
                     #if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 30)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 30)
                     ints2 = ints[:, 2:].reshape(nelements * 7, 7)
 
-                    #strings = frombuffer(data, dtype=???)
+                    #strings = fromstring(data, dtype=???)
                     eids = ints[:, 0] // 10
                     nids = ints2[:, 0]
                     obj.element[istart:iend] = eids
 
                     # dropping off eid and the string word (some kind of Type)
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 30)[:, 2:]
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 30)[:, 2:]
                     floats2 = floats.reshape(nelements * 7, 7)
                     #[oxx, oyy, txy, angle, majorp, minorp]
                     obj.data[obj.itime, istart:iend, :] = floats2[:, 1:]
@@ -1522,15 +1522,15 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    print(frombuffer(data, dtype=self.idtype).size)
+                    print(fromstring(data, dtype=self.idtype).size)
                     print('nelements=%s numwide=%s' % (nelements, numwide_real))
                     print('ndata=', ndata)
                     print('self.element_name=%s' % self.element_name)
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
                     eids = ints[:, 0] // 10
                     obj.element[istart:iend] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
                 results = floats[:, 1:]
                 print('results.shape', results.shape)
 
@@ -1601,13 +1601,13 @@ class OES(OP2Common):
                 #obj._times[obj.itime] = dt
 
                 #if obj.itime == 0:
-                    #print(frombuffer(data, dtype=self.idtype).size)
+                    #print(fromstring(data, dtype=self.idtype).size)
                     #print('nelements=%s numwide=%s' % (nelements, numwide_real))
-                    #ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    #ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
                     #eids = ints[:, 0] // 10
                     ##obj.element[istart:iend] = eids
 
-                #floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                #floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
                 #print('floats[:, 2:].shape', floats[:, 2:].shape)
                 #print('nnelements=%s nnodes=%s numwide//nodes=%s' % (nelements, nnodes, (numwide_real-2) / nnodes))
                 #results = floats[:, 2:].reshape(nelements, nnodes * 6)
@@ -1813,10 +1813,10 @@ class OES(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 2)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 2)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 2)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 2)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1855,10 +1855,10 @@ class OES(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 3)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 3)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 3)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 3)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1957,10 +1957,10 @@ class OES(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2002,10 +2002,10 @@ class OES(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2142,12 +2142,12 @@ class OES(OP2Common):
                 itotal2 = itotal + nelements * 11
 
                 # chop off eid
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 111)[:, 1:]
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 111)[:, 1:]
                 floats2 = floats.reshape(nelements * 11, 10)
 
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 111)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 111)
                     eids = ints[:, 0] // 10
                     eids2 = array([eids] * 11, dtype='int32').T.ravel()
 
@@ -2274,11 +2274,11 @@ class OES(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 4)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
                 itime = obj.itime
                 obj._times[itime] = dt
                 if itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2315,10 +2315,10 @@ class OES(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2405,11 +2405,11 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 16)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 16)
                     eids = ints[:, 0] // 10
                     obj.element[ielement:ielement2] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 16)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 16)
 
                 #[s1a, s2a, s3a, s4a, axial, smaxa, smina, margin_tension,
                 # s1b, s2b, s3b, s4b,        smaxb, sminb, margin_compression]
@@ -2459,10 +2459,10 @@ class OES(OP2Common):
                 itotal2 = itotal + nelements
                 ielement2 = itotal2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 19)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 19)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 19)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 19)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2597,7 +2597,7 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
                     # (eid_device, cid, abcd, nnodes)
-                    ints = frombuffer(data, dtype=self.idtype)
+                    ints = fromstring(data, dtype=self.idtype)
                     try:
                         ints1 = ints.reshape(nelements, numwide_real)
                     except ValueError:
@@ -2626,7 +2626,7 @@ class OES(OP2Common):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 4:]
                 # 1     9    15   2    10   16  3   11  17   8
                 #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
@@ -2727,11 +2727,11 @@ class OES(OP2Common):
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * nnodes_expected
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
                 floats1 = floats[:, 4:].reshape(nelements * nnodes_expected, 13)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_imag)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_imag)
                     ints1 = ints[:, 4:].reshape(nelements * nnodes_expected, 13)
                     eids = ints[:, 0] // 10
                     cids = ints[:, 1]
@@ -2905,14 +2905,14 @@ class OES(OP2Common):
                 itotal2 = itotal + nelements * nnodes_expected
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype)
+                    ints = fromstring(data, dtype=self.idtype)
                     ints1 = ints.reshape(nelements, numwide_real)
                     eids = ints1[:, 0] // 10
                     eids = np.vstack([eids, eids]).T.ravel()
                     assert eids.min() > 0, eids.min()
                     obj.element_node[itotal:itotal2, 0] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 1:]
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 1:]
 
                 #fd, sx, sy, txy, angle, major, minor, max_shear
                 floats1 = floats.reshape(nelements * nnodes_expected, 8)
@@ -2959,11 +2959,11 @@ class OES(OP2Common):
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 15 * nnodes_all)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 15 * nnodes_all)
                 floats1 = floats[:, 1:].reshape(nelements * nnodes_all * 2, 7)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 15 * nnodes_all)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 15 * nnodes_all)
                     eids = ints[:, 0] // 10
                     ints[:, 0] = 0
                     ints1 = ints.reshape(nelements * nnodes_all, 15)
@@ -3099,7 +3099,7 @@ class OES(OP2Common):
 
                 itime = obj.itime
                 if itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 17)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 17)
                     eids = ints[:, 0] // 10
                     #ilayers = ints[:, 1]
                     ints2 = ints[:, 1:].reshape(nlayers, 8)
@@ -3110,7 +3110,7 @@ class OES(OP2Common):
                     #obj.element_node[itotal:iend, 1] = 0
                     #print('obj.element_node\n', obj.element_node)
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 17)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 17)
                 floats1 = floats[:, 1:].reshape(nlayers, 8)
                 obj.data[obj.itime, itotal:iend, :] = floats1
                 obj._times[obj.itime] = dt
@@ -3152,11 +3152,11 @@ class OES(OP2Common):
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 15)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 15)
                 floats1 = floats[:, 1:].reshape(nelements * 2, 7)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 15)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 15)
                     eids = ints[:, 0] // 10
                     ints[:, 0] = 0
                     ints1 = ints.reshape(nelements, 15)
@@ -3326,7 +3326,7 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
                     ints1 = ints[:, 2:].reshape(nlayers//2, 17)[:, 0].reshape(nelements, nnodes_all)
                     ints1[:, 0] = 0.
                     nids = ints1.ravel()
@@ -3347,9 +3347,9 @@ class OES(OP2Common):
                         obj.float_mask = float_mask1
 
                 if obj.nonlinear_factor is not None:
-                    results = frombuffer(data, dtype=self.fdtype)[obj.float_mask]
+                    results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
                 else:
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
                     floats1 = floats[:, 2:].reshape(nlayers // 2, 17)
                     results = floats1[:, 1:].reshape(nlayers, 8)
 
@@ -3431,12 +3431,12 @@ class OES(OP2Common):
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
                 floats1 = floats[:, 2:].reshape(nelements * nnodes_all, 15)
                 floats2 = floats1[:, 1:].reshape(nelements * nnodes_all * 2, 7)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_imag)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_imag)
                     ints[:, 2] = 0  # set center node to 0
                     ints1 = ints[:, 2:].reshape(nelements * nnodes_all, 15)
                     eids = ints[:, 0] // 10
@@ -3589,11 +3589,11 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 13)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 13)
                     eids = ints[:, 0] // 10
                     obj.element_node[ielement:ielement2, 0] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 13)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 13)
 
                 #[fiber_distance, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs]
                 #print(ints)
@@ -3663,9 +3663,9 @@ class OES(OP2Common):
 
                 if obj.itime == 0:
                     try:
-                        ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 25)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 25)
                     except ValueError:
-                        values = frombuffer(data, dtype=self.idtype)
+                        values = fromstring(data, dtype=self.idtype)
 
                     eids = ints[:, 0] // 10
                     #eids2 = vstack([eids, eids]).T.ravel()
@@ -3675,7 +3675,7 @@ class OES(OP2Common):
                      #print(obj.element_node[:10, :])
                     #aaa
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 25)[:, 1:]
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 25)[:, 1:]
                 floats2 = floats.reshape(nelements * 2, 12)
                 #print('a', floats2.shape)
                 #print('b', obj.data[obj.itime, ielement:ielement2, :].shape)
@@ -3788,13 +3788,13 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 11)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 11)
                     eids = ints[:, 0] // 10
                     nids = ints[:, 1]
                     obj.element_layer[istart:iend, 0] = eids
                     obj.element_layer[istart:iend, 1] = nids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 11)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 11)
                 #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 2:]
             else:
@@ -3902,12 +3902,12 @@ class OES(OP2Common):
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 33)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 33)
                 floats1 = floats[:, 1:].reshape(nelements * nnodes_all, 8)
 
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 33)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 33)
                     ints1 = ints[:, 1:].reshape(nelements * nnodes_all, 8)
                     eids = ints[:, 0] // 10
                     ints[:, 0] = 0
@@ -3981,12 +3981,12 @@ class OES(OP2Common):
                 ielement2 = ielement + nelements
 
                 numwide_imag = 37
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
                 floats1 = floats[:, 1:].reshape(nelements * nnodes_all, 9)
 
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_imag)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_imag)
                     ints1 = ints[:, 1:].reshape(nelements * nnodes_all, 9)
                     eids = ints[:, 0] // 10
                     ints[:, 0] = 0
@@ -4093,11 +4093,11 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 7)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 7)
                     eids = ints[:, 0] // 10
                     obj.element[istart:iend] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 7)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 7)
                 #[tx, ty, tz, rx, ry, rz]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
             else:
@@ -4133,10 +4133,10 @@ class OES(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 13)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 13)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 13)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 13)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -4220,13 +4220,13 @@ class OES(OP2Common):
                 obj._times[itime] = dt
 
                 if 1: #obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 8)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 8)
                     eids = ints[:, 0] // 10
                     fail = ints[:, 7]
                     obj.element[itotal:itotal2] = eids
                     obj.is_failed[itime, itotal:itotal2, 0] = fail
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 8)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 8)
                 #[xxx, fe, ue, ve, ao, ae, ep, xxx]
                 obj.data[itime, itotal:itotal2, :] = floats[:, 1:7]
 
@@ -4270,11 +4270,11 @@ class OES(OP2Common):
                 obj._times[itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 9)
                     eids = ints[:, 0] // 10
                     obj.element[itotal:itotal2] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 9)
                 #[fer, uer, aor, aer,
                 # fei, uei, aoi, aei]
                 isave1 = [1, 3, 5, 7]
@@ -4369,10 +4369,10 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 7)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 7)
                     eids = ints[:, 0] // 10
                     obj.element[istart:iend] = eids
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 7)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 7)
                 #[axial_stress, equiv_stress, total_strain,
                 # eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
@@ -4438,12 +4438,12 @@ class OES(OP2Common):
                 ielement2 = obj.ielement + nelements
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[ielement:ielement2] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
 
                 #[force, stress]
                 obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:]
@@ -4499,11 +4499,11 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 11)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 11)
                     eids = ints[:, 0] // 10
                     obj.element[ielement:ielement2] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 11)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 11)
                 # skipping [form1, form2]
                 #[cpx, shy, shz, au, shv, shw, slv, slp]
                 obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:9]
@@ -4655,11 +4655,11 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 10)
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 10)
                     eids = ints[:, 0] // 10
                     obj.element[istart:iend] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 10)
+                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 10)
                 #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
             else:

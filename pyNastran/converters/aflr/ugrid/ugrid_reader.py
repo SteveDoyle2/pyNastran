@@ -142,7 +142,7 @@ class UGRID(object):
             data = ugrid_file.read(nnodes * 3 * nfloat)
             self.n += nnodes * 3 * nfloat
             dtype = endian + float_fmt
-            nodes = np.frombuffer(data, dtype=dtype).reshape((nnodes, 3))
+            nodes = np.fromstring(data, dtype=dtype).reshape((nnodes, 3))
             #print('min xyz value = ' , nodes.min())
             #print('max xyz value = ' , nodes.max())
 
@@ -150,7 +150,7 @@ class UGRID(object):
             data = ugrid_file.read(ntris * 3 * 4)
             self.n += ntris * 3 * 4
             dtype = endian + 'i'
-            tris = np.frombuffer(data, dtype=dtype).reshape((ntris, 3))
+            tris = np.fromstring(data, dtype=dtype).reshape((ntris, 3))
             #print('min tris value = ' , tris.min())
             #print('max tris value = ' , tris.max())
 
@@ -158,7 +158,7 @@ class UGRID(object):
             ## CQUAD4
             data = ugrid_file.read(nquads * 4 * 4)
             self.n += nquads * 4 * 4
-            quads = np.frombuffer(data, dtype=dtype).reshape((nquads, 4))
+            quads = np.fromstring(data, dtype=dtype).reshape((nquads, 4))
             #print('min quads value = ' , quads.min())
             #print('max quads value = ' , quads.max())
 
@@ -166,7 +166,7 @@ class UGRID(object):
                 data = ugrid_file.read(npids * 4)
                 assert len(data) == (npids * 4), 'len(data)=%s' % (len(data))
                 self.n += npids * 4
-                pids = np.frombuffer(data, dtype=dtype)
+                pids = np.fromstring(data, dtype=dtype)
                 #print('min pids value = ' , pids.min())
                 #print('max pids value = ' , pids.max())
                 self.pids = pids
@@ -186,28 +186,28 @@ class UGRID(object):
             ## CTETRA
             data = ugrid_file.read(ntets * 4 * 4)
             self.n += ntets * 4 * 4
-            tets = np.frombuffer(data, dtype=dtype).reshape((ntets, 4))
+            tets = np.fromstring(data, dtype=dtype).reshape((ntets, 4))
             #print('min tets value = ' , tets.min())
             #print('max tets value = ' , tets.max())
 
             ## CPYRAM
             data = ugrid_file.read(npenta5s * 5 * 4)
             self.n += npenta5s * 5 * 4
-            penta5s = np.frombuffer(data, dtype=dtype).reshape((npenta5s, 5))
+            penta5s = np.fromstring(data, dtype=dtype).reshape((npenta5s, 5))
             #print('min penta5s value = ' , penta5s.min())
             #print('max penta5s value = ' , penta5s.max())
 
             ## CPENTA
             data = ugrid_file.read(npenta6s * 6 * 4)
             self.n += npenta6s * 6 * 4
-            penta6s = np.frombuffer(data, dtype=dtype).reshape((npenta6s, 6))
+            penta6s = np.fromstring(data, dtype=dtype).reshape((npenta6s, 6))
             #print('min penta6s value = ' , penta6s.min())
             #print('max penta6s value = ' , penta6s.max())
 
             ## CHEXA
             data = ugrid_file.read(nhexas * 8 * 4)
             self.n += nhexas * 8 * 4
-            hexas = np.frombuffer(data, dtype=dtype).reshape((nhexas, 6))
+            hexas = np.fromstring(data, dtype=dtype).reshape((nhexas, 6))
             #print('min hexas value = ' , hexas.min())
             #print('max hexas value = ' , hexas.max())
 
