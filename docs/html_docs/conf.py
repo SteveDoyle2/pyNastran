@@ -743,10 +743,14 @@ def maybe_skip_member(app, what, name, obj, skip, options):
                   '_update_field_helper',
                   '_is_same_fields',
                   '_get_field_helper',
+                  '_test_update_fields',
 
 
                   'add_op2_data',
                   'deprecated',
+                  '_add_column',
+                  '_add_column_uaccel',
+                  '_get_dtype',
 
                   'OP2Common', 'Op2Codes', 'F06Writer', 'OP2_Scalar',
                   )
