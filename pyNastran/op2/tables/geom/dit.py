@@ -61,18 +61,18 @@ class DIT(GeomCommon):
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.fromstring(datan, self.idtype)
-        floats = np.fromstring(datan, self.fdtype)
+        ints = np.frombuffer(datan, self.idtype)
+        floats = np.frombuffer(datan, self.fdtype)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
         for iend in iminus1_delta:
             #datai = data[n+istart*4 : n+iend*4]
-            tid = ints[istart]
+            tid = ints[istart].copy()
             deltai = iend - istart - 8 # subtract 2 for sid, global scale
             assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
 
-            xy = floats[istart+8:iend].reshape(deltai//2, 2)
+            xy = floats[istart+8:iend].reshape(deltai//2, 2).copy()
             x = xy[:, 0]
             y = xy[:, 1]
             table = TABDMP1(tid, x, y, Type='G')
@@ -321,8 +321,8 @@ class DIT(GeomCommon):
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.fromstring(datan, self.idtype)
-        floats = np.fromstring(datan, self.fdtype)
+        ints = np.frombuffer(datan, self.idtype).copy()
+        floats = np.frombuffer(datan, self.fdtype)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
@@ -335,7 +335,7 @@ class DIT(GeomCommon):
             deltai = iend - istart - 8 # subtract 2 for sid, global scale
             assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
 
-            xy = floats[istart+8:iend].reshape(deltai//2, 2)
+            xy = floats[istart+8:iend].reshape(deltai//2, 2).copy()
             x = xy[:, 0]
             y = xy[:, 1]
             if codex == 0:

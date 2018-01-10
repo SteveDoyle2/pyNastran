@@ -333,10 +333,10 @@ class ONR(OP2Common):
                 floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5).copy()
                 obj._times[obj.itime] = dt
 
-                strings = fromstring(data, dtype=self._uendian + 'S4').reshape(nelements, 5)
+                strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 5)
                 #print(strings)
                 if obj.itime == 0:
-                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
                     if obj.element_name == 'DMIG':
                         s = array([(s1+s2).decode('latin1').strip()
                                    for s1, s2 in zip(strings[:, 0], strings[:, 1])], dtype='|U8')
@@ -392,11 +392,11 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
                 #if obj.itime == 0:
-                ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, eids.min()
                 obj.element[itotal:itotal2] = eids
@@ -404,7 +404,7 @@ class ONR(OP2Common):
 
                 #[energyr, energyi, percent, density]
                 obj.element[obj.itime, itotal:itotal2] = eids
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
@@ -437,21 +437,21 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    strings = fromstring(data, dtype=self._uendian + 'S4').reshape(nelements, 6)
+                    strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 6)
                     s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
 
-                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 6)
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 6)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
                     obj.element_type[obj.itime, itotal:itotal2, :] = s
 
                 #[energy, percent, density]
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 4:]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 4:].copy()
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:

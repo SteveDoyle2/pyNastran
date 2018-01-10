@@ -27,16 +27,6 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-************************
-:mod:`deprecated` Module
-************************
-
-.. inheritance-diagram:: pyNastran.bdf.deprecated
-
-.. automodule:: pyNastran.bdf.deprecated
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 *******************************
 :mod:`errors` Module

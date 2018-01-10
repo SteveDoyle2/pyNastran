@@ -71,6 +71,19 @@ mesh_utils Package
     :undoc-members:
     :show-inheritance:
 
+
+*************************
+:mod:`mirror_mesh` Module
+*************************
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.mirror_mesh
+
+.. automodule:: pyNastran.bdf.bdf_interface.mirror_mesh
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 ****************************
 :mod:`extract_bodies` Module
 ****************************

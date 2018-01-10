@@ -1310,7 +1310,7 @@ class OES(OP2Common):
                     ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 30).copy()
                     ints2 = ints[:, 2:].reshape(nelements * 7, 7)
 
-                    #strings = fromstring(data, dtype=???)
+                    #strings = frombuffer(data, dtype=???)
                     eids = ints[:, 0] // 10
                     nids = ints2[:, 0]
                     obj.element[istart:iend] = eids
@@ -1522,17 +1522,17 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    #print(fromstring(data, dtype=self.idtype).size)
+                    #print(frombuffer(data, dtype=self.idtype).size)
                     #print('nelements=%s numwide=%s' % (nelements, numwide_real))
                     #print('ndata=', ndata)
                     #print('self.element_name=%s' % self.element_name)
-                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real)
                     eids = ints[:, 0] // 10
                     obj.element[istart:iend] = eids
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
-                results = floats[:, 1:]
-                print('results.shape', results.shape)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                results = floats[:, 1:].copy()
+                #print('results.shape', results.shape)
 
                 #[oxx, oyy, ozz, txy, ovm]
                 obj.data[obj.itime, istart:iend, :] = results
@@ -1601,13 +1601,13 @@ class OES(OP2Common):
                 #obj._times[obj.itime] = dt
 
                 #if obj.itime == 0:
-                    #print(fromstring(data, dtype=self.idtype).size)
+                    #print(frombuffer(data, dtype=self.idtype).size)
                     #print('nelements=%s numwide=%s' % (nelements, numwide_real))
-                    #ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    #ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real)
                     #eids = ints[:, 0] // 10
                     ##obj.element[istart:iend] = eids
 
-                #floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                #floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real).copy()
                 #print('floats[:, 2:].shape', floats[:, 2:].shape)
                 #print('nnelements=%s nnodes=%s numwide//nodes=%s' % (nelements, nnodes, (numwide_real-2) / nnodes))
                 #results = floats[:, 2:].reshape(nelements, nnodes * 6)
@@ -3347,11 +3347,11 @@ class OES(OP2Common):
                         obj.float_mask = float_mask1
 
                 if obj.nonlinear_factor is not None:
-                    results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
+                    results = frombuffer(data, dtype=self.fdtype)[obj.float_mask].copy()
                 else:
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
                     floats1 = floats[:, 2:].reshape(nlayers // 2, 17)
-                    results = floats1[:, 1:].reshape(nlayers, 8)
+                    results = floats1[:, 1:].reshape(nlayers, 8).copy()
 
                 #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
                 obj.data[obj.itime, istart:iend, :] = results
@@ -3675,15 +3675,15 @@ class OES(OP2Common):
                      #print(obj.element_node[:10, :])
                     #aaa
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 25)[:, 1:]
-                floats2 = floats.reshape(nelements * 2, 12)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 25)[:, 1:]
+                #floats2 = floats.reshape(nelements * 2, 12)
                 #print('a', floats2.shape)
                 #print('b', obj.data[obj.itime, ielement:ielement2, :].shape)
 
                 #[fiber_distance, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs]
                 #print(ints)
                 #floats[:, 1] = 0
-                obj.data[obj.itime, itotal:itotal2, :] = floats.reshape(nelements * 2, 12)
+                obj.data[obj.itime, itotal:itotal2, :] = floats.reshape(nelements * 2, 12).copy()
                 #obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:]
                 obj.ielement = ielement2
                 obj.itotal = itotal2

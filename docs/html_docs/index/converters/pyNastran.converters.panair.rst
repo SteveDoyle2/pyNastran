@@ -32,16 +32,6 @@ panair Package
     :show-inheritance:
 
 
-:mod:`panair_write` Module
---------------------------
-
-.. inheritance-diagram:: pyNastran.converters.panair.panair_write
-
-.. automodule:: pyNastran.converters.panair.panair_write
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`to_p3d` Module
 --------------------
 

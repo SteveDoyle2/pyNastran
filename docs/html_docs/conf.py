@@ -846,6 +846,9 @@ def maybe_skip_member(app, what, name, obj, skip, options):
                   '_parse_results',
                   '_read_inviscid_pressure',
                   '_fill_abaqus_case',
+                  'add_sort1',
+                  'add_sort2',
+                  'add_new_transient',
                   )
     exclude = name in exclusions
     if not on_rtd and not exclude:
