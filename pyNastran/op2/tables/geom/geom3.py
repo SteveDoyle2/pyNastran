@@ -99,9 +99,9 @@ class GEOM3(GeomCommon):
         NX/MSC
         """
         ntotal = 28  # 7*4
-        ints = np.fromstring(data[n:], dtype='int32')
-        floats = np.fromstring(data[n:], dtype='float32')
-        strings = np.fromstring(data[n:], dtype='|S4')
+        ints = np.frombuffer(data[n:], dtype='int32')
+        floats = np.frombuffer(data[n:], dtype='float32')
+        strings = np.frombuffer(data[n:], dtype='|S4')
         i_minus_1s = np.where(ints == -1)[0]
 
         i0 = 0

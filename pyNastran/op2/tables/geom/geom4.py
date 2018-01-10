@@ -159,7 +159,7 @@ class GEOM4(GeomCommon):
         ndata = len(data)
         #nfields = (ndata - n) // 4
         #fmt = '%ii' % nfields
-        out = np.fromstring(data[n:], self.idtype)
+        out = np.frombuffer(data[n:], self.idtype)
         #print(out)
         izero = np.where(out == -1)[0]
         if len(izero) == 0:
@@ -215,7 +215,7 @@ class GEOM4(GeomCommon):
         ndata = len(data)
         #nfields = (ndata - n) // 4
         #fmt = '%ii' % nfields
-        out = np.fromstring(data[n:], self.idtype)
+        out = np.frombuffer(data[n:], self.idtype)
         #print(out)
         iminus1 = np.where(out == -1)[0]
         if len(iminus1) == 0:
@@ -345,7 +345,7 @@ class GEOM4(GeomCommon):
         MPCADD(4891,60,83) - Record 17
         """
         #nentries = (len(data) - n) // 4
-        datai = np.fromstring(data[n:], self.idtype)
+        datai = np.frombuffer(data[n:], self.idtype)
         _read_spcadd_mpcadd(self, 'MPCADD', datai)
         return len(data)
 
@@ -435,8 +435,8 @@ class GEOM4(GeomCommon):
         6 ALPHA RS Thermal expansion coefficient
         7 UNDEF none Not used
         """
-        idata = np.fromstring(data[n:], self.idtype)
-        #fdata = np.fromstring(data[n:], self.fdtype)
+        idata = np.frombuffer(data[n:], self.idtype)
+        #fdata = np.frombuffer(data[n:], self.fdtype)
 
         i = 0
         nelements = 0
@@ -487,7 +487,7 @@ class GEOM4(GeomCommon):
                   4, 4, 123,    40000, 40001, 40010, 40011, 40020, 40021, -1, 0.0,
                   5, 5, 123,    50000, 50001, 50010, 50011, 50020, 50021, -1, 0.0)
         """
-        idata = np.fromstring(data[n:], self.idtype)
+        idata = np.frombuffer(data[n:], self.idtype)
         iminus1 = np.where(idata == -1)[0]
         if idata[-1] == -1:
             is_alpha = False
@@ -496,7 +496,7 @@ class GEOM4(GeomCommon):
         else:
             is_alpha = True
             i = np.hstack([[0], iminus1[:-1]+1])
-            fdata = np.fromstring(data[n:], self.fdtype)
+            fdata = np.frombuffer(data[n:], self.fdtype)
             j = np.hstack([iminus1[:-1], len(idata)-2])
 
         #print('i=%s' % i)
@@ -564,8 +564,8 @@ class GEOM4(GeomCommon):
 
     def _read_rbe3(self, data, n):
         """RBE3(7101,71,187) - Record 25"""
-        idata = np.fromstring(data[n:], self.idtype)
-        fdata = np.fromstring(data[n:], self.fdtype)
+        idata = np.frombuffer(data[n:], self.idtype)
+        fdata = np.frombuffer(data[n:], self.fdtype)
         read_rbe3s_from_idata_fdata(self, idata, fdata)
         return n
 
@@ -808,7 +808,7 @@ class GEOM4(GeomCommon):
         """
         #nentries = 0
         #nints = (len(data) - n) // 4
-        idata = np.fromstring(data[n:], self.idtype)
+        idata = np.frombuffer(data[n:], self.idtype)
         if not idata[-1] == -1:
             idata = np.hstack([idata, -1])
         iminus1 = np.where(idata == -1)[0]
@@ -874,7 +874,7 @@ class GEOM4(GeomCommon):
         """
         #nentries = 0
         #nints = (len(data) - n) // 4
-        idata = np.fromstring(data[n:], self.idtype)
+        idata = np.frombuffer(data[n:], self.idtype)
         if not idata[-1] == -1:
             idata = np.hstack([idata, -1])
         iminus1 = np.where(idata == -1)[0]
@@ -921,7 +921,7 @@ class GEOM4(GeomCommon):
     def _read_spcadd(self, data, n):
         """SPCADD(5491,59,13) - Record 46"""
         #nentries = (len(data) - n) // 4
-        datai = np.fromstring(data[n:], self.idtype)
+        datai = np.frombuffer(data[n:], self.idtype)
         _read_spcadd_mpcadd(self, 'SPCADD', datai)
         return len(data)
 
