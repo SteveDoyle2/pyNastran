@@ -220,7 +220,7 @@ class TestAero(unittest.TestCase):
         assert model.aelinks[idi][0].comment == '$cat\n', 'comment=%r' % str(model.aelinks[idi][0].comment)
 
         idi = 11
-        lable = 'LABEL'
+        label = 'LABEL'
         independent_labels = ['pig', 'frog', 'dog']
         Cis = []
         aelink2 = model.add_aelink(idi, label, independent_labels, Cis)
@@ -1025,7 +1025,7 @@ class TestAero(unittest.TestCase):
         caero3b.get_points()
         caero3b.panel_points_elements()
 
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
 
     def test_paero3(self):
@@ -1238,7 +1238,7 @@ class TestAero(unittest.TestCase):
 
         read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_convert=False)
 
 
         #caero5.raw_fields()
@@ -1488,7 +1488,7 @@ class TestAero(unittest.TestCase):
             aesid, label, cid1, aelist_id2, cid2=None, alid2=None,
             eff=1.0, ldw='LDW',
             crefc=1.0, crefs=1.2,
-            pllim=--np.pi/2, pulim=np.pi/2.,
+            pllim=-np.pi/2, pulim=np.pi/2.,
             hmllim=-42., hmulim=42.,  # hinge moment limits in force/disp
             tqllim=10, tqulim=11,  # TABLEDi deflection limits vs. dynamic pressure
         )
@@ -1917,10 +1917,10 @@ class TestAero(unittest.TestCase):
 
         # why doesn't this work?
         with self.assertRaises(RuntimeError):
-            trim1._verify(model.suport, model.suport1, model.aestats, model.aeparams,
+            trim1.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
+                              model.aelinks, model.aesurf, xref=True)
+        trim2.verify_trim(model.suport, model.suport1, model.aestats, model.aeparams,
                           model.aelinks, model.aesurf, xref=True)
-        trim2._verify(model.suport, model.suport1, model.aestats, model.aeparams,
-                      model.aelinks, model.aesurf, xref=True)
         model.write_bdf('trim.bdf')
         model2 = read_bdf('trim.bdf', debug=None)
         model2._verify_bdf(xref=True)

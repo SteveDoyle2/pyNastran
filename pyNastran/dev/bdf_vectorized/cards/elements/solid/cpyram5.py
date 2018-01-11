@@ -181,7 +181,7 @@ class CPYRAM5(SolidElement):
             the positions of the GRIDs in CID=0
         :param total: should the volume be summed; centroid be averaged (default=False)
 
-        ..see:: CPYRAM5.get_volume_by_element_id() and CPYRAM5.get_centroid_by_element_id
+        .. seealso:: CPYRAM5.get_volume_by_element_id() and CPYRAM5.get_centroid_by_element_id
         """
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_from_node_index()

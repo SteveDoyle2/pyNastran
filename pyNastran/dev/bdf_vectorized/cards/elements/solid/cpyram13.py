@@ -112,7 +112,7 @@ class CPYRAM13(SolidElement):
         total : bool; default=False
             should the volume be summed
 
-        ..see:: CPYRAM13.get_volume_by_element_id() and CPYRAM13.get_centroid_by_element_id() for more information.
+        .. seealso:: CPYRAM13.get_volume_by_element_id() and CPYRAM13.get_centroid_by_element_id() for more information.
         """
         if element_id is None:
             element_id = self.element_id

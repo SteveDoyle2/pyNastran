@@ -1,9 +1,8 @@
 #pylint: disable=C0326,C0301
 from __future__ import print_function, unicode_literals
-from six import b
 from six.moves import range
 from struct import Struct
-from numpy import fromstring, array
+from numpy import fromstring, frombuffer, array
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
 from pyNastran.op2.op2_interface.op2_common import OP2Common
@@ -57,53 +56,53 @@ class ONR(OP2Common):
             self.log.warning('data[20:28]=%r instead of data[24:32]' % data[20:28])
 
         #: Load set or zero
-        self.load_set = self.add_data_parameter(data, 'load_set', 'i', 8, False)
+        self.load_set = self.add_data_parameter(data, 'load_set', b'i', 8, False)
 
         #: format code
-        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         #: number of words per entry in record
         #: .. note:: is this needed for this table ???
-        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
         ## C
-        self.cvalres = self.add_data_parameter(data, 'cvalres', 'i', 11, False)
+        self.cvalres = self.add_data_parameter(data, 'cvalres', b'i', 11, False)
 
         #: Set identification number Number
-        self.set_id = self.add_data_parameter(data, 'set_id', 'i', 13, False)
+        self.set_id = self.add_data_parameter(data, 'set_id', b'i', 13, False)
 
         #: Natural eigenvalue - real part
-        self.eigen_real = self.add_data_parameter(data, 'eigen_real', 'i', 14, False)
+        self.eigen_real = self.add_data_parameter(data, 'eigen_real', b'i', 14, False)
 
         #: Natural eigenvalue - imaginary part
-        self.eigen_imag = self.add_data_parameter(data, 'eigen_imag', 'i', 15, False)
+        self.eigen_imag = self.add_data_parameter(data, 'eigen_imag', b'i', 15, False)
 
         #: Natural frequency
-        self.freq = self.add_data_parameter(data, 'freq', 'f', 16, False)
+        self.freq = self.add_data_parameter(data, 'freq', b'f', 16, False)
 
         #: RMS and CRMS scale factor - NX
-        self.rmssf = self.add_data_parameter(data, 'rmssf', 'f', 17)
+        self.rmssf = self.add_data_parameter(data, 'rmssf', b'f', 17)
 
         #: Total positive energy
-        self.etotpos = self.add_data_parameter(data, 'etotpos', 'f', 18)
+        self.etotpos = self.add_data_parameter(data, 'etotpos', b'f', 18)
 
         #: Total negative energy
-        self.etotneg = self.add_data_parameter(data, 'etotneg', 'f', 19, False)
+        self.etotneg = self.add_data_parameter(data, 'etotneg', b'f', 19, False)
 
         #: Energy Threshold - NX
-        self.thresh = self.add_data_parameter(data, 'thresh', 'f', 17)
+        self.thresh = self.add_data_parameter(data, 'thresh', b'f', 17)
 
         if not self.is_sort1:
             raise NotImplementedError('sort2...')
 
         if self.analysis_code == 1:   # statics / displacement / heat flux
             #del self.data_code['nonlinear_factor']
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
-            #self.mode_cycle1 = self.add_data_parameter(data, 'mode', 'i', 7)
-            #self.mode_cycle2 = self.add_data_parameter(data, 'mode', 'f', 7)
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
+            #self.mode_cycle1 = self.add_data_parameter(data, 'mode', b'i', 7)
+            #self.mode_cycle2 = self.add_data_parameter(data, 'mode', b'f', 7)
             #print('mode = ', self.mode)
             #print('mode_cycle1 = ', self.mode_cycle1)
             #print('mode_cycle2 = ', self.mode_cycle2)
@@ -119,26 +118,26 @@ class ONR(OP2Common):
         #elif self.analysis_code == 4: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysis_code == 5:   # frequency
-            self.freq2 = self.add_data_parameter(data, 'freq2', 'f', 5)  ## frequency
+            self.freq2 = self.add_data_parameter(data, 'freq2', b'f', 5)  ## frequency
             self.data_names = self.apply_data_code_value('data_names', ['freq2'])
         elif self.analysis_code == 6:  # transient
-            self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
+            self.time = self.add_data_parameter(data, 'time', b'f', 5)  ## time step
             self.data_names = self.apply_data_code_value('data_names', ['time'])
         #elif self.analysis_code == 7: # pre-buckling
             #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
             self.data_names = self.apply_data_code_value('data_names', ['mode'])
         elif self.analysis_code == 9:  # complex eigenvalues
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
             self.data_names = self.apply_data_code_value('data_names', ['mode'])
         elif self.analysis_code == 10:  # nonlinear statics
-            self.loadFactor = self.add_data_parameter(data, 'loadFactor', 'f', 5)  ## load factor
+            self.loadFactor = self.add_data_parameter(data, 'loadFactor', b'f', 5)  ## load factor
             self.data_names = self.apply_data_code_value('data_names', ['loadFactor'])
         #elif self.analysis_code == 11: # old geometric nonlinear statics
             #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
+            self.time = self.add_data_parameter(data, 'time', b'f', 5)  ## time step
             self.data_names = self.apply_data_code_value('data_names', ['time'])
         else:
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
@@ -289,20 +288,20 @@ class ONR(OP2Common):
                 itotal = obj.itotal
                 itotal2 = obj.itotal + nelements * 4
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 4)
                 obj._times[itime] = dt
                 #if obj.itime == 0:
-                ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, eids.min()
                 obj.element[itime, ielement:ielement2] = eids
 
                 #[energy, percent, density]
-                obj.data[itime, ielement:ielement2, :] = floats[:, 1:]
+                obj.data[itime, ielement:ielement2, :] = floats[:, 1:].copy()
                 obj.itotal2 = itotal2
                 obj.ielement = ielement2
             else:
-                struct1 = Struct(b(self._endian + 'i3f'))
+                struct1 = Struct(self._endian + b'i3f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
 
@@ -331,13 +330,13 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5).copy()
                 obj._times[obj.itime] = dt
 
-                strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 5)
+                strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 5)
                 #print(strings)
                 if obj.itime == 0:
-                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
                     if obj.element_name == 'DMIG':
                         s = array([(s1+s2).decode('latin1').strip()
                                    for s1, s2 in zip(strings[:, 0], strings[:, 1])], dtype='|U8')
@@ -351,11 +350,11 @@ class ONR(OP2Common):
                         obj.element_type[obj.itime, itotal:itotal2, :] = s
 
                 #[energy, percent, density]
-                print(floats)
-                print(floats[:, 2:])
-                print(floats[:, 3:])
-                print(obj.data[obj.itime, itotal:itotal2, :])
-                print(obj.data[obj.itime, itotal:itotal2, :].shape)
+                #print(floats)
+                #print(floats[:, 2:])
+                #print(floats[:, 3:])
+                #print(obj.data[obj.itime, itotal:itotal2, :])
+                #print(obj.data[obj.itime, itotal:itotal2, :].shape)
                 if obj.element_name == 'DMIG':
                     obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
                 else:
@@ -363,7 +362,7 @@ class ONR(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(b(self._endian + '8s3f'))
+                s = Struct(self._endian + b'8s3f')
                 for i in range(nnodes):
                     edata = data[n:n+20]
                     out = s.unpack(edata)
@@ -393,11 +392,11 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
                 #if obj.itime == 0:
-                ints = fromstring(data, dtype=self.idtype).reshape(nelements, 5)
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, eids.min()
                 obj.element[itotal:itotal2] = eids
@@ -405,11 +404,11 @@ class ONR(OP2Common):
 
                 #[energyr, energyi, percent, density]
                 obj.element[obj.itime, itotal:itotal2] = eids
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(b(self._endian + 'i4f'))
+                s = Struct(self._endian + b'i4f')
                 for i in range(nelements):
                     edata = data[n:n+20]
                     out = s.unpack(edata)
@@ -438,25 +437,25 @@ class ONR(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 6)
+                    strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 6)
                     s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
 
-                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, 6)
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 6)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
                     obj.element_type[obj.itime, itotal:itotal2, :] = s
 
                 #[energy, percent, density]
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 4:]
+                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 4:].copy()
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                struct1 = Struct(b(self._endian + 'i8s3f'))
+                struct1 = Struct(self._endian + b'i8s3f')
                 for i in range(nnodes):
                     edata = data[n:n+24]
                     out = struct1.unpack(edata)

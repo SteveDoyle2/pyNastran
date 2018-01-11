@@ -1,3 +1,4 @@
+#pylint: disable=W0613,R0201,C0111
 from struct import Struct
 
 class SuppressLogging(object):
@@ -46,7 +47,7 @@ class GeomCommon(object):
         raise RuntimeError('this should be overwritten by the BDF class')
 
     def _add_property_object(self, card, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
 
     def _add_constraint_spc_object(self, constraint):
         raise RuntimeError('this should be overwritten by the BDF class')
@@ -103,4 +104,46 @@ class GeomCommon(object):
         raise RuntimeError('this should be overwritten by the BDF class')
 
     def _add_seqset_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_constraint_spcadd_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_constraint_mpcadd_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_thermal_element_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_mass_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_spoint_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_plotel_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_load_combination_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_lseq_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_constraint_mpc_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_thermal_bc_object(self, obj, key):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_qset_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_element_object(self, obj):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_structural_material_object(self, allow_overwrites=True):
+        raise RuntimeError('this should be overwritten by the BDF class')
+
+    def _add_hyperelastic_material_object(self, allow_overwrites=True):
         raise RuntimeError('this should be overwritten by the BDF class')

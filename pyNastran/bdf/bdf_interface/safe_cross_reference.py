@@ -77,6 +77,7 @@ class SafeXrefMesh(XrefMesh):
             self._cross_reference_optimization()
         if xref_nodes_with_elements:
             self._cross_reference_nodes_with_elements()
+        self.pop_xref_errors()
 
     def _safe_cross_reference_constraints(self):
         # type: () -> None
@@ -211,7 +212,7 @@ class SafeXrefMesh(XrefMesh):
             self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
 
     def _safe_cross_reference_loads(self, debug=True):
-        # type: () -> None
+        # type: (bool) -> None
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """

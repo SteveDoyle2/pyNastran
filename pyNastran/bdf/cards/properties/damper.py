@@ -100,7 +100,7 @@ class PDAMP(DamperProperty):
     def B(self):
         return self.b
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         b = self.B()
         assert isinstance(pid, integer_types), 'pid=%r\n%s' % (pid, str(self))
@@ -179,7 +179,7 @@ class PDAMP5(DamperProperty):
         b = data[2]
         return PDAMP5(pid, mid, b, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pid = self.Pid()
         #b = self.B()
         assert isinstance(pid, integer_types), 'pid=%r\n%s' % (pid, str(self))
@@ -274,7 +274,7 @@ class PDAMPT(DamperProperty):
         tbid = data[1]
         return PDAMPT(pid, tbid, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
 
@@ -399,7 +399,7 @@ class PVISC(DamperProperty):
     def uncross_reference(self):
         pass
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
 

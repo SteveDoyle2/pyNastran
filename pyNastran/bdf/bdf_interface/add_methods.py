@@ -463,8 +463,10 @@ class AddMethods(BDFAttributes):
         """
         Adds a CREEP material
 
-        .. note:: May be removed in the future.  Are CREEP cards materials?
-                  They have an MID, but reference structural materials.
+        Notes
+        -----
+        May be removed in the future.  Are CREEP cards materials?
+        They have an MID, but reference structural materials.
         """
         key = material.mid
         if key in self.thermal_materials and not allow_overwrites:
@@ -770,7 +772,7 @@ class AddMethods(BDFAttributes):
     def _add_aestat_object(self, aestat):
         # type: (Any) -> None
         """adds an AESTAT object"""
-        key = aestat.id
+        key = aestat.aestat_id
         assert key not in self.aestats, '\naestat=\n%s old=\n%s' % (
             aestat, self.aestats[key])
         assert key >= 0
@@ -1023,6 +1025,13 @@ class AddMethods(BDFAttributes):
         assert key > 0
         self.nlpcis[key] = nlpci
         self._type_to_id_map[nlpci.type].append(key)
+
+    def _add_nxstrat_object(self, nxstrat):
+        key = nxstrat.sid
+        assert key not in self.nxstrats
+        assert key > 0
+        self.nxstrats[key] = nxstrat
+        self._type_to_id_map[nxstrat.type].append(key)
 
     def _add_tstep_object(self, tstep, allow_overwrites=False):
         """adds a TSTEP object"""

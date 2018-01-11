@@ -110,7 +110,7 @@ class PROD(Property):
         nsm = data[5]
         return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()
@@ -296,7 +296,7 @@ class PTUBE(Property):
         #OD2 = data[5]  #: .. note:: quirk to this one...
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         A = self.Area()

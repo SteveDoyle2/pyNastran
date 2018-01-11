@@ -525,9 +525,9 @@ def get_test_op2_data():
     is_release = True
     options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx]'
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n]      [-f]           %s OP2_FILENAME\n" % options
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
     else:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] %s OP2_FILENAME\n" % options
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [-p] %s OP2_FILENAME\n" % options
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -561,7 +561,6 @@ def get_test_op2_data():
     if not is_release:
         msg += "\n"
         msg += "Developer:\n"
-        msg += "  -m, --write_xlsx  Writes an XLSX to fem.test_op2.xlsx\n"  # m is for Microsoft
         msg += "  -o, --write_op2   Writes the op2 to fem.test_op2.op2\n"
         msg += '  -p, --profile     Profiles the code (default=False)\n'
 

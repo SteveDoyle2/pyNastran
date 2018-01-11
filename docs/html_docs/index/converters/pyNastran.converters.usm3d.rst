@@ -31,15 +31,6 @@ usm3d Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`usm3d_io` Module
-----------------------
-
-.. inheritance-diagram:: pyNastran.converters.usm3d.usm3d_io
-
-.. automodule:: pyNastran.converters.usm3d.usm3d_io
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`usm3d_reader` Module
 --------------------------

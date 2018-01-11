@@ -63,7 +63,9 @@ def comp2tri(in_filenames, out_filename,
     float_fmt : str; default='%6.7f'
         the format string to use for ascii writing
 
-    .. note:: assumes loads is None
+    Notes
+    -----
+    assumes loads is None
     """
     points = []
     elements = []
@@ -377,7 +379,7 @@ class Cart3dIO(object):
         data = self.infile.read(size)
 
         dtype = np.dtype(self._endian + b('f4'))
-        points = np.fromstring(data, dtype=dtype).reshape((npoints, 3))
+        points = np.frombuffer(data, dtype=dtype).reshape((npoints, 3)).copy()
 
         self.infile.read(8)  # end of second block, start of third block
         return points
@@ -388,7 +390,7 @@ class Cart3dIO(object):
         data = self.infile.read(size)
 
         dtype = np.dtype(self._endian + b('i4'))
-        elements = np.fromstring(data, dtype=dtype).reshape((nelements, 3))
+        elements = np.frombuffer(data, dtype=dtype).reshape((nelements, 3)).copy()
 
         self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
         assert elements.min() == 1, elements.min()
@@ -401,7 +403,7 @@ class Cart3dIO(object):
 
         regions = np.zeros(nelements, dtype='int32')
         dtype = self._endian + b'i'
-        regions = np.fromstring(data, dtype=dtype)
+        regions = np.frombuffer(data, dtype=dtype).copy()
 
         self.infile.read(4)  # end of regions (fourth) block
         return regions
@@ -613,7 +615,9 @@ class Cart3D(Cart3dIO):
         """
         Makes a half model from a full model
 
-        ... note:: Cp is really loads['Cp'] and was meant for loads analysis only
+        Notes
+        -----
+        Cp is really loads['Cp'] and was meant for loads analysis only
         """
         nodes = self.nodes
         elements = self.elements

@@ -181,4 +181,4 @@ class ComplexDisplacementArray(ComplexTableArray):
             #vals = [dx, dy, dz, rx, ry, rz]
             #data = [device_code + 10*nodeID, grid_type, dx, dy, dz, rx, ry, rz]
             #f.write(pack(fascii, 'nid, gridType, dx, dy, dz, rx, ry, rz', fmt, data))
-        #f.write(pack(fascii, 'closer', 'i', nbytes))
+        #f.write(pack(fascii, 'closer', b'i', nbytes))

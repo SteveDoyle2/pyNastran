@@ -1,6 +1,7 @@
 """
 defines:
- - convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge_length=0.0)
+ - convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None,
+                             min_edge_length=0.0)
 """
 from __future__ import print_function
 from six import iteritems
@@ -25,13 +26,9 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
     min_edge_length : float; default=0.0
         what is classified as "short"
 
-    Warning
-    -------
-    Don't cross reference properties/loads
+    .. warning::  Don't cross reference properties/loads
 
-    TODO:
-    -----
-    check for bad xref
+    .. todo::  check for bad xref
     """
     out = model.get_card_ids_by_card_types('CQUAD4')
     cquad4s = out['CQUAD4']

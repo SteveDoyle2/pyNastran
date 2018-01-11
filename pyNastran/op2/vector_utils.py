@@ -103,10 +103,8 @@ def where_searchsorted(a, v, side='left', x=None, y=None):
         --------
         nonzero, choose
 
-        Notes
-        -----
-        If `x` and `y` are given and input arrays are 1-D, `where` is
-        equivalent to::
+        .. note::  If `x` and `y` are given and input arrays are 1-D,
+                   `where` is equivalent to::
 
             [xv if c else yv for (c,xv,yv) in zip(condition,x,y)]
 
@@ -124,9 +122,9 @@ def where_searchsorted(a, v, side='left', x=None, y=None):
         >>> x = np.arange(9.).reshape(3, 3)
         >>> np.where( x > 5 )
         (array([2, 2, 2]), array([0, 1, 2]))
-        >>> x[np.where( x > 3.0 )]               # Note: result is 1D.
+        >>> x[np.where( x > 3.0 )]               # result is 1D.
         array([ 4.,  5.,  6.,  7.,  8.])
-        >>> np.where(x < 5, x, -1)               # Note: broadcasting.
+        >>> np.where(x < 5, x, -1)               # broadcasting.
         array([[ 0.,  1.,  2.],
                [ 3.,  4., -1.],
                [-1., -1., -1.]])
@@ -708,8 +706,3 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
         if consider_rxf:
             logger.debug('moment_sum = %s' % moment_out.sum(axis=0))
     return force_out, moment_out, force_out.sum(axis=0), moment_out.sum(axis=0)
-
-
-if __name__ == '__main__':  # pragma: no cover
-    #print(iformat('4si3f'))
-    pass

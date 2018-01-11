@@ -27,7 +27,7 @@ The Graphical User Interface (GUI) looks like:
 .. code-block:: console
 
   >>> pyNastranGUI --help
-  
+
   Usage:
     pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]
                  [-s SHOT] [-m MAGNIFY]
@@ -46,13 +46,13 @@ The Graphical User Interface (GUI) looks like:
                  [-q] [--groups]
     pyNastranGUI -h | --help
     pyNastranGUI -v | --version
-  
+
   Primary Options:
-    -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair, 
+    -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair,
                                              plot3d, stl, surf, tetgen, ugrid, usm3d)
     -i INPUT, --input INPUT     path to input file
     -o OUTPUT, --output OUTPUT  path to output file
-  
+
   Secondary Options:
     -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)
     -p PSCRIPT, --postscript        path to post script file (runs after load geometry)
@@ -61,7 +61,7 @@ The Graphical User Interface (GUI) looks like:
     --groups                        enables groups
     --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)
     -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)
-  
+
   Info:
     -q, --quiet    prints debug messages (default=True)
     -h, --help     show this help message and exit
@@ -84,10 +84,10 @@ Runs through various checks on a BDF that Nastran doesn't do.  Verifies your mod
     test_bdf [-x] [-p] [-s]           [-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] BDF_FILENAME
     test_bdf -h | --help
     test_bdf -v | --version
-  
+
   Positional Arguments:
     BDF_FILENAME   path to BDF/DAT/NAS file
-  
+
   Options:
     -x, --xref     disables cross-referencing and checks of the BDF
                    (default=True -> on)
@@ -102,7 +102,7 @@ Runs through various checks on a BDF that Nastran doesn't do.  Verifies your mod
     -e E, --nerrors E  Allow for cross-reference errors (default=100)
     --encoding ENCODE  the encoding method (default=None -> 'ascii')
     -q, --quiet        prints debug messages (default=False)
-  
+
   Developer:
     --crash C,       Crash on specific cards (e.g. CGEN,EGRID)
     -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed
@@ -112,7 +112,7 @@ Runs through various checks on a BDF that Nastran doesn't do.  Verifies your mod
     -f, --profile    Profiles the code (default=False)
     -s, --stop       Stop after first read/write (default=False)
     -k, --pickle     Pickles the data objects (default=False)
-  
+
   Info:
     -h, --help     show this help message and exit
     -v, --version  show program's version number and exit
@@ -132,10 +132,10 @@ Runs through various checks on an OP2 file.  Creates a summary table.
     test_op2 -v | --version
 
   Tests to see if an OP2 will work with pyNastran
-  
+
   Positional Arguments:
     OP2_FILENAME         Path to OP2 file
-  
+
   Options:
     -b, --binarydebug     Dumps the OP2 as a readable text file
     -c, --disablecompare  Doesn't do a validation of the vectorized result
@@ -150,11 +150,12 @@ Runs through various checks on an OP2 file.  Creates a summary table.
     -w, --is_sort2        Sets the F06 transient to SORT2
     -x <arg>, --exclude   Exclude specific results
     --nx                  Assume NX Nastran
-  
+
   Info:
     -h, --help     Show this help message and exit
-    -v, --version  Show program's version number and exit 
+    -v, --version  Show program's version number and exit
 
+--------
 test_op4
 --------
 Limited checker for testing to see if an OP4 file will load.
@@ -166,12 +167,12 @@ Limited checker for testing to see if an OP4 file will load.
  test_op4 [-q] [-o] OP4_FILENAME
    test_op4 -h | --help
    test_op4 -v | --version
- 
+
  Tests to see if an OP4 will work with pyNastran
- 
+
  Positional Arguments:
    OP4_FILENAME         Path to OP4 file
- 
+
  Options:
    -q, --quiet          Suppresses debug messages (default=False)
    -o, --write_op4      Writes the op2 to fem.test_op4.op4 (default=True)
@@ -196,7 +197,7 @@ Interface to various BDF-related command line tools
     bdf export_mcids  IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]
     bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]
     bdf bin          IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]
-  
+
     bdf merge         -h | --help
     bdf equivalence   -h | --help
     bdf renumber      -h | --help
@@ -218,14 +219,14 @@ Interface to various F06-related command line tools
 
   Usage:
     f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylim DAMP]
-  
+
     f06 plot_145 -h | --help
     f06 -v | --version
 
 ----------------
 format_converter
 ----------------
-Converts between various common formats, typically using Nastran as a common format.  
+Converts between various common formats, typically using Nastran as a common format.
 This allows methods like nodal equivalencing to be written once.
 
 .. code-block:: console
@@ -239,7 +240,7 @@ This allows methods like nodal equivalencing to be written once.
     format_converter <format1> <INPUT> <format2> <OUTPUT>
     format_converter -h | --help
     format_converter -v | --version
-  
+
   Options:
     format1        format type (nastran, cart3d, stl, ugrid, tecplot)
     format2        format type (nastran, cart3d, stl, ugrid, tecplot)
@@ -255,13 +256,13 @@ This allows methods like nodal equivalencing to be written once.
     -b, --binary   writes the STL in binary (not supported for Tecplot)
     -h, --help     show this help message and exit
     -v, --version  show program's version number and exit
-  
+
   Notes:
     Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)
     STL/Tecplot supports globbing as the input filename
     Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)
     UGRID outfiles must be of the form model.b8.ugrid, where b8, b4, lb8, lb4 are valid choices and periods are important
-  
+
 Example:
 
 .. code-block:: console

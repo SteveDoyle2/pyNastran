@@ -251,7 +251,7 @@ class OP2Writer(OP2_F06_Common):
                     op2.write(pack('3i', *key))
                     op2_ascii.write(str(key) + '\n')
 
-                    spack = Struct(b(endian + '12i'))
+                    spack = Struct(endian + b'12i')
                     for eid in sorted(eids):
                         elem = obj.elements[eid]
                         nids = elem.node_ids

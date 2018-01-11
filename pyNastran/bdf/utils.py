@@ -448,23 +448,21 @@ def parse_patran_syntax(node_sets, pound=None):
       |"12:20:2"   | [12, 14, 16, 18, 20] |
       +------------+----------------------+
 
-    Example 1
-    ----------
-    .. code-block:: python
+    Examples
+    --------
+    **Example 1**
 
-      >>> node_sets = "1 2 3 5:10 12:20:2"
-      >>> data = parse_patran_syntax(node_sets)
-      >>> data
-      data = [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20]
+    >>> node_sets = "1 2 3 5:10 12:20:2"
+    >>> data = parse_patran_syntax(node_sets)
+    >>> data
+    data = [1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20]
 
-    Example 2
-    ----------
-    .. code-block:: python
+    **Example 2**
 
-      >>> node_sets = "1 2 3:#"
-      >>> data = parse_patran_syntax(node_sets, pound=10)
-      >>> data
-      data = [1, 2, 3, 5, 6, 7, 8, 9, 10]
+    >>> node_sets = "1 2 3:#"
+    >>> data = parse_patran_syntax(node_sets, pound=10)
+    >>> data
+    data = [1, 2, 3, 5, 6, 7, 8, 9, 10]
 
 
     .. warning::  Don't include the n/node or e/element or any other
@@ -558,36 +556,38 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None, msg=''):
         str : the key
         values : the integer values for that key
 
-    Example 1
-    ---------
-    .. code-block:: python
+    Examples
+    --------
+    **Example 1**
 
-      node_sets = "e 1:3 n 2:6:2 Node 10:13"
-      data = parse_patran_syntax_dict(node_sets)
-      data = {
+    >>> node_sets = "e 1:3 n 2:6:2 Node 10:13"
+    >>> data = parse_patran_syntax_dict(node_sets)
+    >>> data = {
+          'e'    : [1, 2, 3],
+          'n'    : [2, 4, 6],
+          'Node' : [10, 11, 12, 13],
+    }
+
+
+    **Example 2**
+
+    >>> node_sets = "e 1:3 n 2:6:2 Node 10:#"
+
+    # a pound character will be set to 20, but only for 'Node', but not
+    # 'n' so define it twice if needed
+    >>> pounds = {'Node' : 20}
+    >>> data = parse_patran_syntax_dict(node_sets, pounds=pounds)
+    >>> data = {
           'e'    : [1, 2, 3],
           'n'    : [2, 4, 6],
           'Node' : [10, 11, 12, 13],
       }
 
-    Example 2
-    ---------
-    .. code-block:: python
+    Notes
+    -----
+    An identifier (e.g. "e") must be used.
+    Use parse_patran_syntax to skip the identifier.
 
-      node_sets = "e 1:3 n 2:6:2 Node 10:#"
-
-      # a pound character will be set to 20, but only for 'Node', but not 'n'
-      # so define it twice if needed
-      pounds = {'Node' : 20}
-      data = parse_patran_syntax_dict(node_sets, pounds=pounds)
-      data = {
-          'e'    : [1, 2, 3],
-          'n'    : [2, 4, 6],
-          'Node' : [10, 11, 12, 13],
-      }
-
-    .. note:: an identifier (e.g. "e") must be used.
-              Use parse_patran_syntax to skip the identifier.
     .. warning:: case sensitive
     """
     data = {}  # type: Dict[str, List[int]]
@@ -688,29 +688,31 @@ def parse_patran_syntax_dict_map(node_sets, type_map, msg=''):
         str : the key
         values : the integer values for that key
 
-    Example 1
-    ---------
+    Examples
+    --------
+    **Example 1**
     .. code-block:: python
 
       # we drop the coordinate systems because we didn't request them
       # (coord is not referenced)
       #
-      node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
-      type_map = {
+      >>> node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
+      >>> type_map = {
           'n' : 'Node',
           'Node' : 'Node',
           'e' : 'Element',
           'Elm' : 'Element',
           'Element' : 'Element',
       }
-      data = parse_patran_syntax_dict(node_sets, type_map)
-      data = {
+
+      **Example 2**
+      >>> data = parse_patran_syntax_dict(node_sets, type_map)
+      >>> data = {
           'Element' : [1, 2, 3],
           'Node' : [2, 4, 6, 10, 11, 12, 13, 15],
       }
 
     .. todo:: doesn't support pound_dict
-    .. todo:: doesn't support msg
     """
     # makes it so we can pass in 'N' and 'n' and still get 'Node' out
     update_type_map = {}  # type: Dict[str, str]

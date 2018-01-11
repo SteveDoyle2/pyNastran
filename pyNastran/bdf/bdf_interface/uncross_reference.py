@@ -83,6 +83,14 @@ class UnXrefMesh(SafeXrefMesh):
         except AttributeError:
             print(material)
             raise
+
+        try:
+            for material in itervalues(self.creep_materials):
+                material.uncross_reference()
+        except AttributeError:
+            print(material)
+            raise
+
         data = [self.MATS1, self.MATS3, self.MATS8,
                 self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
                 self.MATT8, self.MATT9]

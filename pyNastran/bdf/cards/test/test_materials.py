@@ -126,10 +126,12 @@ class TestMaterials(unittest.TestCase):
             mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
             a, b, c, d, e, f, g,
             comment='creep')
+        model.pop_parse_errors()
         creep.raw_fields()
         model.cross_reference()
+        model.pop_xref_errors()
         model.uncross_reference()
-        save_load_deck(model)
+        model2 = save_load_deck(model)
 
     def test_mat2_01(self):
         """tests MAT2, MATT2"""
@@ -565,6 +567,18 @@ class TestMaterials(unittest.TestCase):
             model.StructuralMaterial(-1)
         with self.assertRaises(KeyError):
             model.ThermalMaterial(-1)
+
+    def test_nxstrat(self):
+        params = {
+            'AUTO' : 1,
+            'MAXITE' : 30,
+            'RTOL' : 0.005,
+            'ATSNEXT' : 3,
+        }
+        model = BDF(debug=False)
+        nxstrat = model.add_nxstrat(42, params)
+        nxstrat.raw_fields()
+        save_load_deck(model) # , run_remove_unused=False
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

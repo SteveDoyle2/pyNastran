@@ -292,8 +292,8 @@ class CHEXA8(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
         Example
         =======
@@ -344,7 +344,7 @@ class CHEXA8(SolidElement):
         y /= np.linalg.norm(y)
         return centroid, xe, y, z
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         assert isinstance(eid, integer_types)
@@ -569,11 +569,11 @@ class CHEXA20(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         (n1, n2, n3, n4, n5, n6, n7, n8,
@@ -629,7 +629,7 @@ class CHEXA20(SolidElement):
         nids = self.node_ids[:8]
         return chexa_face_area_centroid_normal(nid, nid_opposite, nids, self.nodes_ref[:8])
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         edges = self.get_edge_ids()
@@ -846,8 +846,8 @@ class CPENTA6(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
         Example
         =======
@@ -946,7 +946,7 @@ class CPENTA6(SolidElement):
             area = 0.5 * norm(cross(p1 - p3, p2 - p4))
         return [face_node_ids, area]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1227,8 +1227,8 @@ class CPENTA15(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
         Example
         =======
@@ -1274,7 +1274,7 @@ class CPENTA15(SolidElement):
             tuple(sorted([node_ids[2], node_ids[5]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1423,8 +1423,8 @@ class CPYRAM5(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
         Example
         =======
@@ -1459,7 +1459,7 @@ class CPYRAM5(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1615,8 +1615,8 @@ class CPYRAM13(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
         Example
         =======
@@ -1652,7 +1652,7 @@ class CPYRAM13(SolidElement):
             tuple(sorted([node_ids[3], node_ids[4]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -1869,7 +1869,7 @@ class CTETRA4(SolidElement):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -2105,8 +2105,8 @@ class CTETRA10(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        .. old_note::  The order of the nodes are consistent with ANSYS numbering.
-        .. old_warning:: higher order element ids not verified with ANSYS.
+        .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
+        .. warning:: higher order element ids not verified with ANSYS; is this current?
 
         Example
         =======
@@ -2138,7 +2138,7 @@ class CTETRA10(SolidElement):
             tuple(sorted([node_ids[2], node_ids[3]])),
         ]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids

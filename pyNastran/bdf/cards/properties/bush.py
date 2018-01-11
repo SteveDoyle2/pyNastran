@@ -268,7 +268,7 @@ class PBUSH(BushingProperty):
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
                      comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
 
@@ -520,7 +520,7 @@ class PBUSH1D(BushingProperty):
         #b = data[1]
         #raise NotImplementedError('PBUSH1D data...')
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r' % pid
 

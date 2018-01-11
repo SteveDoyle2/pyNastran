@@ -44,8 +44,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         #datan = data[n:]
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
 
         #  0    1   2   3   4   5   6   7
         #(nid, cp, x1, x2, x3, cd, ps, seid) = out
@@ -80,7 +80,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         ntotal = 48
         nentries = (len(data) - n) // ntotal
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
         eid = ints[:, 0]
         pid = ints[:, 1]
         nodes = ints[:, 2:]
@@ -107,7 +107,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         ntotal = 88
         nentries = (len(data) - n) // ntotal
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
         eid = ints[:, 0]
         pid = ints[:, 1]
         nodes = ints[:, 2:]
@@ -137,7 +137,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         ntotal = 68
         nentries = (len(data) - n) // ntotal
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).frombuffer()
         eid = ints[:, 0]
         pid = ints[:, 1]
         nodes = ints[:, 2:]
@@ -170,8 +170,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
         eid = ints[:, 0]
         pid = ints[:, 1]
         nodes = ints[:, 2:5]
@@ -240,8 +240,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
         eid = ints[:, 0]
         pid = ints[:, 1]
         nodes = ints[:, 2:6]
@@ -281,7 +281,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
 
         #(eid, pid, g1, g2, c1, c2) = out
         eid = ints[:, 0]
@@ -304,8 +304,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
 
         #(eid, k, g1, g2, c1, c2, ge, s) = out
         eid = ints[:, 0]
@@ -333,8 +333,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
 
         #(eid, pid, s1, s2) = out
         eid = ints[:, 0]
@@ -355,8 +355,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
 
         #(eid, pid, s1, s2) = out
         eid = ints[:, 0]
@@ -377,7 +377,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
 
         #(eid, pid, g1, g2, c1, c2) = out
         eid = ints[:, 0]
@@ -400,8 +400,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
 
         #(eid, bdamp, g1, g2, c1, c2) = out
         eid = ints[:, 0]
@@ -423,7 +423,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
 
         #(eid, pid, s1, s2) = out
         eid = ints[:, 0]
@@ -444,8 +444,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
 
         #(eid, pid, s1, s2) = out
         eid = ints[:, 0]
@@ -464,8 +464,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        #floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        #floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
 
         #(eid, pid, n1, n2) = out
         eid = ints[:, 0]
@@ -486,8 +486,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
-        floats = np.fromstring(data[n:], self.fdtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).reshape(nentries, nwords).copy()
         eid = ints[:, 0]
         nodes = ints[:, 1:3]
         mid = ints[:, 3]
@@ -529,7 +529,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
         eid = ints[:, 0]
         pid = ints[:, 1]
         nodes = ints[:, 2:]
@@ -548,7 +548,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
         eid = ints[:, 0]
         pid = ints[:, 1]
         nodes = ints[:, 2:]
@@ -738,7 +738,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         nentries = (len(data) - n) // ntotal
         assert ntotal % 4 == 0, 'ntotal=%s nentries=%s ndata=%s n=%s' % (ntotal, nentries, len(data), n)
         nwords = ntotal // 4
-        ints = np.fromstring(data[n:], self.idtype).reshape(nentries, nwords)
+        ints = np.frombuffer(data[n:], self.idtype).reshape(nentries, nwords).copy()
 
         #(eid, pid, n1, n2, n3, n4) = out
         eid = ints[:, 0]

@@ -302,7 +302,9 @@ def _bar_areaL(class_name, beam_type, dim, prop):
     Area : float
         Area of the given cross section defined by **self.beam_type**
 
-    .. note:: internal method
+    Notes
+    -----
+    internal method
     """
     if beam_type == 'ROD':
         # This is a circle if you couldn't tell...
@@ -896,8 +898,7 @@ class PBAR(LineProperty):
         4 : 'A', 'A' : 'A',
         5 : 'i1', 'I1' : 'i1',
         6 : 'i2', 'I2' : 'i2',
-        7 : 'i12', 'I12' : 'i12',
-        5 : 'j', 'J' : 'j',
+        7 : 'j', 'J' : 'j',
         10 : 'c1',
         11 : 'c2',
         12 : 'd1',
@@ -908,7 +909,7 @@ class PBAR(LineProperty):
         17 : 'f2',
         18 : 'k1',
         19 : 'k1',
-        20 : 'i12',
+        20 : 'i12', 'I12' : 'i12',
     }
 
     def __init__(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
@@ -1068,7 +1069,7 @@ class PBAR(LineProperty):
                     c1, c2, d1, d2, e1, e2,
                     f1, f2, k1, k2, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.pid
         mid = self.Mid()
         A = self.Area()
@@ -1351,7 +1352,7 @@ class PBARL(LineProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.pid
         mid = self.Mid()
         A = self.Area()
@@ -1822,7 +1823,7 @@ class PBRSECT(LineProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.pid
         mid = self.Mid()
         #A = self.Area()

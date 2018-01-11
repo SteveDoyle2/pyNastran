@@ -330,21 +330,19 @@ class BDFMethods(BDFAttributes):
            If you're trying to get the mass of a single element, it
            will be wrong, but for real models will be correct.
 
-        Example 1
-        ---------
-        # mass properties of entire structure
-        mass, cg, I = model.mass_properties()
-        Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+        Examples
+        --------
+        Mass properties of entire structure
 
+        >>> mass, cg, I = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
 
-        Example 2
-        ---------
-        # mass properties of model based on Property ID
-        pids = list(model.pids.keys())
-        pid_eids = self.get_element_ids_dict_with_pids(pids)
+        Mass properties of model based on Property ID
 
-        for pid, eids in sorted(iteritems(pid_eids)):
-            mass, cg, I = model.mass_properties(element_ids=eids)
+        >>> pids = list(model.pids.keys())
+        >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
+        >>> for pid, eids in sorted(iteritems(pid_eids)):
+        >>>     mass, cg, I = model.mass_properties(element_ids=eids)
         """
         if reference_point is None:
             reference_point = np.array([0., 0., 0.])
@@ -413,21 +411,20 @@ class BDFMethods(BDFAttributes):
            If you're trying to get the mass of a single element, it
            will be wrong, but for real models will be correct.
 
-        Example 1
-        ---------
-        # mass properties of entire structure
-        mass, cg, I = model.mass_properties()
-        Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+        Examples
+        --------
+        **mass properties of entire structure**
+
+        >>> mass, cg, I = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
 
 
-        Example 2
-        ---------
-        # mass properties of model based on Property ID
-        pids = list(model.pids.keys())
-        pid_eids = self.get_element_ids_dict_with_pids(pids)
+        **mass properties of model based on Property ID**
 
-        for pid, eids in sorted(iteritems(pid_eids)):
-            mass, cg, I = model.mass_properties(element_ids=eids)
+        >>> pids = list(model.pids.keys())
+        >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
+        >>> for pid, eids in sorted(iteritems(pid_eids)):
+        >>>     mass, cg, I = model.mass_properties(element_ids=eids)
         """
         if reference_point is None:
             reference_point = np.array([0., 0., 0.])
@@ -531,12 +528,14 @@ class BDFMethods(BDFAttributes):
           eids = [3]
           nids = [5]
 
-        .. note:: If you split the model into sections and sum the loads
-                  on each section, you may not get the same result as
-                  if you summed the loads on the total model.  This is
-                  due to the fact that nodal loads on the boundary are
-                  double/triple/etc. counted depending on how many breaks
-                  you have.
+          Notes
+        -----
+        If you split the model into sections and sum the loads
+        on each section, you may not get the same result as
+        if you summed the loads on the total model.  This is
+        due to the fact that nodal loads on the boundary are
+        double/triple/etc. counted depending on how many breaks
+        you have.
 
         .. todo:: not done...
         """
@@ -642,7 +641,6 @@ class BDFMethods(BDFAttributes):
         write_shells : bool; default=False
             write newly created shell elements
             if there are shells in the model, doesn't write these
-
         size : int; default=8
             the field width
         is_double : bool; default=False

@@ -124,19 +124,20 @@ class OP4(object):
         _bytes_i : integer
             Either 4 or 8, to go with Str_i.
         _str_sr : string
-            Either self._endian + '%df' or self._endian + '%dd',
+            Either self._endian + b'%df' or self._endian + b'%dd',
             depending on self._bit64; for reading single precision
             reals.
         _bytes_sr : integer
             Number of bytes in single real.
         _str_dr : string
-            self._endian + '%dd', for reading double precision reals.
+            self._endian + b'%dd', for reading double precision reals.
         _wordsperdouble : integer
             Either 1 or 2; 2 if self._bit64 is False.
         """
         self._fileh = open(filename, 'rb')
         bytes = self._fileh.read(16)
-        self._endian = ''
+        self._endian = b''
+        self._uendian = ''
         self._dformat = False
 
         # Assuming binary, check for a zero byte in the 'type' field;
@@ -145,42 +146,44 @@ class OP4(object):
             self._ascii = False
             if sys.byteorder == 'little':
                 if bytes[12] == 0:
-                    self._endian = '>'
+                    self._endian = b'>'
+                    self._uendian = '>'
             else:
                 if bytes[12] != 0:
-                    self._endian = '<'
-            self._Str_i4 = struct.Struct(self._endian + 'i')
+                    self._endian = b'<'
+                    self._uendian = '<'
+            self._Str_i4 = struct.Struct(self._endian + b'i')
             reclen = self._Str_i4.unpack(bytes[:4])[0]
             if reclen == 48:
                 self._bit64 = True
-                self._Str_i = struct.Struct(self._endian + 'q')
+                self._Str_i = struct.Struct(self._endian + b'q')
                 self._bytes_i = 8
-                self._Str_ii = struct.Struct(self._endian + 'qq')
+                self._Str_ii = struct.Struct(self._endian + b'qq')
                 self._bytes_ii = 16
-                self._Str_iii = struct.Struct(self._endian + '3q')
+                self._Str_iii = struct.Struct(self._endian + b'3q')
                 self._bytes_iii = 24
-                self._Str_iiii = struct.Struct(self._endian + '4q')
+                self._Str_iiii = struct.Struct(self._endian + b'4q')
                 self._bytes_iiii = 32
-                self._str_sr = self._endian + '%dd'
-                self._str_sr_fromfile = np.dtype(self._endian + 'f8')
+                self._str_sr = self._endian + b'%dd'
+                self._str_sr_fromfile = np.dtype(self._uendian + 'f8')
                 self._bytes_sr = 8
                 self._wordsperdouble = 1
             else:
                 self._bit64 = False
                 self._Str_i = self._Str_i4
                 self._bytes_i = 4
-                self._Str_ii = struct.Struct(self._endian + 'ii')
+                self._Str_ii = struct.Struct(self._endian + b'ii')
                 self._bytes_ii = 8
-                self._Str_iii = struct.Struct(self._endian + '3i')
+                self._Str_iii = struct.Struct(self._endian + b'3i')
                 self._bytes_iii = 12
-                self._Str_iiii = struct.Struct(self._endian + '4i')
+                self._Str_iiii = struct.Struct(self._endian + b'4i')
                 self._bytes_iiii = 16
-                self._str_sr = self._endian + '%df'
-                self._str_sr_fromfile = np.dtype(self._endian + 'f4')
+                self._str_sr = self._endian + b'%df'
+                self._str_sr_fromfile = np.dtype(self._uendian + 'f4')
                 self._bytes_sr = 4
                 self._wordsperdouble = 2
-            self._str_dr = self._endian + '%dd'
-            self._str_dr_fromfile = np.dtype(self._endian + 'f8')
+            self._str_dr = self._endian + b'%dd'
+            self._str_dr_fromfile = np.dtype(self._yendian + 'f8')
             self._fileh.seek(0)
         else:
             self._ascii = True
@@ -310,10 +313,9 @@ class OP4(object):
             mtype : integer
                 Nastran matrix type.
 
-        Notes:
-        - All outputs will be None if reached EOF.
-        - The `matrix` output will be [rows, cols] of the matrix if
-          the matrix is skipped.
+        .. note::  All outputs will be None if reached EOF.
+        .. note::  The `matrix` output will be [rows, cols] of the
+                   matrix if the matrix is skipped.
         """
         while 1:
             line = self._fileh.readline()
@@ -499,10 +501,9 @@ class OP4(object):
             mtype : integer
                 Nastran matrix type.
 
-        Notes:
-        - All outputs will be None if reached EOF.
-        - The `matrix` output will be [rows, cols] of the matrix if
-          the matrix is skipped.
+        .. note::  All outputs will be None if reached EOF.
+        .. note::  The `matrix` output will be [rows, cols] of the matrix
+                   if the matrix is skipped.
         """
         fp = self._fileh
         while 1:
@@ -781,9 +782,9 @@ class OP4(object):
             Number of significant digits after the decimal to include
             in the ascii output.
 
-        Note: if rows > 65535, bigmat is turned on and the
-        :func:`write_ascii_sparse_bigmat` function is called ...
-        that's a Nastran rule.
+        .. note:: if rows > 65535, bigmat is turned on and the
+                  :func:`write_ascii_sparse_bigmat` function is
+                  called ...that's a Nastran rule.
         """
         rows, cols = matrix.shape
         if rows >= self._rows4bigmat:
@@ -972,9 +973,9 @@ class OP4(object):
             Endian setting for binary output:  '' for native, '>' for
             big-endian and '<' for little-endian.
 
-        Note: if rows > 65535, bigmat is turned on and the
-        :func:`write_binary_sparse_bigmat` function is called ...
-        that's a Nastran rule.
+        .. note::  if rows > 65535, bigmat is turned on and the
+                   :func:`write_binary_sparse_bigmat` function is
+                   called ...that's a Nastran rule.
         """
         rows, cols = matrix.shape
         if rows >= self._rows4bigmat:
@@ -1236,12 +1237,10 @@ class OP4(object):
         -------
         None.
 
-        Notes
-        -----
-        To write multiple matrices that have the same name or to write
-        the matrices in a specific order, `names` must be a list, not
-        a dictionary.  If a dictionary, the matrices are written in
-        alphabetical order.
+        .. note::  To write multiple matrices that have the same name
+                   or to write the matrices in a specific order, `names`
+                   must be a list, not a dictionary.  If a dictionary,
+                   the matrices are written in alphabetical order.
 
         See also :func:`dctload`, :func:`listload`, :func:`dir`.
 

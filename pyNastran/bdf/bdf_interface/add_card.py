@@ -9,6 +9,7 @@ That said, there are still a few bugs.
 from __future__ import print_function
 
 from typing import Any, Optional, List, Union
+from six import string_types
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
@@ -74,7 +75,7 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, F
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
-                                           MATG, MATHE, MATHP, CREEP, EQUIV)
+                                           MATG, MATHE, MATHP, CREEP, NXSTRAT, EQUIV)
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
@@ -603,8 +604,6 @@ class AddCards(AddMethods):
             nsms.append(nsm)
         return nsms
 
-        return nsm
-
     def add_nsml1(self, sid, nsm_type, value, ids, comment=''):
         # type: (int, str, float, List[int], str) -> NSML1
         """
@@ -649,22 +648,6 @@ class AddCards(AddMethods):
         nsmadd = NSMADD(sid, sets, comment=comment)
         self._add_nsmadd_object(nsmadd)
         return nsmadd
-
-    def add_omit1(self, components, ids, comment=''):
-        """
-        Creates an OMIT1 card, which defines the degree of freedoms that
-        will be excluded (o-set) from the analysis set (a-set).
-
-        Parameters
-        ----------
-        components : str
-            the degree of freedoms to be omitted (e.g., '1', '123')
-        ids : List[int]
-            the GRID/SPOINT ids
-        """
-        omit1 = OMIT1(components, ids, comment=comment)
-        self._add_omit_object(omit1)
-        return omit1
 
     def add_pmass(self, pid, mass, comment=''):
         # type: (int, float, str) -> PMASS
@@ -1072,8 +1055,47 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pgap(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0., kt=None, mu2=None,
-                 tmax=0., mar=100., trmin=0.001, comment=''):
+    def add_pgap(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
+                 kt=None, mu2=None, tmax=0., mar=100., trmin=0.001,
+                 comment=''):
+        """
+        Defines the properties of the gap element (CGAP entry).
+
+        Parameters
+        ----------
+        pid : int
+            property id for a CGAP
+        u0 : float; default=0.
+            Initial gap opening
+        f0 : float; default=0.
+            Preload
+        ka : float; default=1.e8
+            Axial stiffness for the closed gap
+        kb : float; default=None -> 1e-14 * ka
+            Axial stiffness for the open gap
+        mu1 : float; default=0.
+            Coefficient of static friction for the adaptive gap element
+            or coefficient of friction in the y transverse direction
+            for the nonadaptive gap element
+        kt : float; default=None -> mu1*ka
+            Transverse stiffness when the gap is closed
+        mu2 : float; default=None -> mu1
+            Coefficient of kinetic friction for the adaptive gap element
+            or coefficient of friction in the z transverse direction
+            for the nonadaptive gap element
+        tmax : float; default=0.
+            Maximum allowable penetration used in the adjustment of
+            penalty values. The positive value activates the penalty
+            value adjustment
+        mar : float; default=100.
+            Maximum allowable adjustment ratio for adaptive penalty
+            values KA and KT
+        trmin : float; default=0.001
+            Fraction of TMAX defining the lower bound for the allowable
+            penetration
+        comment : str; default=''
+            a comment for the card
+        """
         # type: (int, float, float, float, Any, float, Any, Any, float, float, float, str) -> PGAP
         prop = PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)
@@ -1557,7 +1579,8 @@ class AddCards(AddMethods):
         return elem
 
     def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
-                  c1, c2, d1, d2, e1, e2, f1, f2,
+                  c1=None, c2=None, d1=None, d2=None,
+                  e1=None, e2=None, f1=None, f2=None,
                   k1=1., k2=1., s1=0., s2=0.,
                   nsia=0., nsib=None, cwa=0., cwb=None,
                   m1a=0., m2a=None, m1b=0., m2b=None,
@@ -1582,9 +1605,9 @@ class AddCards(AddMethods):
             area
         i1, i2, i12, j : List[float]
             moments of inertia
-        nsm : List[float]
+        nsm : List[float]; default=None -> [0.]*nxxb
             nonstructural mass per unit length
-        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]
+        c1/c2, d1/d2, e1/e2, f1/f2 : List[float]; default=None -> [0.]*nxxb
            the y/z locations of the stress recovery points
            c1 - point C.y
            c2 - point C.z
@@ -1683,7 +1706,7 @@ class AddCards(AddMethods):
     def add_pbeam3(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
                    cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
                    comment=''):
-        prop = PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=0.,
+        prop = PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=nsm,
                       cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
                       comment=comment)
         self._add_property_object(prop)
@@ -2456,7 +2479,7 @@ class AddCards(AddMethods):
 
     def add_pihex(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                   fctn='SMECH', comment=''):
-        """see PSOLID"""
+        """.. seealso:: PSOLID"""
         prop = PIHEX(pid, mid, cordm=cordm, integ=integ, stress=stress, isop=isop,
                      fctn=fctn, comment=comment)
         self._add_property_object(prop)
@@ -2722,6 +2745,11 @@ class AddCards(AddMethods):
                     s_table=s_table, ge_table=ge_table, f12_table=f12_table, comment=comment)
         self._add_material_dependence_object(mat)
         return mat
+
+    def add_nxstrat(self, sid, params, comment=''):
+        nxstrat = NXSTRAT(sid, params)
+        self._add_nxstrat_object(nxstrat)
+        return nxstrat
 
     def add_load(self, sid, scale, scale_factors, load_ids, comment=''):
         """
@@ -3391,7 +3419,10 @@ class AddCards(AddMethods):
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
 
-        .. note:: len(gids) == len(components) == len(enforced)
+        Notes
+        -----
+        len(gids) == len(components) == len(enforced)
+
         .. warning:: non-zero enforced deflection requires an SPCD as well
         """
         spc = SPC(conid, gids, components, enforced, comment=comment)
@@ -3432,7 +3463,10 @@ class AddCards(AddMethods):
         enforced : List[float]
             the constrained value for the given node (typically 0.0)
 
-        .. note:: len(nodes) == len(constraints) == len(enforced)
+        Notes
+        -----
+        len(nodes) == len(constraints) == len(enforced)
+
         .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
                      Yes, you really want to constrain the deflection to 0.0
                      with an SPC1 card and then reset the deflection using an
@@ -3988,7 +4022,7 @@ class AddCards(AddMethods):
         return spline
 
     def add_spline5(self, eid, caero, aelist, setg, thx, thy, dz=0., dtor=1.0, cid=0,
-                 usage='BOTH', method='BEAM', ftype='WF2', rcore=None, comment=''):
+                    usage='BOTH', method='BEAM', ftype='WF2', rcore=None, comment=''):
         assert isinstance(cid, int), cid
         spline = SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
                          usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
@@ -4212,6 +4246,8 @@ class AddCards(AddMethods):
             ``ids = [1, 3, 5, THRU, 10]``
         is_skin : bool; default=False
             if is_skin is used; ids must be empty
+        comment : str; default=''
+            a comment for the card
         """
         set_obj = SET1(sid, ids, is_skin=is_skin, comment=comment)
         self._add_set_object(set_obj)
@@ -4224,129 +4260,194 @@ class AddCards(AddMethods):
 
     def add_aset(self, ids, components, comment=''):
         """
-        Creates an ASET card, which defines the degree of freedoms that
-        will be retained during an ASET modal reduction.
+        Creates an ASET/ASET1 card, which defines the degree of freedoms
+        that will be retained during an ASET modal reduction.
 
         Parameters
         ----------
-        components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : List[str]; str
+            the degree of freedoms to be retained (e.g., '1', '123')
+            if a list is passed in, a ASET is made
+            if a str is passed in, a ASET1 is made
+        comment : str; default=''
+            a comment for the card
 
         ..note :: the length of components and ids must be the same
         """
-        aset = ASET(ids, components, comment=comment)
+        if isinstance(components, string_types):
+            aset = ASET1(ids, components, comment=comment)
+        else:
+            aset = ASET(ids, components, comment=comment)
         self._add_aset_object(aset)
         return aset
 
-    def add_aset1(self, components, ids, comment=''):
-        """
-        Creates an ASET1 card, which defines the degree of freedoms that
-        will be retained during an ASET modal reduction.
-
-        Parameters
-        ----------
-        components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
-        ids : List[int]
-            the GRID/SPOINT ids
-        """
-        aset = ASET1(components, ids, comment=comment)
-        self._add_aset_object(aset)
-        return aset
+    def add_aset1(self, ids, components, comment=''):
+        """.. .. seealso:: ``add_aset``"""
+        return self.add_aset(ids, components, comment=comment)
 
     def add_bset(self, ids, components, comment=''):
         """
-        Creates an BSET card, which defines the degree of freedoms that
-        will be fixed during a generalized dynamic reduction or component
-        model synthesis calculation.
+        Creates an BSET/BSET1 card, which defines the degree of freedoms
+        that will be fixed during a generalized dynamic reduction or
+        component model synthesis calculation.
 
         Parameters
         ----------
-        components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : List[str]; str
+            the degree of freedoms to be fixed (e.g., '1', '123')
+            if a list is passed in, a ASET is made
+            if a str is passed in, a ASET1 is made
+        comment : str; default=''
+            a comment for the card
 
         ..note :: the length of components and ids must be the same
         """
-        bset = BSET(ids, components, comment=comment)
+        if isinstance(components, string_types):
+            bset = BSET1(ids, components, comment=comment)
+        else:
+            bset = BSET(ids, components, comment=comment)
         self._add_bset_object(bset)
         return bset
 
-    def add_bset1(self, components, ids, comment=''):
-        """
-        Creates an BSET1 card, which defines the degree of freedoms that
-        will be fixed during a generalized dynamic reduction or component
-        model synthesis calculation.
-
-        Parameters
-        ----------
-        components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
-        ids : List[int]
-            the GRID/SPOINT ids
-        """
-        bset = BSET1(components, ids, comment=comment)
-        self._add_bset_object(bset)
-        return bset
+    def add_bset1(self, ids, components, comment=''):
+        """.. .. seealso:: ``add_bset``"""
+        return self.add_bset(ids, components, comment=comment)
 
     def add_cset(self, ids, components, comment=''):
         """
-        Creates an CSET card, which defines the degree of freedoms that
-        will be free during a generalized dynamic reduction or component
-        model synthesis calculation.
+        Creates an CSET/CSET1 card, which defines the degree of freedoms
+        that will be free during a generalized dynamic reduction or
+        component model synthesis calculation.
 
         Parameters
         ----------
-        components : List[str]
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : List[str]; str
+            the degree of freedoms to be free (e.g., '1', '123')
+            if a list is passed in, a CSET is made
+            if a str is passed in, a CSET1 is made
+        comment : str; default=''
+            a comment for the card
 
         ..note :: the length of components and ids must be the same
         """
-        cset = CSET(ids, components, comment=comment)
+        if isinstance(components, string_types):
+            cset = CSET1(ids, components, comment=comment)
+        else:
+            cset = CSET(ids, components, comment=comment)
         self._add_cset_object(cset)
         return cset
 
     def add_cset1(self, ids, components, comment=''):
+        """.. seealso:: ``add_cset``"""
+        return self.add_cset(ids, components, comment=comment)
+
+    #def add_omit1(self, ids, components, comment=''):
+        #""".. seealso:: ``add_omit``"""
+        #return self.add_omit(ids, components, comment=comment)
+
+    #def add_omit(self, ids, components, comment=''):
+        #"""
+        #Creates an OMIT1 card, which defines the degree of freedoms that
+        #will be excluded (o-set) from the analysis set (a-set).
+
+        #Parameters
+        #----------
+        #ids : List[int]
+            #the GRID/SPOINT ids
+        #components : List[str]; str
+            #the degree of freedoms to be retained (e.g., '1', '123')
+            #if a list is passed in, a OMIT is made
+            #if a str is passed in, a OMIT1 is made
+        #comment : str; default=''
+            #a comment for the card
+        #"""
+        #if isinstance(components, string_types):
+            #omit = OMIT1(ids, components, comment=comment)
+        #else:
+            #omit = OMIT(ids, components, comment=comment)
+        #self._add_omit_object(omit)
+        #return omit
+
+    def add_omit1(self, ids, components, comment=''):
         """
-        Creates an CSET1 card, which defines the degree of freedoms that
-        will be free during a generalized dynamic reduction or component
-        model synthesis calculation.
+        Creates an OMIT1 card, which defines the degree of freedoms that
+        will be excluded (o-set) from the analysis set (a-set).
 
         Parameters
         ----------
-        components : str
-            the degree of freedoms to be retained (e.g., '1', '123')
         ids : List[int]
             the GRID/SPOINT ids
+        components : str
+            the degree of freedoms to be omitted (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
         """
-        cset = CSET1(ids, components, comment=comment)
-        self._add_cset_object(cset)
-        return cset
+        omit1 = OMIT1(ids, components, comment=comment)
+        self._add_omit_object(omit1)
+        return omit1
 
     def add_qset(self, ids, components, comment=''):
-        qset = QSET(ids, components, comment=comment)
+        """
+        Creates a QSET/QSET1 card, which defines generalized degrees of
+        freedom (q-set) to be used for dynamic reduction or component
+        mode synthesis.
+
+        Parameters
+        ----------
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : List[str]; str
+            the degree of freedoms to be created (e.g., '1', '123')
+            if a list is passed in, a QSET is made
+            if a str is passed in, a QSET1 is made
+        comment : str; default=''
+            a comment for the card
+        """
+        if isinstance(components, string_types):
+            qset = QSET1(ids, components, comment=comment)
+        else:
+            qset = QSET(ids, components, comment=comment)
         self._add_qset_object(qset)
         return qset
 
-    def add_qset1(self, components, ids, comment=''):
-        qset = QSET1(components, ids, comment=comment)
-        self._add_qset_object(qset)
-        return qset
+    def add_qset1(self, ids, components, comment=''):
+        """.. seealso:: ``add_qset``"""
+        return self.add_qset(ids, components, comment=comment)
 
-    def add_uset(self, name, components, ids, comment=''):
-        uset = USET(name, components, ids, comment=comment)
+    def add_uset(self, name, ids, components, comment=''):
+        """
+        Creates a USET card, which defines a degrees-of-freedom set.
+
+        Parameters
+        ----------
+        name : str
+            SNAME Set name. (One to four characters or the word 'ZERO'
+            followed by the set name.)
+        ids : List[int]
+            the GRID/SPOINT ids
+        components : List[str]
+            the degree of freedoms (e.g., '1', '123')
+            if a list is passed in, a USET is made
+            if a str is passed in, a USET1 is made
+        comment : str; default=''
+            a comment for the card
+        """
+        if isinstance(components, string_types):
+            uset = USET1(name, ids, components, comment=comment)
+        else:
+            uset = USET(name, ids, components, comment=comment)
         self._add_uset_object(uset)
         return uset
 
-    def add_uset1(self, name, components, ids, comment=''):
-        uset = USET1(name, components, ids, comment=comment)
-        self._add_uset_object(uset)
-        return uset
+    def add_uset1(self, name, ids, components, comment=''):
+        """.. seealso:: ``add_uset``"""
+        return self.add_uset(name, ids, components, comment=comment)
 
     def add_sebset(self, seid, ids, components, comment=''):
         sebset = SEBSET(seid, ids, components, comment=comment)
@@ -4354,17 +4455,17 @@ class AddCards(AddMethods):
         return sebset
 
     def add_sebset1(self, seid, ids, components, comment=''):
-        sebset = SEBSET1(seid, components, ids, comment=comment)
+        sebset = SEBSET1(seid, ids, components, comment=comment)
         self._add_sebset_object(sebset)
         return sebset
 
     def add_secset(self, seid, ids, components, comment=''):
-        secset = SECSET(seid, components, ids, comment=comment)
+        secset = SECSET(seid, ids, components, comment=comment)
         self._add_secset_object(secset)
         return secset
 
     def add_secset1(self, seid, ids, components, comment=''):
-        secset = SECSET1(seid, components, ids, comment=comment)
+        secset = SECSET1(seid, ids, components, comment=comment)
         self._add_secset_object(secset)
         return secset
 
@@ -4373,8 +4474,8 @@ class AddCards(AddMethods):
         self._add_seqset_object(seqset)
         return seqset
 
-    def add_seqset1(self, seid, components, ids, comment=''):
-        seqset = SEQSET1(seid, components, ids, comment=comment)
+    def add_seqset1(self, seid, ids, components, comment=''):
+        seqset = SEQSET1(seid, ids, components, comment=comment)
         self._add_seqset_object(seqset)
         return seqset
 
@@ -4503,20 +4604,20 @@ class AddCards(AddMethods):
         self._add_aecomp_object(aecomp)
         return aecomp
 
-    def add_aestat(self, id, label, comment=''):
+    def add_aestat(self, aestat_id, label, comment=''):
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
 
         Parameters
         ----------
-        id : int
+        aestat_id : int
             unique id
         label : str
             name for the id
         comment : str; default=''
             a comment for the card
         """
-        aestat = AESTAT(id, label, comment=comment)
+        aestat = AESTAT(aestat_id, label, comment=comment)
         self._add_aestat_object(aestat)
 
     def add_aelink(self, id, label, independent_labels, Cis, comment=''):
@@ -4957,9 +5058,11 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        .. note:: FREQ5 is only valid in modal frequency-response
-                  solutions (SOLs 111, 146, and 200) and is ignored in
-                  direct frequency response solutions.
+        Notes
+        -----
+        FREQ5 is only valid in modal frequency-response solutions
+        (SOLs 111, 146, and 200) and is ignored in direct frequency
+        response solutions.
         """
         freq = FREQ5(sid, fractions, f1=f1, f2=f2, comment=comment)
         self._add_freq_object(freq)
@@ -5228,32 +5331,35 @@ class AddCards(AddMethods):
         validate : bool; default=True
             should the card be validated when it's created
 
-        Example 1
-        ---------
-        dresp_id = 103
-        label = 'resp1'
-        response_type = 'STRESS'
-        property_type = 'PSHELL'
-        pid = 3
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = None
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        Examples
+        --------
+        **Stress/PSHELL**
 
-        Example 2
-        ---------
-        dresp_id = 104
-        label = 'resp2'
-        response_type = 'STRESS'
-        property_type = 'PCOMP'
-        pid = 3
-        layer = 4
-        atta = 9 # von mises upper surface stress
-        region = None
-        attb = layer
-        atti = [pid]
-        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+        >>> dresp_id = 103
+        >>> label = 'resp1'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PSHELL'
+        >>> pid = 3
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = None
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+
+        **Stress/PCOMP**
+
+        >>> dresp_id = 104
+        >>> label = 'resp2'
+        >>> response_type = 'STRESS'
+        >>> property_type = 'PCOMP'
+        >>> pid = 3
+        >>> layer = 4
+        >>> atta = 9 # von mises upper surface stress
+        >>> region = None
+        >>> attb = layer
+        >>> atti = [pid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         dresp = DRESP1(dresp_id, label, response_type, property_type, region,
                        atta, attb, atti, validate=validate, comment=comment)
@@ -5316,7 +5422,8 @@ class AddCards(AddMethods):
         }
         """
         dresp = DRESP2(dresp_id, label, dequation, region, params,
-                       method=method, c1=c1, c2=c2, c3=c3, comment=comment, validate=validate)
+                       method=method, c1=c1, c2=c2, c3=c3, comment=comment,
+                       validate=validate)
         self._add_dresp_object(dresp)
         return dresp
 
@@ -5410,7 +5517,9 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        .. note:: either dvids or labels is required
+        Notes
+        -----
+        either dvids or labels is required
         """
         dvprel = DVPREL2(oid, prop_type, pid, pname_fid, deqation, dvids, labels,
                          p_min=p_min, p_max=p_max, validate=validate, comment=comment)
@@ -5482,7 +5591,9 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
 
-        .. note:: either dvids or labels is required
+        Notes
+        -----
+        either dvids or labels is required
         """
         dvmrel = DVMREL2(oid, mat_type, mid, mp_name, deqation, dvids, labels,
                          mp_min=mp_min, mp_max=mp_max,

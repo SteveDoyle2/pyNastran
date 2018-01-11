@@ -498,7 +498,7 @@ class CTETRA4(SolidElement):
             the positions of the GRIDs in CID=0
         :param total: should the volume be summed; centroid be averaged (default=False)
 
-        ..see:: CTETRA4.volume() and CTETRA4.centroid for more information.
+        .. seealso:: CTETRA4.volume() and CTETRA4.centroid for more information.
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         n = len(element_id)

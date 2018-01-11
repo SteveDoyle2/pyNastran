@@ -3,10 +3,9 @@ Defines the Real/Complex Forces created by:
     GPFORCE = ALL
 """
 from __future__ import print_function
-from six import b
 from six.moves import range
 from struct import Struct
-from numpy import fromstring
+from numpy import fromstring, frombuffer
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_common import OP2Common
@@ -79,11 +78,11 @@ class OGPF(OP2Common):
 
                     itime = obj.itime
                     if itime == 0 or obj.is_unique:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 10)
+                        ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 10).copy()
 
                         nids = ints[:, 0] // 10
                         eids = ints[:, 1]
-                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)#[:, 2:3]
+                        strings = frombuffer(data, dtype=self._uendian + 'S8').reshape(nnodes, 5).copy()
                         if obj.is_unique:
                             obj.node_element[itime, istart:iend, 0] = nids
                             obj.node_element[itime, istart:iend, 1] = eids
@@ -94,15 +93,15 @@ class OGPF(OP2Common):
                             obj.element_names[istart:iend] = strings[:, 1]
 
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 10)
+                    floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 10)
                     #[f1, f2, f3, m1, m2, m3]
-                    obj.data[itime, istart:iend, :] = floats[:, 4:]
+                    obj.data[itime, istart:iend, :] = floats[:, 4:].copy()
                     #obj._times[obj.itime] = dt
                     #obj.itotal = itotal2
                     if self.is_debug_file:
                         if itime != 0:
-                            ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 10)
-                            strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 5)
+                            ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 10)
+                            strings = frombuffer(data, dtype=self._uendian + 'S8').reshape(nnodes, 5)
                         for i in range(iend - istart):
                             self.binary_debug.write('  nid=%s - (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 ints[i, 0] // 10,
@@ -110,7 +109,7 @@ class OGPF(OP2Common):
                                 floats[i, 4], floats[i, 5], floats[i, 6],
                                 floats[i, 7], floats[i, 8], floats[i, 9], ))
                 else:
-                    s = Struct(b(self._endian + 'ii8s6f'))
+                    s = Struct(self._endian + b'ii8s6f')
                     for i in range(nnodes):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
@@ -146,19 +145,19 @@ class OGPF(OP2Common):
                     obj._times[obj.itime] = dt
 
                     if obj.itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 16)
+                        ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 16)
                         nids = ints[:, 0] // 10
                         eids = ints[:, 1]
                         obj.node_element[istart:iend, 0] = nids
                         obj.node_element[istart:iend, 1] = eids
-                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 8)
-                        obj.element_names[istart:iend] = strings[:, 1]
+                        strings = frombuffer(data, dtype=self._uendian + 'S8').reshape(nnodes, 8)
+                        obj.element_names[istart:iend] = strings[:, 1].copy()
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 16)
+                    floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 16)
                     #[f1, f2, f3, m1, m2, m3]
-                    obj.data[obj.itime, istart:iend, :] = floats[:, 4:]
+                    obj.data[obj.itime, istart:iend, :] = floats[:, 4:].copy()
                 else:
-                    s = Struct(b(self._endian + 'ii8s12f'))
+                    s = Struct(self._endian + b'ii8s12f')
 
                     #if self.is_debug_file:
                         #self.binary_debug.write('  GPFORCE\n')

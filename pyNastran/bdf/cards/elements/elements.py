@@ -327,7 +327,7 @@ class CGAP(Element):
             cid = None
         return CGAP(eid, pid, [ga, gb], x, g0, cid=cid, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         cid = self.Cid()
         eid = self.eid
         pid = self.Pid()
@@ -513,7 +513,7 @@ class CRAC2D(CrackElement):
         nids = data[2:]
         return CRAC2D(eid, pid, nids, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -591,7 +591,7 @@ class CRAC3D(CrackElement):
         nids = data[2:]
         return CRAC3D(eid, pid, nids, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -689,7 +689,7 @@ class PLOTEL(BaseCard):
         nodes = [data[1], data[2]]
         return PLOTEL(eid, nodes, comment=comment)
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
         pass
 
     def cross_reference(self, model):

@@ -131,7 +131,7 @@ class PELAS(SpringProperty):
     def K(self):
         return self.k
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         k = self.K()
         ge = self.ge

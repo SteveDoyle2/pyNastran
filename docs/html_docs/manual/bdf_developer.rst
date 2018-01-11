@@ -120,7 +120,7 @@ of fields ``['GRID', nodeID, coord, x, y, z]``.
   3. Convert the Bulk Data Deck into a series of Nastran "cards", where a ``BDFCard()``
      is a ``list`` object that returns ``None`` if you try to access a value outside
      the valid range.  This conversion step supports:
-    
+
       * small field (8 characters wide)
       * small field CSV
       * large field (16 characters wide)
@@ -193,7 +193,7 @@ element with different numbers of nodes (8-CQUAD8, 9-CQUAD) and the CQUADR and
 CQUADX are axi-symmetric versions of the CQUAD4, and CQUAD8 respectively.
 However, the ``Area()``, ``Mass()``, ``Density()``, etc. methods are calculated
 in the the same way for each card (although the axi-symmetric cards return mass
-per unit theta).  The last thing to note is ``rawFields`` and ``reprFields`` are
+per unit theta).  The last thing to note is ``raw_fields`` and ``repr_fields`` are
 very important to how the code integrates.
 
 ``raw_fields`` is used to check if a duplicated card is the same as another card
@@ -207,7 +207,7 @@ list-esque card object from before).
 way to write the card. For example, the ``T1, T2, T3``, and ``T4`` values
 (thickness at nodes 1, 2, 3, 4) are generally 0.0 and instead are set at an
 elemental level using the PSHELL card.  If these fields were printed, the CQUAD4
-card would be a two line card instead of a one line card.  ``reprFields`` is
+card would be a two line card instead of a one line card.  ``repr_fields`` is
 used instead of ``__repr__()`` in order to be able to write the card in large
 field or small field format.  Defaults are generally not written by the
 ``__repr__()`` method, but are written for certain fields (e.g. the ``xyz``
@@ -228,9 +228,9 @@ Then to print the card, type::
  print(elem)
 
 to see the Nastran formatted card.  The ``__repr__()`` method is defined in
-``bdf/cards/baseCard.py`` the :py:class:`pyNastran.bdf.cards.baseCard` class
-(which is used by the :py:class:`pyNastran.bdf.cards.baseCard.Element` class
-also defined in ``baseCard.py``).
+``bdf/cards/base_card.py`` the :py:class:`pyNastran.bdf.cards.base_card.BaseCard` class
+(which is used by the :py:class:`pyNastran.bdf.cards.base_card.Element` class
+also defined in ``base_card.py``).
 
 
 :mod:`shell`: Cross-Referencing the CQUAD4 Object
@@ -265,7 +265,7 @@ for a PCOMP.
 
 By using classes and functions, it's easy to just call the ``element.MassPerArea()``
 method and get the proper data to apply the formula.  Similarly, the
-``element.Area()`` method calls the ``node.Position()`` method to get the node
+``element.Area()`` method calls the ``node.get_position()`` method to get the node
 in the global XYZ coordinate frame and can then find the area using vectors
 in a 3D space:
 

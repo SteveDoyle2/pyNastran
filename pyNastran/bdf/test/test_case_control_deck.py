@@ -125,12 +125,16 @@ class CaseControlTest(unittest.TestCase):
            19, 20, 21, 22, 23, 24, 25, 26,
            1000000000000000000000000000000000000000000000000000000, 33]
         spaces = '    '
-        options = 10
+        set_id = 10
 
         singles, doubles = collapse_thru_packs(values)
         assert singles == [33, 1000000000000000000000000000000000000000000000000000000], singles
         assert doubles == [[11, 'THRU', 26]], doubles
-        msg = write_set(values, options, spaces)
+        msg = write_set(set_id, values, spaces)
+
+        set_id = 11
+        values = ['ALL']
+        msg = write_set(set_id, values, spaces)
 
     def test_case_control_04(self):
         seti = 'SET 88 = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300'
@@ -138,7 +142,7 @@ class CaseControlTest(unittest.TestCase):
         deck = CaseControlDeck(lines)
         deck.create_new_subcase(2)
         deck.add_parameter_to_local_subcase(2, seti)
-        values, options = deck.get_subcase_parameter(2, 'SET 88')
+        values, set_id = deck.get_subcase_parameter(2, 'SET 88')
 
         check = [
             (7, True),
@@ -156,7 +160,7 @@ class CaseControlTest(unittest.TestCase):
             else:
                 assert value not in values, 'value=%s should NOT be in values=%s' % (value, values)
 
-        msg = write_set(values, options)
+        msg = write_set(set_id, values)
 
         singles, doubles = collapse_thru_packs(values)
         assert singles == [77, 78, 79], singles
@@ -373,7 +377,7 @@ class CaseControlTest(unittest.TestCase):
         #print('%s' % deck_msg)
         deck_lines = deck_msg.split('\n')
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
-        
+
     def test_case_control_13(self):
         # this test checks that subcase 3 uses its local definition of set 100 and subcase 4 uses the default definition
         lines = [

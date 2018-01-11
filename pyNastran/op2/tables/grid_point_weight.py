@@ -13,7 +13,7 @@ from pyNastran.utils import object_attributes, object_methods
 class GridPointWeight(object):
     def __init__(self):
         """
-        ..see:: http://www.6dof.com/index.php?option=com_content&view=article&id=298:output-from-the-grid-point-weight-generator&catid=178:courses-and-trainings&Itemid=61
+        .. seealso:: http://www.6dof.com/index.php?option=com_content&view=article&id=298:output-from-the-grid-point-weight-generator&catid=178:courses-and-trainings&Itemid=61
         """
         # The Grid Point Weight Generator (GPWG) module computes the rigid body
         # mass properties of an entire structure with respect to a user specified point and with

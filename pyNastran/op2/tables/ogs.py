@@ -1,6 +1,5 @@
 from __future__ import print_function
 from struct import Struct
-from six import b
 from six.moves import range
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 #from pyNastran.op2.tables.ogf_gridPointForces.ogs_surface_stresses import (
@@ -23,31 +22,31 @@ class OGS(OP2Common):
             '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)
-        #isubcase = self.get_values(data, 'i', 4)
+        #isubcase = self.get_values(data, b'i', 4)
 
         ## surface/volumeID
-        self.ID = self.add_data_parameter(data, 'ID', 'i', 3, False)
+        self.ID = self.add_data_parameter(data, 'ID', b'i', 3, False)
 
         #: Reference coordinate system ID
-        self.refid = self.add_data_parameter(data, 'refid', 'i', 8, False)
+        self.refid = self.add_data_parameter(data, 'refid', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
-        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## Stress/Strain code
-        self.sCode = self.add_data_parameter(data, 'sCode', 'i', 11, False)
+        self.sCode = self.add_data_parameter(data, 'sCode', b'i', 11, False)
 
         ## Output Coordinate System
-        self.oCoord = self.add_data_parameter(data, 'oCoord', 'i', 12, False)
+        self.oCoord = self.add_data_parameter(data, 'oCoord', b'i', 12, False)
 
         ## Axis Specification code
-        self.axis = self.add_data_parameter(data, 'axis', 'i', 13, False)
+        self.axis = self.add_data_parameter(data, 'axis', b'i', 13, False)
 
         #: Normal Specification Code
-        self.normal = self.add_data_parameter(data, 'normal', 'i', 14, False)
+        self.normal = self.add_data_parameter(data, 'normal', b'i', 14, False)
 
         self.fix_format_code()
         if not self.is_sort1:
@@ -56,14 +55,14 @@ class OGS(OP2Common):
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
             ## real eigenvalue
-            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
+            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             self.mode_cycle = 0.0
             self.update_mode_cycle('mode_cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
@@ -72,14 +71,14 @@ class OGS(OP2Common):
         #elif self.analysis_code == 5: # frequency
         elif self.analysis_code == 6:  # transient
             ## time step
-            self.time = self.add_data_parameter(data, 'time', 'f', 5)
+            self.time = self.add_data_parameter(data, 'time', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['time'])
         #elif self.analysis_code == 7:  # pre-buckling
         #elif self.analysis_code == 8:  # post-buckling
         #elif self.analysis_code == 9:  # complex eigenvalues
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
-            self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
+            self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
         #elif self.analysis_code == 11:  # old geometric nonlinear statics
         #elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
@@ -142,7 +141,7 @@ class OGS(OP2Common):
     def _read_ogs1_table26_numwide11(self, data, ndata):
         """surface stresses"""
         #dt = self.nonlinear_factor
-        s = Struct(b'2i4s8f')
+        s = Struct(self._endian + b'2i4s8f')
 
         n = 0
         nelements = ndata // 44  # 11*4
@@ -172,7 +171,7 @@ class OGS(OP2Common):
 
     def _read_ogs1_table27_numwide9(self, data, ndata):
         """surface stresses"""
-        s = Struct(b(self._endian + '2i7f'))
+        s = Struct(self._endian + b'2i7f')
         n = 0
         nelements = ndata // 36  # 9*4
         for i in range(nelements):
@@ -199,7 +198,7 @@ class OGS(OP2Common):
 
     def _read_ogs1_table35_numwide6(self, data, ndata):
         """grid point stress discontinuities (plane stress/strain)"""
-        s = Struct(b(self._endian + 'i5f'))
+        s = Struct(self._endian + b'i5f')
         n = 0
         nelements = ndata // 24  # 6*4
         for i in range(nelements):

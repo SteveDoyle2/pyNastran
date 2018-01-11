@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 
 class WeightResponse(object):
@@ -93,7 +94,7 @@ class WeightResponse(object):
             #'6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r seid=%r' % (
             #response_type, response_label, row_id, column_id,
             #dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, seid))
-        #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
+        #out = unpack(self._endian + b'iii 8s iiff f fffff', data)
         #print(out)
         #msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
             #response_label, region, subcase, row_id, column_id)
@@ -155,6 +156,7 @@ class FlutterResponse(object):
         self._n += 1
         #if self.n == self._n:
             #print(self)
+
     def __repr__(self):
         msg = 'FlutterResponse()\n'
         msg += '  velocity=%s\n' % (self.velocity)
@@ -168,7 +170,7 @@ class Convergence(object):
         self.is_built = False
         self.ndesign_variables = ndesign_variables
         self.design_iter = []
-        self.iconvergence = []  #      1-soft, 2-hard
+        self.iconvergence = []  #       1-soft, 2-hard
         self.conv_result = []   # 0-no, 1-soft, 2-hard
         self.obj_initial = []
         self.obj_final = []
@@ -196,12 +198,12 @@ class Convergence(object):
         elif (conv_result, iconvergence) == ('soft', 'soft'): # is this possible???
             convergence = 'SOFT'
         else:
-            raise NotImplementedError('conv_result=%r iconvergence=%r' % (conv_result, iconvergence))
+            msg = 'conv_result=%r iconvergence=%r' % (conv_result, iconvergence)
+            raise NotImplementedError(msg)
         return convergence, (conv_result, iconvergence)
 
-
     def append(self, design_iter, iconvergence, conv_result, obj_initial, obj_final,
-                 constraint_max, row_constraint_max, desvar_values):
+               constraint_max, row_constraint_max, desvar_values):
         if not self.is_built:
             self.design_iter = np.zeros(self.n, dtype='int32')
             self.iconvergence = np.zeros(self.n, dtype=object)

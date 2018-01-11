@@ -744,9 +744,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Takes a dictionary of list of times in a transient case and
         gets the output closest to those times.
 
-        .. code-block:: python
-          times = {subcase_id_1: [time1, time2],
-                   subcase_id_2: [time3, time4]}
+        Examples
+        --------
+        >>> times = {subcase_id_1: [time1, time2],
+                     subcase_id_2: [time3, time4]}
 
         .. warning:: I'm not sure this still works...
         """
@@ -1325,16 +1326,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if not hasattr(self, 'f') or self.f is None:
             #: the OP2 file object
             self.f = open(self.op2_filename, 'rb')
+            #: the endian in bytes
             self._endian = None
+            #: the endian in unicode
+            self._uendian = None
             flag_data = self.f.read(20)
             self.f.seek(0)
 
             if unpack(b'>5i', flag_data)[0] == 4:
-                self._endian = '>'
+                self._uendian = '>'
+                self._endian = b'>'
             elif unpack(b'<5i', flag_data)[0] == 4:
-                self._endian = '<'
+                self._uendian = '<'
+                self._endian = b'<'
             #elif unpack(b'<ii', flag_data)[0] == 4:
-                #self._endian = '<'
+                #self._endian = b'<'
             else:
                 # Matrices from test show
                 # (24, 10, 10, 6, 2) before the Matrix Name...
@@ -1342,8 +1348,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #print('----------')
                 #self.show_data(flag_data, types='iqlfsld', endian='>')
                 raise FatalError('cannot determine endian')
-            if PY2:
-                self._endian = b(self._endian)
+            #if PY2:
+                #self._endian = b(self._endian)
         else:
             self._goto(self.n)
 
@@ -1405,7 +1411,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 imat_version = data[6:11].encode('utf8')
                 macro_version = 'IMAT %s' % imat_version
             else:
-                version_ints = Struct(b(self._endian + '7i')).unpack(data)
+                version_ints = Struct(self._endian + b'7i').unpack(data)
                 if version_ints == (1, 2, 3, 4, 5, 6 , 7):
                     macro_version = 'MSFC'
                 else:
@@ -1930,7 +1936,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         elif ndata == 28:
-            subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
+            subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
@@ -1943,7 +1949,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #msg += 'ints     = %r\n' % str(ints)
             #msg += 'floats   = %r' % str(floats)
             print(msg)
-            subtable_name, = unpack(b(self._endian) + '8s', data[:8])
+            subtable_name, = self.struct_8s.unpack(data[:8])
             print('subtable_name = %r' % subtable_name.strip())
         else:
             strings, ints, floats = self.show_data(data)

@@ -161,7 +161,7 @@ def write_stress_type(key, options, value, spaces):
     return msg
 
 
-def write_set(value, options, spaces=''):
+def write_set(set_id, values, spaces=''):
     # type: (List[int], int, str) -> str
     """
     writes
@@ -173,7 +173,7 @@ def write_set(value, options, spaces=''):
     ----------
     value : List[int]
         the Set values
-    options : int
+    options : int / str; default=''
         the Set ID
     spaces : str; default=''
         indentation
@@ -183,16 +183,24 @@ def write_set(value, options, spaces=''):
     msg : str
        the string of the set
 
-    Example
-    -------
-    value = 80
-    options = [1, 2, 3, 4, 5, 7]
-    set = write_set(value, options, spaces='')
-    print(set)
-    >>> SET 80 = 1 THRU 5, 7
+    Examples
+    --------
+    **Example 1**
+    >>> set_id = 80
+    >>> values = [1, 2, 3, 4, 5, 7]
+    >>> set = write_set(set_id, values, spaces='')
+    >>> print(set)
+    SET 80 = 1 THRU 5, 7
+
+    **Example 2**
+    >>> set_id = ''
+    >>> values = ['ALL']
+    >>> set = write_set(set_id, values, spaces='')
+    >>> print(set)
+    SET = ALL
     """
     value.sort()
-    starter = 'SET %s = ' % (options)
+    starter = 'SET %s = ' % (set_id)
     msg2 = spaces + starter
 
     msg = ''
@@ -206,16 +214,16 @@ def write_set(value, options, spaces=''):
     if is_valid:
         singles, doubles = collapse_thru_packs(value)
 
-        out_value = singles
+        out_values = singles
         for double in doubles:
             assert len(double) == 3, double
             sdouble = '%i THRU %i' % (double[0], double[2])
-            out_value.append(sdouble)
+            out_values.append(sdouble)
     else:
-        out_value = value
+        out_values = value
 
-    for i, out_valuei in enumerate(out_value):
-        new_string = '%s, ' % out_valuei
+    for i, out_value in enumerate(out_values):
+        new_string = '%s, ' % out_value
         if len(msg2 + new_string) > 70:
             msg += msg2 + '\n'
             msg2 = ' ' * nchars + new_string

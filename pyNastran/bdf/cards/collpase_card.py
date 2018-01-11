@@ -99,10 +99,9 @@ def collapse_colon_packs(fields, thru_split=3):
     SET1,4000, 3,  :, 10
     SET1,4000, 20, :, 30
 
-    Returns
-    -------
-      singles = [1]
-      doubles = [[3, ':', 10], [20, ':', 30]]
+    # output
+    singles = [1]
+    doubles = [[3, ':', 10], [20, ':', 30]]
     """
     packs = condense(fields)
     singles, doubles = build_thru_packs(packs, max_dv=None, thru_split=thru_split)

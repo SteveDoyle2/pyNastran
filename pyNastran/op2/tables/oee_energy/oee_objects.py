@@ -5,7 +5,7 @@ from numpy import zeros
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import get_key0, _eigenvalue_header, write_float_13e
+from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
 try:
     import pandas as pd  # type: ignore
 except ImportError:
@@ -350,7 +350,7 @@ class RealStrainEnergyArray(ScalarObject):
             percent = self.data[itime, :, 1]
             density = self.data[itime, :, 2]
 
-            itotal = np.where(eids == 100000000)[0][0]
+            #itotal = np.where(eids == 100000000)[0][0]
             #total_energy = self.data[:, :, 0].sum()
             #total_set_energy = energy.sum()
             #total_set_energy = energy[itotal]

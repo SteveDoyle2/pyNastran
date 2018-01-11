@@ -17,7 +17,6 @@ from numpy import array
 import numpy as np
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
@@ -37,7 +36,7 @@ class ShellProperty(Property):
         self.tref = tref
 
 
-class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
+class CompositeShellProperty(ShellProperty):
     def __init__(self):
         ShellProperty.__init__(self)
         self.mids = []
@@ -52,6 +51,37 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         self.ft = None
         self.lam = None
         self.mids_ref = None
+
+    def MassPerArea(self, iply='all', method='nplies'):
+        #self.deprecated('MassPerArea(iply, method)', 'get_mass_per_area(iply, method)', '0.8')
+        return self.get_mass_per_area(iply, method)
+
+    def Thickness(self, iply='all'):
+        return self.get_thickness(iply)
+
+    def nPlies(self):
+        self.deprecated('prop.nPlies()', 'prop.nplies', '1.1')
+        return self.nplies
+
+    def get_nplies(self):
+        self.deprecated('prop.get_nplies()', 'prop.nplies', '1.1')
+        return self.nplies
+
+    def get_material_ids(self):
+        self.deprecated('prop.get_material_ids()', 'prop.material_ids', '1.1')
+        return self.material_ids
+
+    def Nsm(self):
+        return self.get_nonstructural_mass()
+
+    def Rho(self, iply):
+        return self.get_density(iply)
+
+    def Theta(self, iply):
+        return self.get_theta(iply)
+
+    def sout(self, iply):
+        return self.get_sout(iply)
 
     def cross_reference(self, model):
         """
@@ -806,7 +836,7 @@ class PCOMP(CompositeShellProperty):
             #self.souts[i] = sout
             #i += 1
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         is_sym = self.is_symmetrical()
         nplies = self.nplies
@@ -1072,7 +1102,7 @@ class PCOMPG(CompositeShellProperty):
                       global_ply_ids, mids, thicknesses, thetas, souts,
                       nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         is_sym = self.is_symmetrical()
         nplies = self.nplies
@@ -1246,10 +1276,8 @@ class PLPLANE(ShellProperty):
             the BDF object
         """
         msg = ' which is required by PLPLANE pid=%s' % self.pid
-        self.mid = model.HyperelasticMaterial(self.mid, msg=msg)
-        self.cid = model.Coord(self.cid, msg=msg)
-        self.mid_ref = self.mid
-        self.cid_ref = self.cid
+        self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self):
         self.mid = self.Mid()
@@ -1257,7 +1285,7 @@ class PLPLANE(ShellProperty):
         self.mid_ref = None
         self.cid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         cid = self.Cid()
@@ -1354,7 +1382,7 @@ class PPLANE(ShellProperty):
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         #stress_strain_output_location = self.stress_strain_output_location
@@ -1512,7 +1540,7 @@ class PSHEAR(ShellProperty):
         mass_per_area = self.nsm + rho * self.t
         return mass_per_area
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         midi = self.Mid()
 
@@ -1725,7 +1753,7 @@ class PSHELL(ShellProperty):
                       mid3, tst, nsm,
                       z1, z2, mid4, comment=comment)
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         pid = self.Pid()
         mid = self.Mid()
         mid1 = self.Mid1()

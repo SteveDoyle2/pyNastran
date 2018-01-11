@@ -2,7 +2,6 @@ from __future__ import print_function
 
 from copy import deepcopy
 from numpy import zeros
-import numpy as np
 from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 

@@ -1,16 +1,6 @@
 ugrid Package
 =============
 
-:mod:`surf_io` Module
----------------------
-
-.. inheritance-diagram:: pyNastran.converters.ugrid.surf_io
-
-.. automodule:: pyNastran.converters.aflr.surf.surf_io
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`surf_reader` Module
 -------------------------
@@ -23,27 +13,6 @@ ugrid Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`test_ugrid` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.converters.aflr.ugrid.test_ugrid
-
-.. automodule:: pyNastran.converters.aflr.ugrid.test_ugrid
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`test_ugrid_gui` Module
-----------------------------
-
-.. inheritance-diagram:: pyNastran.converters.aflr.ugrid.test_ugrid_gui
-
-.. automodule:: pyNastran.converters.aflr.ugrid.test_ugrid_gui
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`ugrid2d_reader` Module
 ----------------------------
@@ -100,16 +69,6 @@ ugrid Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`ugrid_io` Module
-----------------------
-
-.. inheritance-diagram:: pyNastran.converters.aflr.ugrid.ugrid_io
-
-.. automodule:: pyNastran.converters.aflr.ugrid.ugrid_io
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`ugrid_reader` Module
 --------------------------
@@ -121,13 +80,4 @@ ugrid Package
     :private-members:
     :undoc-members:
     :show-inheritance:
-
-
-Subpackages
------------
-
-.. toctree::
-
-   pyNastran.converters.aflr.ugrid.models
-   pyNastran.converters.aflr.ugrid.naca0012
 

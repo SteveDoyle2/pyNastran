@@ -5,7 +5,7 @@ import numpy as np
 
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank,
-    integer_string_or_blank, string, fields)
+    integer_string_or_blank, string, fields, components_or_blank)
 from pyNastran.bdf.field_writer_8 import (
     print_float_8, print_card_8, set_blank_if_default, set_string8_blank_if_default)
 from pyNastran.bdf.field_writer_16 import (
@@ -70,6 +70,8 @@ class Loads(object):
         self.moment = model.moment
         self.moment1 = model.moment1
         self.moment2 = model.moment2
+        self.spcd = model.spcd
+        self.temp = model.temp
         self.unhandled = []
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -98,6 +100,10 @@ class Loads(object):
             self.moment1.write_card(size, is_double, bdf_file)
         if len(self.moment2):
             self.moment2.write_card(size, is_double, bdf_file)
+        if len(self.spcd):
+            self.spcd.write_card(size, is_double, bdf_file)
+        #if len(self.temp):
+            #self.temp.write_card(size, is_double, bdf_file)
 
     #def make_current(self):
         #"""calls make_current() for each group"""
@@ -113,6 +119,7 @@ class Loads(object):
             self.pload, self.pload1, self.pload2, self.pload4,
             self.force, self.force1, self.force2,
             self.moment, self.moment1, self.moment2,
+            self.spcd, #self.temp,
         ]
         return groups
 
@@ -141,6 +148,8 @@ class Loads(object):
         msg += '%s  MOMENT :  %s\n' % (indent, len(self.moment))
         msg += '%s  MOMENT1:  %s\n' % (indent, len(self.moment1))
         msg += '%s  MOMENT2:  %s\n' % (indent, len(self.moment2))
+        msg += '%s  SPCD:  %s\n' % (indent, len(self.spcd))
+        #msg += '%s  TEMP:  %s\n' % (indent, len(self.temp))
         return msg
 
     def __repr__(self):
@@ -1703,5 +1712,129 @@ class SLOADv(BaseLoad):
 
     def repr_indent(self, indent=''):
         msg = '%sSLOADv:\n' % indent
+        msg += '%s  sid = %s\n' % self.sid
+        return msg
+
+
+class SPCDv(BaseLoad):
+    """
+    Defines an enforced displacement value for static analysis and an
+    enforced motion value (displacement, velocity or acceleration) in
+    dynamic analysis.
+
+     +------+-----+-----+-----+------+----+----+----+
+     |   1  |  2  |  3  |  4  |   5  |  6 | 7  |  8 |
+     +======+=====+=====+=====+======+====+====+====+
+     | SPCD | SID |  G1 | C1  |  D1  | G2 | C2 | D2 |
+     +------+-----+-----+-----+------+----+----+----+
+     | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2  | .9 |
+     +------+-----+-----+-----+------+----+----+----+
+    """
+    card_name = 'SPCD'
+
+    def __init__(self, model):
+        BaseLoad.__init__(self, model)
+        self.nid = np.array([], dtype='int32')
+        self.comp = np.array([], dtype='int32')
+        self.mag = np.array([], dtype='float64')
+
+        self._nid = []
+        self._comp = []
+        self._mag = []
+        self.comment = defaultdict(str)
+
+    def add(self, sid, nid, constraints, mag, comment=''):
+        """
+        Creates an SPCD card, which defines the degree of freedoms to be
+        set during enforced motion
+
+        Parameters
+        ----------
+        sid : int
+            constraint id
+        nodes : List[int]
+            GRID/SPOINT ids
+        constraints : List[str]
+            the degree of freedoms to constrain (e.g., '1', '123')
+        enforced : List[float]
+            the constrained value for the given node (typically 0.0)
+
+        .. note:: len(nodes) == len(constraints) == len(enforced)
+        .. warning:: Non-zero enforced deflection requires an SPC/SPC1 as well.
+                     Yes, you really want to constrain the deflection to 0.0
+                     with an SPC1 card and then reset the deflection using an
+                     SPCD card.
+        """
+        if comment:
+            self.comment[len(self)] = _format_comment(comment)
+        self.is_current = False
+        self._sid.append(sid)
+        self._nid.append(nid)
+        self._comp.append(constraints)
+        self._mag.append(mag)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a SPCD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+        if card.field(5) in [None, '']:
+            nodes = [integer(card, 2, 'G1'),]
+            constraints = [components_or_blank(card, 3, 'C1', 0)]
+            enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+        else:
+            nodes = [
+                integer(card, 2, 'G1'),
+                integer(card, 5, 'G2'),
+            ]
+            # :0 if scalar point 1-6 if grid
+            constraints = [components_or_blank(card, 3, 'C1', 0),
+                           components_or_blank(card, 6, 'C2', 0)]
+            enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                        double_or_blank(card, 7, 'D2', 0.0)]
+        self.add(sid, nodes, constraints, enforced, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for i, sid, nid, comp, mag in zip(count(), self.sid, self.nid, self.comp, self.mag):
+            list_fields = ['SPCD', sid]
+            list_fields += [nid, comp, mag]
+
+            msgi = print_card_8(list_fields)
+            msg += self.comment[i] + msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.sid) > 0: # there are already elements in self.eid
+                self.sid = np.hstack([self.sid, self._sid])
+                self.nid = np.vstack([self.nid, self._nid])
+                self.comp = np.vstack([self.comp, self._comp])
+                self.mag = np.vstack([self.mag, self._mag])
+                # TODO: need to handle comments
+            else:
+                self.sid = np.array(self._sid, dtype='int32')
+                self.nid = np.array(self._nid, dtype='int32')
+                self.comp = np.array(self._comp, dtype='int32')
+                self.mag = np.array(self._mag, dtype='float64')
+
+            self._sid = []
+            self._nid = []
+            self._mag = []
+            self.is_current = True
+
+    def repr_indent(self, indent=''):
+        msg = '%sSPCDv:\n' % indent
         msg += '%s  sid = %s\n' % self.sid
         return msg

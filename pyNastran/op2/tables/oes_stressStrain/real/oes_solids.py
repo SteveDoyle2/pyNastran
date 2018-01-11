@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from struct import Struct, pack
-from six import b, integer_types
+from six import integer_types
 from six.moves import zip, range
 
 import numpy as np
@@ -428,8 +428,8 @@ class RealSolidArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        struct1 = Struct(b(endian + 'ii4si'))
-        struct2 = Struct(b(endian + 'i20f'))
+        struct1 = Struct(self._endian + b'ii4si')
+        struct2 = Struct(self._endian + b'i20f')
 
         cen = b'GRID'
         for itime in range(self.ntimes):

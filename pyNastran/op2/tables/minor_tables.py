@@ -28,7 +28,7 @@ Defines various tables that don't fit in other sections:
                               make_matrix_symmetric)
 """
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from struct import unpack
 from six import b
 import numpy as np
@@ -54,7 +54,7 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 28:
-            subtable_name, month, day, year, zero, one = unpack(b(self._endian + '8s5i'), data)
+            subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
@@ -226,13 +226,13 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         ndata = len(data)
-        subtable_name_raw, = unpack(b(self._endian + '8s'), data[:8])
+        subtable_name_raw, = self.struct_8s.unpack(data[:8])
         subtable_name = subtable_name_raw.strip()
         assert subtable_name == b'FOL', 'subtable_name=%r' % subtable_name
 
         nfloats = (ndata - 8) // 4
         assert nfloats * 4 == (ndata - 8)
-        fmt = b(self._endian + '%sf' % nfloats)
+        fmt = b(self._uendian + '%sf' % nfloats)
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
         self._frequencies = freqs
         if self.is_debug_file:
@@ -461,7 +461,7 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
         if ndata == 16:
-            subtable_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
+            subtable_name, dummy_a, dummy_b = unpack(self._endian + b'8sii', data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (
                     subtable_name, dummy_a, dummy_b))
@@ -496,7 +496,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
         #self.show_data(data)
         if self.read_mode == 2:
-            a, bi, c, d, e, f, g = unpack(b('%s7i'% self._endian), data)
+            a, bi, c, d, e, f, g = unpack(self._endian + b'7i', data)
             assert a == 101, a
             assert bi == 1, bi
             assert c == 27, c
@@ -509,7 +509,7 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         #if self.read_mode == 2:
-        word, = unpack(b('%s8s' % self._endian), data)
+        word, = unpack(self._endian + b'8s', data)
         assert word == b'AECFMON ', word
         #self.show_data(data)
         #print('-----------------------')
@@ -523,7 +523,7 @@ class MinorTables(OP2Common):
             assert ndata == 108, ndata
             n = 8 + 56 + 20 + 12 + 12
             (aero, name, comps, cp, bi, c, d, coeff, word,
-             e, f, g) = unpack(b('8s 56s 5i 4s 8s 3i'), data[:n])
+             e, f, g) = unpack(self._endian + b'8s 56s 5i 4s 8s 3i', data[:n])
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
@@ -560,7 +560,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
         #self.show_data(data)
         if self.read_mode == 2:
-            a, bi, c, d, e, f, g = unpack(b('%s7i' % self._endian), data)
+            a, bi, c, d, e, f, g = unpack(self._endian + b'7i', data)
             assert a == 101, a
             assert bi == 1, bi
             assert c == 27, c
@@ -573,7 +573,7 @@ class MinorTables(OP2Common):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if self.read_mode == 2:
-            word, = unpack(b('%s8s' % self._endian), data)
+            word, = self.struct_8s.unpack(data)
             assert word == b'STCFMON ', word
         #self.show_data(data)
         #print('-----------------------')
@@ -586,7 +586,7 @@ class MinorTables(OP2Common):
             ndata = len(data)
             assert ndata == 108, ndata
             (aero, name, comps, cp, x, y, z, coeff, word, column, cd,
-             ind_dof) = unpack(b'8s 56s 2i 3f 4s 8s 3i', data[:108])
+             ind_dof) = unpack(self._endian + b'8s 56s 2i 3f 4s 8s 3i', data[:108])
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
@@ -639,7 +639,7 @@ class MinorTables(OP2Common):
         if self.read_mode == 1:
             assert data is not None, data
             assert len(data) > 12, len(data)
-            response_type, = unpack(self._endian + 'i', data[8:12])
+            response_type, = self.struct_i.unpack(data[8:12])
             #assert response_type in [1, 6, 10, 84], response_type
             if response_type == 1:
                 if self.weight_response is None:
@@ -674,7 +674,7 @@ class MinorTables(OP2Common):
         read_r1tabrg = True
         if read_r1tabrg:
             #self.show_data(data, types='ifs', endian=None)
-            out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
+            out = unpack(self._endian + b'iii 8s iiii i iiiii', data)
             # per the R1TAB DMAP page:
             #   all indicies are downshift by 1
             #   indices above out[3] are off by +2 because of the 2 field response_label
@@ -741,7 +741,7 @@ class MinorTables(OP2Common):
                 pass
             elif response_type == 84:
                 # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
-                out = unpack(self._endian + 'iii 8s iii fff i fff', data)
+                out = unpack(self._endian + b'iii 8s iii fff i fff', data)
                 mode = out[6]
                 mach = out[7]
                 velocity = out[8]
@@ -809,7 +809,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
 
         (design_iter, iconvergence, conv_result, obj_intial, obj_final,
-         constraint_max, row_constraint_max) = unpack(b(self._endian + '3i3fi'), data[:28])
+         constraint_max, row_constraint_max) = unpack(self._endian + b'3i3fi', data[:28])
         if iconvergence == 1:
             iconvergence = 'soft'
         elif iconvergence == 2:
@@ -899,19 +899,19 @@ class MinorTables(OP2Common):
         if tout == 1:
             nfloats = nvalues
             nterms = nvalues
-            fmt = self._endian + 'i %if' % nfloats
+            fmt = b(self._uendian + 'i %if' % nfloats)
         elif tout == 2:
             nfloats = nvalues // 2
             nterms = nvalues // 2
-            fmt = self._endian + 'i %id' % nfloats
+            fmt = b(self._uendian + 'i %id' % nfloats)
         elif tout == 3:
             nfloats = nvalues
             nterms = nvalues // 2
-            fmt = self._endian + 'i %if' % nfloats
+            fmt = b(self._uendian + 'i %if' % nfloats)
         elif tout == 4:
             nfloats = nvalues // 2
             nterms = nvalues // 4
-            fmt = self._endian + 'i %id' % nfloats
+            fmt = b(self._uendian + 'i %id' % nfloats)
         else:
             raise RuntimeError('tout = %s' % tout)
         return fmt, nfloats, nterms
@@ -986,7 +986,7 @@ class MinorTables(OP2Common):
         #nvalues = len(data) // 4
         assert len(data) % 4 == 0, len(data) / 4.
 
-        header = unpack('3i 8s 7i', data[:48]) # 48=4*12
+        header = unpack(self._endian + b'3i 8s 7i', data[:48]) # 48=4*12
         assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
 
         # ncols_gset is needed for form=9
@@ -1043,12 +1043,12 @@ class MinorTables(OP2Common):
 
         if tout in [1, 3]:
             # works for float32, complex64
-            ints = np.fromstring(data[48:], dtype=self.idtype)
-            floats = np.fromstring(data[48:], dtype=self.fdtype)
+            ints = np.frombuffer(data[48:], dtype=self.idtype).copy()
+            floats = np.frombuffer(data[48:], dtype=self.fdtype).copy()
             temp_ints = ints
         else:
             # works for float64, complex128
-            temp_ints = np.fromstring(data[48:], dtype=self.idtype)
+            temp_ints = np.frombuffer(data[48:], dtype=self.idtype).copy()
 
         # find the first index with ()-1,-1)
         iminus1 = np.where(temp_ints[:-1] == -1)[0]
@@ -1100,7 +1100,7 @@ class MinorTables(OP2Common):
                 datai = data[48+(istarti*4) : 48+(istopi*4)]
                 irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
                 assert len(datai) % 8 == 0, len(datai) / 8
-                real = np.fromstring(datai, dtype=fdtype)[1::2]
+                real = np.frombuffer(datai, dtype=fdtype)[1::2].copy()
 
             elif dtype == 'complex128':
                 datai = data[48+(istarti*4) : 48+(istopi*4)]
@@ -1112,7 +1112,7 @@ class MinorTables(OP2Common):
                 # (nid, dof, real, imag)
                 irow = np.arange(istarti, istopi-1, step=6, dtype='int32')
                 assert len(datai) % 8 == 0, len(datai) / 8
-                floats = np.fromstring(datai, dtype=fdtype)
+                floats = np.frombuffer(datai, dtype=fdtype).copy()
 
                 # ndoubles
                 # --------
@@ -1327,10 +1327,10 @@ class MinorTables(OP2Common):
         data = self._read_record()
 
         # old-bad
-        #matrix_num, form, mrows, ncols, tout, nvalues, g = unpack(self._endian + '7i', data)
+        #matrix_num, form, mrows, ncols, tout, nvalues, g = unpack(self._endian + b'7i', data)
 
         #           good   good   good  good  ???    ???
-        matrix_num, ncols, mrows, form, tout, nvalues, g = unpack(self._endian + '7i', data)
+        matrix_num, ncols, mrows, form, tout, nvalues, g = unpack(self._endian + b'7i', data)
         #print('g =', g)
 
         m = Matrix(table_name, form=form)
@@ -1391,7 +1391,7 @@ class MinorTables(OP2Common):
         data = self._read_record()
 
         if len(data) == 16:
-            name, ai, bi = unpack(self._endian + '8s 2i', data)
+            name, ai, bi = unpack(self._endian + b'8s 2i', data)
             assert ai == 170, ai
             assert bi == 170, bi
         else:

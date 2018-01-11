@@ -143,7 +143,6 @@ class AECOMP(BaseCard):
             the BDF object
         """
         msg = ', which is required by AECOMP name=%r' % self.name
-        #return
         if self.list_type == 'SET1':
             self.lists_ref = [model.SET1(key, msg) for key in self.lists]
         elif self.list_type == 'AELIST':
@@ -154,38 +153,37 @@ class AECOMP(BaseCard):
             # AEQUAD4,/AETRIA3
         else:
             raise NotImplementedError(self.list_type)
-        #self.lists_ref = self.lists
 
     def safe_cross_reference(self, model):
         msg = ', which is required by AECOMP name=%r' % self.name
         #return
-        self.lists_ref = []
+        lists_ref = []
         if self.list_type == 'SET1':
             for key in self.lists:
                 try:
                     ref = model.SET1(key, msg)
                 except KeyError:
                     ref = None
-                self.lists_ref.append(ref)
+                lists_ref.append(ref)
         elif self.list_type == 'AELIST':
             for key in self.lists:
                 try:
                     ref = model.AELIST(key, msg)
                 except KeyError:
                     ref = None
-                self.lists_ref.append(ref)
+                lists_ref.append(ref)
         elif self.list_type == 'CAERO':
             for key in self.lists:
                 try:
                     ref = model.CAero(key, msg)
                 except KeyError:
                     ref = None
-                self.lists_ref.append(ref)
+                lists_ref.append(ref)
         #elif self.list_type == 'CMPID':
             # AEQUAD4,/AETRIA3
         else:
             raise NotImplementedError(self.list_type)
-        #self.lists_ref = self.lists
+        self.lists_ref = lists_ref
 
     def uncross_reference(self):
         self.lists = self.get_lists()
@@ -685,7 +683,7 @@ class AESTAT(BaseCard):
         """
         if comment:
             self.comment = comment
-        self.id = aestat_id
+        self.aestat_id = aestat_id
         self.label = label
 
     @classmethod
@@ -718,6 +716,17 @@ class AESTAT(BaseCard):
     #def uncross_reference(self):
         #pass
 
+
+    @property
+    def id(self):
+        self.deprecated('id', 'aestat_id', '1.1')
+        return self.aestat_id
+
+    @id.setter
+    def id(self, aestat_id):
+        self.deprecated('id', 'aestat_id', '1.1')
+        self.aestat_id = aestat_id
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -727,7 +736,7 @@ class AESTAT(BaseCard):
         fields : List[int/str]
             the fields that define the card
         """
-        list_fields = ['AESTAT', self.id, self.label]
+        list_fields = ['AESTAT', self.aestat_id, self.label]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1133,22 +1142,22 @@ class AESURFS(BaseCard):  # not integrated
         """
         msg = ' which is required by AESURFS aesid=%s' % self.aesid
         self.list1_ref = model.Set(self.list1, msg)
-        self.list1_ref.cross_reference(model, 'Node', msg)
+        self.list1_ref.cross_reference_set(model, 'Node', msg)
 
         self.list2_ref = model.Set(self.list1, msg=msg)
-        self.list2_ref.cross_reference(model, 'Node', msg)
+        self.list2_ref.cross_reference_set(model, 'Node', msg)
 
     def safe_cross_reference(self, model):
         msg = ' which is required by AESURFS aesid=%s' % self.aesid
         try:
             self.list1_ref = model.Set(self.list1, msg=msg)
-            self.list1_ref.cross_reference(model, 'Node', msg)
+            self.list1_ref.cross_reference_set(model, 'Node', msg)
         except KeyError:
             pass
 
         try:
             self.list2_ref = model.Set(self.list1, msg=msg)
-            self.list2_ref.cross_reference(model, 'Node', msg)
+            self.list2_ref.cross_reference_set(model, 'Node', msg)
         except KeyError:
             pass
 
@@ -1530,6 +1539,8 @@ class AEROS(Aero):
             self.sym_xz = 0
         if self.sym_xy is None:
             self.sym_xy = 0
+        self.acsid_ref = None
+        self.rcsid_ref = None
 
     def Acsid(self):
         try:
@@ -2023,6 +2034,8 @@ class CAERO1(BaseCard):
             nchord = 0
         if lchord is None:
             lchord = 0
+        p1 = np.asarray(p1)
+        p4 = np.asarray(p4)
 
         if comment:
             self.comment = comment
@@ -2596,6 +2609,8 @@ class CAERO2(BaseCard):
 
         if comment:
             self.comment = comment
+        p1 = np.asarray(p1)
+
         #: Element identification number
         self.eid = eid
 
@@ -3023,6 +3038,7 @@ class CAERO3(BaseCard):
         self.x43 = x43
         self.pid_ref = None
         self.cp_ref = None
+        self.ascid_ref = None
         self.list_w_ef = None
         self.list_c1_ref = None
         self.list_c2_ref = None
@@ -3131,7 +3147,6 @@ class CAERO3(BaseCard):
         self.pid_ref = None
         self.cp_ref = None
         self.ascid_ref = None
-
         self.list_w_ef = None
         self.list_c1_ref = None
         self.list_c2_ref = None
@@ -3420,12 +3435,12 @@ class CAERO4(BaseCard):
         try:
             self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
         except KeyError:
-            self.model.warning('cannot find PAERO4=%r' % self.pid)
+            model.warning('cannot find PAERO4=%r' % self.pid)
 
         try:
             self.cp_ref = model.Coord(self.cp, msg=msg)
         except KeyError:
-            self.model.warning('cannot find CORDx=%r' % self.cp)
+            model.warning('cannot find CORDx=%r' % self.cp)
 
         if self.nspan == 0:
             assert isinstance(self.lspan, integer_types), self.lspan
@@ -4252,7 +4267,8 @@ class FLFACT(BaseCard):
                 (f1, _thru, fnf, nf) = factors
                 fmid = (f1 + fnf) / 2.
             elif nfactors == 5:
-                (f1, thru, fnf, nf, fmid) = factors
+                (f1, _thru, fnf, nf, fmid) = factors
+                #assert _thru.upper() == 'THRU', 'factors=%s' % str(factors)
             else:
                 raise RuntimeError('factors must be length 4/5; factors=%s' % factors)
             i = np.linspace(0, nf, nf, endpoint=False) + 1
@@ -4294,11 +4310,14 @@ class FLFACT(BaseCard):
             fmid_default = (f1 + fnf) / 2.
             fmid = double_or_blank(card, 6, 'fmid', fmid_default)
             assert len(card) <= 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
-            i = np.linspace(0, nf, nf, endpoint=False) + 1
-            factors = (
-                (f1*(fnf - fmid) * (nf-i) + fnf * (fmid - f1) * (i-1)) /
-                (   (fnf - fmid) * (nf-i) +       (fmid - f1) * (i-1))
-            )
+
+            #(f1, thru, fnf, nf, fmid) = factors
+            factors = [f1, 'THRU', fnf, nf, fmid]
+            #i = np.linspace(0, nf, nf, endpoint=False) + 1
+            #factors = (
+                #(f1*(fnf - fmid) * (nf-i) + fnf * (fmid - f1) * (i-1)) /
+                #(   (fnf - fmid) * (nf-i) +       (fmid - f1) * (i-1))
+            #)
         else:
             raise SyntaxError('expected a float or string for FLFACT field 3; value=%r' % field3)
         return FLFACT(sid, factors, comment=comment)
@@ -4334,8 +4353,7 @@ class FLFACT(BaseCard):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        else:
-            return self.comment + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 
 class FLUTTER(BaseCard):
@@ -4610,8 +4628,7 @@ class FLUTTER(BaseCard):
             return(self.imethod, self.nvalue)
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
-        else:
-            return(self.imethod, self.nvalue)
+        return(self.imethod, self.nvalue)
 
     def _get_repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
@@ -4620,8 +4637,7 @@ class FLUTTER(BaseCard):
             return (imethod, self.nvalue)
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
-        else:
-            return(self.imethod, self.nvalue)
+        return(self.imethod, self.nvalue)
 
     def raw_fields(self):
         """
@@ -4641,7 +4657,7 @@ class FLUTTER(BaseCard):
         (imethod, nvalue) = self._get_repr_nvalue_omax()
         epsilon = set_blank_if_default(self.epsilon, 0.001)
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
-                 self.get_rfreq_vel(), imethod, nvalue, epsilon]
+                       self.get_rfreq_vel(), imethod, nvalue, epsilon]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -4874,7 +4890,7 @@ class MKAERO1(BaseCard):
 
         machs = [None] * 8
         reduced_freqs = [None] * 8
-        cards = []
+        #cards = []
         if not 0 < len(self.machs) <= 8:
             msg = 'MKAERO1; nmachs=%s machs=%s' % (len(self.machs), self.machs)
             raise ValueError(msg)
@@ -4935,7 +4951,6 @@ class MKAERO2(BaseCard):
                 len(self.machs), len(self.reduced_freqs))
             raise ValueError(msg)
 
-
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -4967,7 +4982,7 @@ class MKAERO2(BaseCard):
             the fields that define the card
         """
         list_fields = ['MKAERO2']
-        for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
+        for (mach, rfreq) in zip(self.machs, self.reduced_freqs):
             list_fields += [mach, rfreq]
         return list_fields
 
@@ -5032,7 +5047,7 @@ class MONPNT1(BaseCard):
             loads are to be monitored.
             None : [0., 0., 0.]
         cp : int, CORDx; default=0
-           int : coordinate system
+           coordinate system of XYZ
         cd : int; default=None -> cp
             the coordinate system for load outputs
         comment : str; default=''
@@ -5044,6 +5059,8 @@ class MONPNT1(BaseCard):
             self.comment = comment
         if cd is None:
             cd = cp
+        xyz = np.asarray(xyz)
+
         self.name = name
         self.label = label
         self.axes = axes
@@ -5081,7 +5098,7 @@ class MONPNT1(BaseCard):
     def raw_fields(self):
         list_fields = [
             'MONPNT1', self.name, self.label.strip(), self.axes, self.comp,
-            self.cp,] + self.xyz + [self.cd]
+            self.cp,] + list(self.xyz) + [self.cd]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -5100,6 +5117,7 @@ class MONPNT1(BaseCard):
 
     def __repr__(self):
         return self.write_card()
+
 
 class MONPNT2(BaseCard):
     """MSC Nastran specific card"""
@@ -5151,6 +5169,7 @@ class MONPNT2(BaseCard):
     def __repr__(self):
         return self.write_card()
 
+
 class MONPNT3(BaseCard):
     """MSC Nastran specific card"""
     type = 'MONPNT3'
@@ -5160,6 +5179,8 @@ class MONPNT3(BaseCard):
             self.comment = comment
         if cd is None:
             cd = cp
+        xyz = np.asarray(xyz)
+
         self.name = name
         self.label = label
         self.axes = axes
@@ -5199,7 +5220,8 @@ class MONPNT3(BaseCard):
     def raw_fields(self):
         list_fields = [
             'MONPNT3', self.name, self.label.strip(),
-            self.axes, self.grid_set, self.elem_set, self.cp] + self.xyz + [self.xflag, self.cd]
+            self.axes, self.grid_set, self.elem_set, self.cp
+            ] + list(self.xyz) + [self.xflag, self.cd]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -5752,8 +5774,6 @@ class PAERO3(BaseCard):
 class PAERO4(BaseCard):
     """
     Defines properties of each strip element for Strip theory.
-    PAERO4 PID CLA LCLA CIRC LCIRC DOC1 CAOC1 GAPOC1
-    DOC2 CAOC2 GAPOC2 DOC3 CAOC3 GAPOC3 -etc.-
 
     +--------+------+-------+--------+-------+-------+--------+--------+--------+
     |    1   |   2  |   3   |   4    |   5   |   6   |    7   |   8    |    9   |
@@ -6057,7 +6077,7 @@ class SPLINE1(Spline):
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node', msg=msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -6253,7 +6273,7 @@ class SPLINE2(Spline):
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
-        self.setg_ref.cross_reference(model, 'Node', msg=msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 2:
@@ -6276,7 +6296,7 @@ class SPLINE2(Spline):
 
         try:
             self.setg_ref = model.Set(self.Set(), msg=msg)
-            self.setg_ref.cross_reference(model, 'Node', msg=msg)
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 2:
@@ -6720,7 +6740,7 @@ class SPLINE4(Spline):
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node', msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 3:
@@ -6864,7 +6884,7 @@ class SPLINE5(Spline):
         usage = string_or_blank(card, 12, 'usage', 'BOTH')
         assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
         return SPLINE5(eid, caero, aelist, setg, thx, thy, dz=dz, dtor=dtor, cid=cid,
-                         usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
+                       usage=usage, method=method, ftype=ftype, rcore=rcore, comment=comment)
     @property
     def aero_element_ids(self):
         return self.aelist_ref.elements
@@ -6903,7 +6923,7 @@ class SPLINE5(Spline):
         self.cid_ref = model.Coord(self.cid, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference(model, 'Node', msg)
+        self.setg_ref.cross_reference_set(model, 'Node', msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
 
         nnodes = len(self.setg_ref.ids)
@@ -6936,7 +6956,7 @@ class SPLINE5(Spline):
             pass
 
         try:
-            self.setg_ref.cross_reference(model, 'Node', msg)
+            self.setg_ref.cross_reference_set(model, 'Node', msg)
             self.aelist_ref = model.AEList(self.aelist, msg=msg)
         except KeyError:
             pass
@@ -7088,8 +7108,7 @@ class TRIM(BaseCard):
         self.uxs = uxs
 
         #: Flag to request a rigid trim analysis (Real > 0.0 and < 1.0;
-        #: Default = 1.0. A value of 0.0 provides a rigid trim analysis,
-        #: not supported
+        #: Default = 1.0. A value of 0.0 provides a rigid trim analysis.
         self.aeqr = aeqr
 
     def validate(self):
@@ -7104,13 +7123,11 @@ class TRIM(BaseCard):
                 len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
             raise RuntimeError(msg)
 
-    def _verify(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
+    def verify_trim(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
         """
         Magic function that makes TRIM cards not frustrating.
 
-        Warning
-        -------
-        TODO: This probably gets AELINKs/AEPARMs/AESURFSs wrong.
+        .. warning ::  This probably gets AELINKs/AEPARMs/AESURFSs wrong.
 
         The TRIM equality
         -----------------
@@ -7348,9 +7365,9 @@ class TRIM(BaseCard):
         # fixes a Nastran bug
         aeqr = set_blank_if_default(self.aeqr, 1.0)
 
-        fields = self.raw_fields()
-        fields[8] = aeqr
-        return fields
+        list_fields = self.raw_fields()
+        list_fields[8] = aeqr
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
