@@ -5289,7 +5289,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             optimization_cases = []
             for key, dvprel_data in iteritems(out_dict):
                 dvprel_init, dvprel_min, dvprel_max, design_region = dvprel_data
-                if design_region.max() == 0:
+                if np.nanmax(design_region) == 0:
                     continue
 
                 region_res = GuiResult(

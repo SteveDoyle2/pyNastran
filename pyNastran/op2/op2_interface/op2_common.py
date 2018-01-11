@@ -5,7 +5,7 @@ from six import string_types
 from six.moves import range
 
 import numpy as np
-from numpy import frombuffer, radians, sin, cos, fromstring, ones, dtype as npdtype
+from numpy import frombuffer, radians, sin, cos, ones, dtype as npdtype
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer

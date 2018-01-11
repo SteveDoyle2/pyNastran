@@ -7,8 +7,7 @@ from __future__ import print_function
 from struct import Struct
 from six.moves import range
 import numpy as np
-from numpy import fromstring, frombuffer, vstack, sin, cos, radians, array
-from numpy import hstack, zeros
+from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_common import OP2Common, apply_mag_phase
