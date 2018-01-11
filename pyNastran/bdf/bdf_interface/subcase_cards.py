@@ -517,11 +517,11 @@ class SET(CaseControlCard):
              4572, 4573, 3323 THRU 3462, 3464 THRU 3603, 3605 THRU 3683,
              3910 THRU 3921, 4125 THRU 4136, 4340 THRU 4351
         """
-        return write_set(self.value, self.set_id, spaces=spaces)
+        return write_set(self.set_id, self.value, spaces=spaces)
 
     def __repr__(self):
         """see `write`"""
-        return write_set(self.value, self.set_id)
+        return write_set(self.set_id, self.value)
 
 class SETMC(SET):
     """

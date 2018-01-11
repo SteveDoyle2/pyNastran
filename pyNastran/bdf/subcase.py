@@ -72,7 +72,7 @@ class Subcase(object):
         self.sol = None
         self.log = None
         #print("\n***adding subcase %s***" % self.id)
-        
+
     def __deepcopy__(self, memo):
         # custom method for copy.deepcopy to improve speed by more than 2x (tested with timeit)
         # default method is a bit slow for a list of lists and can take a long time to read a bdf with many subcases
@@ -80,7 +80,7 @@ class Subcase(object):
         # if the subcase is the default subcase, it is shallow copied instead
         # this greatly improves bdf read speed, since it avoids deepcopying large sets defined in the default subcase
         # for every subcase that is defined
-        
+
         _copy = self.__copy__()
         memo[id(self)] = _copy
 
@@ -1014,7 +1014,7 @@ class Subcase(object):
 
         elif param_type == 'SET-type':
             #: .. todo:: collapse data...not written yet
-            msg += write_set(value, options, spaces)
+            msg += write_set(options, value, spaces)
         elif param_type == 'OBJ-type':
             msg += value.write(spaces)
         else:
