@@ -12,28 +12,6 @@ openfoam Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`openfoam_gui` Module
---------------------------
-
-.. inheritance-diagram:: pyNastran.converters.openfoam.openfoam_gui
-
-.. automodule:: pyNastran.converters.openfoam.openfoam_gui
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`openfoam_io` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.converters.openfoam.openfoam_io
-
-.. automodule:: pyNastran.converters.openfoam.openfoam_io
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`openfoam_parser` Module
 -----------------------------
 

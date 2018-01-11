@@ -39,7 +39,7 @@ if sys.version_info <= (3,) or not is_dev:
             print("vtk.VTK_VERSION = %r < '5.10.1'" % vtk.VTK_VERSION)
             py2_packages.append('vtk >= 5.10.1')
     except ImportError:
-        py2_packages.append('vtk >= 5.10.1')  # 6.3.0 used
+        py2_packages.append('vtk >= 5.10.1')  # 8.x used
 
     py2_packages += [
         ##'dill'

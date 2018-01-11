@@ -11,15 +11,6 @@ tecplot Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`tecplot_io` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.converters.tecplot.tecplot_io
-
-.. automodule:: pyNastran.converters.tecplot.tecplot_io
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`tecplot_to_cart3d` Module
 -------------------------------
@@ -41,25 +32,6 @@ tecplot Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`test_tecplot` Module
---------------------------
-
-.. inheritance-diagram:: pyNastran.converters.tecplot.test_tecplot
-
-.. automodule:: pyNastran.converters.tecplot.test_tecplot
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`test_tecplot_gui` Module
-------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.tecplot.test_tecplot_gui
-
-.. automodule:: pyNastran.converters.tecplot.test_tecplot_gui
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`utils` Module
 -------------------

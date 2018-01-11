@@ -17,7 +17,6 @@ from numpy import array
 import numpy as np
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
@@ -37,7 +36,7 @@ class ShellProperty(Property):
         self.tref = tref
 
 
-class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
+class CompositeShellProperty(ShellProperty):
     def __init__(self):
         ShellProperty.__init__(self)
         self.mids = []
@@ -52,6 +51,37 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         self.ft = None
         self.lam = None
         self.mids_ref = None
+
+    def MassPerArea(self, iply='all', method='nplies'):
+        #self.deprecated('MassPerArea(iply, method)', 'get_mass_per_area(iply, method)', '0.8')
+        return self.get_mass_per_area(iply, method)
+
+    def Thickness(self, iply='all'):
+        return self.get_thickness(iply)
+
+    def nPlies(self):
+        self.deprecated('prop.nPlies()', 'prop.nplies', '1.1')
+        return self.nplies
+
+    def get_nplies(self):
+        self.deprecated('prop.get_nplies()', 'prop.nplies', '1.1')
+        return self.nplies
+
+    def get_material_ids(self):
+        self.deprecated('prop.get_material_ids()', 'prop.material_ids', '1.1')
+        return self.material_ids
+
+    def Nsm(self):
+        return self.get_nonstructural_mass()
+
+    def Rho(self, iply):
+        return self.get_density(iply)
+
+    def Theta(self, iply):
+        return self.get_theta(iply)
+
+    def sout(self, iply):
+        return self.get_sout(iply)
 
     def cross_reference(self, model):
         """

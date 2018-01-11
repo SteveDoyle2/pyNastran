@@ -23,17 +23,6 @@ abaqus Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`abaqus_io` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.converters.abaqus.abaqus_io
-
-.. automodule:: pyNastran.converters.abaqus.abaqus_io
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`rpy_writer` Module
 ------------------------
 
@@ -44,15 +33,3 @@ abaqus Package
     :private-members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`test_abaqus` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.converters.abaqus.test_abaqus
-
-.. automodule:: pyNastran.converters.abaqus.test_abaqus
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-

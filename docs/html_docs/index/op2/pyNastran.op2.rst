@@ -64,13 +64,6 @@ This is the pyNastran.op2.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`export_to_vtk` Module
----------------------------
-
-.. automodule:: pyNastran.op2.export_to_vtk
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`data_in_material_coord` Module
 ------------------------------------
@@ -98,5 +91,3 @@ Subpackages
    pyNastran.op2.op2_interface
    pyNastran.op2.result_objects
    pyNastran.op2.tables
-   pyNastran.op2.test
-

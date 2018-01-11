@@ -1043,12 +1043,12 @@ class MinorTables(OP2Common):
 
         if tout in [1, 3]:
             # works for float32, complex64
-            ints = np.fromstring(data[48:], dtype=self.idtype)
-            floats = np.fromstring(data[48:], dtype=self.fdtype)
+            ints = np.frombuffer(data[48:], dtype=self.idtype).copy()
+            floats = np.frombuffer(data[48:], dtype=self.fdtype).copy()
             temp_ints = ints
         else:
             # works for float64, complex128
-            temp_ints = np.fromstring(data[48:], dtype=self.idtype)
+            temp_ints = np.frombuffer(data[48:], dtype=self.idtype).copy()
 
         # find the first index with ()-1,-1)
         iminus1 = np.where(temp_ints[:-1] == -1)[0]
@@ -1100,7 +1100,7 @@ class MinorTables(OP2Common):
                 datai = data[48+(istarti*4) : 48+(istopi*4)]
                 irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
                 assert len(datai) % 8 == 0, len(datai) / 8
-                real = np.fromstring(datai, dtype=fdtype)[1::2]
+                real = np.frombuffer(datai, dtype=fdtype)[1::2].copy()
 
             elif dtype == 'complex128':
                 datai = data[48+(istarti*4) : 48+(istopi*4)]
@@ -1112,7 +1112,7 @@ class MinorTables(OP2Common):
                 # (nid, dof, real, imag)
                 irow = np.arange(istarti, istopi-1, step=6, dtype='int32')
                 assert len(datai) % 8 == 0, len(datai) / 8
-                floats = np.fromstring(datai, dtype=fdtype)
+                floats = np.frombuffer(datai, dtype=fdtype).copy()
 
                 # ndoubles
                 # --------

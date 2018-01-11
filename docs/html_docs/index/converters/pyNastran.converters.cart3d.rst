@@ -12,15 +12,6 @@ cart3d Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`cart3d_io` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.cart3d_io
-
-.. automodule:: pyNastran.converters.cart3d.cart3d_io
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`cart3d_result` Module
 ---------------------------
@@ -82,32 +73,4 @@ cart3d Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`test_cart3d` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.test_cart3d
-
-.. automodule:: pyNastran.converters.cart3d.test_cart3d
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`test_cart3d_gui` Module
------------------------------
-
-.. inheritance-diagram:: pyNastran.converters.cart3d.test_cart3d_gui
-
-.. automodule:: pyNastran.converters.cart3d.test_cart3d_gui
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Subpackages
------------
-
-.. toctree::
-
-   pyNastran.converters.cart3d.gui
-   pyNastran.converters.cart3d.models
 
