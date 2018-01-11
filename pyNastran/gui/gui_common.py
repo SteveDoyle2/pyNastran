@@ -2018,7 +2018,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         As this is somewhat Nastran specific, create_groups_by_visible_result exists as well.
         """
-        self._create_groups_by_name('PropertyID', 'property')
+        self._create_groups_by_name('PropertyID', 'property', nlimit=500)
         self.log_command('create_groups_by_property_id()')
 
     def _create_groups_by_name(self, name, prefix, nlimit=50):

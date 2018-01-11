@@ -121,7 +121,7 @@ class AnimationWindow(PyDialog):
         self.time = QLabel("Total Time (sec):")
         self.time_edit = QDoubleSpinBox(self)
         self.time_edit.setValue(self._default_time)
-        self.time_edit.setRange(0.1, 10.0)
+        self.time_edit.setRange(0.1, 5. * 60.)
         self.time_edit.setDecimals(2)
         self.time_edit.setSingleStep(0.1)
         self.time_button = QPushButton("Default")
