@@ -452,7 +452,7 @@ class Usm3d(object):
         #assert dummy3_int == 298560
         self.log.debug("dummy3 = %i" % unpack('>i', dummy3)) #, unpack('>f', dummy3)
 
-        if use_fromstring:
+        if use_frombuffer:
             data_length = 8 * nnodes
             data = cogsg_file.read(3 * data_length)
             assert self.precision == 'double', self.precision
