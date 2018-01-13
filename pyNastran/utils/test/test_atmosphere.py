@@ -12,6 +12,9 @@ from pyNastran.utils.atmosphere import (
     get_alt_for_density,
     get_alt_for_pressure,
     get_alt_for_q_with_constant_mach,
+    get_alt_for_eas_with_constant_mach,
+    atm_unit_reynolds_number as atm_unit_reynolds_number1a,
+    atm_unit_reynolds_number2 as atm_unit_reynolds_number2a,
 )
 from pyNastran.utils.atmosphere2 import (
     atm_density as atm_density2,
@@ -26,7 +29,9 @@ from pyNastran.utils.atmosphere2 import (
     get_alt_for_density as get_alt_for_density2,
     get_alt_for_pressure as get_alt_for_pressure2,
     get_alt_for_q_with_constant_mach as get_alt_for_q_with_constant_mach2,
-    #atm_unit_reynolds_number as atm_unit_reynolds_number2,
+    get_alt_for_eas_with_constant_mach as get_alt_for_eas_with_constant_mach2,
+    atm_unit_reynolds_number as atm_unit_reynolds_number1b,
+    atm_unit_reynolds_number2 as atm_unit_reynolds_number2b,
 )
 
 
@@ -300,6 +305,36 @@ class TestAtm(unittest.TestCase):
             assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
 
         #get_alt_for_q_mach(q, mach, pressure_units='psf', alt_units='ft')
+
+    def test_get_alt_for_q_with_constant_mach2(self):
+        """tests get_alt_for_q_with_constant_mach"""
+        mach = 0.8
+        alt_targets = [0., 10., 20., 30., 40., 50.]
+        for alt_target in alt_targets:
+            pressure1 = atm_dynamic_pressure(alt_target*1000., mach)
+
+            veq1 = atm_equivalent_airspeed(alt_target*1000., mach)
+            veq2 = atm_equivalent_airspeed2(alt_target, mach, alt_units='kft', eas_units='knots')
+            alt1 = get_alt_for_eas_with_constant_mach2(veq1, mach)
+            alt2 = get_alt_for_eas_with_constant_mach2(veq2, mach, velocity_units='knots', alt_units='kft')
+
+            assert np.allclose(alt1/1000., alt_target, atol=1e-3), 'alt1=%s alt_target=%s' % (alt1, alt_target)
+            assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+
+    def test_reynolds(self):
+        """tests get_alt_for_q_with_constant_mach"""
+        mach = 0.8
+        alt_targets = [0., 10., 20., 30., 40., 50.]
+        for alt in alt_targets:
+            rel_a = atm_unit_reynolds_number1a(alt*1000., mach)
+            rel_b = atm_unit_reynolds_number2a(alt*1000., mach)
+            assert np.allclose(rel_a, rel_b, atol=1e-3), 'rel_a=%s rel_b=%s' % (rel_a, rel_b)
+
+            rel_c = atm_unit_reynolds_number1b(alt, mach, alt_units='kft', reynolds_units='1/ft')
+            rel_d = atm_unit_reynolds_number2b(alt, mach, alt_units='kft', reynolds_units='1/ft')
+            assert np.allclose(rel_c, rel_d, atol=1e-3), 'rel_c=%s rel_d=%s' % (rel_c, rel_d)
+
+            assert np.allclose(rel_a, rel_d, atol=1e-3), 'rel_a=%s rel_d=%s' % (rel_a, rel_d)
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

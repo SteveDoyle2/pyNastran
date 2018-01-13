@@ -8,7 +8,7 @@ import numpy as np
 from numpy import full, issubdtype
 from numpy.linalg import norm  # type: ignore
 import vtk
-from vtk.util.numpy_support import numpy_to_vtk
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
 
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage

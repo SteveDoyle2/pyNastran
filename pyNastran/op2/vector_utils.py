@@ -174,8 +174,9 @@ def sortedsum1d(ids, values, axis=None):
     out : (nunique, m) float ndarray
         the summed values
 
-    1D Example
-    ----------
+    Examples
+    --------
+    **1D Example**
     For an set  of arrays, there are 5 values in sorted order.
 
     ..code-block :: python
@@ -187,8 +188,7 @@ def sortedsum1d(ids, values, axis=None):
     ..code-block :: python
         out = [2.0, 4.0, 9.0, 4.0, 15.0]
 
-    2D Example
-    ----------
+    **2D Example**
     ..code-block :: python
 
        ids = [1, 1, 2, 2, 3, 3, 3, 4, 5, 5, 5]
@@ -233,8 +233,8 @@ def iformat(format_old, precision=2):
     format_new : str
         the int/float data types in single/double precision format
 
-    Example
-    -------
+    Examples
+    --------
     >>> iformat('8i6f10s', precision=1)
     '8i6f10s'
     >>> iformat('8i6f10s', precision=2)

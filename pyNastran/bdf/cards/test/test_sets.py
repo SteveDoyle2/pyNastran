@@ -8,6 +8,8 @@ from pyNastran.bdf.field_writer_8 import print_int_card_blocks
 from pyNastran.bdf.cards.bdf_sets import (
     SET1, SET3, ASET, ASET1, OMIT1, BSET, BSET1, CSET, CSET1, QSET, QSET1,
 )
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestSets(unittest.TestCase):
 
@@ -58,18 +60,24 @@ class TestSets(unittest.TestCase):
         """checks the SET1 card"""
         sid = 10
         ids = [1, 2, 3, 4, 5]
-        set1a = SET1(sid, ids, is_skin=False, comment='')
+        set1a = SET1(sid, ids, is_skin=False, comment='set1')
         set1b = SET1.add_card(BDFCard(['SET1', sid] + ids))
         set1a.write_card()
 
     def test_set3_01(self):
         """checks the SET3 card"""
+        model = BDF(debug=False)
         sid = 10
         ids = [1, 2, 3, 4, 5]
         desc = 'ELEM'
-        set3a = SET3(sid, desc, ids, comment='')
-        set3b = SET3.add_card(BDFCard(['SET3', sid, desc] + ids))
+        set3a = SET3(sid, desc, ids, comment='set3')
+        model.sets[sid] = set3a
+        model.add_card(BDFCard(['SET3', sid+1, desc] + ids), 'SET3', comment='set3')
+        set3b = model.sets[sid]
         set3a.write_card()
+        set3a.validate()
+        set3b.validate()
+        save_load_deck(model)
 
     def test_set3_02(self):
         """checks the SET3 card"""
@@ -83,13 +91,13 @@ class TestSets(unittest.TestCase):
         card_lines = ['SET3', 1, 'GRID'] + grid_list
 
         # Add nastran card to BDF object
-        model.add_card(card_lines, 'SET3', comment='', is_list=True)
+        model.add_card(card_lines, 'SET3', comment='set3-1', is_list=True)
         fields = model.sets[1].raw_fields()
         thru_count = Counter(fields)['THRU']
         assert thru_count in [0, 1], fields
         str(model.sets[1])
 
-        set3a = SET3(2, 'GRID', grid_list, comment='')
+        set3a = SET3(2, 'GRID', grid_list, comment='set3-2')
         fields = model.sets[1].raw_fields()
         thru_count = Counter(fields)['THRU']
         assert thru_count in [0, 1], fields
@@ -98,90 +106,133 @@ class TestSets(unittest.TestCase):
 
     def test_aset(self):
         """checks the ASET/ASET1 cards"""
-        aset1a = ASET1([1, 'THRU', 10], 4)
-        aset1b = ASET1.add_card(BDFCard(['ASET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
+        model = BDF(debug=False)
+        aset1a = ASET1([1, 'THRU', 10], 4, comment='aset')
+        aset1b = ASET1.add_card(BDFCard(['ASET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
+                                comment='aset1')
         aset1a.write_card()
         aset1b.write_card()
+        model._add_aset_object(aset1a)
+        model._add_aset_object(aset1b)
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
         aseta = ASET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
         asetb = ASET.add_card(BDFCard(['ASET',
                                        1, 2, 3, 4, 5,
                                        5, 4, 3, 2, 1]))
+
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        for nid in nids:
+            model.add_grid(nid, [float(nid), 0., 0.])
         aseta.validate()
         asetb.validate()
         aseta.write_card()
         asetb.write_card()
+        save_load_deck(model)
 
     def test_omit(self):
         """checks the OMIT/OMIT1 cards"""
-        omit1a = OMIT1([1, 'THRU', 10], 4)
+        model = BDF(debug=False)
+        omit1a = OMIT1([1, 'THRU', 10], 4, comment='omit1')
         self.assertEqual(omit1a.components, 4)
-        omit1b = OMIT1.add_card(BDFCard(['OMIT1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
+        omit1b = OMIT1.add_card(BDFCard(['OMIT1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
+                                comment='omit1')
+        model._add_omit_object(omit1a)
+        model._add_omit_object(omit1b)
+
+        omit1a.validate()
+        omit1b.validate()
         omit1a.write_card()
         omit1b.write_card()
         #| OMIT1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        #aseta = ASET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
-        #asetb = ASET.add_card(BDFCard(['ASET',
+        #omita = OMIT([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+        #omitb = OMIT.add_card(BDFCard(['OMIT',
                                        #1, 2, 3, 4, 5,
                                        #5, 4, 3, 2, 1]))
-        #aseta.validate()
-        #asetb.validate()
-        #aseta.write_card()
-        #asetb.write_card()
+        #omita.validate()
+        #omitb.validate()
+        #omita.write_card()
+        #omitb.write_card()
+        save_load_deck(model)
 
     def test_bset(self):
         """checks the BSET/BSET1 cards"""
-        bset1a = BSET1([1, 'THRU', 10], 4)
-        bset1b = BSET1.add_card(BDFCard(['BSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
+        model = BDF(debug=False)
+        bset1a = BSET1([1, 'THRU', 10], 4, comment='bset1')
+        bset1b = BSET1.add_card(BDFCard(['BSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
+                                comment='bset1')
         bset1a.write_card()
         bset1b.write_card()
-        #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
+        model._add_bset_object(bset1a)
+        model._add_bset_object(bset1b)
+        #| BSET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        bseta = BSET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+        bseta = BSET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='bset')
         bsetb = BSET.add_card(BDFCard(['BSET',
                                        1, 2, 3, 4, 5,
-                                       5, 4, 3, 2, 1]))
+                                       5, 4, 3, 2, 1]), comment='bset')
+        model._add_bset_object(bseta)
+        model._add_bset_object(bsetb)
+
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        for nid in nids:
+            model.add_grid(nid, [float(nid), 0., 0.])
         bseta.validate()
         bsetb.validate()
         bseta.write_card()
         bsetb.write_card()
+        save_load_deck(model)
 
-    def _test_cset(self):
+    def test_cset(self):
         """checks the CSET/CSET1 cards"""
-        cset1a = CSET1([1, 'THRU', 10], 4)
-        cset1b = CSET1.add_card(BDFCard(['CSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
+        model = BDF(debug=False)
+        cset1a = CSET1([1, 'THRU', 10], 4, comment='cset')
+        cset1b = CSET1.add_card(BDFCard(['CSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
+                                comment='cset1')
         cset1a.write_card()
         cset1b.write_card()
+        model._add_cset_object(cset1a)
+        model._add_cset_object(cset1b)
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        cseta = CSET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+        cseta = CSET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='cset')
         csetb = CSET.add_card(BDFCard(['CSET',
                                        1, 2, 3, 4, 5,
-                                       5, 4, 3, 2, 1]))
+                                       5, 4, 3, 2, 1]), comment='cset')
+        model._add_cset_object(cseta)
+        model._add_cset_object(csetb)
+        model.add_cset([1, 2, 3], '42', comment='cset')
+        model.add_cset1([1, 2, 3], [1, 2, 3], comment='cset1')
+
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        for nid in nids:
+            model.add_grid(nid, [float(nid), 0., 0.])
         cseta.validate()
         csetb.validate()
         cseta.write_card()
         csetb.write_card()
-
+        save_load_deck(model)
 
     def test_qset(self):
         """checks the QSET/QSET1 cards"""
-        qset1a = QSET1([1, 'THRU', 10], 4)
-        qset1b = QSET1.add_card(BDFCard(['QSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
+        model = BDF(debug=False)
+        qset1a = QSET1([1, 'THRU', 10], 4, comment='qset')
+        qset1b = QSET1.add_card(BDFCard(['QSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]),
+                                comment='qset1')
         qset1a.write_card()
         qset1b.write_card()
         #| ASET1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
 
-        qseta = QSET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1])
+        qseta = QSET([1, 2, 3, 4, 5], [5, 4, 3, 2, 1], comment='qset')
         qsetb = QSET.add_card(BDFCard(['QSET',
                                        1, 2, 3, 4, 5,
-                                       5, 4, 3, 2, 1]))
+                                       5, 4, 3, 2, 1]), comment='qset')
         qseta.validate()
         qsetb.validate()
         qseta.write_card()
         qsetb.write_card()
+        save_load_deck(model)
 
 
 if __name__ == '__main__':  # pragma: no cover

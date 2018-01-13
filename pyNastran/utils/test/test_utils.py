@@ -8,7 +8,7 @@ from six import StringIO
 import numpy as np
 
 import pyNastran
-from pyNastran.utils import is_binary_file, object_methods, object_attributes
+from pyNastran.utils import is_binary_file, object_methods, object_attributes, print_bad_path
 from pyNastran.utils.numpy_utils import loadtxt_nice
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import (
@@ -203,7 +203,6 @@ class TestUtils(unittest.TestCase):
         #print('x2=%s y2=%s' % (x2, y2))
         assert np.array_equal(x1, x2), 'x1=%s x2=%s' % (x1, x2)
         assert np.array_equal(y1, y2), 'y1=%s y2=%s' % (y1, y2)
-
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

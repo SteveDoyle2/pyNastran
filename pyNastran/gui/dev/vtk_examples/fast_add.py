@@ -35,7 +35,8 @@ http://www.vtk.org/Wiki/VTK/Examples/Python/Visualization/ClampGlyphSizes
 """
 import numpy as np
 import vtk
-from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from vtk.util.numpy_support import numpy_to_vtkIdTypeArray
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
 
 
 # kills the program when you hit Cntl+C from the command line

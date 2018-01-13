@@ -20,7 +20,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, CardParseSyntaxError,
                                   DuplicateIDsError, MissingDeckSections)
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.converters.nastran.nastranIOv import NastranIO
+from pyNastran.converters.nastran.nastran_io import NastranIO
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.panair.panair_io import PanairIO
 from pyNastran.converters.fast.fast_io import FastIO

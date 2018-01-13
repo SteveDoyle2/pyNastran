@@ -28,12 +28,12 @@ from qtpy.QtWidgets import (
 from qtpy.compat import getsavefilename, getopenfilename
 
 
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
 
 
 import vtk
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-#from vtk.util.numpy_support import numpy_to_vtk
+#from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
 
 
 import pyNastran
@@ -2169,15 +2169,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
         from vtk.util.numpy_support import numpy_to_vtkIdTypeArray
 
-        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
-        if isize == 4:
-            dtype = 'int32' # TODO: can we include endian?
-        elif isize == 8:
-            dtype = 'int64'
-        else:
-            msg = 'ids.dtype=%s' % str(ids.dtype)
-            raise NotImplementedError(msg)
-
+        dtype = get_numpy_idtype_for_vtk()
         ids = np.asarray(ids, dtype=dtype)
         vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
         return vtk_ids
@@ -3292,8 +3284,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         correct   : applies to the icase_to_apply
         incorrect : applies to the icase_result
 
-        Example
-        -------
+        Examples
+        --------
         .. code-block::
 
           eids = [16563, 16564, 8916703, 16499, 16500, 8916699,

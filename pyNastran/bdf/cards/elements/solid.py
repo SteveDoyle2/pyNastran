@@ -295,8 +295,8 @@ class CHEXA8(SolidElement):
         .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
         .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -849,8 +849,8 @@ class CPENTA6(SolidElement):
         .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
         .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -1230,8 +1230,8 @@ class CPENTA15(SolidElement):
         .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
         .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15 = self.node_ids
@@ -1426,8 +1426,8 @@ class CPYRAM5(SolidElement):
         .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
         .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -1618,8 +1618,8 @@ class CPYRAM13(SolidElement):
         .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
         .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         node_ids = self.node_ids
@@ -1739,8 +1739,8 @@ class CTETRA4(SolidElement):
         .. note::  The order of the nodes are consistent with normals that point outwards
                    The face numbering is meaningless
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -1766,8 +1766,8 @@ class CTETRA4(SolidElement):
         .. note::  The order of the nodes are consistent with ANSYS numbering.
         .. warning:: higher order element ids not verified with ANSYS.
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         nodes = self.node_ids
@@ -2108,8 +2108,8 @@ class CTETRA10(SolidElement):
         .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
         .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         n1, n2, n3, n4, n5, n6, n7, n8, n9, n10 = self.node_ids

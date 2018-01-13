@@ -2657,8 +2657,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         nid_cp_cd : (n, 3) int ndarray
             node id, CP, CD for each node
 
-        Example
-        -------
+        Examples
+        --------
         # assume GRID 1 has a CD=10
         # assume GRID 2 has a CD=10
         # assume GRID 5 has a CD=50
@@ -2822,8 +2822,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
 
-        Example
-        -------
+        Examples
+        --------
         # assume GRID 1 has a CD=10
         # assume GRID 2 has a CD=10
         # assume GRID 5 has a CD=50
@@ -2868,8 +2868,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             Dictionary from coordinate id to 3 x 3 transformation
             matrix for that coordinate system.
 
-        Example
-        -------
+        Examples
+        --------
         # assume GRID 1 has a CD=10
         # assume GRID 2 has a CD=10
         # assume GRID 5 has a CD=50
