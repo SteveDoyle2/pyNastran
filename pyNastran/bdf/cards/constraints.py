@@ -183,7 +183,7 @@ class SUPORT1(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SUPORT1=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -322,7 +322,7 @@ class SUPORT(Constraint):
             except KeyError:
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SUPORT' % nid
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -534,7 +534,7 @@ class MPC(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -748,7 +748,7 @@ class SPC(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.gids_ref = nids2
@@ -1034,7 +1034,7 @@ class SPC1(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -1169,7 +1169,7 @@ class SPCOFF(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPCOFF=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -1279,7 +1279,7 @@ class SPCOFF1(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -1399,7 +1399,7 @@ class SPCADD(ConstraintAdd):
                 if debug:
                     msg = 'Couldnt find SPC=%i, which is required by SPCADD=%s' % (
                         spc_id, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             self.sets_ref.append(spc)
 
@@ -1510,7 +1510,7 @@ class MPCADD(ConstraintAdd):
                 if debug:
                     msg = 'Couldnt find MPC=%i, which is required by MPCADD=%s' % (
                         mpc_id, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             self.sets_ref.append(mpc)
 

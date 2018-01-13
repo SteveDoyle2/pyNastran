@@ -921,14 +921,13 @@ def _update_case_control(model, mapper):
                             global_subcase.update(
                                 seti, values2, seti_key, param_type)
                     else:
-                        #pass
                         #print('key=%s seti2=%s' % (key, seti2))
                         model.log.error('key=%r options=%r param_type=%r value=%r' % (
                             key, options, param_type, value))
                         raise RuntimeError(key)
                 elif value in ['NONE', 'ALL']:
-                    # print('*ALL -> key=%s options=%s param_type=%s value=%s' % (
-                        # key, options, param_type, value))
+                    #print('*ALL -> key=%s options=%s param_type=%s value=%s' % (
+                        #key, options, param_type, value))
                     #print('*all')
                     pass
                 elif key == '':

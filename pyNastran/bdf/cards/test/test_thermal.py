@@ -5,12 +5,13 @@ from six import StringIO
 from pyNastran.bdf.bdf import read_bdf, BDF, CHBDYG, CaseControlDeck
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
-
+from pyNastran.utils.log import SimpleLogger
 
 class TestThermal(unittest.TestCase):
     def test_thermal_1(self):
         """tests various thermal cards"""
-        model = BDF(debug=False)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log, debug=False)
         model.sol = 101
         lines = [
             'SUBCASE 1',
@@ -200,7 +201,7 @@ class TestThermal(unittest.TestCase):
         #print(bdf_filename.getvalue())
 
         bdf_filename2.seek(0)
-        model2 = read_bdf(bdf_filename2, xref=False, debug=False)
+        model2 = read_bdf(bdf_filename2, xref=False, log=log, debug=False)
         model2.safe_cross_reference()
         save_load_deck(model, punch=False, run_convert=False)
 

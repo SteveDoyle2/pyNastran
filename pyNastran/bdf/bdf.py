@@ -3608,22 +3608,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
         return nids_all, nids_transform, icd_transform
 
-    def get_displacement_index_transforms(self):
-        """
-        Deprecated in v1.0
-        Removed in v1.1
+    #def get_displacement_index_transforms(self):
+        #"""
+        #Deprecated in v1.0
+        #Removed in v1.1
 
-        Old
-        ---
-        icd_transform, beta_transforms = model.get_displacement_index_transforms()
+        #Old
+        #---
+        #icd_transform, beta_transforms = model.get_displacement_index_transforms()
 
-        New
-        ---
-        nids_all, nids_transform, icd_transform = model.get_displacement_index()
-        """
-        self.deprecated(
-            'icd_transform, beta_transforms = model.get_displacement_index_transforms()',
-            'nids_all, nids_transform, icd_transform = model.get_displacement_index()', '1.0')
+        #New
+        #---
+        #nids_all, nids_transform, icd_transform = model.get_displacement_index()
+        #"""
+        #self.deprecated(
+            #'icd_transform, beta_transforms = model.get_displacement_index_transforms()',
+            #'nids_all, nids_transform, icd_transform = model.get_displacement_index()', '1.0')
 
     def _get_card_name(self, lines):
         # type: (List[str]) -> str

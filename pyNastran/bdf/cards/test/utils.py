@@ -8,6 +8,8 @@ from pyNastran.bdf.mesh_utils.convert import convert
 
 def save_load_deck(model, punch=True, run_remove_unused=True, run_convert=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
+    model.pop_parse_errors()
+    model.pop_xref_errors()
     bdf_file = StringIO()
     model.write_bdf(bdf_file, size=8, close=False)
     bdf_file.seek(0)

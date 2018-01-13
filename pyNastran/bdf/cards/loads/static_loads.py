@@ -393,13 +393,17 @@ class ACCEL(BaseCard):
     the structural model. The load variation is based upon the tabular
     input defined on this Bulk Data entry.
 
-    +-------+------+------+------+------+-----+-----+--------+-----+
-    |   1   |   2  |   3  |  4   |   5  |  6  |  7  |   8    |  9  |
-    +=======+======+======+======+======+=====+=====+========+=====+
-    | ACCEL | SID  | CID  | N1   | N2   | N3  | DIR |        |     |
-    +-------+------+------+------+------+-----+-----+--------+-----+
-    |       | LOC1 | VAL1 | LOC2 | VAL2 | Continues in Groups of 2 |
-    +-------+------+------+------+------+--------------------------+
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |   1   |   2  |   3  |    4   |   5  |  6  |  7  |   8    |  9  |
+    +=======+======+======+========+======+=====+=====+========+=====+
+    | ACCEL | SID  | CID  |   N1   |  N2  | N3  | DIR |        |     |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |       | LOC1 | VAL1 |  LOC2  | VAL2 | Continues in Groups of 2 |
+    +-------+------+------+--------+------+--------------------------+
+    | ACCEL |  100 |   2  |   0.0  |  1.0 | 2.0 |  X  |        |     |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |       |  1.0 |  1.1 |   2.0  |  2.1 | 3.0 | 3.1 |  4.0   | 4.1 |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
     """
     type = 'ACCEL'
 
@@ -416,10 +420,11 @@ class ACCEL(BaseCard):
         direction : str
             Component direction of acceleration variation
             {X, Y, Z}
-        locs : ???
-            ???
-        vals : ???
-            ???
+        locs : List[float]
+            Location along direction DIR in coordinate system CID for
+            specification of a load scale factor.
+        vals : List[float]
+            The load scale factor associated with location LOCi
         cid : int; default=0
             the coordinate system for the load
         comment : str; default=''

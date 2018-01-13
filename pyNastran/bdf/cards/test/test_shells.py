@@ -1063,23 +1063,23 @@ class TestShells(unittest.TestCase):
         eid = 4
         cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4])
         cquad4.flip_normal()
-        print(cquad4)
+        str(cquad4)
 
         eid = 5
         cquad4 = model.add_cquad4(eid, pid, [1, 2, 3, 4],
                                   tflag=1, T1=2., T2=2., T3=2., T4=2.)
-        print(cquad4)
+        str(cquad4)
 
         eid = 6
         ctria3 = model.add_ctria3(eid, pid, [1, 2, 3])
         ctria3.flip_normal()
-        print(ctria3)
+        str(ctria3)
 
         eid = 7
         ctria3 = model.add_ctria3(eid, pid, [1, 2, 3],
                                   tflag=1, T1=2., T2=2., T3=2.)
-        print(ctria3)
-        print(ctria3)
+        str(ctria3)
+        str(ctria3)
 
         E = 3.0e7
         G = None

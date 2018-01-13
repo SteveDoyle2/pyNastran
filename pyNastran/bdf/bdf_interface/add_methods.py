@@ -744,7 +744,7 @@ class AddMethods(BDFAttributes):
     def _add_aelink_object(self, aelink):
         # type: (Any) -> None
         """adds an AELINK object"""
-        key = aelink.id
+        key = aelink.aelink_id
         assert key >= 0
         if key not in self.aelinks:
             self.aelinks[key] = []
@@ -763,7 +763,7 @@ class AddMethods(BDFAttributes):
     def _add_aeparm_object(self, aeparam):
         # type: (Any) -> None
         """adds an AEPARM object"""
-        key = aeparam.id
+        key = aeparam.aeparm_id
         assert key not in self.aeparams, '\naeparam=\n%s oldAEPARM=\n%s' % (aeparam, self.aeparams[key])
         assert key >= 0
         self.aeparams[key] = aeparam
@@ -1081,22 +1081,27 @@ class AddMethods(BDFAttributes):
     def _add_aset_object(self, set_obj):
         """adds an ASET/ASET1 object"""
         self.asets.append(set_obj)
+        self._type_to_id_map[set_obj.type] = True
 
     def _add_omit_object(self, set_obj):
         """adds an OMIT/OMIT1 object"""
         self.omits.append(set_obj)
+        self._type_to_id_map[set_obj.type] = True
 
     def _add_bset_object(self, set_obj):
         """adds an BSET/BSET1 object"""
         self.bsets.append(set_obj)
+        self._type_to_id_map[set_obj.type] = True
 
     def _add_cset_object(self, set_obj):
         """adds an CSET/USET1 object"""
         self.csets.append(set_obj)
+        self._type_to_id_map[set_obj.type] = True
 
     def _add_qset_object(self, set_obj):
         """adds an QSET/QSET1 object"""
         self.qsets.append(set_obj)
+        self._type_to_id_map[set_obj.type] = True
 
     def _add_uset_object(self, set_obj):
         """adds an USET/USET1 object"""
@@ -1105,6 +1110,7 @@ class AddMethods(BDFAttributes):
             self.usets[key].append(set_obj)
         else:
             self.usets[key] = [set_obj]
+        self._type_to_id_map[set_obj.type].append(key)
 
     def _add_sebset_object(self, set_obj):
         """adds an SEBSET/SEBSET1 object"""
@@ -1125,6 +1131,7 @@ class AddMethods(BDFAttributes):
             self.se_usets[key].append(set_obj)
         else:
             self.se_usets[key] = [set_obj]
+        self._type_to_id_map[set_obj.type].append(key)
 
     def _add_seset_object(self, set_obj):
         """adds an SESET object"""

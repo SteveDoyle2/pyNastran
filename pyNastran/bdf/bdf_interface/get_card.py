@@ -301,6 +301,9 @@ class GetCard(GetMethods):
             slot = getattr(self, key)
             ids = self._type_to_id_map[card_type]
             cards = []
+            if isinstance(ids, bool):
+                continue
+
             for idi in ids:
                 try:
                     card = slot[idi]

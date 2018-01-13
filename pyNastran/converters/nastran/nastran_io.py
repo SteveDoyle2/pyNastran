@@ -45,8 +45,7 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
-from vtk.util.numpy_support import numpy_to_vtkIdTypeArray
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 
 
 #from pyNastran import is_release
@@ -3694,7 +3693,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             try:
                 icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
             except:
-                #raise
+                if IS_TESTING or self.is_testing_flag:
+                    raise
                 s = StringIO()
                 traceback.print_exc(file=s)
                 sout = s.getvalue()

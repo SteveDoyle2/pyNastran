@@ -6,7 +6,6 @@ from six import iteritems, integer_types
 import numpy as np
 
 import vtk
-from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
 
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.settings import Settings

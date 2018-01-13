@@ -176,7 +176,7 @@ class AEFACT(BaseCard):
     """
     type = 'AEFACT'
 
-    def __init__(self, sid, Di, comment=''):
+    def __init__(self, sid, factors, comment=''):
         """
         Creates an AEFACT card, which defines the mach, dynamic_pressure,
         velocity, and reduced frequency for an FLUTTER card
@@ -187,7 +187,7 @@ class AEFACT(BaseCard):
         ----------
         sid : int
             unique id
-        Di : List[float, ..., float]
+        factors : List[float, ..., float]
             list of:
              - machs
              - dynamic_pressures
@@ -201,7 +201,7 @@ class AEFACT(BaseCard):
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
         #: Number (float)
-        self.Di = np.asarray(Di, dtype='float64')
+        self.factors = np.asarray(factors, dtype='float64')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -217,15 +217,11 @@ class AEFACT(BaseCard):
         """
         sid = integer(card, 1, 'sid')
 
-        Di = []
+        factors = []
         for i in range(2, len(card)):
-            di = double(card, i, 'Di_%i' % (i - 1))
-            Di.append(di)
-        return AEFACT(sid, Di, comment=comment)
-
-    @property
-    def data(self):
-        return self.Di
+            factor = double(card, i, 'Di_%i' % (i - 1))
+            factors.append(factor)
+        return AEFACT(sid, factors, comment=comment)
 
     def raw_fields(self):
         """
@@ -236,7 +232,7 @@ class AEFACT(BaseCard):
         fields : List[int/float/str]
             the fields that define the card
         """
-        list_fields = ['AEFACT', self.sid] + list(self.Di)
+        list_fields = ['AEFACT', self.sid] + list(self.factors)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -265,14 +261,14 @@ class AELINK(BaseCard):
     """
     type = 'AELINK'
 
-    def __init__(self, id, label, independent_labels, Cis, comment=''):
+    def __init__(self, aelink_id, label, independent_labels, Cis, comment=''):
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
 
         Parameters
         ----------
-        id : int
+        aelink_id : int
             unique id
         label : str
             name of the AESURF(???) card
@@ -292,12 +288,12 @@ class AELINK(BaseCard):
         #: linking coefficient (real)
         self.Cis = Cis
 
-        if isinstance(id, string_types):
-            if id != 'ALWAYS':
+        if isinstance(aelink_id, string_types):
+            if aelink_id != 'ALWAYS':
                 raise RuntimeError("The only valid ID that is a string is 'ALWAYS'")
-            id = 0
+            aelink_id = 0
         #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
-        self.id = id
+        self.aelink_id = aelink_id
 
     def validate(self):
         if len(self.independent_labels) != len(self.Cis):
@@ -318,7 +314,7 @@ class AELINK(BaseCard):
         comment : str; default=''
             a comment for the card
         """
-        id = integer_or_string(card, 1, 'ID')
+        aelink_id = integer_or_string(card, 1, 'ID')
         label = string(card, 2, 'label')
         independent_labels = []
         Cis = []
@@ -330,7 +326,7 @@ class AELINK(BaseCard):
             Ci = list_fields[i + 1]
             independent_labels.append(independent_label)
             Cis.append(Ci)
-        return AELINK(id, label, independent_labels, Cis, comment=comment)
+        return AELINK(aelink_id, label, independent_labels, Cis, comment=comment)
 
     def raw_fields(self):
         """
@@ -1841,14 +1837,14 @@ class CAERO1(BaseCard):
         """returns (nnodes_nchord, nnodes_span)"""
         if self.nchord == 0:
             lchord_ref = model.AEFact(self.lchord)
-            x = lchord_ref.Di
+            x = lchord_ref.factors
             nchord = len(x) - 1
         else:
             nchord = self.nchord
 
         if self.nspan == 0:
             lspan_ref = model.AEFact(self.lspan)
-            y = lspan_ref.Di
+            y = lspan_ref.factors
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -1885,7 +1881,7 @@ class CAERO1(BaseCard):
         """
         if self.nchord == 0:
             lchord_ref = model.AEFACT(self.lchord)
-            x = lchord_ref.Di
+            x = lchord_ref.factors
             nchord = len(x) - 1
         else:
             nchord = self.nchord
@@ -1893,7 +1889,7 @@ class CAERO1(BaseCard):
 
         if self.nspan == 0:
             lspan_ref = model.AEFACT(self.lspan)
-            y = lspan_ref.Di
+            y = lspan_ref.factors
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -2187,7 +2183,7 @@ class CAERO2(BaseCard):
 
         if self.nsb == 0:
             lsb_ref = model.AEFact(self.lsb)
-            xstation = lsb_ref.data
+            xstation = lsb_ref.factors
             nx = len(xstation) - 1
             #print('xstation = ', xstation)
         else:
@@ -2201,14 +2197,14 @@ class CAERO2(BaseCard):
             radii_slender = np.ones(nx + 1) * paero2.width
         else:
             lrsb_ref = model.AEFact(paero2.lrsb)
-            radii_slender = lrsb_ref.data
+            radii_slender = lrsb_ref.factors
 
         # TODO: not suppported
         if paero2.lrib in [0, None]:
             radii_interference = np.ones(nx + 1) * paero2.width
         else:
             lrib_ref = model.AEFact(paero2.lrib)
-            radii_interference = lrib_ref.data
+            radii_interference = lrib_ref.factors
         radii = radii_slender
 
         # TODO: not suppported
@@ -2777,7 +2773,7 @@ class CAERO5(BaseCard):
             self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
             lspan_ref = model.AEFACT(self.lspan)
-            y = lspan_ref.Di
+            y = lspan_ref.factors
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -2795,7 +2791,7 @@ class CAERO5(BaseCard):
             self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
             lspan_ref = model.AEFACT(self.lspan)
-            y = lspan_ref.Di
+            y = lspan_ref.factors
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -3051,10 +3047,10 @@ class PAERO5(BaseCard):
 
     #def integrals(self):
         ## chord location
-        #x = self.lxis.Di
+        #x = self.lxis.factors
 
         ## thickness
-        #y = self.ltaus.Di
+        #y = self.ltaus.factors
 
         ## slope of airfoil semi-thickness
         #yp = derivative1(y/2, x)

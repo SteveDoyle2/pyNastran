@@ -74,8 +74,8 @@ class TestAtm(unittest.TestCase):
             'alt_units' : 'ft',
             'pressure_units' : 'psf',
         }
-        self.assertEqual(atm_pressure2(alt=10*1000.,  **units), 1456.3074319943232)
-        self.assertEqual(atm_pressure2(alt=60*1000.,  **units), 151.20878913237249)
+        self.assertEqual(atm_pressure2(alt=10*1000., **units), 1456.3074319943232)
+        self.assertEqual(atm_pressure2(alt=60*1000., **units), 151.20878913237249)
         self.assertEqual(atm_pressure2(alt=120*1000., **units), 9.8627955961437763)
         self.assertEqual(atm_pressure2(alt=165*1000., **units), 1.7725806687593277)
         self.assertEqual(atm_pressure2(alt=230*1000., **units), 0.13023784776280109)
@@ -306,23 +306,21 @@ class TestAtm(unittest.TestCase):
 
         #get_alt_for_q_mach(q, mach, pressure_units='psf', alt_units='ft')
 
-    def test_get_alt_for_q_with_constant_mach2(self):
+    def get_alt_for_eas_with_constant_mach(self):
         """tests get_alt_for_q_with_constant_mach"""
         mach = 0.8
         alt_targets = [0., 10., 20., 30., 40., 50.]
         for alt_target in alt_targets:
-            pressure1 = atm_dynamic_pressure(alt_target*1000., mach)
-
             veq1 = atm_equivalent_airspeed(alt_target*1000., mach)
             veq2 = atm_equivalent_airspeed2(alt_target, mach, alt_units='kft', eas_units='knots')
-            alt1 = get_alt_for_eas_with_constant_mach2(veq1, mach)
+            alt1 = get_alt_for_eas_with_constant_mach(veq1, mach)
             alt2 = get_alt_for_eas_with_constant_mach2(veq2, mach, velocity_units='knots', alt_units='kft')
 
             assert np.allclose(alt1/1000., alt_target, atol=1e-3), 'alt1=%s alt_target=%s' % (alt1, alt_target)
             assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
 
-    def test_reynolds(self):
-        """tests get_alt_for_q_with_constant_mach"""
+    def test_atm_unit_reynolds_number(self):
+        """tests atm_unit_reynolds_number and atm_unit_reynolds_number"""
         mach = 0.8
         alt_targets = [0., 10., 20., 30., 40., 50.]
         for alt in alt_targets:

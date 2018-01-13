@@ -870,8 +870,7 @@ class OP2(OP2_Scalar):
         for nodes with their output in coordinate systems other than the
         global.
 
-        Used in combination with ``BDF.get_displacement_index_transforms``
-                          and/or ``BDF.get_displacement_index``
+        Used in combination with  ``BDF.get_displacement_index``
 
         Parameters
         ----------
@@ -1059,8 +1058,7 @@ class OP2(OP2_Scalar):
         for nodes with their output in coordinate systems other than the
         global.
 
-        Used in combination with ``BDF.get_displacement_index_transforms``
-                          and/or ``BDF.get_displacement_index``
+        Used in combination with ``BDF.get_displacement_index``
 
         Parameters
         ----------

@@ -52,6 +52,7 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(force.scaled_vector, np.array([42., 42., 84.])), force.scaled_vector
         model.cross_reference()
         force.raw_fields()
+        save_load_deck(model)
 
     def test_moment(self):
         """CONROD, MOMENT"""
@@ -80,6 +81,7 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(moment.scaled_vector, np.array([42., 42., 84.])), moment.scaled_vector
         model.cross_reference()
         moment.raw_fields()
+        save_load_deck(model)
 
     def test_accel1(self):
         """tests ACCEL1"""
@@ -105,6 +107,7 @@ class TestLoads(unittest.TestCase):
         accel1.write_card(size=8)
         accel1.write_card(size=16)
         accel1.write_card(size=16, is_double=True)
+        save_load_deck(model)
 
     def test_accel1_2(self):
         """tests problematic ACCEL1 cards"""
@@ -178,6 +181,7 @@ class TestLoads(unittest.TestCase):
         accel.write_card(size=8)
         accel.write_card(size=16)
         accel.write_card(size=16, is_double=True)
+        #save_load_deck(model)
 
     def test_darea_01(self):
         """tests a DAREA"""
@@ -434,6 +438,7 @@ class TestLoads(unittest.TestCase):
             if not allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz f=%s fm_expected=%s' % (
                     isubcase, forces1.tolist(), fm.tolist()))
+        save_load_deck(model, punch=False)
 
     def test_pload4_cquad4(self):
         """tests a PLOAD4 with a CQUAD4"""
@@ -487,6 +492,7 @@ class TestLoads(unittest.TestCase):
             if not allclose(f1[2], force[2]):
                 model.log.error('subcase=%-2i Fz f=%s force_expected=%s' % (
                     isubcase, f1.tolist(), force.tolist()))
+        save_load_deck(model, punch=False)
 
     def test_pload4_ctetra(self):
         """tests a PLOAD4 with a CTETRA"""
@@ -580,6 +586,7 @@ class TestLoads(unittest.TestCase):
             if not allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s face=%s normal=%s' % (
                     isubcase, g1, g34, forces1, fm, face, normal))
+        save_load_deck(model, punch=False)
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""

@@ -6,9 +6,23 @@ defines:
 import numpy as np
 import vtk
 from vtk.util.numpy_support import (
-    numpy_to_vtkIdTypeArray, create_vtk_array, get_numpy_array_type,
+    create_vtk_array, get_numpy_array_type,
     get_vtk_array_type,
 )
+
+VTK_VERSION = [int(val) for val in vtk.VTK_VERSION.split('.')]
+if VTK_VERSION[0] < 7:
+    msg = 'VTK version=%r is no longer supported (use vtk 7 or 8)' % vtk.VTK_VERSION
+    raise NotImplementedError(msg)
+elif VTK_VERSION[0] in [7, 8]:
+    # tested in 7.1.1
+    vtkConstants = vtk
+#elif VTK_VERSION[0] == vtk_9?:
+    #vtkConstants = vtk.vtkConstants
+else:
+    msg = 'VTK version=%r is not supported (use vtk 7 or 8)' % vtk.VTK_VERSION
+    raise NotImplementedError(msg)
+
 
 def get_numpy_idtype_for_vtk():
     """This gets the numpy dtype that we need to use to make vtk not crash"""
@@ -103,7 +117,7 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
         array_type=vtk.vtkUnsignedCharArray().GetDataType())
 
     vtk_cell_offsets = numpy_to_vtk(cell_offsets, deep=0,
-                                    array_type=vtk.VTK_ID_TYPE)
+                                    array_type=vtkConstants.VTK_ID_TYPE)
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
@@ -171,7 +185,7 @@ def create_vtk_cells_of_constant_element_types(grid, elements_list,
         array_type=vtk.vtkUnsignedCharArray().GetDataType())
 
     vtk_cell_offsets = numpy_to_vtk(cell_offsets_array, deep=0,
-                                    array_type=vtk.VTK_ID_TYPE)
+                                    array_type=vtkConstants.VTK_ID_TYPE)
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
@@ -203,6 +217,8 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):
     VTK uses a BSD license, so it's OK to do  that.
     """
     z = np.asarray(num_array)
+    if not z.flags.contiguous:
+        z = numpy.ascontiguousarray(z)
 
     shape = z.shape
     assert z.flags.contiguous, 'Only contiguous arrays are supported.'
@@ -253,4 +269,25 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):
         copy = result_array.NewInstance()
         copy.DeepCopy(result_array)
         result_array = copy
+    else:
+        result_array._numpy_reference = z
     return result_array
+
+def numpy_to_vtkIdTypeArray(num_array, deep=0):
+    """
+    Note
+    ----
+    This was pulled from VTK and modified to eliminate numpy 1.14 warnings.
+    VTK uses a BSD license, so it's OK to do  that.
+    """
+    isize = vtk.vtkIdTypeArray().GetDataTypeSize()
+    dtype = num_array.dtype
+    if isize == 4:
+        if dtype != np.int32:
+            raise ValueError(
+             'Expecting a numpy.int32 array, got %s instead.' % (str(dtype)))
+    else:
+        if dtype != np.int64:
+            raise ValueError(
+             'Expecting a numpy.int64 array, got %s instead.' % (str(dtype)))
+    return numpy_to_vtk(num_array, deep, vtkConstants.VTK_ID_TYPE)

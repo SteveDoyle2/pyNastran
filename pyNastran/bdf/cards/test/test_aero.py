@@ -162,8 +162,10 @@ class TestAero(unittest.TestCase):
         msg = '$this is a bad comment\nAEFACT        97      .3      .7      1.\n'
         aefact97 = model.aefacts[97]
         aefact98 = model.aefacts[98]
-        self.assertTrue(all(aefact97.Di == [.3, .7, 1.0]))
+        self.assertTrue(all(aefact97.fractions == [.3, .7, 1.0]))
+        self.assertTrue(all(aefact98.fractions == [.3, .7, 1.0]))
         self.assertTrue(all(aefact98.Di == [.3, .7, 1.0]))
+        self.assertTrue(all(aefact98.data == [.3, .7, 1.0]))
 
         out = aefact97.write_card(8, None)
         self.assertEqual(msg, out)
@@ -203,6 +205,8 @@ class TestAero(unittest.TestCase):
         independent_labels = ['A', 'B', 'C']
         Cis = [1.0, 2.0]
         aelink = AELINK(idi, label, independent_labels, Cis, comment='')
+        assert aelink.aelink_id == idi
+        assert aelink.id == idi
         with self.assertRaises(RuntimeError):
             aelink.validate()
         str(aelink)
@@ -271,9 +275,12 @@ class TestAero(unittest.TestCase):
 
     def test_aeparm_1(self):
         """checks the AEPARM card"""
-        aeparm = AEPARM.add_card(BDFCard(['AEPARM', 100, 'THRUST', 'lb']),
+        aeparm_id = 100
+        aeparm = AEPARM.add_card(BDFCard(['AEPARM', aeparm_id, 'THRUST', 'lb']),
                                  comment='aeparm_comment')
-        aeparm = AEPARM(100, 'THRUST', 'lb', comment='aeparm_comment')
+        aeparm = AEPARM(aeparm_id, 'THRUST', 'lb', comment='aeparm_comment')
+        assert aeparm.aeparm_id == aeparm_id
+        assert aeparm.id == aeparm_id
         aeparm.validate()
         aeparm.cross_reference(None)
         aeparm.uncross_reference()

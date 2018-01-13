@@ -129,7 +129,7 @@ class TestNsm(unittest.TestCase):
                 self.assertEqual(mass, 0.0)
             else:
                 self.assertTrue(mass > 0)
-            print('mass[%s] = %s' % (nsm_id, mass))
+            #print('mass[%s] = %s' % (nsm_id, mass))
             #print('----------------------------------------------')
 
         model2 = save_load_deck(model)

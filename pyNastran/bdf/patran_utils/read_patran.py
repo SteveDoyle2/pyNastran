@@ -108,7 +108,6 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
             i16 += width
             datai.append(value)
         #print('datai = %r' % datai)
-        #aaa
         data.append(datai)
 
     nids_array = np.array(nids, dtype=idtype)
@@ -122,6 +121,3 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
         'headers' : headers,
     }
     return data_dict
-
-if __name__ == '__main__':
-    read_patran('normals.nod', fdtype='float64', idtype='int32')

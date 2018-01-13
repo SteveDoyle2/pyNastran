@@ -33,7 +33,6 @@ from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points, get_numpy_idt
 
 import vtk
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-#from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
 
 
 import pyNastran
@@ -2167,7 +2166,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def numpy_to_vtk_idtype(self, ids):
         #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-        from vtk.util.numpy_support import numpy_to_vtkIdTypeArray
+        from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtkIdTypeArray
 
         dtype = get_numpy_idtype_for_vtk()
         ids = np.asarray(ids, dtype=dtype)

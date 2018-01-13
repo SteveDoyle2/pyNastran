@@ -130,20 +130,6 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
         return mass
 
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
-        #self.g0 = model.nodes[self.g0]
-        self.pid_ref = model.Property(self.pid, msg=msg)
-
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
@@ -420,6 +406,8 @@ class CBAR(LineElement):
         else:
             wb = np.asarray(wb)
 
+        if x is not None:
+            x = np.asarray(x)
         self.eid = eid
         self.pid = pid
         self.x = x
@@ -436,6 +424,17 @@ class CBAR(LineElement):
         self.gb_ref = None
 
     def validate(self):
+        msg = ''
+        if self.x is None:
+            if not isinstance(self.g0, integer_types):
+                msg += 'CBAR eid=%s: x is None, so g0=%s must be an integer' % (self.eid, self.g0)
+        else:
+            if not isinstance(self.x, (list, np.ndarray)):
+                msg += 'CBAR eid=%s: x=%s and g0=%s, so x must be a list; type(x)=%s' % (
+                    self.eid, self.x, self.g0, type(self.x))
+        if msg:
+            raise ValueError(msg)
+
         if isinstance(self.offt, integer_types):
             assert self.offt in [1, 2], 'invalid offt; offt=%i' % self.offt
             raise NotImplementedError('invalid offt; offt=%i' % self.offt)

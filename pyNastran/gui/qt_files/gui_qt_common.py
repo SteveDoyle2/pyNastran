@@ -13,8 +13,9 @@ from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.testing_methods import GuiAttributes
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points, VTK_VERSION
 from pyNastran.gui import IS_DEV
+
 
 class GuiCommon(GuiAttributes):
     def __init__(self, **kwds):
@@ -29,7 +30,7 @@ class GuiCommon(GuiAttributes):
         self._group_shown = {}
         self._names_storage = NamesStorage()
 
-        self.vtk_version = [int(i) for i in vtk.VTK_VERSION.split('.')[:1]]
+        self.vtk_version = VTK_VERSION
         print('vtk_version = %s' % (self.vtk_version))
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
