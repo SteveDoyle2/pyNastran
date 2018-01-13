@@ -781,6 +781,28 @@ class TestCoords(unittest.TestCase):
                           xaxis=xaxis, yaxis=None, zaxis=None,
                           xyplane=xyplane, yzplane=None, xzplane=None, add=True)
 
+    def test_add_coord_cards(self):
+        """tests the ``add_card`` method"""
+        model = BDF(debug=False)
+        fields = ['CORD1R',
+                  10, 1, 2, 3,
+                  11, 7, 8, 9]
+        model.add_card(fields, 'CORD1R')
+
+        fields = ['CORD1R',
+                  12, 1, 2, 3,
+                  13, 7, 8, 9]
+        model.add_card(fields, 'CORD1S')
+
+        fields = ['CORD1R',
+                  14, 1, 2, 3,
+                  15, 7, 8, 9]
+        model.add_card(fields, 'CORD1C')
+        model.pop_parse_errors()
+        #print(model.coords)
+        model.pop_xref_errors()
+        self.assertEqual(len(model.coords), 7)
+
 
 def get_nodes(grids, grids_expected, coords):
     """

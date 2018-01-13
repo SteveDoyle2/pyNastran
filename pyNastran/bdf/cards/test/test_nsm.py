@@ -157,6 +157,27 @@ class TestNsm(unittest.TestCase):
             #print('mass[%s] = %s' % (nsm_id, mass))
         #print('done with null')
 
+    def test_nsm_prepare(self):
+        """tests the NSMADD and all NSM cards using the prepare methods"""
+        model = BDF()
+        nsm_id = 100
+        fields = ['NSM', nsm_id, 'ELEMENT',
+                  1, 1.0,
+                  2, 2.0,
+                  3, 3.0,
+                  4, 2.0]
+        model.add_card(fields, 'NSM', comment='', is_list=True,
+                      has_none=True)
+        model.add_card(fields, 'NSML', comment='', is_list=True,
+                       has_none=True)
+
+        fields = ['NSM1', nsm_id, 'ELEMENT', 1.0, 1, 2, 3]
+        model.add_card(fields, 'NSM1', comment='', is_list=True,
+                       has_none=True)
+        model.add_card(fields, 'NSML1', comment='', is_list=True,
+                       has_none=True)
+
+
     def test_nsmadd(self):
         """tests the NSMADD and all NSM cards"""
         eid_quad = 1

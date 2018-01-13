@@ -2372,7 +2372,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _prepare_bctset(self, card, card_obj, comment=''):
         # type: (BDFCard, List[str], str) -> None
-        """adds a GRDSET"""
+        """adds a BCTSET"""
         card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
         self._add_bctset_object(card)
 
@@ -2504,24 +2504,24 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _prepare_nsm(self, card, card_obj, comment=''):
         """adds an NSM"""
-        class_instance = NSM.add_card(card_obj, icard=0, comment=comment)
-        self._add_nsm_object(class_instance)
-        if card_obj.field(5):
-            class_instance = NSM.add_card(card_obj, icard=1, comment=comment)
-            self._add_nsm_object(class_instance)
-        if card_obj.field(7):
-            class_instance = NSM.add_card(card_obj, icard=2, comment=comment)
+        nfields = len(card_obj)
+        ncards = (nfields - 3) // 2
+        nextra = (nfields - 3) % 2
+        assert nextra == 0, 'NSM error; nfields=%s must have an odd number of fields\ncard=%s' % (
+            nfields, card_obj)
+        for icard in range(ncards):
+            class_instance = NSM.add_card(card_obj, icard, comment=comment)
             self._add_nsm_object(class_instance)
 
     def _prepare_nsml(self, card, card_obj, comment=''):
         """adds an NSML"""
-        class_instance = NSML.add_card(card_obj, icard=0, comment=comment)
-        self._add_nsm_object(class_instance)
-        if card_obj.field(5):
-            class_instance = NSML.add_card(card_obj, icard=1, comment=comment)
-            self._add_nsm_object(class_instance)
-        if card_obj.field(7):
-            class_instance = NSML.add_card(card_obj, icard=2, comment=comment)
+        nfields = len(card_obj)
+        ncards = (nfields - 3) // 2
+        nextra = (nfields - 3) % 2
+        assert nextra == 0, 'NSML error; nfields=%s must have an odd number of fields\ncard=%s' % (
+            nfields, card_obj)
+        for icard in range(ncards):
+            class_instance = NSML.add_card(card_obj, icard, comment=comment)
             self._add_nsm_object(class_instance)
 
     def _prepare_pvisc(self, card, card_obj, comment=''):
