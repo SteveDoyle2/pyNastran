@@ -2,7 +2,7 @@
 defines:
  - create_vtk_cells_of_constant_element_type(grid, elements, etype)
 """
-
+import sys
 import numpy as np
 import vtk
 from vtk.util.numpy_support import (
@@ -10,11 +10,13 @@ from vtk.util.numpy_support import (
     get_vtk_array_type,
 )
 
+IS_TESTING = 'test' in sys.argv[0]
 VTK_VERSION = [int(val) for val in vtk.VTK_VERSION.split('.')]
-if VTK_VERSION[0] < 7:
+if VTK_VERSION[0] < 7 and not IS_TESTING:
     msg = 'VTK version=%r is no longer supported (use vtk 7 or 8)' % vtk.VTK_VERSION
     raise NotImplementedError(msg)
-elif VTK_VERSION[0] in [7, 8]:
+elif VTK_VERSION[0] in [5, 6, 7, 8]:
+    # should work in 5/6
     # tested in 7.1.1
     vtkConstants = vtk
 #elif VTK_VERSION[0] == vtk_9?:
