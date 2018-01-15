@@ -323,20 +323,6 @@ class TableDef(object):
 
         self._subcase_ids = set()
 
-    def __deepcopy__(self, memodict=None):
-        from copy import copy
-        _copy = copy(self)
-        _copy.domain_count = 0
-        _copy._index_offset = 0
-        del _copy._index_data[:]
-        del _copy._subcase_index[:]
-        _copy._index_table = None
-        _copy._private_index_table = None
-
-        memodict[id(_copy)] = _copy
-
-        return _copy
-
     def finalize(self):
         if self.is_subtable:
             return
