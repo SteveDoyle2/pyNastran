@@ -19,7 +19,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
-    integer_string_or_blank, string_or_blank, string, integer_or_double)
+    integer_string_or_blank, string_or_blank, string, integer_or_double,
+    double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -267,11 +268,11 @@ class CBARAO(BaseCard):
         x1_npoints = integer_or_double(card, 3, 'x1/npoints')
         if isinstance(x1_npoints, integer_types):
             npoints = x1_npoints
-            x1 = double_or_blank(card, 4, 'x1')
-            delta_x = double_or_blank(card, 4, 'delta_x')
-            x = np.arange(x1, npoints, delta_x)
-            raise NotImplementedError('card=%s x=%s' % (card, x))
-
+            assert 0 < npoints < 7, 'CBARAO npoints=%r must be 1-6' % npoints
+            x1 = double(card, 4, 'x1')
+            delta_x = double(card, 5, 'delta_x')
+            x = np.linspace(x1, x1 + delta_x * (npoints-1), num=npoints)
+            assert len(x) == npoints, x
         else:
             x = [
                 x1_npoints,
@@ -281,6 +282,7 @@ class CBARAO(BaseCard):
                 double_or_blank(card, 7, 'x5'),
                 double_or_blank(card, 8, 'x6'),
             ]
+            x = [xi for xi in x if xi is not None]
         assert len(card) <= 9, 'len(CBARAO card) = %i\ncard=%s' % (len(card), card)
         return CBARAO(eid, scale, x, comment=comment)
 

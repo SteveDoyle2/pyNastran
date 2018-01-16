@@ -616,6 +616,8 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 load.scale *= accel_scale
             elif load_type == 'ACCEL1':
                 load.scale *= accel_scale
+            elif load_type == 'PLOAD':
+                load.pressure *= pressure_scale
             elif load_type == 'PLOAD1':
                 # the errors should never hit
                 if load.scale in ['LE', 'LEPR']:
@@ -627,7 +629,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
                         load.p2 *= moment_scale
                     else:
                         raise RuntimeError(load)
-                elif load.scale in ['FR', 'RFPR']:
+                elif load.scale in ['FR', 'RFPR']:  # fractional
                     pass
                 else:
                     raise RuntimeError(load)

@@ -2720,6 +2720,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _get_npoints_nids_allnids(self):
         """helper method for get_xyz_in_coord"""
+        if self.is_bdf_vectorized:
+            return self.nodes.nids
+
         nnodes = len(self.nodes)
         nspoints = 0
         nepoints = 0
@@ -3235,8 +3238,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                                    cid=0, in_place=False, atol=1e-6):
         # type: (Any, Any, int, bool, float) -> Any
         """
-        Working on faster method for calculating node locations
-        Not validated...
+        Vectorized method for calculating node locations in an arbitrary
+        coordinate system.
 
         Parameters
         ----------
@@ -3258,6 +3261,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         -------
         xyz_cid : (n, 3) float ndarray
             points in the CID coordinate system
+
+        Examples
+        --------
+        # assume GRID 1 has a CD=10, CP=0
+        # assume GRID 2 has a CD=10, CP=0
+        # assume GRID 5 has a CD=50, CP=1
+        >>> model.point_ids
+        [1, 2, 5]
+        >>> out = model.get_displacement_index_xyz_cp_cd()
+        >>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        >>> nids = nid_cp_cd[:, 0]
+        >>> xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+                xyz_cp, nids, icp_transform,
+                cid=0)
+        >>> xyz_cid1 = model.transform_xyzcp_to_xyz_cid(
+                xyz_cp, nids, icp_transform,
+                cid=1)
 
         F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\heli112em7.dat
         """
@@ -3401,12 +3421,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         #else:
             #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
-        xyz_cid_correct = self.get_xyz_in_coord(cid=cid)
-        if not np.allclose(xyz_cid, xyz_cid_correct, atol=atol):
-            #np.array_equal(xyz_cid, xyz_cid_correct):
-            msg = ('xyz_cid:\n%s\n'
-                   'xyz_cid_correct:\n%s'% (xyz_cid, xyz_cid_correct))
-            raise ValueError(msg)
+        if atol is not None:
+            xyz_cid_correct = self.get_xyz_in_coord(cid=cid)
+            if not np.allclose(xyz_cid, xyz_cid_correct, atol=atol):
+                #np.array_equal(xyz_cid, xyz_cid_correct):
+                msg = ('xyz_cid:\n%s\n'
+                       'xyz_cid_correct:\n%s'% (xyz_cid, xyz_cid_correct))
+                raise ValueError(msg)
         return xyz_cid
 
     def _transform(self, cps_to_check0, icp_transform,

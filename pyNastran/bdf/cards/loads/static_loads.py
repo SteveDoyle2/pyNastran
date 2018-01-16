@@ -195,8 +195,10 @@ class LOAD(LoadCombination):
 
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
-        for (scale_factor, load_id) in zip(self.scale_factors, self.get_load_ids()):
+        load_ids = self.get_load_ids()
+        for (scale_factor, load_id) in zip(self.scale_factors, load_ids):
             list_fields += [scale_factor, self.LoadID(load_id)]
+        assert len(load_ids) == len(self.scale_factors), print_card_8(list_fields)
         return list_fields
 
     def repr_fields(self):

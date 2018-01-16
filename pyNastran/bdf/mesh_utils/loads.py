@@ -63,29 +63,11 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
     else:
         p = array(p0)
 
-    try:
-        load_case = model.Load(loadcase_id, consider_load_combinations=True)
-    except KeyError:
-        msg = 'load_case=%s is invalid; ' % loadcase_id
-        msg += 'load_cases = %s\n' % np.unique(list(model.loads.keys()))
-        for subcase_id, subcase in iteritems(model.subcases):
-            if 'LOAD' in subcase:
-                load_id = subcase.get_parameter('LOAD')[0]
-                msg += '  SUBCASE %i; LOAD=%s\n' % (subcase_id, load_id)
-            else:
-                msg += '  SUBCASE %i has no LOAD\n' % (subcase_id)
-        model.log.error(msg)
-        raise KeyError(msg)
-    #for (key, load_case) in iteritems(model.loads):
-        #if key != loadcase_id:
-            #continue
-
     loads, scale_factors, is_grav = model.get_reduced_loads(
         loadcase_id, skip_scale_factor0=True)
 
     F = array([0., 0., 0.])
     M = array([0., 0., 0.])
-
     if xyz_cid0 is None:
         xyz = {}
         for nid, node in iteritems(model.nodes):

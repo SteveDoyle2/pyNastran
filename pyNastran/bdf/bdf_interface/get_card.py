@@ -1347,6 +1347,7 @@ class GetCard(GetMethods):
                 load_ids = load.get_load_ids()
                 load_scale = load.scale * scale
                 scale_factors = load.scale_factors
+                assert len(load_ids) == len(scale_factors), str(load)
                 scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
                 for load_idi, scalei in zip(load_ids, scale_factors_temp):
                     # prevents recursion

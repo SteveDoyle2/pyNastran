@@ -450,7 +450,6 @@ class BDF(BDF_):
 
     @grids.setter
     def grids(self, grid):
-        print('setter')
         key = grid.nid
         self.grid.update(grid)
         #self.grid.add_grid(grid.nid, grid.xyz, cp=grid.cp, cd=grid.cd,
