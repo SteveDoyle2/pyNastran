@@ -11,7 +11,6 @@ import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.loads.static_loads import LOAD
 
 
 def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None):
@@ -81,10 +80,10 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             #continue
         if load.type == 'FORCE':
             if load.Cid() != 0:
-                cp = load.cid_ref
+                cp_ref = load.cid_ref
                 #from pyNastran.bdf.bdf import CORD2R
-                #cp = CORD2R()
-                f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                #cp_ref = CORD2R()
+                f = load.mag * cp_ref.transform_vector_to_global(load.xyz) * scale
             else:
                 f = load.mag * load.xyz * scale
 
@@ -464,8 +463,8 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             # we collect them so we only get one print
             unsupported_types.add(load.type)
 
-    for Type in unsupported_types:
-        model.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
+    for load_type in unsupported_types:
+        model.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, load_type))
     return (F, M)
 
 def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
@@ -631,8 +630,8 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                 continue
 
             if load.Cid() != 0:
-                cp = load.cid_ref
-                m = cp.transform_vector_to_global(load.xyz)
+                cp_ref = load.cid_ref
+                m = cp_ref.transform_vector_to_global(load.xyz)
             else:
                 m = load.xyz
             M += load.mag * m * scale
@@ -722,7 +721,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                 if load.scale == 'FR':  # x1, x2 are fractional lengths
                     x1 = load.x1
                     x2 = load.x2
-                    compute_fx = False
+                    #compute_fx = False
                 elif load.scale == 'LE': # x1, x2 are actual lengths
                     x1 = load.x1 / L
                     x2 = load.x2 / L

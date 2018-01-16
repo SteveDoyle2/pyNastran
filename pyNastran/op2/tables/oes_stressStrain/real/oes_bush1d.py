@@ -206,7 +206,7 @@ class RealBush1DStressArray(OES_Object):
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  is_failed.shape = %s\n' % str(self.is_failed.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 

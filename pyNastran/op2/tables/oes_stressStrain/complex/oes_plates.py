@@ -102,7 +102,7 @@ class ComplexTriaxStressArray(OES_Object):
         msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self._get_headers())))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  %s\n  ' % self.element_name)
+        msg.append('  %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -316,7 +316,7 @@ class ComplexPlateArray(OES_Object):
         msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self._get_headers())))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  %s\n  ' % self.element_name)
+        msg.append('  %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 

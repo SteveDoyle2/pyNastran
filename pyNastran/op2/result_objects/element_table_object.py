@@ -124,7 +124,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
         headers = ', '.join(self._get_headers())
         #msg.append('  data: [%s] shape=%s dtype=%s\n'
                    #% (headers, [int(i) for i in self.data.shape], self.data.dtype))
-        msg.append('  data: [%s] shape=%s dtype=%s\n  '
+        msg.append('  data: [%s] shape=%s dtype=%s\n'
                    % (headers,
                       [int(i) for i in self.data.shape], self.data.dtype))
         msg += self.get_data_code()

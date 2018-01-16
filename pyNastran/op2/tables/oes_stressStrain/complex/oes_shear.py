@@ -160,7 +160,7 @@ class ComplexShearArray(OES_Object):
         msg.append('  data: [ntimes, nnodes, 2] where 2=[%s]\n' % str(', '.join(self._get_headers())))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  %s\n  ' % self.element_name)
+        msg.append('  %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 

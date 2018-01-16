@@ -52,7 +52,7 @@ class AppliedLoadsVectorArray(ScalarObject):
                        % (self.__class__.__name__, nelements))
         msg.append('  data: [f1, f2, f3, m1, m2, m3] shape=%s dtype=%s\n'
                    % ([int(i) for i in self.data.shape], self.data.dtype))
-        msg.append('  sources, eids\n  ')
+        msg.append('  sources, eids\n')
         msg += self.get_data_code()
         return msg
 

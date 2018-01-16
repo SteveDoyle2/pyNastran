@@ -340,12 +340,12 @@ class ScalarObject(BaseScalarObject):
             #print("  key=%s value=%s" %(key, value))
         #if self.table_name in [b'OES1X', b'OES1X1']:
 
-    def get_data_code(self):
+    def get_data_code(self, prefix='  '):
         msg = ''
         if 'data_names' not in self.data_code:
             return ['']
 
-        msg += 'sort1\n  ' if self.is_sort1 else 'sort2\n  '
+        msg += '%ssort1\n' % prefix if self.is_sort1 else '%ssort2\n' % prefix
         for name in self.data_code['data_names']:
             if hasattr(self, name + 's'):
                 vals = getattr(self, name + 's')
@@ -353,9 +353,9 @@ class ScalarObject(BaseScalarObject):
             else:
                 vals = getattr(self, name)
             #msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])))
-            msg += '%s = %s\n  ' % (name, np.array(vals))
+            msg += '%s%s = %s\n' % (prefix, name, np.array(vals))
         #print("***data_names =", self.data_names)
-        return [msg.rstrip(' ')]
+        return [msg]
 
     def get_unsteady_value(self):
         name = self.data_code['name']

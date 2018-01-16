@@ -130,7 +130,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         msg.append('  data: [%s] shape=%s dtype=%s\n'
                    % (headers,
                       [int(i) for i in self.data.shape], self.data.dtype))
-        msg.append('  gridTypes\n  ')
+        msg.append('  gridTypes\n')
         msg += self.get_data_code()
         return msg
 
@@ -233,63 +233,6 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         for ugridtype in ugridtypes:
             i = where(gridtypes == ugridtype)
             self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
-
-    def _write_xlsx(self, sheet, is_mag_phase=False):
-        from xlwings import Range, Chart
-        # 0.3.5 doesn't work, 0.5 does
-        #from numpy import astype
-        # print('xlsx_filename = %r' % xlsx_filename)
-        #f = None
-        #wb = Workbook()  # Creates a connection with a new workbook
-        #wb.save(xlsx_filename)
-        #Range('A1').value = 'Foo 1'
-        #print(Range('A1').value)
-        #'Foo 1'
-        # Range('A1').value = xlsx_filename
-        name = str(self.__class__.__name__)
-        Range(sheet, 'A1').value = [name]
-        Range(sheet, 'A2').value = ['Node', 'GridType'] + self.headers
-        Range(sheet, 'A3').value = self.node_gridtype
-
-        if self.is_real:
-            Range(sheet, 'C3').value = self.data[0, :, :]
-        else:
-            pass
-            #from numpy.core.defchararray import add as sadd
-            #n, m = self.data[0, :, :].shape
-            #nm = n * m
-            #scomplex = array(['=complex('] * nm, dtype='|S10').reshape(n, m)
-            #scomma = array([','] * nm, dtype='|S40').reshape(n, m)
-            #sparen = array([')'] * nm, dtype='|S40').reshape(n, m)
-            #data = sadd(
-                #sadd(scomplex, self.data.real.astype('|S10')), # complex(5.
-                #sadd(
-                    #scomma, # ,
-                    #sadd(self.data.imag.astype('|U10'), sparen), # 3j)
-                #)
-            #)
-            #data = sadd(
-                #scomplex,
-                #self.data.real.astype('|S10'),
-                #scomma,
-                #self.data.imag.astype('|S10'),
-                #sparen)
-            #print(self.data.real)
-            #Range(sheet, 'C3', atleast_2d=True).table.value = self.data.real
-            #Range(sheet, 'C3').value = self.data.real
-        #Range('C4').value = self.data[0, :, 0]
-        #Range('D4').value = self.data[0, :, 1:]
-        #print(Range('A1').table.value)  # or: Range('A1:C2').value
-        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        #print(Sheet(1).name)
-        #Sheet(isheet).name = 'displacements'
-        #'Sheet1'
-        #nrows = self.data.shape[1]
-        #end_row = '%s' % (4 + nrows)
-        #t1 = self.data[0, :, 0]
-        #chart = Chart.add(source_data=Range('C4').value)
-        #wb.save()
-        # wb.save()
 
     def add_sort1(self, dt, node_id, grid_type, v1):
         """unvectorized method for adding SORT1 transient data"""
