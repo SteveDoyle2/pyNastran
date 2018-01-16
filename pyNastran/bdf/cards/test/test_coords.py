@@ -501,6 +501,7 @@ class TestCoords(unittest.TestCase):
             xyz_cp, nids, icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nids, array([30, 31, 32]))
+        model2.nodes.nids = nid_cp_cd[:, 0]
 
 
         for cid in [30, 31, 32]:
