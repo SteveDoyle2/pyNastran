@@ -109,6 +109,7 @@ class BaseScalarObject(Op2Codes):
         return self.__class__.__name__
 
     def __getstate__(self):
+        """we need to remove the saved functions"""
         state = self.__dict__.copy()
         if 'add' in state:
             del state['add']
@@ -122,6 +123,22 @@ class BaseScalarObject(Op2Codes):
             del state['add_node']
         if 'add_eid' in state:
             del state['add_eid']
+        if '_add' in state:
+            del state['_add']
+        #if '_add_new_eid_sort1' in state:
+            #del state['_add_new_eid_sort1']
+        #if '_add_new_node_sort1' in state:
+            #del state['_add_new_node_sort1']
+        if '_add_new_eid' in state:
+            del state['_add_new_eid']
+        if '_add_new_node' in state:
+            del state['_add_new_node']
+
+        #for key, value in state.iteritems():
+            #if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
+                #continue
+            #print(' %s = %s' % (key, value))
+        #print(state)
         return state
 
     def get_headers(self):

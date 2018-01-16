@@ -1029,11 +1029,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 uduplicate_eids = np.unique(duplicate_eids)
                 msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
                 for eid in uduplicate_eids:
-                    msg += 'old_element=\n%s\n' % self.elements[eid].print_repr_card()
+                    msg += 'old_element=\n%s\n' % str(self.elements[eid])
                     msg += 'new_elements=\n'
                     for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
                         if eidi == eid:
-                            msg += elem.print_repr_card()
+                            msg += str(elem)
                     msg += '\n'
                     is_error = True
                     raise DuplicateIDsError(msg)
@@ -1043,11 +1043,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 uduplicate_pids = np.unique(duplicate_pids)
                 msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
                 for pid in duplicate_pids:
-                    msg += 'old_property=\n%s\n' % self.properties[pid].print_repr_card()
+                    msg += 'old_property=\n%s\n' % str(self.properties[pid])
                     msg += 'new_properties=\n'
                     for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
                         if pidi == pid:
-                            msg += prop.print_repr_card()
+                            msg += str(prop)
                     msg += '\n'
                     is_error = True
 
@@ -1056,11 +1056,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 uduplicate_eids = np.unique(duplicate_eids)
                 msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
                 for eid in uduplicate_eids:
-                    msg += 'old_mass=\n%s\n' % self.masses[eid].print_repr_card()
+                    msg += 'old_mass=\n%s\n' % str(self.masses[eid])
                     msg += 'new_masses=\n'
                     for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
                         if eidi == eid:
-                            msg += elem.print_repr_card()
+                            msg += str(elem)
                     msg += '\n'
                     is_error = True
 
@@ -1069,11 +1069,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 uduplicate_mids = np.unique(duplicate_mids)
                 msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
-                    msg += 'old_material=\n%s\n' % self.materials[mid].print_repr_card()
+                    msg += 'old_material=\n%s\n' % str(self.materials[mid])
                     msg += 'new_materials=\n'
                     for mat, midi in zip(self._duplicate_materials, duplicate_mids):
                         if midi == mid:
-                            msg += mat.print_repr_card()
+                            msg += str(mat)
                     msg += '\n'
                     is_error = True
 
@@ -1082,12 +1082,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 uduplicate_mids = np.unique(duplicate_mids)
                 msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
-                    msg += 'old_thermal_material=\n%s\n' % (
-                        self.thermal_materials[mid].print_repr_card())
+                    msg += 'old_thermal_material=\n%s\n' % str(self.thermal_materials[mid])
                     msg += 'new_thermal_materials=\n'
                     for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
                         if midi == mid:
-                            msg += mat.print_repr_card()
+                            msg += str(mat)
                     msg += '\n'
                     is_error = True
 
@@ -1096,11 +1095,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 uduplicate_cids = np.unique(duplicate_cids)
                 msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
                 for cid in uduplicate_cids:
-                    msg += 'old_coord=\n%s\n' % self.coords[cid].print_repr_card()
+                    msg += 'old_coord=\n%s\n' % str(self.coords[cid])
                     msg += 'new_coords=\n'
                     for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
                         if cidi == cid:
-                            msg += coord.print_repr_card()
+                            msg += str(coord)
                     msg += '\n'
                     is_error = True
 

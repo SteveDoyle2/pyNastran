@@ -679,7 +679,7 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
             lengths['PBEAM'].append(length)
             nsm_centroids_length['PBEAM'].append(nsm_centroid)
             m = mass_per_length * length
-            assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass, str(elem))
+            assert m == elem.Mass(), 'mass_new=%s mass_old=%s\n%s' % (m, elem.Mass(), str(elem))
             assert np.array_equal(centroid, elem.Centroid()), 'centroid_new=%s centroid_old=%s\n%s' % (str(centroid), str(elem.Centroid()), str(elem))
             #nsmi = property_nsms[nsm_id]['PBEAM'][pid] + element_nsms[nsm_id][eid] * length
             #nsm = (nsm_per_length + nsmi) * length

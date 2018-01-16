@@ -1287,7 +1287,7 @@ class RBE3(RigidElement):
             self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
     def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by RBE3 eid=%s nid=%%s' % (self.eid)
+        msg = ' which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
         self.Gmi_ref, missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
 

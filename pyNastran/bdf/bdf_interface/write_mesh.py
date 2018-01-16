@@ -805,7 +805,7 @@ class WriteMesh(BDFAttributes):
             msg = []
             msg.append('$NODES\n')
             if self.grdset:
-                msg.append(self.grdset.print_card(size))
+                msg.append(self.grdset.write_card(size))
 
             if self.is_long_ids:
                 for (unused_nid, node) in sorted(iteritems(self.nodes)):
