@@ -58,8 +58,10 @@ for i in range(len(_data)):
         _data_.append('        self.%s = None  # skipping for now' % name.lower())
         continue
 
-    if 'CPLX' in name:
+    if '_CPLX' in name:
         result_type = 'COMPLEX'
+    elif '_RR' in name:
+        result_type = 'RANDOM'
     else:
         result_type = 'REAL'
 

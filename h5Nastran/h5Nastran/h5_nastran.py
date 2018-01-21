@@ -135,6 +135,8 @@ class H5Nastran(object):
         reader.register_callback(self._load_result_table)
         reader.read()
 
+        self.h5f.flush()
+
         for table in self._tables:
             table.finalize()
 
