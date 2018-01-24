@@ -5,6 +5,7 @@ defines readers for BDF objects in the OP2 EPT/EPTS table
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import unpack, Struct
+from six import b
 from six.moves import range
 
 import numpy as np
@@ -227,7 +228,7 @@ class EPT(GeomCommon):
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
             expected_length = valid_types[beam_type]
-            iformat = self._endian + b'%if' % expected_length
+            iformat = b(self._uendian + '%if' % expected_length)
 
             ndelta = expected_length * 4
             data_in += list(unpack(iformat, data[n:n+ndelta]))

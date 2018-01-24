@@ -2,6 +2,7 @@
 defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table
 """
 from __future__ import print_function
+from six import b
 from struct import unpack, Struct
 import numpy as np
 
@@ -274,9 +275,9 @@ class DYNAMICS(GeomCommon):
         ndata = len(data)
         nfields = (ndata - n) // 4
         datan = data[n:]
-        ints = unpack(self._endian + b'%ii' % nfields, datan)
-        floats = unpack(self._endian + b'%if' % nfields, datan)
-        strings = unpack(self._endian + b'4s'* nfields, datan)
+        ints = unpack(b(self._uendian + '%ii' % nfields), datan)
+        floats = unpack(b(self._uendian + '%if' % nfields), datan)
+        strings = unpack(b(self._uendian + '4s'* nfields), datan)
         #print('ints = ', ints)
         #print('floats = ', floats)
         #print('strings = ', strings)
@@ -508,7 +509,7 @@ class DYNAMICS(GeomCommon):
     def _read_epoint(self, data, n):
         """EPOINT(707,7,124) - Record 12"""
         npoints = (len(data) - n) // 4
-        fmt = self._endian + b'%ii' % npoints
+        fmt = b(self._uendian + '%ii' % npoints)
         nids = unpack(fmt, data[n:])
         if self.is_debug_file:
             self.binary_debug.write('EPOINT=%s\n' % str(nids))
