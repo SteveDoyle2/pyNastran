@@ -2,17 +2,23 @@ from __future__ import print_function
 
 from h5Nastran import H5Nastran
 
-db = H5Nastran('./models/model_001.h5', 'w')
-db.load_bdf('./models/model_001.bdf')
-db.load_punch('./models/model_001.pch')
+db = H5Nastran('./models/model_001.h5', 'r')
+# db.load_bdf('./models/model_001.bdf')
+# db.load_punch('./models/model_001.pch')
 
 print(db.input.node.grid.identity)  # or db.input.node.grid.grid
 
 domain_ids = [1, 2]
 elements = [400002, 400111, 400198]
-forces = db.result.elemental.element_force.quad4.search(domain_ids, elements)
+f = db.result.elemental.element_force.quad4.search(domain_ids, elements)
 
-print(forces)
+print(f)
+
+print(2 * f + 3 * f)
+
+f = db.result.elemental.element_force.search(elements, domain_ids)
+
+print(f.quad4)
 
 # pynastran bdf
 bdf = db.bdf
