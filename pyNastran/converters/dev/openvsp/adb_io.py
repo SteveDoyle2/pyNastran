@@ -6,7 +6,7 @@ import vtk
 from vtk import vtkTriangle, vtkLine
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.converters.openvsp.adb_reader import ADB_Reader
+from pyNastran.converters.dev.openvsp.adb_reader import ADB_Reader
 
 
 class ADB_IO(object):  # pragma: no cover

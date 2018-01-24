@@ -3980,8 +3980,6 @@ class PAERO5(BaseCard):
         +--------+-------+--------+--------+---------+-------+-------+-------+
         |        | CAOC1 | CAOC2  | CAOC3  |  CAOC4  | CAOC5 |       |       |
         +--------+-------+--------+--------+---------+-------+-------+-------+
-
-        +--------+-------+--------+--------+---------+-------+-------+-------+
         | PAERO5 | 7001  |   1    |  702   |    1    | 701   |   1   |  700  |
         +--------+-------+--------+--------+---------+-------+-------+-------+
         |        |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |       |       |
@@ -4310,14 +4308,7 @@ class FLFACT(BaseCard):
             fmid_default = (f1 + fnf) / 2.
             fmid = double_or_blank(card, 6, 'fmid', fmid_default)
             assert len(card) <= 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
-
-            #(f1, thru, fnf, nf, fmid) = factors
             factors = [f1, 'THRU', fnf, nf, fmid]
-            #i = np.linspace(0, nf, nf, endpoint=False) + 1
-            #factors = (
-                #(f1*(fnf - fmid) * (nf-i) + fnf * (fmid - f1) * (i-1)) /
-                #(   (fnf - fmid) * (nf-i) +       (fmid - f1) * (i-1))
-            #)
         else:
             raise SyntaxError('expected a float or string for FLFACT field 3; value=%r' % field3)
         return FLFACT(sid, factors, comment=comment)
@@ -4890,7 +4881,6 @@ class MKAERO1(BaseCard):
 
         machs = [None] * 8
         reduced_freqs = [None] * 8
-        #cards = []
         if not 0 < len(self.machs) <= 8:
             msg = 'MKAERO1; nmachs=%s machs=%s' % (len(self.machs), self.machs)
             raise ValueError(msg)
@@ -4906,6 +4896,7 @@ class MKAERO1(BaseCard):
 
     def __repr__(self):
         return self.write_card()
+
 
 class MKAERO2(BaseCard):
     """
