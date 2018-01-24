@@ -183,8 +183,3 @@ class ShabpOut(object):
             Cp_dict_components[icomponent] = Cp
             delta_dict_components[icomponent] = Delta
         return line, i, Cp_dict_components, delta_dict_components, ncases
-
-
-if __name__ == '__main__':  # pragma: no cover
-    s = ShabpOut()
-    s.read_shabp_out('SHABP.OUT')

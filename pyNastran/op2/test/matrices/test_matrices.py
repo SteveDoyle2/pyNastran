@@ -9,7 +9,7 @@ import pyNastran
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_geom import read_op2_geom, FatalError
-pkg_path = pyNastran.__path__[0]
+PKG_PATH = pyNastran.__path__[0]
 
 
 class TestOP2Matrix(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestOP2Matrix(unittest.TestCase):
 
     def test_gpspc(self):
         """Tests the gspc1 MATPOOL model"""
-        op2_filename = os.path.join(pkg_path, 'op2', 'test', 'matrices', 'gpsc1.op2')
+        op2_filename = os.path.join(PKG_PATH, 'op2', 'test', 'matrices', 'gpsc1.op2')
         model = read_op2_geom(op2_filename, debug=False)
 
         deltak = model.matrices['DELTAK']
@@ -40,7 +40,7 @@ class TestOP2Matrix(unittest.TestCase):
 
     def test_op2_dmi_01(self):
         """tests DMI matrix style"""
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        folder = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
         bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
         op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
         matrices = {
@@ -101,7 +101,7 @@ class TestOP2Matrix(unittest.TestCase):
 
     def test_op2_dmi_02(self):
         """tests DMI matrix style"""
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        folder = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
         bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
         op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
         matrices = {
@@ -164,8 +164,10 @@ def compare_dmi_matrix_from_bdf_to_op2(bdf_model, op2_model, expected, actual, m
 
         if matrix_name in bdf_model.dmis:
             dmi = bdf_model.dmis[matrix_name]
-            table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
-            #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=True, apply_symmetry=False)
+            table_array, rows_reversed, cols_reversed = dmi.get_matrix(
+                is_sparse=False, apply_symmetry=False)
+            #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(
+                #is_sparse=True, apply_symmetry=False)
             #print(table_array)
         #print(stable_array)
         msg = 'matrix %s was not read properly\n' % matrix_name
@@ -179,6 +181,6 @@ def compare_dmi_matrix_from_bdf_to_op2(bdf_model, op2_model, expected, actual, m
 
 
 if __name__ == '__main__':  # pragma: no cover
-    on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-    if not on_rtd:
+    ON_RTD = os.environ.get('READTHEDOCS', None) == 'True'
+    if not ON_RTD:
         unittest.main()

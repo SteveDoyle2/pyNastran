@@ -60,7 +60,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'DMIG', 'DMI', 'DMIJ', 'DMIK', 'DMIJI',
         'POINT', 'EPOINT',
         'DELAY', 'DPHASE',
-        'CBARAO',
+        'CBARAO', 'AEPARM',
 
 
         # properties
@@ -87,10 +87,14 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'AESURFS', 'CSSCHD',
         'CGEN', 'NXSTRAT',
     ]
-    set_types = [
+    set_types_simple = [
         'SET1', 'SET3',
+    ]
+    set_types = [
         'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
-        'QSET', 'SSET1', 'USET', 'USET1', 'OMIT', 'OMIT1',
+        'QSET', 'QSET1', 'USET', 'USET1', 'OMIT', 'OMIT1',
+    ]
+    seset_types = [
         'SESET',
     ]
     load_types = [
@@ -276,7 +280,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 prop = model.properties[pid]
                 mids_used.update(mids)
 
-        elif card_type in ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE']:
+        elif card_type in ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON']:
             for eid in ids:
                 elem = model.rigid_elements[eid]
                 #print(elem.object_attributes())
@@ -451,8 +455,26 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
 
         elif card_type in skip_cards:
             pass
-        elif card_type in set_types:
+        elif card_type in set_types_simple:
+            # handled based on context in other blocks
             pass
+        elif card_type in ['USET', 'USET1']:
+            for set_cards in itervalues(model.usets):
+                for set_card in set_cards:
+                    nids_used.update(set_card.ids)
+
+        elif card_type in set_types:
+            obj = card_type[:4].lower() + 's'
+            sets = getattr(model, obj) # list of SETs
+            for set_card in sets:
+                nids_used.update(set_card.ids)
+
+        elif card_type in seset_types:
+            obj = card_type[:6].lower() + 's'
+            sets = getattr(model, obj) # list of SETs
+            for set_card in sets:
+                nids_used.update(set_card.ids)
+
         elif card_type in ['DCONSTR']:
             pass
         elif card_type == 'DRESP1':

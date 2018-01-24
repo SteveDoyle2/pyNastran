@@ -14,6 +14,9 @@ from numpy.compat import asstr, asbytes
 
 from pyNastran.utils import is_file_obj, _filename
 
+def isfinite_and_nonzero(_array):
+    """are any of the values finite and a value non-zero?"""
+    return (np.any(np.isfinite(_array)) and abs(np.nanmax(_array)) > 0.)
 
 def unique_rows(A, return_index=False, return_inverse=False):
     """

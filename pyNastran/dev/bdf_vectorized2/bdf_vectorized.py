@@ -450,7 +450,6 @@ class BDF(BDF_):
 
     @grids.setter
     def grids(self, grid):
-        print('setter')
         key = grid.nid
         self.grid.update(grid)
         #self.grid.add_grid(grid.nid, grid.xyz, cp=grid.cp, cd=grid.cd,
@@ -578,7 +577,7 @@ class BDF(BDF_):
         nid_cp_cd : (n, 3) int ndarray
             node id, CP, CD for each node
 
-        Example
+        Examples
         --------
         # assume GRID 1 has a CD=10, CP=0
         # assume GRID 2 has a CD=10, CP=0

@@ -541,8 +541,8 @@ class Element(BaseCard):
         .. note::  The order of the nodes are consistent with ANSYS numbering; is this current?
         .. warning:: higher order element ids not verified with ANSYS; is this current?
 
-        Example
-        =======
+        Examples
+        --------
         >>> print(element.faces)
         """
         faces = {}

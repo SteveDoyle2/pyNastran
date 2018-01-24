@@ -167,6 +167,7 @@ class LoadCombination(Load):
                     msg = ('The get_load_ids method doesnt support %s cards.\n'
                            '%s' % (load.__class__.__name__, str(load)))
                     raise NotImplementedError(msg)
+                break
         return load_ids
 
     def get_loads(self):

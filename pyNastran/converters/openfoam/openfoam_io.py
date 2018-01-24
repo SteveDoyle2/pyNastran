@@ -84,8 +84,8 @@ class OpenFoamIO(object):
         if skip_reading:
             return
         reset_labels = True
-        #print('self.modelType=%s' % self.modelType)
-        print('mesh_3d = %s' % mesh_3d)
+        #self.log.info('self.modelType=%s' % self.modelType)
+        self.log.info('mesh_3d = %s' % mesh_3d)
         if mesh_3d in ['hex', 'shell']:
             model = BlockMesh(log=self.log, debug=False) # log=self.log, debug=False
         elif mesh_3d == 'faces':
@@ -95,7 +95,7 @@ class OpenFoamIO(object):
 
         self.modelType = 'openfoam'
         #self.modelType = model.modelType
-        print('openfoam_filename = %s' % openfoam_filename)
+        self.log.info('openfoam_filename = %s' % openfoam_filename)
 
         is_face_mesh = False
         if mesh_3d == 'hex':

@@ -185,7 +185,7 @@ class ComplexBeamArray(OES_Object):
                 str(self.data.shape).replace('L', ''),
         ))
 
-        msg.append('  CBEAM\n  ')
+        msg.append('  CBEAM\n')
         msg += self.get_data_code()
         return msg
 

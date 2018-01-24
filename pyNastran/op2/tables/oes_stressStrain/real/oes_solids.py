@@ -229,8 +229,9 @@ class RealSolidArray(OES_Object):
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  element_cid.shape = %s\n' % str(self.element_cid.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
+        #print(''.join(msg))
         return msg
 
 

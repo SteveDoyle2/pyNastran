@@ -129,7 +129,7 @@ class TestNsm(unittest.TestCase):
                 self.assertEqual(mass, 0.0)
             else:
                 self.assertTrue(mass > 0)
-            print('mass[%s] = %s' % (nsm_id, mass))
+            #print('mass[%s] = %s' % (nsm_id, mass))
             #print('----------------------------------------------')
 
         model2 = save_load_deck(model)
@@ -156,6 +156,27 @@ class TestNsm(unittest.TestCase):
             self.assertEqual(mass, 0.0)
             #print('mass[%s] = %s' % (nsm_id, mass))
         #print('done with null')
+
+    def test_nsm_prepare(self):
+        """tests the NSMADD and all NSM cards using the prepare methods"""
+        model = BDF()
+        nsm_id = 100
+        fields = ['NSM', nsm_id, 'ELEMENT',
+                  1, 1.0,
+                  2, 2.0,
+                  3, 3.0,
+                  4, 2.0]
+        model.add_card(fields, 'NSM', comment='', is_list=True,
+                      has_none=True)
+        model.add_card(fields, 'NSML', comment='', is_list=True,
+                       has_none=True)
+
+        fields = ['NSM1', nsm_id, 'ELEMENT', 1.0, 1, 2, 3]
+        model.add_card(fields, 'NSM1', comment='', is_list=True,
+                       has_none=True)
+        model.add_card(fields, 'NSML1', comment='', is_list=True,
+                       has_none=True)
+
 
     def test_nsmadd(self):
         """tests the NSMADD and all NSM cards"""
@@ -190,11 +211,12 @@ class TestNsm(unittest.TestCase):
         model.add_nsml(3000, 'PSHELL', pid_pshell, 1.0, comment='nsml') # correct; 1.0
         model.add_nsml(4000, 'PSHELL', pid_pshell, 1.0, comment='nsml') # correct; 1.0
         model.add_nsmadd(5000, [1000, 2000, 3000, 4000], comment='nsmadd')
+        model.add_nsmadd(5000, [1000, 2000, 3000, 4000], comment='nsmadd')
         model.cross_reference()
         model.pop_xref_errors()
 
         mass, cg, I = model._mass_properties_new(nsm_id=5000)
-        self.assertAlmostEqual(mass, 4.0)
+        self.assertAlmostEqual(mass, 8.0)
         model2 = save_load_deck(model)
         mass, cg, I = model2._mass_properties_new(nsm_id=5000)
 

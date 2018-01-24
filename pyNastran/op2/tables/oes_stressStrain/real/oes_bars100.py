@@ -184,7 +184,7 @@ class RealBar10NodesArray(OES_Object):
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
-        msg.append('  element type: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 

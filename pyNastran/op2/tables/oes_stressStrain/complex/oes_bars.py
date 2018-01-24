@@ -167,7 +167,7 @@ class ComplexBarArray(OES_Object):
                 str(self.data.shape).replace('L', ''),
         ))
 
-        msg.append('  CBAR\n  ')
+        msg.append('  CBAR\n')
         msg += self.get_data_code()
         return msg
 

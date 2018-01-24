@@ -375,17 +375,26 @@ class OP2(OP2_Scalar):
         #if hasattr(self, '_card_parser_prepare'):
             #del state['_card_parser_prepare']
 
-        #i = 0
-        #for key, value in sorted(state.items()):
-            #if isinstance(value, dict) and len(value) == 0:
-                #continue
-            #if not isinstance(value, (str, int, float)):
-            #if i > 200: # 72
-                #del state[key]
-            #else:
-                #print(key, type(value), value)
-                #break
-            #i += 1
+        # this block let's us identify the objects that are problematic
+        # we just play with the value of i to delete all objects past
+        # some threshold.  Once we find where the code breaks, we dig
+        # into the objects further
+        if 0:  # pragma: no cover
+            i = 0
+            for key, value in sorted(state.items()):
+                if isinstance(value, dict) and len(value) == 0:
+                    continue
+                #if not isinstance(value, (str, int, float)):
+                if i > 100:
+                    #print('deleting', key)
+                    del state[key]
+                else:
+                    #print('***', key, value)
+                    i += 1
+                #else:
+                    #print(key, type(value), value)
+                    #break
+                #i += 1
         return state
 
     def save(self, obj_filename='model.obj', unxref=True):
@@ -870,8 +879,7 @@ class OP2(OP2_Scalar):
         for nodes with their output in coordinate systems other than the
         global.
 
-        Used in combination with ``BDF.get_displacement_index_transforms``
-                          and/or ``BDF.get_displacement_index``
+        Used in combination with  ``BDF.get_displacement_index``
 
         Parameters
         ----------
@@ -1059,8 +1067,7 @@ class OP2(OP2_Scalar):
         for nodes with their output in coordinate systems other than the
         global.
 
-        Used in combination with ``BDF.get_displacement_index_transforms``
-                          and/or ``BDF.get_displacement_index``
+        Used in combination with ``BDF.get_displacement_index``
 
         Parameters
         ----------

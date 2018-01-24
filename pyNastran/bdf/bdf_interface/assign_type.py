@@ -925,8 +925,8 @@ def interpret_value(value_raw, card=''):
         pass
 
     #if('=' in value_in or '(' in value_in or ')' in value_in):
-    #    print("=()!")
-    #    return value_in
+        #print("=()!")
+        #return value_in
 
     # if there are non-floats/scientific notation -> string
     no_ed = list(set(value_in) - set('ED 1234567890+-'))

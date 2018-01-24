@@ -45,11 +45,12 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
-from vtk.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 
 
 #from pyNastran import is_release
 from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import isfinite_and_nonzero
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
@@ -67,7 +68,8 @@ from pyNastran.bdf.cards.elements.solid import (
 )
 
 from pyNastran.gui.gui_utils.vtk_utils import (
-    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
+    get_numpy_idtype_for_vtk, numpy_to_vtk_points,
+    create_vtk_cells_of_constant_element_type)
 from pyNastran.gui.errors import NoGeometry
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (
@@ -188,8 +190,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def toggle_caero_panels(self):
         """
-        Toggle the visibility of the CAERO panels. The visibility of the sub panels
-        or panels will be set according to the current show_caero_sub_panels state.
+        Toggle the visibility of the CAERO panels. The visibility of the
+        sub panels or panels will be set according to the current
+        show_caero_sub_panels state.
         """
         if not self.has_caero:
             return
@@ -218,8 +221,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _get_geometry_properties_by_name(self, names):
         """
-        Get a subset of the self.geometry_properties dict specified by names. any names not in the
-        dict will be ignored.
+        Get a subset of the self.geometry_properties dict specified by
+        names.  Any names not in the dict will be ignored.
 
         Parameters
         -----------
@@ -286,7 +289,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         Parameters
         ----------
         dim_max : float
-            the max model dimension; 10% of the max will be used for the coord length
+            the max model dimension; 10% of the max will be used for the
+            coord length
         cid : int
            the coordinate system id
         coord : Coord()
@@ -309,7 +313,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         model : BDF()
             the BDF object
         dim_max : float
-            the max model dimension; 10% of the max will be used for the coord length
+            the max model dimension; 10% of the max will be used for the
+            coord length
         """
         cid_types = {
             'R' : 'xyz',
@@ -415,7 +420,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print('dt_nastran_xyz =', time.time() - time0)
         return xyz_cid0, nid_cp_cd
 
-    def _get_model_nonvectorized(self, bdf_filename, xref_loads=True):
+    def _get_model_unvectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
         ext = os.path.splitext(bdf_filename)[1].lower()
         punch = False
@@ -435,7 +440,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                            validate=True)
             #print('done with read_bdf')
             #xref_loads = False
-        xref_aero = len(model.caeros) > 0
+        #xref_aero = len(model.caeros) > 0
 
         xref_nodes = True
         #model.cross_reference()
@@ -495,15 +500,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if skip_reading:
             return
 
-        load_geom = True
+        #load_geom = True
         if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             if IS_TESTING or self.is_testing_flag:
                 self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
-                self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+                self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
             else:
-                self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+                self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
         else:
-            self.load_nastran_geometry_nonvectorized(bdf_filename, plot=plot)
+            self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
 
     def load_nastran_geometry_vectorized(self, bdf_filename, plot=True):
         """
@@ -592,30 +597,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # nodes/coords
         #print('get_xyz_in_coord')
         xyz_cid0, nid_cp_cd = self.get_xyz_in_coord_vectorized(model, cid=0, fdtype='float32')
-        points = numpy_to_vtk_points(xyz_cid0)
-        #self.grid.SetPoints(points)
-        self.xyz_cid0 = xyz_cid0
-
-        maxi = xyz_cid0.max(axis=0)
-        mini = xyz_cid0.min(axis=0)
-        assert len(maxi) == 3, len(maxi)
-        xmax, ymax, zmax = maxi
-        xmin, ymin, zmin = mini
-        dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-
-        #print('_create_nastran_coords')
-        #self._create_nastran_coords(model, dim_max)
-        #print('done _create_nastran_coords')
-
-        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
-        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
         #-----------------------------------------------------------------------
 
         #------------------------------------------------------------
         # TEMP
         j = 0
-        results = self._map_elements_vectorized(points, self.nid_map, model, j, dim_max,
+        results = self._map_elements_vectorized(self.nid_map, model, j, dim_max,
                                                 nid_cp_cd, plot=True, xref_loads=True)
         has_control_surface = False
         geometry_names = []
@@ -692,7 +680,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         form0.append(('ElementID', icase, []))
         icase += 1
 
-        is_element_dim = True
+        #is_element_dim = True
         dim_array = results['dim']
         if len(np.unique(dim_array)) > 1:
             dim_res = GuiResult(subcase_id, 'ElementDim', 'ElementDim', 'centroid', dim_array,
@@ -818,16 +806,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self._set_results([form], cases)
 
 
-    def _map_elements_vectorized(self, points, nid_map, model, j, dim_max,
+    def _map_elements_vectorized(self, nid_map, model, j, dim_max,
                                  nid_cp_cd, plot=True, xref_loads=True):
         """
-        Much, much faster way to add elements that directly builds the VTK objects
-        rather than using for loops.
+        Much, much faster way to add elements that directly builds the
+        VTK objects rather than using for loops.
 
         Parameters
         ----------
-        points : ???
-           ???
         nid_map : ???
            ???
         model : BDF()
@@ -847,7 +833,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         -------
         nid_to_pid_map  : dict
             node to property id map
-            used to show SPC constraints (we don't want to show constraints on 456 DOFs)
+            used to show SPC constraints (we don't want to show constraints
+            on 456 DOFs)
         icase : int
             the result number
         cases : dict
@@ -860,7 +847,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         self.isubcase_name_map = {1: ['Nastran', '']}
         grid = self.grid
-        grid.SetPoints(points)
 
         nelements = self.nelements
         dim_array = np.zeros(nelements, 'int32')
@@ -893,15 +879,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nids_list = []
         ieid = 0
         cell_offset = 0
-
-        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
-        if isize == 4:
-            dtype = 'int32' # TODO: can we include endian?
-        elif isize == 8:
-            dtype = 'int64'
-        else:
-            msg = 'isize=%s' % str(isize)
-            raise NotImplementedError(msg)
+        dtype = get_numpy_idtype_for_vtk()
 
         nelements = self.nelements
         eids_array = np.zeros(nelements, dtype=dtype)
@@ -1517,7 +1495,34 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #)
         return model
 
-    def load_nastran_geometry_nonvectorized(self, bdf_filename, plot=True):
+    def _points_to_vtkpoints_coords(self, model, xyz_cid0):
+        """
+        helper method for:
+         - load_nastran_geometry_unvectorized
+         - load_nastran_geometry_vectorized
+        """
+        points = numpy_to_vtk_points(xyz_cid0)
+        self.grid.SetPoints(points)
+
+        self.xyz_cid0 = xyz_cid0
+
+        maxi = xyz_cid0.max(axis=0)
+        mini = xyz_cid0.min(axis=0)
+        assert len(maxi) == 3, len(maxi)
+        xmax, ymax, zmax = maxi
+        xmin, ymin, zmin = mini
+        dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
+
+        #print('_create_nastran_coords')
+        self._create_nastran_coords(model, dim_max)
+        #print('done _create_nastran_coords')
+
+        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        return dim_max
+
+    def load_nastran_geometry_unvectorized(self, bdf_filename, plot=True):
         """
         The entry point for Nastran geometry loading.
 
@@ -1535,7 +1540,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.scalarBar.Modified()
 
         xref_loads = True # should be True
-        model, xref_nodes = self._get_model_nonvectorized(bdf_filename, xref_loads=xref_loads)
+        model, xref_nodes = self._get_model_unvectorized(bdf_filename, xref_loads=xref_loads)
 
         nnodes = len(model.nodes)
         nspoints = len(model.spoints)
@@ -1607,28 +1612,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #print('get_xyz_in_coord')
         xyz_cid0, nid_cp_cd = self.get_xyz_in_coord(model, cid=0, fdtype='float32')
-        points = numpy_to_vtk_points(xyz_cid0)
-        self.xyz_cid0 = xyz_cid0
-
-        maxi = xyz_cid0.max(axis=0)
-        mini = xyz_cid0.min(axis=0)
-        assert len(maxi) == 3, len(maxi)
-        xmax, ymax, zmax = maxi
-        xmin, ymin, zmin = mini
-        dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-
-        #print('_create_nastran_coords')
-        self._create_nastran_coords(model, dim_max)
-        #print('done _create_nastran_coords')
-
-        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
-        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        dim_max = self._points_to_vtkpoints_coords(model, xyz_cid0)
         #-----------------------------------------------------------------------
 
         j = 0
         nid_to_pid_map, icase, cases, form = self.map_elements(
-            xyz_cid0, nid_cp_cd, points, self.nid_map, model, j, dim_max,
+            xyz_cid0, nid_cp_cd, self.nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
 
         #if 0:
@@ -2850,16 +2839,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         ieid = 0
         cell_offset = 0
 
-        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
-        if isize == 4:
-            dtype = 'int32' # TODO: can we include endian?
-        elif isize == 8:
-            dtype = 'int64'
-        else:
-            msg = 'isize=%s' % str(isize)
-            raise NotImplementedError(msg)
-        #print('isize = ', isize)
-        #print('dtype = ', dtype)
+        dtype = get_numpy_idtype_for_vtk()
+
         cell_types_array = np.zeros(nelements, dtype=dtype)
         cell_offsets_array = np.zeros(nelements, dtype=dtype)
 
@@ -3410,7 +3391,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #max_normal = np.nanmax(normal_mag[i_not_nan])
             #is_shell = np.abs(max_normal) > 0.
             is_shell = True
-        is_solid = np.any(np.isfinite(max_interior_angle)) and abs(np.nanmax(max_interior_angle)) > 0.
+        is_solid = isfinite_and_nonzero(max_interior_angle)
         #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
         if is_shell:
             nx_res = GuiResult(
@@ -3506,7 +3487,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form_checks.append(('Taper Ratio', icase, []))
                 icase += 1
 
-            if np.any(np.isfinite(max_warp_angle)) and np.nanmax(max_warp_angle) > 0.0:
+            if isfinite_and_nonzero(max_warp_angle):
                 warp_res = GuiResult(
                     0, header='Max Warp Angle', title='MaxWarpAngle',
                     location='centroid', scalar=np.degrees(max_warp_angle))
@@ -3615,7 +3596,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         return nid_to_pid_map, icase, cases, form
 
-    def map_elements(self, xyz_cid0, nid_cp_cd, points, nid_map, model, j, dim_max,
+    def map_elements(self, xyz_cid0, nid_cp_cd, nid_map, model, j, dim_max,
                      plot=True, xref_loads=True):
         """
         Creates the elements
@@ -3625,8 +3606,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             used for setting the NodeID and CD coordinate results
         xyz_cid0 : (nnodes, 3) float ndarray
             the global xyz locations
-        points : vtkPoints
-            the vtkPoints to b added to the grid
         nid_map : dict[nid] : nid_index
             nid : int
                 the GRID/SPOINT/EPOINT id
@@ -3641,7 +3620,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             use for ???
         """
         grid = self.grid
-        grid.SetPoints(points)
 
         if IS_TESTING:
             self._map_elements3(nid_map, model, j, dim_max,
@@ -3715,7 +3693,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             try:
                 icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
             except:
-                #raise
+                if IS_TESTING or self.is_testing_flag:
+                    raise
                 s = StringIO()
                 traceback.print_exc(file=s)
                 sout = s.getvalue()
@@ -4006,7 +3985,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
-                    material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
+                    material_coord[i] = _get_shell_material_coord_int(element)
                 elem = vtkTriangle()
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4030,7 +4009,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif isinstance(element, (CTRIA6, CPLSTN6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):
-                    material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
+                    material_coord[i] = _get_shell_material_coord_int(element)
                 node_ids = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = node_ids[:3]
@@ -4067,7 +4046,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # |       \
                 # 1----2----3
                 #
-                material_coord[i] = element.theta # TODO: no mcid
+                #material_coord[i] = element.theta # TODO: no mcid
                 # midside nodes are required, nodes out of order
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4100,7 +4079,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
-                    material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
+                    material_coord[i] = _get_shell_material_coord_int(element)
                 #print('eid=%s theta=%s' % (eid, material_coord[i]))
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4128,7 +4107,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
-                    material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
+                    material_coord[i] = _get_shell_material_coord_int(element)
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -4159,7 +4138,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
-                material_coord[i] = 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
+                material_coord[i] = _get_shell_material_coord_int(element)
 
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4847,14 +4826,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         is_shell = np.abs(normals).max() > 0.
 
         # we have to add the 2nd/3rd lines to make sure bars are getting into this check
-        is_solid = np.any(np.isfinite(max_interior_angle)) and (
-            (np.any(np.isfinite(min_interior_angle)) and abs(np.nanmax(min_interior_angle)) > 0.) and
-            (np.any(np.isfinite(max_interior_angle)) and abs(np.nanmax(max_interior_angle)) > 0.)
+
+        is_solid = (
+            isfinite_and_nonzero(min_interior_angle) and
+            isfinite_and_nonzero(max_interior_angle)
         )
+
         #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
-        #print("  np.any(np.isfinite(min_interior_angle)) =", np.any(np.isfinite(min_interior_angle)))
-        #print("  np.any(np.isfinite(max_interior_angle)) =", np.any(np.isfinite(max_interior_angle)))
-        #print("  abs(np.nanmax(max_interior_angle)) > 0. =", abs(np.nanmax(max_interior_angle)) > 0.)
         if is_shell:
             nx_res = GuiResult(
                 0, header='NormalX', title='NormalX',
@@ -4949,7 +4927,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form_checks.append(('Taper Ratio', icase, []))
                 icase += 1
 
-            if np.any(np.isfinite(max_warp_angle)) and np.nanmax(max_warp_angle) > 0.0:
+            if isfinite_and_nonzero(max_warp_angle):
                 warp_res = GuiResult(
                     0, header='Max Warp Angle', title='MaxWarpAngle',
                     location='centroid', scalar=np.degrees(max_warp_angle))
@@ -5102,7 +5080,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 mid = prop.mid_ref.mid
                 mids[i, 0] = mid
             elif prop.type == 'PSHELL':
-                # TODO: only considers mid1
                 i = np.where(pids == pid)[0]
                 mid1 = prop.Mid1()
                 mid2 = prop.Mid2()
@@ -5114,7 +5091,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 mids[i, 3] = mid4 if mid4 is not None else 0
                 thickness[i, 0] = prop.Thickness()
             elif prop.type in ['PCOMP', 'PCOMPG']:
-                # TODO: only considers iply=0
                 i = np.where(pids == pid)[0]
                 npliesi = prop.nplies
                 nplies[i] = npliesi
@@ -5177,7 +5153,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             form_layer = []
             has_mat8, has_mat11, e11, e22, e33 = self._get_material_arrays(model, midsi)
-            if np.any(np.isfinite(thicknessi)) and np.nanmax(thicknessi) > 0.0:
+            if isfinite_and_nonzero(thicknessi):
                 t_res = GuiResult(0, header='Thickness', title='Thickness',
                                   location='centroid', scalar=thicknessi)
                 cases[icase] = (t_res, (0, 'Thickness'))
@@ -5878,3 +5854,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.eid_to_nid_map = {}
         self.element_ids = None
         self.node_ids = None
+
+def _get_shell_material_coord_int(element):
+    """
+    used by:
+     - CQUAD4, CQUADR, CQUAD8, CQUAD, CQUADX
+     - CTRIA3, CTRIAR, CTRIA6
+    """
+    return 0 if isinstance(element.theta_mcid, float) else element.theta_mcid

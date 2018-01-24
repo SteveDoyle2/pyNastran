@@ -51,6 +51,9 @@ class TestShabpGUI(unittest.TestCase):
         #test.load_panair_geometry(geometry_filename)
         #test.load_panair_results(agps_filename)
 
+        #model = ShabpOut()
+        #model.read_shabp_out('SHABP.OUT')
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

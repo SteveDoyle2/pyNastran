@@ -52,6 +52,7 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(force.scaled_vector, np.array([42., 42., 84.])), force.scaled_vector
         model.cross_reference()
         force.raw_fields()
+        save_load_deck(model)
 
     def test_moment(self):
         """CONROD, MOMENT"""
@@ -80,6 +81,7 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(moment.scaled_vector, np.array([42., 42., 84.])), moment.scaled_vector
         model.cross_reference()
         moment.raw_fields()
+        save_load_deck(model)
 
     def test_accel1(self):
         """tests ACCEL1"""
@@ -105,6 +107,7 @@ class TestLoads(unittest.TestCase):
         accel1.write_card(size=8)
         accel1.write_card(size=16)
         accel1.write_card(size=16, is_double=True)
+        save_load_deck(model)
 
     def test_accel1_2(self):
         """tests problematic ACCEL1 cards"""
@@ -178,6 +181,7 @@ class TestLoads(unittest.TestCase):
         accel.write_card(size=8)
         accel.write_card(size=16)
         accel.write_card(size=16, is_double=True)
+        #save_load_deck(model)
 
     def test_darea_01(self):
         """tests a DAREA"""
@@ -434,6 +438,7 @@ class TestLoads(unittest.TestCase):
             if not allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz f=%s fm_expected=%s' % (
                     isubcase, forces1.tolist(), fm.tolist()))
+        save_load_deck(model, punch=False)
 
     def test_pload4_cquad4(self):
         """tests a PLOAD4 with a CQUAD4"""
@@ -487,6 +492,7 @@ class TestLoads(unittest.TestCase):
             if not allclose(f1[2], force[2]):
                 model.log.error('subcase=%-2i Fz f=%s force_expected=%s' % (
                     isubcase, f1.tolist(), force.tolist()))
+        save_load_deck(model, punch=False)
 
     def test_pload4_ctetra(self):
         """tests a PLOAD4 with a CTETRA"""
@@ -580,6 +586,7 @@ class TestLoads(unittest.TestCase):
             if not allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s face=%s normal=%s' % (
                     isubcase, g1, g34, forces1, fm, face, normal))
+        save_load_deck(model, punch=False)
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""
@@ -923,10 +930,6 @@ class TestLoads(unittest.TestCase):
                         tref=0., ge=0., lam=None,
                         z0=None, comment='pcomp')
 
-        sid = 2
-        pressure = 2.0
-        model.add_pload2(sid, pressure, [3, 4], comment='')  # ctria3, cquad4
-
         pid = 5
         global_ply_ids = [5, 6, 7]
         mids = [mid, mid, mid]
@@ -959,15 +962,6 @@ class TestLoads(unittest.TestCase):
 
         psolid = model.add_psolid(pid, mid, cordm=0, integ=None, stress=None,
                                   isop=None, fctn='SMECH', comment='psolid')
-
-        sid = 13
-        eids = [eid]
-        g1 = 6
-        g34 = 8
-        pressures = [1., 1., 1., 1.]
-        pload4 = model.add_pload4(sid, eids, pressures, g1=1, g34=8,
-                                  cid=0, nvector=None, surf_or_line='SURF',
-                                  line_load_dir='NORM', comment='pload4')
 
 
         conid = 42
@@ -1015,16 +1009,6 @@ class TestLoads(unittest.TestCase):
         #model.add_spoint([11, 'THRU', 42], comment='spoint3')
         str(model.spoints)
 
-        sid = 14
-        nids = 11 # SPOINT
-        mags = 20.
-        sload = model.add_sload(sid, nids, mags, comment='an sload')
-
-        sid = 14
-        nids = [11, 12] # SPOINT, GRID
-        mags = [20., 30.]
-        sload = model.add_sload(sid, nids, mags, comment='an sload')
-
         sid = 12
         xyz = [2., 3., 4.]
         node = 7
@@ -1054,6 +1038,22 @@ class TestLoads(unittest.TestCase):
         load_ids = [12, 13] # force, pload4
         load = model.add_load(load_id, scale, scale_factors, load_ids, comment='load')
 
+        # loads
+        sid = 13
+        pressure = 2.0
+        model.add_pload(sid, pressure, [1, 2, 3], comment='pload')
+        model.add_pload2(sid, pressure, [3, 4], comment='pload2')  # ctria3, cquad4
+
+        eids = [eid]
+        g1 = 6
+        g34 = 8
+        pressures = [1., 1., 1., 1.]
+        pload4 = model.add_pload4(sid, eids, pressures, g1=1, g34=8,
+                                  cid=0, nvector=None, surf_or_line='SURF',
+                                  line_load_dir='NORM', comment='pload4')
+        #print(model.loads)
+        #print(model.load_combinations)
+
         #-----------------------------------------------------------------------
         # constraints
         conid = 42
@@ -1068,7 +1068,9 @@ class TestLoads(unittest.TestCase):
         conid = 44
         sets = [42, 43]
         spcadd = model.add_spcadd(conid, sets, comment='spcadd')
+
         #-----------------------------------------------------------------------
+        sid = 12
         model.add_eigrl(sid, v1=None, v2=None, nd=None, msglvl=0,
                         maxset=None, shfscl=None, norm=None,
                         options=None, values=None, comment='eigrl')
@@ -1120,16 +1122,16 @@ class TestLoads(unittest.TestCase):
         p0 = [0., 0., 0.]
         forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
                                                      include_grav=True, xyz_cid0=None)
-        forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                              include_grav=True, xyz_cid0=None)
-        assert np.array_equal(forces1, forces2)
-        assert np.array_equal(moments1, moments2)
+        #forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                              #include_grav=True, xyz_cid0=None)
+        #assert np.array_equal(forces1, forces2)
+        #assert np.array_equal(moments1, moments2)
 
 
         model2.write_skin_solid_faces('skin.bdf', write_solids=False,
                                       write_shells=True)
         os.remove('skin.bdf')
-        save_load_deck(model2, run_convert=False)
+        save_load_deck(model2)
 
     def test_load(self):
         """makes sure LOAD cards don't get sorted"""
@@ -1151,6 +1153,37 @@ class TestLoads(unittest.TestCase):
                                scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
         with self.assertRaises(RuntimeError):
             model.validate()
+
+    def test_sload(self):
+        model = BDF(debug=False)
+        model.add_spoint([11, 12])
+        sid = 14
+        nids = 11 # SPOINT
+        mags = 20.
+        sload = model.add_sload(sid, nids, mags, comment='an sload')
+
+        sid = 14
+        nids = [11, 12] # SPOINT, GRID
+        mags = [20., 30.]
+        sload = model.add_sload(sid, nids, mags, comment='an sload')
+        model.validate()
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+
+        p0 = [0., 0., 0.]
+        eids = list(model.elements.keys())
+        nids = list(model.nodes.keys())
+        #print('nids =', nids) # empty
+        loadcase_id = sid
+        forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
+                                                     include_grav=True, xyz_cid0=None)
+        forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                              include_grav=True, xyz_cid0=None)
+        assert np.array_equal(forces1, forces2)
+        assert np.array_equal(moments1, moments2)
+        save_load_deck(model, run_convert=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

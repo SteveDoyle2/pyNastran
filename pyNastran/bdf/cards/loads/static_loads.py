@@ -195,8 +195,10 @@ class LOAD(LoadCombination):
 
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
-        for (scale_factor, load_id) in zip(self.scale_factors, self.get_load_ids()):
+        load_ids = self.get_load_ids()
+        for (scale_factor, load_id) in zip(self.scale_factors, load_ids):
             list_fields += [scale_factor, self.LoadID(load_id)]
+        assert len(load_ids) == len(self.scale_factors), print_card_8(list_fields)
         return list_fields
 
     def repr_fields(self):
@@ -393,13 +395,17 @@ class ACCEL(BaseCard):
     the structural model. The load variation is based upon the tabular
     input defined on this Bulk Data entry.
 
-    +-------+------+------+------+------+-----+-----+--------+-----+
-    |   1   |   2  |   3  |  4   |   5  |  6  |  7  |   8    |  9  |
-    +=======+======+======+======+======+=====+=====+========+=====+
-    | ACCEL | SID  | CID  | N1   | N2   | N3  | DIR |        |     |
-    +-------+------+------+------+------+-----+-----+--------+-----+
-    |       | LOC1 | VAL1 | LOC2 | VAL2 | Continues in Groups of 2 |
-    +-------+------+------+------+------+--------------------------+
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |   1   |   2  |   3  |    4   |   5  |  6  |  7  |   8    |  9  |
+    +=======+======+======+========+======+=====+=====+========+=====+
+    | ACCEL | SID  | CID  |   N1   |  N2  | N3  | DIR |        |     |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |       | LOC1 | VAL1 |  LOC2  | VAL2 | Continues in Groups of 2 |
+    +-------+------+------+--------+------+--------------------------+
+    | ACCEL |  100 |   2  |   0.0  |  1.0 | 2.0 |  X  |        |     |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
+    |       |  1.0 |  1.1 |   2.0  |  2.1 | 3.0 | 3.1 |  4.0   | 4.1 |
+    +-------+------+------+--------+------+-----+-----+--------+-----+
     """
     type = 'ACCEL'
 
@@ -416,10 +422,11 @@ class ACCEL(BaseCard):
         direction : str
             Component direction of acceleration variation
             {X, Y, Z}
-        locs : ???
-            ???
-        vals : ???
-            ???
+        locs : List[float]
+            Location along direction DIR in coordinate system CID for
+            specification of a load scale factor.
+        vals : List[float]
+            The load scale factor associated with location LOCi
         cid : int; default=0
             the coordinate system for the load
         comment : str; default=''

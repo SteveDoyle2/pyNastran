@@ -47,7 +47,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.elements.solid import (CIHEX1, CIHEX2,
                                                 CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
                                                 CTETRA10, CPYRAM13, CPENTA15, CHEXA20)
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
@@ -387,7 +387,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'CGAP',
 
             ## rigid_elements
-            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE',
+            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON',
 
             ## plotels
             'PLOTEL',
@@ -1313,11 +1313,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 uduplicate_eids = np.unique(duplicate_eids)
                 msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
                 for eid in uduplicate_eids:
-                    msg += 'old_element=\n%s\n' % self.elements[eid].print_repr_card()
+                    msg += 'old_element=\n%s\n' % str(self.elements[eid])
                     msg += 'new_elements=\n'
                     for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
                         if eidi == eid:
-                            msg += elem.print_repr_card()
+                            msg += str(elem)
                     msg += '\n'
                     is_error = True
                     raise DuplicateIDsError(msg)
@@ -1327,11 +1327,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 uduplicate_pids = np.unique(duplicate_pids)
                 msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
                 for pid in duplicate_pids:
-                    msg += 'old_property=\n%s\n' % self.properties[pid].print_repr_card()
+                    msg += 'old_property=\n%s\n' % str(self.properties[pid])
                     msg += 'new_properties=\n'
                     for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
                         if pidi == pid:
-                            msg += prop.print_repr_card()
+                            msg += str(prop)
                     msg += '\n'
                     is_error = True
 
@@ -1340,11 +1340,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 uduplicate_eids = np.unique(duplicate_eids)
                 msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
                 for eid in uduplicate_eids:
-                    msg += 'old_mass=\n%s\n' % self.masses[eid].print_repr_card()
+                    msg += 'old_mass=\n%s\n' % str(self.masses[eid])
                     msg += 'new_masses=\n'
                     for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
                         if eidi == eid:
-                            msg += elem.print_repr_card()
+                            msg += str(elem)
                     msg += '\n'
                     is_error = True
 
@@ -1353,11 +1353,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 uduplicate_mids = np.unique(duplicate_mids)
                 msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
-                    msg += 'old_material=\n%s\n' % self.materials[mid].print_repr_card()
+                    msg += 'old_material=\n%s\n' % str(self.materials[mid])
                     msg += 'new_materials=\n'
                     for mat, midi in zip(self._duplicate_materials, duplicate_mids):
                         if midi == mid:
-                            msg += mat.print_repr_card()
+                            msg += str(mat)
                     msg += '\n'
                     is_error = True
 
@@ -1366,12 +1366,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 uduplicate_mids = np.unique(duplicate_mids)
                 msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
-                    msg += 'old_thermal_material=\n%s\n' % (
-                        self.thermal_materials[mid].print_repr_card())
+                    msg += 'old_thermal_material=\n%s\n' % str(self.thermal_materials[mid])
                     msg += 'new_thermal_materials=\n'
                     for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
                         if midi == mid:
-                            msg += mat.print_repr_card()
+                            msg += str(mat)
                     msg += '\n'
                     is_error = True
 
@@ -1380,11 +1379,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 uduplicate_cids = np.unique(duplicate_cids)
                 msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
                 for cid in uduplicate_cids:
-                    msg += 'old_coord=\n%s\n' % self.coords[cid].print_repr_card()
+                    msg += 'old_coord=\n%s\n' % str(self.coords[cid])
                     msg += 'new_coords=\n'
                     for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
                         if cidi == cid:
-                            msg += coord.print_repr_card()
+                            msg += str(coord)
                     msg += '\n'
                     is_error = True
 
@@ -1965,6 +1964,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'RBE3' : (RBE3, self._add_rigid_element_object),
             'RROD' : (RROD, self._add_rigid_element_object),
             'RSPLINE' : (RSPLINE, self._add_rigid_element_object),
+            'RSSCON' : (RSSCON, self._add_rigid_element_object),
 
 
             ## there is no MAT6 or MAT7
@@ -2372,7 +2372,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _prepare_bctset(self, card, card_obj, comment=''):
         # type: (BDFCard, List[str], str) -> None
-        """adds a GRDSET"""
+        """adds a BCTSET"""
         card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
         self._add_bctset_object(card)
 
@@ -2504,24 +2504,24 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _prepare_nsm(self, card, card_obj, comment=''):
         """adds an NSM"""
-        class_instance = NSM.add_card(card_obj, icard=0, comment=comment)
-        self._add_nsm_object(class_instance)
-        if card_obj.field(5):
-            class_instance = NSM.add_card(card_obj, icard=1, comment=comment)
-            self._add_nsm_object(class_instance)
-        if card_obj.field(7):
-            class_instance = NSM.add_card(card_obj, icard=2, comment=comment)
+        nfields = len(card_obj)
+        ncards = (nfields - 3) // 2
+        nextra = (nfields - 3) % 2
+        assert nextra == 0, 'NSM error; nfields=%s must have an odd number of fields\ncard=%s' % (
+            nfields, card_obj)
+        for icard in range(ncards):
+            class_instance = NSM.add_card(card_obj, icard, comment=comment)
             self._add_nsm_object(class_instance)
 
     def _prepare_nsml(self, card, card_obj, comment=''):
         """adds an NSML"""
-        class_instance = NSML.add_card(card_obj, icard=0, comment=comment)
-        self._add_nsm_object(class_instance)
-        if card_obj.field(5):
-            class_instance = NSML.add_card(card_obj, icard=1, comment=comment)
-            self._add_nsm_object(class_instance)
-        if card_obj.field(7):
-            class_instance = NSML.add_card(card_obj, icard=2, comment=comment)
+        nfields = len(card_obj)
+        ncards = (nfields - 3) // 2
+        nextra = (nfields - 3) % 2
+        assert nextra == 0, 'NSML error; nfields=%s must have an odd number of fields\ncard=%s' % (
+            nfields, card_obj)
+        for icard in range(ncards):
+            class_instance = NSML.add_card(card_obj, icard, comment=comment)
             self._add_nsm_object(class_instance)
 
     def _prepare_pvisc(self, card, card_obj, comment=''):
@@ -2720,6 +2720,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _get_npoints_nids_allnids(self):
         """helper method for get_xyz_in_coord"""
+        if self.is_bdf_vectorized:
+            return self.nodes.nids
+
         nnodes = len(self.nodes)
         nspoints = 0
         nepoints = 0
@@ -3144,7 +3147,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         nid_cp_cd : (n, 3) int ndarray
             node id, CP, CD for each node
 
-        Example
+        Examples
         --------
         # assume GRID 1 has a CD=10, CP=0
         # assume GRID 2 has a CD=10, CP=0
@@ -3235,8 +3238,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                                    cid=0, in_place=False, atol=1e-6):
         # type: (Any, Any, int, bool, float) -> Any
         """
-        Working on faster method for calculating node locations
-        Not validated...
+        Vectorized method for calculating node locations in an arbitrary
+        coordinate system.
 
         Parameters
         ----------
@@ -3258,6 +3261,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         -------
         xyz_cid : (n, 3) float ndarray
             points in the CID coordinate system
+
+        Examples
+        --------
+        # assume GRID 1 has a CD=10, CP=0
+        # assume GRID 2 has a CD=10, CP=0
+        # assume GRID 5 has a CD=50, CP=1
+        >>> model.point_ids
+        [1, 2, 5]
+        >>> out = model.get_displacement_index_xyz_cp_cd()
+        >>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+        >>> nids = nid_cp_cd[:, 0]
+        >>> xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+                xyz_cp, nids, icp_transform,
+                cid=0)
+        >>> xyz_cid1 = model.transform_xyzcp_to_xyz_cid(
+                xyz_cp, nids, icp_transform,
+                cid=1)
 
         F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\heli112em7.dat
         """
@@ -3401,12 +3421,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         #else:
             #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 
-        xyz_cid_correct = self.get_xyz_in_coord(cid=cid)
-        if not np.allclose(xyz_cid, xyz_cid_correct, atol=atol):
-            #np.array_equal(xyz_cid, xyz_cid_correct):
-            msg = ('xyz_cid:\n%s\n'
-                   'xyz_cid_correct:\n%s'% (xyz_cid, xyz_cid_correct))
-            raise ValueError(msg)
+        if atol is not None:
+            xyz_cid_correct = self.get_xyz_in_coord(cid=cid)
+            if not np.allclose(xyz_cid, xyz_cid_correct, atol=atol):
+                #np.array_equal(xyz_cid, xyz_cid_correct):
+                msg = ('xyz_cid:\n%s\n'
+                       'xyz_cid_correct:\n%s'% (xyz_cid, xyz_cid_correct))
+                raise ValueError(msg)
         return xyz_cid
 
     def _transform(self, cps_to_check0, icp_transform,
@@ -3578,8 +3599,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
 
-        Example
-        -------
+        Examples
+        --------
         # assume GRID 1 has a CD=10
         # assume GRID 2 has a CD=10
         # assume GRID 5 has a CD=50
@@ -3608,22 +3629,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             icd_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
         return nids_all, nids_transform, icd_transform
 
-    def get_displacement_index_transforms(self):
-        """
-        Deprecated in v1.0
-        Removed in v1.1
+    #def get_displacement_index_transforms(self):
+        #"""
+        #Deprecated in v1.0
+        #Removed in v1.1
 
-        Old
-        ---
-        icd_transform, beta_transforms = model.get_displacement_index_transforms()
+        #Old
+        #---
+        #icd_transform, beta_transforms = model.get_displacement_index_transforms()
 
-        New
-        ---
-        nids_all, nids_transform, icd_transform = model.get_displacement_index()
-        """
-        self.deprecated(
-            'icd_transform, beta_transforms = model.get_displacement_index_transforms()',
-            'nids_all, nids_transform, icd_transform = model.get_displacement_index()', '1.0')
+        #New
+        #---
+        #nids_all, nids_transform, icd_transform = model.get_displacement_index()
+        #"""
+        #self.deprecated(
+            #'icd_transform, beta_transforms = model.get_displacement_index_transforms()',
+            #'nids_all, nids_transform, icd_transform = model.get_displacement_index()', '1.0')
 
     def _get_card_name(self, lines):
         # type: (List[str]) -> str

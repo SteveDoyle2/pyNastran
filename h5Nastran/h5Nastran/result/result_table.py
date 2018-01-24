@@ -3,12 +3,17 @@ from six import iteritems
 
 from collections import defaultdict
 from copy import deepcopy
+from typing import List
 
 import numpy as np
 import tables
+import pandas as pd
 
 from h5Nastran.msc import data_tables
 from ..punch import PunchTableData
+
+
+pd.options.mode.chained_assignment = None
 
 
 ########################################################################################################################
@@ -198,7 +203,10 @@ def _get_data(data, index):
 ########################################################################################################################
 
 
+# TODO: merge TableDef into ResultTable
 class TableDef(object):
+    
+    result_table_data = None  # type: ResultTableData
 
     @classmethod
     def create(cls, table_def, results_type, indices=None, validator=None, len_id=None, pos_id=None, subtables=None, rename=None,
@@ -323,19 +331,21 @@ class TableDef(object):
 
         self._subcase_ids = set()
 
-    def __deepcopy__(self, memodict=None):
-        from copy import copy
-        _copy = copy(self)
-        _copy.domain_count = 0
-        _copy._index_offset = 0
-        del _copy._index_data[:]
-        del _copy._subcase_index[:]
-        _copy._index_table = None
-        _copy._private_index_table = None
-
-        memodict[id(_copy)] = _copy
-
-        return _copy
+    # this doesn't work when creating multiple databases in same python run... I don't know why it was done to begin with
+    # works without it, so will be getting rid of it
+    # def __deepcopy__(self, memodict=None):
+    #     from copy import copy
+    #     _copy = copy(self)
+    #     _copy.domain_count = 0
+    #     _copy._index_offset = 0
+    #     del _copy._index_data[:]
+    #     del _copy._subcase_index[:]
+    #     _copy._index_table = None
+    #     _copy._private_index_table = None
+    #
+    #     memodict[id(_copy)] = _copy
+    #
+    #     return _copy
 
     def finalize(self):
         if self.is_subtable:
@@ -387,6 +397,8 @@ class TableDef(object):
                     if results_data[i] in data:
                         indices.add(i)
             results = results[sorted(indices)]
+            
+        results = self.result_table_data.from_records(results)
 
         return results
 
@@ -560,7 +572,10 @@ class TableDef(object):
 
         for i in range(len(counts)):
             d = i + 1
-            count = counts[d]
+            try:
+                count = counts[d]
+            except KeyError:
+                raise KeyError(str((d, counts)))
 
             row['DOMAIN_ID'] = d
             row['POSITION'] = pos
@@ -685,12 +700,24 @@ class TableData(object):
 class ResultTable(object):
     result_type = ''
     table_def = None  # type: TableDef
+    result_data_cols = []  # type: List[int]
+    result_data_group_by = []  # type: List[str]
 
     def __init__(self, h5n, parent):
         self._h5n = h5n
         self._parent = parent
         self._table_def = deepcopy(self.table_def)
         self._table_def.set_h5f(self._h5n.h5f)
+
+        class _ResultTableData(ResultTableData):
+            data_cols = pd.Index(self.result_data_cols)
+            data_group_by = list(self.result_data_group_by)
+
+            @property
+            def _constructor(self):
+                return _ResultTableData
+        
+        self._table_def.result_table_data = _ResultTableData
 
         if self.result_type is not None:
             self._h5n.register_result_table(self)
@@ -705,7 +732,10 @@ class ResultTable(object):
         return self._table_def.read(indices)
 
     def search(self, domains, data_ids, filter=None):
-        return self._table_def.search(domains, data_ids, filter)
+        try:
+            return self._table_def.search(domains, data_ids, filter)
+        except tables.exceptions.NoSuchNodeError:
+            return self._table_def.result_table_data()
 
     @property
     def results_type(self):
@@ -714,3 +744,110 @@ class ResultTable(object):
     @results_type.setter
     def results_type(self, value):
         self._table_def.results_type = value
+
+    def path(self):
+        return self._parent.path() + [self.__class__.__name__]
+
+    def read_h5_table(self):
+        path = '/'.join(self.path())
+
+        data = self._h5n.h5f.get_node(path).read()
+
+        return data
+
+
+########################################################################################################################
+
+
+class ResultTableData(pd.DataFrame):
+    _metadata = ['data_cols', 'data_group_by']
+
+    data_cols = []  # List[str]
+    data_group_by = []  # List[str]
+
+    @property
+    def _constructor(self):
+        return ResultTableData
+
+    def _data_group_by(self):
+        if len(self.data_group_by) == 0:
+            keys = list(self.keys())
+            self.__class__.data_group_by = [keys[0], keys[-1]]
+
+        return self.data_group_by
+
+    def _data_cols(self):
+        if len(self.data_cols) == 0:
+            self.__class__.data_cols = self.select_dtypes(include=['float']).columns
+
+        return self.data_cols
+
+    def __truediv__(self, other):
+        assert other != 0.
+        return self.__mul__(1 / other)
+
+    def __div__(self, other):
+        return self.__truediv__(other)
+
+    def __itruediv__(self, other):
+        assert other != 0.
+        return self.__imul__(1 / other)
+
+    def __idiv__(self, other):
+        return self.__itruediv__(other)
+
+    def __mul__(self, other):
+        assert isinstance(other, (float, int))
+        result = self.copy(deep=True)
+
+        for i in self._data_cols():
+            result[i] *= other
+
+        return result
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __imul__(self, other):
+        assert isinstance(other, (float, int))
+
+        for i in self._data_cols():
+            self[i] *= other
+
+        return self
+
+    def __add__(self, other):
+        assert np.all(other.dtypes == self.dtypes)
+        result = self.copy(deep=True).append(other)
+        data_group_by = self._data_group_by()
+        result = result.groupby(data_group_by, as_index=False).sum()
+        result.sort_values(list(reversed(data_group_by)), inplace=True)
+        result = self.__class__(result[self.keys()])
+        return result
+    
+    def __sub__(self, other):
+        assert np.all(other.dtypes == self.dtypes)
+        result = self.copy(deep=True).append(-1 * other)
+        data_group_by = self._data_group_by()
+        result = result.groupby(data_group_by, as_index=False).sum()
+        result.sort_values(list(reversed(data_group_by)), inplace=True)
+        result = self.__class__(result[self.keys()])
+        return result
+
+    def __rsub__(self, other):
+        raise NotImplementedError
+
+    def __iadd__(self, other):
+        raise NotImplementedError
+    
+    def __isub__(self, other):
+        raise NotImplementedError
+
+    def __radd__(self, other):
+        raise NotImplementedError
+
+    def __rtruediv__(self, other):
+        raise NotImplementedError
+
+    def __rdiv__(self, other):
+        return NotImplementedError

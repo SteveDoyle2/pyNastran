@@ -892,7 +892,8 @@ class TestBeams(unittest.TestCase):
         so = ['YES', 'YES']
 
         area = [2.0, 2.0]
-        i1 = i2 = i12 = j = [0., 0.]
+        i1 = i2 = j = [0.1, 0.1]
+        i12 = [0.01, 0.01]
         c1 = c2 = d1 = d2 = e1 = e2 = f1 = f2 = [0., 0.]
         pbeam = model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
                                c1, c2, d1, d2,
@@ -905,6 +906,8 @@ class TestBeams(unittest.TestCase):
                                m1b=0., m2b=None,
                                n1a=0., n2a=None,
                                n1b=0., n2b=None, comment='')
+        pbeam.validate()
+
         E = 1.0
         G = None
         nu = 0.3
@@ -931,6 +934,7 @@ class TestBeams(unittest.TestCase):
         mat1.rho = 10.0
         assert pbeam.MassPerLength() == 21.0, pbeam.MassPerLength()
         assert pbeam2.MassPerLength() == 21.0, pbeam2.MassPerLength()
+        save_load_deck(model)
 
     def test_pbeaml_nsm(self):
         """tests the PBEAML with non structural mass"""
@@ -972,6 +976,7 @@ class TestBeams(unittest.TestCase):
         mat1.rho = 10.0
         assert pbeaml.MassPerLength() == 21.0, pbeaml.MassPerLength()
         assert pbeaml2.MassPerLength() == 21.0, pbeaml2.MassPerLength()
+        save_load_deck(model)
 
     def test_pbcomp(self):
         """tests a PBCOMP"""

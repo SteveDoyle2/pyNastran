@@ -173,7 +173,7 @@ class BSURFS(BaseCard):
 
         n = card.nfields - 5
         i = 0
-        j = 0
+        j = 1
         while i < n:
             eid = integer(card, 5 + i, 'eid%s' % j)
             g1 = integer(card, 5 + i + 1, 'g3_%s' % j)
@@ -327,7 +327,7 @@ class BCRPARA(BaseCard):
         """
         crid = integer(card, 1, 'crid')
         surf = string_or_blank(card, 2, 'surf', 'TOP')
-        offset = double_or_blank(card, 3, None)
+        offset = double_or_blank(card, 3, 'offset', None)
         Type = string_or_blank(card, 4, 'type', 'FLEX')
         mgp = integer_or_blank(card, 5, 'mpg', 0)
         return BCRPARA(crid, surf=surf, offset=offset, Type=Type, mgp=mgp, comment=comment)
@@ -480,7 +480,7 @@ class BCTADD(BaseCard):
        BCTADD entry.
     """
     type = 'BCTADD'
-    def __init__(self, csid, S, comment=''):
+    def __init__(self, csid, contact_sets, comment=''):
         if comment:
             self.comment = comment
         #: Contact set identification number. (Integer > 0)
@@ -488,7 +488,7 @@ class BCTADD(BaseCard):
 
         #: Identification numbers of contact sets defined via BCTSET entries.
         #: (Integer > 0)
-        self.S = S
+        self.contact_sets = contact_sets
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -503,19 +503,19 @@ class BCTADD(BaseCard):
             a comment for the card
         """
         csid = integer(card, 1, 'csid')
-        S = []
+        contact_sets = []
 
         i = 1
         j = 1
         while i < card.nfields:
-            s = integer(card, i, 'S%i' % j)
-            S.append(s)
+            contact_set = integer(card, i, 'S%i' % j)
+            contact_sets.append(contact_set)
             i += 1
             j += 1
-        return BCTADD(csid, S, comment=comment)
+        return BCTADD(csid, contact_sets, comment=comment)
 
     def raw_fields(self):
-        fields = ['BCTADD'] + self.S
+        fields = ['BCTADD'] + self.contact_sets
         return fields
 
     def write_card(self, size=8, is_double=False):

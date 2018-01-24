@@ -67,15 +67,18 @@ def get_abs_index(data, axis=1):
     """
     Gets the maximum absolute value of a 2D matrix along an axis
 
-    Example
-    -------
+    Examples
+    --------
     >>> data = [
             [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
             [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
         ]
     >>> max_values, index = get_min_index(data, axis=1)
-    >>> out   = [4.1, 2.2, 3.1, 5.1, 2.2]
-    >>> index = [1, 0, 1, 1, 0]
+    >>> out
+    [4.1, 2.2, 3.1, 5.1, 2.2]
+
+    >>> index
+    [1, 0, 1, 1, 0]
     """
     nvalues = data.shape[axis]
     # isubcase, nelements
@@ -89,15 +92,18 @@ def get_max_index(data, axis=1):
     """
     Gets the maximum values of a 2D matrix along an axis
 
-    Example
-    -------
+    Examples
+    --------
     >>> data = [
             [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
             [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
         ]
-    >>> max_values, index = get_min_index(data, axis=1)
-    >>> out   = [4.1, 2.2, 3.1, 5.1, 2.2]
-    >>> index = [1, 0, 1, 1, 0]
+    >>> max_values, index = get_max_index(data, axis=1)
+    >>> out
+    [4.1, 2.2, 3.1, 5.1, 2.2]
+
+    >>> index
+    [1, 0, 1, 1, 0]
     """
     nvalues = data.shape[axis]
     # isubcase, nelements
@@ -111,15 +117,18 @@ def get_min_index(data, axis=1):
     """
     Gets the minimum values of a 2D matrix along an axis
 
-    Example
-    -------
+    Examples
+    --------
     >>> data = [
             [4.0, 2.2, 3.0, 5.0, 2.2]  # subcase 1
             [4.1, 2.1, 3.1, 5.1, 2.1], # subcase 2
         ]
     >>> min_values, index = get_min_index(data, axis=1)
-    >>> out   = [4.0, 2.1, 3.0, 5.0, 2.1]
-    >>> index = [0, 1, 0, 0, 1]
+    >>> out
+    [4.0, 2.1, 3.0, 5.0, 2.1]
+
+    >>> index
+    [0, 1, 0, 0, 1]
     """
     nvalues = data.shape[axis]
     axis2 = abs(axis - 1)

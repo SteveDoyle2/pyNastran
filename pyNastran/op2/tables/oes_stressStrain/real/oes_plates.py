@@ -241,7 +241,7 @@ class RealPlateArray(OES_Object):
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n' % self.element_name)
-        msg.append('  s_code: %s\n  ' % self.s_code)
+        msg.append('  s_code: %s\n' % self.s_code)
         msg += self.get_data_code()
         return msg
 

@@ -44,10 +44,6 @@ class Constraint(BaseCard):
     def __init__(self):
         pass
 
-    #def raw_fields(self):
-        #fields = [self.type, self.conid]
-        #return fields
-
     def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes, allow_empty_nodes, msg)
@@ -183,7 +179,7 @@ class SUPORT1(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SUPORT1=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -256,23 +252,20 @@ class SUPORT(Constraint):
         comment : str; default=''
             a comment for the card
         """
-        # TODO: remove fields...
-        #fields = card.fields(1)
-
         nfields = len(card)
         assert len(card) > 1, card
         nterms = int(nfields / 2.)
         n = 1
         nodes = []
-        Cs = []
+        components = []
         for i in range(nterms):
             nstart = 1 + 2 * i
             nid = integer(card, nstart, 'ID%s' % n)
-            C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
+            componentsi = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
             nodes.append(nid)
-            Cs.append(C)
+            components.append(componentsi)
             n += 1
-        return SUPORT(nodes, Cs, comment=comment)
+        return SUPORT(nodes, components, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -288,11 +281,11 @@ class SUPORT(Constraint):
         """
         fields = data
         nodes = []
-        Cs = []
+        components = []
         for i in range(0, len(fields), 2):
             nodes.append(fields[i])
-            Cs.append(fields[i + 1])
-        return SUPORT(nodes, Cs, comment=comment)
+            components.append(fields[i + 1])
+        return SUPORT(nodes, components, comment=comment)
 
     @property
     def node_ids(self):
@@ -322,7 +315,7 @@ class SUPORT(Constraint):
             except KeyError:
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SUPORT' % nid
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -534,7 +527,7 @@ class MPC(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.nodes_ref = nids2
@@ -556,8 +549,7 @@ class MPC(Constraint):
         """see BaseCard.write_card``"""
         if size == 8:
             return self.write_card_8()
-        else:
-            return self.write_card_16(is_double)
+        return self.write_card_16(is_double)
 
     def write_card_8(self):
         msg = 'MPC     %8s' % self.conid
@@ -748,7 +740,7 @@ class SPC(Constraint):
                 if debug:
                     msg = 'Couldnt find nid=%i, which is required by SPC=%s' % (
                         nid, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             nids2.append(nid2)
         self.gids_ref = nids2
@@ -1026,17 +1018,17 @@ class SPC1(Constraint):
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPC1=%s' % self.conid
+        missing_nids = []
         for nid in self.node_ids:
             try:
-                nid2 = model.Node(nid, msg=msg)
+                nid2 = model.Node(nid)
             except KeyError:
-                if debug:
-                    msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
-                        nid, self.conid)
-                    print(msg)
+                missing_nids.append(str(nid))
                 continue
             nids2.append(nid2)
+        if missing_nids and debug:
+            model.log.warning("Couldn't find nids=[%s], which is required by SPC1=%s" % (
+                ', '.join(missing_nids), self.conid))
         self.nodes_ref = nids2
 
     def uncross_reference(self):
@@ -1156,22 +1148,23 @@ class SPCOFF(Constraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by SPCOFF=%s' % (self.conid)
+        msg = ', which is required by SPCOFF'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPCOFF=%s' % (self.conid)
+        missing_nids = []
         for nid in self.node_ids:
             try:
-                nid2 = model.Node(nid, msg=msg)
+                nid2 = model.Node(nid)
             except KeyError:
-                if debug:
-                    msg = 'Couldnt find nid=%i, which is required by SPCOFF=%s' % (
-                        nid, self.conid)
-                    print(msg)
+                missing_nids.append(str(nid))
                 continue
             nids2.append(nid2)
+
+        if missing_nids and debug:
+            model.log.warning("Couldn't find nids=[%s], which is required by SPCOFF" % (
+                ', '.join(missing_nids)))
         self.nodes_ref = nids2
 
     def uncross_reference(self):
@@ -1266,22 +1259,23 @@ class SPCOFF1(Constraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by SPCOFF1; conid=%s' % (self.conid)
+        msg = ', which is required by SPCOFF1'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def safe_cross_reference(self, model, debug=True):
         nids2 = []
-        msg = ' which is required by SPCOFF1=%s' % (self.conid)
+        missing_nids = []
         for nid in self.node_ids:
             try:
-                nid2 = model.Node(nid, msg=msg)
+                nid2 = model.Node(nid)
             except KeyError:
-                if debug:
-                    msg = 'Couldnt find nid=%i, which is required by SPC1=%s' % (
-                        nid, self.conid)
-                    print(msg)
+                missing_nids.append(str(nid))
                 continue
             nids2.append(nid2)
+
+        if missing_nids and debug:
+            model.log.warning("Couldn't find nids=[%s], which is required by SPCOFF1" % (
+                ', '.join(missing_nids)))
         self.nodes_ref = nids2
 
     def uncross_reference(self):
@@ -1399,7 +1393,7 @@ class SPCADD(ConstraintAdd):
                 if debug:
                     msg = 'Couldnt find SPC=%i, which is required by SPCADD=%s' % (
                         spc_id, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             self.sets_ref.append(spc)
 
@@ -1510,7 +1504,7 @@ class MPCADD(ConstraintAdd):
                 if debug:
                     msg = 'Couldnt find MPC=%i, which is required by MPCADD=%s' % (
                         mpc_id, self.conid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             self.sets_ref.append(mpc)
 

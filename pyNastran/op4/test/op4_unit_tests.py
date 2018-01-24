@@ -169,9 +169,11 @@ class TestOP4(unittest.TestCase):
             wb = 'wb'
         else:
             wb = 'w'
-        with open(os.path.join(OP4_PATH, 'file_ascii.op4'), wb) as op4_file:
+        op4_filename = os.path.join(OP4_PATH, 'file_ascii.op4')
+        with open(op4_filename, wb) as op4_file:
             op4.write_op4(op4_file, matrices, name_order='A1', precision='default',
                           is_binary=False)
+        os.remove(op4_filename)
 
     @staticmethod
     def test_file_obj_binary():
@@ -181,9 +183,11 @@ class TestOP4(unittest.TestCase):
         matrices = {
             'A1': (form1, A1),
         }
-        with open(os.path.join(OP4_PATH, 'file_binary.op4'), 'wb') as op4_file:
+        op4_filename = os.path.join(OP4_PATH, 'file_binary.op4')
+        with open(op4_filename, 'wb') as op4_file:
             op4.write_op4(op4_file, matrices, name_order='A1', precision='default',
                           is_binary=True)
+        os.remove(op4_filename)
 
     def test_square_matrices_1(self):
         """tests reading/writing square matrices (A1, A2, A3)"""
@@ -270,7 +274,7 @@ class TestOP4(unittest.TestCase):
                 op4.endian = '>'
                 #if 't' in fname:
                 #else:
-                    #f = open('binary.op4','wb')
+                    #f = open('binary.op4', 'wb')
                 op4_filename = os.path.join(OP4_PATH, op4_filename)
                 matrices = op4.read_op4(op4_filename, matrix_names=matrix_names,
                                         precision='default')
@@ -283,6 +287,8 @@ class TestOP4(unittest.TestCase):
                         op4.write_op4(op4_fileb, matrices, name_order=name,
                                       is_binary=True)
 
+        os.remove('ascii.op4')
+        os.remove('binary.op4')
 
 def get_matrices():
     """creates dummy matrices"""
@@ -318,8 +324,6 @@ def get_matrices():
         [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='float32') # f?
     return strings
-
-
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -205,13 +205,21 @@ class SuperABCQSet(Set):
         self.components = components
         self.ids_ref = None
 
+    def validate(self):
+        assert isinstance(self.ids, list), type(self.ids)
+        assert isinstance(self.components, list), type(self.components)
+        assert len(self.ids) == len(self.components), 'len(ids)=%s len(components)=%s' % (len(self.ids), len(self.components))
+
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
         ids = []
         components = []
 
-        nterms = len(card) // 2
+        nfields = len(card)
+        nterms = nfields // 2 - 1
+        delta = nfields % 2
+        assert delta == 0, 'The number of fields must be even; nfields=%s\ncard=%s' % (nfields, card)
         for n in range(nterms):
             i = n * 2 + 2
             idi = integer(card, i, 'ID' + str(n))
@@ -1065,12 +1073,8 @@ class SET3(Set):
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
     |      | ID7 |  ID8  | etc |     |     |     |     |     |
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
-
-    Example
-
-    +------+-----+-------+-----+----+
-    | SET3 |  1  | POINT | 11  | 12 |
-    +------+-----+-------+-----+----+
+    | SET3 |  1  | POINT | 11  | 12  |     |     |     |     |
+    +------+-----+-------+-----+-----+-----+-----+-----+-----+
     """
     type = 'SET3'
     valid_descs = ['GRID', 'POINT', 'ELEMENT', 'PROP', 'RBEIN', 'RBEEX']
@@ -1302,6 +1306,21 @@ class SEBSET(SuperABCQSet):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SEBSET1(SuperABQSet1):
+    """
+    Defines boundary degrees-of-freedom to be fixed (b-set) during
+    generalized dynamic reduction or component mode synthesis
+    calculations.
+
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    |    1     |  2   |  3  |   4  |   5  |  6  |  7  |  8  |  9  |
+    +==========+======+=====+======+======+=====+=====+=====+=====+
+    | SEBSET1  | SEID |  C  | ID1  | ID2  | ID3 | ID4 | ID5 | ID6 |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    |          | ID7  | ID9 |      |      |     |     |     |     |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    | SEBSET1  | SEID |  C  | ID1  | THRU | ID2 |     |     |     |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    """
     type = 'SEBSET1'
 
     def __init__(self, seid, ids, components, comment=''):
@@ -1315,6 +1334,19 @@ class SECSET(SuperABCQSet):
         SuperABCQSet.__init__(self, seid, ids, components, comment)
 
 class SECSET1(SuperABQSet1):
+    """
+    Defines SECSET1
+
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    |    1     |  2   |  3  |   4  |   5  |  6  |  7  |  8  |  9  |
+    +==========+======+=====+======+======+=====+=====+=====+=====+
+    | SECSET1  | SEID |  C  | ID1  | ID2  | ID3 | ID4 | ID5 | ID6 |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    |          | ID7  | ID9 |      |      |     |     |     |     |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    | SECSET1  | SEID |  C  | ID1  | THRU | ID2 |     |     |     |
+    +----------+------+-----+------+------+-----+-----+-----+-----+
+    """
     type = 'SECSET1'
 
     def __init__(self, seid, ids, components, comment=''):
@@ -1582,19 +1614,19 @@ class USET1(ABQSet1):
         comment : str; default=''
             a comment for the card
         """
-        ABQSet1.__init__(self)
-        if comment:
-            self.comment = comment
+        ABQSet1.__init__(self, ids, components, comment=comment)
+        #if comment:
+            #self.comment = comment
         self.name = name
 
         #:  Component number. (Integer zero or blank for scalar points or any
         #:  unique combination of the Integers 1 through 6 for grid points with
         #:  no embedded blanks.)
-        self.components = components
+        #self.components = components
 
         #:  Identifiers of grids points. (Integer > 0)
-        self.ids = expand_thru(ids)
-        self.ids_ref = None
+        #self.ids = expand_thru(ids)
+        #self.ids_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):

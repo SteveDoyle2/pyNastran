@@ -162,8 +162,10 @@ class TestAero(unittest.TestCase):
         msg = '$this is a bad comment\nAEFACT        97      .3      .7      1.\n'
         aefact97 = model.aefacts[97]
         aefact98 = model.aefacts[98]
-        self.assertTrue(all(aefact97.Di == [.3, .7, 1.0]))
+        self.assertTrue(all(aefact97.fractions == [.3, .7, 1.0]))
+        self.assertTrue(all(aefact98.fractions == [.3, .7, 1.0]))
         self.assertTrue(all(aefact98.Di == [.3, .7, 1.0]))
+        self.assertTrue(all(aefact98.data == [.3, .7, 1.0]))
 
         out = aefact97.write_card(8, None)
         self.assertEqual(msg, out)
@@ -203,6 +205,8 @@ class TestAero(unittest.TestCase):
         independent_labels = ['A', 'B', 'C']
         Cis = [1.0, 2.0]
         aelink = AELINK(idi, label, independent_labels, Cis, comment='')
+        assert aelink.aelink_id == idi
+        assert aelink.id == idi
         with self.assertRaises(RuntimeError):
             aelink.validate()
         str(aelink)
@@ -271,14 +275,20 @@ class TestAero(unittest.TestCase):
 
     def test_aeparm_1(self):
         """checks the AEPARM card"""
-        aeparm = AEPARM.add_card(BDFCard(['AEPARM', 100, 'THRUST', 'lb']),
+        aeparm_id = 100
+        aeparm = AEPARM.add_card(BDFCard(['AEPARM', aeparm_id, 'THRUST', 'lb']),
                                  comment='aeparm_comment')
-        aeparm = AEPARM(100, 'THRUST', 'lb', comment='aeparm_comment')
+
+        model = BDF(debug=False)
+        aeparm = model.add_aeparm(aeparm_id, 'THRUST', 'lb', comment='aeparm_comment')
+        assert aeparm.aeparm_id == aeparm_id
+        assert aeparm.id == aeparm_id
         aeparm.validate()
         aeparm.cross_reference(None)
         aeparm.uncross_reference()
         aeparm.safe_cross_reference(None)
         aeparm.write_card()
+        save_load_deck(model)
 
    # def test_aestat_1(self):
    # def test_aesurf_1(self):
@@ -2085,6 +2095,36 @@ class TestAero(unittest.TestCase):
                 run_extract_bodies=True, nerrors=0, dev=True,
                 crash_cards=None, pickle_obj=True)
 
+    def test_rotord(self):
+        model = BDF(debug=False)
+
+        sid = 42
+        rstart = 3.14
+        rstep = .314
+        numstep = 10
+        rids = [None]
+        rsets = [-31]
+        rcords = [10]
+        w3s = [13.]
+        w4s = [3.]
+        rforces = [14]
+        brgsets = [17, False]
+        rspeeds = [42.1]
+        rotord = model.add_rotord(
+            sid, rstart, rstep, numstep,
+            rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
+            refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
+            zstein='NO', orbeps=1.e-6, roprt=0, sync=1, etype=1,
+            eorder=1.0, threshold=0.02, maxiter=10, comment='rotord')
+        rotord.validate()
+
+        sid = 43
+        nids = [100, 101, 102]
+        rotorg = model.add_rotorg(
+            sid, nids, comment='rotorg'
+        )
+        rotorg.validate()
+        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

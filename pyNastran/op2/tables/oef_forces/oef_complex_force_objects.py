@@ -148,7 +148,7 @@ class ComplexRodForceArray(ScalarObject):
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -384,7 +384,7 @@ class ComplexCShearForceArray(ScalarObject):
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -613,7 +613,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -830,7 +830,7 @@ class ComplexViscForceArray(ScalarObject):
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1045,7 +1045,7 @@ class ComplexPlateForceArray(ScalarObject):
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1289,7 +1289,7 @@ class ComplexPlate2ForceArray(ScalarObject):
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1529,7 +1529,7 @@ class ComplexCBarForceArray(ScalarObject):
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
-        msg.append('  CBAR\n  ')
+        msg.append('  CBAR\n')
         msg += self.get_data_code()
         return msg
 
@@ -1823,7 +1823,7 @@ class ComplexCBeamForceArray(ScalarObject):
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
-        msg.append('  CBEAM\n  ')
+        msg.append('  CBEAM\n')
         msg += self.get_data_code()
         return msg
 
@@ -2086,7 +2086,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -2305,7 +2305,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -2525,7 +2525,7 @@ class ComplexCBushForceArray(ScalarObject):
         msg.append('  data: [ntimes, nelements, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         # msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
-        msg.append('  CBUSH\n  ')
+        msg.append('  CBUSH\n')
         msg += self.get_data_code()
         return msg
 
@@ -2998,7 +2998,7 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             self.add = self.add_sort2
 
     def get_stats(self, short=False):
-        msg = ['  '] + self.get_data_code()
+        msg = [''] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
             ntimes = len(self.membraneX)

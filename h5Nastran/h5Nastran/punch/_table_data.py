@@ -22,6 +22,7 @@ class PunchHeaderData(object):
         self.subtitle = ''
         self.label = ''
         self._subcase_id = ''
+        self._random_id = ''
         self._results_type = ''
         self.real_output = False
         self.other = {}
@@ -45,6 +46,10 @@ class PunchHeaderData(object):
             self.label = line.split('=')[1].strip()
         elif line.startswith('$SUBCASE ID'):
             self._subcase_id = line.split('=')[1].strip()
+            self._random_id = None
+        elif line.startswith('$RANDOM ID'):
+            self._random_id = line.split('=')[1].strip()
+            self._subcase_id = None
         elif line.startswith('$REAL OUTPUT'):
             self.real_output = True
         # elif line.startswith('$ELEMENT TYPE'):
@@ -77,6 +82,7 @@ class PunchHeaderData(object):
 
         if self.real_output:
             return '%s REAL' % results_type
+
         else:
             return '%s COMPLEX' % results_type
 

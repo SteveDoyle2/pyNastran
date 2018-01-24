@@ -86,11 +86,11 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     debug : bool
         True/False (used if log is not defined)
 
-    Example
-    -------
-    cart3d_filename = 'threePlugs.tri'
-    bdf_filename = 'threePlugs.bdf'
-    cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
+    Examples
+    --------
+    >>> cart3d_filename = 'threePlugs.tri'
+    >>> bdf_filename = 'threePlugs.bdf'
+    >>> cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
     """
     if isinstance(cart3d_filename, Cart3D):
         cart3d = cart3d_filename

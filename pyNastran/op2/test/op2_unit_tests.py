@@ -1,8 +1,6 @@
 from __future__ import print_function
 import os
 import unittest
-#import warnings
-
 from six import iteritems
 import numpy as np
 try:
@@ -32,8 +30,8 @@ from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min_vector
 
-TEST_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.abspath(os.path.join(TEST_PATH, '..', 'models'))
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
 
 
 class TestOP2(Tester):
@@ -139,11 +137,11 @@ class TestOP2(Tester):
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""
         bdf_filename = os.path.abspath(os.path.join(
-            TEST_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
         f06_filename = os.path.abspath(os.path.join(
-            TEST_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
+            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
         op2_filename = os.path.abspath(os.path.join(
-            TEST_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+            PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
         op2 = read_op2_geom(op2_filename, xref=False, debug=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -178,7 +176,7 @@ class TestOP2(Tester):
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
             write_f06=True, write_op2=False,
-            write_xlsx=False, is_mag_phase=False,
+            is_mag_phase=False,
             is_sort2=False, is_nx=None, delete_f06=True,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=True,
@@ -190,7 +188,7 @@ class TestOP2(Tester):
         op2, is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False,
-            write_xlsx=False, is_mag_phase=False,
+            is_mag_phase=False,
             is_sort2=False, is_nx=None, delete_f06=True,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=True,
@@ -213,7 +211,7 @@ class TestOP2(Tester):
         #os.remove(f06_filename)
         run_op2(op2_filename, make_geom=True, write_bdf=True,
                 write_f06=True, write_op2=False,
-                write_xlsx=False, is_mag_phase=False,
+                is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
@@ -233,7 +231,7 @@ class TestOP2(Tester):
 
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
-                write_xlsx=False, is_mag_phase=False,
+                is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
@@ -255,7 +253,7 @@ class TestOP2(Tester):
 
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
-                write_xlsx=False, is_mag_phase=False,
+                is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
@@ -277,7 +275,7 @@ class TestOP2(Tester):
 
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
-                write_xlsx=False, is_mag_phase=False,
+                is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
@@ -299,7 +297,7 @@ class TestOP2(Tester):
 
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
-                write_xlsx=False, is_mag_phase=False,
+                is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
@@ -341,7 +339,7 @@ class TestOP2(Tester):
         write_f06 = True
         debug = False
         #debug_file = 'solid_bending.debug.out'
-        model, ext = os.path.splitext(op2_filename)
+        model = os.path.splitext(op2_filename)[0]
         debug_file = model + '.debug.out'
 
         if os.path.exists(debug_file):
@@ -374,7 +372,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'solid_bending.op2')
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -407,7 +405,7 @@ class TestOP2(Tester):
         f06_filename = os.path.join(folder, 'static_solid_shell_bar.test_op2.f06')
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -423,7 +421,7 @@ class TestOP2(Tester):
         subcases = [1]
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -441,7 +439,7 @@ class TestOP2(Tester):
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -473,7 +471,7 @@ class TestOP2(Tester):
         subcases = 2
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -485,7 +483,7 @@ class TestOP2(Tester):
         subcases = 2
         op2, is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -497,7 +495,7 @@ class TestOP2(Tester):
         subcases = [1, 2]
         op2, is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -513,7 +511,7 @@ class TestOP2(Tester):
         f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
-            write_f06=False, write_op2=False, write_xlsx=False,
+            write_f06=False, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -530,7 +528,7 @@ class TestOP2(Tester):
         op2 = read_op2_geom(op2_filename, debug=False)
         op2, is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
-            write_f06=False, write_op2=False, write_xlsx=False,
+            write_f06=False, write_op2=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -1034,7 +1032,6 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    #@unittest.expectedFailure
     def test_op2_solid_shell_bar_freq(self):
         """tests sol_101_elements/freq_solid_shell_bar.op2"""
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
