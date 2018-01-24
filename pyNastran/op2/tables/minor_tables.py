@@ -30,7 +30,6 @@ Defines various tables that don't fit in other sections:
 
 from __future__ import print_function, unicode_literals
 from struct import unpack
-from six import b
 import numpy as np
 import scipy  # type: ignore
 from pyNastran.op2.tables.matrix import Matrix
@@ -232,7 +231,7 @@ class MinorTables(OP2Common):
 
         nfloats = (ndata - 8) // 4
         assert nfloats * 4 == (ndata - 8)
-        fmt = b(self._uendian + '%sf' % nfloats)
+        fmt = self._endian + b'%sf' % nfloats
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
         self._frequencies = freqs
         if self.is_debug_file:
@@ -899,19 +898,19 @@ class MinorTables(OP2Common):
         if tout == 1:
             nfloats = nvalues
             nterms = nvalues
-            fmt = b(self._uendian + 'i %if' % nfloats)
+            fmt = self._endian + b'i %if' % nfloats
         elif tout == 2:
             nfloats = nvalues // 2
             nterms = nvalues // 2
-            fmt = b(self._uendian + 'i %id' % nfloats)
+            fmt = self._endian + b'i %id' % nfloats
         elif tout == 3:
             nfloats = nvalues
             nterms = nvalues // 2
-            fmt = b(self._uendian + 'i %if' % nfloats)
+            fmt = self._endian + b'i %if' % nfloats
         elif tout == 4:
             nfloats = nvalues // 2
             nterms = nvalues // 4
-            fmt = b(self._uendian + 'i %id' % nfloats)
+            fmt = self._endian + b'i %id' % nfloats
         else:
             raise RuntimeError('tout = %s' % tout)
         return fmt, nfloats, nterms

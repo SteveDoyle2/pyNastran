@@ -58,7 +58,7 @@ import os
 from struct import unpack, Struct
 from collections import Counter
 from typing import List
-from six import string_types, iteritems, PY2, PY3, b
+from six import string_types, iteritems, PY2, PY3
 from six.moves import range
 
 from numpy import array
