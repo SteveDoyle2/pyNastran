@@ -1,6 +1,7 @@
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, RBE1, RBE2, RBE3
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 bdf = BDF(debug=False)
 class TestRigid(unittest.TestCase):
@@ -102,7 +103,6 @@ class TestRigid(unittest.TestCase):
             'RBE1       10201   10201     123   10202     456',
             '              UM   10201     456   10202     123'
         ]
-
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
@@ -132,8 +132,6 @@ class TestRigid(unittest.TestCase):
             '                    1009     123    1010     123    1011     123',
             '                    1012     123',
         ]
-
-
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
@@ -156,7 +154,6 @@ class TestRigid(unittest.TestCase):
             'RBE1          46       3  123456',
             '              UM       4  123456       5  123456 .000002'
         ]
-
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
@@ -164,6 +161,37 @@ class TestRigid(unittest.TestCase):
         for actual, expected in zip(lines_actual, lines_expected):
             self.assertEqual(actual, expected, msg)
 
+    def test_rsscon(self):
+        model = BDF(debug=False)
+        eid = 100
+        shell_eid = 1
+        solid_eid = 2
+        model.add_rsscon(
+            eid, 'ELEM',
+            shell_eid=shell_eid, solid_eid=solid_eid,
+            a_solid_grids=None, b_solid_grids=None, shell_grids=None,
+            comment='rsscon')
+
+        eid = 101
+        shell_grids = [31]
+        a_solid_grids = [74]
+        b_solid_grids = [75]
+        model.add_rsscon(
+            eid, 'GRID',
+            shell_eid=None, solid_eid=None,
+            a_solid_grids=a_solid_grids, b_solid_grids=b_solid_grids, shell_grids=shell_grids,
+            comment='rsscon')
+
+        eid = 102
+        shell_grids = [11, 14]
+        a_solid_grids = [12, 15]
+        b_solid_grids = [13, 16]
+        model.add_rsscon(
+            eid, 'GRID',
+            shell_eid=None, solid_eid=None,
+            a_solid_grids=b_solid_grids, b_solid_grids=b_solid_grids, shell_grids=shell_grids,
+            comment='rsscon')
+        save_load_deck(model, punch=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

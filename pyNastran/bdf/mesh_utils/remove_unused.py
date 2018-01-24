@@ -280,7 +280,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 prop = model.properties[pid]
                 mids_used.update(mids)
 
-        elif card_type in ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE']:
+        elif card_type in ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON']:
             for eid in ids:
                 elem = model.rigid_elements[eid]
                 #print(elem.object_attributes())

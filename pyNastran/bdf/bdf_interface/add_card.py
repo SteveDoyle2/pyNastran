@@ -28,7 +28,7 @@ from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
@@ -5218,6 +5218,35 @@ class AddCards(AddMethods):
         """
         elem = RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
                        diameter_ratio=diameter_ratio, comment=comment)
+        self._add_rigid_element_object(elem)
+        return elem
+
+    def add_rsscon(self, eid, rigid_type,
+                   shell_eid=None, solid_eid=None,
+                   a_solid_grids=None, b_solid_grids=None, shell_grids=None,
+                   comment=''):
+        """
+        Creates an RSSCON card, which defines multipoint constraints to
+        model clamped connections of shell-to-solid elements.
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        rigid_type : str
+            GRID/ELEM
+        shell/solid_eid : int; default=None
+            the shell/solid element id (if rigid_type=ELEM)
+        shell/solid_grids : List[int, int]; default=None
+            the shell/solid node ids (if rigid_type=GRID)
+        comment : str; default=''
+            a comment for the card
+        """
+        elem = RSSCON(eid, rigid_type,
+                      shell_eid=shell_eid, solid_eid=solid_eid,
+                      a_solid_grids=a_solid_grids, b_solid_grids=b_solid_grids,
+                      shell_grids=shell_grids,
+                      comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 

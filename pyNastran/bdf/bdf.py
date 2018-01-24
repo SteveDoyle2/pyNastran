@@ -47,7 +47,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.elements.solid import (CIHEX1, CIHEX2,
                                                 CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
                                                 CTETRA10, CPYRAM13, CPENTA15, CHEXA20)
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
@@ -387,7 +387,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'CGAP',
 
             ## rigid_elements
-            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE',
+            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON',
 
             ## plotels
             'PLOTEL',
@@ -1964,6 +1964,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'RBE3' : (RBE3, self._add_rigid_element_object),
             'RROD' : (RROD, self._add_rigid_element_object),
             'RSPLINE' : (RSPLINE, self._add_rigid_element_object),
+            'RSSCON' : (RSSCON, self._add_rigid_element_object),
 
 
             ## there is no MAT6 or MAT7

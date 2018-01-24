@@ -1276,6 +1276,8 @@ class GetCard(GetMethods):
                 independent_nid = elem.independent_nid
                 for dependent_nid in np.unique(elem.dependent_nids):
                     lines_rigid.append([dependent_nid, independent_nid])
+            elif elem.type == 'RSSCON':
+                self.log.warning('skipping card in _get_rigid\n%s' % str(elem))
             else:
                 print(str(elem))
                 raise NotImplementedError(elem.type)
@@ -1483,6 +1485,9 @@ class GetCard(GetMethods):
                 rbe_nids = independent_nodes | dependent_nodes
                 if nids.intersection(rbe_nids):
                     rbes.append(eid)
+            elif elem.type == 'RSSCON':
+                msg = 'skipping card in get_rigid_elements_with_node_ids\n%s' % str(elem)
+                self.log.warning(msg)
             else:
                 raise RuntimeError(rigid_element.type)
         return rbes
@@ -1585,6 +1590,9 @@ class GetCard(GetMethods):
                     if component is None:
                         continue
                     dependent_nid_to_components[nid] = component
+            elif rigid_element.type == 'RSSCON':
+                msg = 'skipping card in get_dependent_nid_to_components\n%s' % str(elem)
+                self.log.warning(msg)
             else:
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components
