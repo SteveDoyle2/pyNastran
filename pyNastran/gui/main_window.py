@@ -103,6 +103,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             # no results
             'lawgs', 'stl', 'fast',
             'bedge', 'su2', 'tetgen', 'avus', 'abaqus',
+            'degen_geom',
 
             # openfoam
             'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',

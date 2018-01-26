@@ -35,8 +35,10 @@ from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
 from pyNastran.converters.dev.avus.avus_io import AvusIO
 
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
-from pyNastran.converters.aflr.ugrid.surf_io import SurfIO
+from pyNastran.converters.aflr.surf.surf_io import SurfIO
 from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
+from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
+from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
 
 from pyNastran.gui.arg_handling import determine_format
 from pyNastran.utils import print_bad_path
@@ -81,7 +83,8 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
               #ADB_IO, DegenGeomIO, #Plot3d_io,
               # AbaqusIO,
               AvusIO,
-              TecplotIO, FastIO, SurfIO, UGRID_IO, BEdge_IO, SU2_IO):
+              TecplotIO, FastIO, SurfIO, UGRID_IO, BEdge_IO, SU2_IO,
+              DegenGeomIO, ADB_IO):
     """spoofs the gui for testing"""
 
     def __init__(self, formati, inputs=None):
