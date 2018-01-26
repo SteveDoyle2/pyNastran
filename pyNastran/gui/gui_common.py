@@ -51,12 +51,12 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.coord_properties import CoordProperties
 
 
-from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
-from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
-from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
-from pyNastran.gui.gui_interface.preferences.interface import set_preferences_menu
-from pyNastran.gui.gui_interface.groups_modify.interface import on_set_modify_groups
-from pyNastran.gui.gui_interface.groups_modify.groups_modify import Group
+from pyNastran.gui.menus.legend.interface import set_legend_menu
+from pyNastran.gui.menus.clipping.interface import set_clipping_menu
+from pyNastran.gui.menus.camera.interface import set_camera_menu
+from pyNastran.gui.menus.preferences.interface import set_preferences_menu
+from pyNastran.gui.menus.groups_modify.interface import on_set_modify_groups
+from pyNastran.gui.menus.groups_modify.groups_modify import Group
 
 
 from pyNastran.gui.menus.results_sidebar import Sidebar

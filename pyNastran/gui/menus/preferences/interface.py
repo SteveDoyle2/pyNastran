@@ -1,6 +1,6 @@
 from __future__ import print_function
 import vtk
-from pyNastran.gui.gui_interface.preferences.preferences import PreferencesWindow
+from pyNastran.gui.menus.preferences.preferences import PreferencesWindow
 
 
 def set_preferences_menu(self):

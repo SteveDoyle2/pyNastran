@@ -1,6 +1,6 @@
 from __future__ import print_function
 from six import integer_types
-from pyNastran.gui.gui_interface.legend.qt_legend import LegendPropertiesWindow
+from pyNastran.gui.menus.legend.qt_legend import LegendPropertiesWindow
 
 def set_legend_menu(self):
     """

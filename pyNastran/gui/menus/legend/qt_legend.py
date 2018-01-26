@@ -15,7 +15,7 @@ from qtpy.QtWidgets import (
 from pyNastran.gui.colormaps import colormap_keys
 
 from pyNastran.gui.qutils.pydialog import PyDialog
-from pyNastran.gui.gui_interface.legend.animation import AnimationWindow
+from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.gui.qt_version import qt_version
 
 

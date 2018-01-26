@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pyNastran.gui.gui_interface.clipping.clipping import ClippingPropertiesWindow
+from pyNastran.gui.menus.clipping.clipping import ClippingPropertiesWindow
 
 def set_clipping_menu(self):
     """
