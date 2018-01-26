@@ -45,8 +45,6 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
-
 
 #from pyNastran import is_release
 from pyNastran.utils import integer_types
@@ -67,9 +65,10 @@ from pyNastran.bdf.cards.elements.solid import (
     CPYRAM5, CPYRAM13,
 )
 
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.vtk.vtk_utils import (
     get_numpy_idtype_for_vtk, numpy_to_vtk_points,
-    create_vtk_cells_of_constant_element_type)
+    create_vtk_cells_of_constant_element_type,
+    numpy_to_vtk, numpy_to_vtkIdTypeArray)
 from pyNastran.gui.errors import NoGeometry
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (

@@ -11,7 +11,7 @@ import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 from pyNastran.converters.cart3d.cart3d import read_cart3d
 from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry #, Cart3dResult

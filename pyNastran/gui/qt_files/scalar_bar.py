@@ -3,7 +3,7 @@ import numpy as np
 from six import string_types
 import vtk
 
-from pyNastran.gui.colormaps import colormap_dict
+from pyNastran.gui.utils.colormaps import colormap_dict
 
 
 class ScalarBar(object):

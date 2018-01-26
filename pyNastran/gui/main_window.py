@@ -24,7 +24,7 @@ from qtpy.QtWidgets import QMessageBox, qApp
 import vtk
 
 import pyNastran
-from pyNastran.gui.gui_utils.utils import check_for_newer_version
+from pyNastran.gui.utils.version import check_for_newer_version
 
 
 # pyNastran

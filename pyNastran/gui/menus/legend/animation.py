@@ -12,9 +12,9 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory # getopenfilename
 
-from pyNastran.gui.qutils.pydialog import PyDialog
-from pyNastran.gui.gui_utils.dialogs import open_file_dialog
-from pyNastran.gui.gui_utils.write_gif import IS_IMAGEIO
+from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.dialogs import open_file_dialog
+from pyNastran.gui.utils.write_gif import IS_IMAGEIO
 
 
 ANIMATION_PROFILES = [

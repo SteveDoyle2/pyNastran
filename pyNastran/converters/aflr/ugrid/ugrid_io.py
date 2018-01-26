@@ -15,7 +15,7 @@ from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.utils import is_binary_file
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 class UGRID_IO(object):

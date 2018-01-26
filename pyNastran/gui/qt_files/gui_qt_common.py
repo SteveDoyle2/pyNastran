@@ -8,12 +8,11 @@ import numpy as np
 from numpy import full, issubdtype
 from numpy.linalg import norm  # type: ignore
 import vtk
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
 
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.testing_methods import GuiAttributes
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points, VTK_VERSION
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtk_points, VTK_VERSION
 from pyNastran.gui import IS_DEV
 
 

@@ -8,7 +8,7 @@ from vtk import vtkQuad
 
 from pyNastran.converters.dev.openvsp.degen_geom import DegenGeom
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 

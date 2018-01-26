@@ -11,7 +11,7 @@ from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 #from pyNastran.converters.tecplot.utils import merge_tecplot_files
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 class TecplotIO(object):

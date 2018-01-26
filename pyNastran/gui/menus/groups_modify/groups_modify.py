@@ -16,8 +16,8 @@ from qtpy.QtWidgets import (
 
 from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model
-from pyNastran.gui.qutils.pydialog import PyDialog
-from pyNastran.gui.qutils.qelement_edit import QElementEdit
+from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.qelement_edit import QElementEdit
 from .groups import Group, _get_collapsed_text
 #from .groups_modify.color_display import ColorDisplay
 

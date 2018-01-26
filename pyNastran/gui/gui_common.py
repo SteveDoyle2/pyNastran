@@ -28,7 +28,7 @@ from qtpy.QtWidgets import (
 from qtpy.compat import getsavefilename, getopenfilename
 
 
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
 
 
 import vtk
@@ -42,7 +42,7 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
-from pyNastran.gui.gui_utils.write_gif import (
+from pyNastran.gui.utils.write_gif import (
     setup_animation, update_animation_inputs, write_gif)
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
@@ -71,7 +71,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
-from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
+from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
 
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -1993,24 +1993,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         This should really only be called for integer results < 50-ish.
         """
-        #self.scalar_bar.title
-        case_key = self.case_keys[self.icase] # int for object
-        result_name = self.result_name
-        obj, (i, name) = self.result_cases[case_key]
-        default_title = obj.get_default_title(i, name)
-        location = obj.get_location(i, name)
-        if obj.data_format != '%i':
-            self.log.error('not creating result=%r; must be an integer result' % result_name)
-            return 0
-        if location != 'centroid':
-            self.log.error('not creating result=%r; must be a centroidal result' % result_name)
-            return 0
+        try:
+            #self.scalar_bar.title
+            case_key = self.case_keys[self.icase] # int for object
+            result_name = self.result_name
+            obj, (i, name) = self.result_cases[case_key]
+            default_title = obj.get_default_title(i, name)
+            location = obj.get_location(i, name)
+            if obj.data_format != '%i':
+                self.log.error('not creating result=%r; must be an integer result' % result_name)
+                return 0
+            if location != 'centroid':
+                self.log.error('not creating result=%r; must be a centroidal result' % result_name)
+                return 0
 
-        word = default_title
-        prefix = default_title
-        ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
-        self.log_command('create_groups_by_visible_result()'
-                         ' # created %i groups for result_name=%r' % (ngroups, result_name))
+            word = default_title
+            prefix = default_title
+            ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
+            self.log_command('create_groups_by_visible_result()'
+                             ' # created %i groups for result_name=%r' % (ngroups, result_name))
+        except Exception as e:
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
 
     def create_groups_by_property_id(self):
         """
@@ -2027,8 +2032,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #eids = self.find_result_by_name('ElementID')
         #elements_pound = eids.max()
-        eids = self.groups['main'].element_ids
-        elements_pound = self.groups['main'].elements_pound
+        try:
+            eids = self.groups['main'].element_ids
+            elements_pound = self.groups['main'].elements_pound
+        except Exception as e:
+            self.log.error('Cannot create groups as there are no elements in the model')
+            return 0
 
         result = self.find_result_by_name(name)
         ures = np.unique(result)
@@ -2167,8 +2176,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def numpy_to_vtk_idtype(self, ids):
         #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-        from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtkIdTypeArray
-
+        from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtkIdTypeArray
         dtype = get_numpy_idtype_for_vtk()
         ids = np.asarray(ids, dtype=dtype)
         vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)

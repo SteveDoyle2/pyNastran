@@ -13,7 +13,7 @@ from qtpy import QtGui
 from qtpy.QtWidgets import (
     QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
     QComboBox, QLabel, QHBoxLayout)
-from pyNastran.gui.qutils.qtreeview2 import QTreeView2
+from pyNastran.gui.utils.qt.qtreeview2 import QTreeView2
 
 class Sidebar(QWidget):
     """

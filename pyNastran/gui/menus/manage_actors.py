@@ -18,7 +18,7 @@ from qtpy.QtWidgets import (
 )
 
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
-from pyNastran.gui.qutils.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 

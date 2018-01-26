@@ -4,8 +4,8 @@ from qtpy import QtCore, QtGui
 from qtpy.QtGui import QFocusEvent, QFont
 from qtpy.QtWidgets import QDialog, QLineEdit, QPushButton
 
-from pyNastran.gui.qutils.qpush_button_color import QPushButtonColor
-from pyNastran.gui.qutils.qelement_edit import QElementEdit
+from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
+from pyNastran.gui.utils.qt.qelement_edit import QElementEdit
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict, write_patran_syntax_dict)
 
