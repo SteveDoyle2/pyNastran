@@ -10,13 +10,13 @@ from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
 
 class Geom(object):
     def __init__(self, name, lifting_surface_xyz,
-                 lifting_surface_nx, lifting_surface_ny):  # pragma: no cover
+                 lifting_surface_nx, lifting_surface_ny):
         self.name = name
         self.xyz = lifting_surface_xyz
         self.nx = lifting_surface_nx
         self.ny = lifting_surface_ny
 
-    def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):  # pragma: no cover
+    def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):
         nx = self.nx
         ny = self.ny
         nxy = nx * ny
@@ -44,7 +44,7 @@ class Geom(object):
         return nid0, eid, pid
 
     @property
-    def elements(self):  # pragma: no cover
+    def elements(self):
         nid0 = 1
         #eidi = 0
         k = 0
@@ -71,12 +71,12 @@ class Geom(object):
 
 
 class DegenGeom(object):
-    def __init__(self, log=None, debug=False):  # pragma: no cover
+    def __init__(self, log=None, debug=False):
         self.log = log
         self.debug = debug
         self.components = defaultdict(list)
 
-    def write_bdf(self, bdf_filename):  # pragma: no cover
+    def write_bdf(self, bdf_filename):
         bdf_file = open(bdf_filename, 'wb')
         bdf_file.write('$pyNastran: VERSION=NX\n')
         bdf_file.write('CEND\n')
@@ -176,7 +176,7 @@ class DegenGeom(object):
         pan.write_panair(panair_filename)
         #self.nNetworks = i
 
-    def read_degen_geom(self, degen_geom_csv):  # pragma: no cover
+    def read_degen_geom(self, degen_geom_csv):
         with open(degen_geom_csv, 'r') as degen_geom_file:
             lines = degen_geom_file.readlines()
 
