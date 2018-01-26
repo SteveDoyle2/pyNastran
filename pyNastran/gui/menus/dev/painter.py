@@ -2,7 +2,6 @@ from __future__ import print_function
 from pyNastran.gui.menus.manage_actors import SingleChoiceQTableView
 from PyQt4 import QtCore, QtGui
 from QtGui import QColorDialog
-#from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
 
 class EditBoundaryConditions(QtGui.QDialog):

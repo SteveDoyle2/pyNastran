@@ -11,9 +11,7 @@ from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 
-#from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.colormaps import colormap_keys
-
 from pyNastran.gui.qutils.pydialog import PyDialog
 from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.gui.qt_version import qt_version

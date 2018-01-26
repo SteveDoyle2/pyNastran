@@ -8,7 +8,7 @@ import numpy as np
 import vtk
 
 from pyNastran.utils.log import get_logger
-from pyNastran.gui.settings import Settings
+from pyNastran.gui.gui_objects.settings import Settings
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 #from pyNastran.gui.gui_objects.gui_result import GuiResult
 #from pyNastran.converters.nastran.displacements import DisplacementResults

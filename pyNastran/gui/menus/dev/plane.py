@@ -1,5 +1,5 @@
 from qtpy import QtCore, QtGui
-from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
+from pyNastran.gui.menus.menu_utils import eval_float_from_string
 
 
 class BCMap(QtGui.QDialog):
