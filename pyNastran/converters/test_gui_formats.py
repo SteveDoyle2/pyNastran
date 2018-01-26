@@ -20,6 +20,8 @@ from pyNastran.converters.aflr.ugrid.test_ugrid_gui import TestUgridGui
 
 #try:
 from pyNastran.converters.dev.avus.test_avus_gui import TestAvusGUI
+from pyNastran.converters.dev.openvsp.test_openvsp_gui import TestOpenVSP_GUI
+
 #except ImportError:
     #pass
 
