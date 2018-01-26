@@ -47,8 +47,9 @@ from pyNastran.gui.gui_utils.write_gif import (
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
-from pyNastran.gui.qt_files.coord_properties import CoordProperties
+
+from pyNastran.gui.gui_objects.coord_properties import CoordProperties
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 
 
 from pyNastran.gui.menus.legend.interface import set_legend_menu

@@ -10,7 +10,7 @@ from six import iteritems
 from qtpy import QtCore, QtGui
 from QtGui import QColorDialog
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
 
 

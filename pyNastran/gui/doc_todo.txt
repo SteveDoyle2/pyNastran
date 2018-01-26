@@ -12,12 +12,9 @@
 
 VTK
 =======
-1.  Edge display
-  - edges don't work in:
-     - VTK 7.1.0, Python 3.5.2
-     - VTK 7.1.0, Python 2.7.13
-  - edges work in:
-     - VTK 5.10.1, Python 2.7.12
+1.  Mouse Rotation after animation
+  - rotation don't work in:
+  - rotation work in:
 - 
 Qt
 =======

@@ -9,7 +9,7 @@ import vtk
 
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.settings import Settings
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 #from pyNastran.gui.gui_objects.gui_result import GuiResult
 #from pyNastran.converters.nastran.displacements import DisplacementResults
 from pyNastran.bdf.cards.base_card import deprecated

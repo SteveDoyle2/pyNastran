@@ -23,8 +23,8 @@ import numpy as np
 import vtk
 from qtpy import QtGui
 
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
-from pyNastran.gui.qt_files.coord_properties import CoordProperties
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
+from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)

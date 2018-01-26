@@ -19,8 +19,8 @@ from qtpy.QtWidgets import (
 
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.qutils.pydialog import PyDialog
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
-from pyNastran.gui.qt_files.coord_properties import CoordProperties
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
+from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 
 
 class SingleChoiceQTableView(QTableView):
