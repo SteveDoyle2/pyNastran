@@ -209,20 +209,18 @@ class DegenGeom(object):
 
                 self.log.info('lifting_surface name=%r' % name)
                 (iline, nelements, normals, area, lifting_surface_xyz,
-                 lifting_surface_nx, lifting_surface_ny) = self.read_surface_node(
+                 lifting_surface_nx, lifting_surface_ny) = read_surface_node(
                      degen_geom_file, lines, iline, self.log)
 
                 self.log.debug('iline=%s' % iline)
 
-                iline = self.read_surface_face(
+                iline = read_surface_face(
                     degen_geom_file, lines, iline, nelements, self.log,
                     normals, area)
 
-                iline = self.read_plate(degen_geom_file, lines, iline, self.log)
-
-                iline = self.read_stick_node(degen_geom_file, lines, iline, self.log)
-
-                iline = self.read_stick_face(degen_geom_file, lines, iline, self.log)
+                iline = read_plate(degen_geom_file, lines, iline, self.log)
+                iline = read_stick_node(degen_geom_file, lines, iline, self.log)
+                iline = read_stick_face(degen_geom_file, lines, iline, self.log)
 
                 # DegenGeom Type
                 # POINT
@@ -263,20 +261,20 @@ class DegenGeom(object):
                 #print(line)
 
                 (iline, nelements, normals, area, lifting_surface_xyz,
-                 lifting_surface_nx, lifting_surface_ny) = self.read_surface_node(
+                 lifting_surface_nx, lifting_surface_ny) = read_surface_node(
                      degen_geom_file, lines, iline, self.log)
 
-                iline = self.read_surface_face(
+                iline = read_surface_face(
                     degen_geom_file, lines, iline, nelements, self.log,
                     normals, area)
-                iline = self.read_plate(degen_geom_file, lines, iline, self.log)
-                iline = self.read_plate(degen_geom_file, lines, iline, self.log)
+                iline = read_plate(degen_geom_file, lines, iline, self.log)
+                iline = read_plate(degen_geom_file, lines, iline, self.log)
 
-                iline = self.read_stick_node(degen_geom_file, lines, iline, self.log)
-                iline = self.read_stick_face(degen_geom_file, lines, iline, self.log)
+                iline = read_stick_node(degen_geom_file, lines, iline, self.log)
+                iline = read_stick_face(degen_geom_file, lines, iline, self.log)
 
-                #iline = self.read_stick_node(degen_geom_file, lines, iline, self.log)
-                #iline = self.read_stick_face(degen_geom_file, lines, iline, self.log)
+                #iline = read_stick_node(degen_geom_file, lines, iline, self.log)
+                #iline = read_stick_face(degen_geom_file, lines, iline, self.log)
 
                 line = degen_geom_file.readline()
                 iline += 1
@@ -288,131 +286,131 @@ class DegenGeom(object):
                 raise RuntimeError(sline)
             self.components[name].append(component)
 
-    def read_surface_node(self, degen_geom_file, lines, iline, log):
-        """
-        degenGeom, Type, nxsections, npoints/xsection
-        SURFACE_NODE,6,33
-        # nnodes -> 6*33=198
-        # nelements -> 160
-        """
-        line = degen_geom_file.readline()
-        #print(line)
-        iline += 1
+def read_surface_node(degen_geom_file, lines, iline, log):
+    """
+    degenGeom, Type, nxsections, npoints/xsection
+    SURFACE_NODE,6,33
+    # nnodes -> 6*33=198
+    # nelements -> 160
+    """
+    line = degen_geom_file.readline()
+    #print(line)
+    iline += 1
 
-        line = degen_geom_file.readline().strip()
-        iline += 1
+    line = degen_geom_file.readline().strip()
+    iline += 1
 
-        sline = line.split(',')
-        self.log.info(str(sline))
-        surface_node, lifting_surface_nx, lifting_surface_ny = sline
-        assert surface_node == 'SURFACE_NODE', surface_node
-        lifting_surface_nx = int(lifting_surface_nx)
-        lifting_surface_ny = int(lifting_surface_ny)
-        npoints = lifting_surface_nx * lifting_surface_ny
-        nelements = (lifting_surface_nx - 1) * (lifting_surface_ny - 1)
-        self.log.info('npoints = %r' % npoints)
-        lifting_surface_xyz = np.zeros((npoints, 3), dtype='float64')
-        normals = np.zeros((nelements, 3), dtype='float64')
-        area = np.zeros(nelements, dtype='float64')
+    sline = line.split(',')
+    log.info(str(sline))
+    surface_node, lifting_surface_nx, lifting_surface_ny = sline
+    assert surface_node == 'SURFACE_NODE', surface_node
+    lifting_surface_nx = int(lifting_surface_nx)
+    lifting_surface_ny = int(lifting_surface_ny)
+    npoints = lifting_surface_nx * lifting_surface_ny
+    nelements = (lifting_surface_nx - 1) * (lifting_surface_ny - 1)
+    log.info('npoints = %r' % npoints)
+    lifting_surface_xyz = np.zeros((npoints, 3), dtype='float64')
+    normals = np.zeros((nelements, 3), dtype='float64')
+    area = np.zeros(nelements, dtype='float64')
 
-        # x, y, z, u, v
-        degen_geom_file.readline()
-        iline += 1
-        for ipoint in range(npoints):
-            sline = degen_geom_file.readline().strip().split(',')
-            iline += 1
-            x, y, z, u, v = sline
-            sline2 = lines[iline].strip().split(',')
-            assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
-            #log.debug('%s: %s' % (iline, sline2))
-            lifting_surface_xyz[ipoint, :] = [x, y, z]
-        iline += 1
-        return iline, nelements, normals, area, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny
-
-    def read_surface_face(self, degen_geom_file, lines, iline, nelements, log,
-                          normals, area):
-        """SURFACE_FACE,5,32"""
+    # x, y, z, u, v
+    degen_geom_file.readline()
+    iline += 1
+    for ipoint in range(npoints):
         sline = degen_geom_file.readline().strip().split(',')
-        surface_node, nx, ny = sline
-        assert surface_node == 'SURFACE_FACE', 'surface_node=%s, nx+%s, ny=%s' % (surface_node, nx, ny)
+        iline += 1
+        x, y, z, u, v = sline
         sline2 = lines[iline].strip().split(',')
         assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
+        #log.debug('%s: %s' % (iline, sline2))
+        lifting_surface_xyz[ipoint, :] = [x, y, z]
+    iline += 1
+    return iline, nelements, normals, area, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny
 
-        line = degen_geom_file.readline() # nx,ny,nz,area
-        iline += 1
-        log.debug(line)
-        for ielem in range(nelements):
-            line = degen_geom_file.readline()
-            iline += 1
-            nx, ny, nz, areai = line.split(',')
-            normals[ielem, :] = [nx, ny, nz]
-            area[ielem] = areai
-        iline += 1
-        return iline
+def read_surface_face(degen_geom_file, lines, iline, nelements, log,
+                      normals, area):
+    """SURFACE_FACE,5,32"""
+    sline = degen_geom_file.readline().strip().split(',')
+    surface_node, nx, ny = sline
+    assert surface_node == 'SURFACE_FACE', 'surface_node=%s, nx+%s, ny=%s' % (surface_node, nx, ny)
+    sline2 = lines[iline].strip().split(',')
+    assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
 
-    def read_plate(self, degen_geom_file, lines, iline, log):
-        """
-        DegenGeom Type,nXsecs,nPnts/Xsec
-        PLATE,6,17
-        nx,ny,nz
-
-        TODO: the plate is very unclear...it's 6 lines with 3 normals on each line
-              but 6*17?
-        """
-        degen_geom_file.readline()
-        iline += 1
-
-        sline = degen_geom_file.readline().strip().split(',')
-        sline2 = lines[iline].strip().split(',')
-        assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
-        plate, nx, ny = sline
-
-        iline += 1
-        nx = int(nx)
-        ny = int(ny)
-        nxy = nx * ny
-        degen_geom_file.readline()
-        iline += 1
-        for i in range(nx):
-            degen_geom_file.readline()
-            iline += 1
-
-        # x,y,z,zCamber,t,nCamberx,nCambery,nCamberz,u,wTop,wBot
+    line = degen_geom_file.readline() # nx,ny,nz,area
+    iline += 1
+    log.debug(line)
+    for ielem in range(nelements):
         line = degen_geom_file.readline()
         iline += 1
-        for i in range(nxy):
-            degen_geom_file.readline()
-            iline += 1
-        return iline
+        nx, ny, nz, areai = line.split(',')
+        normals[ielem, :] = [nx, ny, nz]
+        area[ielem] = areai
+    iline += 1
+    return iline
 
-    def read_stick_node(self, degen_geom_file, lines, iline, log):
-        """
-        DegenGeom Type, nXsecs
-        STICK_NODE, 6
-        (lex, ley, lez, tex, tey, tez, cgShellx, cgShelly, cgShellz,
-         cgSolidx, cgSolidy, cgSolidz, toc, tLoc, chord,
-         Ishell11, Ishell22, Ishell12, Isolid11, Isolid22, Isolid12,
-         sectArea, sectNormalx, sectNormaly, sectNormalz,
-         perimTop, perimBot, u,
-         t00, t01, t02, t03, t10, t11, t12, t13,
-         t20, t21, t22, t23, t30, t31, t32, t33,
-         it00, it01, it02, it03, it10, it11, it12, it13,
-         it20, it21, it22, it23, it30, it31, it32, it33)
-        """
+def read_plate(degen_geom_file, lines, iline, log):
+    """
+    DegenGeom Type,nXsecs,nPnts/Xsec
+    PLATE,6,17
+    nx,ny,nz
+
+    TODO: the plate is very unclear...it's 6 lines with 3 normals on each line
+          but 6*17?
+    """
+    degen_geom_file.readline()
+    iline += 1
+
+    sline = degen_geom_file.readline().strip().split(',')
+    sline2 = lines[iline].strip().split(',')
+    assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
+    plate, nx, ny = sline
+
+    iline += 1
+    nx = int(nx)
+    ny = int(ny)
+    nxy = nx * ny
+    degen_geom_file.readline()
+    iline += 1
+    for i in range(nx):
         degen_geom_file.readline()
         iline += 1
-        stick_node, nx = degen_geom_file.readline().split(',')
-        iline += 1
-        assert stick_node == 'STICK_NODE', stick_node
-        nx = int(nx)
+
+    # x,y,z,zCamber,t,nCamberx,nCambery,nCamberz,u,wTop,wBot
+    line = degen_geom_file.readline()
+    iline += 1
+    for i in range(nxy):
         degen_geom_file.readline()
         iline += 1
-        for i in range(nx):
-            degen_geom_file.readline()
-            iline += 1
-        return iline
+    return iline
 
-    def read_stick_face(self, degen_geom_file, lines, iline, log):
+def read_stick_node(degen_geom_file, lines, iline, log):
+    """
+    DegenGeom Type, nXsecs
+    STICK_NODE, 6
+    (lex, ley, lez, tex, tey, tez, cgShellx, cgShelly, cgShellz,
+     cgSolidx, cgSolidy, cgSolidz, toc, tLoc, chord,
+     Ishell11, Ishell22, Ishell12, Isolid11, Isolid22, Isolid12,
+     sectArea, sectNormalx, sectNormaly, sectNormalz,
+     perimTop, perimBot, u,
+     t00, t01, t02, t03, t10, t11, t12, t13,
+     t20, t21, t22, t23, t30, t31, t32, t33,
+     it00, it01, it02, it03, it10, it11, it12, it13,
+     it20, it21, it22, it23, it30, it31, it32, it33)
+    """
+    degen_geom_file.readline()
+    iline += 1
+    stick_node, nx = degen_geom_file.readline().split(',')
+    iline += 1
+    assert stick_node == 'STICK_NODE', stick_node
+    nx = int(nx)
+    degen_geom_file.readline()
+    iline += 1
+    for i in range(nx):
+        degen_geom_file.readline()
+        iline += 1
+    return iline
+
+def read_stick_face(degen_geom_file, lines, iline, log):
         # DegenGeom Type, nXsecs
         # STICK_FACE, 5
         # sweeple,sweepte,areaTop,areaBot

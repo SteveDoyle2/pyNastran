@@ -1,52 +1,13 @@
 from __future__ import print_function
-from pyNastran.bdf.utils import (
-    parse_patran_syntax, parse_patran_syntax_dict, write_patran_syntax_dict)
 
 from qtpy import QtCore, QtGui
 from qtpy.QtGui import QFocusEvent, QFont
 from qtpy.QtWidgets import QDialog, QLineEdit, QPushButton
 
-
-class QElementEdit(QLineEdit):
-    """creates a QLineEdit that can pick element ids"""
-    def __init__(self, win_parent, parent=None, *args, **kwargs):
-        super(QElementEdit, self).__init__(parent, *args, **kwargs)
-        self.win_parent = win_parent
-        #self.focusInEvent.connect(self.on_focus)
-
-    def focusInEvent(self, event):
-        self.on_focus()
-        QLineEdit.focusInEvent(self, QFocusEvent(QtCore.QEvent.FocusIn))
-
-    def on_focus_callback(self, eids, nids):
-        """the callback method for ``on_focus``"""
-        eids_str = write_patran_syntax_dict({'' : eids})
-        self.setText(eids_str)
-
-    def on_focus(self):
-        """called when the QElementEdit is activated"""
-        self.win_parent.win_parent.on_area_pick(is_eids=True, is_nids=False,
-                                                callback=self.on_focus_callback,
-                                                force=True)
-
-
-class QPushButtonColor(QPushButton):
-    """Creates a QPushButton with a face color"""
-    def __init__(self, labelcolor_int):
-        QPushButton.__init__(self)
-
-        qcolor = QtGui.QColor()
-        #self.color_edit.setFlat(True)
-        qcolor.setRgb(*labelcolor_int)
-        palette = QtGui.QPalette(self.palette())
-        palette.setColor(QtGui.QPalette.Background, QtGui.QColor('blue'))
-        self.setPalette(palette)
-        self.setStyleSheet(
-            "QPushButton {"
-            "background-color: rgb(%s, %s, %s);" % tuple(labelcolor_int) +
-            #"border:1px solid rgb(255, 170, 255); "
-            "}")
-
+from pyNastran.gui.qutils.qpush_button_color import QPushButtonColor
+from pyNastran.gui.qutils.qelement_edit import QElementEdit
+from pyNastran.bdf.utils import (
+    parse_patran_syntax, parse_patran_syntax_dict, write_patran_syntax_dict)
 
 class PyDialog(QDialog):
     """

@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.colormaps import colormap_keys
 
-from pyNastran.gui.gui_interface.common import PyDialog
+from pyNastran.gui.qutils.pydialog import PyDialog
 from pyNastran.gui.gui_interface.legend.animation import AnimationWindow
 from pyNastran.gui.qt_version import qt_version
 

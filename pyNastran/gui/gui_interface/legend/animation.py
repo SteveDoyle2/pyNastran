@@ -12,7 +12,7 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory # getopenfilename
 
-from pyNastran.gui.gui_interface.common import PyDialog
+from pyNastran.gui.qutils.pydialog import PyDialog
 from pyNastran.gui.gui_utils.dialogs import open_file_dialog
 from pyNastran.gui.gui_utils.write_gif import IS_IMAGEIO
 

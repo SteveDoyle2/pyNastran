@@ -15,7 +15,7 @@ from pyNastran.gui.qt_version import qt_version
 #else:
     #raise NotImplementedError('qt_version = %r' % qt_version)
 
-from pyNastran.gui.gui_interface.common import PyDialog
+from pyNastran.gui.qutils.pydialog import PyDialog
 
 
 class CameraWindow(PyDialog):
