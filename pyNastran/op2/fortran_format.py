@@ -241,8 +241,10 @@ class FortranFormat(object):
             data = self.read_block()
             imarker, = self.struct_i.unpack(data)
             if marker != imarker:
-                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r' % (
-                    marker, imarker, markers, i, self.table_name)
+                import os
+                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r; iloc=%s/%s' % (
+                    marker, imarker, markers, i, self.table_name,
+                    self.f.tell(), os.path.getsize(self.op2_filename))
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)

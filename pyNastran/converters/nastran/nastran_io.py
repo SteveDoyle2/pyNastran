@@ -5303,7 +5303,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #return icase
 
         # quit out if we don't have pressures
-        if 'PLOAD4' not in model.card_count:
+        if not any(['PLOAD' in self.card_count, 'PLOAD2' in self.card_count,
+                    'PLOAD4' in self.card_count]):
             return icase
 
         subcase = model.subcases[subcase_id]

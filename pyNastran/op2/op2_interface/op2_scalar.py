@@ -1318,7 +1318,35 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.f06_filename = fname + f06_extension
 
         self._create_binary_debug()
+        self._setup_op2()
+        self._read_version()
 
+        #=================
+        table_name = self._read_table_name(rewind=True, stop_on_failure=False)
+        if table_name is None:
+            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nNo tables exist...')
+
+        self._make_tables()
+        table_names = self._read_tables(table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('-' * 80 + '\n')
+            self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
+            self.binary_debug.close()
+
+        if self._close_op2:
+            self.f.close()
+            del self.binary_debug
+            del self.f
+        #self.remove_unpickable_data()
+        return table_names
+
+    def _setup_op2(self):
+        """
+        Does preliminary op2 tasks like:
+          - open the file
+          - set the endian
+          - preallocate some struct objects
+        """
         #: file index
         self.n = 0
         self.table_name = None
@@ -1356,26 +1384,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         if self.read_mode == 1:
             self._set_structs()
-
-        self._read_version()
-
-        #=================
-        table_name = self._read_table_name(rewind=True, stop_on_failure=False)
-        if table_name is None:
-            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\nNo tables exist...')
-
-        self._make_tables()
-        table_names = self._read_tables(table_name)
-        if self.is_debug_file:
-            self.binary_debug.write('-' * 80 + '\n')
-            self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
-            self.binary_debug.close()
-        if self._close_op2:
-            self.f.close()
-            del self.binary_debug
-            del self.f
-        #self.remove_unpickable_data()
-        return table_names
 
     def _read_version(self):
         """reads the version header"""

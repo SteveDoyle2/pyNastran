@@ -30,6 +30,7 @@ Defines various tables that don't fit in other sections:
 
 from __future__ import print_function, unicode_literals
 from struct import unpack
+from itertools import count
 from six import b
 import numpy as np
 import scipy  # type: ignore
@@ -43,6 +44,10 @@ class MinorTables(OP2Common):
     """reads various tables that don't fit into a larger category"""
     def __init__(self):
         OP2Common.__init__(self)
+
+        #: should a MATPOOL "symmetric" matrix be stored as symmetric
+        #: it takes double the RAM, but is easier to use
+        self.apply_symmetry = True
 
     def _read_omm2(self):
         """reads the OMM2 table"""
@@ -522,8 +527,8 @@ class MinorTables(OP2Common):
             ndata = len(data)
             assert ndata == 108, ndata
             n = 8 + 56 + 20 + 12 + 12
-            (aero, name, comps, cp, bi, c, d, coeff, word,
-             e, f, g) = unpack(self._endian + b'8s 56s 5i 4s 8s 3i', data[:n])
+            out = unpack(self._endian + b'8s 56s 5i 4s 8s 3i', data[:n])
+            (aero, name, comps, cp, bi, c, d, coeff, word, e, f, g) = out
             print('aero=%r' % aero)
             print('name=%r' % name)
             print('comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
@@ -941,7 +946,9 @@ class MinorTables(OP2Common):
         #if enable_matpool:
         try:
             self._read_matrix_mat()
-        except:
+        except MemoryError:
+            raise
+        except: #(RuntimeError, AssertionError, ValueError):
             # read matpool matrix
             self._goto(i)
             try:
@@ -993,16 +1000,16 @@ class MinorTables(OP2Common):
         #  list of header values:
         #    4:5   matrix name
         #    6     placeholder
-        #    7     matrix shape (1 = square, 2 or 9 = rectangular, 6 = symmetric)
-        #    8     input type flag (1 = single, 2 = double, 3 = complex single,
-        #                           4 = complex double)
-        #    9     output type flag (0 = precision set by system cell,
-        #                            1 = single, 2 = double, 3 = complex single,
-        #                            4 = complex double)
-        #   10     complex flag (0 = real/imaginary, >0 = magnitude/phase)
+        #    7     matrix shape (1=square, 2 or 9 = rectangular, 6=symmetric)
+        #    8     input type flag (1=single, 2=double, 3=complex single,
+        #                           4=complex double)
+        #    9     output type flag (0=precision set by system cell,
+        #                            1=single, 2=double, 3=complex single,
+        #                            4=complex double)
+        #   10     complex flag (0=real/imaginary, >0=magnitude/phase)
         #   11     placeholder
-        #   12     number of columns in the G set (only necessary for matrix
-        #                                          shape 9)
+        #   12     number of columns in the G set
+        #          (only necessary for matrix shape 9)
         matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
         matrix_name = matrix_name.strip()
 
@@ -1178,8 +1185,7 @@ class MinorTables(OP2Common):
         assert len(grids1) == len(grids2), 'ngrids1=%s ngrids2=%s' % (len(grids1), len(grids2))
         assert len(comps1) == len(comps2), 'ncomps1=%s ncomps2=%s' % (len(comps1), len(comps2))
 
-        apply_symmetry = True
-        make_matrix_symmetric = apply_symmetry and matrix_shape == 'symmetric'
+        make_matrix_symmetric = self.apply_symmetry and matrix_shape == 'symmetric'
         j1, j2, nj1, nj2, nj = grids_comp_array_to_index(
             grids1, comps1, grids2, comps2, make_matrix_symmetric)
         assert len(j1) == len(j2), 'nj1=%s nj2=%s' % (len(j1), len(j2))
@@ -1276,6 +1282,19 @@ class MinorTables(OP2Common):
 
     def _read_matrix_mat(self):
         """
+        Reads a matrix in "standard" form.  The forms are::
+            standard:
+                Return a matrix that looks similar to a matrix found
+                in the OP4.  Created by:
+                ``ASSIGN output2='model.op2', UNIT=12,UNFORMATTED,DELETE``
+                ``OUTPUT2 KGG//0/12``
+            matpool:
+                Return a matrix that looks similar to a DMIG matrix
+                (e.g., it contains the node id and DOF).  Created by:
+                ``ASSIGN output2='model.op2', UNIT=12,UNFORMATTED,DELETE``
+                ``TODO: add the magic keyword...``
+                ``OUTPUT2 KGG//0/12``
+
         Matrix Trailer:
         +------+---------------------------------------------------+
         | Word | Contents                                          |
@@ -1384,7 +1403,7 @@ class MinorTables(OP2Common):
                            'ncols=%s tout=%s nvalues=%s g=%s' % (
                                table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
             raise RuntimeError('form=%s; allowed=%s' % (form, allowed_forms))
-        #self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
+        #self.log.debug('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
             #table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         self.read_markers([-2, 1, 0])
@@ -1452,11 +1471,11 @@ class MinorTables(OP2Common):
 
                 #assert max(GCi) <= mrows, 'GCi=%s GCj=%s mrows=%s' % (GCi, GCj, mrows)
                 #assert max(GCj) <= ncols, 'GCi=%s GCj=%s ncols=%s' % (GCi, GCj, ncols)
+
+                # we subtract 1 to the indicides to account for Fortran
                 GCi = np.array(GCi, dtype='int32') - 1
                 GCj = np.array(GCj, dtype='int32') - 1
                 try:
-                    # we subtract 1 to the indicides to account for Fortran
-                    #    huh??? we don't...
                     if dtype == '???':
                         matrix = None
                         self.log.warning('what is the dtype?')
@@ -1466,8 +1485,7 @@ class MinorTables(OP2Common):
                         matrix = scipy.sparse.coo_matrix(
                             (real_array, (GCi, GCj)),
                             shape=(mrows, ncols), dtype=dtype)
-                        matrix = np.asarray(matrix.todense())
-                        #self.log.info('created %s' % self.table_name)
+                        #self.log.info('created %s (real)' % self.table_name)
                     elif tout in [3, 4]:
                         # complex
                         real_array = np.array(reals, dtype=dtype)
@@ -1523,7 +1541,6 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
     bi = np.vstack([grids2, comps2]).T
     #print('grids2 =', grids2)
     #print('comps2 =', comps2)
-    from itertools import count
     #c = np.vstack([a, b])
     #assert c.shape[1] == 2, c.shape
     #urows = unique2d(c)
@@ -1573,5 +1590,3 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
             jb[i] = nid_comp_to_dof_index[tuple(nid_dof)]
 
         return ja, jb, nja, njb, nj
-
-
