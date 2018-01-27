@@ -428,6 +428,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         #print(op2.case_control_deck.get_op2_data())
         #print(op2.case_control_deck.get_op2_data())
         is_passed = True
+    except MemoryError:
+        raise
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)

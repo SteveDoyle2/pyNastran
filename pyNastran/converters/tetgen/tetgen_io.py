@@ -59,7 +59,6 @@ class TetgenIO(object):
 
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         assert nodes is not None
         points = numpy_to_vtk_points(nodes)

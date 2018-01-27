@@ -77,13 +77,6 @@ class AvusIO(object):
         #nnodes = self.nnodes
 
         grid = self.grid
-        #self.gridResult.Allocate(self.nnodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        #self.nid_map = {}
-        #elem.SetNumberOfPoints(nNodes)
-
-        #assert nodes is not None
-        #nnodes = nodes.shape[0]
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
@@ -193,10 +186,6 @@ class AvusIO(object):
             raise NotImplementedError()
 
         grid.SetPoints(points)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print(dir(self.grid) #.SetNumberOfComponents(0))
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         grid.Modified()
         if hasattr(grid, 'Update'):
             grid.Update()

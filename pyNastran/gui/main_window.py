@@ -12,7 +12,6 @@ import os.path
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
 
-#from six import string_types, iteritems
 from six.moves import range
 
 
@@ -28,7 +27,6 @@ from pyNastran.gui.utils.version import check_for_newer_version
 
 
 # pyNastran
-#from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import (
     NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, ShabpIO, ADB_IO, FastIO, # Plot3d_io,
@@ -103,10 +101,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             # no results
             'lawgs', 'stl', 'fast',
             'bedge', 'su2', 'tetgen', 'avus', 'abaqus',
-            'degen_geom',
+            'degen_geom', 'obj',
 
             # openfoam
-            'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj',
+            'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
@@ -158,15 +156,15 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         Looks for:
             ## pyNastran v0.7.2 has been Released (4/25/2015)
         """
-        import time
-        time0 = time.time()
+        #import time
+        #time0 = time.time()
         version_latest, version_current, is_newer = check_for_newer_version()
         if is_newer:
             url = pyNastran.__website__
             from pyNastran.gui.menus.download import DownloadWindow
             win = DownloadWindow(url, version_latest, win_parent=self)
             win.show()
-        dt = time.time() - time0
+        #dt = time.time() - time0
         #print('dt_version_check = %.2f' % dt)
 
     def mousePressEvent(self, ev):

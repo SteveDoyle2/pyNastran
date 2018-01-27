@@ -41,15 +41,11 @@ class Cart3dIO(object):
         self.eid_map = {}
         self.nid_map = {}
         if filename is None:
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
             skip_reading = True
         else:
             self.turn_text_off()
             self.grid.Reset()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
 
             self.result_cases = {}
             self.ncases = 0

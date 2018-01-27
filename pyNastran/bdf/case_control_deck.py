@@ -530,7 +530,7 @@ class CaseControlDeck(object):
         elif line_upper.startswith(('LABEL', 'SUBT', 'TITL')):  # SUBTITLE/TITLE
             try:
                 eindex = line.index('=')
-            except:
+            except ValueError:
                 msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
                 msg += "line = %r" % line_upper.strip()
                 raise RuntimeError(msg)
@@ -778,7 +778,7 @@ class CaseControlDeck(object):
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
                 (key, value) = line_upper.split(' ')
-            except:
+            except ValueError:
                 msg = 'excepted "BEGIN BULK" found=%r' % line
                 raise RuntimeError(msg)
             key = key.upper()
@@ -936,7 +936,7 @@ def verify_card(key, value, options, line):
                'MFLUID', 'MODES', 'MODTRAK', 'MPC', 'NLHARM',]:
         try:
             value2 = int(value)
-        except:
+        except ValueError:
             print('line=%r is invalid; value=%r' % (line, value))
             raise
         assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
@@ -998,7 +998,7 @@ def verify_card2(key, value, options, line):
     if key in ['BCONTACT', 'CURVELINESYMBOL']:
         try:
             value2 = int(value)
-        except:
+        except ValueError:
             print('line=%r is invalid; value=%r' % (line, value))
             raise
 
@@ -1006,7 +1006,7 @@ def verify_card2(key, value, options, line):
     elif key in int_cards:
         try:
             value2 = int(value)
-        except:
+        except ValueError:
             print('line=%r is invalid; value=%r' % (line, value))
             raise
         assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
@@ -1027,13 +1027,13 @@ def verify_card2(key, value, options, line):
                 for spot in sline:
                     try:
                         value2 = int(spot)
-                    except:
+                    except ValueError:
                         print('line=%r is invalid; value=%r' % (line, spot))
                         raise
             else:
                 try:
                     value2 = int(value)
-                except:
+                except ValueError:
                     print('line=%r is invalid; value=%r' % (line, value))
                     raise
                 if value2 <= 0:

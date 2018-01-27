@@ -764,24 +764,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         if checkables is None:
             checkables = []
-        #print('---------------------------')
+
         for tool in tools:
             (name, txt, icon, shortcut, tip, func) = tool
             if name in self.actions:
                 self.log_error('trying to create a duplicate action %r' % name)
                 continue
-            #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
-                  #% (name, txt, icon, shortcut, tip, func))
-            #if icon is None:
-                #print("missing_icon = %r!!!" % name)
-                #icon = os.path.join(icon_path, 'no.png')
 
             if icon is None:
                 print("missing_icon = %r!!!" % name)
                 ico = None
-                #print(print_bad_path(icon))
-            #elif not "/" in icon:
-                #ico = QtGui.QIcon.fromTheme(icon)
             else:
                 ico = QtGui.QIcon()
                 pth = os.path.join(icon_path, icon)
@@ -861,9 +853,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
         end = text_cursor.End
-        #print("end", end)
         text_cursor.movePosition(end)
-        #print(dir(text_cursor))
         text_cursor.insertHtml(msg + r"<br />")
         self.log_widget.ensureCursorVisible() # new message will be visible
         self.log_mutex.unlock()
@@ -980,8 +970,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 z = 'z'
 
             elif Type == 'Rtp':  # spherical
-                xlabel = u'R'
-                #ylabel = u'θ'
+                #x = u'R'
+                #y = u'θ'
                 #z = u'Φ'
                 x = 'R'
                 y = 't'
@@ -1026,29 +1016,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.corner_axis.SetEnabled(1)
         self.corner_axis.InteractiveOff()
 
-    #def on_show_hide_axes(self):
-        #"""
-        #show/hide axes
-        #"""
-        #if not self.run_vtk:
-            #return
-        ## this method should handle all the coords when
-        ## there are more then one
-        #if self._is_axes_shown:
-            #for axis in itervalues(self.axes):
-                #axis.VisibilityOff()
-        #else:
-            #for axis in itervalues(self.axes):
-                #axis.VisibilityOn()
-        #self._is_axes_shown = not self._is_axes_shown
-
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
 
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
-        #self.emptyResult = vtk.vtkFloatArray()
-        #self.vectorResult = vtk.vtkFloatArray()
 
         # edges
         self.edge_actor = vtk.vtkLODActor()
@@ -1672,7 +1644,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         xc = origin[0] + 0.5*(extent[0] + extent[1]) * spacing[0]
         yc = origin[1] + 0.5*(extent[2] + extent[3]) * spacing[1]
-        # xd = (extent[1] - extent[0] + 1) * spacing[0]
+        #xd = (extent[1] - extent[0] + 1) * spacing[0]
         yd = (extent[3] - extent[2] + 1) * spacing[1]
         d = camera.GetDistance()
         camera.SetParallelScale(0.5 * yd)
@@ -1753,10 +1725,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
-
-    #def _script_helper(self, python_file=False):
-        #if python_file in [None, False]:
-            #self.on_run_script(python_file)
 
     def set_style_as_trackball(self):
         """sets the default rotation style"""
@@ -2569,7 +2537,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return is_failed, (infile_name, load_function, filter_index, formats)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=True):
+                         plot=True, raise_error=False):
         """
         Loads a baseline geometry
 

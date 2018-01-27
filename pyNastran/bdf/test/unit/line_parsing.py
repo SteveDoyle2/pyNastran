@@ -162,7 +162,7 @@ def _parse_entry(lines):
     elif line_upper.startswith('BEGIN'):  # begin bulk
         try:
             (key, value) = line_upper.split(' ')
-        except:
+        except ValueError:
             msg = 'excepted "BEGIN BULK" found=%r' % (line)
             raise RuntimeError(msg)
         param_type = 'BEGIN_BULK-type'

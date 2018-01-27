@@ -39,7 +39,7 @@ def parse_components(card, ifield, fieldname):
 
     try:
         value = int(svalue)
-    except:
+    except ValueError:
         dtype = _get_dtype(svalue)
         msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'
                'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -255,7 +255,7 @@ def integer(card, ifield, fieldname):
 
     try:
         return int(svalue)
-    except:
+    except ValueError:
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -290,7 +290,7 @@ def integer_or_blank(card, ifield, fieldname, default=None):
 
         try:
             return int(svalue)
-        except:
+        except ValueError:
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -555,7 +555,7 @@ def integer_or_double(card, ifield, fieldname):
         # int
         try:
             value = int(svalue)
-        except:
+        except ValueError:
             value = interpret_value(svalue)
             if isinstance(value, (int, float)):
                 return value

@@ -82,24 +82,12 @@ class TecplotIO(object):
         nnodes = self.nnodes
         grid = self.grid
 
-        #points = vtk.vtkPoints()
-        #points.SetNumberOfPoints(nnodes)
-        #self.gridResult.Allocate(self.nnodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        #self.nid_map = {}
-        #elem.SetNumberOfPoints(nNodes)
-
-        #assert nodes is not None
-        #nnodes = nodes.shape[0]
-
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.create_global_axes(dim_max)
 
         points = numpy_to_vtk_points(nodes)
-        #for i in range(nnodes):
-            #points.InsertPoint(i, nodes[i, :])
 
         #elements = model.elements
         quads = model.quad_elements

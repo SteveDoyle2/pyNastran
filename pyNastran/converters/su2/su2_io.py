@@ -49,9 +49,7 @@ class SU2_IO(object):
 
         self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
         self.grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
-        #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
 
         assert nodes is not None

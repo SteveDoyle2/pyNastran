@@ -335,9 +335,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         skip_reading = False
         if bdf_filename is None or bdf_filename is '':
             #self.grid = vtk.vtkUnstructuredGrid()
-            #self.gridResult = vtk.vtkFloatArray()
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
             #self.scalarBar.VisibilityOff()
             skip_reading = True
             return skip_reading
@@ -345,9 +342,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.turn_text_off()
             self.grid.Reset()
 
-            #self.gridResult = vtk.vtkFloatArray()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
             #self.eid_map = {}
             #self.nid_map = {}
 

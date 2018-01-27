@@ -2400,7 +2400,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             except TypeError:
                 msg = 'problem adding %s' % card_obj
                 raise
-                raise TypeError(msg)
+                #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
@@ -3482,11 +3482,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 raise
 
         for key, card in sorted(iteritems(self.dresps)):
-            #try:
-            card._verify(xref)
-            #except:
-                #print(str(card))
-                #raise
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
 
         for key, card in sorted(iteritems(self.dvcrels)):
             try:

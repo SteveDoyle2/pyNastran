@@ -188,6 +188,11 @@ class FortranFormat(object):
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
 
+        See
+        ---
+        read_3_blocks - reds 3 blocks
+        ??? - reads multi-blocks
+
         Returns
         -------
         data : bytes
@@ -199,6 +204,30 @@ class FortranFormat(object):
         data_out = self.f.read(ndata)
         data = self.f.read(4)
         self.n += 8 + ndata
+        return data_out
+
+    def read_3_blocks(self):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+            [nbytes, data, nbytes]
+            [nbytes, data, nbytes]
+
+        This is intended to be used for reading marker triples
+
+        Returns
+        -------
+        data : bytes
+            the data in binary
+        """
+        data_out = b''
+        for i in range(3):
+            data = self.f.read(4)
+            ndata, = self.struct_i.unpack(data)
+
+            data_out += self.f.read(ndata)
+            data = self.f.read(4)
+            self.n += 8 + ndata
         return data_out
 
     def _read_block_ndata(self):
@@ -236,6 +265,11 @@ class FortranFormat(object):
         ----------
         markers : List[int]
             markers to get; markers = [-10, 1]
+
+        Raises
+        ------
+        FortranMarkerError
+            if the expected table number is not found
         """
         for i, marker in enumerate(markers):
             data = self.read_block()
@@ -257,8 +291,13 @@ class FortranFormat(object):
         ----------
         markers : List[int, int, int]
             markers to get; markers = [-10, 1, 0]
+
+        Raises
+        ------
+        FortranMarkerError
+            if the expected table number is not found
         """
-        data = self.read_block() + self.read_block() + self.read_block()
+        data = self.read_3_blocks()
         imarkers = self.struct_3i.unpack(data)
         for i, marker in enumerate(markers):
             if marker != imarker:
@@ -809,7 +848,17 @@ class FortranFormat(object):
             #nloop += 1
 
     def _read_record(self, stream=False, debug=True, macro_rewind=False):
-        """reads a record"""
+        """
+        Reads a record.
+
+        A record is defined N blocks.  Blocks are split every 2^12 bytes,
+        which is an oddity of the OP2, which is a "Fortran formatted" file.
+        You can think of a block as a partial result.  A record is a full
+        result.
+
+        If a block is small enough, it will fit into 2^12 bytes and a record
+        is a block.
+        """
         return self._read_record_ndata(stream, debug, macro_rewind)[0]
 
     def _read_record_ndata(self, stream=False, debug=True, macro_rewind=False):

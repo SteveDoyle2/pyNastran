@@ -266,7 +266,7 @@ class GuiCommon(GuiAttributes):
 
         try:
             key = self.case_keys[icase]
-        except:
+        except KeyError:
             print('icase=%s case_keys=%s' % (icase, str(self.case_keys)))
             raise
         self.icase = icase

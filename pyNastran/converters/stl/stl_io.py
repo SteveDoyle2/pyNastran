@@ -45,21 +45,10 @@ class STL_IO(object):
         self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = numpy_to_vtk_points(nodes)
         self.nid_map = {}
         #elem.SetNumberOfPoints(nnodes)
-        if 0:
-            fraction = 1. / self.nnodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
