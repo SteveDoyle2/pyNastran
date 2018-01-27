@@ -12,7 +12,7 @@ from qtpy.QtWidgets import (
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 
 from pyNastran.gui.colormaps import colormap_keys
-from pyNastran.gui.qutils.pydialog import PyDialog
+from pyNastran.gui.qutils.pydialog import PyDialog, check_format
 from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.gui.qt_version import qt_version
 
@@ -668,7 +668,7 @@ class LegendPropertiesWindow(PyDialog):
         name_value, flag0 = self.check_name(self.name_edit)
         min_value, flag1 = self.check_float(self.min_edit)
         max_value, flag2 = self.check_float(self.max_edit)
-        format_value, flag3 = self.check_format(self.format_edit)
+        format_value, flag3 = check_format(self.format_edit)
         scale, flag4 = self.check_float(self.scale_edit)
         phase, flag5 = self.check_float(self.phase_edit)
 

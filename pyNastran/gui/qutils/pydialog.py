@@ -1,13 +1,11 @@
 from __future__ import print_function
 
-from qtpy import QtCore, QtGui
-from qtpy.QtGui import QFocusEvent, QFont
-from qtpy.QtWidgets import QDialog, QLineEdit, QPushButton
+from qtpy import QtCore
+from qtpy.QtGui import QFont
+from qtpy.QtWidgets import QDialog
 
-from pyNastran.gui.qutils.qpush_button_color import QPushButtonColor
-from pyNastran.gui.qutils.qelement_edit import QElementEdit
 from pyNastran.bdf.utils import (
-    parse_patran_syntax, parse_patran_syntax_dict, write_patran_syntax_dict)
+    parse_patran_syntax, parse_patran_syntax_dict)
 
 class PyDialog(QDialog):
     """
@@ -85,42 +83,6 @@ class PyDialog(QDialog):
             return None, False
 
     @staticmethod
-    def check_format(cell):
-        text = str(cell.text())
-
-        is_valid = True
-        if len(text) < 2:
-            is_valid = False
-        elif 's' in text.lower():
-            is_valid = False
-        elif '%' not in text[0]:
-            is_valid = False
-        elif text[-1].lower() not in ['g', 'f', 'i', 'e']:
-            is_valid = False
-
-        try:
-            text % 1
-            text % .2
-            text % 1e3
-            text % -5.
-            text % -5
-        except ValueError:
-            is_valid = False
-
-        try:
-            text % 's'
-            is_valid = False
-        except TypeError:
-            pass
-
-        if is_valid:
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    @staticmethod
     def check_patran_syntax(cell, pound=None):
         text = str(cell.text())
         try:
@@ -144,3 +106,39 @@ class PyDialog(QDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             cell.setToolTip(str(e))
             return None, False
+
+
+def check_format(cell):
+    text = str(cell.text())
+
+    is_valid = True
+    if len(text) < 2:
+        is_valid = False
+    elif 's' in text.lower():
+        is_valid = False
+    elif '%' not in text[0]:
+        is_valid = False
+    elif text[-1].lower() not in ['g', 'f', 'i', 'e']:
+        is_valid = False
+
+    try:
+        text % 1
+        text % .2
+        text % 1e3
+        text % -5.
+        text % -5
+    except ValueError:
+        is_valid = False
+
+    try:
+        text % 's'
+        is_valid = False
+    except TypeError:
+        pass
+
+    if is_valid:
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return text, True
+    else:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        return None, False

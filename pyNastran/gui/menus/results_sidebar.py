@@ -1,6 +1,5 @@
 from __future__ import print_function
 import sys
-#from copy import deepcopy
 
 # kills the program when you hit Cntl+C from the command line
 import signal
