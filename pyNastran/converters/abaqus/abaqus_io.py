@@ -9,7 +9,7 @@ import numpy as np
 
 import vtk
 from vtk import vtkLine, vtkTriangle, vtkQuad, vtkTetra
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 #from pyNastran.gui.qt_files.result import Result

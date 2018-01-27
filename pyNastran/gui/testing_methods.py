@@ -13,8 +13,8 @@ from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 #from pyNastran.gui.gui_objects.gui_result import GuiResult
 #from pyNastran.converters.nastran.displacements import DisplacementResults
 from pyNastran.bdf.cards.base_card import deprecated
-from pyNastran.gui.gui_utils.utils import create_res_obj
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.load_results import create_res_obj
+from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 

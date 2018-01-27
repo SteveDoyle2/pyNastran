@@ -28,7 +28,7 @@ from qtpy.QtWidgets import (
 from qtpy.compat import getsavefilename, getopenfilename
 
 
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
 
 
 import vtk
@@ -42,7 +42,7 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
-from pyNastran.gui.gui_utils.write_gif import (
+from pyNastran.gui.utils.write_gif import (
     setup_animation, update_animation_inputs, write_gif)
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
@@ -71,7 +71,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
-from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
+from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
 
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -764,24 +764,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         if checkables is None:
             checkables = []
-        #print('---------------------------')
+
         for tool in tools:
             (name, txt, icon, shortcut, tip, func) = tool
             if name in self.actions:
                 self.log_error('trying to create a duplicate action %r' % name)
                 continue
-            #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
-                  #% (name, txt, icon, shortcut, tip, func))
-            #if icon is None:
-                #print("missing_icon = %r!!!" % name)
-                #icon = os.path.join(icon_path, 'no.png')
 
             if icon is None:
                 print("missing_icon = %r!!!" % name)
                 ico = None
-                #print(print_bad_path(icon))
-            #elif not "/" in icon:
-                #ico = QtGui.QIcon.fromTheme(icon)
             else:
                 ico = QtGui.QIcon()
                 pth = os.path.join(icon_path, icon)
@@ -861,9 +853,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
         end = text_cursor.End
-        #print("end", end)
         text_cursor.movePosition(end)
-        #print(dir(text_cursor))
         text_cursor.insertHtml(msg + r"<br />")
         self.log_widget.ensureCursorVisible() # new message will be visible
         self.log_mutex.unlock()
@@ -980,8 +970,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 z = 'z'
 
             elif Type == 'Rtp':  # spherical
-                xlabel = u'R'
-                #ylabel = u'θ'
+                #x = u'R'
+                #y = u'θ'
                 #z = u'Φ'
                 x = 'R'
                 y = 't'
@@ -1026,29 +1016,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.corner_axis.SetEnabled(1)
         self.corner_axis.InteractiveOff()
 
-    #def on_show_hide_axes(self):
-        #"""
-        #show/hide axes
-        #"""
-        #if not self.run_vtk:
-            #return
-        ## this method should handle all the coords when
-        ## there are more then one
-        #if self._is_axes_shown:
-            #for axis in itervalues(self.axes):
-                #axis.VisibilityOff()
-        #else:
-            #for axis in itervalues(self.axes):
-                #axis.VisibilityOn()
-        #self._is_axes_shown = not self._is_axes_shown
-
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
 
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
-        #self.emptyResult = vtk.vtkFloatArray()
-        #self.vectorResult = vtk.vtkFloatArray()
 
         # edges
         self.edge_actor = vtk.vtkLODActor()
@@ -1672,7 +1644,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         xc = origin[0] + 0.5*(extent[0] + extent[1]) * spacing[0]
         yc = origin[1] + 0.5*(extent[2] + extent[3]) * spacing[1]
-        # xd = (extent[1] - extent[0] + 1) * spacing[0]
+        #xd = (extent[1] - extent[0] + 1) * spacing[0]
         yd = (extent[3] - extent[2] + 1) * spacing[1]
         d = camera.GetDistance()
         camera.SetParallelScale(0.5 * yd)
@@ -1753,10 +1725,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
-
-    #def _script_helper(self, python_file=False):
-        #if python_file in [None, False]:
-            #self.on_run_script(python_file)
 
     def set_style_as_trackball(self):
         """sets the default rotation style"""
@@ -1993,24 +1961,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         This should really only be called for integer results < 50-ish.
         """
-        #self.scalar_bar.title
-        case_key = self.case_keys[self.icase] # int for object
-        result_name = self.result_name
-        obj, (i, name) = self.result_cases[case_key]
-        default_title = obj.get_default_title(i, name)
-        location = obj.get_location(i, name)
-        if obj.data_format != '%i':
-            self.log.error('not creating result=%r; must be an integer result' % result_name)
-            return 0
-        if location != 'centroid':
-            self.log.error('not creating result=%r; must be a centroidal result' % result_name)
-            return 0
+        try:
+            #self.scalar_bar.title
+            case_key = self.case_keys[self.icase] # int for object
+            result_name = self.result_name
+            obj, (i, name) = self.result_cases[case_key]
+            default_title = obj.get_default_title(i, name)
+            location = obj.get_location(i, name)
+            if obj.data_format != '%i':
+                self.log.error('not creating result=%r; must be an integer result' % result_name)
+                return 0
+            if location != 'centroid':
+                self.log.error('not creating result=%r; must be a centroidal result' % result_name)
+                return 0
 
-        word = default_title
-        prefix = default_title
-        ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
-        self.log_command('create_groups_by_visible_result()'
-                         ' # created %i groups for result_name=%r' % (ngroups, result_name))
+            word = default_title
+            prefix = default_title
+            ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
+            self.log_command('create_groups_by_visible_result()'
+                             ' # created %i groups for result_name=%r' % (ngroups, result_name))
+        except Exception as e:
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
 
     def create_groups_by_property_id(self):
         """
@@ -2027,8 +2000,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #eids = self.find_result_by_name('ElementID')
         #elements_pound = eids.max()
-        eids = self.groups['main'].element_ids
-        elements_pound = self.groups['main'].elements_pound
+        try:
+            eids = self.groups['main'].element_ids
+            elements_pound = self.groups['main'].elements_pound
+        except Exception as e:
+            self.log.error('Cannot create groups as there are no elements in the model')
+            return 0
 
         result = self.find_result_by_name(name)
         ures = np.unique(result)
@@ -2167,8 +2144,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def numpy_to_vtk_idtype(self, ids):
         #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-        from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtkIdTypeArray
-
+        from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtkIdTypeArray
         dtype = get_numpy_idtype_for_vtk()
         ids = np.asarray(ids, dtype=dtype)
         vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
@@ -2561,7 +2537,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return is_failed, (infile_name, load_function, filter_index, formats)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=True):
+                         plot=True, raise_error=False):
         """
         Loads a baseline geometry
 

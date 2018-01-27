@@ -45,8 +45,6 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
-
 
 #from pyNastran import is_release
 from pyNastran.utils import integer_types
@@ -67,9 +65,10 @@ from pyNastran.bdf.cards.elements.solid import (
     CPYRAM5, CPYRAM13,
 )
 
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.vtk.vtk_utils import (
     get_numpy_idtype_for_vtk, numpy_to_vtk_points,
-    create_vtk_cells_of_constant_element_type)
+    create_vtk_cells_of_constant_element_type,
+    numpy_to_vtk, numpy_to_vtkIdTypeArray)
 from pyNastran.gui.errors import NoGeometry
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (
@@ -336,9 +335,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         skip_reading = False
         if bdf_filename is None or bdf_filename is '':
             #self.grid = vtk.vtkUnstructuredGrid()
-            #self.gridResult = vtk.vtkFloatArray()
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
             #self.scalarBar.VisibilityOff()
             skip_reading = True
             return skip_reading
@@ -346,9 +342,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.turn_text_off()
             self.grid.Reset()
 
-            #self.gridResult = vtk.vtkFloatArray()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
             #self.eid_map = {}
             #self.nid_map = {}
 

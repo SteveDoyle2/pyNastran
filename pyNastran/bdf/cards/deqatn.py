@@ -460,7 +460,7 @@ def fortran_to_python(lines, default_values, comment=''):
             # f(x, y) = abs(x) + y
             # f = 42.
             f, eq = line.split('=')
-        except:
+        except ValueError:
             if '=' not in line:
                 raise SyntaxError('= not found in %r' % (line))
             else:

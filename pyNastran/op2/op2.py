@@ -623,6 +623,8 @@ class OP2(OP2_Scalar):
                     try:
                         obj.build_dataframe()
                         obj.object_methods()
+                    except MemoryError:
+                        raise
                     except:
                         self.log.error(obj)
                         self.log.error('build_dataframe is broken for %s' % class_name)
@@ -634,6 +636,8 @@ class OP2(OP2_Scalar):
                     continue
                 try:
                     obj.build_dataframe()
+                except MemoryError:
+                    raise
                 except NotImplementedError:
                     self.log.warning(obj)
                     self.log.warning('build_dataframe is broken for %s' % class_name)

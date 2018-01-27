@@ -3885,11 +3885,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 raise
 
         for key, card in sorted(iteritems(self.dresps)):
-            #try:
-            card._verify(xref)
-            #except:
-                #print(str(card))
-                #raise
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
 
         for key, card in sorted(iteritems(self.dvcrels)):
             try:

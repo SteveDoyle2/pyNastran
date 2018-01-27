@@ -3,7 +3,7 @@ from qtpy import QtCore
 from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
 
-from pyNastran.gui.qutils.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 
 class ClippingPropertiesWindow(PyDialog):

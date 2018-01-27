@@ -7,7 +7,7 @@ from numpy import arange
 import vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.converters.dev.obj.obj import read_obj
 
 
@@ -33,15 +33,11 @@ class ObjIO(object):
         self.eid_map = {}
         self.nid_map = {}
         if filename is None:
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
             skip_reading = True
         else:
             self.turn_text_off()
             self.grid.Reset()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
 
             self.result_cases = {}
             self.ncases = 0

@@ -15,7 +15,7 @@ from vtk import vtkTriangle, vtkQuad, vtkHexahedron
 from pyNastran.converters.openfoam.block_mesh import BlockMesh, Boundary
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.utils import print_bad_path
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
@@ -144,14 +144,11 @@ class OpenFoamIO(object):
 
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         self.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
-
-        #nid = 0
 
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
@@ -161,7 +158,6 @@ class OpenFoamIO(object):
         self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
 
-        #print()
         #dim_max = (mmax - mmin).max()
         assert dim_max > 0
 
@@ -264,10 +260,6 @@ class OpenFoamIO(object):
 
         self.nelements = nelements
         self.grid.SetPoints(points)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print(dir(self.grid) #.SetNumberOfComponents(0))
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()

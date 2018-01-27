@@ -50,24 +50,9 @@ class ShabpIO(object):
         #print("nelements = ", self.nelements)
 
         self.grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nnodes)
-        #self.gridResult.Allocate(self.nnodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        #elem.SetNumberOfPoints(nnodes)
-        #if 0:
-            #fraction = 1. / nnodes  # so you can color the nodes by ID
-            #for nid, node in sorted(iteritems(nodes)):
-                #points.InsertPoint(nid - 1, *node)
-                #self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert len(nodes) > 0
         mmax = amax(nodes, axis=0)
@@ -88,10 +73,6 @@ class ShabpIO(object):
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
         self.grid.SetPoints(points)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print dir(self.grid) #.SetNumberOfComponents(0)
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()

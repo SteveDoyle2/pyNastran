@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-from qtpy import QtCore
 from qtpy.QtGui import QFont
 from qtpy.QtWidgets import QDialog
 

@@ -50,7 +50,7 @@ def determine_format(input_filename, allowed_formats=None):
                            for val in value}
     try:
         formati = extension_to_format[ext]
-    except:
+    except KeyError:
         print('allowed_formats =', allowed_formats)
         msg = 'format=%r was not found\nSpecify the format as [%s]' % (
             ext, ', '.join(allowed_formats))
