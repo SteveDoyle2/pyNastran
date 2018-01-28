@@ -17,7 +17,8 @@ from qtpy.QtWidgets import (
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
 import vtk
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, QPushButtonColor
+from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 
 

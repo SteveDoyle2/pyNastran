@@ -75,7 +75,7 @@ from pyNastran.converters.nastran.geometry_helper import (
     NastranGeometryHelper, tri_quality, quad_quality, get_min_max_theta)
 from pyNastran.converters.nastran.results_helper import NastranGuiResults
 from pyNastran.converters.nastran.displacements import (
-    ForceTableResults)
+    ForceTableResults, ElementalTableResults)
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
@@ -4954,6 +4954,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form_checks.append(('OffsetY', icase + 2, []))
             form_checks.append(('OffsetZ', icase + 3, []))
             icase += 4
+
+            if 0:
+                xyz_offset = np.vstack([xoffset, yoffset, zoffset]).T
+                titles = ['Offset XYZ']
+                headers = titles
+                assert xyz_offset.shape[1] == 3, xyz_offset.shape
+                assert xyz_offset.shape[0] == len(offset)
+                scales = [1.0]
+                subcase_id = 0
+                offset_xyz_res = ElementalTableResults(
+                    subcase_id, titles, headers, xyz_offset, offset)
+                offset_xyz_res.save_defaults()
+                cases[icase] = (offset_z_res, (0, 'OffsetZ'))
+                form_checks.append(('OffsetXYZ', icase, []))
+                icase += 1
 
             if self.make_xyz or IS_TESTING:
                 x_res = GuiResult(

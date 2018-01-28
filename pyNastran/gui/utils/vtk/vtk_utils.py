@@ -220,7 +220,7 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):
     """
     z = np.asarray(num_array)
     if not z.flags.contiguous:
-        z = numpy.ascontiguousarray(z)
+        z = np.ascontiguousarray(z)
 
     shape = z.shape
     assert z.flags.contiguous, 'Only contiguous arrays are supported.'

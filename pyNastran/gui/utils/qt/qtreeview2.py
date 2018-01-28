@@ -1,11 +1,18 @@
 from __future__ import print_function
 
-#from qtpy import QtGui
+from six import string_types
+
+from qtpy import QtGui
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QTreeView, QMessageBox
+from qtpy.QtWidgets import QTreeView, QMessageBox, QMenu
 
 
 class QTreeView2(QTreeView):
+    """
+    creates a QTreeView with:
+     - a nice-ish way to extract the location in the tree
+     - key press delete support
+    """
     def __init__(self, parent, data, choices):
         self.parent = parent
         self.old_rows = []
@@ -16,19 +23,24 @@ class QTreeView2(QTreeView):
         QTreeView.__init__(self)
         #self.setAlternatingRowColors(True)
 
-    def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
+    def keyPressEvent(self, event):
+        """
+        Handles:
+         - delete: delete result cases
+         - enter/return: apply result
+         - up/down/left/right: navigate the tree
+        """
         #if event.key() == QtCore.Qt.Key_Escape:
             #self.close()
         #return
         key = event.key()
         if key == Qt.Key_Delete:
-            rows = self.find_list_index()
-            self.remove_rows(rows)
-            #self.model().removeRow(row)
-            #self.parent().on_delete(index.row())
-
-            #del self.data[row]
-            #self.model().change_data(self.data)
+            self.on_delete()
+        elif key in [Qt.Key_Enter, Qt.Key_Return]:
+            return self.parent.parent.on_apply(event)
+        elif key in [Qt.Key_Up, Qt.Key_Down]:
+            QTreeView.keyPressEvent(self, event)
+            self.set_rows()
         else:
             QTreeView.keyPressEvent(self, event)
 
@@ -109,10 +121,7 @@ class QTreeView2(QTreeView):
                 return
 
             self.cases_deleted.update(set(cases_to_delete))
-            sidebar = self.parent.parent
-            if hasattr(sidebar.parent, 'delete_cases'):
-                gui = sidebar.parent
-                gui.delete_cases(cases_to_delete, ask=False)
+            self.on_delete_parent_cases(cases_to_delete)
 
         # hide the line the user wants to delete
         row = rows[-1]
@@ -120,10 +129,15 @@ class QTreeView2(QTreeView):
         self.setRowHidden(row, indexes[-1].parent(), True)
         self.update()
 
+    def on_delete_parent_cases(self, cases_to_delete):
+        """delete cases from the parent"""
+        sidebar = self.parent.parent
+        if hasattr(sidebar.parent, 'delete_cases'):
+            gui = sidebar.parent
+            gui.delete_cases(cases_to_delete, ask=False)
+
     def find_list_index(self):
-        """
-        trace the tree to find the selected item
-        """
+        """trace the tree to find the selected item"""
         indexes = self.selectedIndexes()
 
         rows = []
@@ -139,22 +153,45 @@ class QTreeView2(QTreeView):
         rows.reverse()
         return rows
 
-    def mousePressEvent(self, position):
+    def mousePressEvent(self, event):
         """called when you click a result"""
-        QTreeView.mousePressEvent(self, position)
+        QTreeView.mousePressEvent(self, event)
+        if event.button() == Qt.LeftButton:
+            self.on_left_mouse_button()
+        elif event.button() == Qt.RightButton:
+            self.on_right_mouse_button()
 
-        # trace the tree to find the selected item
-        rows = self.find_list_index()
-
-        # TODO: what is this for???
-        if rows != self.old_rows:
-            self.old_rows = rows
+    def on_left_mouse_button(self):
+        self.set_rows()
         valid, keys = self.get_row()
         if not valid:
             print('invalid=%s keys=%s' % (valid, keys))
         else:
             print('valid=%s keys=%s' % (valid, keys))
             #print('choice =', self.choices[keys])
+
+    def on_right_mouse_button(self):
+        """overwrite this to make a right-click menu"""
+        pass
+
+    def on_delete(self):
+        """interface for deleting rows"""
+        rows = self.find_list_index()
+        self.remove_rows(rows)
+        #self.model().removeRow(row)
+        #self.parent().on_delete(index.row())
+
+        #del self.data[row]
+        #self.model().change_data(self.data)
+
+    def set_rows(self):
+        """trace the tree to find the selected item"""
+        rows = self.find_list_index()
+
+        # TODO: what is this for???
+        #if rows != self.old_rows:
+        self.old_rows = rows
+        #print('rows =', rows)
 
     def get_row(self):
         """
@@ -169,7 +206,7 @@ class QTreeView2(QTreeView):
             tuple : valid case
                 ('centroid', None, [])
                 0 - the location (e.g. node, centroid)
-                1 - iCase
+                1 - icase
                 2 - []
         """
         # if there's only 1 data member, we don't need to extract the data id
@@ -200,11 +237,80 @@ class QTreeView2(QTreeView):
         self.old_rows = [0]
 
 
-#for subcase in subcases:
-#    for time in times:
-#        disp
-#        stress
-#        load
+class RightClickTreeView(QTreeView2):
+    """
+    creates a QTreeView with:
+     - all the features of QTreeView2
+     - a right click context menu with:
+       - Clear Active Results
+       - Show Normals
+       - Apply Results to Fringe
+       - Apply Results to Displacement
+       - Apply Results to Vector
+       - Delete Case
+    """
+    def __init__(self, parent, data, choices):
+        QTreeView2.__init__(self, parent, data, choices)
+        #
+        # TODO: create a menu that only has clear/normals/fringe/delete
+        #       if there is no transient result
+        #
+        self.right_click_menu = QMenu()
+        self.clear = self.right_click_menu.addAction("Clear Results...")
+        self.normals = self.right_click_menu.addAction("Apply Normals to Fringe...")
+        self.fringe = self.right_click_menu.addAction("Apply Results to Fringe...")
+
+        self.clear.triggered.connect(self.on_clear_results)
+        self.normals.triggered.connect(self.on_normals)
+        self.fringe.triggered.connect(self.on_fringe)
+
+        self.disp = self.right_click_menu.addAction("Apply Results to Displacement...")
+        self.vector = self.right_click_menu.addAction("Apply Results to Vector...")
+
+        self.disp.triggered.connect(self.on_disp)
+        self.vector.triggered.connect(self.on_vector)
+        if 0:  # pragma: no cover
+            self.delete = self.right_click_menu.addAction("Delete...")
+            self.delete.triggered.connect(self.on_delete)
+
+        #self.normals.setCheckable(True)
+        #self.fringe.setCheckable(True)
+        #self.disp.setCheckable(True)
+        #self.vector.setCheckable(True)
+
+    def on_clear_results(self):
+        """clears the active result"""
+        self.parent.parent.on_clear_results()
+
+    def on_normals(self):
+        """applies surface normals"""
+        is_valid, icase = self.get_row()
+        self.parent.parent.on_normals(icase)
+
+    def on_fringe(self):
+        """applies a fringe result"""
+        is_valid, icase = self.get_row()
+        self.parent.parent.on_fringe(icase)
+
+    def on_disp(self):
+        """applies a displacement result"""
+        is_valid, icase = self.get_row()
+        self.parent.parent.on_disp(icase)
+
+    def on_vector(self):
+        """applies a vector result"""
+        is_valid, icase = self.get_row()
+        self.parent.parent.on_vector(icase)
+
+    def on_right_mouse_button(self):
+        """interfaces with the right click menu"""
+        self.set_rows()
+        is_valid, icase = self.get_row()
+        if not is_valid:
+            return
+        # TODO: check if we should show disp/vector
+        self.right_click_menu.popup(QtGui.QCursor.pos())
+
 
 def get_many_cases(data):
     """
@@ -235,3 +341,10 @@ def get_many_cases(data):
     else:
         cases = [case]
     return cases
+
+
+#for subcase in subcases:
+#    for time in times:
+#        disp
+#        stress
+#        load

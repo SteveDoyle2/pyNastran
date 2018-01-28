@@ -4247,6 +4247,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.glyphs = glyphs
         self.glyph_mapper = glyph_mapper
         self.arrow_actor = arrow_actor
+        #-----------------------------------------
+        glyphs_centroid = vtk.vtkGlyph3D()
+        glyphs_centroid.SetVectorModeToUseVector()
+        glyphs_centroid.SetScaleModeToScaleByVector()
+        glyphs_centroid.SetColorModeToColorByScale()
+        glyphs_centroid.ScalingOn()
+        glyphs_centroid.ClampingOn()
+        glyphs_centroid.SetSourceConnection(glyph_source.GetOutputPort())
+
+        glyph_mapper_centroid = vtk.vtkPolyDataMapper()
+        glyph_mapper_centroid.SetInputConnection(glyphs_centroid.GetOutputPort())
+        glyph_mapper_centroid.ScalarVisibilityOff()
+
+        arrow_actor_centroid = vtk.vtkLODActor()
+        arrow_actor_centroid.SetMapper(glyph_mapper_centroid)
+
+        self.glyphs_centroid = glyphs_centroid
+        self.glyph_mapper_centroid = glyph_mapper_centroid
+        self.arrow_actor_centroid = arrow_actor_centroid
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
         if names_to_ignore is None:
