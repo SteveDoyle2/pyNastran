@@ -371,8 +371,13 @@ class TableDef(object):
 
         return data
 
-    def search(self, domains, data_ids, filter=None):
+    def search(self, data_ids, domains=(), subcase_ids=()):
+        # TODO: consider subcase_ids
+        
         private_index_table = self._get_private_index_table()
+        
+        if len(domains) == 0:
+            domains = list(range(len(private_index_table)))
 
         indices = set()
 
@@ -387,20 +392,8 @@ class TableDef(object):
                 indices.update(set(index + offset for index in _indices))
 
         results = self.read(sorted(indices))
-
-        if filter is not None:
-            indices = set()
-            for key in filter.keys():
-                data = set(filter[key])
-                results_data = results[key]
-                for i in range(results_data.shape[0]):
-                    if results_data[i] in data:
-                        indices.add(i)
-            results = results[sorted(indices)]
-            
-        results = self.result_table_data.from_records(results)
-
-        return results
+        
+        return self.result_table_data.from_records(results)
 
     def path(self):
         return self.group + '/' + self.table_id
@@ -731,9 +724,9 @@ class ResultTable(object):
     def read(self, indices):
         return self._table_def.read(indices)
 
-    def search(self, domains, data_ids, filter=None):
+    def search(self, data_ids, domains=(), subcase_ids=()):
         try:
-            return self._table_def.search(domains, data_ids, filter)
+            return self._table_def.search(data_ids, domains, subcase_ids)
         except tables.exceptions.NoSuchNodeError:
             return self._table_def.result_table_data()
 
@@ -760,14 +753,21 @@ class ResultTable(object):
 
 
 class ResultTableData(pd.DataFrame):
-    _metadata = ['data_cols', 'data_group_by']
+    _metadata = ['data_cols', 'data_group_by', 'the_dtype']
 
     data_cols = []  # List[str]
     data_group_by = []  # List[str]
+    the_dtype = None
+    
+    @classmethod
+    def from_records(cls, *args, **kwargs):
+        result = super(ResultTableData, cls).from_records(*args, **kwargs)
+        cls.the_dtype = args[0].dtype
+        return result
 
     @property
     def _constructor(self):
-        return ResultTableData
+        return self.__class__
 
     def _data_group_by(self):
         if len(self.data_group_by) == 0:

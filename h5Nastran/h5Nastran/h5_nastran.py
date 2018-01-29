@@ -44,9 +44,20 @@ class H5Nastran(object):
 
         if mode == 'w':
             self._write_info()
+        else:
+            self.input.update()
 
     def close(self):
         self.h5f.close()
+        
+    def visualize(self):
+        from .gui.visualization import to_vtk
+        
+        if self.bdf is None:
+            self.load_bdf()
+        
+        vtk_data = to_vtk(self.bdf)
+        vtk_data.visualize()
 
     def load_bdf(self, filename=None):
         if self._bdf is not None:

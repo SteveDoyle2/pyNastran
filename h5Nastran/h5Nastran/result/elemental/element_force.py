@@ -102,9 +102,9 @@ class ElementForce(object):
         return self._elemental.path() + ['ELEMENT_FORCE']
 
     # TODO: individual tables need to have data_ids first for consistency
-    def search(self, element_ids, domain_ids=None, subcase_ids=None):
-        # :type (List[int], List[int], List[int]) -> Dict[str, np.ndarray]
-        # TODO: add support for subcase_ids
+    def search(self, element_ids, domain_ids=(), subcase_ids=()):
+        # :type (List[int], List[int], List[int]) -> ElementForceResult
+        # TODO: consider subcase_ids here... convert to domain_ids and use domain_ids only
         result = ElementForceResult()
         _result = result.__dict__
         table_ids = self.__dict__.keys()
@@ -112,8 +112,7 @@ class ElementForce(object):
         for table_id in table_ids:
             if table_id.startswith('_'):  # not a table
                 continue
-
-            _result[table_id] = _tables[table_id].search(domain_ids, element_ids)
+            _result[table_id] = _tables[table_id].search(element_ids, domain_ids, subcase_ids)
                 
         return result
     

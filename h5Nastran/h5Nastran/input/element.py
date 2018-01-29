@@ -551,7 +551,11 @@ class CHEXA(CardTable):
 
     @staticmethod
     def from_bdf(card):
-        return TableData([[card.eid, card.pid, card.node_ids]])
+        node_ids = list(card.node_ids)
+        diff = 20 - len(node_ids)
+        if diff > 0:
+            node_ids += [0] * diff
+        return TableData([[card.eid, card.pid, node_ids]])
 
 ########################################################################################################################
 

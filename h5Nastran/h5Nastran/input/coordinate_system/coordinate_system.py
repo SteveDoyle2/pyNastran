@@ -5,7 +5,8 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef, TableData
+from ...input.card_table import CardTable, TableDef, TableData
+from .transformation import Transformation
 
 
 class CoordinateSystem(object):
@@ -22,6 +23,7 @@ class CoordinateSystem(object):
         self.cord3g = CORD3G(self._h5n, self)
         self.cord3r = CORD3R(self._h5n, self)
         # self.transformation = TRANSFORMATION(self._h5n, self)
+        self.h5n_transformation = Transformation(self._h5n, self)
 
     def path(self):
         return self._input.path() + ['COORDINATE_SYSTEM']
@@ -34,6 +36,9 @@ class CoordinateSystem(object):
                 item.read()
             except AttributeError:
                 pass
+
+    def update(self):
+        self.h5n_transformation.update()
 
 
 ########################################################################################################################

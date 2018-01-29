@@ -236,7 +236,7 @@ class TableDef(object):
     def read(self):
         table = self.get_table()
         if table is None:
-            return None
+            return np.empty(0, dtype=self.dtype)
         return table.read()
 
 
@@ -333,7 +333,7 @@ class CardTable(object):
     def read(self):
         if self.from_bdf is CardTable.from_bdf:
             # if not implemented, then bail now so the table isn't created in the h5 file
-            return
+            return np.empty(0, dtype=self.table_def.dtype)
 
         self.data.clear()
         # main table should ALWAYS be identity, regardless of inconsistencies in MSC spec
@@ -349,6 +349,8 @@ class CardTable(object):
 
         for subtable in self._table_def.subtables:
             _get_subtable_data(subtable)
+
+        return self.data['identity']
 
     def __getattr__(self, item):
         if len(self.data) == 0:
