@@ -255,7 +255,7 @@ def integer(card, ifield, fieldname):
 
     try:
         return int(svalue)
-    except ValueError:
+    except(ValueError, TypeError):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -290,7 +290,7 @@ def integer_or_blank(card, ifield, fieldname, default=None):
 
         try:
             return int(svalue)
-        except ValueError:
+        except(ValueError, TypeError):
             dtype = _get_dtype(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\n'
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -555,7 +555,7 @@ def integer_or_double(card, ifield, fieldname):
         # int
         try:
             value = int(svalue)
-        except ValueError:
+        except(ValueError, TypeError):
             value = interpret_value(svalue)
             if isinstance(value, (int, float)):
                 return value
@@ -747,7 +747,7 @@ def integer_double_or_string(card, ifield, fieldname):
             # int
             try:
                 value = int(svalue)
-            except ValueError:
+            except(ValueError, TypeError):
                 msg = ('%s = %r (field #%s) on card must be an integer, float, '
                        'or string (not blank).\n'
                        'card=%s' % (fieldname, svalue, ifield, card))
