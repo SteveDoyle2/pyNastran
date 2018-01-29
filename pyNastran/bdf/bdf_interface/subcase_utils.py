@@ -171,7 +171,7 @@ def write_set(set_id, values, spaces=''):
 
     Parameters
     ----------
-    value : List[int]
+    values : List[int]
         the Set values
     options : int / str; default=''
         the Set ID
@@ -199,20 +199,20 @@ def write_set(set_id, values, spaces=''):
     >>> print(set)
     SET = ALL
     """
-    value.sort()
+    values.sort()
     starter = 'SET %s = ' % (set_id)
     msg2 = spaces + starter
 
     msg = ''
     nchars = len(msg2)
     is_valid = True
-    for valuei in value:
+    for valuei in values:
         if not isinstance(valuei, integer_types):
             is_valid = False
             break
 
     if is_valid:
-        singles, doubles = collapse_thru_packs(value)
+        singles, doubles = collapse_thru_packs(values)
 
         out_values = singles
         for double in doubles:
@@ -220,7 +220,7 @@ def write_set(set_id, values, spaces=''):
             sdouble = '%i THRU %i' % (double[0], double[2])
             out_values.append(sdouble)
     else:
-        out_values = value
+        out_values = values
 
     for i, out_value in enumerate(out_values):
         new_string = '%s, ' % out_value
