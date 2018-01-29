@@ -2,7 +2,7 @@
 from __future__ import print_function, unicode_literals
 from six.moves import range
 from struct import Struct
-from numpy import fromstring, frombuffer, array
+from numpy import frombuffer, array
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
 from pyNastran.op2.op2_interface.op2_common import OP2Common
@@ -372,7 +372,7 @@ class ONR(OP2Common):
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     #eid = self.obj.add_new_eid(out)
                     if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; %s\n' % (eid, str(out)))
+                        self.binary_debug.write('  eid/word=%r; %s\n' % (word, str(out)))
                     obj.add_sort1(dt, word, energy, percent, density)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 5:

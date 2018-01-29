@@ -8,7 +8,7 @@ from six import iteritems
 
 from vtk import vtkTriangle, vtkTetra
 from pyNastran.converters.fast.fgrid_reader import FGridReader
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 class FastIO(object):
@@ -65,14 +65,11 @@ class FastIO(object):
 
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = numpy_to_vtk_points(nodes)
         self.nid_map = {}
         #if 0:
             #fraction = 1. / self.nnodes  # so you can color the nodes by ID
-            #for nid, node in sorted(iteritems(nodes)):
-                #self.gridResult.InsertNextValue(nid * fraction)
 
         assert nodes is not None
         nnodes = nodes.shape[0]

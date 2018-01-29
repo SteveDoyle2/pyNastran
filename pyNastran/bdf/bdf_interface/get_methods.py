@@ -129,8 +129,8 @@ class GetMethods(BDFAttributes):
         """
         Gets an element
 
-        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE)
-        or mass (CMASS1, CONM2))
+        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE, RSSCON)
+        or mass (CMASS1, CONM2)
         """
         try:
             return self.elements[eid]
@@ -139,6 +139,12 @@ class GetMethods(BDFAttributes):
                            % (eid, msg, np.unique(list(self.elements.keys()))))
 
     def Elements(self, eids, msg=''):
+        """
+        Gets an series of elements
+
+        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE, RSSCON)
+        or mass (CMASS1, CONM2)
+        """
         elements = []
         bad_eids = []
         for eid in eids:
@@ -161,7 +167,7 @@ class GetMethods(BDFAttributes):
                            % (eid, msg, np.unique(list(self.masses.keys()))))
 
     def RigidElement(self, eid, msg=''):
-        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE)"""
+        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON)"""
         try:
             return self.rigid_elements[eid]
         except KeyError:

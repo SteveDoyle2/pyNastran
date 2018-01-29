@@ -204,7 +204,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
-            write_f06=True, write_op2=False, write_xlsx=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False, is_sort2=False, is_nx=None,
             delete_f06=False, skip_dataframe=False,
             subcases=None, exclude=None, short_stats=False,
@@ -225,8 +225,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         should an F06 be written based on the results
     write_op2 : bool; default=False
         should an OP2 be written based on the results
-    write_xlsx : bool; default=False
-        should an XLSX be written based on the results
     is_mag_phase : bool; default=False
         False : write real/imag results
         True : write mag/phase results
@@ -408,15 +406,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
                 except:
                     pass
 
-        if write_xlsx:
-            model = os.path.splitext(op2_filename)[0]
-            op2.write_xlsx(model + '.test_op2.xlsx', is_mag_phase=is_mag_phase)
-            if delete_f06:
-                try:
-                    os.remove(model + '.test_op2.xlsx')
-                except:
-                    pass
-
         if is_memory and check_memory:
             op2 = None
             del op2_nv
@@ -439,6 +428,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         #print(op2.case_control_deck.get_op2_data())
         #print(op2.case_control_deck.get_op2_data())
         is_passed = True
+    except MemoryError:
+        raise
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
@@ -635,7 +626,6 @@ def main():
             write_bdf=data['--write_bdf'],
             write_f06=data['--write_f06'],
             write_op2=data['--write_op2'],
-            write_xlsx=data['--write_xlsx'],
             is_mag_phase=data['--is_mag_phase'],
             skip_dataframe=data['--skip_dataframe'],
             subcases=data['--subcase'],

@@ -21,6 +21,11 @@ class Nodes(object):
         self.epoints = model.epoints
         self.xyz_cid0 = None
 
+    #@property
+    #def nids(self):
+        #self.grid.make_current()
+        #return self.grid.nid
+
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         if len(self.grid):

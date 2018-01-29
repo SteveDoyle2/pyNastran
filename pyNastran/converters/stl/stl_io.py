@@ -11,7 +11,7 @@ from vtk import vtkTriangle
 
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
@@ -45,21 +45,10 @@ class STL_IO(object):
         self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = numpy_to_vtk_points(nodes)
         self.nid_map = {}
         #elem.SetNumberOfPoints(nnodes)
-        if 0:
-            fraction = 1. / self.nnodes  # so you can color the nodes by ID
-            for nid, node in sorted(iteritems(nodes)):
-                self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
         nnodes = nodes.shape[0]

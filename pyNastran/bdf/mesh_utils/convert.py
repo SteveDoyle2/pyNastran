@@ -346,15 +346,34 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PBUSH':
+            # can be length=0
+            #assert len(prop.Ki) == 6, prop.Ki
+            #assert len(prop.Bi) == 6, prop.Bi
             for var in prop.vars:
+                # TODO: I think this needs to consider rotation
                 if var == 'K':
                     prop.Ki = [ki*stiffness_scale if ki is not None else None
                                for ki in prop.Ki]
                 elif var == 'B':
-                    [bi*velocity_scale if bi is not None else None
-                     for bi in prop.Bi]
+                    prop.Bi = [bi*velocity_scale if bi is not None else None
+                               for bi in prop.Bi]
+                elif var == 'GE':
+                    pass
                 else:
                     raise NotImplementedError(prop)
+
+            #prop.rcv
+            if prop.mass is not None:
+                prop.mass *= mass_scale
+            #rcv : List[float]; default=None -> (None, None, None, None)
+                #[sa, st, ea, et] = rcv
+                #length(mass_fields) = 4
+            #mass : float; default=None
+                #lumped mass of the CBUSH
+                #This is an MSC only parameter.
+        elif prop.type in ['PBUSH1D', 'PBUSH2D']:
+            model.log.warning('skipping:\n%s' % str(prop))
+
         #elif prop.type == 'PCOMPS':
             #pass
         elif prop.type == 'PCONEAX':
@@ -374,8 +393,6 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             prop.z1 *= xyz_scale
             prop.z2 *= xyz_scale
 
-
-            pass
         #elif prop.type == 'PBCOMP':
             #pass
         #elif prop.type == 'PPLANE':
@@ -400,6 +417,18 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             #pass
         #elif prop.type == 'PDAMP5':
             #pass
+        elif prop.type == 'PGAP':
+            #: initial gap opening
+            prop.u0 *= xyz_scale
+            #: preload
+            prop.f0 *= force_scale
+
+            #: axial stiffness of closed/open gap
+            prop.ka *= stiffness_scale
+            prop.kb *= stiffness_scale
+
+            #: transverse stiffness of closed gap
+            prop.kt *= stiffness_scale
         else:
             raise NotImplementedError(prop_type)
 
@@ -585,6 +614,10 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 load.mag *= moment_scale
             elif load_type == 'GRAV':
                 load.scale *= accel_scale
+            elif load_type == 'ACCEL1':
+                load.scale *= accel_scale
+            elif load_type == 'PLOAD':
+                load.pressure *= pressure_scale
             elif load_type == 'PLOAD1':
                 # the errors should never hit
                 if load.scale in ['LE', 'LEPR']:
@@ -596,7 +629,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
                         load.p2 *= moment_scale
                     else:
                         raise RuntimeError(load)
-                elif load.scale in ['FR', 'RFPR']:
+                elif load.scale in ['FR', 'RFPR']:  # fractional
                     pass
                 else:
                     raise RuntimeError(load)
@@ -697,7 +730,13 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
 
 def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     """converts the optimization objects"""
+    time_scale = 1.
+    force_scale = weight_scale
+    velocity_scale = xyz_scale / time_scale
+
     pressure_scale = weight_scale / xyz_scale ** 2
+    stiffness_scale = force_scale / xyz_scale
+    damping_scale = force_scale / velocity_scale
     #for key, deqatn in iteritems(model.dequations):
         #deqatn.cross_reference(model)
     #for key, dresp in iteritems(model.dresps):
@@ -735,16 +774,30 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
                 raise NotImplementedError(dconstr)
 
     for key, dvcrel in iteritems(model.dvcrels):
-        raise NotImplementedError(dvcrel)
+        if dvcrel.type == 'DVCREL1':
+            element_type = dvcrel.element_type
+            if element_type == 'CBUSH':
+                if dvcrel.cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']:
+                    scale = xyz_scale
+                else:
+                    raise NotImplementedError(dvcrel)
+            else:
+                raise NotImplementedError(dvcrel)
+        else:
+            raise NotImplementedError(dvcrel)
+
+        desvars = dvcrel.dvids_ref
+        assert len(desvars) == 1, len(desvars)
+        scale_desvars(desvars, scale)
+
     for key, dvmrel in iteritems(model.dvmrels):
         raise NotImplementedError(dvmrel)
+
     for key, dvprel in iteritems(model.dvprels):
         if dvprel.type == 'DVPREL1':
             #print(dvprel)
             prop_type = dvprel.prop_type
-            desvars = dvprel.dvids_ref
             var_to_change = dvprel.pname_fid
-            assert len(desvars) == 1, len(desvars)
 
             if prop_type == 'PSHELL':
                 if var_to_change == 'T':
@@ -775,23 +828,53 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
                     scale = xyz_scale
                 else:
                     raise NotImplementedError(dvprel)
+            elif prop_type == 'PBUSH':
+                if var_to_change in ['K1', 'K2', 'K3', 'K4', 'K5', 'K6']:
+                    scale = stiffness_scale
+                elif var_to_change in ['B1', 'B2', 'B3', 'B4', 'B5', 'B6']:
+                    scale = damping_scale
+                else:
+                    raise NotImplementedError(dvprel)
+            elif prop_type == 'PGAP':
+                if var_to_change in ['KA', 'KB', 'KT']:
+                    scale = stiffness_scale
+                else:
+                    raise NotImplementedError(dvprel)
+                ##: initial gap opening
+                #prop.u0 *= xyz_scale
+                ##: preload
+                #prop.f0 *= force_scale
+
+            elif prop_type == 'PBUSH1D':
+                if var_to_change in ['K']:
+                    scale = stiffness_scale
+                elif var_to_change in ['C']:
+                    scale = damping_scale
+                elif var_to_change in ['M']:
+                    scale = mass_scale
+                else:
+                    raise NotImplementedError(dvprel)
+
+            elif prop_type == 'PVISC':
+                if var_to_change in ['CE1']:
+                    scale = force_scale / velocity_scale
+                else:
+                    raise NotImplementedError(dvprel)
+
+                #prop.ce *= force_scale / velocity_scale
+                #prop.cr *= moment_scale / velocity_scale
+            elif prop_type == 'PDAMP':
+                if var_to_change in ['B1']:
+                    scale = force_scale / velocity_scale
+                else:
+                    raise NotImplementedError(dvprel)
+
             else:
                 raise NotImplementedError(dvprel)
 
-            for desvar in desvars:
-                desvar.xinit *= scale
-                if desvar.xlb != -1e20:
-                    desvar.xlb *= scale
-                if desvar.xub != 1e20:
-                    desvar.xub *= scale
-                #if desvar.delx != 1e20:
-                if desvar.delx is not None and desvar.delx != 1e20:
-                    desvar.delx *= scale
-                if desvar.ddval is not None:
-                    msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
-                    raise RuntimeError(msg)
-                assert desvar.ddval is None, desvar
-
+            desvars = dvprel.dvids_ref
+            assert len(desvars) == 1, len(desvars)
+            scale_desvars(desvars, scale)
         else:
             raise NotImplementedError(dvprel)
         if dvprel.p_max != 1e20:
@@ -801,6 +884,22 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         #print('------------')
         #print(dvprel)
         #pass
+
+def scale_desvars(desvars, scale):
+    """scales the DVPREL/DVCREL/DVMREL DESVAR values"""
+    for desvar in desvars:
+        desvar.xinit *= scale
+        if desvar.xlb != -1e20:
+            desvar.xlb *= scale
+        if desvar.xub != 1e20:
+            desvar.xub *= scale
+        #if desvar.delx != 1e20:
+        if desvar.delx is not None and desvar.delx != 1e20:
+            desvar.delx *= scale
+        if desvar.ddval is not None:
+            msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
+            raise RuntimeError(msg)
+        assert desvar.ddval is None, desvar
 
 def get_scale_factors(units_from, units_to):
     """

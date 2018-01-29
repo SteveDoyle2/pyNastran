@@ -340,7 +340,7 @@ class DLOAD(LoadCombination):
                 if debug:
                     msg = 'Couldnt find dload_id=%i, which is required by %s=%s' % (
                         dload_id, self.type, self.sid)
-                    print(msg)
+                    model.log.warning(msg)
                 continue
             dload_ids2.append(dload_id2)
         self.load_ids_ref = dload_ids2

@@ -7,7 +7,8 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 class NastranTable(GuiResultCommon):
-    def __init__(self, subcase_id, titles, headers, dxyz, linked_scale_factor, #xyz, scalar,
+    def __init__(self, subcase_id, location,
+                 titles, headers, dxyz, linked_scale_factor, #xyz, scalar,
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
@@ -56,6 +57,8 @@ class NastranTable(GuiResultCommon):
         GuiResultCommon.__init__(self)
 
         self.subcase_id = subcase_id
+        self.location = location
+        assert location in ['node', 'centroid'], 'location=%r' % location
         self.linked_scale_factor = linked_scale_factor
         #assert self.subcase_id > 0, self.subcase_id
 
@@ -131,6 +134,9 @@ class NastranTable(GuiResultCommon):
         self.max_values = deepcopy(self.default_maxs)
 
     # getters
+
+    def get_location(self, i, name):
+        return self.location
 
     def get_header(self, i, name):
         #j = self.titles_default.index(name)
@@ -286,14 +292,53 @@ class NastranTable(GuiResultCommon):
         return xyz, deflected_xyz
 
 
+class ElementalTableResults(NastranTable):
+    def __init__(self, subcase_id, titles, headers, dxyz, scalar,
+                 scales, data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 set_max_min=False, uname='NastranGeometry'):
+        """this is a nodal result"""
+        linked_scale_factor = False
+        location = 'centroid'
+        NastranTable.__init__(
+            self, subcase_id, location, titles, headers, dxyz, linked_scale_factor, scales,
+            data_formats=data_formats, nlabels=nlabels,
+            labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap, set_max_min=set_max_min,
+            uname=uname)
+    def get_methods(self, i):
+        if self.is_real:
+            return ['magnitude', 'x', 'y', 'z']
+        else:
+            raise NotImplementedError('self.is_real=%s' % self.is_real)
+    def deflects(self, i, res_name):
+        return False
+    def get_vector_result_by_scale_phase(self, i, name, scale, phase=0.):
+        xyz = None
+        #assert len(self.xyz.shape) == 2, self.xyz.shape
+        if self.is_real:
+            if self.dim == 2:
+                # single result
+                deflected_xyz = self.dxyz
+            elif self.dim == 3:
+                deflected_xyz = self.dxyz[i, :]
+            else:
+                raise NotImplementedError('dim=%s' % self.dim)
+        else:
+            deflected_xyz = self._get_complex_displacements_by_phase(i, phase)
+        assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
+        return xyz, deflected_xyz
+
 class ForceTableResults(NastranTable):
     def __init__(self, subcase_id, titles, headers, dxyz, scalar,
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
+        """this is a nodal result"""
         linked_scale_factor = False
+        location = 'node'
         NastranTable.__init__(
-            self, subcase_id, titles, headers, dxyz, linked_scale_factor, scales,
+            self, subcase_id, location, titles, headers, dxyz, linked_scale_factor, scales,
             data_formats=data_formats, nlabels=nlabels,
             labelsize=labelsize, ncolors=ncolors,
             colormap=colormap, set_max_min=set_max_min,
@@ -305,9 +350,9 @@ class ForceTableResults(NastranTable):
         else:
             return ['node real', 'node imag', 'node magnitude', 'node phase']
 
-    def get_location(self, i, name):
-        """the result type"""
-        return 'node'
+    #def get_location(self, i, name):
+        #"""the result type"""
+        #return 'node'
 
     def deflects(self, i, res_name):
         return False
@@ -392,8 +437,9 @@ class DisplacementResults(NastranTable):
             some unique name for ...
         """
         linked_scale_factor = False
+        location = 'node'
         NastranTable.__init__(
-            self, subcase_id, titles, headers, dxyz, linked_scale_factor,
+            self, subcase_id, location, titles, headers, dxyz, linked_scale_factor,
             scales,
             data_formats=data_formats, nlabels=nlabels,
             labelsize=labelsize, ncolors=ncolors,

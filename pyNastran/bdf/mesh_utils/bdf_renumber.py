@@ -69,7 +69,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
      - elements
         - CELASx/CONROD/CBAR/CBEAM/CQUAD4/CTRIA3/CTETRA/CPENTA/CHEXA
-        - RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
+        - RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE/RSSCON
 
      - properties
         - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
@@ -460,7 +460,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             mass_id_map[eidi] = eid
             eid += 1
         for eidi, elem in sorted(iteritems(model.rigid_elements)):
-            # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
+            # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE/RSSCON
             elem.eid = eid
             eid_map[eidi] = eid
             rigid_elements_map[eidi] = eid
@@ -921,14 +921,13 @@ def _update_case_control(model, mapper):
                             global_subcase.update(
                                 seti, values2, seti_key, param_type)
                     else:
-                        #pass
                         #print('key=%s seti2=%s' % (key, seti2))
                         model.log.error('key=%r options=%r param_type=%r value=%r' % (
                             key, options, param_type, value))
                         raise RuntimeError(key)
                 elif value in ['NONE', 'ALL']:
-                    # print('*ALL -> key=%s options=%s param_type=%s value=%s' % (
-                        # key, options, param_type, value))
+                    #print('*ALL -> key=%s options=%s param_type=%s value=%s' % (
+                        #key, options, param_type, value))
                     #print('*all')
                     pass
                 elif key == '':

@@ -208,8 +208,8 @@ class SafeXrefMesh(XrefMesh):
             else:
                 missing_safe_xref.add(elem.type)
                 elem.cross_reference(self)
-        if missing_safe_xref:
-            self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
+        #if missing_safe_xref:
+            #self.log.warning('These cards dont support safe_xref; %s' % str(list(missing_safe_xref)))
 
     def _safe_cross_reference_loads(self, debug=True):
         # type: (bool) -> None

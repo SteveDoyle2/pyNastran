@@ -4733,6 +4733,17 @@ def get_dvprel_key(dvprel, prop=None):
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
+    elif prop_type == 'PMASS': # 3
+        if var_to_change == 3:
+            var_to_change = 'M1'
+
+        if var_to_change in ['M1']:
+            pass
+        #elif isinstance(var_to_change, int):  # pragma: no cover
+            #msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
+        else:  # pragma: no cover
+            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+
     else:  # pragma: no cover
         msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
     key = '%s %s' % (prop_type, var_to_change)

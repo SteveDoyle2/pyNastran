@@ -90,7 +90,7 @@ def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft'):
     return alt_out
 
 
-def get_alt_for_eas_mach(equivalent_airspeed, mach, velocity_units='ft/s', alt_units='ft'):
+def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach, velocity_units='ft/s', alt_units='ft'):
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -247,6 +247,32 @@ def _altitude_factor(alt_units_in, alt_units_out):
         factor /= 1000.
     else:
         raise RuntimeError('alt_units_out=%r is not valid; use [ft, m, kft]' % alt_units_out)
+    return factor
+
+def _reynolds_factor(reynolds_units_in, reynolds_units_out):
+    """helper method"""
+    factor = 1.0
+    # units to 1/feet
+    if reynolds_units_in == '1/m':
+        factor *= 0.3048
+    elif reynolds_units_in == '1/ft':
+        pass
+    elif reynolds_units_in == '1/in':
+        factor *= 12.
+    else:
+        msg = 'reynolds_units_in=%r is not valid; use [1/ft, 1/m, 1/in]' % reynolds_units_in
+        raise RuntimeError(msg)
+
+    # 1/ft to 1/m
+    if reynolds_units_out == '1/m':
+        factor /= 0.3048
+    elif reynolds_units_out == '1/ft':
+        pass
+    elif reynolds_units_out == '1/in':
+        factor /= 12.
+    else:
+        msg = 'reynolds_units_out=%r is not valid; use [1/ft, 1/m, 1/in]' % reynolds_units_out
+        raise RuntimeError(msg)
     return factor
 
 def convert_velocity(velocity, velocity_units_in, velocity_units_out):
@@ -642,7 +668,7 @@ def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3'):
     rho2 = convert_density(rho, 'slug/ft^3', density_units)
     return rho2
 
-def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s', debug=False):
+def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s'):
     r"""
     Freestream Kinematic Viscosity \f$ \nu_{\infty} \f$
 
@@ -709,7 +735,7 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
         raise NotImplementedError('visc_units=%r; not in (lbf*s)/ft^2 or (N*s)/m^2 or Pa*s')
     return mu * factor
 
-def atm_unit_reynolds_number2(alt, mach, alt_units='ft', ReL_units='1/ft', debug=False):
+def atm_unit_reynolds_number2(alt, mach, alt_units='ft', reynolds_units='1/ft'):
     r"""
     Returns the Reynolds Number per unit length
 
@@ -721,8 +747,8 @@ def atm_unit_reynolds_number2(alt, mach, alt_units='ft', ReL_units='1/ft', debug
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
         the altitude units; ft, kft, m
-    ReL_units : str; default='1/ft'
-        the altitude units; 1/ft, 1/m
+    reynolds_units : str; default='1/ft'
+        the altitude units; 1/ft, 1/m, 1/in
 
     Returns
     -------
@@ -745,65 +771,60 @@ def atm_unit_reynolds_number2(alt, mach, alt_units='ft', ReL_units='1/ft', debug
     mu = sutherland_viscoscity(T)
     ReL = p * a * mach / (mu * R * T)
 
-    if debug:  # pragma: no cover
-        print("---atm_UnitReynoldsNumber2---")
-        print("z  = %s [m]   = %s [ft]"  % (alt * _feet_to_alt_units('m'), z))
-        print("a  = %s [m/s] = %s [ft/s]"  % (a * _feet_to_alt_units('m'), a))
-        rho = p / (R * T)
-        print("rho = %s [kg/m^3] = %s [slug/ft^3]"  % (rho * 515.378818, rho))
-        print("M  = %s"  % mach)
-        print("V  = %s [m/s] = %s [ft/s]"  % (a * mach * _feet_to_alt_units('m'), a * mach))
-        print("T  = %s [K] = %s [R]" % (T * 5 / 9., T))
-        print("mu = %s [(N*s)/m^2] = %s [(lbf*s)/ft^2]" % (mu * 47.88026, mu))
-        print("Re = %s [1/m] = %s [1/ft]" % (ReL / 0.3048, ReL))
+    #if debug:  # pragma: no cover
+        #print("---atm_UnitReynoldsNumber2---")
+        #print("z  = %s [m]   = %s [ft]"  % (alt * _feet_to_alt_units('m'), z))
+        #print("a  = %s [m/s] = %s [ft/s]"  % (a * _feet_to_alt_units('m'), a))
+        #rho = p / (R * T)
+        #print("rho = %s [kg/m^3] = %s [slug/ft^3]"  % (rho * 515.378818, rho))
+        #print("M  = %s"  % mach)
+        #print("V  = %s [m/s] = %s [ft/s]"  % (a * mach * _feet_to_alt_units('m'), a * mach))
+        #print("T  = %s [K] = %s [R]" % (T * 5 / 9., T))
+        #print("mu = %s [(N*s)/m^2] = %s [(lbf*s)/ft^2]" % (mu * 47.88026, mu))
+        #print("Re = %s [1/m] = %s [1/ft]" % (ReL / 0.3048, ReL))
 
-    # convert ReL in 1/ft to 1/m
-    if ReL_units == '1/ft':
-        factor = 1.
-    elif ReL_units == '1/m':
-        factor = 1. / .3048
-    else:
-        raise NotImplementedError(ReL_units)
-    return ReL * factor
+    ReL *= _reynolds_factor('1/ft', reynolds_units)
+    return ReL
 
-def atm_unit_reynolds_number(alt, mach, SI=False, debug=False):
+def atm_unit_reynolds_number(alt, mach, alt_units='ft', reynolds_units='1/ft'):
     r"""
     Returns the Reynolds Number per unit length
 
     Parameters
     ----------
-    alt : bool
-        Altitude in feet or meters (SI)
+    alt : float
+        Altitude in alt_units
     mach : float
         Mach Number \f$ M \f$
-    SI : bool; default=False
-        convert to SI units
+    alt_units : str; default='ft'
+        the altitude units; ft, kft, m
+    reynolds_units : str; default='1/ft'
+        the altitude units; 1/ft, 1/m, 1/in
 
     Returns
     -------
     ReynoldsNumber/L : float
-        1/ft or 1/m (SI)
+        Reynolds number per unit length in reynolds_units
 
     \f[ \large Re   = \frac{ \rho V L}{\mu} \f]
     \f[ \large Re_L = \frac{ \rho V  }{\mu} \f]
     """
-    z = _update_alt(alt, SI)
+    z = _update_alt(alt, alt_units)
     rho = atm_density(z)
     V = atm_velocity(z, mach)
     mu = atm_dynamic_viscosity_mu(z)
 
     ReL = (rho * V) / mu
 
-    if debug:  # pragma: no cover
-        print("---atm_UnitReynoldsNumber---")
-        print("z  = %s [m]   = %s [ft]"  % (alt * _feet_to_alt_units('m'), z))
-        print("rho = %s [kg/m^3] = %s [slug/ft^3]"  % (rho * 515.378818, rho))
-        print("V  = %s [m/s] = %s [ft/s]"  % (V * _feet_to_alt_units('m'), V))
-        print("mu = %s [(N*s)/m^2] = %s [(lbf*s)/ft^2]" % (mu * 47.88026, mu))
-        print("Re = %s [1/m] = %s [1/ft]" % (ReL / 0.3048, ReL))
+    #if debug:  # pragma: no cover
+        #print("---atm_UnitReynoldsNumber---")
+        #print("z  = %s [m]   = %s [ft]"  % (alt * _feet_to_alt_units('m'), z))
+        #print("rho = %s [kg/m^3] = %s [slug/ft^3]"  % (rho * 515.378818, rho))
+        #print("V  = %s [m/s] = %s [ft/s]"  % (V * _feet_to_alt_units('m'), V))
+        #print("mu = %s [(N*s)/m^2] = %s [(lbf*s)/ft^2]" % (mu * 47.88026, mu))
+        #print("Re = %s [1/m] = %s [1/ft]" % (ReL / 0.3048, ReL))
 
-    if SI:
-        return ReL / .3048  # convert ReL in 1/ft to 1/m
+    ReL *= _reynolds_factor('1/ft', reynolds_units)
     return ReL
 
 def sutherland_viscoscity(T):

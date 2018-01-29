@@ -7,8 +7,7 @@ http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-wo
 """
 from __future__ import print_function
 #from PyQt4 import QtCore, QtGui
-#from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
 from pyNastran.gui.qt_version import qt_version
 

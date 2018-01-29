@@ -50,3 +50,6 @@ class Input(object):
                 item.read()
             except AttributeError:
                 pass
+            
+    def update(self):
+        self.coordinate_system.update()

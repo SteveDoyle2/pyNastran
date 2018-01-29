@@ -5,7 +5,7 @@ Defines the Real/Complex Forces created by:
 from __future__ import print_function
 from six.moves import range
 from struct import Struct
-from numpy import fromstring, frombuffer
+from numpy import frombuffer
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_common import OP2Common

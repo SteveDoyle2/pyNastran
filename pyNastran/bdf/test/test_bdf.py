@@ -217,7 +217,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
-            nerrors=0, dev=False, crash_cards=None, safe_xref=True, pickle_obj=False, safe=False):
+            nerrors=0, dev=False, crash_cards=None, safe_xref=True, pickle_obj=False, safe=False,
+            stop_on_failure=True):
     """
     Runs a single BDF
 
@@ -304,6 +305,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
         safe_xref=safe_xref,
         run_extract_bodies=run_extract_bodies, pickle_obj=pickle_obj,
+        stop_on_failure=stop_on_failure,
     )
     return fem1, fem2, diff_cards
 
@@ -316,6 +318,7 @@ def run_and_compare_fems(
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
         safe_xref=True, run_extract_bodies=False, pickle_obj=False,
+        stop_on_failure=True,
     ):
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
@@ -351,7 +354,7 @@ def run_and_compare_fems(
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
-                        encoding=encoding, debug=debug, quiet=quiet)
+                        encoding=encoding, debug=debug, quiet=quiet, stop_on_failure=stop_on_failure)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -625,7 +628,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     elif mesh_form == 'separate':
         fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
     else:
-        msg = "mesh_form=%r; allowedForms=['combined','separate']" % mesh_form
+        msg = "mesh_form=%r; allowed_mesh_forms=['combined','separate']" % mesh_form
         raise NotImplementedError(msg)
     #fem1.write_as_ctria3(out_model)
 
@@ -670,7 +673,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
 def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double, mesh_form,
-             encoding=None, debug=False, quiet=False):
+             encoding=None, debug=False, quiet=False,
+             stop_on_failure=True):
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -696,8 +700,6 @@ def run_fem2(bdf_model, out_model, xref, punch,
         debugs
     quiet : bool
         supress prints
-    log : logger / None
-        ignored
     """
     assert os.path.exists(bdf_model), bdf_model
     assert os.path.exists(out_model), out_model
@@ -736,7 +738,8 @@ def run_fem2(bdf_model, out_model, xref, punch,
             if line.strip().upper().startswith('RESTART'):
                 is_restart = True
         if not is_restart:
-            validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map)
+            validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
+                                  stop_on_failure=stop_on_failure)
 
     if mesh_form is not None:
         fem2.write_bdf(out_model_2, interspersed=False, size=size, is_double=is_double)
@@ -757,7 +760,8 @@ def _assert_has_spc(subcase, fem):
                 break
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
-def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map):
+def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
+                          stop_on_failure=True):
     for isubcase in subcase_keys[1:]:  # drop isubcase = 0
         subcase = subcases[isubcase]
         str(subcase)
@@ -771,7 +775,8 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_ma
                 #raise NotImplementedError(msg)
         #else:
             #sol = sol_base
-        check_case(sol_base, subcase, fem2, p0, isubcase, subcases)
+        check_case(sol_base, subcase, fem2, p0, isubcase, subcases,
+                   stop_on_failure=stop_on_failure)
 
 def check_for_flag_in_subcases(fem2, subcase, parameters):
     """
@@ -798,7 +803,7 @@ def check_for_flag_in_subcases(fem2, subcase, parameters):
                 msg += str(subcasei)
             raise RuntimeError(msg)
 
-def check_case(sol, subcase, fem2, p0, isubcase, subcases):
+def check_case(sol, subcase, fem2, p0, isubcase, subcases, stop_on_failure=True):
     """
     Checks to see if the case has all the required case control fields
     and that they are valid.
@@ -963,7 +968,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         msg = 'SOL = %s\n' % (sol)
         msg += str(subcase)
         raise NotImplementedError(msg)
-    _check_case_parameters(subcase, fem2, p0, isubcase, sol)
+    _check_case_parameters(subcase, fem2, p0, isubcase, sol,
+                           stop_on_failure=stop_on_failure)
 
 def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
     """
@@ -1053,7 +1059,7 @@ def require_cards(card_names, log, soltype, sol, subcase):
             nerrors += 1
     return nerrors
 
-def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
+def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=True):
     """helper method for ``check_case``"""
     if any(subcase.has_parameter('TIME', 'TSTEP')):
         if 'TIME' in subcase:
@@ -1082,9 +1088,12 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
             suport_id = subcase.get_parameter('SUPORT1')[0]
             suport1 = fem2.suport1[suport_id]
         try:
-            trim._verify(fem2.suport, suport1, fem2.aestats, fem2.aeparams,
-                         fem2.aelinks, fem2.aesurf, xref=True)
+            trim.verify_trim(
+                fem2.suport, suport1, fem2.aestats, fem2.aeparams,
+                fem2.aelinks, fem2.aesurf, xref=True)
         except RuntimeError as e:
+            if stop_on_failure:
+                raise
             exc_info = sys.exc_info()
             traceback.print_exception(*exc_info)
             #traceback.print_stack()
@@ -1108,7 +1117,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol):
             raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
         assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
-                       112, 144, 145, 146, 187], 'sol=%s METHOD\n%s' % (sol, subcase)
+                       112, 144, 145, 146, 187, 200], 'sol=%s METHOD\n%s' % (sol, subcase)
 
     if 'CMETHOD' in subcase:
         cmethod_id = subcase.get_parameter('CMETHOD')[0]
@@ -1727,6 +1736,7 @@ def main():
             pickle_obj=data['--pickle'],
             safe_xref=data['--safe'],
             print_stats=True,
+            stop_on_failure=False,
         )
         prof.dump_stats('bdf.profile')
 
@@ -1770,6 +1780,7 @@ def main():
             pickle_obj=data['--pickle'],
             safe_xref=data['--safe'],
             print_stats=True,
+            stop_on_failure=False,
         )
     print("total time:  %.2f sec" % (time.time() - time0))
 

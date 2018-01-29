@@ -12,7 +12,7 @@ import pyNastran
 from pyNastran.gui.gui_common import GuiCommon2
 from pyNastran.gui.arg_handling import get_inputs
 #from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
-#from pyNastran.converters.nastran.nastranIOv import NastranIO
+#from pyNastran.converters.nastran.nastran_io import NastranIO
 from pyNastran.converters.stl.stl_io import STL_IO
 
 

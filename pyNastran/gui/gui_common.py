@@ -28,12 +28,11 @@ from qtpy.QtWidgets import (
 from qtpy.compat import getsavefilename, getopenfilename
 
 
-from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
 
 
 import vtk
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-#from vtk.util.numpy_support import numpy_to_vtk
 
 
 import pyNastran
@@ -43,21 +42,22 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types, object_methods
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
-from pyNastran.gui.gui_utils.write_gif import (
+from pyNastran.gui.utils.write_gif import (
     setup_animation, update_animation_inputs, write_gif)
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
-from pyNastran.gui.qt_files.coord_properties import CoordProperties
+
+from pyNastran.gui.gui_objects.coord_properties import CoordProperties
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 
 
-from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
-from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
-from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
-from pyNastran.gui.gui_interface.preferences.interface import set_preferences_menu
-from pyNastran.gui.gui_interface.groups_modify.interface import on_set_modify_groups
-from pyNastran.gui.gui_interface.groups_modify.groups_modify import Group
+from pyNastran.gui.menus.legend.interface import set_legend_menu
+from pyNastran.gui.menus.clipping.interface import set_clipping_menu
+from pyNastran.gui.menus.camera.interface import set_camera_menu
+from pyNastran.gui.menus.preferences.interface import set_preferences_menu
+from pyNastran.gui.menus.groups_modify.interface import on_set_modify_groups
+from pyNastran.gui.menus.groups_modify.groups_modify import Group
 
 
 from pyNastran.gui.menus.results_sidebar import Sidebar
@@ -71,7 +71,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
-from pyNastran.gui.gui_utils.utils import load_csv, load_deflection_csv, load_user_geom
+from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
 
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -189,19 +189,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """determines if the legend is shown"""
         return self.scalar_bar.is_shown
 
+    #@legend_shown.setter
+    #def legend_shown(self):
+        #"""show/hide the legend shown"""
+        #return self.scalar_bar.is_shown
+
     @property
     def scalarBar(self):
         return self.scalar_bar.scalar_bar
 
     def hide_legend(self):
         """hides the legend"""
+        self.scalar_bar.VisibilityOff()
         #self.scalar_bar.is_shown = False
-        self.scalarBar.VisibilityOff()
 
     def show_legend(self):
         """shows the legend"""
+        self.scalar_bar.VisibilityOn()
         #self.scalar_bar.is_shown = True
-        self.scalarBar.VisibilityOn()
 
     @property
     def color_function(self):
@@ -764,24 +769,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         if checkables is None:
             checkables = []
-        #print('---------------------------')
+
         for tool in tools:
             (name, txt, icon, shortcut, tip, func) = tool
             if name in self.actions:
                 self.log_error('trying to create a duplicate action %r' % name)
                 continue
-            #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
-                  #% (name, txt, icon, shortcut, tip, func))
-            #if icon is None:
-                #print("missing_icon = %r!!!" % name)
-                #icon = os.path.join(icon_path, 'no.png')
 
             if icon is None:
                 print("missing_icon = %r!!!" % name)
                 ico = None
-                #print(print_bad_path(icon))
-            #elif not "/" in icon:
-                #ico = QtGui.QIcon.fromTheme(icon)
             else:
                 ico = QtGui.QIcon()
                 pth = os.path.join(icon_path, icon)
@@ -861,9 +858,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
         end = text_cursor.End
-        #print("end", end)
         text_cursor.movePosition(end)
-        #print(dir(text_cursor))
         text_cursor.insertHtml(msg + r"<br />")
         self.log_widget.ensureCursorVisible() # new message will be visible
         self.log_mutex.unlock()
@@ -980,8 +975,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 z = 'z'
 
             elif Type == 'Rtp':  # spherical
-                xlabel = u'R'
-                #ylabel = u'θ'
+                #x = u'R'
+                #y = u'θ'
                 #z = u'Φ'
                 x = 'R'
                 y = 't'
@@ -1026,29 +1021,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.corner_axis.SetEnabled(1)
         self.corner_axis.InteractiveOff()
 
-    #def on_show_hide_axes(self):
-        #"""
-        #show/hide axes
-        #"""
-        #if not self.run_vtk:
-            #return
-        ## this method should handle all the coords when
-        ## there are more then one
-        #if self._is_axes_shown:
-            #for axis in itervalues(self.axes):
-                #axis.VisibilityOff()
-        #else:
-            #for axis in itervalues(self.axes):
-                #axis.VisibilityOn()
-        #self._is_axes_shown = not self._is_axes_shown
-
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
 
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
-        #self.emptyResult = vtk.vtkFloatArray()
-        #self.vectorResult = vtk.vtkFloatArray()
 
         # edges
         self.edge_actor = vtk.vtkLODActor()
@@ -1672,7 +1649,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         xc = origin[0] + 0.5*(extent[0] + extent[1]) * spacing[0]
         yc = origin[1] + 0.5*(extent[2] + extent[3]) * spacing[1]
-        # xd = (extent[1] - extent[0] + 1) * spacing[0]
+        #xd = (extent[1] - extent[0] + 1) * spacing[0]
         yd = (extent[3] - extent[2] + 1) * spacing[1]
         d = camera.GetDistance()
         camera.SetParallelScale(0.5 * yd)
@@ -1753,10 +1730,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
-
-    #def _script_helper(self, python_file=False):
-        #if python_file in [None, False]:
-            #self.on_run_script(python_file)
 
     def set_style_as_trackball(self):
         """sets the default rotation style"""
@@ -1993,24 +1966,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         This should really only be called for integer results < 50-ish.
         """
-        #self.scalar_bar.title
-        case_key = self.case_keys[self.icase] # int for object
-        result_name = self.result_name
-        obj, (i, name) = self.result_cases[case_key]
-        default_title = obj.get_default_title(i, name)
-        location = obj.get_location(i, name)
-        if obj.data_format != '%i':
-            self.log.error('not creating result=%r; must be an integer result' % result_name)
-            return 0
-        if location != 'centroid':
-            self.log.error('not creating result=%r; must be a centroidal result' % result_name)
-            return 0
+        try:
+            #self.scalar_bar.title
+            case_key = self.case_keys[self.icase] # int for object
+            result_name = self.result_name
+            obj, (i, name) = self.result_cases[case_key]
+            default_title = obj.get_default_title(i, name)
+            location = obj.get_location(i, name)
+            if obj.data_format != '%i':
+                self.log.error('not creating result=%r; must be an integer result' % result_name)
+                return 0
+            if location != 'centroid':
+                self.log.error('not creating result=%r; must be a centroidal result' % result_name)
+                return 0
 
-        word = default_title
-        prefix = default_title
-        ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
-        self.log_command('create_groups_by_visible_result()'
-                         ' # created %i groups for result_name=%r' % (ngroups, result_name))
+            word = default_title
+            prefix = default_title
+            ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
+            self.log_command('create_groups_by_visible_result()'
+                             ' # created %i groups for result_name=%r' % (ngroups, result_name))
+        except Exception as e:
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(e))
 
     def create_groups_by_property_id(self):
         """
@@ -2027,8 +2005,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #eids = self.find_result_by_name('ElementID')
         #elements_pound = eids.max()
-        eids = self.groups['main'].element_ids
-        elements_pound = self.groups['main'].elements_pound
+        try:
+            eids = self.groups['main'].element_ids
+            elements_pound = self.groups['main'].elements_pound
+        except Exception as e:
+            self.log.error('Cannot create groups as there are no elements in the model')
+            return 0
 
         result = self.find_result_by_name(name)
         ures = np.unique(result)
@@ -2167,17 +2149,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def numpy_to_vtk_idtype(self, ids):
         #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-        from vtk.util.numpy_support import numpy_to_vtkIdTypeArray
-
-        isize = vtk.vtkIdTypeArray().GetDataTypeSize()
-        if isize == 4:
-            dtype = 'int32' # TODO: can we include endian?
-        elif isize == 8:
-            dtype = 'int64'
-        else:
-            msg = 'ids.dtype=%s' % str(ids.dtype)
-            raise NotImplementedError(msg)
-
+        from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtkIdTypeArray
+        dtype = get_numpy_idtype_for_vtk()
         ids = np.asarray(ids, dtype=dtype)
         vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
         return vtk_ids
@@ -2569,7 +2542,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return is_failed, (infile_name, load_function, filter_index, formats)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
-                         plot=True, raise_error=True):
+                         plot=True, raise_error=False):
         """
         Loads a baseline geometry
 
@@ -3292,8 +3265,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         correct   : applies to the icase_to_apply
         incorrect : applies to the icase_result
 
-        Example
-        -------
+        Examples
+        --------
         .. code-block::
 
           eids = [16563, 16564, 8916703, 16499, 16500, 8916699,
@@ -4279,6 +4252,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.glyphs = glyphs
         self.glyph_mapper = glyph_mapper
         self.arrow_actor = arrow_actor
+        #-----------------------------------------
+        glyphs_centroid = vtk.vtkGlyph3D()
+        glyphs_centroid.SetVectorModeToUseVector()
+        glyphs_centroid.SetScaleModeToScaleByVector()
+        glyphs_centroid.SetColorModeToColorByScale()
+        glyphs_centroid.ScalingOn()
+        glyphs_centroid.ClampingOn()
+        glyphs_centroid.SetSourceConnection(glyph_source.GetOutputPort())
+
+        glyph_mapper_centroid = vtk.vtkPolyDataMapper()
+        glyph_mapper_centroid.SetInputConnection(glyphs_centroid.GetOutputPort())
+        glyph_mapper_centroid.ScalarVisibilityOff()
+
+        arrow_actor_centroid = vtk.vtkLODActor()
+        arrow_actor_centroid.SetMapper(glyph_mapper_centroid)
+
+        self.glyphs_centroid = glyphs_centroid
+        self.glyph_mapper_centroid = glyph_mapper_centroid
+        self.arrow_actor_centroid = arrow_actor_centroid
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
         if names_to_ignore is None:

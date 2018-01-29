@@ -6,7 +6,7 @@ import vtk
 from vtk import vtkTriangle, vtkLine
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.converters.openvsp.adb_reader import ADB_Reader
+from pyNastran.converters.dev.openvsp.adb_reader import ADB_Reader
 
 
 class ADB_IO(object):  # pragma: no cover
@@ -25,15 +25,11 @@ class ADB_IO(object):  # pragma: no cover
         self.eid_map = {}
         self.nid_map = {}
         if adb_filename is None:
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
             skip_reading = True
         else:
             self.turn_text_off()
             self.grid.Reset()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
 
             self.result_cases = {}
             self.ncases = 0
@@ -84,11 +80,9 @@ class ADB_IO(object):  # pragma: no cover
         self.nelements = nelements
 
         self.grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nnodes)
-        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
 

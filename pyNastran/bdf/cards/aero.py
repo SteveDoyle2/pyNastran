@@ -243,7 +243,7 @@ class AEFACT(BaseCard):
     """
     type = 'AEFACT'
 
-    def __init__(self, sid, Di, comment=''):
+    def __init__(self, sid, fractions, comment=''):
         """
         Creates an AEFACT card, which defines the mach, dynamic_pressure,
         velocity, and reduced frequency for an FLUTTER card
@@ -254,7 +254,7 @@ class AEFACT(BaseCard):
         ----------
         sid : int
             unique id
-        Di : List[float, ..., float]
+        fractions : List[float, ..., float]
             list of:
              - machs
              - dynamic_pressures
@@ -268,7 +268,7 @@ class AEFACT(BaseCard):
         #: Set identification number. (Unique Integer > 0)
         self.sid = sid
         #: Number (float)
-        self.Di = np.asarray(Di, dtype='float64')
+        self.fractions = np.asarray(fractions, dtype='float64')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -284,11 +284,11 @@ class AEFACT(BaseCard):
         """
         sid = integer(card, 1, 'sid')
 
-        Di = []
+        fractions = []
         for i in range(2, len(card)):
-            di = double(card, i, 'Di_%i' % (i - 1))
-            Di.append(di)
-        return AEFACT(sid, Di, comment=comment)
+            fraction = double(card, i, 'factor_%i' % (i - 1))
+            fractions.append(fraction)
+        return AEFACT(sid, fractions, comment=comment)
 
     #def cross_reference(self, model):
         #pass
@@ -297,8 +297,19 @@ class AEFACT(BaseCard):
         #pass
 
     @property
+    def Di(self):
+        self.deprecated('Di', 'fractions', '1.1')
+        return self.fractions
+
+    @Di.setter
+    def Di(self, fractions):
+        self.deprecated('Di', 'fractions', '1.1')
+        self.fractions = fractions
+
+    @property
     def data(self):
-        return self.Di
+        self.deprecated('data', 'fractions', '1.1')
+        return self.fractions
 
     def raw_fields(self):
         """
@@ -309,7 +320,7 @@ class AEFACT(BaseCard):
         fields : List[int/float/str]
             the fields that define the card
         """
-        list_fields = ['AEFACT', self.sid] + list(self.Di)
+        list_fields = ['AEFACT', self.sid] + list(self.fractions)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -347,14 +358,14 @@ class AELINK(BaseCard):
     """
     type = 'AELINK'
 
-    def __init__(self, id, label, independent_labels, Cis, comment=''):
+    def __init__(self, aelink_id, label, independent_labels, Cis, comment=''):
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
 
         Parameters
         ----------
-        id : int
+        aelink_id : int
             unique id
         label : str
             name of the AESURF(???) card
@@ -374,12 +385,12 @@ class AELINK(BaseCard):
         #: linking coefficient (real)
         self.Cis = Cis
 
-        if isinstance(id, string_types):
-            if id != 'ALWAYS':
+        if isinstance(aelink_id, string_types):
+            if aelink_id != 'ALWAYS':
                 raise RuntimeError("The only valid ID that is a string is 'ALWAYS'")
-            id = 0
+            aelink_id = 0
         #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
-        self.id = id
+        self.aelink_id = aelink_id
 
     def validate(self):
         if len(self.independent_labels) != len(self.Cis):
@@ -400,7 +411,7 @@ class AELINK(BaseCard):
         comment : str; default=''
             a comment for the card
         """
-        id = integer_or_string(card, 1, 'ID')
+        aelink_id = integer_or_string(card, 1, 'ID')
         label = string(card, 2, 'label')
         independent_labels = []
         Cis = []
@@ -412,10 +423,20 @@ class AELINK(BaseCard):
             Ci = list_fields[i + 1]
             independent_labels.append(independent_label)
             Cis.append(Ci)
-        return AELINK(id, label, independent_labels, Cis, comment=comment)
+        return AELINK(aelink_id, label, independent_labels, Cis, comment=comment)
 
     #def uncross_reference(self):
         #pass
+
+    @property
+    def id(self):
+        self.deprecated('id', 'aelink_id', '1.1')
+        return self.aelink_id
+
+    @id.setter
+    def id(self, aelink_id):
+        self.deprecated('id', 'aelink_id', '1.1')
+        self.aelink_id = aelink_id
 
     def raw_fields(self):
         """
@@ -426,7 +447,7 @@ class AELINK(BaseCard):
         list_fields : List[int/float/str]
             the fields that define the card
         """
-        list_fields = ['AELINK', self.id, self.label]
+        list_fields = ['AELINK', self.aelink_id, self.label]
         for (ivar, ival) in zip(self.independent_labels, self.Cis):
             list_fields += [ivar, ival]
         return list_fields
@@ -582,9 +603,19 @@ class AEPARM(BaseCard):
         """
         if comment:
             self.comment = comment
-        self.id = aeparm_id
+        self.aeparm_id = aeparm_id
         self.label = label
         self.units = units
+
+    @property
+    def id(self):
+        self.deprecated('id', 'aeparm_id', '1.1')
+        return self.aeparm_id
+
+    @id.setter
+    def id(self, aeparm_id):
+        self.deprecated('id', 'aeparm_id', '1.1')
+        self.aeparm_id = aeparm_id
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -642,7 +673,7 @@ class AEPARM(BaseCard):
         fields : List[int/float/str]
             the fields that define the card
         """
-        list_fields = ['AEPARM', self.id, self.label, self.units]
+        list_fields = ['AEPARM', self.aeparm_id, self.label, self.units]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2365,13 +2396,13 @@ class CAERO1(BaseCard):
     def shape(self):
         """returns (nelements_nchord, nelements_span)"""
         if self.nchord == 0:
-            x = self.lchord_ref.Di
+            x = self.lchord_ref.fractions
             nchord = len(x) - 1
         else:
             nchord = self.nchord
 
         if self.nspan == 0:
-            y = self.lspan_ref.Di
+            y = self.lspan_ref.fractions
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -2408,14 +2439,14 @@ class CAERO1(BaseCard):
             The percentage y location in the span-wise direction of each panel
         """
         if self.nchord == 0:
-            x = self.lchord_ref.Di
+            x = self.lchord_ref.fractions
             nchord = len(x) - 1
         else:
             nchord = self.nchord
             x = np.linspace(0., 1., nchord + 1)
 
         if self.nspan == 0:
-            y = self.lspan_ref.Di
+            y = self.lspan_ref.fractions
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -2801,7 +2832,7 @@ class CAERO2(BaseCard):
         paero2 = self.pid_ref
 
         if self.nsb == 0:
-            xstation = self.lsb_ref.data
+            xstation = self.lsb_ref.fractions
             nx = len(xstation) - 1
             #print('xstation = ', xstation)
         else:
@@ -2814,14 +2845,14 @@ class CAERO2(BaseCard):
         if paero2.lrsb in [0, None]:
             radii_slender = np.ones(nx + 1) * paero2.width
         else:
-            radii_slender = paero2.lrsb_ref.data
+            radii_slender = paero2.lrsb_ref.fractions
 
         # TODO: not suppported
         if paero2.lrib in [0, None]:
             radii_interference = np.ones(nx + 1) * paero2.width
         else:
             #print('lrib = ', paero2.lrib)
-            radii_interference = paero2.lrib_ref.data
+            radii_interference = paero2.lrib_ref.fractions
         radii = radii_slender
 
         # TODO: not suppported
@@ -3495,7 +3526,7 @@ class CAERO4(BaseCard):
         nchord = 1
 
         if self.nspan == 0:
-            y = self.lspan_ref.Di
+            y = self.lspan_ref.fractions
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -3534,7 +3565,7 @@ class CAERO4(BaseCard):
         x = np.linspace(0., 1., num=2)  # nchord=1
 
         if self.nspan == 0:
-            y = self.lspan_ref.Di
+            y = self.lspan_ref.fractions
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -3780,7 +3811,7 @@ class CAERO5(BaseCard):
         msg = 'CAERO5 eid=%s nspan=%s lspan=%s' % (
             self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
-            y = self.lspan_ref.Di
+            y = self.lspan_ref.fractions
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -3797,7 +3828,7 @@ class CAERO5(BaseCard):
         msg = 'CAERO5 eid=%s nspan=%s lspan=%s' % (
             self.eid, self.nspan, self.lspan)
         if self.nspan == 0:
-            y = self.lspan_ref.Di
+            y = self.lspan_ref.fractions
             nspan = len(y) - 1
         else:
             nspan = self.nspan
@@ -3849,6 +3880,7 @@ class CAERO5(BaseCard):
             ma2_secL2 = mach ** 2 - secL2
             c1 = mach / ma2_secL2 ** 0.5
             c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
+        return c1, c2
 
     def Cp(self):
         if self.cp_ref is not None:
@@ -3961,7 +3993,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     assert points.shape == (npoints, 3), 'npoints=%s shape=%s' % (npoints, str(points.shape))
 
     # create a matrix with the point counter
-    ipoints = np.arange(npoints, dtype='int32').reshape((nx, ny))
+    #ipoints = np.arange(npoints, dtype='int32').reshape((nx, ny))
 
     return points, elements
 
@@ -3979,8 +4011,6 @@ class PAERO5(BaseCard):
         | PAERO5 |  PID  | NALPHA | LALPHA |  NXIS   | LXIS  | NTAUS | LTAUS |
         +--------+-------+--------+--------+---------+-------+-------+-------+
         |        | CAOC1 | CAOC2  | CAOC3  |  CAOC4  | CAOC5 |       |       |
-        +--------+-------+--------+--------+---------+-------+-------+-------+
-
         +--------+-------+--------+--------+---------+-------+-------+-------+
         | PAERO5 | 7001  |   1    |  702   |    1    | 701   |   1   |  700  |
         +--------+-------+--------+--------+---------+-------+-------+-------+
@@ -4090,10 +4120,10 @@ class PAERO5(BaseCard):
 
     #def integrals(self):
         ## chord location
-        #x = self.lxis.Di
+        #x = self.lxis.fractions
 
         ## thickness
-        #y = self.ltaus.Di
+        #y = self.ltaus.fractions
 
         ## slope of airfoil semi-thickness
         #yp = derivative1(y/2, x)
@@ -4310,14 +4340,7 @@ class FLFACT(BaseCard):
             fmid_default = (f1 + fnf) / 2.
             fmid = double_or_blank(card, 6, 'fmid', fmid_default)
             assert len(card) <= 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
-
-            #(f1, thru, fnf, nf, fmid) = factors
             factors = [f1, 'THRU', fnf, nf, fmid]
-            #i = np.linspace(0, nf, nf, endpoint=False) + 1
-            #factors = (
-                #(f1*(fnf - fmid) * (nf-i) + fnf * (fmid - f1) * (i-1)) /
-                #(   (fnf - fmid) * (nf-i) +       (fmid - f1) * (i-1))
-            #)
         else:
             raise SyntaxError('expected a float or string for FLFACT field 3; value=%r' % field3)
         return FLFACT(sid, factors, comment=comment)
@@ -4890,7 +4913,6 @@ class MKAERO1(BaseCard):
 
         machs = [None] * 8
         reduced_freqs = [None] * 8
-        #cards = []
         if not 0 < len(self.machs) <= 8:
             msg = 'MKAERO1; nmachs=%s machs=%s' % (len(self.machs), self.machs)
             raise ValueError(msg)
@@ -4906,6 +4928,7 @@ class MKAERO1(BaseCard):
 
     def __repr__(self):
         return self.write_card()
+
 
 class MKAERO2(BaseCard):
     """
@@ -5710,7 +5733,7 @@ class PAERO3(BaseCard):
         assert len(self.x) <= 8, 'nx=%s'  % len(self.x)
         for i, xi, yi in zip(count(), self.x, self.y):
             if xi is None or yi is None:
-                assert xi == yi, 'xi=%s yi=%s must be None or floats' % (xi, yi)
+                assert xi == yi, 'x%i=%s y%i=%s must be None or floats' % (i, xi, i, yi)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -6471,7 +6494,7 @@ class SPLINE3(Spline):
             msg += 'nnodes=%s ncoeffs=%s must be equal\n' % (
                 len(self.nodes), len(self.coeffs))
 
-        for i, disp_component, coeff  in zip(count(), self.displacement_components, self.coeffs):
+        for i, disp_component  in enumerate(self.displacement_components):
             if disp_component not in [0, 1, 2, 3, 4, 5, 6]:
                 msg += 'i=%s displacement_component=%s must be [0, 1, 2, 3, 4, 5, 6]\n' % (
                     i, disp_component)
@@ -7028,7 +7051,7 @@ class TRIM(BaseCard):
             the value for the appropriate field
         """
         ni = 4
-        for (i, label, ux) in zip(count(), self.labels, self.uxs):
+        for i in range(len(self.labels)):
             if n == ni:
                 value = self.labels[i]
                 return value
@@ -7054,7 +7077,7 @@ class TRIM(BaseCard):
             the value for the appropriate field
         """
         ni = 4
-        for (i, label, ux) in zip(count(), self.labels, self.uxs):
+        for i in range(len(self.labels)):
             if n == ni:
                 self.labels[i] = value
                 return
@@ -7062,9 +7085,7 @@ class TRIM(BaseCard):
                 self.uxs[i] = value
                 return
 
-            #list_fields += [label, ux]
             if i == 1:
-                #list_fields += [self.aeqr]
                 ni += 1
         raise KeyError('Field %r=%r is an invalid TRIM entry.' % (n, value))
 
@@ -7271,19 +7292,28 @@ class TRIM(BaseCard):
                     #ntrim, nsuport_dofs, nsuport1_dofs, naesurf)
                 #raise RuntimeError(msg)
 
-           #ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
-           #if ndelta != 0:
-               #msg = '(naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-               #msg += ('naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
-                       #'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
-                           #naestat, naesurf, naeparms, ntrim_aesurf,
-                           #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
+            #ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
+            #if ndelta != 0:
+                #msg = (
+                    #'(naestat + naesurf + naeparm + ntrim_aesurf) - '
+                    #'(ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
+                    #'naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
+                    #'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+                        #ndelta,
+                        #naestat, naesurf, naeparms, ntrim_aesurf,
+                        #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
 
             ndelta = (naestat + naesurf + naeparm) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
-                msg = '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-                msg += 'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
-                    naestat, naesurf, naeparm, ntrim, ntrim_aesurf, naelink, nsuport_dofs, nsuport1_dofs)
+                msg = (
+                    '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
+                    'nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
+                    'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s '
+                    'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+                        ndelta,
+                        naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
+                        naelink, nsuport_dofs, nsuport1_dofs)
+                )
                 raise RuntimeError(msg)
 
     def cross_reference(self, model):

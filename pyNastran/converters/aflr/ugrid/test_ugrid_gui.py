@@ -81,6 +81,7 @@ class TestUgridGui(unittest.TestCase):
         test = UGRID_GUI()
         test.log = log
         test.load_ugrid_geometry(ugrid_filename, name='main', plot=True)
+        os.remove(ugrid_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -1,18 +1,30 @@
 from __future__ import print_function
 
+import numpy as np
+
 from h5Nastran import H5Nastran
 
-db = H5Nastran('./models/model_001.h5', 'w')
-db.load_bdf('./models/model_001.bdf')
-db.load_punch('./models/model_001.pch')
+db = H5Nastran('./models/model_001.h5', 'r')
+# db.load_bdf('./models/model_001.bdf')
+# db.load_punch('./models/model_001.pch')
 
 print(db.input.node.grid.identity)  # or db.input.node.grid.grid
 
 domain_ids = [1, 2]
 elements = [400002, 400111, 400198]
-forces = db.result.elemental.element_force.quad4.search(domain_ids, elements)
+f = db.result.elemental.element_force.quad4.search(elements, domain_ids)
 
-print(forces)
+print(f)
+
+print(2 * f + 3 * f)
+
+f = db.result.elemental.element_force.search(elements, domain_ids)
+
+print(f.quad4)
+
+vec = db.input.coordinate_system.h5n_transformation.vector_to_basic([1, 1, 1], 1)
+
+print(vec)
 
 # pynastran bdf
 bdf = db.bdf
@@ -23,5 +35,7 @@ bdf = db.bdf
 # currently, the entire bdf is written to h5 as written by pynastran
 # it can be loaded by doing db.load_bdf() without a filename
 # the goal is to recreate the bdf file from only the h5 data
+
+db.visualize()
 
 db.close()

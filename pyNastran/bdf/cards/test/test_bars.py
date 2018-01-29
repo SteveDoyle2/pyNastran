@@ -6,6 +6,8 @@ from numpy import allclose, array
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CBAR, PBAR, PBARL, GRID, MAT1
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 
 class TestBars(unittest.TestCase):
     """test CBAR/PBAR/PBARL classes"""
@@ -119,7 +121,7 @@ class TestBars(unittest.TestCase):
         j = -4.
         pbar = PBAR(pid, mid, A=0., i1=i1, i2=i2, i12=i12, j=j, nsm=0., c1=0., c2=0.,
                     d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
-                    k2=1.e8, comment='cat')
+                    k2=1.e8, comment='pbar')
         with self.assertRaises(ValueError):
             pbar.validate()
 
@@ -133,6 +135,24 @@ class TestBars(unittest.TestCase):
 
         pbar.j = 4.
         pbar.validate()
+
+        model = BDF(debug=False)
+        pbar = model.add_pbar(pid, mid, A=0., i1=2., i2=2., i12=1., j=4., nsm=0., c1=0., c2=0.,
+                              d1=0., d2=0., e1=0., e2=0., f1=0., f2=0., k1=1.e8,
+                              k2=1.e8, comment='pbar')
+        pbar.validate()
+        nids = [100, 101]
+        eid = 1000
+        x = [0., 0., 1.]
+        g0 = None
+        model.add_cbar(eid, pid, nids, x, g0, comment='cbar')
+        model.add_grid(100, [0., 0., 0.])
+        model.add_grid(101, [1., 0., 0.])
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        save_load_deck(model)
 
     def test_pbarl_1(self):
         """tests the PBARL"""
@@ -186,6 +206,9 @@ class TestBars(unittest.TestCase):
         g0 = None
         cbar = CBAR(eid, pid, [nid1, nid2], x, g0, offt='GGG',
                     pa=0, pb=0, wa=None, wb=None, comment='')
+        with self.assertRaises(ValueError):
+            cbar.validate()
+        cbar.x = [0., 1., 2.]
         cbar.validate()
         model.elements[eid] = cbar
         pbarl._verify(xref=False)
@@ -198,6 +221,11 @@ class TestBars(unittest.TestCase):
         mat.rho = 0.
         assert allclose(cbar.Mass(), 0.5), cbar.Mass()
 
+        scale = 'FR'
+        x = [0.2, 0.4, 0.6, 0.8]
+        model.add_cbarao(eid, scale, x, comment='cbarao')
+        model.add_card(['CBARAO', eid+1, 'RF', 6, 0.1, 0.2], 'CBARAO')
+        save_load_deck(model)
 
     def test_bar_mass_1(self):
         """tests CBAR/PBAR mass"""

@@ -1,7 +1,7 @@
 import os
 import unittest
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.converters.nastran.nastranIOv import NastranIO
+from pyNastran.converters.nastran.nastran_io import NastranIO
 import pyNastran
 #from pyNastran.utils.log import get_logger2
 

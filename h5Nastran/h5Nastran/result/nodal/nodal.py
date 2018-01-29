@@ -87,6 +87,51 @@ class GridForce(ResultTable):
                                 indices=DataGetter(indices=[0, 2, 3, 5, 6, 7, 8, 9, 10]),
                                 validator=_validator
                                 )
+    
+    def search(self, data_ids, domains=(), subcase_ids=(), convert_to_basic=False):
+        _data = super(GridForce, self).search(data_ids, domains, subcase_ids)
+        
+        if not convert_to_basic:
+            return _data
+        
+        _nid = _data.loc[:, 'ID']
+        _f1 = _data.loc[:, 'F1']
+        _f2 = _data.loc[:, 'F2']
+        _f3 = _data.loc[:, 'F3']
+        _m1 = _data.loc[:, 'M1']
+        _m2 = _data.loc[:, 'M2']
+        _m3 = _data.loc[:, 'M3']
+
+        data = _data.copy()
+        f1 = data.loc[:, 'F1']
+        f2 = data.loc[:, 'F2']
+        f3 = data.loc[:, 'F3']
+        m1 = data.loc[:, 'M1']
+        m2 = data.loc[:, 'M2']
+        m3 = data.loc[:, 'M3']
+
+        get_grid = self._h5n.input.node.grid.get_grid
+        vector_to_basic = self._h5n.input.coordinate_system.h5n_transformation.vector_to_basic
+
+        for i in range(_nid.shape[0]):
+            cid = get_grid(_nid[i])[3]
+
+            f = [_f1[i], _f2[i], _f3[i]]
+            m =[_m1[i], _m2[i], _m3[i]]
+
+            if cid != 0:
+                f = vector_to_basic(f, cid)
+                m = vector_to_basic(m, cid)
+
+            f1[i] = f[0]
+            f2[i] = f[1]
+            f3[i] = f[2]
+            m1[i] = m[0]
+            m2[i] = m[1]
+            m3[i] = m[2]
+            
+        return data
+            
 
 ########################################################################################################################
 

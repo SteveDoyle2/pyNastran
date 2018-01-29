@@ -1,11 +1,14 @@
 from __future__ import print_function, absolute_import
 from six import iteritems, itervalues
 from six.moves import range
+from collections import OrderedDict
+from typing import List, Dict, Any
 
 import tables
 import numpy as np
+from pandas import DataFrame
 
-from ..result_table import ResultTable, TableDef
+from ..result_table import ResultTable, TableDef, ResultTableData
 
 
 class ElementForce(object):
@@ -50,7 +53,7 @@ class ElementForce(object):
         self.fast = FAST(self._h5n, self)
         self.fast_cplx = FAST_CPLX(self._h5n, self)
         self.gap = GAP(self._h5n, self)
-        self.grad_flux = None  # skipping for now
+        # self.grad_flux = None  # skipping for now
         self.hbdye = HBDYE(self._h5n, self)
         self.hbdyg = HBDYG(self._h5n, self)
         self.hbdyp = HBDYP(self._h5n, self)
@@ -98,6 +101,107 @@ class ElementForce(object):
     def path(self):
         return self._elemental.path() + ['ELEMENT_FORCE']
 
+    # TODO: individual tables need to have data_ids first for consistency
+    def search(self, element_ids, domain_ids=(), subcase_ids=()):
+        # :type (List[int], List[int], List[int]) -> ElementForceResult
+        # TODO: consider subcase_ids here... convert to domain_ids and use domain_ids only
+        result = ElementForceResult()
+        _result = result.__dict__
+        table_ids = self.__dict__.keys()
+        _tables = self.__dict__
+        for table_id in table_ids:
+            if table_id.startswith('_'):  # not a table
+                continue
+            _result[table_id] = _tables[table_id].search(element_ids, domain_ids, subcase_ids)
+                
+        return result
+    
+    
+########################################################################################################################
+
+class ElementForceResult(object):
+    def __init__(self):
+        self.bar = None  # type: DataFrame
+        self.bars = None  # type: DataFrame
+        self.bars_cplx = None  # type: DataFrame
+        self.bar_cplx = None  # type: DataFrame
+        self.beam = None  # type: DataFrame
+        self.beam3 = None  # type: DataFrame
+        self.beam3_cplx = None  # type: DataFrame
+        self.beam_cplx = None  # type: DataFrame
+        self.bend = None  # type: DataFrame
+        self.bend_cplx = None  # type: DataFrame
+        self.bush = None  # type: DataFrame
+        self.bush1d = None  # type: DataFrame
+        self.bush_cplx = None  # type: DataFrame
+        self.cone = None  # type: DataFrame
+        self.conrod = None  # type: DataFrame
+        self.conrod_cplx = None  # type: DataFrame
+        self.conv = None  # type: DataFrame
+        self.convm = None  # type: DataFrame
+        self.damp1 = None  # type: DataFrame
+        self.damp1_cplx = None  # type: DataFrame
+        self.damp2 = None  # type: DataFrame
+        self.damp2_cplx = None  # type: DataFrame
+        self.damp3 = None  # type: DataFrame
+        self.damp3_cplx = None  # type: DataFrame
+        self.damp4 = None  # type: DataFrame
+        self.damp4_cplx = None  # type: DataFrame
+        self.elas1 = None  # type: DataFrame
+        self.elas1_cplx = None  # type: DataFrame
+        self.elas2 = None  # type: DataFrame
+        self.elas2_cplx = None  # type: DataFrame
+        self.elas3 = None  # type: DataFrame
+        self.elas3_cplx = None  # type: DataFrame
+        self.elas4 = None  # type: DataFrame
+        self.elas4_cplx = None  # type: DataFrame
+        self.fast = None  # type: DataFrame
+        self.fast_cplx = None  # type: DataFrame
+        self.gap = None  # type: DataFrame
+        self.hbdye = None  # type: DataFrame
+        self.hbdyg = None  # type: DataFrame
+        self.hbdyp = None  # type: DataFrame
+        self.quad4 = None  # type: DataFrame
+        self.quad4_cn = None  # type: DataFrame
+        self.quad4_cn_cplx = None  # type: DataFrame
+        self.quad4_comp = None  # type: DataFrame
+        self.quad4_cplx = None  # type: DataFrame
+        self.quad8 = None  # type: DataFrame
+        self.quad8_comp = None  # type: DataFrame
+        self.quad8_cplx = None  # type: DataFrame
+        self.quadr = None  # type: DataFrame
+        self.quadr_cplx = None  # type: DataFrame
+        self.rac2d = None  # type: DataFrame
+        self.rac2d_cplx = None  # type: DataFrame
+        self.rac3d = None  # type: DataFrame
+        self.rac3d_cplx = None  # type: DataFrame
+        self.radbc = None  # type: DataFrame
+        self.radint = None  # type: DataFrame
+        self.rod = None  # type: DataFrame
+        self.rod_cplx = None  # type: DataFrame
+        self.seam = None  # type: DataFrame
+        self.seam_cplx = None  # type: DataFrame
+        self.shear = None  # type: DataFrame
+        self.shear_cplx = None  # type: DataFrame
+        self.tria3 = None  # type: DataFrame
+        self.tria3_comp = None  # type: DataFrame
+        self.tria3_cplx = None  # type: DataFrame
+        self.tria6 = None  # type: DataFrame
+        self.tria6_comp = None  # type: DataFrame
+        self.tria6_cplx = None  # type: DataFrame
+        self.triar = None  # type: DataFrame
+        self.triar_cplx = None  # type: DataFrame
+        self.tube = None  # type: DataFrame
+        self.tube_cplx = None  # type: DataFrame
+        self.visc = None  # type: DataFrame
+        self.visc_cplx = None  # type: DataFrame
+        self.weld = None  # type: DataFrame
+        self.weldc = None  # type: DataFrame
+        self.weldc_cplx = None  # type: DataFrame
+        self.weldp = None  # type: DataFrame
+        self.weldp_cplx = None  # type: DataFrame
+        self.weld_cplx = None  # type: DataFrame
+        
 
 ########################################################################################################################
 
@@ -425,6 +529,8 @@ class HBDYP(ResultTable):
 class QUAD4(ResultTable):
     result_type = 'ELEMENT FORCES 33 QUAD4 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4', result_type)
+    result_data_cols = ['MX', 'MY', 'MXY', 'BMX', 'BMY', 'BMXY', 'TX', 'TY']
+    result_data_group_by = ['EID', 'DOMAIN_ID']
 
 
 ########################################################################################################################

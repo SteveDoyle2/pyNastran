@@ -8,6 +8,8 @@ from vtk import vtkQuad
 
 from pyNastran.converters.dev.openvsp.degen_geom import DegenGeom
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
 class DegenGeomIO(object):
@@ -35,56 +37,56 @@ class DegenGeomIO(object):
         self.model_type = 'vspaero'
         #self.model_type = model.model_type
         model.read_degen_geom(csv_filename)
+        nodes = []
+        elements = []
+        inid = 0
         for name, comps in sorted(model.components.items()):
-            #print('name = %r' % name)
-            #print(comp)
+            self.log.debug('name = %r' % name)
+            #print(comps)
             #print('------------')
             for comp in comps:
-                nodes = comp.xyz
-                elements = comp.elements
-                nnodes = nodes.shape[0]
-                nelements = elements.shape[0]
+                self.log.info(comp)
+                nnodes = comp.xyz.shape[0]
+                nodes.append(comp.xyz)
+                is_elem = np.linalg.norm(comp.elements, axis=1) > 0
+                elements.append(comp.elements[is_elem] + inid)
+                inid += nnodes
 
+        if len(nodes) == 1:
+            nodes = nodes[0]
+            elements = elements[0]
+        else:
+            nodes = np.vstack(nodes)
+            elements = np.vstack(elements)
+
+
+        nnodes = nodes.shape[0]
+        nelements = elements.shape[0]
         self.nnodes = nnodes
         self.nelements = nelements
 
         self.grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
-
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nnodes)
-        #self.gridResult.Allocate(self.nnodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nid_map = {}
 
         assert nodes is not None
 
-        nid = 0
         #print("nxyz_nodes=%s" % nxyz_nodes)
         mmax = amax(nodes, axis=0)
+
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.create_global_axes(dim_max)
 
-        for i in range(nnodes):
-            points.InsertPoint(nid, nodes[i, :])
-            nid += 1
+        points = numpy_to_vtk_points(nodes)
         #self.log.info('nxyz_nodes=%s nwake_nodes=%s total=%s' % (
             #nnodes, nwake_nodes, nxyz_nodes + nwake_nodes))
         #self.log.info('nxyz_elements=%s nwake_elements=%s total=%s' % (
             #nxyz_elements, nwake_elements, nxyz_elements + nwake_elements))
 
         elements -= 1
-        for eid in range(nelements):
-            elem = vtkQuad()
-            #assert elem.GetCellType() == 9, elem.GetCellType()
-            node_ids = elements[eid, :]
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
-            elem.GetPointIds().SetId(2, node_ids[2])
-            elem.GetPointIds().SetId(3, node_ids[3])
-            #elem.GetCellType() = 5  # vtkTriangle
-            self.grid.InsertNextCell(9, elem.GetPointIds())
+        etype = 9 # vtkQuad().GetCellType()
+        create_vtk_cells_of_constant_element_type(self.grid, elements, etype)
 
         self.grid.SetPoints(points)
         self.grid.Modified()
@@ -114,7 +116,6 @@ class DegenGeomIO(object):
     #def load_adb_results(self, cart3d_filename):
         #raise NotImplementedError()
 
-
     def _fill_degen_geom_case(self, cases, ID, model, nnodes, nelements):  # pragma: no cover
         icase = 0
         itime = 0
@@ -128,8 +129,8 @@ class DegenGeomIO(object):
         formi = []
         form0 = form
 
-        nodes = np.arange(nnodes + 1, dtype='int32')
-        elements = np.arange(nelements + 1, dtype='int32')
+        nodes = np.arange(nnodes, dtype='int32')
+        elements = np.arange(nelements, dtype='int32')
 
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
                             location='centroid', scalar=elements)

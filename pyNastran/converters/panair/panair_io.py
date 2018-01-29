@@ -52,13 +52,9 @@ class PanairIO(object):
         #print("nelements = ", self.nelements)
 
         self.grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nnodes)
-        #self.gridResult.Allocate(self.nnodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        #elem.SetNumberOfPoints(nnodes)
 
         assert len(nodes) > 0
         mmax = amax(nodes, axis=0)
@@ -81,10 +77,6 @@ class PanairIO(object):
             self.grid.InsertNextCell(quad_type, elem.GetPointIds())
 
         self.grid.SetPoints(points)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print dir(self.grid) #.SetNumberOfComponents(0)
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()

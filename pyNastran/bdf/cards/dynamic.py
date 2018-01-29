@@ -23,7 +23,7 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from math import log, exp, ceil
+from math import log, exp
 from six.moves import zip, range
 import numpy as np
 from numpy import unique, hstack
@@ -1656,7 +1656,11 @@ class TSTEP(BaseCard):
         DT = []
         NO = []
 
-        nrows = int(ceil((len(card) - 1.) / 8.))
+        nfields = len(card)
+        nrows = (nfields - 1) // 8
+        if (nfields - 1) % 8 != 0:
+            nrows += 1
+
         for i in range(nrows):
             n = 8 * i + 1
             ni = integer_or_blank(card, n + 1, 'N' + str(i), 1)
@@ -1752,7 +1756,10 @@ class TSTEP1(BaseCard):
         ninc = []
         nout = []
 
-        nrows = int(ceil((len(card) - 1.) / 8.))
+        nfields = len(card)
+        nrows = (nfields - 1) // 8
+        if (nfields - 1) % 8 != 0:
+            nrows += 1
         for i in range(nrows):
             n = 8 * i + 1
             tendi = double_or_blank(card, n + 1, 'TEND' + str(i), 1.)

@@ -679,7 +679,7 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             try:
                 node_ids = (all_node_ids[face[0]], all_node_ids[face[1]],
                             all_node_ids[face[2]], all_node_ids[face[3]])
-            except:
+            except KeyError:
                 print(face)
                 print(node_ids)
                 raise

@@ -1,6 +1,5 @@
 from __future__ import print_function
 import sys
-from copy import deepcopy
 
 # kills the program when you hit Cntl+C from the command line
 import signal
@@ -8,213 +7,13 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from six import string_types
 
-from qtpy import QtGui
-from qtpy.QtCore import Qt
+#from qtpy import QtGui
+#from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
-    QComboBox, QLabel, QHBoxLayout, QMessageBox)
+    QWidget, QVBoxLayout, QPushButton, QApplication,
+    QComboBox, QLabel, QHBoxLayout)
+from pyNastran.gui.utils.qt.results_window import ResultsWindow
 
-
-class QTreeView2(QTreeView):
-    def __init__(self, parent, data, choices):
-        self.parent = parent
-        self.old_rows = []
-        self.data = data
-        self.cases_deleted = set([])
-        self.choices = choices
-        self.single = False
-        QTreeView.__init__(self)
-        #self.setAlternatingRowColors(True)
-
-    def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
-        #if event.key() == QtCore.Qt.Key_Escape:
-            #self.close()
-        #return
-        key = event.key()
-        if key == Qt.Key_Delete:
-            rows = self.find_list_index()
-            self.remove_rows(rows)
-            #self.model().removeRow(row)
-            #self.parent().on_delete(index.row())
-
-            #del self.data[row]
-            #self.model().change_data(self.data)
-        else:
-            QTreeView.keyPressEvent(self, event)
-
-    def remove_rows(self, rows):
-        """
-        We just hide the row to delete things to prevent refreshing
-        the window and changing which items have been expanded
-
-        Parameters
-        ----------
-        rows : List[int]
-            the trace on the data/form block
-
-        form = [
-            ['Geometry', None, [
-                ('NodeID', 0, []),
-                ('ElementID', 1, []),
-                ('PropertyID', 2, []),
-                ('MaterialID', 3, []),
-                ('E', 4, []),
-                ('Element Checks', None, [
-                    ('ElementDim', 5, []),
-                    ('Min Edge Length', 6, []),
-                    ('Min Interior Angle', 7, []),
-                    ('Max Interior Angle', 8, [])],
-                 ),],
-             ],
-        ]
-
-        # delete Geometry
-        data[0] = ('Geometry', None, [...])
-        >>> remove_rows([0])
-
-        # delete MaterialID
-        data[0][3] = ('MaterialID', 3, [])
-        >>> remove_rows([0, 3])
-
-        # delete ElementChecks
-        data[0][5] = ('Element Checks', None, [...])
-        >>> remove_rows([0, 5])
-
-        # delete Min Edge Length
-        data[0][5][1] = ('Min Edge Length', 6, [])
-        >>> remove_rows([0, 5, 1])
-        """
-        # find the row the user wants to delete
-        data = self.data
-        for row in rows[:-1]:
-            data = data[row][2]
-
-        # we got our data block
-        # now we need to get 1+ results
-        last_row = rows[-1]
-        cases_to_delete = get_many_cases(data[last_row])
-
-        cases_to_delete = list(set(cases_to_delete) - self.cases_deleted)
-        cases_to_delete.sort()
-        if len(cases_to_delete) == 0: # can this happen?
-            # this happens when you cleared out a data block by
-            # deleting to entries, but not the parent
-            #
-            # we'll just hide the row now
-            msg = ''
-            return
-        elif len(cases_to_delete) == 1:
-            msg = 'Are you sure you want to delete 1 result case load_case=%s' % cases_to_delete[0]
-        else:
-            msg = 'Are you sure you want to delete %s result cases %s' % (
-                len(cases_to_delete), str(cases_to_delete))
-
-        if msg:
-            widget = QMessageBox()
-            title = 'Delete Cases'
-            result = QMessageBox.question(widget, title, msg,
-                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-            if result != QMessageBox.Yes:
-                return
-
-            self.cases_deleted.update(set(cases_to_delete))
-            sidebar = self.parent.parent
-            if hasattr(sidebar.parent, 'delete_cases'):
-                gui = sidebar.parent
-                gui.delete_cases(cases_to_delete, ask=False)
-
-        # hide the line the user wants to delete
-        row = rows[-1]
-        indexes = self.selectedIndexes()
-        self.setRowHidden(row, indexes[-1].parent(), True)
-        self.update()
-
-    def find_list_index(self):
-        """
-        trace the tree to find the selected item
-        """
-        indexes = self.selectedIndexes()
-
-        rows = []
-        for index in indexes:
-            row = index.row()
-            rows.append(row)
-            level = 0
-            while index.parent().isValid():
-                index = index.parent()
-                row = index.row()
-                rows.append(row)
-                level += 1
-        rows.reverse()
-        return rows
-
-    def mousePressEvent(self, position):
-        """called when you click a result"""
-        QTreeView.mousePressEvent(self, position)
-
-        # trace the tree to find the selected item
-        rows = self.find_list_index()
-
-        # TODO: what is this for???
-        if rows != self.old_rows:
-            self.old_rows = rows
-        valid, keys = self.get_row()
-        if not valid:
-            print('invalid=%s keys=%s' % (valid, keys))
-        else:
-            print('valid=%s keys=%s' % (valid, keys))
-            #print('choice =', self.choices[keys])
-
-    def get_row(self):
-        """
-        gets the row
-
-        Returns
-        -------
-        is_valid : bool
-            is this case valid
-        row : None or tuple
-            None : invalid case
-            tuple : valid case
-                ('centroid', None, [])
-                0 - the location (e.g. node, centroid)
-                1 - iCase
-                2 - []
-        """
-        # if there's only 1 data member, we don't need to extract the data id
-        if self.single:
-            return True, self.data[0]
-
-        irow = 0
-
-        # TODO: what is this for???
-        #     crashes some PyQt4 cases when clicking on the first
-        #     non-results level of the sidebar
-        #data = deepcopy(self.data)
-        data = self.data
-        for row in self.old_rows:
-            try:
-                key = data[row][0]
-            except IndexError:
-                return False, irow
-            irow = data[row][1]
-            data = data[row][2]
-
-        if data:
-            return False, None
-        return True, irow
-
-    def set_single(self, single):
-        self.single = single
-        self.old_rows = [0]
-
-
-#for subcase in subcases:
-#    for time in times:
-#        disp
-#        stress
-#        load
 
 class Sidebar(QWidget):
     """
@@ -427,10 +226,10 @@ class Sidebar(QWidget):
         self.result_data_window.clear_data()
         self.apply_button.setEnabled(False)
 
-    def on_pulldown(self, event):
+    def on_pulldown(self, event):  # pragma: no cover
         print('pulldown...')
 
-    def on_update_name(self, event):
+    def on_update_name(self, event):  # pragma: no cover
         """user clicked the pulldown"""
         name = str(self.name_pulldown.currentText())
         data = self.parent._get_sidebar_data(name)
@@ -467,135 +266,24 @@ class Sidebar(QWidget):
         result_name = None
         self.parent._set_case(result_name, i, explicit=True)
 
+    def on_clear_results(self):
+        if hasattr(self.parent, 'on_clear_results'):
+            self.parent.on_clear_results()
+    def on_normals(self, icase):
+        if hasattr(self.parent, 'on_normals'):
+            self.parent.on_normals(icase)
+    def on_fringe(self, icase):
+        if hasattr(self.parent, 'on_fringe'):
+            self.parent.on_fringe(icase)
+    def on_disp(self, icase):
+        if hasattr(self.parent, 'on_disp'):
+            self.parent.on_disp(icase)
+    def on_vector(self, icase):
+        if hasattr(self.parent, 'on_vector'):
+            self.parent.on_vector(icase)
 
-class ResultsWindow(QWidget):
-    """
-    A ResultsWindow creates the box where we actually select our
-    results case.  It does not have an apply button.
-    """
-    def __init__(self, parent, name, data, choices):
-        QWidget.__init__(self)
-        self.name = name
-        self.data = data
-        self.choices = choices
-        self.parent = parent
-        self.treeView = QTreeView2(self, self.data, choices)
-        self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        self.model = QtGui.QStandardItemModel()
-        is_single = self.addItems(self.model, data)
-        self.treeView.setModel(self.model)
-        self.treeView.set_single(is_single)
-
-        self.model.setHorizontalHeaderLabels([self.tr(self.name)])
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.treeView)
-        self.setLayout(layout)
-
-    def update_data(self, data):
-        self.clear_data()
-        self.data = data
-        try:
-            self.addItems(self.model, data)
-        except:
-            raise RuntimeError('cannot add data=\n%s' % data)
-            #if isinstance(data, string_types):
-                #self.addItems(self.model, data)
-            #else:
-                #self.addItems(self.model, *tuple(data))
-        self.treeView.data = data
-        #layout = QVBoxLayout()
-        #layout.addWidget(self.treeView)
-        #self.setLayout(layout)
-
-    def clear_data(self):
-        self.model.clear()
-        self.treeView.data = []
-        self.model.setHorizontalHeaderLabels([self.tr(self.name)])
-
-    def addItems(self, parent, elements, level=0, count_check=False):
-        nelements = len(elements)
-        redo = False
-        #print(elements[0])
-        try:
-            #if len(elements):
-                #assert len(elements[0]) == 3, 'len=%s elements[0]=%s\nelements=\n%s\n' % (
-                    #len(elements[0]), elements[0], elements)
-            for element in elements:
-                #if isinstance(element, str):
-                    #print('elements = %r' % str(elements))
-
-                #print('element = %r' % str(element))
-                if not len(element) == 3:
-                    print('element = %r' % str(element))
-                text, i, children = element
-                nchildren = len(children)
-                #print('text=%r' % text)
-                item = QtGui.QStandardItem(text)
-                parent.appendRow(item)
-
-                # TODO: count_check and ???
-                if nelements == 1 and nchildren == 0 and level == 0:
-                    #self.result_data_window.setEnabled(False)
-                    item.setEnabled(False)
-                    #print(dir(self.treeView))
-                    #self.treeView.setCurrentItem(self, 0)
-                    #item.mousePressEvent(None)
-                    redo = True
-                #else:
-                    #pass
-                    #print('item=%s count_check=%s nelements=%s nchildren=%s' % (
-                        #text, count_check, nelements, nchildren))
-                if children:
-                    assert isinstance(children, list), children
-                    self.addItems(item, children, level + 1, count_check=count_check)
-            is_single = redo
-            return is_single
-        except ValueError:
-            print()
-            print('elements =', elements)
-            print('element =', element)
-            print('len(elements)=%s' % len(elements))
-            for e in elements:
-                print('  e = %s' % str(e))
-            raise
-        #if redo:
-        #    data = [
-        #        ('A', []),
-        #        ('B', []),
-        #    ]
-        #    self.update_data(data)
-
-def get_many_cases(data):
-    """
-    Get the result case ids that are a subset of the data/form list
-
-    data = [
-        (u'Element Checks', None, [
-            (u'ElementDim', 5, []),
-            (u'Min Edge Length', 6, []),
-            (u'Min Interior Angle', 7, []),
-            (u'Max Interior Angle', 8, [])],
-        ),
-    ]
-    >>> get_many_cases(data)
-    [5, 6, 7, 8]
-
-    >>> data = [(u'Max Interior Angle', 8, [])]
-    [8]
-    """
-    name, case, rows = data
-    if case is None:
-        # remove many results
-        # (Geometry, None, [results...])
-        cases = []
-        for irow, row in enumerate(rows):
-            name, row_id, data2 = row
-            cases += get_many_cases(row)
-    else:
-        cases = [case]
-    return cases
+    def get_clicked(self):
+        self.result_data_window.treeView.get_clicked()
 
 def main():  # pragma: no cover
     app = QApplication(sys.argv)
@@ -612,8 +300,8 @@ def main():  # pragma: no cover
                 (u'Min Edge Length', 6, []),
                 (u'Min Interior Angle', 7, []),
                 (u'Max Interior Angle', 8, [])],
-             ),],
-         ],
+            ),],
+        ],
     ]
     #form = []
     res_widget = Sidebar(app, data=form, clear_data=False, debug=True)
@@ -622,10 +310,7 @@ def main():  # pragma: no cover
     #res_widget.update_results(form, name)
 
     res_widget.show()
-
-
     sys.exit(app.exec_())
 
 if __name__ == "__main__":  # pragma: no cover
     main()
-

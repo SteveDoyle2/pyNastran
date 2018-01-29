@@ -12,7 +12,7 @@ is_cart3d = True
     #is_cart3d = False
 
 #try:
-from pyNastran.converters.nastran.nastranIOv import NastranIO
+from pyNastran.converters.nastran.nastran_io import NastranIO
 is_nastran = True
 #except ImportError:
     #raise

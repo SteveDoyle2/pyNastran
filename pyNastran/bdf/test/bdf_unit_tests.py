@@ -3,7 +3,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import unittest
 from numpy import allclose, array
-from numpy.linalg import norm  # type: ignore
 from six import StringIO
 
 import pyNastran
@@ -11,11 +10,11 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.write_path import write_include, _split_path
-
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'bdf', 'test')
 from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder
 
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
+MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 class Tester(unittest.TestCase):
 
@@ -57,7 +56,7 @@ class TestBDF(Tester):
             sline4 = _split_path(include_name)
 
             msg1_expected = r'INCLUDE C:\\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py' '\n'
-            msg2_expected =  'INCLUDE /opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py\n'
+            msg2_expected = 'INCLUDE /opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py\n'
             msg3_expected = ('INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/\n'
                              '        pyNastran/bdf/writePath.py\n')
             msg4_expected = (r'INCLUDE opt\NASA\test1\test2\test3\test4\formats\pynastran_v0.6' '\\\n'
@@ -81,7 +80,7 @@ class TestBDF(Tester):
     def test_object_attributes_03(self):
         """tests getting object attributes with a card"""
         model = BDF(debug=False)
-        model.add_card(['GRID',1], 'GRID')
+        model.add_card(['GRID', 1], 'GRID')
         grid = model.nodes[1]
         grid.object_attributes(mode='public', keys_to_skip=None)
 
@@ -100,15 +99,15 @@ class TestBDF(Tester):
     def test_object_methods_03(self):
         """tests getting object attributes with a card"""
         model = BDF(debug=False)
-        model.add_card(['GRID',1], 'GRID')
+        model.add_card(['GRID', 1], 'GRID')
         grid = model.nodes[1]
         grid.object_methods(mode='public', keys_to_skip=None)
 
     def test_bdf_01(self):
-        bdf_filename = os.path.join('solid_bending', 'solid_bending.bdf')
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        self.run_bdf(folder, bdf_filename)
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, xref=True)
+        """checks solid_bending.dat"""
+        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        self.run_bdf('', bdf_filename)
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, xref=True)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -128,18 +127,23 @@ class TestBDF(Tester):
         for i, (cgi, cgie) in enumerate(zip(cg, cg_exact)):
             assert allclose(cgi, cgie), 'i=%s cg=%s' % (i, str(cg))
 
-        self._compare_mass_cg_I(fem1)
-        self._compare_mass_cg_I(fem1, reference_point=u'cg')
+        compare_mass_cg_inertia(fem1)
+        compare_mass_cg_inertia(fem1, reference_point=u'cg')
         mass, cg, I = fem1.mass_properties(reference_point='cg')
 
-    def _compare_mass_cg_I(self, fem1, reference_point=None, sym_axis=None):
-        mass1, cg1, I1 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis)
+    def test_bdf_01_hdf5(self):
+        """checks solid_bending.dat"""
+        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        model = BDF(debug=False)
+        cards = model._read_bdf_cards(bdf_filename, validate=True, xref=False,
+                                      punch=False, read_includes=True, encoding=None)
+        assert len(cards) == 9, len(cards)
 
     def test_bdf_02(self):
-        bdf_filename = os.path.join('plate_py', 'plate_py.dat')
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        self.run_bdf(folder, bdf_filename)
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, xref=True)
+        """checks plate_py.dat"""
+        bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
+        self.run_bdf('', bdf_filename)
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, xref=True)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -152,13 +156,13 @@ class TestBDF(Tester):
             assert len(fem.elements) == 200, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
-        self._compare_mass_cg_I(fem1)
-        self._compare_mass_cg_I(fem1, reference_point=u'cg')
+        compare_mass_cg_inertia(fem1)
+        compare_mass_cg_inertia(fem1, reference_point=u'cg')
 
     def test_bdf_03(self):
-        bdf_filename = os.path.join('cbush', 'cbush.dat')
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, debug=False)
+        """checks cbush.dat"""
+        bdf_filename = os.path.join(MODEL_PATH, 'cbush', 'cbush.dat')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, debug=False)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -172,15 +176,15 @@ class TestBDF(Tester):
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
 
-        self._compare_mass_cg_I(fem1)
-        self._compare_mass_cg_I(fem1, reference_point=u'cg')
+        compare_mass_cg_inertia(fem1)
+        compare_mass_cg_inertia(fem1, reference_point=u'cg')
 
-        self.run_bdf(folder, bdf_filename, xref=True, debug=False)
+        self.run_bdf('', bdf_filename, xref=True, debug=False)
 
     def test_bdf_04(self):
-        bdf_filename = os.path.join('beam_modes', 'beam_modes.dat')
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        """checks beam_modes.dat"""
+        bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -195,8 +199,8 @@ class TestBDF(Tester):
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
             assert len(fem.properties_mass) == 0, 'len(properties_mass) = %i' % len(fem.properties_mass)
-        self._compare_mass_cg_I(fem1)
-        #self._compare_mass_cg_I(fem1, reference_point=u'cg')
+        compare_mass_cg_inertia(fem1)
+        #compare_mass_cg_inertia(fem1, reference_point=u'cg')
 
         #self.run_bdf(folder, bdf_filename, xref=True, debug=False) # PBEAML is not supported
 
@@ -245,10 +249,10 @@ class TestBDF(Tester):
 
 
     def test_bdf_05(self):
-        bdf_filename = 'testA.bdf'
-        folder = os.path.abspath(os.path.join(pkg_path, 'bdf', 'test', 'unit'))
+        """checks testA.dat"""
+        bdf_filename = os.path.join(PKG_PATH, 'bdf', 'test', 'unit', 'testA.bdf')
         (fem1, fem2, diff_cards) = self.run_bdf(
-            folder, bdf_filename, xref=False, run_extract_bodies=False,
+            '', bdf_filename, xref=False, run_extract_bodies=False,
         )
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
@@ -257,8 +261,8 @@ class TestBDF(Tester):
         #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
 
     def test_bdf_06(self):
-        bdf_filename = os.path.join('bar3truss', 'vared_bar3.bdf')
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        """checks bar3truss/vared_bar3.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bar3truss', 'vared_bar3.bdf')
 
         dynamic_vars = {
             'bar1_a': 1.0,
@@ -270,7 +274,8 @@ class TestBDF(Tester):
             'youngs' : 1e7,
             'rho': 0.01,
         }
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, dynamic_vars=dynamic_vars)
+        fem1, fem2, diff_cards = self.run_bdf(
+            '', bdf_filename, dynamic_vars=dynamic_vars)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -284,14 +289,14 @@ class TestBDF(Tester):
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
 
-        self._compare_mass_cg_I(fem1)
-        self._compare_mass_cg_I(fem1, reference_point=u'cg')
-        self._compare_mass_cg_I(fem1, reference_point='cg')
+        compare_mass_cg_inertia(fem1)
+        compare_mass_cg_inertia(fem1, reference_point=u'cg')
+        compare_mass_cg_inertia(fem1, reference_point='cg')
 
     def test_bdf_transfer_function_01(self):
-        bdf_filename = os.path.join('transfer_function', 'actuator_tf_modeling.bdf')
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        """checks transfer_function/actuator_tf_modeling.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'transfer_function', 'actuator_tf_modeling.bdf')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -309,9 +314,9 @@ class TestBDF(Tester):
             assert fem.card_count['TF'] == 2, fem.card_count
 
     def test_bdf_aero_01(self):
-        bdf_filename = os.path.join('aero', 'aerobeam.bdf')
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        """checks aero/aerobeam.bdf"""
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.bdf')
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -347,7 +352,7 @@ class TestBDF(Tester):
             assert fem.card_count['SET1'] == 5, fem.card_count
             assert fem.card_count['MKAERO1'] == 1, fem.card_count
             assert fem.card_count['PBEAML'] == 3, fem.card_count
-            assert fem.card_count['FLFACT'] ==5, fem.card_count
+            assert fem.card_count['FLFACT'] == 5, fem.card_count
             assert fem.card_count['AESURF'] == 3, fem.card_count
             assert fem.card_count['DEQATN'] == 3, fem.card_count
             assert fem.card_count['CBAR'] == 4, fem.card_count
@@ -356,7 +361,12 @@ class TestBDF(Tester):
             assert fem.card_count['FLUTTER'] == 4, fem.card_count
             assert fem.card_count['DOPTPRM'] == 1, fem.card_count
 
+def compare_mass_cg_inertia(fem1, reference_point=None, sym_axis=None):
+    mass1, cg1, I1 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis)
+
+
 class TestBaseCard(Tester):
+    """Tests methods used by ``BaseCard``"""
     def test_base_card_01_collapse_thru(self):
         """
         tests collapse_thru method used by SETx cards

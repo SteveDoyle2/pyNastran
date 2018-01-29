@@ -139,7 +139,7 @@ class FailureIndices(RealForceObject):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -309,7 +309,7 @@ class RealSpringDamperForceArray(RealForceObject):
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
-        msg.append('  element type: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -540,7 +540,7 @@ class RealRodForceArray(RealForceObject):
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -802,7 +802,7 @@ class RealCBeamForceArray(ScalarObject):
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
-        msg.append('  CBEAM\n  ')
+        msg.append('  CBEAM\n')
         msg += self.get_data_code()
         return msg
 
@@ -1054,7 +1054,7 @@ class RealCShearForceArray(ScalarObject):
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1223,7 +1223,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1467,7 +1467,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
-        msg.append('  element type: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1699,7 +1699,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        msg.append('  element type: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1949,7 +1949,7 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -2163,7 +2163,7 @@ class RealConeAxForceArray(ScalarObject):
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -2339,7 +2339,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -2554,7 +2554,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -2701,7 +2701,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -2933,7 +2933,7 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -3226,7 +3226,7 @@ class RealCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  parent_coord.shape = %s\n' % str(self.parent_coord.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -3433,7 +3433,7 @@ class RealCBushForceArray(ScalarObject):
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
-        msg.append('  element name: %s\n  ' % self.element_name)
+        msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -3633,7 +3633,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        msg.append('  element type: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -3759,7 +3759,7 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
 
     def get_stats(self, short=False):
         """deprecated"""
-        msg = ['  '] + self.get_data_code()
+        msg = [''] + self.get_data_code()
         nelements = len(self.coord)
         if self.dt is not None:  # transient
             ntimes = len(self.membrane_x)

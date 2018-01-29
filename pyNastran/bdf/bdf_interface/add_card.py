@@ -28,7 +28,7 @@ from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
@@ -2747,7 +2747,7 @@ class AddCards(AddMethods):
         return mat
 
     def add_nxstrat(self, sid, params, comment=''):
-        nxstrat = NXSTRAT(sid, params)
+        nxstrat = NXSTRAT(sid, params, comment=comment)
         self._add_nxstrat_object(nxstrat)
         return nxstrat
 
@@ -3190,10 +3190,11 @@ class AddCards(AddMethods):
         direction : str
             Component direction of acceleration variation
             {X, Y, Z}
-        locs : ???
-            ???
-        vals : ???
-            ???
+        locs : List[float]
+            Location along direction DIR in coordinate system CID for
+            specification of a load scale factor.
+        vals : List[float]
+            The load scale factor associated with location LOCi
         cid : int; default=0
             the coordinate system for the load
         comment : str; default=''
@@ -4450,34 +4451,40 @@ class AddCards(AddMethods):
         return self.add_uset(name, ids, components, comment=comment)
 
     def add_sebset(self, seid, ids, components, comment=''):
-        sebset = SEBSET(seid, ids, components, comment=comment)
+        if isinstance(components, string_types):
+            sebset = SEBSET1(seid, ids, components, comment=comment)
+        else:
+            sebset = SEBSET(seid, ids, components, comment=comment)
         self._add_sebset_object(sebset)
         return sebset
 
     def add_sebset1(self, seid, ids, components, comment=''):
-        sebset = SEBSET1(seid, ids, components, comment=comment)
-        self._add_sebset_object(sebset)
-        return sebset
+        """.. seealso:: ``add_secset``"""
+        return self.add_sebset(seid, ids, components, comment=comment)
 
     def add_secset(self, seid, ids, components, comment=''):
-        secset = SECSET(seid, ids, components, comment=comment)
+        if isinstance(components, string_types):
+            secset = SECSET1(seid, ids, components, comment=comment)
+        else:
+            secset = SECSET(seid, ids, components, comment=comment)
         self._add_secset_object(secset)
         return secset
 
     def add_secset1(self, seid, ids, components, comment=''):
-        secset = SECSET1(seid, ids, components, comment=comment)
-        self._add_secset_object(secset)
-        return secset
+        """.. seealso:: ``add_secset``"""
+        return self.add_secset(seid, ids, components, comment=comment)
 
     def add_seqset(self, seid, ids, components, comment=''):
-        seqset = SEQSET(seid, ids, components, comment=comment)
+        if isinstance(components, string_types):
+            seqset = SEQSET1(seid, ids, components, comment=comment)
+        else:
+            seqset = SEQSET(seid, ids, components, comment=comment)
         self._add_seqset_object(seqset)
         return seqset
 
     def add_seqset1(self, seid, ids, components, comment=''):
-        seqset = SEQSET1(seid, ids, components, comment=comment)
-        self._add_seqset_object(seqset)
-        return seqset
+        """.. seealso:: ``add_secset``"""
+        return self.add_seqset(seid, ids, components, comment=comment)
 
     def add_seset(self, seid, ids, comment=''):
         seset = SESET(seid, ids, comment=comment)
@@ -4620,14 +4627,14 @@ class AddCards(AddMethods):
         aestat = AESTAT(aestat_id, label, comment=comment)
         self._add_aestat_object(aestat)
 
-    def add_aelink(self, id, label, independent_labels, Cis, comment=''):
+    def add_aelink(self, aelink_id, label, independent_labels, Cis, comment=''):
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
 
         Parameters
         ----------
-        id : int
+        aelink_id : int
             unique id
         label : str
             name of the AESURF(???) card
@@ -4636,7 +4643,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        aelink = AELINK(id, label, independent_labels, Cis, comment=comment)
+        aelink = AELINK(aelink_id, label, independent_labels, Cis, comment=comment)
         self._add_aelink_object(aelink)
         return aelink
 
@@ -4658,7 +4665,7 @@ class AddCards(AddMethods):
         self._add_aelist_object(aelist)
         return aelist
 
-    def add_aefact(self, sid, Di, comment=''):
+    def add_aefact(self, sid, factors, comment=''):
         """
         Creates an AEFACT card, which defines the mach, dynamic_pressure,
         velocity, and reduced frequency for an FLUTTER card
@@ -4669,7 +4676,7 @@ class AddCards(AddMethods):
         ----------
         sid : int
             unique id
-        Di : List[float, ..., float]
+        factors : List[float, ..., float]
             list of:
              - machs
              - dynamic_pressures
@@ -4678,7 +4685,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        aefact = AEFACT(sid, Di, comment=comment)
+        aefact = AEFACT(sid, factors, comment=comment)
         self._add_aefact_object(aefact)
         return aefact
 
@@ -4795,13 +4802,13 @@ class AddCards(AddMethods):
         self._add_aesurfs_object(aesurfs)
         return aesurfs
 
-    def add_aeparm(self, id, label, units, comment=''):
+    def add_aeparm(self, aeparm_id, label, units, comment=''):
         """
         Creates an AEPARM card, which defines a new trim variable.
 
         Parameters
         ----------
-        id : int
+        aeparm_id : int
             the unique id
         label : str
             the variable name
@@ -4810,7 +4817,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        aeparm = AEPARM(id, label, units, comment=comment)
+        aeparm = AEPARM(aeparm_id, label, units, comment=comment)
         self._add_aeparm_object(aeparm)
         return aeparm
 
@@ -5211,6 +5218,35 @@ class AddCards(AddMethods):
         """
         elem = RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
                        diameter_ratio=diameter_ratio, comment=comment)
+        self._add_rigid_element_object(elem)
+        return elem
+
+    def add_rsscon(self, eid, rigid_type,
+                   shell_eid=None, solid_eid=None,
+                   a_solid_grids=None, b_solid_grids=None, shell_grids=None,
+                   comment=''):
+        """
+        Creates an RSSCON card, which defines multipoint constraints to
+        model clamped connections of shell-to-solid elements.
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        rigid_type : str
+            GRID/ELEM
+        shell/solid_eid : int; default=None
+            the shell/solid element id (if rigid_type=ELEM)
+        shell/solid_grids : List[int, int]; default=None
+            the shell/solid node ids (if rigid_type=GRID)
+        comment : str; default=''
+            a comment for the card
+        """
+        elem = RSSCON(eid, rigid_type,
+                      shell_eid=shell_eid, solid_eid=solid_eid,
+                      a_solid_grids=a_solid_grids, b_solid_grids=b_solid_grids,
+                      shell_grids=shell_grids,
+                      comment=comment)
         self._add_rigid_element_object(elem)
         return elem
 
@@ -5737,8 +5773,8 @@ class AddCards(AddMethods):
         self._add_bctset_object(bctset)
         return bctset
 
-    def add_bctadd(self, csid, S, comment=''):
-        bctadd = BCTADD(csid, S, comment=comment)
+    def add_bctadd(self, csid, contact_sets, comment=''):
+        bctadd = BCTADD(csid, contact_sets, comment=comment)
         self._add_bctadd_object(bctadd)
         return bctadd
 

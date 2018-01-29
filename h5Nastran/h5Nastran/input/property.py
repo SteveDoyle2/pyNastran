@@ -458,7 +458,7 @@ class PBEAML(CardTable):
             'YESA': 2.
         }
 
-        so = [_so(_so) for _so in card.so]
+        so = [_so[_s] for _s in card.so]
 
         subdata = [[so[i], card.xxb[i], card.nsm[i]] for i in range(len(card.so))]
         subdata = TableData(subdata)

@@ -214,41 +214,6 @@ class ChangeBCs(QDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
-    def check_format(self, cell):
-        text = str(cell.text())
-
-        is_valid = True
-        if len(text) < 2:
-            is_valid = False
-        elif 's' in text.lower():
-            is_valid = False
-        elif '%' not in text[0]:
-            is_valid = False
-        elif text[-1].lower() not in ['g', 'f', 'i', 'e']:
-            is_valid = False
-
-        try:
-            text % 1
-            text % .2
-            text % 1e3
-            text % -5.
-            text % -5
-        except ValueError:
-            is_valid = False
-
-        try:
-            text % 's'
-            is_valid = False
-        except TypeError:
-            pass
-
-        if is_valid:
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
     def on_validate(self):
         name_value, flag0 = self.check_name(self.name_edit)
         coords_value, flag1 = self.check_patran_syntax(self.coords_edit,

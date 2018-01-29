@@ -1,6 +1,6 @@
 import vtk
 import numpy as np
-from vtk.util.numpy_support import numpy_to_vtk
+from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
 
 
 def main():

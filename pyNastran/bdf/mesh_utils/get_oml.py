@@ -68,7 +68,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     while eids_next:
         eid_starts = deepcopy(eids_next)
         eids_oml_start = deepcopy(eids_oml)
-        print(len(eid_starts))
+        model.log.warning(len(eid_starts))
         while eid_starts:
             eid_start = eid_starts.pop()
             normal_start = normals[eid_start]
@@ -121,7 +121,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
         #eids_next = eids_next.difference(eid_starts)
         #print('eids_next =', eids_next)
         #print('-------------------------------')
-    print('done...')
+    model.log.warning('done...')
 
     with open('eids_oml.txt', 'w') as eids_file:
         eids_file.write('eids_oml = %s\n' % list(eids_oml))

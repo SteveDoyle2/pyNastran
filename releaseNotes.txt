@@ -46,87 +46,149 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v1.1.0 released 2017/?/?-----------------------
-Relase notes:
-   - This is a fairly minor release, but as there are some
-     small changes to the API, so there's a version bump
-   - Added support for exporting OP2 to HDF5
+-----------------------v1.1.0 released 2018/?/?-----------------------
+This is a major release.  As in the v1.0 release, the focus has been on testing.
 
-BDF bug fixes:
- - numpy 1.13 support added (not done...)
- - more add_card documentation (e.g., add_grid, add_ctria3)
- - fixed NSMADD card type (was SPCADD)
- - fixed CPLTSTN3 card type (was CTRIA3)
- - fixed CPLTSTS3 card type (was CTRIA3)
- - fixed shell MCIDs not renumbering
- - fixed FREQx renumbering crash
- - model may be pickled again (model.save('model.obj') and model.load('model.obj')
- - fixed PBARL/PBEAML DBOX error
- - fixed PositionWRT bug
+The bigest change has been to cross-referencing.  All cross-referenced 
+objects now have an ``_ref`` attribute that is cross-referened, which 
+is ``None`` if the model is not cross referenced.  Objects maintain the
+uncross-referenced form as well.  For a CQUAD4, instead of:
+ ``model.elements[eid].nodes[0].nid``
+the referenced object is:
+ ``model.elements[eid].nodes_ref[0].nid``
 
-BDF API changes (might not get changed for v1.0.1):
- - renumbering:
-   - bdf_renumber now supports renumbers SETs and SPLINEx cards
-   - SPOINTs/EPOINTs now use dictionaries to enable SPOINT/EPOINT renumbering
-   - renumbering mapper object returned now
- - model.Node(nid, allow_empty_nodes=False msg='') no longer supports allow_empty_nodes
-   use model.EmptyNode(nid, msg='') instead for that
-   model.Node(nid, msg='') is the new form
- - model.Nodes(nid, allow_empty_nodes=False msg='') no longer supports allow_empty_nodes
-   use model.EmptyNodes(nid, msg='') instead for that
-   model.Nodes(nid, msg='') is the new form
- - PCOMPG.validate() now checks that global ply ids are unique
- - xref_nodes_with_elements now creates a list instead of a set (fixes a Python 3.x bug)
- - get_MPCx_node_ids_c1 is now get_MPCx_node_ids_c1 (was inconsistent with what it does)
- - get_MPCx_node_ids_c1 created
- - xref'd objects now use _ref globally
+For detail on the license for the various components, see the v1.0 release.
 
-New BDF features:
- - model.get_reduced_loads(load_id)
- - model.get_reduced_dloads(dload_id)
- - card1 == card2 now supported
- - PBARL/PBEAML support the NX TUBE2 type
- - added FREQ3, FREQ5, CAERO5, PAERO5, MATT3, SPLINE3
- - more xref
- - added pierce_shells
- - added model.clear_attributes()
+Quick Overview:
+---------------
+Programmatics:
+ - Added support for numpy 1.14
+ - Dropping support for Python 3.4 (2.7, 3.5, 3.6 are supported)
+ - Dropping support for VTK 5/6 (7/8 are supported)
 
-OP2/F06 features:
- - added model.set_additional_generalized_tables_to_read(tables) to create
-   custom OP2 readers
- - added complex/average strain energy
+BDF:
+ - model may be pickled (model.save('model.obj') and model.load('model.obj')
+ - simplified cross-referencing
 
-OP2 bug fixes:
- - improved table skipping
+OP2:
+ - model may be pickled (model.save('model.obj') and model.load('model.obj')
+ - Added support for exporting OP2 to HDF5 (uses pyNastran format, not MSC)
+ - real sparse matrices take much less memory now; were being converted to dense matrices
 
-OP2 removed features:
- - buggy/imcomplete/slow xlsx exporter removed
+GUI:
+ - improved animations
+ - improved labels
 
-OP2 Geometry:
- - improved table reading
 
-GUI features:
- - control surfaces now get labels (label size doesn't resize properly)
- - in-gui animation
- - delete secondary actor support
+Detailed Overview:
+------------------
+BDF:
+  - New features:
+   - model.get_reduced_loads(load_id)
+   - model.get_reduced_dloads(dload_id)
+   - card1 == card2 now supported
+   - PBARL/PBEAML support the NX TUBE2 type
+   - added FREQ3, FREQ5, CAERO5, PAERO5, MATT3, SPLINE3, RSSCON, OMIT1
+   - more xref
+   - added model.clear_attributes()
+   - renumbering:
+     - bdf_renumber now supports renumbers SETs and SPLINEx cards
+     - SPOINTs/EPOINTs now use dictionaries to enable SPOINT/EPOINT renumbering
+     - caero sub-panels ids are now renumbered
+     - renumbering mapper object returned now
+   - improved removed_unused card support
 
-GUI bug fixes:
- - displays control surfaces again (aesurf)
- - changing secondary actor color works again
- - fixing random crash
- - "Show/Hide CAERO panels" updates the "Edit Geometry Properties" menu
- - "Toggle CAERO Subpanels" updates the "Edit Geometry Properties" menu
- - "Toggle CONM2s" updates the "Edit Geometry Properties" menu
- - fixing Windows taskbar icon bug
- - fixing first launch bug
+  - Bug fixes:
+   - more add_card documentation (e.g., add_grid, add_ctria3)
+   - fixed NSMADD card type (was SPCADD)
+   - fixed CPLTSTN3 card type (was CTRIA3)
+   - fixed CPLTSTS3 card type (was CTRIA3)
+   - fixed shell MCIDs not renumbering
+   - fixed FREQx renumbering crash
+   - model may be pickled again (model.save('model.obj') and model.load('model.obj')
+   - fixed PBARL/PBEAML DBOX error
+   - fixed PositionWRT bug
+   - fixed LOAD card messing up load ids after cross referencing
+   - fixed TRIM default on aeqr (was 0.0/rigid; should be 1.0/elastic) 
+   - NLPCI now gets written when there are no other dynamic cards
+
+  - API changes:
+   - model.Node(nid, allow_empty_nodes=False msg='') no longer supports 
+     allow_empty_nodes.  Use:
+       model.EmptyNode(nid, msg='') instead for that
+       model.Node(nid, msg='') is the new form
+   - model.Nodes(nid, allow_empty_nodes=False msg='') no longer supports 
+     allow_empty_nodes.  Use:
+       model.EmptyNodes(nid, msg='') instead for that
+       model.Nodes(nid, msg='') is the new form
+   - PCOMPG.validate() now checks that global ply ids are unique
+   - xref_nodes_with_elements now creates a list instead of a set
+     (fixes a Python 3.x bug)
+   - get_MPCx_node_ids_c1 is now get_MPCx_node_ids_c1
+     (was inconsistent with what it does)
+   - get_MPCx_node_ids_c1 created
+   - xref'd objects now use _ref globally
+   - aestat.id is now aestat.aestat_id
+   - aeparm.id is now aeparm.aeparm_id
+   - model.add_aset1/aset (also bset/cset/qset/uset) now a consistent set of
+     function arguments and call the same function.  The card will be created
+     based on your data instead of necessarily what you asked for.
+   - LOAD cards are now stored in model.load_combinations instead of model.loads
+
+  - Known bugs:
+   - dynamic loads cross-referencing is buggy; 
+     reject the cards if there is a problem
+   - PBEAM defaults with ENDA are slightly incorrect.
+
+OP2:
+  - New features:
+   - added model.set_additional_generalized_tables_to_read(tables) to 
+     create custom OP2 readers
+   - added complex/average strain energy
+
+  - Bug fixes:
+   - improved table skipping
+   - fixed RealCShearForceArray f06 writing
+   - fixed CEN/3, CEN/4 writing for RealPlateBilinearForceArray
+   - improved geometry table reading
+   - real sparse matrices take much less memory now; were being converted to dense matrices
+
+  - API changes:
+    - xlsx exporter removed
+
+  - Known bugs:
+    - pandas fails on some decks (numpy<1.13 is fine)
+    - a large number of PSOLIDs will crash the read_op2/read_op2_geom;
+      use PARAM,OGEOM,NO
+    - transform_gpforce_to_global doesn't work properly with cylindrical
+      or spherical coordinate systems
+
+GUI:
+  - New features:
+    - control surfaces now get labels (label size doesn't resize properly)
+    - in-gui animation
+    - delete secondary actor support
+    - delete result cases support
+    - improved view buttons
+
+  - Bug fixes:
+    - displays control surfaces again (aesurf)
+    - changing secondary actor color works again
+    - fixing random crash
+    - "Show/Hide CAERO panels" updates the "Edit Geometry Properties" menu
+    - "Toggle CAERO Subpanels" updates the "Edit Geometry Properties" menu
+    - "Toggle CONM2s" updates the "Edit Geometry Properties" menu
+    - fixing Windows taskbar icon bug
+    - fixing first launch bug
+
+  - Known bugs:
+    - after animating a model from within the GUI, the mouse behavior changes
 
 OP4 bug fixes:
  - fixed Python 3 bytes bug
 
 Applictions:
  - removed due to excessively amount of unmaintained code
-
------------------------v1.0.1 released 2017/?/?-----------------------
 
 
 -----------------------v1.0.0 released 2017/5/25-----------------------

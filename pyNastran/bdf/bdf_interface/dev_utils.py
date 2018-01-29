@@ -256,14 +256,14 @@ def get_joints(model, pid_sets):
     joints : (N, ) int nodes
         the list of joint node ids
 
-    Example
-    -------
+    Examples
+    --------
     For a set of ribs, spars, and skins:
      - ribs intersect spars
      - ribs and spars intersect skins
 
     We want the nodes on the skin at the intersections.
-    pid_sets = [
+    >>> pid_sets = [
         [rib1_pid, rib2_pid, rib3_pid, ...],
         [spar1_pid, spar2_pid, spar3_pid, ...],
         [skin],
@@ -524,16 +524,16 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
         For an aircraft rib, y would be the preferred direction for the normal.
         For an aircraft spar, x/z would work.
 
-    Example
-    -------
-    eids = [A, B, C]
-    nids = [1, 2, 3, 4]
-    width = 3.0
-    nodes, elements = create_spar_cap(model, eids, nids, width)
-    nodes
-    >>> [5, 6]
-    elements
-    >>> [D, E]
+    Examples
+    --------
+    >>> eids = [A, B, C]
+    >>> nids = [1, 2, 3, 4]
+    >>> width = 3.0
+    >>> nodes, elements = create_spar_cap(model, eids, nids, width)
+    >>> nodes
+    [5, 6]
+    >>> elements
+    [D, E]
     """
     assert vector1 is None, vector1
     assert vector2 is None, vector2

@@ -6,7 +6,7 @@ import os
 
 from pyNastran.converters.tetgen.tetgen import Tetgen
 #from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.gui_utils.vtk_utils import (
+from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
@@ -59,7 +59,6 @@ class TetgenIO(object):
 
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nelements)
 
         assert nodes is not None
         points = numpy_to_vtk_points(nodes)

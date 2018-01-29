@@ -107,9 +107,6 @@ class Plot3d_io(object):  # pragma: no cover
 
         #print("eid = ", eid)
         self.grid.SetPoints(points)
-        #print dir(self.grid) #.SetNumberOfComponents(0)
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         self.grid.Update()
         self.log_info("updated grid")

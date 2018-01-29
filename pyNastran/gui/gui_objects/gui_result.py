@@ -298,8 +298,8 @@ class GuiResult(GuiResultCommon):
         self.header_default = self.header
         self.data_format_default = self.data_format
 
-        self.min_default = self.scalar.min()
-        self.max_default = self.scalar.max()
+        self.min_default = np.nanmin(self.scalar)
+        self.max_default = np.nanmax(self.scalar)
         if self.data_type in INT_TYPES:
             # turns out you can't have a NaN/inf with an integer array
             # we need to recast it

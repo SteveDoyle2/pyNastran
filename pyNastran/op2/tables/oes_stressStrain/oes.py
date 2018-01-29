@@ -3907,8 +3907,8 @@ class OES(OP2Common):
 
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 33)
-                    ints1 = ints[:, 1:].reshape(nelements * nnodes_all, 8).copy()
+                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 33).copy()
+                    ints1 = ints[:, 1:].reshape(nelements * nnodes_all, 8)
                     eids = ints[:, 0] // 10
                     ints[:, 0] = 0
                     nids = ints1[:, 0]

@@ -52,20 +52,20 @@ def b(string):
     """reimplementation of six.b(...) to work in Python 2"""
     return string.encode('latin-1')
 
-def merge_dicts(dict_list, strict=True):
-    """merges two or more dictionaries"""
-    assert isinstance(dict_list, list), type(dict_list)
-    dict_out = {}
-    for adict in dict_list:
-        assert isinstance(adict, dict), adict
-        for key, value in iteritems(adict):
-            if key not in dict_out:
-                dict_out[key] = value
-            elif strict:
-                raise RuntimeError('key=%r exists in multiple dictionaries' % key)
-            else:
-                print('key=%r is dropped?' % key)
-    return dict_out
+#def merge_dicts(dict_list, strict=True):
+    #"""merges two or more dictionaries"""
+    #assert isinstance(dict_list, list), type(dict_list)
+    #dict_out = {}
+    #for adict in dict_list:
+        #assert isinstance(adict, dict), adict
+        #for key, value in iteritems(adict):
+            #if key not in dict_out:
+                #dict_out[key] = value
+            #elif strict:
+                #raise RuntimeError('key=%r exists in multiple dictionaries' % key)
+            #else:
+                #print('key=%r is dropped?' % key)
+    #return dict_out
 
 
 def is_binary_file(filename):
@@ -235,12 +235,12 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
     return __object_attr(obj, mode, keys_to_skip, lambda x: not isinstance(x, MethodType))
 
 
-def remove_files(*filenames):
-    """delete a list of files"""
-    failed_list = []
-    for filename in filenames:
-        try:
-            os.remove(filename)
-        except OSError:  # OSError is the general version of WindowsError
-            failed_list.append(filename)
-    return failed_list
+#def remove_files(*filenames):
+    #"""delete a list of files"""
+    #failed_list = []
+    #for filename in filenames:
+        #try:
+            #os.remove(filename)
+        #except OSError:  # OSError is the general version of WindowsError
+            #failed_list.append(filename)
+    #return failed_list

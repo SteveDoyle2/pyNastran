@@ -1,11 +1,38 @@
+"""
+defines:
+ - expand_thru_case_control(set_value)
+ - write_set(set_id, values, spaces='')
+ - write_stress_type(key, options, value, spaces='')
+"""
 from __future__ import print_function
-from six import string_types, iteritems
+from six import string_types
 from typing import List
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
 def expand_thru_case_control(set_value):
+    """
+    Expands a case control SET card
+
+    Parameters
+    ----------
+    set_value : str???
+        ???
+
+    Returns
+    -------
+    values : List[int] / List[float]
+        the values in the SET
+
+    Examples
+    --------
+    **This hasn't been verified**
+    #set_value = 'SET 88 = 1 THRU 5, 20 THRU 30 BY 2'
+    set_value = ['1 THRU 5', '20 THRU 30 BY 2']
+    >>> values = expand_thru_case_control(set_value)
+    [1, 2, 3, 4, 5, 20, 22, 24, 26, 28, 30]
+    """
     set_value2 = set([])
     add_mode = True
     imin = 0
@@ -50,7 +77,7 @@ def expand_thru_case_control(set_value):
                 set_value2.add(ivalue)
             elif isinstance(ivalue, string_types):
                 #print('  not digit=%r' % set_value)
-                if set_value is 'EXCLUDE':
+                if set_value == 'EXCLUDE':
                     msg = ('EXCLUDE is not supported on CaseControlDeck '
                            'SET card\n')
                     raise RuntimeError(msg)
@@ -115,7 +142,7 @@ def expand_thru_case_control(set_value):
     #print('end of expansion = %s' % list_values)
     return list_values
 
-def write_stress_type(key, options, value, spaces):
+def write_stress_type(key, options, value, spaces=''):
     """
     writes:
      - STRESS(SORT1) = ALL
@@ -137,7 +164,6 @@ def write_stress_type(key, options, value, spaces):
             msg_done = ''
             i = 0
             while i < len(options):
-                option = options[i]
                 new_msgi = '%s,' % options[i]
                 if (len(msgi) + len(new_msgi)) < 64:
                     msgi += new_msgi
@@ -222,7 +248,7 @@ def write_set(set_id, values, spaces=''):
     else:
         out_values = values
 
-    for i, out_value in enumerate(out_values):
+    for out_value in out_values:
         new_string = '%s, ' % out_value
         if len(msg2 + new_string) > 70:
             msg += msg2 + '\n'

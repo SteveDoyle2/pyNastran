@@ -6,16 +6,19 @@ http://www.saltycrane.com/blog/2007/12/pyqt-43-qtableview-qabstracttablemodel/
 http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-work-in-this-program
 """
 from __future__ import print_function
-from six import iteritems
-from qtpy import QtCore, QtGui
-from QtGui import QColorDialog
-#from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
-from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+#from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QCheckBox, QLabel, QLineEdit, QDialog, QColorDialog, QSpinBox,
+    QDoubleSpinBox, QRadioButton, QHBoxLayout, QButtonGroup,
+    QVBoxLayout, QGridLayout, QPushButton, QHeaderView,
+)
+from qtpy import QtGui
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
+#from pyNastran.gui.qutils.pydialog import check_format
 
 
-
-class BreakSurfaceMenu(QtGui.QDialog):
+class BreakSurfaceMenu(QDialog):
     def __init__(self, data, win_parent=None):
         """
         +-----------------+
@@ -40,7 +43,7 @@ class BreakSurfaceMenu(QtGui.QDialog):
         |         Close          |
         +------------------------+
         """
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         self.setWindowTitle('Break Surface')
 
         #default
@@ -65,7 +68,10 @@ class BreakSurfaceMenu(QtGui.QDialog):
         table_model = Model(items, header_labels, self)
         view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+
+        header = view.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        #header.setResizeMode(QtGui.QHeaderView.Stretch)
         self.table = view
 
         #self.representation = actor_obj.representation
@@ -80,40 +86,56 @@ class BreakSurfaceMenu(QtGui.QDialog):
         #----------------------------------------------
         #self._default_is_apply = False
 
-        self.mode_header = QtGui.QLabel("Mode:")
+        self.mode_header = QLabel("Mode:")
 
         nregions_max = 10
         pick_angle = 20.0
         region_id = 4
         all_regions = True
-        self.region_id = QtGui.QLabel("Region ID:")
-        self.region_id_edit = QtGui.QSpinBox(self)
+        self.region_id = QLabel("Region ID:")
+        self.region_id_edit = QSpinBox(self)
         self.region_id_edit.setRange(1, nregions_max)
         self.region_id_edit.setSingleStep(1)
         self.region_id_edit.setValue(region_id)
 
-        self.pick_angle = QtGui.QLabel("Pick Angle:")
-        self.pick_angle_edit = QtGui.QDoubleSpinBox(self)
+        self.pick_angle = QLabel("Pick Angle:")
+        self.pick_angle_edit = QDoubleSpinBox(self)
         self.pick_angle_edit.setRange(0.0, 360.0)
         self.pick_angle_edit.setDecimals(3)
         self.pick_angle_edit.setSingleStep(0.5)
         self.pick_angle_edit.setValue(pick_angle)
 
         # region IDs/all
-        self.checkbox_region_ids = QtGui.QCheckBox("Region IDs")
-        self.checkbox_region_all = QtGui.QCheckBox("All Regions")
+        self.checkbox_region_ids = QCheckBox("Region IDs")
+        self.checkbox_region_all = QCheckBox("All Regions")
         self.checkbox_region_all.setChecked(all_regions)
         self.checkbox_region_ids.setChecked(not all_regions)
 
         # pick mode
-        self.checkbox_pick_mode = QtGui.QCheckBox("Pick Mode  (Off=label)")
+        self.checkbox_pick_mode = QCheckBox("Pick Mode  (Off=label)")
         self.checkbox_pick_mode.setChecked(False)
 
         #----------------------------------------------
-        self.nodes_header = QtGui.QLabel("Single Node:")
-        self.name = QtGui.QLabel("ID:")
-        self.name_edit = QtGui.QLineEdit('Node %i' % name)
+        self.nodes_header = QLabel("Single Node:")
+        self.name = QLabel("ID:")
+        self.name_edit = QLineEdit('Node %i' % name)
         self.name_edit.setDisabled(True)
+
+        #----------------------------------------------
+        self.location_x = QLabel("X:")
+        self.location_x_edit = QLineEdit('X')
+
+        self.location_y = QLabel("Y:")
+        self.location_y_edit = QLineEdit('Y')
+
+        self.location_z = QLabel("Z:")
+        self.location_z_edit = QLineEdit('Z')
+
+        #----------------------------------------------
+
+        # remove these...
+        self.description_edit = QLineEdit('Description')
+        self.coord_edit = QSpinBox()
 
         #----------------------------------------------
 
@@ -121,7 +143,7 @@ class BreakSurfaceMenu(QtGui.QDialog):
         #if self._default_is_apply:
             #self.apply_button.setDisabled(True)
 
-        self.close_button = QtGui.QPushButton("Close")
+        self.close_button = QPushButton("Close")
 
         self.create_layout()
         #self.set_connections()
@@ -136,7 +158,7 @@ class BreakSurfaceMenu(QtGui.QDialog):
         #old_obj.description = self.description_edit.value()
         #old_obj.description = self.description_edit.value()
 
-        str_name = str(index.data().toString())
+        str_name = str(index.data())
         name = int(str_name[5:])
         #i = self.keys.index(self.active_key)
 
@@ -155,9 +177,9 @@ class BreakSurfaceMenu(QtGui.QDialog):
         elif point[2] == 'S':
             self.radio_spherical.setChecked(True)
 
-        self.location_x_edit.setValue(point[3])
-        self.location_y_edit.setValue(point[4])
-        self.location_z_edit.setValue(point[5])
+        self.location_x_edit.setText(str(point[3]))
+        self.location_y_edit.setText(str(point[4]))
+        self.location_z_edit.setText(str(point[5]))
         #obj = self.out_data[name]
         #point_size = obj.point_size
         #opacity = obj.opacity
@@ -173,28 +195,28 @@ class BreakSurfaceMenu(QtGui.QDialog):
         #return
 
     def create_layout(self):
-        cancel_box = QtGui.QHBoxLayout()
+        cancel_box = QHBoxLayout()
         cancel_box.addWidget(self.close_button)
 
-        grid1 = QtGui.QGridLayout()
-        grid2 = QtGui.QGridLayout()
+        grid1 = QGridLayout()
+        grid2 = QGridLayout()
 
         #-----------------------------------------
         # setup
-        self.radio_rectangular = QtGui.QRadioButton('Rectangular')
-        self.radio_cylindrical = QtGui.QRadioButton('Cylindrical')
-        self.radio_spherical = QtGui.QRadioButton('Spherical')
+        self.radio_rectangular = QRadioButton('Rectangular')
+        self.radio_cylindrical = QRadioButton('Cylindrical')
+        self.radio_spherical = QRadioButton('Spherical')
 
-        coord_type_layout = QtGui.QHBoxLayout()
+        coord_type_layout = QHBoxLayout()
         coord_type_layout.addWidget(self.radio_rectangular)
         coord_type_layout.addWidget(self.radio_cylindrical)
         coord_type_layout.addWidget(self.radio_spherical)
 
-        checkboxs = QtGui.QButtonGroup(self)
+        checkboxs = QButtonGroup(self)
         checkboxs.addButton(self.checkbox_region_all)
         checkboxs.addButton(self.checkbox_region_ids)
 
-        vbox1 = QtGui.QVBoxLayout()
+        vbox1 = QVBoxLayout()
         vbox1.addWidget(self.checkbox_region_all)
         vbox1.addWidget(self.checkbox_region_ids)
         #vbox1.addLayout(checkboxs)
@@ -203,6 +225,22 @@ class BreakSurfaceMenu(QtGui.QDialog):
         irow = 0
         grid2.addWidget(self.name, irow, 0)
         grid2.addWidget(self.name_edit, irow, 1)
+        irow += 1
+
+        #grid2.addWidget(self.name, irow, 0)
+        grid2.addWidget(self.description_edit, irow, 1)
+        irow += 1
+
+        grid2.addWidget(self.location_x, irow, 0)
+        grid2.addWidget(self.location_x_edit, irow, 1)
+        irow += 1
+
+        grid2.addWidget(self.location_y, irow, 0)
+        grid2.addWidget(self.location_y_edit, irow, 1)
+        irow += 1
+
+        grid2.addWidget(self.location_z, irow, 0)
+        grid2.addWidget(self.location_z_edit, irow, 1)
         irow += 1
 
         #|  Name      EngineInlet |
@@ -242,7 +280,7 @@ class BreakSurfaceMenu(QtGui.QDialog):
 
         #------------------------------------
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addLayout(grid1)
         #vbox.addLayout(vbox1)
         #vbox.addStretch()
@@ -255,30 +293,29 @@ class BreakSurfaceMenu(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
-        self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
-        self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
-        self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
-        self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
+        self.opacity_edit.clicked.connect(self.on_opacity)
+        self.point_size.clicked.connect(self.on_point_size)
+        self.color_edit.clicked.connect(self.on_color)
+        self.checkbox_show.clicked.connect(self.on_show)
+        self.checkbox_hide.clicked.connect(self.on_hide)
 
+        #self.connect(self.description_edit, QtCore.SIGNAL("valueChanged(int)"), self.on_description)
+        #self.connect(self.coord_edit, QtCore.SIGNAL("valueChanged(int)"), self.on_coord)
+        self.radio_rectangular.clicked.connect(self.on_coord_type)
+        self.radio_cylindrical.clicked.connect(self.on_coord_type)
+        self.radio_spherical.clicked.connect(self.on_coord_type)
 
-        self.connect(self.description_edit, QtCore.SIGNAL("valueChanged(int)"), self.on_description)
-        self.connect(self.coord_edit, QtCore.SIGNAL("valueChanged(int)"), self.on_coord)
-        self.connect(self.radio_rectangular, QtCore.SIGNAL('clicked()'), self.on_coord_type)
-        self.connect(self.radio_cylindrical, QtCore.SIGNAL('clicked()'), self.on_coord_type)
-        self.connect(self.radio_spherical, QtCore.SIGNAL('clicked()'), self.on_coord_type)
+        self.location_x_edit.clicked.connect(self.on_location_x)
+        self.location_y_edit.clicked.connect(self.on_location_y)
+        self.location_z_edit.clicked.connect(self.on_location_z)
 
-        self.connect(self.location_x_edit, QtCore.SIGNAL('clicked()'), self.on_location_x)
-        self.connect(self.location_y_edit, QtCore.SIGNAL('clicked()'), self.on_location_y)
-        self.connect(self.location_z_edit, QtCore.SIGNAL('clicked()'), self.on_location_z)
-
-        self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
+        self.close_button.clicked.connect(self.on_close)
 
         #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
 
         #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
+        self.close_button.clicked.connect(self.on_close)
 
 
     def on_color(self):
@@ -423,9 +460,11 @@ def main():
 
 
     import sys
+    from qtpy.QtWidgets import QApplication
+
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     #g = GeometryHandle()
     #g.add('main', color=(0, 0, 0), line_thickness=0.0)
@@ -436,7 +475,8 @@ def main():
     parent = app
     green = (0, 255, 0)
 
-    point_properties = AltGeometry(parent, 'point_properties', color=green, point_size=5, opacity=1.0)
+    point_properties = AltGeometry(parent, 'point_properties', color=green,
+                                   point_size=5, opacity=1.0)
 
     points = {
         1 : ['LERoot', 0, 'R', 1.0, 2.0, 3.0],
@@ -447,13 +487,13 @@ def main():
         2 : ['C'],
         42 : ['S'],
     }
-    d = {
+    data = {
         'point_properties' : point_properties,
         'points' : points,
         'active_point' : 2,
         'coords' : coords,
     }
-    main_window = BreakSurfaceMenu(d, win_parent=None)
+    main_window = BreakSurfaceMenu(data, win_parent=None)
     main_window.show()
     # Enter the main loop
     app.exec_()
