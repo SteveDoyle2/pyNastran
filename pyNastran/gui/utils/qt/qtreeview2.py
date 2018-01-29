@@ -269,14 +269,24 @@ class RightClickTreeView(QTreeView2):
 
         self.disp.triggered.connect(self.on_disp)
         self.vector.triggered.connect(self.on_vector)
-        if 0:  # pragma: no cover
-            self.delete = self.right_click_menu.addAction("Delete...")
-            self.delete.triggered.connect(self.on_delete)
+        #if 1:  # pragma: no cover
+        self.delete = self.right_click_menu.addAction("Delete...")
+        self.delete.triggered.connect(self.on_delete)
 
         #self.normals.setCheckable(True)
         #self.fringe.setCheckable(True)
         #self.disp.setCheckable(True)
         #self.vector.setCheckable(True)
+
+    def get_clicked(self):
+        """gets the state of the clickable buttons"""
+        is_clicked = {
+            'normals' : self.normals.isChecked(),
+            'fringe' : self.fringe.isChecked(),
+            'disp' : self.disp.isChecked(),
+            'vector' : self.vector.isChecked(),
+        }
+        return is_clicked
 
     def on_clear_results(self):
         """clears the active result"""
@@ -310,7 +320,6 @@ class RightClickTreeView(QTreeView2):
             return
         # TODO: check if we should show disp/vector
         self.right_click_menu.popup(QtGui.QCursor.pos())
-
 
 def get_many_cases(data):
     """

@@ -336,7 +336,7 @@ class ForceTableResults(NastranTable):
                  set_max_min=False, uname='NastranGeometry'):
         """this is a nodal result"""
         linked_scale_factor = False
-        location = 'centroid'
+        location = 'node'
         NastranTable.__init__(
             self, subcase_id, location, titles, headers, dxyz, linked_scale_factor, scales,
             data_formats=data_formats, nlabels=nlabels,

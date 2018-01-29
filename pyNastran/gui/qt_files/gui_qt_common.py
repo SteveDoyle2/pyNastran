@@ -249,7 +249,7 @@ class GuiCommon(GuiAttributes):
         case = obj.get_result(i, name)
         if case is None:
             # normal result
-            self.log_error('icase=%r is not a valid result_case' % icase)
+            self.log_error('icase=%r is not a displacement/force' % icase)
             return is_valid, failed_data
 
         result_type = obj.get_title(i, name)
@@ -305,9 +305,12 @@ class GuiCommon(GuiAttributes):
         """helper for ``on_disp``"""
         is_valid = False
         failed_data = (None, None, None, None)
+        #is_checked = self.res_widget.get_checked()
 
         if not isinstance(icase, integer_types):
             self.log_error('icase=%r is not an integer; type=%s' % (icase, type(icase)))
+            #self.res_widget.set_checked('normals', is_checked)
+
             return is_valid, failed_data
             #assert isinstance(icase, integer_types), icase
 
@@ -323,7 +326,7 @@ class GuiCommon(GuiAttributes):
         case = obj.get_result(i, name)
         if case is None:
             # normal result
-            self.log_error('icase=%r is not a valid result_case' % icase)
+            self.log_error('icase=%r is not a displacement/force' % icase)
             return is_valid, failed_data
 
         result_type = obj.get_title(i, name)
@@ -333,7 +336,12 @@ class GuiCommon(GuiAttributes):
             return is_valid, failed_data
         location = obj.get_location(i, name)
         if is_disp and location != 'node':
-            self.log_error('icase=%r is not a displacement-like result' % icase)
+            self.log_error('icase=%r is not a displacement-like (nodal vector) result' % icase)
+            return is_valid, failed_data
+
+        xyz_nominal, vector_data = obj.get_vector_result(i, name)
+        if is_disp and xyz_nominal is None:
+            self.log_error('icase=%r is not a displacement-like (nodal vector) result' % icase)
             return is_valid, failed_data
 
         methods = obj.get_methods(i)
@@ -366,7 +374,7 @@ class GuiCommon(GuiAttributes):
         # flips sign to make colors go from blue -> red
         norm_value = float(max_value - min_value)
 
-        vector_size = 1
+        vector_size = 3
         name_tuple = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
         name_str = self._names_storage.get_name_string(name)
         #return name, normi, vector_size, min_value, max_value, norm_value
@@ -377,13 +385,13 @@ class GuiCommon(GuiAttributes):
         min_value = None
         max_value = None
         norm_value = None
-        xyz_nominal, vector_data = obj.get_vector_result(i, name)
 
         data = (
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, phase, methods,
             nlabels, labelsize, ncolors, colormap,
             xyz_nominal, vector_data,
+            is_checked,
         )
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
@@ -419,7 +427,6 @@ class GuiCommon(GuiAttributes):
         grid_result.SetName(name_str)
         self._names_storage.add(name)
 
-        self.log_debug('icase=%s location=%s' % (icase, location))
         cell_data = grid.GetCellData()
         point_data = grid.GetPointData()
         if location == 'centroid':
@@ -443,7 +450,6 @@ class GuiCommon(GuiAttributes):
             raise RuntimeError(location)
 
         is_low_to_high = True
-        self.log_info('min_value=%s, max_value=%s' % (min_value, max_value))
         #self._legend_window_shown = False
         #self.update_legend(
             #icase,
@@ -462,8 +468,11 @@ class GuiCommon(GuiAttributes):
         #is_legend_shown = True
         #if is_legend_shown is None:
         is_legend_shown = self.scalar_bar.is_shown
-        self.log_debug('is_legend_shown = %s' % is_legend_shown)
+
+        # TODO: normal -> fringe screws up legend
+        #print('is_legend_shown = ', is_legend_shown)
         if not is_legend_shown:
+            #print('shownig')
             self.show_legend()
 
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,

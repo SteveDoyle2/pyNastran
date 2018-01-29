@@ -282,6 +282,8 @@ class Sidebar(QWidget):
         if hasattr(self.parent, 'on_vector'):
             self.parent.on_vector(icase)
 
+    def get_clicked(self):
+        self.result_data_window.treeView.get_clicked()
 
 def main():  # pragma: no cover
     app = QApplication(sys.argv)

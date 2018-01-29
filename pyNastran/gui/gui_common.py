@@ -189,19 +189,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """determines if the legend is shown"""
         return self.scalar_bar.is_shown
 
+    #@legend_shown.setter
+    #def legend_shown(self):
+        #"""show/hide the legend shown"""
+        #return self.scalar_bar.is_shown
+
     @property
     def scalarBar(self):
         return self.scalar_bar.scalar_bar
 
     def hide_legend(self):
         """hides the legend"""
+        self.scalar_bar.VisibilityOff()
         #self.scalar_bar.is_shown = False
-        self.scalarBar.VisibilityOff()
 
     def show_legend(self):
         """shows the legend"""
+        self.scalar_bar.VisibilityOn()
         #self.scalar_bar.is_shown = True
-        self.scalarBar.VisibilityOn()
 
     @property
     def color_function(self):
