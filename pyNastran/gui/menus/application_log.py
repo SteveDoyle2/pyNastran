@@ -1,8 +1,8 @@
 from __future__ import print_function
 from pyNastran.gui.qt_version import qt_version, is_pygments
 
-#from qtpy.QtCore import Qt
-from qtpy.QtGui import QFont, QFontMetrics, QColor
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QFont, QFontMetrics, QColor, QCursor
 from qtpy import QtCore
 #from qtpy.QtCore import QSci
 #import QScintilla
@@ -33,13 +33,35 @@ else:
 
 class HtmlLog(QTextEdit):
 
-    def __init__(self, parent):
-        QTextEdit.__init__(self, parent=parent)
+    def __init__(self, *args, **kwargs):
+        super(HtmlLog, self).__init__(*args, **kwargs)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.__contextMenu)
         self.setReadOnly(True)
+
+    def __contextMenu(self):
+        self._normalMenu = self.createStandardContextMenu()
+        self._addCustomMenuItems(self._normalMenu)
+        self._normalMenu.exec_(QCursor.pos())
+
+    def _addCustomMenuItems(self, menu):
+        menu.addSeparator()
+        menu.addAction('Clear...', self.on_clear)
+
+    def on_clear(self):
+        """calls out to the main GUI to clear the screen"""
+        self.parent().on_clear()
 
     def buttonClicked(self):
         if qApp.mouseButtons() & QtCore.Qt.RightButton:
             print(self.sender().toolTip())
+
+    def mousePressEvent(self, event):
+        """called when you click a result"""
+        if event.button() == Qt.RightButton:
+            pass
+        else:
+            QTextEdit.mousePressEvent(self, event)
 
     def clear(self):
         """clears out the text"""
@@ -51,6 +73,11 @@ class ApplicationLogWidget(QDockWidget):
         self.setObjectName('application_log')
         self.log_widget = HtmlLog(parent=self)
         self.setWidget(self.log_widget)
+
+    def on_clear(self):
+        parent = self.parent()
+        if hasattr(parent, 'clear_application_log'):
+            parent.clear_application_log()
 
     #def keyPressEvent(self, event):
         #key = event.key()
@@ -189,16 +216,18 @@ class PythonConsoleWidget(QDockWidget):
         #self.connect(self, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),
         #             self.listItemRightClicked)
 
-        menu_item1 = self.listMenu.addAction("Properties...")
-        menu_item2 = self.listMenu.addAction("Select All...")
-        menu_item3 = self.listMenu.addAction("Copy...")
-        menu_item1.triggered.connect(self.menuItemClicked_1)
-        menu_item2.triggered.connect(self.menuItemClicked_2)
-        menu_item3.triggered.connect(self.menuItemClicked_3)
+        properties = self.listMenu.addAction("Properties...")
+        select_all = self.listMenu.addAction("Select All")
+        copy = self.listMenu.addAction("Copy")
+        #clear = self.listMenu.addAction("Clear...")
+        properties.triggered.connect(self.on_properties)
+        select_all.triggered.connect(self.on_select_all)
+        copy.triggered.connect(self.on_copy)
+        #clear.triggered.connect(self.on_clear)
 
-        #self.connect(menu_item1, QtCore.SIGNAL("triggered()"), self.menuItemClicked_1)
-        #self.connect(menu_item2, QtCore.SIGNAL("triggered()"), self.menuItemClicked_2)
-        #self.connect(menu_item3, QtCore.SIGNAL("triggered()"), self.menuItemClicked_3)
+        #self.connect(properties, QtCore.SIGNAL("triggered()"), self.on_properties)
+        #self.connect(select_all, QtCore.SIGNAL("triggered()"), self.on_select_all)
+        #self.connect(copy, QtCore.SIGNAL("triggered()"), self.on_copy)
 
         # we have to create a QWidget to put the console vbox into vbox_widget because
         #    self.setLayout(vbox)
@@ -219,14 +248,17 @@ class PythonConsoleWidget(QDockWidget):
         #self.listMenu.move(parentPosition + QPos)
         #self.listMenu.show()
 
-    def menuItemClicked_1(self):
+    def on_properties(self):
         print(1)
 
-    def menuItemClicked_2(self):
+    def on_select_all(self):
         print(2)
 
-    def menuItemClicked_3(self):
+    def on_copy(self):
         print(3)
+
+    def on_clear(self):
+        print(4)
 
 
 def main():  # pragma: no cover

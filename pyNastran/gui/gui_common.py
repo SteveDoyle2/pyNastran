@@ -447,7 +447,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
 
             tools = file_tools + [
-                ('log_clear', 'Clear Application Log', '', None, 'Clear Application Log', self.clear_application_log),
                 ('label_clear', 'Clear Current Labels', '', None, 'Clear current labels', self.clear_labels),
                 ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
@@ -607,7 +606,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'set_preferences', '',
-            'log_clear', 'label_clear', 'label_reset', '',
+            'label_clear', 'label_reset', '',
             'legend', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
             #'anti_alias_4', 'anti_alias_8',],

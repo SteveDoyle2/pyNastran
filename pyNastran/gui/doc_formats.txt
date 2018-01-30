@@ -57,7 +57,7 @@ Cart3d
  - secondary actors
    - box with inflow/outflow/symmetry/farfield boundary condtions as colors
 
- - TODO: show/hide elements based on picking
+ - show/hide elements based on picking
 
 Panair
 ======
