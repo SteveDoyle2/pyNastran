@@ -191,7 +191,7 @@ class GuiCommon(GuiAttributes):
         for i in range(npoint_arrays):
             name = point_data.GetArrayName(i)
             if name is not None:
-                print("pointArray ", i, ": ", name)
+                #print("pointArray ", i, ": ", name)
                 point_data.RemoveArray(name)
 
         cell_data = grid.GetCellData()
@@ -199,7 +199,7 @@ class GuiCommon(GuiAttributes):
         for i in range(ncell_arrays):
             name = cell_data.GetArrayName(i)
             if name is not None:
-                print("cellArray ", i, ": ", name)
+                #print("cellArray ", i, ": ", name)
                 cell_data.RemoveArray(name)
 
         cell_data.SetActiveScalars(None)
@@ -222,7 +222,6 @@ class GuiCommon(GuiAttributes):
         self.scalar_bar.is_shown = False
         self.vtk_interactor.Render()
 
-        self.res_widget.result_case_window.treeView.normals.setChecked(False)
         self.res_widget.result_case_window.treeView.fringe.setChecked(False)
         self.res_widget.result_case_window.treeView.disp.setChecked(False)
         self.res_widget.result_case_window.treeView.vector.setChecked(False)
@@ -230,6 +229,7 @@ class GuiCommon(GuiAttributes):
     def _get_fringe_data(self, icase):
         """helper for ``on_fringe``"""
         is_valid = False
+        # (grid_result, name_tuple, name_str, data)
         failed_data = (None, None, None, None)
 
         if not isinstance(icase, integer_types):
@@ -247,16 +247,23 @@ class GuiCommon(GuiAttributes):
         (obj, (i, name)) = self.result_cases[icase]
         subcase_id = obj.subcase_id
         case = obj.get_result(i, name)
+
         if case is None:
             # normal result
-            self.log_error('icase=%r is not a displacement/force' % icase)
+            self.res_widget.result_case_window.treeView.fringe.setChecked(False)
+            #self.res_widget.result_case_window.treeView.disp.setChecked(False)
+            #self.res_widget.result_case_window.treeView.vector.setChecked(False)
+
+            #is_legend_shown = False
+            self.set_normal_result(icase, name, subcase_id, subtitle, label)
+            # this is valid, but we want to skip out
             return is_valid, failed_data
 
         result_type = obj.get_title(i, name)
+        data_format = obj.get_data_format(i, name)
         vector_size = obj.get_vector_size(i, name)
         location = obj.get_location(i, name)
         methods = obj.get_methods(i)
-        data_format = obj.get_data_format(i, name)
         #scale = obj.get_scale(i, name)
         #phase = obj.get_phase(i, name)
         label2 = obj.get_header(i, name)
@@ -493,45 +500,16 @@ class GuiCommon(GuiAttributes):
         self.grid_selected.Modified()
         self.vtk_interactor.Render()
         self.res_widget.result_case_window.treeView.fringe.setChecked(True)
-        self.res_widget.result_case_window.treeView.normals.setChecked(False)
-
-    def on_normals(self, icase):
-        label2 = ''
-        (obj, (i, name)) = self.result_cases[icase]
-        subcase_id = obj.subcase_id
-        result_type = obj.get_title(i, name)
-        data_format = obj.get_data_format(i, name)
-        label2 = obj.get_header(i, name)
-        out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
-        nlabels, labelsize, ncolors, colormap = out
-        subtitle, label = self.get_subtitle_label(subcase_id)
-        if label2:
-            label += '; ' + label2
-
-        is_low_to_high = True
-        is_legend_shown = False
-        self.res_widget.result_case_window.treeView.normals.setChecked(True)
-        self.res_widget.result_case_window.treeView.fringe.setChecked(False)
-        #self.res_widget.result_case_window.treeView.disp.setChecked(False)
-        #self.res_widget.result_case_window.treeView.vector.setChecked(False)
-        return self.set_normal_result(
-            icase, name, result_type, subcase_id,
-            subtitle, label,
-            data_format, nlabels, labelsize, ncolors, colormap,
-            is_legend_shown, is_low_to_high)
-
 
     def on_disp(self, icase, show_msg=True):
         is_disp = True
         self._on_disp_vector(icase, is_disp, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.disp.setChecked(True)
-        self.res_widget.result_case_window.treeView.normals.setChecked(False)
 
     def on_vector(self, icase, show_msg=True):
         is_disp = False
         self._on_disp_vector(icase, is_disp, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
-        self.res_widget.result_case_window.treeView.normals.setChecked(False)
 
     def _on_disp_vector(self, icase, is_disp, show_msg=True):
         """
@@ -778,11 +756,7 @@ class GuiCommon(GuiAttributes):
         #================================================
         is_low_to_high = True
         if case is None:
-            return self.set_normal_result(
-                icase, name, result_type, subcase_id,
-                subtitle, label,
-                data_format, nlabels, labelsize, ncolors, colormap,
-                is_legend_shown, is_low_to_high)
+            return self.set_normal_result(icase, name, subcase_id, subtitle, label)
 
         elif self._is_normals and self.legend_shown:
             # we hacked the scalar bar to turn off for Normals
@@ -858,10 +832,7 @@ class GuiCommon(GuiAttributes):
         assert self.icase is not False, self.icase
         return self.icase
 
-    def set_normal_result(self, icase, name, result_type, subcase_id,
-                          subtitle, label,
-                          data_format, nlabels, labelsize, ncolors, colormap,
-                          is_legend_shown, is_low_to_high):
+    def set_normal_result(self, icase, name, subcase_id, subtitle, label):
         """plots a NormalResult"""
         name_str = self._names_storage.get_name_string(name)
         prop = self.geom_actor.GetProperty()
@@ -900,15 +871,15 @@ class GuiCommon(GuiAttributes):
                                #is_low_to_high=is_low_to_high,
                                #is_horizontal=self.is_horizontal_scalar_bar,
                                #is_shown=is_legend_shown)
-        scale = 0.0
-        phase = None
+        #scale = 0.0
+        #phase = None
 
-        min_value = -1.
-        max_value = 1.
-        self.update_legend(icase,
-                           result_type, min_value, max_value, data_format, scale, phase,
-                           nlabels, labelsize, ncolors, colormap,
-                           is_low_to_high, self.is_horizontal_scalar_bar)
+        #min_value = -1.
+        #max_value = 1.
+        #self.update_legend(icase,
+                           #result_type, min_value, max_value, data_format, scale, phase,
+                           #nlabels, labelsize, ncolors, colormap,
+                           #is_low_to_high, self.is_horizontal_scalar_bar)
         self.hide_legend()
         self._is_normals = True
         #min_value = 'Front Face'

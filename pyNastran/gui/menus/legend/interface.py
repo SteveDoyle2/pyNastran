@@ -46,12 +46,15 @@ def set_legend_menu(self):
 
     data = {
         'font_size' : self.font_size,
-        'icase' : self.icase,
+        'icase_fringe' : self.icase,
+        'icase_disp' : self.icase,
+        'icase_vector' : self.icase,
         'name' : result_type,
         'min' : min_value,
         'max' : max_value,
 
         'scale' : scale,
+        'arrow_scale' : scale,
         'phase' : phase,
         'format' : data_format,
 
@@ -59,6 +62,7 @@ def set_legend_menu(self):
         'default_max' : default_max,
         'default_title' : default_title,
         'default_scale' : default_scale,
+        'default_arrow_scale' : default_arrow_scale,
         'default_phase' : default_phase,
         'default_format' : default_format,
 
