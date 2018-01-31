@@ -182,7 +182,7 @@ class Stress(object):
         return self._elemental.path() + ['STRESS']
 
     def search(self, element_ids, domain_ids=(), subcase_ids=()):
-        # :type (List[int], List[int], List[int]) -> ElementForceResult
+        # :type (List[int], List[int], List[int]) -> StressResult
         # TODO: consider subcase_ids here... convert to domain_ids and use domain_ids only
         result = StressResult()
         _result = result.__dict__
