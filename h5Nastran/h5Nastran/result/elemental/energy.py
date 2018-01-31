@@ -38,5 +38,3 @@ class STRAIN_ELEM(ResultTable):
                                 indices=DataGetter(indices=[0, 2, 3, 4], indices_len=5),
                                 validator=_validator
                                 )
-
-
