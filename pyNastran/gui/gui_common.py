@@ -4025,6 +4025,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         -------
         onesided : bool; default=True
             should the animation go up and back down
+            True : the video will use images [0...N]
+            False : the video will use images [0...N...0]
         nrepeat : int; default=0
             0 : loop infinitely
             1 : loop 1 time

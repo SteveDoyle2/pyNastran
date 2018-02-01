@@ -133,7 +133,7 @@ class GetCard(GetMethods):
         """resets self._type_to_slot_map"""
         rslot_map = defaultdict(list)
         for dict_name, card_names in iteritems(self._slot_to_type_map):
-            print('card_names=%s dict_name=%s' % (card_names, dict_name))
+            #print('card_names=%s dict_name=%s' % (card_names, dict_name))
             card_name0 = card_names[0]
             if card_name0 in ['DTABLE', 'GRDSET', 'SESUP', 'DOPTPRM', 'MONPNT1', 'SUPORT',
                               'MKAERO1', 'MATHP']:
@@ -863,8 +863,8 @@ class GetCard(GetMethods):
                                 fail_nids.add(nid)
                                 fail_count += 1
                                 if fail_count < fail_count_max:
-                                    print('    nid=%s is a dependent node and has a PLOAD2 applied\n'
-                                          '%s' % (nid, str(load)))
+                                    print('    nid=%s is a dependent node and has a '
+                                          'PLOAD2 applied\n%s' % (nid, str(load)))
                             forces[nid_map[nid]] += forcei
                         forces += forcei
                         # F += f
@@ -887,7 +887,11 @@ class GetCard(GetMethods):
                         if load.surf_or_line == 'SURF':
                             if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
                                 normal = load.nvector / np.linalg.norm(load.nvector)
-                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                                cid = load.Cid()
+                                if cid != 0:
+                                    msg = 'cid=%r on a PLOAD4 is not supported\n%s' % (
+                                        cid, str(load))
+                                    raise NotImplementedError(msg)
                         else:
                             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                                 load.surf_or_line, str(load))
@@ -928,7 +932,11 @@ class GetCard(GetMethods):
                         if load.surf_or_line == 'SURF':
                             if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
                                 normal = load.nvector / np.linalg.norm(load.nvector)
-                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                                cid = load.Cid()
+                                if cid != 0:
+                                    msg = 'cid=%r on a PLOAD4 is not supported\n%s' % (
+                                        cid, str(load))
+                                    raise NotImplementedError(msg)
                         else:
                             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                                 load.surf_or_line, str(load))
@@ -966,26 +974,27 @@ class GetCard(GetMethods):
                         elem_node_ids = elem.node_ids
                         if elem.type == 'CTETRA':
                             #face1 = elem.get_face(load.g1.nid, load.g34.nid)
-                            face, area, centroid, normal = elem.get_face_area_centroid_normal(
-                                load.g1.nid, load.g34.nid)
+                            facn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
+                            face, area, centroid, normal
                             #assert face == face1
                             nface = 3
                         elif elem.type == 'CHEXA':
                             #face1 = elem.get_face(load.g34.nid, load.g1.nid)
-                            face, area, centroid, normal = elem.get_face_area_centroid_normal(
-                                load.g34.nid, load.g1.nid)
+                            facn = elem.get_face_area_centroid_normal(load.g34.nid, load.g1.nid)
+                            face, area, centroid, normal = facn
                             #assert face == face1
                             nface = 4
                         elif elem.type == 'CPENTA':
                             g1 = load.g1.nid
                             if load.g34 is None:
                                 #face1 = elem.get_face(g1)
-                                face, area, centroid, normal = elem.get_face_area_centroid_normal(g1)
+                                facn = elem.get_face_area_centroid_normal(g1)
+                                face, area, centroid, normal = facn
                                 nface = 3
                             else:
                                 #face1 = elem.get_face(g1, load.g34.nid)
-                                face, area, centroid, normal = elem.get_face_area_centroid_normal(
-                                    g1, load.g34.nid)
+                                facn = elem.get_face_area_centroid_normal(g1, load.g34.nid)
+                                face, area, centroid, normal = facn
                                 nface = 4
                             #assert face == face1
                         #elif elem.type == 'CPYRAM':
@@ -1011,7 +1020,10 @@ class GetCard(GetMethods):
                         if  load.surf_or_line == 'SURF':
                             if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
                                 normal = load.nvector / np.linalg.norm(load.nvector)
-                                assert load.Cid() == 0, 'cid=%r on a PLOAD4 is not supported\n%s' % (load.Cid(), str(load))
+                                cid = load.Cid()
+                                if cid != 0:
+                                    msg = 'cid=%r on a PLOAD4 is not supported\n%s' % (cid, str(load))
+                                    raise NotImplementedError(msg)
                         else:
                             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                                 load.surf_or_line, str(load))
@@ -1523,7 +1535,6 @@ class GetCard(GetMethods):
 
         if mpc_id is not None:
             mpcs = self.get_mpcs(mpc_id)
-            asfd
             for mpc in mpcs:
                 if mpc.type == 'MPC':
                     for nid, component in zip(mpc.node_ids, mpc.components):
@@ -1591,7 +1602,7 @@ class GetCard(GetMethods):
                         continue
                     dependent_nid_to_components[nid] = component
             elif rigid_element.type == 'RSSCON':
-                msg = 'skipping card in get_dependent_nid_to_components\n%s' % str(elem)
+                msg = 'skipping card in get_dependent_nid_to_components\n%s' % str(rigid_element)
                 self.log.warning(msg)
             else:
                 raise RuntimeError(rigid_element.type)
@@ -1971,7 +1982,8 @@ class GetCard(GetMethods):
                 eids2.append(eid)
         return eids2
 
-    def get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None, idtype='int32', msg=''):
+    def get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None,
+                                               idtype='int32', msg=''):
         """
         a work in progress
 
@@ -2033,7 +2045,8 @@ class GetCard(GetMethods):
                 if len(eids) == 0:
                     continue
                 if etype in skip_elements:
-                    self.log.warning('skipping etype=%s because there are no properties%s' % (etype, msg))
+                    self.log.warning('skipping etype=%s because there are no properties%s' % (
+                        etype, msg))
                     continue
 
                 try:
@@ -2293,7 +2306,8 @@ class GetCard(GetMethods):
                         mid_to_pids_map[mid].append(pid)
                     except KeyError:
                         print(prop)
-                        raise KeyError('i=%s mid=%s is invalid for card%s=\n%s' % (i, mid, msg, str(prop)))
+                        raise KeyError('i=%s mid=%s is invalid for card%s=\n%s' % (
+                            i, mid, msg, str(prop)))
             else:
                 mid = prop.Mid()
                 try:
@@ -2346,12 +2360,14 @@ class GetCard(GetMethods):
                             else:
                                 nsmiii = nsmii.conid
                             nsms2i = self.get_reduced_nsms(
-                                nsmiii, consider_nsmadd=False, stop_on_failure=stop_on_failure)
+                                nsmiii, consider_nsmadd=False,
+                                stop_on_failure=stop_on_failure)
                             nsms2 += nsms2i
                     else:
                         assert isinstance(nsmi, integer_types), nsmi
                         nsms2i = self.get_reduced_nsms(
-                            nsmi, consider_nsmadd=False, stop_on_failure=stop_on_failure)
+                            nsmi, consider_nsmadd=False,
+                            stop_on_failure=stop_on_failure)
                         nsms2 += nsms2i
             else:
                 nsms2.append(nsm)
@@ -2400,12 +2416,14 @@ class GetCard(GetMethods):
                             else:
                                 mpciii = mpcii.conid
                             mpcs2i = self.get_reduced_mpcs(
-                                mpciii, consider_mpcadd=False, stop_on_failure=stop_on_failure)
+                                mpciii, consider_mpcadd=False,
+                                stop_on_failure=stop_on_failure)
                             mpcs2 += mpcs2i
                     else:
                         assert isinstance(mpci, integer_types), mpci
                         mpcs2i = self.get_reduced_mpcs(
-                            mpci, consider_mpcadd=False, stop_on_failure=stop_on_failure)
+                            mpci, consider_mpcadd=False,
+                            stop_on_failure=stop_on_failure)
                         mpcs2 += mpcs2i
             else:
                 mpcs2.append(mpc)
