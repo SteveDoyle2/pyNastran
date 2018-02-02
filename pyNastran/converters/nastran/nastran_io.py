@@ -5328,7 +5328,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return icase
 
         is_pressure, pressures = model.get_pressure_array(
-            load_case_id, eids=self.element_ids, normals=self.normals, stop_on_failure=False)
+            load_case_id, eids=self.element_ids, stop_on_failure=False)
         if not is_pressure:
             return icase
 

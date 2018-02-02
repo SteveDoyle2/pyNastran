@@ -11,7 +11,7 @@ defines various methods to access high level BDF data:
    - get_MPCx_node_ids( mpc_id, stop_on_failure=True)
    - get_MPCx_node_ids_c1( mpc_id, stop_on_failure=True)
    - get_load_arrays(self, subcase_id, nid_map, eid_map, node_ids, normals)
-   - get_pressure_array(self, load_case, eids, normals)
+   - get_pressure_array(self, load_case, eids)
    - get_reduced_loads(self, load_id, scale=1., skip_scale_factor0=True, msg='')
    - get_reduced_dloads(self, dload_id, scale=1., skip_scale_factor0=True, msg='')
    - get_rigid_elements_with_node_ids(self, node_ids)
@@ -1075,7 +1075,7 @@ class GetCard(GetMethods):
             self.log.warning('fail_nids = %s' % np.array(fail_nids_list))
         return centroidal_pressures, forces, spcd
 
-    def get_pressure_array(self, load_case_id, eids, normals, stop_on_failure=True):
+    def get_pressure_array(self, load_case_id, eids, stop_on_failure=True):
         """
         Gets the shell pressures for a load case.
         Used by the GUI.
@@ -1086,8 +1086,6 @@ class GetCard(GetMethods):
             the load case to get the pressure contour for
         eids : (nelements, ) int ndarray
             the element ids in sorted order
-        normals : (nelements, 3) float ndarray
-            the element normals that correspond to eids
         stop_on_failure : bool; default=True
             crashes if the load_case_id doesn't exist
 
@@ -1140,8 +1138,7 @@ class GetCard(GetMethods):
                         #for elem in load.eids:
                         ie = np.searchsorted(eids, elem.eid)
                         #pressures[ie] += p  # correct; we can't assume model orientation
-                        normal = normals[ie, 2]  # considers normal of shell
-                        pressures[ie] += pressure * normal
+                        pressures[ie] += pressure
 
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         #A, centroid, normal = elem.get_face_area_centroid_normal(

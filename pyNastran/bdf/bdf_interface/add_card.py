@@ -80,15 +80,14 @@ from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5,
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
-from pyNastran.bdf.cards.aero import (
-    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
-    AESURF, AESURFS, AERO, AEROS, CSSCHD,
+from pyNastran.bdf.cards.aero.aero import (
+    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS, AERO,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3,
-    FLFACT, FLUTTER, GUST, MKAERO1,
-    MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
-    SPLINE5, TRIM, DIVERG)
+    FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2,
+    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+from pyNastran.bdf.cards.aero.trim import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
 from pyNastran.bdf.cards.optimization import (
     DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
     DRESP1, DRESP2, DRESP3,
@@ -4665,27 +4664,22 @@ class AddCards(AddMethods):
         self._add_aelist_object(aelist)
         return aelist
 
-    def add_aefact(self, sid, factors, comment=''):
+    def add_aefact(self, sid, fractions, comment=''):
         """
-        Creates an AEFACT card, which defines the mach, dynamic_pressure,
-        velocity, and reduced frequency for an FLUTTER card
-
-        Used in flutter (145) and gust (146) analysis.
+        Creates an AEFACT card, which is used by the CAEROx / PAEROx card
+        to adjust the spacing of the sub-paneleing (and grid point
+        paneling in the case of the CAERO3).
 
         Parameters
         ----------
         sid : int
             unique id
-        factors : List[float, ..., float]
-            list of:
-             - machs
-             - dynamic_pressures
-             - velocities
-             - reduced frequency
+        fractions : List[float, ..., float]
+            list of percentages
         comment : str; default=''
             a comment for the card
         """
-        aefact = AEFACT(sid, factors, comment=comment)
+        aefact = AEFACT(sid, fractions, comment=comment)
         self._add_aefact_object(aefact)
         return aefact
 

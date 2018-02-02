@@ -99,15 +99,14 @@ from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5,
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
-from pyNastran.bdf.cards.aero import (
-    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
-    AESURF, AESURFS, AERO, AEROS, CSSCHD,
+from pyNastran.bdf.cards.aero.aero import (
+    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS, AERO,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3,
-    FLFACT, FLUTTER, GUST, MKAERO1,
-    MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
-    SPLINE5, TRIM, DIVERG)
+    FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2,
+    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+from pyNastran.bdf.cards.aero.trim import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
 from pyNastran.bdf.cards.optimization import (
     DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
     DRESP1, DRESP2, DRESP3,

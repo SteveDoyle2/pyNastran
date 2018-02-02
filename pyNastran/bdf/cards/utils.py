@@ -1,6 +1,12 @@
+"""
+defines:
+ - fields_out = build_table_lines(fields, nstart=1, nend=0)
+ - fields_out = wipe_empty_fields(card)
+"""
 from __future__ import unicode_literals, print_function
 from typing import List, Union, Optional
 from six import string_types
+
 
 def build_table_lines(fields, nstart=1, nend=0):
     """
@@ -54,74 +60,6 @@ def build_table_lines(fields, nstart=1, nend=0):
         fields_out += [None] * nspaces
     return fields_out
 
-
-def wipe_empty_fields_off(fields):
-    """
-    Removes any trailing Nones from the card.
-    Also converts empty strings to None.
-
-    .. warning:: doesn't allows floats & ints.
-    """
-    nfields = len(fields)
-    for i, field in enumerate(reversed(fields)):
-        if field:
-            break
-    # print('i =', i)
-    # print('fields =', fields[:nfields-i])
-
-    # has the potential issue of not returning embedded Nones
-    return [field.strip() if isinstance(field, string_types) else field for field in fields[:nfields-i]]
-    # return [field.strip() if field.strip() else None for field in fields[:nfields-i] ] # fails on ints/Nones
-
-#def wipe_empty_fields_old(fields):
-    #i = len(fields) - 1
-    ## print('fields1', fields)
-    #while i > 0:
-        #field = fields[i]
-        ##print('i=%s %r; %s' % (i, field, type(field)))
-        #if isinstance(field, string_types):
-            #field_strip = field.strip()
-            #if field_strip:
-                #break
-            #else:
-                ##print('popping %r' % field_strip)
-                #fields.pop()
-                #i -= 1
-        #else:
-            #zafd
-
-    #while i > 0:
-        #field = fields[i]
-        #if isinstance(field, string_types):
-            #field_strip = field.strip()
-            #if not field_strip:
-                #field = field_strip
-                #i -= 1
-            #else:
-                ## return fields
-                #break
-        #fields[i] = field
-    ## print('fields2', fields)
-    #return fields
-
-#def _wipe_empty_fields(card):
-    #"""
-    #For testing:
-        #this method is:   wipe_empty_fields
-        #the one above is: wipe_empty_fields_new
-
-    #In general:
-        #this method is     _wipe_empty_fields
-        #the  one above is: wipe_empty_fields
-    #"""
-    #typed = wipe_empty_fields(card)
-    #untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
-    #untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
-    #if typed != untyped:
-        #msg = 'typed   = %s\n' % typed
-        #msg += 'untyped = %s\n' % untyped
-        #print(msg)
-    #return untyped
 
 def wipe_empty_fields(card):
     # type: (List[Optional[str]]) -> List[str]
