@@ -101,15 +101,17 @@ class H5Nastran(object):
         for card_name in card_names:
             table = self._card_tables.get(card_name, None)
 
+            print(card_name)
+
             if table is None:
-                print(card_name)
+                print(card_name, 'not supported')
                 unsupported.append(card_name)
                 continue
 
             try:
                 table.write_data(cards[card_name], self._bdf_domain)
             except NotImplementedError:
-                print(card_name)
+                print(card_name, 'not supported')
                 unsupported.append(card_name)
 
             tables.add(table)

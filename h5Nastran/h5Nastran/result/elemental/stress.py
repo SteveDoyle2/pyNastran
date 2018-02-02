@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from ..result_table import ResultTable, TableDef
+from ..result_table import ResultTable, TableDef, DataGetter
 
 
 class Stress(object):
@@ -836,6 +836,7 @@ class PENTA_NL(ResultTable):
 class QUAD4(ResultTable):
     result_type = 'ELEMENT STRESSES 33 QUAD4 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/QUAD4', result_type)
+    table_def.add_index_option('EFFE', DataGetter(indices=[0, 2, 3, 4, 5, 10, 11, 12, 13]))
 
 
 ########################################################################################################################
@@ -1276,6 +1277,7 @@ class TETRA_NL(ResultTable):
 class TRIA3(ResultTable):
     result_type = 'ELEMENT STRESSES 74 TRIA3 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/TRIA3', result_type)
+    table_def.add_index_option('EFFE', DataGetter(indices=[0, 2, 3, 4, 5, 10, 11, 12, 13]))
 
 
 ########################################################################################################################

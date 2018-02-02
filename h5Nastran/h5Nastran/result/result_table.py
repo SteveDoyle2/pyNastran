@@ -330,6 +330,8 @@ class TableDef(object):
         self._index_offset = 0
 
         self._subcase_ids = set()
+        
+        self._index_options = {}
 
     # this doesn't work when creating multiple databases in same python run... I don't know why it was done to begin with
     # works without it, so will be getting rid of it
@@ -346,6 +348,10 @@ class TableDef(object):
     #     memodict[id(_copy)] = _copy
     #
     #     return _copy
+    
+    def add_index_option(self, option, indices):
+        assert isinstance(indices, (DataGetter, type(None)))
+        self._index_options[option] = indices
 
     def finalize(self):
         if self.is_subtable:
@@ -366,8 +372,12 @@ class TableDef(object):
 
         indices = np.array(indices, dtype='i8')
 
-        data = np.empty(len(indices), dtype=table._v_dtype)
-        table._read_elements(indices, data)
+        indices_len = len(indices)
+
+        data = np.empty(indices_len, dtype=table._v_dtype)
+
+        if indices_len > 0:
+            table._read_elements(indices, data)
 
         return data
 
@@ -387,8 +397,10 @@ class TableDef(object):
             except IndexError:
                 continue
 
+            index_dict_get = index_dict.get
+
             for data_id in data_ids:
-                _indices = index_dict[data_id]
+                _indices = index_dict_get(data_id, {})
                 indices.update(set(index + offset for index in _indices))
 
         results = self.read(sorted(indices))
@@ -403,7 +415,10 @@ class TableDef(object):
         for subtable in self.subtables:
             subtable.set_h5f(h5f)
 
-    def to_numpy(self, data):
+    def to_numpy(self, data, indices=None):
+        if indices is None:
+            indices = self.indices        
+        
         result = np.empty(len(data), dtype=self.dtype)
 
         validator = self.validator
@@ -413,7 +428,7 @@ class TableDef(object):
         _result = {name: result[name] for name in names}
 
         for i in range(len(data)):
-            _data = validator(self.indices.get_data(data[i]))
+            _data = validator(indices.get_data(data[i]))
             _data.append(self.domain_count)
 
             for j in range(len(names)):
@@ -430,12 +445,35 @@ class TableDef(object):
         table = self.get_table()
 
         subcase_id = data.header.subcase_id
+        
+        options = data.header.options
+        
+        indices = self.indices
+        
+        for option in options:
+            try:
+                _indices = self._index_options[option]
+                if _indices is not None:
+                    indices = _indices
+            except KeyError:
+                msg = """
+                Result table '%s' is not supported!
+                A parameter in your bdf file directed Nastran to output the result table with an option that is
+                currently not supported.  This option might affect the format of the results file.  H5Nastran
+                needs to know the format.
+                This requires the following to be added to the result table definition:
+                table_def.add_index_option('%s', new_format)
+                where new_format might simply be None (no change to default format).
+                See RESULT/ELEMENTAL/STRESS/QUAD4 in the source code for an example.
+                Please create a new issue on github.com/SteveDoyle2/pyNastran to request this format to be supported.
+                """ % (data.header.results_type, option)
+                raise H5NastranException(msg)
 
         if subcase_id not in self._subcase_ids:
             self.domain_count += 1
             self._subcase_ids.add(subcase_id)
 
-        data = self.to_numpy(data.data)
+        data = self.to_numpy(data.data, indices=indices)
         table.append(data)
         self._record_data_indices(data)
 
@@ -851,3 +889,7 @@ class ResultTableData(pd.DataFrame):
 
     def __rdiv__(self, other):
         return NotImplementedError
+
+
+class H5NastranException(Exception):
+    pass

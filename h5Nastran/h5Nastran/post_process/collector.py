@@ -74,7 +74,7 @@ class H5NastranCollector(object):
         self.close()
             
     def combine(self, data):
-        # type: (List[DataDrame]) -> DataDrame
+        # type: (List[DataFrame]) -> DataFrame
         
         # if isinstance(data, DataFrame):
         #     data = [data]
@@ -95,11 +95,13 @@ class H5NastranCollector(object):
                 # TODO: need to handle loadcase selection better
                 j = loadcase
                 
+                _data = data[file_index]
+                
                 for data_col in data_cols:
                     # print(data_col, i, j)
                     # print(_result[data_col][i])
                     # print(data[file_index][data_col][j])
-                    _result[data_col][i] += factor * data[file_index][data_col][j]
+                    _result[data_col][i] += factor * _data[data_col][j]
                 
         _result['LOADCASE'] = case_ids
                 
