@@ -101,7 +101,6 @@ class ElementForce(object):
     def path(self):
         return self._elemental.path() + ['ELEMENT_FORCE']
 
-    # TODO: individual tables need to have data_ids first for consistency
     def search(self, element_ids, domain_ids=(), subcase_ids=()):
         # :type (List[int], List[int], List[int]) -> ElementForceResult
         # TODO: consider subcase_ids here... convert to domain_ids and use domain_ids only

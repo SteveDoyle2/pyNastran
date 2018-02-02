@@ -21,9 +21,17 @@ class H5Nastran(object):
 
     version = '0.1.0'
 
-    def __init__(self, h5filename, mode='r'):
+    default_driver = None
+
+    def __init__(self, h5filename, mode='r', in_memory=False):
         filters = tables.Filters(complib='zlib', complevel=5)
-        self.h5f = tables.open_file(h5filename, mode=mode, filters=filters)
+
+        if in_memory:
+            driver = 'H5FD_CORE'
+        else:
+            driver = self.default_driver
+
+        self.h5f = tables.open_file(h5filename, mode=mode, filters=filters, driver=driver)
 
         self._card_tables = {}
         self._result_tables = {}
@@ -41,6 +49,8 @@ class H5Nastran(object):
         self._f06 = None
 
         self._bdf_domain = 1
+
+        self._element_results_tables = {}
 
         if mode == 'w':
             self._write_info()
@@ -112,6 +122,8 @@ class H5Nastran(object):
         self._bdf_domain += 1
 
         self._save_bdf()
+
+        self.input.update()
 
         return self.bdf
 
@@ -205,6 +217,9 @@ class H5Nastran(object):
         table = self._result_tables.get(results_type_, None)
 
         if table is None:
+            table = self._find_element_result_table(results_type_)
+
+        if table is None:
             return self._unsupported_table(table_data)
 
         table.results_type = results_type
@@ -212,6 +227,30 @@ class H5Nastran(object):
         table.write_data(table_data)
 
         self._tables.add(table)
+
+    # TODO: remove element type from results tables, since it's hard to know what they should be
+    # item code is good enough
+    def _find_element_result_table(self, results_type):
+        if not results_type.startswith('ELEMENT'):
+            return None
+
+        tmp = results_type.split(' ')
+        del tmp[2]
+        results_type = ' '.join(tmp)
+
+        if len(self._element_results_tables) == 0:
+            keys = self._result_tables.keys()
+            for key in keys:
+                if not key.startswith('ELEMENT'):
+                    continue
+                tmp = key.split(' ')
+                del tmp[2]
+                tmp = ' '.join(tmp)
+                self._element_results_tables[tmp] = key
+
+        _results_type = self._element_results_tables.get(results_type, None)
+
+        return self._result_tables.get(_results_type, None)
 
     def _save_bdf(self):
         from six import StringIO
