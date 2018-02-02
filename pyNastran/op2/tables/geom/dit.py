@@ -6,7 +6,7 @@ from struct import Struct
 from six.moves import range
 import numpy as np
 
-from pyNastran.bdf.cards.aero.aero import GUST
+from pyNastran.bdf.cards.aero.dynamic_loads import GUST
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABRND1, TABDMP1, TABLES1)

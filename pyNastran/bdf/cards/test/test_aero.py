@@ -13,14 +13,15 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID, read_bdf
 from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero.aero import (
-    FLFACT, AEFACT, AEPARM, AERO,
+    AEFACT, AELIST, AEPARM,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    AELIST, FLUTTER, MKAERO1, MKAERO2, GUST, AESURF, AESURFS,
+    AELIST, AESURF, AESURFS,
     AELINK, AECOMP,
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
-from pyNastran.bdf.cards.aero.trim import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
+from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 ROOTPATH = pyNastran.__path__[0]

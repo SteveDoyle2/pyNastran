@@ -50,7 +50,6 @@ def get_files_of_type(dirname, extension='.txt', max_size=100., limit_file='no_d
               os.path.splitext(filenamei)[1].endswith(extension) and
               os.path.getsize(filename) / 1048576. <= max_size):
             filenames2.append(filename)
-            pass
     return filenames2
 
 

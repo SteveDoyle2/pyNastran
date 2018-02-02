@@ -12,21 +12,15 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-import math
-from typing import List, Any
-#from six.moves import zip, range
-from six import string_types
 
-import numpy as np
-
-from pyNastran.bdf.cards.aero.aero import Aero
+from pyNastran.bdf.cards.aero.dynamic_loads import Aero
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank,
-    )
+)
 
 
 class AEROS(Aero):
@@ -285,6 +279,7 @@ class AESTAT(BaseCard):
         comment : str; default=''
             a comment for the card
         """
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.aestat_id = aestat_id
@@ -561,6 +556,7 @@ class DIVERG(BaseCard):
         comment : str; default=''
             a comment for the card
         """
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.sid = sid
@@ -694,6 +690,7 @@ class TRIM(BaseCard):
         comment : str; default=''
             a comment for the card
         """
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         #: Trim set identification number. (Integer > 0)
@@ -828,7 +825,7 @@ class TRIM(BaseCard):
                         nsuport_dofs += 1
 
             if suport1:
-                conid = suport1.conid
+                #unused_conid = suport1.conid
                 nids = suport1.node_ids
                 for nid, cs in zip(nids, suport1.Cs):
                     for ci in cs:
