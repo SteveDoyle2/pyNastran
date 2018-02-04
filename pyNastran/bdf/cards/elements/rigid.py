@@ -1610,7 +1610,8 @@ class RSSCON(RigidElement):
             a_solid_grids.append(integer_or_blank(card, 7, 'a_solid_grid_2'))  # EA2
             b_solid_grids.append(integer_or_blank(card, 8, 'b_solid_grid_2'))  # EA2
         else:
-            raise RuntimeError('rigid_type=%s and must be [ELEM, GRID]' % rigid_type)
+            msg = 'RSSCON; eid=%s rigid_type=%s and must be [ELEM, GRID]' % (eid, rigid_type)
+            raise RuntimeError(msg)
         return RSSCON(eid, rigid_type,
                       shell_eid=shell_eid, solid_eid=solid_eid,
                       a_solid_grids=a_solid_grids, b_solid_grids=b_solid_grids,

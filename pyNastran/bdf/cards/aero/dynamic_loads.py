@@ -13,7 +13,6 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from typing import List, Any
 from six.moves import range
 from six import string_types
 import numpy as np
@@ -22,6 +21,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.utils.atmosphere2 import make_flfacts_alt_sweep, make_flfacts_mach_sweep
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     fields, string_or_blank, double_string_or_blank, interpret_value)
@@ -633,6 +633,43 @@ class FLUTTER(BaseCard):
         return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
                        imethod=imethod, nvalue=nvalue, omax=omax,
                        epsilon=epsilon, comment=comment)
+
+    def make_flfacts_alt_sweep(self, mach, alts, eas_limit=1000.,
+                               alt_units='m',
+                               velocity_units='m/s',
+                               density_units='kg/m^3',
+                               eas_units='m/s'):
+        """makes an altitude sweep"""
+        rho, mach, velocity = make_flfacts_alt_sweep(
+            mach, alts, eas_limit=eas_limit,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+        flfact_rho = self.sid + 1
+        flfact_mach = self.sid + 2
+        flfact_velocity = self.sid + 3
+        model.add_flfact(flfact_rho, rho, msg=' ' + density_units)
+        model.add_flfact(flfact_mach, mach)
+        model.add_flfact(flfact_velocity, velocity, msg=' ' + velocity_units)
+
+    def make_flfacts_mach_sweep(self, alt, machs, eas_limit=1000., alt_units='m',
+                                velocity_units='m/s',
+                                density_units='kg/m^3',
+                                eas_units='m/s'):
+        """makes a mach sweep"""
+        rho, mach, velocity = make_flfacts_mach_sweep(
+            alt, machs, eas_limit=eas_limit,
+            alt_units=alt_units,
+            velocity_units=velocity_units,
+            density_units=density_units,
+            eas_units=eas_units)
+        flfact_rho = self.sid + 1
+        flfact_mach = self.sid + 2
+        flfact_velocity = self.sid + 3
+        model.add_flfact(flfact_rho, rho, msg=' ' + density_units)
+        model.add_flfact(flfact_mach, mach)
+        model.add_flfact(flfact_velocity, velocity, msg=' ' + velocity_units)
 
     @property
     def headers(self):

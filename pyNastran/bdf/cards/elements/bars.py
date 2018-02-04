@@ -438,7 +438,7 @@ class CBAR(LineElement):
             raise ValueError(msg)
 
         if isinstance(self.offt, integer_types):
-            assert self.offt in [1, 2], 'invalid offt; offt=%i' % self.offt
+            assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
             raise NotImplementedError('invalid offt; offt=%i' % self.offt)
         elif not isinstance(self.offt, string_types):
             raise SyntaxError('invalid offt expected a string of length 3 '

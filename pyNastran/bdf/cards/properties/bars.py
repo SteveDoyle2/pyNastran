@@ -1213,6 +1213,19 @@ class PBARL(LineProperty):
         "HAT1": 5,
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
+    #pname_fid_map = {
+        #12 : 'DIM1',
+        #13 : 'DIM2',
+        #14 : 'DIM3',
+        #15 : 'DIM3',
+    #}
+    def update_by_pname_fid(self, pname_fid, value):
+        if isinstance(pname_fid, string_types) and pname_fid.startswith('DIM'):
+            num = int(pname_fid[3:])
+            self.dim[num - 1] = value
+        else:
+            raise NotImplementedError('PBARL Type=%r name=%r has not been implemented' % (
+                self.Type, self.pname_fid))
 
     def __init__(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment=''):
         """

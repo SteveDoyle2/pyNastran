@@ -239,7 +239,11 @@ class BDFMethods(BDFAttributes):
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 # what should I do here?
                 nsm = prop.nsm
-                rho = prop.Rho()
+                try:
+                    rho = prop.Rho()
+                except AttributeError:
+                    print(prop)
+                    raise
                 for eid in eids:
                     elem = self.elements[eid]
                     area = prop.Area()

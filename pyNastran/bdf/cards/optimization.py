@@ -178,6 +178,15 @@ def validate_dvprel(prop_type, pname_fid, validate):
         _check_dvprel_options(pname_fid, prop_type, options)
 
     elif prop_type == 'PBARL':
+        if pname_fid in [12, 13, 14, 15, 16, 17, 18, 19]:
+            # field 12 = DIM1 (10 values per line)
+            iline = pname_fid // 10
+            ifield = pname_fid % 10
+            if ifield == 0 or ifield > 8:
+                msg = 'iline=%s ifield=%s pname_fid=%s PBARL' % (iline, ifield, pname_fid)
+                raise RuntimeError(msg)
+            pname_fid = ('DIM%i' % (pname_fid - 11))
+
         options = [
             12, 13, 14, 15, 16, 17,
             'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10']
@@ -1908,7 +1917,7 @@ class DRESP2(OptConstraint):
                     params[key][0].append(model.Node(nid, msg))
                 params[key][1] = component_vals
             else:
-                raise NotImplementedError('  TODO: xref %s' % str(key))
+                raise NotImplementedError('  TODO: xref %s\n%s' % (str(key), str(self)))
 
         # what does this do???
         #for key, value_list in sorted(iteritems(self.params)):

@@ -303,24 +303,31 @@ class GetMethods(BDFAttributes):
                 sid, msg, np.unique(loads_ids), np.unique(load_combination_ids)))
         return load
 
-    def DLoad(self, sid, msg=''):
-        """gets a DLOAD"""
+    def DLoad(self, sid, consider_dload_combinations=True, msg=''):
+        """
+        Gets a DLOAD, TLOAD1, TLOAD2, etc. associcated with the
+        Case Control DLOAD entry
+        """
         assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
-        if sid in self.dloads:
-            load = self.dloads[sid]
+
+        if consider_dload_combinations and sid in self.dloads:
+            dload = self.dloads[sid]
+        elif sid in self.dload_entries:
+            dload = self.dload_entries[sid]
         else:
-            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (
-                sid, msg, np.unique(list(self.dloads.keys()))))
-        return load
+            dloads_ids = list(self.dload_entries.keys())
+            dload_combination_ids = list(self.dloads.keys())
+            raise KeyError('cannot find DLOAD ID=%r%s.\nAllowed dloads (e.g., TLOAD1)=%s; DLOAD=%s' % (
+                sid, msg, np.unique(dloads_ids), np.unique(dload_combination_ids)))
+        return dload
 
     def get_dload_entries(self, sid, msg=''):
-        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
-        if sid in self.dload_entries:
-            load = self.dload_entries[sid]
-        else:
-            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (
-                sid, msg, np.unique(list(self.dload_entries.keys()))))
-        return load
+        """gets the dload entries (e.g., TLOAD1, TLOAD2)"""
+        self.deprecated(
+            "get_dload_entries(sid, msg='')",
+            "DLoad(sid, consider_dload_combinations=False, msg='')",
+            '1.1')
+        return self.DLoad(sid, consider_dload_combinations=False, msg=msg)
 
     def DAREA(self, darea_id, msg=''):
         """gets a DAREA"""

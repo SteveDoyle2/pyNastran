@@ -1303,6 +1303,8 @@ class GetCard(GetMethods):
         ----------
         load_case_id : int
             the desired LOAD id
+        consider_load_combinations : bool; default=True
+            look at the LOAD card
         scale : float; default=1.0
             additional scale factor on top of the existing LOADs
         skip_scale_factor0 : bool; default=False
@@ -1388,24 +1390,8 @@ class GetCard(GetMethods):
                 loads_out.append(load)
         return loads_out, scale_factors_out, is_grav_out
 
-    #def _get_loads_and_scale_factors(self, load_case):
-        #"""account for scale factors"""
-        #loads2 = []
-        #scale_factors2 = []
-        #for load in load_case:
-            #if load.type == 'LOAD':
-                #scale_factors, loads = load.get_reduced_loads()
-                #for scale_factor, loadi in zip(scale_factors, loads):
-                    #if scale_factor == 0.0:
-                        #continue
-                    #scale_factors2.append(scale_factor)
-                    #loads2.append(loadi)
-            #else:
-                #scale_factors2.append(1.)
-                #loads2.append(load)
-        #return loads2, scale_factors2
-
-    def get_reduced_dloads(self, dload_id, scale=1., skip_scale_factor0=False, msg=''):
+    def get_reduced_dloads(self, dload_id, scale=1., consider_dload_combinations=True,
+                           skip_scale_factor0=False, msg=''):
         """
         Accounts for scale factors.
 
@@ -1413,6 +1399,8 @@ class GetCard(GetMethods):
         ----------
         dload_id : int
             the desired DLOAD id
+        consider_dload_combinations : bool; default=True
+            look at the DLOAD card
         scale : float; default=1.0
             additional scale factor on top of the existing LOADs
         skip_scale_factor0 : bool; default=False
@@ -1431,7 +1419,10 @@ class GetCard(GetMethods):
 
         .. warning:: assumes xref=True
         """
-        dload_case = self.DLoad(dload_id, msg=msg)
+        dload_case = self.DLoad(
+            dload_id,
+            consider_dload_combinations=consider_dload_combinations,
+            msg=msg)
         dloads, scale_factors = self._reduce_dload_case(dload_case, scale=scale, msg=msg)
         return dloads, scale_factors
 
@@ -1447,6 +1438,11 @@ class GetCard(GetMethods):
                 dload_ids = dload.get_load_ids()
                 load_scale = dload.scale * scale
                 scale_factors = dload.scale_factors
+                if len(dload_ids) != len(scale_factors):
+                    msg = 'dload_ids=%s scale_factors=%s\n%s' % (
+                        dload_ids, scale_factors, str(dload))
+                    raise ValueError(msg)
+
                 scale_factors_temp = [load_scale * scalei for scalei in scale_factors]
                 for dload_idi, scalei in zip(dload_ids, scale_factors_temp):
                     # prevents recursion
@@ -2473,8 +2469,6 @@ class GetCard(GetMethods):
                                                            stop_on_failure=stop_on_failure)
                             spcs2 += spcs2i
                     else:
-                        # print('spci =', spci)
-                        # print(spci.object_attributes())
                         assert isinstance(spci, integer_types), spci
                         spcs2i = self.get_reduced_spcs(spci,
                                                        consider_spcadd=False,

@@ -1663,8 +1663,12 @@ class TSTEP(BaseCard):
 
         for i in range(nrows):
             n = 8 * i + 1
-            ni = integer_or_blank(card, n + 1, 'N' + str(i), 1)
-            dt = double_or_blank(card, n + 2, 'dt' + str(i), 0.)
+            #if i == 0:
+            ni = integer(card, n + 1, 'Ntimes' + str(i))
+            dt = double(card, n + 2, 'dt' + str(i))
+            #else:
+            #ni = integer_or_blank(card, n + 1, 'N' + str(i), 1)
+            #dt = double_or_blank(card, n + 2, 'dt' + str(i), 0.)
             no = integer_or_blank(card, n + 3, 'NO' + str(i), 1)
             N.append(ni)
             DT.append(dt)

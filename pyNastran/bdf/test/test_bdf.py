@@ -35,6 +35,7 @@ import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
 
 class DisabledCardError(RuntimeError):
+    """lets bdf_test.py flag cards as auto-crashing and then skipping the deck (e.g., CGEN)"""
     pass
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
@@ -354,7 +355,8 @@ def run_and_compare_fems(
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
-                        encoding=encoding, debug=debug, quiet=quiet, stop_on_failure=stop_on_failure)
+                        encoding=encoding, debug=debug, quiet=quiet,
+                        stop_on_failure=stop_on_failure)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -443,7 +445,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
     is no list, a test is necessary.
     """
     if nastran:
-        from pyNastran.op2.op2 import OP2
+        from pyNastran.op2.op2 import read_op2
         dirname = os.path.dirname(bdf_model)
         basename = os.path.basename(bdf_model).split('.')[0]
 
@@ -484,10 +486,9 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         for fnamei in [f04_model, log_model, xdb_model, pch_model, asm_model, master_model]:
             if os.path.exists(fnamei):
                 os.remove(fnamei)
-        op2 = OP2()
         if not os.path.exists(op2_model):
             raise RuntimeError('%s failed' % op2_model)
-        op2.read_op2(op2_model2)
+        op2 = read_op2(op2_model2)
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
@@ -566,6 +567,14 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
                 # 1. testing that these methods work with xref
                 fem1._get_rigid()
+                common_node_ids = list(fem1.nodes.keys())
+                fem1.get_rigid_elements_with_node_ids(common_node_ids)
+
+                for spc_id in set(fem1.spcadds.keys() + fem1.spcs.keys()):
+                    fem1.get_reduced_spcs(spc_id)
+                for mpc_id in set(fem1.mpcadds.keys() + fem1.mpcs.keys()):
+                    fem1.get_reduced_mpcs(mpc_id)
+
                 fem1.get_dependent_nid_to_components()
                 fem1._get_maps(eids=None, map_names=None,
                                consider_0d=True, consider_0d_rigid=True,
@@ -586,30 +595,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 read_bdf(fem1.bdf_filename, encoding=encoding,
                          debug=fem1.debug, log=fem1.log)
 
-                remake = pickle_obj
-                if remake:
-                    #log = fem1.log
-                    model_name = os.path.splitext(bdf_model)[0]
-                    obj_model = '%s.test_bdf.obj' % (model_name)
-                    #out_model_8 = '%s.test_bdf.bdf' % (model_name)
-                    #out_model_16 = '%s.test_bdf.bdf' % (model_name)
-
-                    fem1.save(obj_model)
-                    fem1.save(obj_model, unxref=False)
-                    #fem1.write_bdf(out_model_8)
-                    fem1.get_bdf_stats()
-
-                    fem1 = BDF(debug=fem1.debug, log=fem1.log)
-                    fem1.load(obj_model)
-                    #fem1.write_bdf(out_model_8)
-                    #fem1.log = log
-                    os.remove(obj_model)
-                    fem1.get_bdf_stats()
-
-                    fem1.cross_reference()
-                    #fem1.get_bdf_stats()
-                    fem1._xref = True
-
+                fem1 = remake_model(bdf_model, fem1, pickle_obj)
                 #fem1.geom_check(geom_check=True, xref=True)
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
@@ -639,20 +625,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     #units_from = ['m', 'kg', 's']
     #convert(fem1, units_to, units=units_from)
     if xref:
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = fem1.get_displacement_index_xyz_cp_cd(
-            fdtype='float64', idtype='int32', sort_ids=True)
-        cds = np.unique(nid_cp_cd[:, 2])
-        cd_coords = []
-        for cd in cds:
-            if cd == -1:
-                continue
-            coord = fem1.coords[cd]
-            # coordRs work in op2 extraction
-            if coord.type not in ['CORD2R', 'CORD1R']:
-                cd_coords.append(cd)
-        if cd_coords:
-            msg = 'GRID-CD coords=%s can cause a problem in the OP2 results processing; be careful' % cd_coords
-            fem1.log.warning(msg)
+        check_for_cd_frame(fem1)
 
         try:
             fem1.get_area_breakdown()
@@ -670,6 +643,57 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 fem1.log.warning('no elements with mass found')
     return fem1
 
+
+def remake_model(bdf_model, fem1, pickle_obj):
+    """reloads the model if we're testing pickling"""
+    remake = pickle_obj
+    if remake:
+        #log = fem1.log
+        model_name = os.path.splitext(bdf_model)[0]
+        obj_model = '%s.test_bdf.obj' % (model_name)
+        #out_model_8 = '%s.test_bdf.bdf' % (model_name)
+        #out_model_16 = '%s.test_bdf.bdf' % (model_name)
+
+        fem1.save(obj_model)
+        fem1.save(obj_model, unxref=False)
+        #fem1.write_bdf(out_model_8)
+        fem1.get_bdf_stats()
+
+        fem1 = BDF(debug=fem1.debug, log=fem1.log)
+        fem1.load(obj_model)
+        #fem1.write_bdf(out_model_8)
+        #fem1.log = log
+        os.remove(obj_model)
+        fem1.get_bdf_stats()
+
+        fem1.cross_reference()
+        #fem1.get_bdf_stats()
+        fem1._xref = True
+    return fem1
+
+def check_for_cd_frame(fem1):
+    """
+    A cylindrical/spherical CD frame will cause problems with the
+    grid point force transformation
+    """
+    if any([card_name in fem1.card_count for card_name in ['GRID', 'SPOINT', 'EPOINT', 'RINGAX']]):
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = fem1.get_displacement_index_xyz_cp_cd(
+            fdtype='float64', idtype='int32', sort_ids=True)
+        cds = np.unique(nid_cp_cd[:, 2])
+        cd_coords = []
+        for cd in cds:
+            if cd == -1:
+                continue
+            coord = fem1.coords[cd]
+            # coordRs work in op2 extraction
+            if coord.type not in ['CORD2R', 'CORD1R']:
+                cd_coords.append(cd)
+        if cd_coords:
+            msg = (
+                'GRID-CD coords=%s can cause a problem in the OP2 results processing; '
+                'be careful' % cd_coords
+            )
+            fem1.log.warning(msg)
 
 def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double, mesh_form,
@@ -946,7 +970,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases, stop_on_failure=True)
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
             assert any(subcase.has_parameter('TEMPERATURE(LOAD)', 'TEMPERATURE(INITIAL)')), 'sol=%s\n%s' % (sol, subcase)
         else:
-            assert any(subcase.has_parameter('LOAD')), 'sol=%s\n%s' % (sol, subcase)
+            assert any(subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)')), 'sol=%s\n%s' % (sol, subcase)
 
     elif sol == 159: #  nonlinear transient; heat?
         if 'NLPARM' not in subcase:
@@ -1146,7 +1170,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
         # FLUTTER
         method_id = subcase.get_parameter('FMETHOD')[0]
         method = fem2.flutters[method_id]
-        assert sol in [145], 'sol=%s FMETHOD\n%s' % (sol, subcase)
+        assert sol in [145, 200], 'sol=%s FMETHOD\n%s' % (sol, subcase)
 
     nid_map = fem2.nid_map
     if 'TEMPERATURE(LOAD)' in subcase:
@@ -1173,7 +1197,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
-                       108, 109, 110, 111, 112, 144, 145, 153, 400, 601,
+                       108, 109, 110, 111, 112, 144, 145, 153, 200, 400, 601,
                       ], 'sol=%s LOAD\n%s' % (sol, subcase)
     else:
         # print('is_load =', subcase.has_parameter('LOAD'))
@@ -1182,7 +1206,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
     if 'FREQUENCY' in subcase:
         freq_id = subcase.get_parameter('FREQUENCY')[0]
         freq = fem2.frequencies[freq_id]
-        assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146], 'sol=%s FREQUENCY' % sol
+        assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146, 200], 'sol=%s FREQUENCY' % sol
 
     # if 'LSEQ' in subcase:
         # lseq_id = subcase.get_parameter('LSEQ')[0]
@@ -1260,7 +1284,8 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
         # TYPE 1/2/3 (DISP, VELO, ACCE)
         #  - no LOADSET -> SPCD
         #  -    LOADSET -> SPCDs as specified by LSEQ
-        scale_factors, loads = resolve_dloads(fem2, dload_id)
+        loads, scale_factors = fem2.get_reduced_dloads(dload_id)
+        fem2.log.info('scale_factors=%s loads=%s' % (scale_factors, loads))
 
         if sol in [108, 111]:  # direct frequency, modal frequency
             for load2, scale_factor in zip(loads, scale_factors):
@@ -1278,46 +1303,6 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
 
         # print(loads)
 
-#def check_for_str(options, subcase):
-    #"""helper method for test_bdf"""
-    #for option in options:
-        #if option in subcase:
-            #break
-    #else:
-        #raise ValueError('%s must be in subcase\n%s' % (options, subcase))
-
-def resolve_dloads(fem, dload_id):
-    # type: (BDF, int) -> Tuple[List[float], List[int]]
-    """sums the dloads"""
-    if dload_id in fem.dloads:
-        dload = fem.dloads[dload_id]
-    else:
-        dload = fem.dload_entries[dload_id]
-
-    scale_factors2 = []
-    loads2 = []
-    for load in dload:
-        if isinstance(load, DLOAD):
-            scale = load.scale
-            scale_factors = []
-            loads = []
-            # scale_factors, loads = load.get_reduced_loads()
-            for load, scale_factor in zip(load.load_ids, load.scale_factors):
-                if isinstance(load, list):
-                    for loadi in load:
-                        assert not isinstance(loadi, list), loadi
-                        scale_factors.append(scale * scale_factor)
-                        loads.append(loadi)
-                else:
-                    scale_factors.append(scale * scale_factor)
-                    assert not isinstance(load, list), load
-                    loads.append(load)
-            scale_factors2 += scale_factors
-            loads2 += loads
-        else:
-            scale_factors2.append(1.)
-            loads2.append(load)
-    return scale_factors2, loads2
 
 def divide(value1, value2):
     # type: (int, int) -> float
@@ -1523,10 +1508,6 @@ def get_element_stats(fem1, fem2, quiet=False):
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
         mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None, nsm_id=nsm_id)
         print('mass[nsm=%i] = %s' % (nsm_id, mass))
-        #mass, cg, I = fem1._mass_properties_new(reference_point=None, sym_axis=None)
-        #print("mass_old =", mass)
-        #print("cg_old   =", cg)
-    #print("I    =", I)
 
 
 def get_matrix_stats(fem1, fem2):

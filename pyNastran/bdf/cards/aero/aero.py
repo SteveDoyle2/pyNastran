@@ -20,7 +20,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 import math
-from typing import List, Any
 from six.moves import zip, range
 from six import string_types
 
@@ -28,7 +27,6 @@ import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
-from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
@@ -2090,10 +2088,10 @@ class CAERO2(BaseCard):
 
         # TODO: not suppported
         if paero2.lrib in [0, None]:
-            radii_interference = np.ones(nx + 1) * paero2.width
+            unused_radii_interference = np.ones(nx + 1) * paero2.width
         else:
             #print('lrib = ', paero2.lrib)
-            radii_interference = paero2.lrib_ref.fractions
+            unused_radii_interference = paero2.lrib_ref.fractions
         radii = radii_slender
 
         # TODO: not suppported
@@ -3086,7 +3084,7 @@ class CAERO5(BaseCard):
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
 
     def c1_c2(self, mach):
-        p1, p2, p3, p4 = self.get_points()
+        p1, unused_p2, unused_p3, p4 = self.get_points()
         #i = p2 - p1
         #ihat = i / norm(i)
         #k = cross(ihat, p4-p1)
@@ -3537,7 +3535,7 @@ class MONPNT3(BaseCard):
         cp = self.cp
         cd = self.cd
         if cp == cd:
-            cds = ''
+            cd = ''
         xflag = self.xflag
         if xflag is None:
             xflag = ''
@@ -4771,7 +4769,6 @@ class SPLINE3(Spline):
         self.caero_ref = None
 
     def validate(self):
-        is_failed = False
         msg = ''
         if self.components not in [0, 1, 2, 3, 4, 5, 6]:
             msg += 'components=%r must be [0, 1, 2, 3, 4, 5, 6]\n' % (
@@ -4852,6 +4849,9 @@ class SPLINE3(Spline):
         msg = ' which is required by SPLINE3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
+
+    def safe_cross_reference(self, model):
+        self.cross_reference(model)
 
     def uncross_reference(self):
         self.caero = self.CAero()
