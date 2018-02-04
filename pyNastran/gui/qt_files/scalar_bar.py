@@ -30,7 +30,7 @@ class ScalarBar(object):
             self.scalar_bar.Modified()
             self.is_shown = False
 
-    def __init__(self, is_horizontal):
+    def __init__(self, is_horizontal=False):
         """creates the scalar bar"""
         self.scalar_bar = vtk.vtkScalarBarActor()
         self.color_function = vtk.vtkColorTransferFunction()

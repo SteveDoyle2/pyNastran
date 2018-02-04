@@ -152,6 +152,14 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        test.on_fringe(icase=43)
+        test.on_vector(icase=43)# force_xyz
+        test.on_disp(icase=45)# disp
+        test.on_clear_results()
+
+        test.on_fringe(icase=43)
+        test.on_vector(icase=43)# force_xyz
+        test.on_disp(icase=45)# disp
 
     def test_gui_elements_02(self):
         """tests a large number of elements and results in SOL 101"""
