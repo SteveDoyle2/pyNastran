@@ -570,9 +570,9 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 common_node_ids = list(fem1.nodes.keys())
                 fem1.get_rigid_elements_with_node_ids(common_node_ids)
 
-                for spc_id in set(fem1.spcadds.keys() + fem1.spcs.keys()):
+                for spc_id in set(list(fem1.spcadds.keys()) + list(fem1.spcs.keys())):
                     fem1.get_reduced_spcs(spc_id)
-                for mpc_id in set(fem1.mpcadds.keys() + fem1.mpcs.keys()):
+                for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
                     fem1.get_reduced_mpcs(mpc_id)
 
                 fem1.get_dependent_nid_to_components()
