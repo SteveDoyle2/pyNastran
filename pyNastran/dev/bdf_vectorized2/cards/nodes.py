@@ -379,7 +379,6 @@ class GRIDv(object):
             self.ps = self.ps[isort]
             self.seid = self.seid[isort]
 
-            #print(self.nid)
             self._nid = []
             self._xyz = []
             self._cp = []
@@ -387,8 +386,6 @@ class GRIDv(object):
             self._ps = []
             self._seid = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
 
     def cross_reference(self, model):
         """does this do anything?"""

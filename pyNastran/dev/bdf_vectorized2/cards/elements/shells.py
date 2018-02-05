@@ -295,98 +295,101 @@ class CTRIA3v(ShellElement):
     def quality(self, eids=None):
         """gets the quality metrics for a tri"""
         assert eids is None
-        piover3 = np.pi / 3.
         self.make_current()
         nelements = len(self)
-        #print("nelements =", nelements)
         xyz_cid0 = self.model.nodes.xyz_cid0
         i123 = self.model.get_node_index(self.nids)
-        #print('i123 = ', i123)
-        p1 = xyz_cid0[i123[:, 0], :]
-        p2 = xyz_cid0[i123[:, 1], :]
-        p3 = xyz_cid0[i123[:, 2], :]
-        #print('p1 = ', p1)
-        e1 = (p1 + p2) / 2.
-        e2 = (p2 + p3) / 2.
-        e3 = (p3 + p1) / 2.
-
-        #    3
-        #    / \
-        # e3/   \ e2
-        #  /    /\
-        # /    /  \
-        # 1---/----2
-        #    e1
-        e21 = e2 - e1
-        e31 = e3 - e1
-        e32 = e3 - e2
-
-        e3_p2 = e3 - p2
-        e2_p1 = e2 - p1
-        e1_p3 = e1 - p3
-
-        v21 = p2 - p1
-        v32 = p3 - p2
-        v13 = p1 - p3
-        #print(v21)
-        length21 = np.linalg.norm(v21, axis=1)
-        length32 = np.linalg.norm(v32, axis=1)
-        length13 = np.linalg.norm(v13, axis=1)
-        assert len(length13) == nelements, 'len(length13)=%s nelements=%s' % (len(length13), nelements)
-
-        length = np.vstack([length21, length32, length13])
-        #print(length)
-
-        #min_edge_length = min(length21, length32, length13)
-        min_edge_length = length.min(axis=0)
-        assert len(min_edge_length) == nelements, 'len(min_edge_length)=%s nelements=%s' % (len(min_edge_length), nelements)
-
-        areai = 0.5 * np.linalg.norm(np.cross(v21, v13), axis=1)
-        assert len(areai) == nelements, 'len(areai)=%s nelements=%s' % (len(areai), nelements)
-        assert len(np.linalg.norm(e2_p1, axis=1)) == nelements
-        assert len(np.linalg.norm(e31, axis=1)) == nelements
-
-
-        # TODO: the stuff below needs work...
-        #cos_skew1 = np.dot(e2_p1,  e31) / (np.linalg.norm(e2_p1, axis=1) * np.linalg.norm(e31, axis=1))
-        #cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1, axis=1) * np.linalg.norm(e31, axis=1))
-        #cos_skew3 = np.dot(e3_p2,  e21) / (np.linalg.norm(e3_p2, axis=1) * np.linalg.norm(e21, axis=1))
-        #cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2, axis=1) * np.linalg.norm(e21, axis=1))
-        #cos_skew5 = np.dot(e1_p3,  e32) / (np.linalg.norm(e1_p3, axis=1) * np.linalg.norm(e32, axis=1))
-        #cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3, axis=1) * np.linalg.norm(e32, axis=1))
-        #max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([
-            #cos_skew1, cos_skew2, cos_skew3,
-            #cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
-        max_skew = None
-        lengths = np.linalg.norm([length21, length32, length13], axis=0)
-        #assert len(lengths) == 3, lengths
-        #print('lengths = ', lengths)
-        aspect_ratio = lengths.max() / lengths.min()
-        #assert len(aspect_ratio) == nelements, 'len(aspect_ratio)=%s nelements=%s' % (len(aspect_ratio), nelements)
-        #assert len(cos_skew1) == nelements, 'len(cos_skew1)=%s nelements=%s' % (len(cos_skew1), nelements)
-        cos_skew1 = None
-
-        #cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
-        #cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
-        #cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
-        #thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
-        thetas = np.array([60.])
-        min_thetai = thetas.min()
-        max_thetai = thetas.max()
-        dideal_thetai = max(max_thetai - piover3, piover3 - min_thetai)
-        #assert len(cos_theta1) == nelements, 'len(cos_theta1)=%s nelements=%s' % (len(cos_theta1), nelements)
-
-        #theta_deg = np.degrees(np.arccos(max_cos_theta))
-        #if theta_deg < 60.:
-            #print('p1=%s' % xyz_cid0[p1, :])
-            #print('p2=%s' % xyz_cid0[p2, :])
-            #print('p3=%s' % xyz_cid0[p3, :])
-            #print('theta1=%s' % np.degrees(np.arccos(cos_theta1)))
-            #print('theta2=%s' % np.degrees(np.arccos(cos_theta2)))
-            #print('theta3=%s' % np.degrees(np.arccos(cos_theta3)))
-            #print('max_theta=%s' % theta_deg)
-            #asdf
+        quality = ctria3_quality(nelements, xyz_cid0, i123)
         return areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai, min_edge_length
+
+def ctria3_quality(nelements, xyz_cid0, i123):
+    piover3 = np.pi / 3.
+    #print('i123 = ', i123)
+    p1 = xyz_cid0[i123[:, 0], :]
+    p2 = xyz_cid0[i123[:, 1], :]
+    p3 = xyz_cid0[i123[:, 2], :]
+    #print('p1 = ', p1)
+    e1 = (p1 + p2) / 2.
+    e2 = (p2 + p3) / 2.
+    e3 = (p3 + p1) / 2.
+
+    #    3
+    #    / \
+    # e3/   \ e2
+    #  /    /\
+    # /    /  \
+    # 1---/----2
+    #    e1
+    e21 = e2 - e1
+    e31 = e3 - e1
+    e32 = e3 - e2
+
+    e3_p2 = e3 - p2
+    e2_p1 = e2 - p1
+    e1_p3 = e1 - p3
+
+    v21 = p2 - p1
+    v32 = p3 - p2
+    v13 = p1 - p3
+    #print(v21)
+    length21 = np.linalg.norm(v21, axis=1)
+    length32 = np.linalg.norm(v32, axis=1)
+    length13 = np.linalg.norm(v13, axis=1)
+    assert len(length13) == nelements, 'len(length13)=%s nelements=%s' % (len(length13), nelements)
+
+    length = np.vstack([length21, length32, length13])
+    #print(length)
+
+    #min_edge_length = min(length21, length32, length13)
+    min_edge_length = length.min(axis=0)
+    assert len(min_edge_length) == nelements, 'len(min_edge_length)=%s nelements=%s' % (len(min_edge_length), nelements)
+
+    areai = 0.5 * np.linalg.norm(np.cross(v21, v13), axis=1)
+    assert len(areai) == nelements, 'len(areai)=%s nelements=%s' % (len(areai), nelements)
+    assert len(np.linalg.norm(e2_p1, axis=1)) == nelements
+    assert len(np.linalg.norm(e31, axis=1)) == nelements
+
+
+    # TODO: the stuff below needs work...
+    #cos_skew1 = np.dot(e2_p1,  e31) / (np.linalg.norm(e2_p1, axis=1) * np.linalg.norm(e31, axis=1))
+    #cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1, axis=1) * np.linalg.norm(e31, axis=1))
+    #cos_skew3 = np.dot(e3_p2,  e21) / (np.linalg.norm(e3_p2, axis=1) * np.linalg.norm(e21, axis=1))
+    #cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2, axis=1) * np.linalg.norm(e21, axis=1))
+    #cos_skew5 = np.dot(e1_p3,  e32) / (np.linalg.norm(e1_p3, axis=1) * np.linalg.norm(e32, axis=1))
+    #cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3, axis=1) * np.linalg.norm(e32, axis=1))
+    #max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([
+        #cos_skew1, cos_skew2, cos_skew3,
+        #cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
+    max_skew = None
+    lengths = np.linalg.norm([length21, length32, length13], axis=0)
+    #assert len(lengths) == 3, lengths
+    #print('lengths = ', lengths)
+    aspect_ratio = lengths.max() / lengths.min()
+    #assert len(aspect_ratio) == nelements, 'len(aspect_ratio)=%s nelements=%s' % (len(aspect_ratio), nelements)
+    #assert len(cos_skew1) == nelements, 'len(cos_skew1)=%s nelements=%s' % (len(cos_skew1), nelements)
+    cos_skew1 = None
+
+    #cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
+    #cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
+    #cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
+    #thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
+    thetas = np.array([60.])
+    min_thetai = thetas.min()
+    max_thetai = thetas.max()
+    dideal_thetai = max(max_thetai - piover3, piover3 - min_thetai)
+    #assert len(cos_theta1) == nelements, 'len(cos_theta1)=%s nelements=%s' % (len(cos_theta1), nelements)
+
+    #theta_deg = np.degrees(np.arccos(max_cos_theta))
+    #if theta_deg < 60.:
+        #print('p1=%s' % xyz_cid0[p1, :])
+        #print('p2=%s' % xyz_cid0[p2, :])
+        #print('p3=%s' % xyz_cid0[p3, :])
+        #print('theta1=%s' % np.degrees(np.arccos(cos_theta1)))
+        #print('theta2=%s' % np.degrees(np.arccos(cos_theta2)))
+        #print('theta3=%s' % np.degrees(np.arccos(cos_theta3)))
+        #print('max_theta=%s' % theta_deg)
+        #asdf
+    return areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai, min_edge_length
 
 class CTRIA6v(ShellElement):
     """

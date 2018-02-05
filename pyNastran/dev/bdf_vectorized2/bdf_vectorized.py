@@ -5,32 +5,36 @@ from six import iteritems
 from pyNastran.bdf.bdf import BDF_, LOAD
 #from pyNastran.bdf.bdf import BDF as BDF_, LOAD
 from pyNastran.dev.bdf_vectorized2.cards.nodes import GRIDv, Nodes
-from pyNastran.dev.bdf_vectorized2.cards.elements import Elements
+from pyNastran.dev.bdf_vectorized2.cards.elements.elements import Elements
 
-from pyNastran.dev.bdf_vectorized2.cards.springs import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
-from pyNastran.dev.bdf_vectorized2.cards.dampers import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.dampers import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, CVISCv, PLOTELv, Dampers)
-from pyNastran.dev.bdf_vectorized2.cards.bush import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.bush import (
     CBUSHv, Bushes)
 
-from pyNastran.dev.bdf_vectorized2.cards.rods import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.rods import (
     CONRODv, CRODv, CTUBEv, Rods)
-from pyNastran.dev.bdf_vectorized2.cards.masses import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.masses import (
     CONM2v, Masses)
-from pyNastran.dev.bdf_vectorized2.cards.loads import (
-    Loads, PLOADv, PLOAD1v, PLOAD2v, PLOAD4v,
-    FORCEv, FORCE1v, FORCE2v,
-    MOMENTv, MOMENT1v, MOMENT2v,
-    SLOADv, SPCDv, TEMPv, TEMPDv, GRAVv, LSEQv)
-from pyNastran.dev.bdf_vectorized2.cards.bars import CBARv, Bars
-from pyNastran.dev.bdf_vectorized2.cards.beams import CBEAMv, Beams
-from pyNastran.dev.bdf_vectorized2.cards.shears import CSHEARv, Shears
-from pyNastran.dev.bdf_vectorized2.cards.shells import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.bars import CBARv, Bars
+from pyNastran.dev.bdf_vectorized2.cards.elements.beams import CBEAMv, Beams
+from pyNastran.dev.bdf_vectorized2.cards.elements.shears import CSHEARv, Shears
+from pyNastran.dev.bdf_vectorized2.cards.elements.shells import (
     CTRIA3v, CTRIA6v, CTRIARv, CQUAD4v, CQUAD8v, CQUADv, CQUADRv, Shells)
-from pyNastran.dev.bdf_vectorized2.cards.solids import (
+from pyNastran.dev.bdf_vectorized2.cards.elements.solids import (
     CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
     CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
+
+from pyNastran.dev.bdf_vectorized2.cards.loads.loads import (
+    Loads, FORCEv, FORCE1v, FORCE2v,
+    MOMENTv, MOMENT1v, MOMENT2v,
+    SLOADv, SPCDv, GRAVv, LSEQv)
+from pyNastran.dev.bdf_vectorized2.cards.loads.pressure_loads import (
+    PLOADv, PLOAD1v, PLOAD2v, PLOAD4v)
+from pyNastran.dev.bdf_vectorized2.cards.loads.thermal_loads import (
+    TEMPv, TEMPDv)
 
 
 class BDF(BDF_):

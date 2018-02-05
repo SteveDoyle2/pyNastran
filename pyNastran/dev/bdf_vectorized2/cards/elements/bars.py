@@ -1,20 +1,20 @@
 from __future__ import print_function
 from collections import defaultdict
 import numpy as np
-from pyNastran.utils import string_types
+from pyNastran.utils import integer_types
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, integer_double_string_or_blank)
+    integer, integer_or_blank, integer_double_or_blank, double_or_blank,
+    integer_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
-from pyNastran.dev.bdf_vectorized2.cards.bars import init_x_g0
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class BeamElement(object):
-    """base class for CBEAM"""
+class BarElement(object):
+    """base class for CBAR"""
     card_name = ''
     def __init__(self, model):
-        """intializes the BeamElement"""
+        """intializes the BarElement"""
         self.model = model
         self.is_current = True
         self.eid = np.array([], dtype='int32')
@@ -26,7 +26,6 @@ class BeamElement(object):
         self.pin_flags = np.array([], dtype='int32')
         self.wa_offset = np.array([], dtype='float64')
         self.wb_offset = np.array([], dtype='float64')
-        self.sab_warping = np.array([], dtype='int32')
         self._eid = []
         self._pid = []
         self._nids = []
@@ -36,7 +35,6 @@ class BeamElement(object):
         self._pin_flags = []
         self._wa_offset = []
         self._wb_offset = []
-        self._sab_warping = []
         self.comment = defaultdict(str)
 
     def check_if_current(self, nid, nids):
@@ -68,7 +66,7 @@ class BeamElement(object):
                 self.g0 = np.hstack([self.g0, self._g0])
                 self.pin_flags = np.hstack([self.pin_flags, self._pin_flags])
                 self.wa_offset = np.hstack([self.wa_offset, self._wa_offset])
-                self.wb_offset = np.hstack([self.wb_offset, self._wb_offset])
+                self.wa_offset = np.hstack([self.wa_offset, self._wb_offset])
                 # don't need to handle comments
             else:
                 self.eid = np.array(self._eid, dtype='int32')
@@ -102,10 +100,7 @@ class BeamElement(object):
             self._pin_flags = []
             self._wa_offset = []
             self._wb_offset = []
-            self._sab_warping = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
 
     def cross_reference(self, model):
         """does this do anything?"""
@@ -136,38 +131,41 @@ class BeamElement(object):
         return self.repr_indent('')
 
 
-class CBEAMv(BeamElement):
+class CBARv(BarElement):
     """
-    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
-    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
-    +=======+=====+=====+=====+=====+=====+=====+=====+==========+
-    | CBEAM | EID | PID | GA  | GB  | X1  | X2  | X3  | OFFT/BIT |
-    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
-    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
-    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
-    |       | SA  | SB  |     |     |     |     |     |          |
-    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |   9  |
+    +=======+=====+=====+=====+=====+=====+=====+=====+======+
+    | CBAR  | EID | PID | GA  | GB  | X1  | X2  | X3  | OFFT |
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B  |
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
 
     or
 
-    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
-    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |    9     |
-    +=======+=====+=====+=====+=====+=====+=====+=====+==========+
-    | CBEAM | EID | PID | GA  | GB  | G0  |     |     | OFFT/BIT |
-    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
-    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
-    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
-    |       | SA  | SB  |     |     |     |     |     |          |
-    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |   9  |
+    +=======+=====+=====+=====+=====+=====+=====+=====+======+
+    | CBAR  | EID | PID | GA  | GB  | G0  |     |     | OFFT |
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B  |
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
 
-    offt/bit are MSC specific fields
+    +-------+-------+-----+-------+-------+--------+-------+-------+-------+
+    |   1   |   2   |  3  |   4   |   5   |    6   |   7   |   8   |   9   |
+    +=======+=======+=====+=======+=======+========+=======+=======+=======+
+    |  CBAR |   2   |  39 |   7   |   6   |  105   |       |       |  GGG  |
+    +-------+-------+-----+-------+-------+--------+-------+-------+-------+
+    |       |       | 513 |  0.0  |  0.0  |    -9. |  0.0  |  0.0  |   -9. |
+    +-------+-------+-----+-------+-------+--------+-------+-------+-------+
     """
-    card_name = 'CBEAM'
+    card_name = 'CBAR'
 
-    def add(self, eid, pid, nids, x, g0, offt='GGG', bit=None,
-            pin_flags=None, wa=None, wb=None, sa=0, sb=0, comment=''):
+    def add(self, eid, pid, nids,
+            x, g0, offt='GGG',
+            pin_flags=None, wa=None, wb=None, comment=''):
         """
-        Adds a CBEAM card
+        Adds a CBAR card
 
         Parameters
         ----------
@@ -186,54 +184,36 @@ class CBEAMv(BeamElement):
             to End A
         offt : str; default='GGG'
             Offset vector interpretation flag
-            None : bit is active
-        bit : float; default=None
-            Built-in twist of the cross-sectional axes about the beam axis
-            at end B relative to end A.
-            For beam p-elements ONLY!
-            None : offt is active
         pin_flags : List[int, int]; default=None
             None : [0, 0]; don't release the DOFs
             Pin Flag at End A/B.  Releases the specified DOFs
         wa / wb : List[float, float, float]
             Components of offset vectors from the grid points to the end
             points of the axis of the shear center
-        sa / sb : int; default=0
-            Scalar or grid point identification numbers for the ends A and B,
-            respectively. The degrees-of-freedom at these points are the
-            warping variables . SA and SB cannot be specified for
-            beam p-elements
         comment : str; default=''
             a comment for the card
-
-        offt/bit are MSC specific fields
         """
-        if g0 is None:
-            g0 = -1
-        else:
-            x = [np.nan, np.nan, np.nan]
-        if pin_flags is None:
-            pin_flags = [0, 0]
-
         self.model.bars.add(eid)
         self.is_current = False
         self._eid.append(eid)
         self._pid.append(pid)
         self._nids.append(nids)
+        if g0 is None:
+            g0 = 0
         self._x.append(x)
         self._g0.append(g0)
         self._offt.append(offt)
+        if pin_flags is None:
+            pin_flags = [0, 0]
+        self._pin_flags.append(pin_flags)
         self._wa_offset.append(wa)
         self._wb_offset.append(wb)
-        self._sab_warping.append([sa, sb])
-        self._pin_flags.append(pin_flags)
-        #self._offset.append(wa_offset)
         if comment:
             self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
-        Adds a CBEAM card from ``BDF.add_card(...)``
+        Adds a CBAR card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -246,25 +226,25 @@ class CBEAMv(BeamElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
-
         x, g0 = init_x_g0(card, eid)
-        offt, bit = init_offt_bit(card, eid)# offt doesn't exist in NX nastran
+
+        # doesn't exist in NX nastran
+        offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
+        #print('cls.offt = %r' % (cls.offt))
+
         pin_flag_a = integer_or_blank(card, 9, 'pa', 0)
         pin_flag_b = integer_or_blank(card, 10, 'pb', 0)
 
         wa = np.array([double_or_blank(card, 11, 'w1a', 0.0),
                        double_or_blank(card, 12, 'w2a', 0.0),
-                       double_or_blank(card, 13, 'w3a', 0.0)], 'float64')
+                       double_or_blank(card, 13, 'w3a', 0.0)], dtype='float64')
 
         wb = np.array([double_or_blank(card, 14, 'w1b', 0.0),
                        double_or_blank(card, 15, 'w2b', 0.0),
-                       double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
-
-        sa = integer_or_blank(card, 17, 'sa', 0)
-        sb = integer_or_blank(card, 18, 'sb', 0)
-        assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
-        return self.add(eid, pid, [ga, gb], x, g0, offt, bit,
-                        [pin_flag_a, pin_flag_b], wa, wb, sa, sb, comment=comment)
+                       double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
+        assert len(card) <= 17, 'len(CBAR card) = %i\ncard=%s' % (len(card), card)
+        return self.add(eid, pid, [ga, gb], x, g0,
+                        offt, [pin_flag_a, pin_flag_b], wa, wb, comment=comment)
 
     #def update(self, grid):
         #"""functions like a dictionary"""
@@ -336,43 +316,36 @@ class CBEAMv(BeamElement):
         for eid, pid, nodes, x, g0, offt, pin_flags, wa_offset, wb_offset in zip(
             self.eid, self.pid, self.nids, self.x, self.g0, self.offt, self.pin_flags, self.wa_offset, self.wb_offset):
             x1, x2, x3 = self.get_x_g0_defaults(x, g0)
-            #pa = set_blank_if_default(self.pa, 0)
-            #pb = set_blank_if_default(self.pb, 0)
+            pin_flag_a = set_blank_if_default(pin_flags[0], 0)
+            pin_flag_b = set_blank_if_default(pin_flags[1], 0)
 
-            #w1a = set_blank_if_default(self.wa[0], 0.0)
-            #w2a = set_blank_if_default(self.wa[1], 0.0)
-            #w3a = set_blank_if_default(self.wa[2], 0.0)
+            w1a = set_blank_if_default(wa_offset[0], 0.0)
+            w2a = set_blank_if_default(wa_offset[1], 0.0)
+            w3a = set_blank_if_default(wa_offset[2], 0.0)
 
-            #w1b = set_blank_if_default(self.wb[0], 0.0)
-            #w2b = set_blank_if_default(self.wb[1], 0.0)
-            #w3b = set_blank_if_default(self.wb[2], 0.0)
+            w1b = set_blank_if_default(wb_offset[0], 0.0)
+            w2b = set_blank_if_default(wb_offset[1], 0.0)
+            w3b = set_blank_if_default(wb_offset[2], 0.0)
             ga, gb = nodes
-            pin_flag_a, pin_flag_b = pin_flags
-            w1a, w2a, w3a = wa_offset
-            w1b, w2b, w3b = wb_offset
-
-            #sa = set_blank_if_default(self.sa, 0)
-            #sb = set_blank_if_default(self.sb, 0)
-            sa = sb = 0
             #(x1, x2, x3) = self.get_x_g0_defaults()
 
             # offt doesn't exist in NX nastran
             offt = set_blank_if_default(offt, 'GGG')
 
-            list_fields = ['CBEAM', eid, pid, ga, gb, x1, x2, x3, offt,
-                           pin_flag_a, pin_flag_b, w1a, w2a, w3a, w1b, w2b, w3b, sa, sb]
+            list_fields = ['CBAR', eid, pid, ga, gb, x1, x2, x3, offt,
+                           pin_flag_a, pin_flag_b, w1a, w2a, w3a, w1b, w2b, w3b]
             msg += self.comment[eid] + print_card_8(list_fields)
         bdf_file.write(msg)
         return msg
 
 
-class Beams(object):
+class Bars(object):
     """
-    Stores CBEAM elements that exist in 3D space
+    Stores CBAR elements that exist in 3D space
     """
     def __init__(self, model):
         self.model = model
-        self.cbeam = model.cbeam
+        self.cbar = model.cbar
         self._eids = set([])
 
     def add(self, eid):
@@ -383,44 +356,42 @@ class Beams(object):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        if len(self.cbeam):
-            self.cbeam.write_card(size, is_double, bdf_file)
+        if len(self.cbar):
+            self.cbar.write_card(size, is_double, bdf_file)
 
     def make_current(self):
-        self.cbeam.make_current()
+        self.cbar.make_current()
 
     def __len__(self):
-        return len(self.cbeam)
+        return len(self.cbar)
 
     def repr_indent(self, indent=''):
-        msg = '%s<Beams> : nelements=%s\n' % (indent, len(self))
-        msg += '%s  CBEAM: %s\n' % (indent, len(self.cbeam))
+        msg = '%s<Bars> : nelements=%s\n' % (indent, len(self))
+        msg += '%s  CBAR: %s\n' % (indent, len(self.cbar))
         return msg
 
     def __repr__(self):
         return self.repr_indent(indent='')
 
-def init_offt_bit(card, eid):
-    """
-    offt doesn't exist in NX nastran
-    """
-    field8 = integer_double_string_or_blank(card, 8, 'field8')
-    if isinstance(field8, float):
-        offt = None
-        bit = field8
-    elif field8 is None:
-        offt = 'GGG'  # default
-        bit = None
-    elif isinstance(field8, string_types):
-        bit = None
-        offt = field8
-        msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
-        assert offt[0] in ['G', 'B', 'O', 'E'], msg
-        assert offt[1] in ['G', 'B', 'O', 'E'], msg
-        assert offt[2] in ['G', 'B', 'O', 'E'], msg
-    else:
-        msg = ('field8 on %s card is not a string(offt) or bit '
-               '(float)...field8=%s\n' % (card.field(0), field8))
-        raise RuntimeError("Card Instantiation: %s" % msg)
-    return offt, bit
 
+def init_x_g0(card, eid):
+    """common method to read the x/g0 field for the CBAR, CBEAM, CBEAM3"""
+    field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+    if isinstance(field5, integer_types):
+        g0 = field5
+        x = np.full(3, np.nan)
+    elif isinstance(field5, float):
+        g0 = 0
+        x = np.array([field5,
+                      double_or_blank(card, 6, 'x2', 0.0),
+                      double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+        if np.linalg.norm(x) == 0.0:
+            msg = 'G0 vector defining plane 1 is not defined.\n'
+            msg += 'G0 = %s\n' % g0
+            msg += 'X  = %s\n' % x
+            raise RuntimeError(msg)
+    else:
+        msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
+               'type=%s' % (card.field(0), eid, field5, type(field5)))
+        raise RuntimeError(msg)
+    return x, g0
