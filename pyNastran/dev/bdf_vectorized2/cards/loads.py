@@ -72,6 +72,13 @@ class Loads(object):
         self.moment2 = model.moment2
         self.spcd = model.spcd
         self.temp = model.temp
+        self.tempd = model.tempd
+        self.lseq = model.lseq
+        #self.rforce = model.rforce
+        #self.rforce1 = model.rforce1
+        self.grav = model.grav
+        #self.presax = model.presax
+        #self.gmload = model.gmload
         self.unhandled = []
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -102,8 +109,24 @@ class Loads(object):
             self.moment2.write_card(size, is_double, bdf_file)
         if len(self.spcd):
             self.spcd.write_card(size, is_double, bdf_file)
-        #if len(self.temp):
-            #self.temp.write_card(size, is_double, bdf_file)
+
+        if len(self.temp):
+            self.temp.write_card(size, is_double, bdf_file)
+        if len(self.tempd):
+            self.tempd.write_card(size, is_double, bdf_file)
+        if len(self.lseq):
+            self.lseq.write_card(size, is_double, bdf_file)
+
+        #if len(self.rforce):
+            #self.rforce.write_card(size, is_double, bdf_file)
+        #if len(self.rforce1):
+            #self.rforce1.write_card(size, is_double, bdf_file)
+        if len(self.grav):
+            self.grav.write_card(size, is_double, bdf_file)
+        #if len(self.presax):
+            #self.presax.write_card(size, is_double, bdf_file)
+        #if len(self.gmload):
+            #self.gmload.write_card(size, is_double, bdf_file)
 
     #def make_current(self):
         #"""calls make_current() for each group"""
@@ -119,7 +142,9 @@ class Loads(object):
             self.pload, self.pload1, self.pload2, self.pload4,
             self.force, self.force1, self.force2,
             self.moment, self.moment1, self.moment2,
-            self.spcd, #self.temp,
+            self.spcd, self.temp, self.tempd,
+            self.grav, self.lseq,#self.rforce, self.rforce1,
+            #self.presax,
         ]
         return groups
 
@@ -137,19 +162,25 @@ class Loads(object):
 
     def repr_indent(self, indent='  '):
         msg = '%s<Loads> : nloads=%s\n' % (indent, len(self))
-        msg += '%s  SLOAD :  %s\n' % (indent, len(self.sload))
-        msg += '%s  PLOAD :  %s\n' % (indent, len(self.pload4))
-        msg += '%s  PLOAD1:  %s\n' % (indent, len(self.pload1))
-        msg += '%s  PLOAD2:  %s\n' % (indent, len(self.pload4))
-        msg += '%s  PLOAD4:  %s\n' % (indent, len(self.pload4))
-        msg += '%s  FORCE :  %s\n' % (indent, len(self.force))
-        msg += '%s  FORCE1:  %s\n' % (indent, len(self.force1))
-        msg += '%s  FORCE2:  %s\n' % (indent, len(self.force2))
+        msg += '%s  SLOAD  :  %s\n' % (indent, len(self.sload))
+        msg += '%s  PLOAD  :  %s\n' % (indent, len(self.pload4))
+        msg += '%s  PLOAD1 :  %s\n' % (indent, len(self.pload1))
+        msg += '%s  PLOAD2 :  %s\n' % (indent, len(self.pload2))
+        msg += '%s  PLOAD4 :  %s\n' % (indent, len(self.pload4))
+        msg += '%s  FORCE  :  %s\n' % (indent, len(self.force))
+        msg += '%s  FORCE1 :  %s\n' % (indent, len(self.force1))
+        msg += '%s  FORCE2 :  %s\n' % (indent, len(self.force2))
         msg += '%s  MOMENT :  %s\n' % (indent, len(self.moment))
         msg += '%s  MOMENT1:  %s\n' % (indent, len(self.moment1))
         msg += '%s  MOMENT2:  %s\n' % (indent, len(self.moment2))
-        msg += '%s  SPCD:  %s\n' % (indent, len(self.spcd))
-        #msg += '%s  TEMP:  %s\n' % (indent, len(self.temp))
+        msg += '%s  SPCD   :  %s\n' % (indent, len(self.spcd))
+        msg += '%s  TEMP   :  %s\n' % (indent, len(self.temp))
+        msg += '%s  TEMPD  :  %s\n' % (indent, len(self.tempd))
+        msg += '%s  GRAV   :  %s\n' % (indent, len(self.grav))
+        #msg += '%s  RFORCE:  %s\n' % (indent, len(self.rforce))
+        #msg += '%s  RFORCE1:  %s\n' % (indent, len(self.rforce1))
+        #msg += '%s  GMLOAD:  %s\n' % (indent, len(self.gmload))
+        #msg += '%s  PRESAX:  %s\n' % (indent, len(self.presax))
         return msg
 
     def __repr__(self):
@@ -695,8 +726,8 @@ class PLOAD4v(BaseLoad):
         else:
             # standard form
             eids = [eid]
-            g1 = integer_or_blank(card, 7, 'g1')
-            g34 = integer_or_blank(card, 8, 'g34')
+            g1 = integer_or_blank(card, 7, 'g1', -1)
+            g34 = integer_or_blank(card, 8, 'g34', -1)
 
         cid = integer_or_blank(card, 9, 'cid', 0)
         nvector = np.array([double_or_blank(card, 10, 'N1', 0.0),
@@ -727,7 +758,7 @@ class PLOAD4v(BaseLoad):
             p4 = set_blank_if_default(pressures[3], p1)
             list_fields = ['PLOAD4', sid, eid, pressures[0], p2, p3, p4]
 
-            if g1 is not None:
+            if g1 != -1:
                 # is it a SOLID element
                 list_fields += [g1, g34]
             else:
@@ -1715,6 +1746,323 @@ class SLOADv(BaseLoad):
         msg += '%s  sid = %s\n' % self.sid
         return msg
 
+class GRAVv(BaseLoad):
+    """
+    Defines acceleration vectors for gravity or other acceleration loading.
+
+    +------+-----+-----+------+-----+-----+------+-----+
+    |  1   |  2  |  3  |   4  |  5  |  6  |   7  |  8  |
+    +======+=====+=====+======+=====+=====+======+=====+
+    | GRAV | SID | CID |  A   | N1  | N2  |  N3  |  MB |
+    +------+-----+-----+------+-----+-----+------+-----+
+    | GRAV | 1   | 3   | 32.2 | 0.0 | 0.0 | -1.0 |     |
+    +------+-----+-----+------+-----+-----+------+-----+
+    """
+    def __init__(self, model):
+        BaseLoad.__init__(self, model)
+        #self.nid = np.array([], dtype='int32')
+        self.mb = np.array([], dtype='int32')
+        self.cid = np.array([], dtype='int32')
+        self.scale = np.array([], dtype='float64')
+        self.N = np.array([], dtype='float64')
+
+        #self._nid = []
+        self._cid = []
+        self._mb = []
+        self._scale = []
+        self._N = []
+        self.comment = defaultdict(str)
+
+    def add(self, sid, scale, N, cid=0, mb=0, comment=''):
+        """
+        Creates an GRAV card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            scale factor for load
+        N : (3, ) float ndarray
+            the acceleration vector in the cid frame
+        cid : int; default=0
+            the coordinate system for the load
+        mb : int; default=0
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
+        #if comment:
+            #self.comment[len(self)] = _format_comment(comment)
+        self.is_current = False
+        self._sid.append(sid)
+        self._cid.append(cid)
+        self._scale.append(scale)
+        self._N.append(N)
+        self._mb.append(mb)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a GRAV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+        cid = integer_or_blank(card, 2, 'cid', 0)
+        scale = double(card, 3, 'scale')
+        N = np.array([double_or_blank(card, 4, 'N1', 0.0),
+                      double_or_blank(card, 5, 'N2', 0.0),
+                      double_or_blank(card, 6, 'N3', 0.0)])
+        mb = integer_or_blank(card, 7, 'mb', 0)
+        assert len(card) <= 8, 'len(GRAV card) = %i\ncard=%s' % (len(card), card)
+        return self.add(sid, scale, N, cid=cid, mb=mb, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for i, sid, cid, scale, N, mb in zip(count(), self.sid, self.cid, self.scale, self.N, self.mb):
+            list_fields = ['GRAV', sid, cid, scale] + list(N) + [mb]
+            msgi = print_card_8(list_fields)
+            msg += self.comment[i] + msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.sid) > 0: # there are already elements in self.eid
+                self.sid = np.hstack([self.sid, self._sid])
+                self.cid = np.vstack([self.cid, self._cid])
+                self.mb = np.vstack([self.mb, self._mb])
+                self.scale = np.vstack([self.scale, self._scale])
+                self.N = np.vstack([self.N, self._N])
+                # TODO: need to handle comments
+            else:
+                self.sid = np.array(self._sid, dtype='int32')
+                self.cid = np.array(self._cid, dtype='int32')
+                self.mb = np.array(self._mb, dtype='int32')
+                self.N = np.array(self._N, dtype='float64')
+                self.scale = np.array(self._scale, dtype='float64')
+
+            self._sid = []
+            self._cid = []
+            self._scale = []
+            self._mb = []
+            self._N = []
+            self.is_current = True
+
+    def repr_indent(self, indent=''):
+        msg = '%sGRAVv:\n' % indent
+        msg += '%s  sid = %s\n' % self.sid
+        return msg
+
+
+class TEMPv(BaseLoad):
+    """
+    Defines temperature at grid points for determination of thermal loading,
+    temperature-dependent material properties, or stress recovery.
+
+    +------+-----+----+-------+----+-------+----+----+
+    |   1  |  2  |  3 |   4   |  5 |   6   |  7 |  8 |
+    +======+=====+====+=======+====+=======+====+====+
+    | TEMP | SID | G1 |  T1   | G2 |  T2   | G3 | T3 |
+    +------+-----+----+-------+----+-------+----+----+
+    | TEMP |  3  | 94 | 316.2 | 49 | 219.8 |    |    |
+    +------+-----+----+-------+----+-------+----+----+
+    """
+    def __init__(self, model):
+        BaseLoad.__init__(self, model)
+        self.nid = np.array([], dtype='int32')
+        self.temperatures = np.array([], dtype='int32')
+
+        self._nid = []
+        self._temperatures = []
+        self.comment = defaultdict(str)
+
+    def add(self, sid, nodes, temperatures, comment=''):
+        """
+        Creates an TEMP card
+
+        Parameters
+        ----------
+        sid : List[int]
+            constraint ids
+        nodes : List[int]
+            GRID/SPOINT ids
+        temperatures : List[float]
+            the nodal temperature
+        enforced : List[float]
+            the constrained value for the given node (typically 0.0)
+        """
+        if comment:
+            self.comment[len(self)] = _format_comment(comment)
+        self.is_current = False
+        self._sid += sid
+        self._nid += nodes
+        self._temperatures += temperatures
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a TEMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+
+        nfields = len(card)
+        assert nfields <= 8, 'len(card)=%i card=%s' % (len(card), card)
+
+        ntemps = (nfields -2) // 2
+        assert nfields % 2 == 0, card
+        assert nfields // 2 > 1, card
+
+        nodes = []
+        temperatures = []
+        for i in range(ntemps):
+            n = i * 2 + 2
+            node = integer(card, n, 'g' + str(i))
+            temperaturei = double(card, n + 1, 'T' + str(i))
+            nodes.append(node)
+            temperatures.append(temperaturei)
+
+        sids = [sid] * len(temperatures)
+        self.add(sids, nodes, temperatures, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for i, sid, nid, temperature in zip(count(), self.sid, self.nid, self.temperatures):
+            list_fields = ['TEMP', sid, nid, temperature]
+            msgi = print_card_8(list_fields)
+            msg += self.comment[i] + msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.sid) > 0: # there are already elements in self.eid
+                self.sid = np.hstack([self.sid, self._sid])
+                self.nid = np.vstack([self.nid, self._nid])
+                self.temperatures = np.vstack([self.temperatures, self._temperatures])
+                # TODO: need to handle comments
+            else:
+                self.sid = np.array(self._sid, dtype='int32')
+                self.nid = np.array(self._nid, dtype='int32')
+                self.temperatures = np.array(self._temperatures, dtype='float64')
+
+            self._sid = []
+            self._nid = []
+            self._temperatures = []
+            self.is_current = True
+
+    def repr_indent(self, indent=''):
+        msg = '%sTEMPv:\n' % indent
+        msg += '%s  sid = %s\n' % self.sid
+        return msg
+
+class TEMPDv(BaseLoad):
+    """
+    Defines a temperature value for all grid points of the structural model
+    that have not been given a temperature on a TEMP entry
+
+    +-------+------+----+------+----+------+----+------+----+
+    |   1   |  2   | 3  |  4   |  5 |  6   | 7  |  8   | 9  |
+    +=======+======+====+======+====+======+====+======+====+
+    | TEMPD | SID1 | T1 | SID2 | T2 | SID3 | T3 | SID4 | T4 |
+    +-------+------+----+------+----+------+----+------+----+
+    """
+    def __init__(self, model):
+        BaseLoad.__init__(self, model)
+        self.temperatures = np.array([], dtype='int32')
+
+        self._temperatures = []
+        self.comment = defaultdict(str)
+
+    def add(self, sid, temperatures, comment=''):
+        """
+        Creates an TEMPD card
+
+        Parameters
+        ----------
+        sid : List[int]
+            constraint ids
+        temperatures : List[float]
+            the nodal temperature
+        """
+        if comment:
+            self.comment[len(self)] = _format_comment(comment)
+        self.is_current = False
+        self._sid += sid
+        self._temperatures += temperatures
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a TEMP card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        #sids = []
+        #temperatures = []
+        sids = [integer(card, 1, 'sid')]
+        temperatures = [double(card, 2, 'temp')]
+
+        i = 3
+        while i < len(card):
+            sids.append(integer(card, i, 'sid'))
+            temperatures.append(double(card, i + 1, 'temp'))
+            i += 2
+        assert len(sids) <= 4, sids
+
+        self.add(sids, temperatures, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for i, sid, temperature in zip(count(), self.sid, self.temperatures):
+            list_fields = ['TEMPD', sid, temperature]
+            msgi = print_card_8(list_fields)
+            msg += self.comment[i] + msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.sid) > 0: # there are already elements in self.eid
+                self.sid = np.hstack([self.sid, self._sid])
+                self.temperatures = np.vstack([self.temperatures, self._temperatures])
+                # TODO: need to handle comments
+            else:
+                self.sid = np.array(self._sid, dtype='int32')
+                self.temperatures = np.array(self._temperatures, dtype='float64')
+
+            self._sid = []
+            self._temperatures = []
+            self.is_current = True
+
+    def repr_indent(self, indent=''):
+        msg = '%sTEMPDv:\n' % indent
+        msg += '%s  sid = %s\n' % self.sid
+        return msg
 
 class SPCDv(BaseLoad):
     """
@@ -1725,7 +2073,7 @@ class SPCDv(BaseLoad):
      +------+-----+-----+-----+------+----+----+----+
      |   1  |  2  |  3  |  4  |   5  |  6 | 7  |  8 |
      +======+=====+=====+=====+======+====+====+====+
-     | SPCD | SID |  G1 | C1  |  D1  | G2 | C2 | D2 |
+     | SPCD | SID |  G1 |  C1 |  D1  | G2 | C2 | D2 |
      +------+-----+-----+-----+------+----+----+----+
      | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2  | .9 |
      +------+-----+-----+-----+------+----+----+----+
@@ -1743,15 +2091,15 @@ class SPCDv(BaseLoad):
         self._mag = []
         self.comment = defaultdict(str)
 
-    def add(self, sid, nid, constraints, mag, comment=''):
+    def add(self, sid, nodes, constraints, mag, comment=''):
         """
         Creates an SPCD card, which defines the degree of freedoms to be
         set during enforced motion
 
         Parameters
         ----------
-        sid : int
-            constraint id
+        sid : List[int]
+            constraint ids
         nodes : List[int]
             GRID/SPOINT ids
         constraints : List[str]
@@ -1768,10 +2116,10 @@ class SPCDv(BaseLoad):
         if comment:
             self.comment[len(self)] = _format_comment(comment)
         self.is_current = False
-        self._sid.append(sid)
-        self._nid.append(nid)
-        self._comp.append(constraints)
-        self._mag.append(mag)
+        self._sid += sid
+        self._nid += nodes
+        self._comp += constraints
+        self._mag += mag
 
     def add_card(self, card, comment=''):
         """
@@ -1784,12 +2132,13 @@ class SPCDv(BaseLoad):
         comment : str; default=''
             a comment for the card
         """
-        sid = integer(card, 1, 'sid')
+        sid = [integer(card, 1, 'sid')]
         if card.field(5) in [None, '']:
             nodes = [integer(card, 2, 'G1'),]
             constraints = [components_or_blank(card, 3, 'C1', 0)]
             enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
+            sid.append(sid[0])
             nodes = [
                 integer(card, 2, 'G1'),
                 integer(card, 5, 'G2'),
@@ -1808,7 +2157,6 @@ class SPCDv(BaseLoad):
         for i, sid, nid, comp, mag in zip(count(), self.sid, self.nid, self.comp, self.mag):
             list_fields = ['SPCD', sid]
             list_fields += [nid, comp, mag]
-
             msgi = print_card_8(list_fields)
             msg += self.comment[i] + msgi
         bdf_file.write(msg)
@@ -1836,5 +2184,164 @@ class SPCDv(BaseLoad):
 
     def repr_indent(self, indent=''):
         msg = '%sSPCDv:\n' % indent
+        msg += '%s  sid = %s\n' % self.sid
+        return msg
+
+
+class LSEQv(BaseLoad):
+    """
+    Defines a sequence of static load sets
+
+    .. todo:: how does this work...
+    +------+-----+----------+-----+-----+
+    |   1  |  2  |     3    |  4  |  5  |
+    +======+=====+==========+=====+=====+
+    | LSEQ | SID | EXCITEID | LID | TID |
+    +------+-----+----------+-----+-----+
+
+    ACSRCE : If there is no LOADSET Case Control command, then EXCITEID
+             may reference DAREA and SLOAD entries. If there is a LOADSET
+             Case Control command, then EXCITEID may reference DAREA
+             entries as well as SLOAD entries specified by the LID field
+             in the selected LSEQ entry corresponding to EXCITEID.
+
+    DAREA :  Refer to RLOAD1, RLOAD2, TLOAD1, TLOAD2, or ACSRCE entries
+             for the formulas that define the scale factor Ai in dynamic
+             analysis.
+
+    DPHASE :
+
+    SLOAD :  In the static solution sequences, the load set ID (SID) is
+             selected by the Case Control command LOAD. In the dynamic
+             solution sequences, SID must be referenced in the LID field
+             of an LSEQ entry, which in turn must be selected by the Case
+             Control command LOADSET.
+
+    LSEQ LID : Load set identification number of a set of static load
+               entries such as those referenced by the LOAD Case Control
+               command.
+
+
+    LSEQ,  SID, EXCITEID, LID, TID
+
+    #--------------------------------------------------------------
+    # F:\\Program Files\\Siemens\\NXNastran\\nxn10p1\\nxn10p1\\nast\\tpl\\cube_iter.dat
+
+    DLOAD       1001     1.0     1.0   55212
+    sid = 1001
+    load_id = [55212] -> RLOAD2.SID
+
+    RLOAD2,     SID, EXCITEID, DELAYID, DPHASEID,   TB,     TP,  TYPE
+    RLOAD2     55212   55120              55122   55123   55124
+    EXCITEID = 55120 -> DAREA.SID
+    DPHASEID = 55122 -> DPHASE.SID
+
+    DARA        SID      NID    COMP  SCALE
+    DAREA      55120     913    3     9.9E+9
+    SID = 55120 -> RLOAD2.SID
+
+    DPHASE      SID     POINTID   C1    TH1
+    DPHASE     55122     913       3   -90.0
+    SID = 55122
+    POINTID = 913 -> GRID.NID
+
+    GRID       NID       X     Y     Z
+    GRID       913      50.  0.19  -39.9
+    """
+    type = 'LSEQ'
+    def __init__(self, model):
+        BaseLoad.__init__(self, model)
+        self.sid = np.array([], dtype='int32')
+        self.excite_id = np.array([], dtype='int32')
+        self.lid = np.array([], dtype='int32')
+        self.tid = np.array([], dtype='int32')
+
+        self._excite_id = []
+        self._lid = []
+        self._tid = []
+        self.comment = defaultdict(str)
+
+    def add(self, sid, excite_id, lid, tid=0, comment=''):
+        """
+        Creates a LSEQ card
+
+        Parameters
+        ----------
+        sid : int
+            loadset id; LOADSET points to this
+        excite_id : int
+            set id assigned to this static load vector
+        lid : int
+            load set id of a set of static load entries;
+            LOAD in the Case Control
+        tid : int; default=None
+            temperature set id of a set of thermal load entries;
+            TEMP(LOAD) in the Case Control
+        comment : str; default=''
+            a comment for the card
+        """
+        #if comment:
+            #self.comment[len(self)] = _format_comment(comment)
+        self.is_current = False
+        self._sid.append(sid)
+        self._excite_id.append(excite_id)
+        self._lid.append(lid)
+        self._tid.append(tid)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds an LSEQ card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id')
+        load_id = integer_or_blank(card, 3, 'lid', 0)
+        temp_id = integer_or_blank(card, 4, 'tid', 0)
+        if load_id is 0 and temp_id is 0:
+            msg = 'LSEQ load_id/temp_id are both 0; load_id=%s temp_id=%s' % (load_id, temp_id)
+            raise RuntimeError(msg)
+        assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
+        return self.add(sid, excite_id, load_id, tid=temp_id, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for i, sid, excite_id, lid, tid in zip(count(), self.sid, self.excite_id, self.lid, self.tid):
+            list_fields = ['LSEQ', sid, excite_id, lid, tid]
+            msgi = print_card_8(list_fields)
+            msg += self.comment[i] + msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.sid) > 0: # there are already elements in self.eid
+                self.sid = np.hstack([self.sid, self._sid])
+                self.excite_id = np.vstack([self.excite_id, self._excite_id])
+                self.lid = np.vstack([self.lid, self._lid])
+                self.tid = np.vstack([self.tid, self._tid])
+                # TODO: need to handle comments
+            else:
+                self.sid = np.array(self._sid, dtype='int32')
+                self.excite_id = np.array(self._excite_id, dtype='int32')
+                self.lid = np.array(self._lid, dtype='int32')
+                self.tid = np.array(self._tid, dtype='int32')
+
+            self._sid = []
+            self._excite_id = []
+            self._lid = []
+            self._tid = []
+            self.is_current = True
+
+    def repr_indent(self, indent=''):
+        msg = '%sLSEQv:\n' % indent
         msg += '%s  sid = %s\n' % self.sid
         return msg

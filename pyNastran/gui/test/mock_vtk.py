@@ -11,7 +11,7 @@ class MockArrays(object):
         return 'fakename'
     def RemoveArray(self, name):
         pass
-    def SetActiveVectors(selfe, name):
+    def SetActiveVectors(self, name):
         pass
 
 class MockGridMapper(object):

@@ -6,7 +6,7 @@ from six import iteritems, PY2
 import pyNastran
 from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
 from pyNastran.utils.dev import get_files_of_type
-pkg_path = pyNastran.__path__[0]
+PKG_PATH = pyNastran.__path__[0]
 
 def parse_skipped_cards(fname):
     with open(fname, 'r') as skip_file:
@@ -86,7 +86,7 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     # works
     files = get_files_of_type('tests', '.op2')
 
-    folders_file = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
+    folders_file = os.path.join(PKG_PATH, 'bdf', 'test', 'tests', 'foldersRead.txt')
 
     isubcases = []
     write_op2 = False

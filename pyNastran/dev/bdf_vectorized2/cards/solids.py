@@ -307,9 +307,8 @@ class CTETRA10v(SolidElement):
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             #data = [eid, pid] + nids.tolist()
-            nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
-
-            data = [eid, pid] + nodes[:4] + nodes2
+            nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:].tolist()]
+            data = [eid, pid] + nodes[:4].tolist() + nodes2
             msgi = ('CTETRA  %8i%8i%8i%8i%8i%8i%8s%8s\n'
                     '        %8s%8s%8s%8s' % tuple(data))
             #row2_data = [theta, zoffset, # theta is theta_mcid
@@ -440,8 +439,8 @@ class CPENTA15v(SolidElement):
         self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
-            nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
-            data = [self.eid, self.Pid()] + nodes[:6] + nodes2
+            nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:].tolist()]
+            data = [eid, pid] + nodes[:6].tolist() + nodes2
             msgi = ('CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n'
                     '        %8s%8s%8s%8s%8s%8s%8s%8s\n'
                     '        %8s' % tuple(data))
@@ -567,8 +566,8 @@ class CHEXA20v(SolidElement):
         self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
-            nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
-            data = [eid, pid] + nodes[:8] + nodes2
+            nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:].tolist()]
+            data = [eid, pid] + nodes[:8].tolist() + nodes2
             msgi = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
                     '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
                     '        %8s%8s%8s%8s%8s%8s' % tuple(data))
@@ -612,7 +611,7 @@ class CPYRAM5v(SolidElement):
         self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
-            data = [eid, pid] + nodes
+            data = [eid, pid] + nodes.tolist()
             msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
@@ -658,8 +657,8 @@ class CPYRAM13v(SolidElement):
         self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
-            nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:]]
-            data = [eid, pid] + nodes[:5] + nodes2
+            nodes2 = ['' if node is None else '%8i' % node for node in nodes[5:].tolist()]
+            data = [eid, pid] + nodes[:5].tolist() + nodes2
             msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i%8s\n'
                    '        %8s%8s%8s%8s%8s%8s%s' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'

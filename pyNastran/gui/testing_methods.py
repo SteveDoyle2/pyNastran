@@ -13,7 +13,7 @@ from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.bdf.cards.base_card import deprecated
 
 from pyNastran.gui.test.mock_vtk import (
-    MockArrays, MockGeometryActor, MockGeometryProperty, MockGrid, MockGridMapper,
+    MockGeometryActor, MockGeometryProperty, MockGrid, MockGridMapper,
     MockArrowSource, MockGlyph3D, MockLODActor, MockPolyDataMapper, MockVTKInteractor,
 )
 

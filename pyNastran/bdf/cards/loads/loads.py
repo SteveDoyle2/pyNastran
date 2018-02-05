@@ -297,10 +297,13 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        lid = integer(card, 3, 'lid')
-        tid = integer_or_blank(card, 4, 'tid')
+        load_id = integer_or_blank(card, 3, 'lid')
+        temp_id = integer_or_blank(card, 4, 'tid')
+        if load_id is None and temp_id is None:
+            msg = 'LSEQ load_id/temp_id must not be None; load_id=%s temp_id=%s' % (load_id, temp_id)
+            raise RuntimeError(msg)
         assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
-        return LSEQ(sid, excite_id, lid, tid=tid, comment=comment)
+        return LSEQ(sid, excite_id, load_id, tid=temp_id, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

@@ -81,6 +81,7 @@ setup(
 
             #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
             #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
+            'test_bdfv = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
             #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
         ]
     },
