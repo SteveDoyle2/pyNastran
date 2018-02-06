@@ -1905,14 +1905,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         data = self._read_record()
 
         self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        if len(data) == 8:
+        data, ndata = self._read_record_ndata()
+        if ndata == 8:
             subtable_name, = self.struct_8s.unpack(data)
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'Unhandled table length error\n'
             msg += 'table_name = %s\n' % self.table_name
-            msg += 'len(data) = %i\n' % len(data)
+            msg += 'len(data) = %i\n' % ndata
             msg += 'strings  = %r\n' % strings
             msg += 'ints     = %r\n' % str(ints)
             msg += 'floats   = %r' % str(floats)

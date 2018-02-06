@@ -300,6 +300,7 @@ class CTRIA3v(ShellElement):
         xyz_cid0 = self.model.nodes.xyz_cid0
         i123 = self.model.get_node_index(self.nids)
         quality = ctria3_quality(nelements, xyz_cid0, i123)
+        areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai, min_edge_length = quality
         return areai, max_skew, aspect_ratio, min_thetai, max_thetai, dideal_thetai, min_edge_length
 
 def ctria3_quality(nelements, xyz_cid0, i123):
@@ -635,8 +636,8 @@ class CTRIARv(ShellElement):
 
             if mcid != -1:
                 theta = mcid
-            list_fields = (['CTRIA6', eid, pid] + nids.tolist() +
-                           [mcid, zoffset] + thickness.tolist() + [thickness_flag])
+            list_fields = (['CTRIAR', eid, pid] + nids.tolist() +
+                           [mcid, zoffset, None, None, thickness_flag] + thickness.tolist())
             msg += self.comment[eid] + print_card_8(list_fields)
         bdf_file.write(msg)
         return msg
@@ -1159,12 +1160,13 @@ class CQUADv(ShellElement):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, pid, nids, theta, mcid, thickness_flag, thickness in zip(
-            self.eid, self.pid, self.nids, self.theta, self.mcid, self.thickness_flag, self.thickness):
-            nodes2 = ['' if node is None else '%8i' % node for node in nids[4:]]
-            theta_mcid = self.theta_mcid
+        for eid, pid, nids, theta, mcid in zip(
+            self.eid, self.pid, self.nids, self.theta, self.mcid):
+            nodes2 = ['' if node is None else '%8i' % node for node in nids[4:].tolist()]
+            if mcid == -1:
+                mcid = theta
 
-            data = [self.eid, self.Pid()] + nids[:4] + nodes2 + [theta_mcid]
+            data = [eid, pid] + nids[:4].tolist() + nodes2 + [mcid]
             msgi = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
                     '        %8s%8s%8s%8s\n' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'

@@ -44,8 +44,10 @@ def set_legend_menu(self):
     if default_format is None:
         default_format = data_format
 
+    default_arrow_scale = None
     data = {
         'font_size' : self.font_size,
+        'icase' : self.icase,
         'icase_fringe' : self.icase,
         'icase_disp' : self.icase,
         'icase_vector' : self.icase,

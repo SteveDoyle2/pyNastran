@@ -244,13 +244,7 @@ class CTETRA4v(SolidElement):
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()
             msgi = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
-            #row2_data = [theta, zoffset, # theta is theta_mcid
-                         #tflag, T1, T2, T3]
-            #row2 = [print_field_8(field) for field in row2_data]
-            #data = [eid, pid] + nids.tolist() + row2
-            #msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-                   #'                %8s%8s%8s%8s\n' % tuple(data))
-            msg += self.comment[eid] + msgi.rstrip() + '\n'
+            msg += self.comment[eid] + msgi
         bdf_file.write(msg)
         return msg
 
@@ -308,12 +302,6 @@ class CTETRA10v(SolidElement):
             data = [eid, pid] + nodes[:4].tolist() + nodes2
             msgi = ('CTETRA  %8i%8i%8i%8i%8i%8i%8s%8s\n'
                     '        %8s%8s%8s%8s' % tuple(data))
-            #row2_data = [theta, zoffset, # theta is theta_mcid
-                         #tflag, T1, T2, T3]
-            #row2 = [print_field_8(field) for field in row2_data]
-            #data = [eid, pid] + nids.tolist() + row2
-            #msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-                   #'                %8s%8s%8s%8s\n' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
         return msg
@@ -371,13 +359,7 @@ class CPENTA6v(SolidElement):
         for eid, pid, nids in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nids.tolist()
             msgi = 'CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
-            #row2_data = [theta, zoffset, # theta is theta_mcid
-                         #tflag, T1, T2, T3]
-            #row2 = [print_field_8(field) for field in row2_data]
-            #data = [eid, pid] + nids.tolist() + row2
-            #msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-                   #'                %8s%8s%8s%8s\n' % tuple(data))
-            msg += self.comment[eid] + msgi.rstrip() + '\n'
+            msg += self.comment[eid] + msgi
         bdf_file.write(msg)
         return msg
 
@@ -441,12 +423,6 @@ class CPENTA15v(SolidElement):
             msgi = ('CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n'
                     '        %8s%8s%8s%8s%8s%8s%8s%8s\n'
                     '        %8s' % tuple(data))
-            #row2_data = [theta, zoffset, # theta is theta_mcid
-                         #tflag, T1, T2, T3]
-            #row2 = [print_field_8(field) for field in row2_data]
-            #data = [eid, pid] + nids.tolist() + row2
-            #msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-                   #'                %8s%8s%8s%8s\n' % tuple(data))
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
         return msg
@@ -497,13 +473,7 @@ class CHEXA8v(SolidElement):
             data = [eid, pid] + nids.tolist()
             msgi = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
                     '        %8i%8i\n' % tuple(data))
-            #row2_data = [theta, zoffset, # theta is theta_mcid
-                         #tflag, T1, T2, T3]
-            #row2 = [print_field_8(field) for field in row2_data]
-            #data = [eid, pid] + nids.tolist() + row2
-            #msgi = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-                   #'                %8s%8s%8s%8s\n' % tuple(data))
-            msg += self.comment[eid] + msgi.rstrip() + '\n'
+            msg += self.comment[eid] + msgi
         bdf_file.write(msg)
         return msg
 
@@ -609,8 +579,8 @@ class CPYRAM5v(SolidElement):
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
             data = [eid, pid] + nodes.tolist()
-            msg = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i' % tuple(data))
-            msg += self.comment[eid] + msgi.rstrip() + '\n'
+            msgi = ('CPYRAM  %8i%8i%8i%8i%8i%8i%8i\n' % tuple(data))
+            msg += self.comment[eid] + msgi
         bdf_file.write(msg)
         return msg
 

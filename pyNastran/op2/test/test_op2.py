@@ -13,15 +13,15 @@ np.set_printoptions(precision=3, threshold=20)
 
 try:
     import pandas
-    is_pandas = True
+    IS_PANDAS = True
 except ImportError:
-    is_pandas = False
+    IS_PANDAS = False
 
 try:
     import h5py
-    is_hdf5 = True
+    IS_HDF5 = True
 except ImportError:
-    is_hdf5 = False
+    IS_HDF5 = False
 
 #import warnings
 #warnings.filterwarnings('error')
@@ -29,14 +29,10 @@ except ImportError:
 
 import pyNastran
 from pyNastran import is_release
-from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
+from pyNastran.op2.op2 import OP2, FatalError
+#SortCodeError, DeviceCodeError, FortranMarkerError
 
-try:
-    from pyNastran.op2.op2_geom import OP2Geom
-    is_geom = True
-except ImportError:
-    is_geom = False
-    raise
+from pyNastran.op2.op2_geom import OP2Geom
 
 
 # we need to check the memory usage
@@ -166,7 +162,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     nfailed = 0
     ntotal = 0
     npassed = 0
-    t0 = time.time()
+    #t0 = time.time()
     for i, op2file in enumerate(files[nstart:nstop], nstart):  # 149
         basename = os.path.basename(op2file)
         #if basename not in skip_files and not basename.startswith('acms') and i not in nskip:
@@ -174,7 +170,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
         if basename not in skip_files and '#' not in op2file:
             print("%" * 80)
             print('file=%s\n' % op2file)
-            n = '%s ' % i
+            #n = '%s ' % i
             ntotal += 1
 
             is_passed = True
@@ -296,8 +292,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         debug_file = model + '.debug.out'
     #print('debug_file = %r' % debug_file, os.getcwd())
 
-    if make_geom and not is_geom:
-        raise RuntimeError('make_geom=%s is not supported' % make_geom)
     if make_geom:
         op2 = OP2Geom(debug=debug, log=log)
         op2_nv = OP2Geom(debug=debug, log=log, debug_file=debug_file)
@@ -318,6 +312,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
     else:
         op2 = OP2(debug=debug, log=log)
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file) # have to double write this until
+        op2_bdf = None
     op2_nv.use_vector = False
 
     if not quiet:
@@ -353,22 +348,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()
 
-        if write_bdf:
-            assert make_geom, 'make_geom=%s' % make_geom
-            op2._nastran_format = 'msc'
-            op2.executive_control_lines = ['CEND\n']
-            op2.validate()
-            op2.write_bdf(bdf_filename, size=8)
-            op2.log.debug('bdf_filename = %s' % bdf_filename)
-            if read_bdf:
-                try:
-                    op2_bdf.read_bdf(bdf_filename)
-                except:
-                    if dev and len(op2_bdf.card_count) == 0:
-                        pass
-                    else:
-                        raise
-            #os.remove(bdf_filename)
+        write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev)
+
         if compare:
             assert op2 == op2_nv
 
@@ -380,7 +361,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             mb = kb / 1024.
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
-        if is_hdf5:
+        if IS_HDF5:
             op2.export_to_hdf5(model + '.test_op2.h5')
         if write_f06:
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
@@ -392,7 +373,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
                     pass
 
         # we put it down here so we don't blame the dataframe for real errors
-        if is_pandas and not skip_dataframe:
+        if IS_PANDAS and not skip_dataframe:
             op2.build_dataframe()
         #if compare:
             #op2_nv.build_dataframe()
@@ -507,13 +488,31 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
 
     return op2, is_passed
 
+def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev):
+    if write_bdf:
+        assert make_geom, 'make_geom=%s' % make_geom
+        op2._nastran_format = 'msc'
+        op2.executive_control_lines = ['CEND\n']
+        op2.validate()
+        op2.write_bdf(bdf_filename, size=8)
+        op2.log.debug('bdf_filename = %s' % bdf_filename)
+        if read_bdf:
+            try:
+                op2_bdf.read_bdf(bdf_filename)
+            except:
+                if dev and len(op2_bdf.card_count) == 0:
+                    pass
+                else:
+                    raise
+        #os.remove(bdf_filename)
+
 def get_test_op2_data():
     """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
     msg = "Usage:\n"
-    is_release = True
+    #is_release = True
     options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx]'
     if is_release:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options

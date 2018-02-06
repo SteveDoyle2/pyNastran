@@ -313,6 +313,7 @@ class GuiCommon(GuiAttributes):
         is_valid = False
         failed_data = (None, None, None, None)
         #is_checked = self.res_widget.get_checked()
+        is_checked = False
 
         if not isinstance(icase, integer_types):
             self.log_error('icase=%r is not an integer; type=%s' % (icase, type(icase)))
@@ -531,6 +532,7 @@ class GuiCommon(GuiAttributes):
             data_format, scale, phase, methods,
             nlabels, labelsize, ncolors, colormap,
             xyz_nominal, vector_data,
+            is_checked,
         ) = data
         #deflects = obj.deflects(i, res_name)
 
