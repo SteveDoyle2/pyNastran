@@ -8,7 +8,7 @@ SUBCASE 1
 $ Subcase name : Default
    SUBTITLE=Default
    SPC = 2
-   LOAD = 123458
+   $LOAD = 123458
    DISPLACEMENT(PLOT,PRINT,SORT1,REAL)=ALL
    SPCFORCES(PLOT,PRINT,SORT1,REAL)=ALL
    STRESS(PLOT,PRINT,SORT1,REAL,VONMISES,BILIN)=ALL
@@ -19,40 +19,47 @@ $ Subcase name : Default
    GPKE=ALL
    ESE(PLOT)=ALL
    FORCE(PLOT,PRINT)=ALL
-   TIME = 22
-   DLOAD     = 32  $ points to the RLOAD1 cards
+   TSTEP = 22
+   DLOAD = 501  $ points to the RLOAD1 cards
 BEGIN BULK
 PARAM    POST    -1
 PARAM    AUTOSPC NO
 PARAM   PRTMAXIM YES
 $  1. Applied Load - AssemblyLoad
-$     References an AssemblyElasticBody named Right Superelement
-$DAREA  sid             nodeID1         compID1         value1
-DAREA*  8001            13              1                           1.e0
+$     References an AssemblyElasticBody
+$DAREA	sid	nodeID1	compID1	value1
+$DAREA	8000	13	1	1.0
+DAREA	8001	13	1	1.0
 
 $ loadMotionProfile named Applied Load Profile - SinusoidalSeriesLoadMotionProfile
 $ TLOAD1  SID | EXCITEID | DELAY | TYPE | TID |
 $ TLOAD2  SID | EXCITEID | DELAY | TYPE | T1  | T2  |  FREQ  |  PHASE  |
 $          C  |     B    |  US0  |  VS0 |     |     |        |         |
-TLOAD1, 8001, 8001, , LOAD, 8003
-TSTEP,22, 100, 0.1
+
+$ EXCITE_ID => DAREA
+$TLOAD1	SID	EXCITEID DELAY	TYPE	TID
+TLOAD1	500	600		LOAD	8003
+
+$	SID	nid	cid	scale	fx	fy	fz
+FORCE	600	13	0	10000.	0.	0.	1.
+TSTEP,22, 100, 10.0
 $ Defines Magnitude vs. Frequency
 $TABLEx TableID         InterpType
 $       Frequency       Magnitude       Frequency       Magnitude
-TABLED1*8003            LINEAR          LINEAR
-*
-*                   0.e0            0.e0            1.e1            0.e0
-*                   2.e1            0.e0            3.e1            0.e0
-*                   4.e1  1.0141996972e4            5.e1            0.e0
-*                   6.e1            0.e0            7.e1            0.e0
-*                   8.e2            0.e0ENDT
-*
+
+TABLED1     8003  LINEAR  LINEAR
+              0.      0.     10.      0.     20.      0.     30.      0.
+             40.  10142.     50.      0.     60.      0.     70.      0.
+            800.      0.    ENDT
 $-------------------------------------------------------------------------------
 $
 $DLOAD  dLoadID         GlobalScale     Scale           LoadID
 $       Scale           LoadID
-DLOAD*  32                          1.e0            1.e0 8001
-*
+$DLOAD*  32                          1.e0            1.e0 8000
+$*
+
+$	dloadid	global	scale	load_id
+DLOAD	501	1.0	1.1	500
 $-------------------------------------------------------------------------------
 
 

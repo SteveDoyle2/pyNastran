@@ -1,9 +1,9 @@
+# pylint: disable=C1801, C0103
 from __future__ import print_function
 from copy import deepcopy
 from collections import defaultdict
 import traceback
 
-from six import iteritems
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -67,69 +67,15 @@ class NastranGuiResults(NastranGuiAttributes):
             # transient
             if case.nonlinear_factor is not None:
                 #code_name = case.data_code['name']
-                has_cycle = hasattr(case, 'mode_cycle')
+                unused_has_cycle = hasattr(case, 'mode_cycle')
             else:
-                has_cycle = False
-                code_name = None
+                unused_has_cycle = False
+                unused_code_name = None
             if not case.is_sort1:
                 self.log.warning('Skipping because SORT2\n' + str(case))
                 continue
-            assert case.is_sort1, case.is_sort1
 
-            itime0 = 0
-            t1 = case.data[itime0, :, 0]
-            ndata = t1.shape[0]
-            if nnodes != ndata:
-                #print('nnodes=%s ndata=%s' % (nnodes, ndata))
-                nidsi = case.node_gridtype[:, 0]
-                #assert len(nidsi) == nnodes, 'nidsi=%s nnodes=%s' % (nidsi, nnodes)
-                j = np.searchsorted(nids, nidsi)  # searching for nidsi
-
-                try:
-                    if not np.allclose(nids[j], nidsi):
-                        msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
-                        raise RuntimeError(msg)
-                except IndexError:
-                    msg = 'node_ids = %s\n' % list(nids)
-                    msg += 'nidsi in disp = %s\n' % list(nidsi)
-                    raise IndexError(msg)
-
-            # (itime, nnodes, xyz)
-            # (901, 6673, 3)
-            t123 = case.data[:, :, :3]
-            ntimes = case.ntimes
-
-            if nnodes != ndata:
-                t123i = np.zeros((ntimes, nnodes, 3), dtype='float32')
-                t123i[:, j, :] = t123
-                t123 = t123i
-
-                # (itime, nnodes, xyz)
-                # tnorm (901, 3)
-                tnorm = norm(t123, axis=2)   # I think this is wrong...
-                #print('tnorm.shape ', tnorm.shape)
-                assert len(tnorm) == t123.shape[0]
-            else:
-                # (itime, nnodes, xyz)
-                # tnorm (901, 3)
-
-                # float32s are apparently buggy in numpy if you have small numbers
-                # see models/elements/loadstep_elememnts.op2
-                try:
-                    tnorm = norm(t123, axis=1)
-                except FloatingPointError:
-                    t123 = t123.astype(dtype='float64')
-                    tnorm = norm(t123, axis=1)
-
-                    #print('skipping %s' % name)
-                    #print(t123.max(axis=1))
-                    #for itime, ti in enumerate(t123):
-                        #print('itime=%s' % itime)
-                        #print(ti.tolist())
-                assert len(tnorm) == t123.shape[0]
-
-            assert t123.shape[0] == ntimes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
-            assert t123.shape[1] == nnodes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
+            t123, tnorm, ntimes = _get_t123_tnorm(case, nids, nnodes)
 
             titles = []
             scales = []
@@ -149,10 +95,11 @@ class NastranGuiResults(NastranGuiAttributes):
                         # (6673, )
                         normiii = np.linalg.norm(t123[itime, :, :], axis=1)
                         #print(normiii.shape)
-                        #print('Displacement; itime=%s time=%s tnorm=%s' % (itime, dt, normiii.max()))
+                        #print('Displacement; itime=%s time=%s tnorm=%s' % (
+                            #itime, dt, normiii.max()))
                         dmax.append(normiii.max())
                     # mode = 2; freq = 75.9575 Hz
-                    header = self._get_nastran_header(case, dt, itime)
+                    header = _get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
                     keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
@@ -185,20 +132,11 @@ class NastranGuiResults(NastranGuiAttributes):
                                                 uname='NastranResult')
                 for itime in range(ntimes):
                     dt = case._times[itime]
-                    header = self._get_nastran_header(case, dt, itime)
+                    header = _get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
                     keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
                     tnorm_abs_max = tnorm.max()
-                    #if tnorm_abs_max == 0.0:
-                        #scale = self.displacement_scale_factor
-                    #else:
-                        #scale = self.displacement_scale_factor / tnorm_abs_max
-
-                    # TODO: what to do with the scale factor?
-                    #scale = self.settings.dim_max
-                    #if tnorm_abs_max > 0.0:
-                        #scale = self.settings.dim_max / tnorm_abs_max * 0.25
                     scale = 1.
                     scales.append(scale)
                     titles.append(title1)
@@ -225,7 +163,7 @@ class NastranGuiResults(NastranGuiAttributes):
             ntimes = case.ntimes
             for itime in range(ntimes):
                 dt = case._times[itime]
-                header = self._get_nastran_header(case, dt, itime)
+                header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
                 keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
@@ -304,7 +242,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #headers = []
             #for itime in range(ntimes):
                 #dt = case._times[itime]
-                #header = self._get_nastran_header(case, dt, itime)
+                #header = _get_nastran_header(case, dt, itime)
                 #header_dict[(key, itime)] = header
 
                 #loads = case.data[itime, :, :]
@@ -388,44 +326,6 @@ class NastranGuiResults(NastranGuiAttributes):
         return self._fill_op2_stress(cases, model, key, icase, itime,
                                      form_dict, header_dict, keys_map,
                                      is_static, is_stress=False)
-
-    def _get_times(self, model, isubcase):
-        """
-        Get the times/frequencies/eigenvalues/loadsteps used on a given
-        subcase
-        """
-        table_types = model.get_table_types()
-        is_real = True
-        is_data = False
-        is_static = False
-        times = None
-        #print('isubcase =', isubcase)
-        #print('table_types =', table_types)
-        #print('model.eigenvectors.keys() =', model.eigenvectors.keys())
-        for table_type in table_types:
-            if not hasattr(model, table_type):
-                print('no table_type=%s' % table_type)
-                continue
-            table = getattr(model, table_type)
-            if len(table) == 0:
-                continue
-            #print(table)
-            if isubcase in table:
-                is_data = True
-                case = table[isubcase]
-                #print(case)
-                is_real = case.is_real
-                if case.nonlinear_factor is not None:
-                    times = case._times
-                    is_static = False
-                else:
-                    is_static = True
-                    times = np.zeros(1, dtype='int32')
-                #print('times = ', times)
-                break
-                #return is_data, is_static, is_real, times
-        #print('isubcase =', isubcase)
-        return is_data, is_static, is_real, times
 
     def _get_stress_times(self, model, isubcase):
         table_types = self._get_stress_table_types()
@@ -555,52 +455,10 @@ class NastranGuiResults(NastranGuiAttributes):
         ]
         return table_types
 
-    def _get_nastran_header(self, case, dt, itime):
-        #if case is None:
-            #return None
-        try:
-            code_name = case.data_code['name']
-        except KeyError:
-            return 'Static'
-
-        if isinstance(dt, float):
-            header = ' %s = %.4E' % (code_name, dt)
-        else:
-            header = ' %s = %i' % (code_name, dt)
-
-        # cases:
-        #   1. lsftsfqs
-        #   2. loadIDs, eigrs
-        #   3. lsdvmns, eigrs
-        #   ???
-        if hasattr(case, 'mode_cycle'):
-            header += '; freq = %g Hz' % case.mode_cycles[itime]
-        elif hasattr(case, 'cycles'):
-            header += '; freq = %g Hz' % case.cycles[itime]
-        elif hasattr(case, 'eigis'):
-            eigi = case.eigis[itime]
-            cycle = np.abs(eigi) / (2. * np.pi)
-            header += '; freq = %g Hz' % cycle
-        elif hasattr(case, 'eigns'):  #  eign is not eigr; it's more like eigi
-            eigi = case.eigrs[itime] #  but |eigi| = sqrt(|eign|)
-            cycle = np.sqrt(np.abs(eigi)) / (2. * np.pi)
-            header += '; freq = %g Hz' % cycle
-        elif hasattr(case, 'dt'):
-            time = case._times[itime]
-            header += '; time = %g sec' % time
-        elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
-            pass
-            #raise RuntimeError(header)
-        else:
-            msg = 'unhandled case; header=%r\n%s' % (header, str(case))
-            print(msg)
-            #raise RuntimeError(msg)
-
-        return header.strip('; ')
-
     def _fill_op2_time_centroidal_strain_energy(self, cases, model,
                                                 key, icase, itime,
-                                                form_dict, header_dict, keys_map, is_static):
+                                                form_dict, unused_header_dict, keys_map,
+                                                unused_is_static):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -647,7 +505,7 @@ class NastranGuiResults(NastranGuiAttributes):
         if not any(has_strain_energy):
             return icase
         itrue = has_strain_energy.index(True)
-        ese0 = strain_energies[itrue][0]
+        unused_ese0 = strain_energies[itrue][0]
         #times = ese0._times
 
         #fmt = '%g'
@@ -668,7 +526,7 @@ class NastranGuiResults(NastranGuiAttributes):
         for i, is_true in enumerate(has_strain_energy):
             if not is_true:
                 continue
-            resdict, name, flag = strain_energies[i]
+            resdict, unused_name, unused_flag = strain_energies[i]
 
             #print('key =', key)
             case = resdict[key]
@@ -701,7 +559,7 @@ class NastranGuiResults(NastranGuiAttributes):
         # nelements = 12093
 
         #try:
-            #header = self._get_nastran_header(case, dt, itime)
+            #header = _get_nastran_header(case, dt, itime)
             #header_dict[(key, itime)] = header
         #except AttributeError:
             #pass
@@ -747,9 +605,9 @@ class NastranGuiResults(NastranGuiAttributes):
         rz = np.zeros(nelements, dtype='float32') # bending_z
 
         is_element_on = np.zeros(nelements, dtype='float32') # torque
-        fmt = '%g'
+        unused_fmt = '%g'
         header = ''
-        form0 = ('Force', None, [])
+        unused_form0 = ('Force', None, [])
 
         case = None
         found_force = False
@@ -762,10 +620,10 @@ class NastranGuiResults(NastranGuiAttributes):
                 keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
                 data = case.data
                 if case.nonlinear_factor is None:
-                    ntimes = data.shape[:1]
+                    unused_ntimes = data.shape[:1]
                     eids = case.element
                     dt = case._times[itime]
-                    header = self._get_nastran_header(case, dt, itime)
+                    header = _get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
                     #eids_to_find = intersect1d(self.element_ids, eids)
                     i = np.searchsorted(self.element_ids, eids)
@@ -792,7 +650,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 is_element_on[i] = 1.
 
                 dt = case._times[itime]
-                header = self._get_nastran_header(case, dt, itime)
+                header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
                 keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
@@ -810,7 +668,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     rxi = case.data[itime, :, 7]#.max(axis=0)
                     ryi = np.vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max(axis=0)
                     rzi = np.vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max(axis=0)
-                    rzv = rzi
+                    unused_rzv = rzi
 
                     # rza = array([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
                     # rzh = hstack([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
@@ -831,7 +689,7 @@ class NastranGuiResults(NastranGuiAttributes):
             ueids = np.unique(eids)
 
             dt = case._times[itime]
-            header = self._get_nastran_header(case, dt, itime)
+            header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
             keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
@@ -842,7 +700,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 #print('di =', np.unique(di))
                 # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
                 ii = 0
-                eid_old = eids[0]
+                unused_eid_old = eids[0]
                 fxi = defaultdict(list)
                 fyi = defaultdict(list)
                 fzi = defaultdict(list)
@@ -895,7 +753,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
     def _fill_op2_time_centroidal_force(self, cases, model,
                                         key, icase, itime,
-                                        form_dict, header_dict, keys_map, is_static):
+                                        form_dict, header_dict, keys_map, unused_is_static):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -908,7 +766,7 @@ class NastranGuiResults(NastranGuiAttributes):
         subcase_id = key[2]
         if found_force:
             fmt = '%.4f'
-            # header = self._get_nastran_header(case, dt, itime)
+            # header = _get_nastran_header(case, dt, itime)
 
             #num_on = nelements
             num_off = 0
@@ -1028,486 +886,46 @@ class NastranGuiResults(NastranGuiAttributes):
         ovm = np.zeros(nelements, dtype='float32')
 
         vm_word = None
-        if is_stress:
-            rods = [model.crod_stress, model.conrod_stress, model.ctube_stress,]
-        else:
-            rods = [model.crod_strain, model.conrod_strain, model.ctube_strain,]
+        vm_word = get_rod_stress_strain(
+            model, key, is_stress, vm_word, itime,
+            oxx, txy,
+            max_principal, min_principal, ovm, is_element_on,
+            eids, header_dict, keys_map)
 
-        for result in rods:
-            if key not in result:
-                continue
+        vm_word = get_bar_stress_strain(
+            model, key, is_stress, vm_word, itime,
+            oxx,
+            max_principal, min_principal, ovm, is_element_on,
+            eids, header_dict, keys_map)
 
-            case = result[key]
-            if case.is_complex:
-                continue
-            eidsi = case.element
-            i = np.searchsorted(eids, eidsi)
-            if len(i) != len(np.unique(i)):
-                msg = 'irod=%s is not unique\n' % str(i)
-                print('eids = %s\n' % str(list(eids)))
-                print('eidsi = %s\n' % str(list(eidsi)))
-                raise RuntimeError(msg)
+        vm_word = get_bar100_stress_strain(
+            model, key, is_stress, vm_word, itime,
+            oxx,
+            max_principal, min_principal, ovm, is_element_on,
+            eids, header_dict, keys_map)
 
-            is_element_on[i] = 1
-            dt = case._times[itime]
-            header = self._get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+        vm_word = get_beam_stress_strain(
+            model, key, is_stress, vm_word, itime,
+            oxx,
+            max_principal, min_principal, ovm, is_element_on,
+            header_dict, keys_map, self.eid_map)
 
-            # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
-            oxx[i] = case.data[itime, :, 0]
-            txy[i] = case.data[itime, :, 2]
-            try:
-                ovm[i] = np.sqrt(oxx[i]**2 + 3*txy[i]**2) # plane stress
-            except FloatingPointError:
-                ovm[i] = 0.
-                assert np.allclose(oxx[i], 0.)
-                assert np.allclose(txy[i], 0.)
-            # max_principal[i] = sqrt(oxx[i]**2 + txy[i]**2)
-            # min_principal[i] = max_principal[i] - 2 * txy[i]
-            # simplification of:
-            #   eig(A) = [oxx, txy]
-            #            [txy, 0.0]
-            # per Equation 7: http://www.soest.hawaii.edu/martel/Courses/GG303/Eigenvectors.pdf
-            try:
-                max_principal[i] = (oxx[i] + np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
-                min_principal[i] = (oxx[i] - np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
-            except FloatingPointError:
-                # underflow is a thing...we can promote the dtype from float32 to float64
-                # but we'll hold off until there's a real example
-                assert np.allclose(oxx[i], 0.)
-                assert np.allclose(txy[i], 0.)
-                max_principal[i] = 0.
-                min_principal[i] = 0.
-        del rods
+        vm_word = get_plate_stress_strain(
+            model, key, is_stress, vm_word, itime,
+            oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
+            header_dict, keys_map)
 
+        vm_word = get_composite_plate_stress_strain(
+            model, key, is_stress, vm_word, itime,
+            oxx, oyy, txy, tyz, txz,
+            max_principal, mid_principal, min_principal, ovm, is_element_on,
+            eids, header_dict, keys_map, self.eid_map)
 
-        if is_stress:
-            bars = model.cbar_stress
-        else:
-            bars = model.cbar_strain
-
-        if key in bars:
-            case = bars[key]
-            if case.is_complex:
-                pass
-            else:
-                dt = case._times[itime]
-                header = self._get_nastran_header(case, dt, itime)
-                header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-                #s1a = case.data[itime, :, 0]
-                #s2a = case.data[itime, :, 1]
-                #s3a = case.data[itime, :, 2]
-                #s4a = case.data[itime, :, 3]
-
-                axial = case.data[itime, :, 4]
-                smaxa = case.data[itime, :, 5]
-                smina = case.data[itime, :, 6]
-                #MSt = case.data[itime, :, 7]
-
-                #s1b = case.data[itime, :, 8]
-                #s2b = case.data[itime, :, 9]
-                #s3b = case.data[itime, :, 10]
-                #s4b = case.data[itime, :, 11]
-
-                smaxb = case.data[itime, :, 12]
-                sminb = case.data[itime, :, 13]
-                #MSc   = case.data[itime, :, 14]
-
-                eidsi = case.element # [:, 0]
-
-                i = np.searchsorted(eids, eidsi)
-                if len(i) != len(np.unique(i)):
-                    print('ibar = %s' % i)
-                    print('eids = %s' % eids)
-                    msg = 'ibar=%s is not unique' % str(i)
-                    raise RuntimeError(msg)
-
-                is_element_on[i] = 1.
-                oxx[i] = axial
-
-                ## TODO :not sure if this block is general for multiple CBAR elements
-                samax = np.amax([smaxa, smaxb], axis=0)
-                samin = np.amin([smaxa, smaxb], axis=0)
-                assert len(samax) == len(i), len(samax)
-                assert len(samin) == len(i)
-                savm = np.amax(np.abs(
-                    [smina, sminb,
-                     smaxa, smaxb, axial]), axis=0)
-
-                max_principal[i] = samax
-                min_principal[i] = samin
-                ovm[i] = savm
-                del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
-        del bars
-
-
-        if is_stress:
-            bars2 = model.cbar_stress_10nodes
-        else:
-            bars2 = model.cbar_strain_10nodes
-
-        if key in bars2:
-            case = bars2[key]
-            if case.is_complex:
-                pass
-            else:
-                dt = case._times[itime]
-                header = self._get_nastran_header(case, dt, itime)
-                header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-
-                #  0    1    2    3    4     5     6     7     8
-                # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
-
-                eidsi = case.element # [:, 0]
-                ueidsi = np.unique(eidsi)
-                istart = np.searchsorted(eidsi, ueidsi)
-                iend = np.hstack(istart[1:], [len(eidsi)])
-                axial = case.data[itime, :, 5]
-
-                nbars = len(eidsi) // 10
-                assert nbars * 10 == len(eidsi), 'nbars=%s neids=%s' % (nbars, len(eidsi))
-                axial = case.data[itime, :, 5].reshape(nbars, 10).min(axis=1)
-                smax = case.data[itime, :, 6].reshape(nbars, 10).max(axis=1)
-                smin = case.data[itime, :, 7].reshape(nbars, 10).min(axis=1)
-
-
-                i = np.searchsorted(eids, eidsi)
-                if len(i) != len(np.unique(i)):
-                    print('ibar = %s' % i)
-                    print('eids = %s' % eids)
-                    msg = 'ibar=%s is not unique' % str(i)
-                    raise RuntimeError(msg)
-
-                is_element_on[i] = 1.
-                oxx[i] = axial
-
-                ## TODO :not sure if this block is general for multiple CBAR elements
-                svm = np.amax(np.abs([smin, smin]), axis=0)
-
-                max_principal[i] = smax
-                min_principal[i] = smin
-                ovm[i] = svm
-                #del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
-        del bars2
-
-
-        if is_stress:
-            beams = model.cbeam_stress
-        else:
-            beams = model.cbeam_strain
-
-        if key in beams:
-            case = beams[key]
-            if case.is_complex:
-                pass
-            else:
-                eidsi = case.element_node[:, 0]
-                ueids = np.unique(eidsi)
-                #neids = len(ueids)
-
-                # sxc, sxd, sxe, sxf
-                # smax, smin, MSt, MSc
-                dt = case._times[itime]
-                header = self._get_nastran_header(case, dt, itime)
-                header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-                sxc = case.data[itime, :, 0]
-                sxd = case.data[itime, :, 1]
-                sxe = case.data[itime, :, 2]
-                sxf = case.data[itime, :, 3]
-                smax = case.data[itime, :, 4]
-                smin = case.data[itime, :, 5]
-
-                imin = np.searchsorted(eidsi, ueids)
-                imax = np.searchsorted(eidsi, ueids, side='right')
-                #sxxi = smax[imin:imax]
-                for eid, imini, imaxi in zip(ueids, imin, imax):
-                    oxxi = 0.
-                    smaxi = 0.
-                    smini = 0.
-                    eid2 = self.eid_map[eid]
-                    is_element_on[eid2] = 1.
-                    oxxi = max(
-                        sxc[imini:imaxi].max(),
-                        sxd[imini:imaxi].max(),
-                        sxe[imini:imaxi].max(),
-                        sxf[imini:imaxi].max(),
-                    )
-                    smaxi = smax[imini:imaxi].max()
-                    smini = smin[imini:imaxi].min()
-                    ovmi = max(np.abs(smaxi), np.abs(smini))
-                    oxxi = oxx[eid2]
-                    max_principal[eid2] = smaxi
-                    min_principal[eid2] = smini
-                    ovm[eid2] = ovmi
-                del eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
-        del beams
-
-
-        if is_stress:
-            plates = [
-                model.ctria3_stress, model.cquad4_stress,
-                model.ctria6_stress, model.cquad8_stress,
-                model.ctriar_stress, model.cquadr_stress,
-            ]
-        else:
-            plates = [
-                model.ctria3_strain, model.cquad4_strain,
-                model.ctria6_strain, model.cquad8_strain,
-                model.ctriar_strain, model.cquadr_strain,
-            ]
-
-        for result in plates:
-            if key not in result:
-                continue
-            case = result[key]
-            if case.is_complex:
-                continue
-
-            if case.is_von_mises:
-                vm_word = 'vonMises'
-            else:
-                vm_word = 'maxShear'
-
-            nnodes_per_element = case.nnodes
-            nlayers_per_element = nnodes_per_element * 2  # *2 for every other layer
-            eidsi = case.element_node[::nlayers_per_element, 0]  # ::2 is for layer skipping
-
-            i = np.searchsorted(eids, eidsi)
-            if len(i) != len(np.unique(i)):
-                print(case.element_node)
-                print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
-                print('iplate = %s' % i)
-                print('eids = %s' % eids)
-                print('eidsiA = %s' % case.element_node[:, 0])
-                print('eidsiB = %s' % eidsi)
-                msg = 'iplate=%s is not unique' % str(i)
-                raise RuntimeError(msg)
-            #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
-            #                                         txy, angle,
-            #                                         majorP, minorP, ovm]
-            is_element_on[i] = 1.
-            ntotal = case.data.shape[1]  # (ndt, ntotal, nresults)
-            if nlayers_per_element == 1:
-                j = None
-            else:
-                j = np.arange(ntotal)[::nlayers_per_element]
-
-            #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
-            #                                         txy, angle,
-            #                                         majorP, minorP, ovm]
-            dt = case._times[itime]
-            header = self._get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-            oxxi = case.data[itime, j, 1]
-            oyyi = case.data[itime, j, 2]
-            txyi = case.data[itime, j, 3]
-            o1i = case.data[itime, j, 5]
-            o3i = case.data[itime, j, 6]
-            ovmi = case.data[itime, j, 7]
-
-            #print("nlayers_per_element = ", case.element_name, nlayers_per_element)
-            for inode in range(1, nlayers_per_element):
-                #print('%s - ilayer = %s' % (case.element_name, inode))
-                #print(case.data[itime, j + inode, 1])
-                #print(case.data[itime, :, 1])
-                oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 1]]), axis=0)
-                oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 2]]), axis=0)
-                txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
-                o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 5]]), axis=0)
-                o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
-                ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 7]]), axis=0)
-                assert len(oxxi) == len(j)
-                #print('-------')
-
-            oxx[i] = oxxi
-            oyy[i] = oyyi
-            txy[i] = txyi
-            max_principal[i] = o1i
-            min_principal[i] = o3i
-            ovm[i] = ovmi
-
-
-        if is_stress:
-            cplates = [
-                ('CTRIA3', model.ctria3_composite_stress),
-                ('CQUAD4', model.cquad4_composite_stress),
-                ('CTRIA6', model.ctria6_composite_stress),
-                ('CQUAD8', model.cquad8_composite_stress),
-                #model.ctriar_composite_stress,
-                #model.cquadr_composite_stress,
-            ]
-        else:
-            cplates = [
-                ('CTRIA3', model.ctria3_composite_strain),
-                ('CQUAD4', model.cquad4_composite_strain),
-                ('CTRIA6', model.ctria6_composite_strain),
-                ('CQUAD8', model.cquad8_composite_strain),
-                #model.ctriar_composite_strain,
-                #model.cquadr_composite_strain,
-            ]
-
-        for cell_type, result in cplates:
-            if key not in result:
-                continue
-            case = result[key]
-            if case.is_complex:
-                continue
-
-            if case.is_von_mises:
-                vm_word = 'vonMises'
-            else:
-                vm_word = 'maxShear'
-
-            dt = case._times[itime]
-            header = self._get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-            eidsi = case.element_layer[:, 0]
-            layers = case.element_layer[:, 1]
-            ntotal = case.data.shape[1]
-
-            #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
-            oxxs = case.data[itime, :, 0]
-            oyys = case.data[itime, :, 1]
-            txys = case.data[itime, :, 2]
-            txzs = case.data[itime, :, 3]
-            tyzs = case.data[itime, :, 4]
-            # angle
-            omaxs = case.data[itime, :, 6]
-            omins = case.data[itime, :, 7]
-            ovms = case.data[itime, :, 8]
-
-            j = 0
-            for eid in np.unique(eidsi):
-                ieid = np.where(eidsi == eid)[0]
-                ieid.sort()
-                layersi = layers[ieid]
-                eid2 = self.eid_map[eid]
-                is_element_on[eid2] = 1.
-
-                oxxi = 0.
-                oyyi = 0.
-                txyi = 0.
-                tyzi = 0.
-                txzi = 0.
-                omaxi = 0.
-                omini = 0.
-                ovmi = 0.
-                nlayers = len(layersi)
-                for ilayer in range(nlayers):
-                    oxxi = max(oxxs[j], oxxi)
-                    oyyi = max(oyys[j], oyyi)
-                    txyi = max(txys[j], txyi)
-                    tyzi = max(tyzs[j], tyzi)
-                    txzi = max(txzs[j], txzi)
-
-                    omaxi = max(omaxs[j], omaxi)
-                    omini = min(omins[j], omini)
-                    ovmi = max(ovms[j], ovmi)
-                    j += 1
-
-                oxx[eid2] = oxxi
-                oyy[eid2] = oyyi
-                txy[eid2] = txyi
-                tyz[eid2] = tyzi
-                txz[eid2] = txzi
-                max_principal[eid2] = omaxi
-                min_principal[eid2] = omini
-                ovm[eid2] = ovmi
-            del oxxi, oyyi, txyi, tyzi, txzi, omaxi, omini, ovmi, eid2, j, layers, eidsi
-        del cplates
-
-
-        if is_stress:
-            solids = [(model.ctetra_stress),
-                      (model.cpenta_stress),
-                      (model.chexa_stress),]
-        else:
-            solids = [(model.ctetra_strain),
-                      (model.cpenta_strain),
-                      (model.chexa_strain),]
-
-        for result in solids:
-            if key not in result:
-                continue
-            case = result[key]
-            if case.is_complex:
-                continue
-
-            if case.is_von_mises:
-                vm_word = 'vonMises'
-            else:
-                vm_word = 'maxShear'
-
-            nnodes_per_element = case.nnodes
-            eidsi = case.element_cid[:, 0]
-            ntotal = len(eidsi)  * nnodes_per_element
-
-            i = np.searchsorted(eids, eidsi)
-            if len(i) != len(np.unique(i)):
-                print('isolid = %s' % str(i))
-                print('eids = %s' % eids)
-                print('eidsi = %s' % eidsi)
-                assert len(i) == len(np.unique(i)), 'isolid=%s is not unique' % str(i)
-
-            is_element_on[i] = 1
-            #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
-            #                                         txy, tyz, txz,
-            #                                         o1, o2, o3, ovm]
-
-            if nnodes_per_element == 1:
-                j = None
-            else:
-                j = np.arange(ntotal)[::nnodes_per_element]
-                ueidsi = np.unique(eidsi)
-                assert len(j) == len(ueidsi), 'j=%s ueidsi=%s' % (j, ueidsi)
-
-            dt = case._times[itime]
-            header = self._get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-            oxxi = case.data[itime, j, 0]
-            oyyi = case.data[itime, j, 1]
-            ozzi = case.data[itime, j, 2]
-            txyi = case.data[itime, j, 3]
-            tyzi = case.data[itime, j, 4]
-            txzi = case.data[itime, j, 5]
-            o1i = case.data[itime, j, 6]
-            o2i = case.data[itime, j, 7]
-            o3i = case.data[itime, j, 8]
-            ovmi = case.data[itime, j, 9]
-
-            for inode in range(1, nnodes_per_element):
-                oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
-                oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
-                ozzi = np.amax(np.vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
-                txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
-                tyzi = np.amax(np.vstack([tyzi, case.data[itime, j + inode, 4]]), axis=0)
-                txzi = np.amax(np.vstack([txzi, case.data[itime, j + inode, 2]]), axis=0)
-
-                o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 6]]), axis=0)
-                o2i = np.amax(np.vstack([o2i, case.data[itime, j + inode, 7]]), axis=0)
-                o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 8]]), axis=0)
-                ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 9]]), axis=0)
-                assert len(oxxi) == len(j)
-
-            oxx[i] = oxxi
-            oyy[i] = oyyi
-            ozz[i] = ozzi
-            txy[i] = txyi
-            tyz[i] = tyzi
-            txz[i] = txzi
-            max_principal[i] = o1i
-            mid_principal[i] = o2i
-            min_principal[i] = o3i
-            ovm[i] = ovmi
-        del solids
-
+        vm_word = get_solid_stress_strain(
+            model, key, is_stress, vm_word, itime,
+            oxx, oyy, ozz, txy, tyz, txz,
+            max_principal, mid_principal, min_principal, ovm, is_element_on,
+            eids, header_dict, keys_map)
 
         if is_stress:
             word = 'Stress'
@@ -1531,9 +949,9 @@ class NastranGuiResults(NastranGuiAttributes):
         if not is_static:
             #print('is_static = %s' % is_static)
             if case is None:
-                formis = None
+                unused_formis = None
                 return icase
-            header = self._get_nastran_header(case, dt, itime)
+            header = _get_nastran_header(case, dt, itime)
             #form_time[0] = header
 
         form0 = (word, None, [])
@@ -1619,7 +1037,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
 
     def _get_nastran_key_order(self, model):
-        displacement_like = [
+        unused_displacement_like = [
             model.displacements,
             model.velocities,
             model.accelerations,
@@ -1633,10 +1051,10 @@ class NastranGuiResults(NastranGuiAttributes):
             model.force_vectors,
             #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
         ]
-        temperature_like = [
+        unused_temperature_like = [
             model.temperatures,
         ]
-        stress = [
+        unused_stress = [
             model.crod_stress, model.conrod_stress, model.ctube_stress,
             model.cbar_stress,
             model.cbeam_stress,
@@ -1650,7 +1068,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
             model.ctetra_stress, model.cpenta_stress, model.chexa_stress,
         ]
-        strain = [
+        unused_strain = [
             model.crod_strain, model.conrod_strain, model.ctube_strain,
             model.cbar_strain,
             model.cbeam_strain,
@@ -1664,7 +1082,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
             model.ctetra_strain, model.cpenta_strain, model.chexa_strain,
         ]
-        strain_energy = [
+        unused_strain_energy = [
             #model.strain_energy,
             model.cquad4_strain_energy, model.cquad8_strain_energy,
             model.cquadr_strain_energy, model.cquadx_strain_energy,
@@ -1688,8 +1106,8 @@ class NastranGuiResults(NastranGuiAttributes):
             #displacement_like, temperature_like, stress, strain, strain_energy,
         #]
 
-        nids = self.node_ids
-        eids = self.element_ids
+        unused_nids = self.node_ids
+        unused_eids = self.element_ids
         keys_order = []
         # model = OP2()
 
@@ -1715,7 +1133,7 @@ class NastranGuiResults(NastranGuiAttributes):
             #print('subcase_key =', model.subcase_key)
             keys = model.subcase_key[isubcase]
             #print('keys[%s] =%s' % (isubcase, keys))
-            key0 = keys[0]
+            unused_key0 = keys[0]
 
             # this while loop lets us make sure we pull the analysis codes in the expected order
             # TODO: doesn't pull count in the right order
@@ -1737,3 +1155,660 @@ class NastranGuiResults(NastranGuiAttributes):
                         keys2.remove(keyi)
                 #keys_order += keys
         return keys_order
+
+def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
+                          oxx, txy,
+                          max_principal, min_principal, ovm, is_element_on,
+                          eids, header_dict, keys_map):
+    """helper method for _fill_op2_time_centroidal_stress"""
+    if is_stress:
+        rods = [model.crod_stress, model.conrod_stress, model.ctube_stress,]
+    else:
+        rods = [model.crod_strain, model.conrod_strain, model.ctube_strain,]
+
+    for result in rods:
+        if key not in result:
+            continue
+
+        case = result[key]
+        if case.is_complex:
+            continue
+        eidsi = case.element
+        i = np.searchsorted(eids, eidsi)
+        if len(i) != len(np.unique(i)):
+            msg = 'irod=%s is not unique\n' % str(i)
+            print('eids = %s\n' % str(list(eids)))
+            print('eidsi = %s\n' % str(list(eidsi)))
+            raise RuntimeError(msg)
+
+        is_element_on[i] = 1
+        dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+
+        # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
+        oxx[i] = case.data[itime, :, 0]
+        txy[i] = case.data[itime, :, 2]
+        try:
+            ovm[i] = np.sqrt(oxx[i]**2 + 3*txy[i]**2) # plane stress
+        except FloatingPointError:
+            ovm[i] = 0.
+            assert np.allclose(oxx[i], 0.)
+            assert np.allclose(txy[i], 0.)
+        # max_principal[i] = sqrt(oxx[i]**2 + txy[i]**2)
+        # min_principal[i] = max_principal[i] - 2 * txy[i]
+        # simplification of:
+        #   eig(A) = [oxx, txy]
+        #            [txy, 0.0]
+        # per Equation 7: http://www.soest.hawaii.edu/martel/Courses/GG303/Eigenvectors.pdf
+        try:
+            max_principal[i] = (oxx[i] + np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+            min_principal[i] = (oxx[i] - np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
+        except FloatingPointError:
+            # underflow is a thing...we can promote the dtype from float32 to float64
+            # but we'll hold off until there's a real example
+            assert np.allclose(oxx[i], 0.)
+            assert np.allclose(txy[i], 0.)
+            max_principal[i] = 0.
+            min_principal[i] = 0.
+    del rods
+    return vm_word
+
+def get_bar_stress_strain(model, key, is_stress, vm_word, itime,
+                          oxx,
+                          max_principal, min_principal, ovm, is_element_on,
+                          eids, header_dict, keys_map):
+    """helper method for _fill_op2_time_centroidal_stress"""
+    if is_stress:
+        bars = model.cbar_stress
+    else:
+        bars = model.cbar_strain
+
+    if key in bars:
+        case = bars[key]
+        if case.is_complex:
+            pass
+        else:
+            dt = case._times[itime]
+            header = _get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            #s1a = case.data[itime, :, 0]
+            #s2a = case.data[itime, :, 1]
+            #s3a = case.data[itime, :, 2]
+            #s4a = case.data[itime, :, 3]
+
+            axial = case.data[itime, :, 4]
+            smaxa = case.data[itime, :, 5]
+            smina = case.data[itime, :, 6]
+            #MSt = case.data[itime, :, 7]
+
+            #s1b = case.data[itime, :, 8]
+            #s2b = case.data[itime, :, 9]
+            #s3b = case.data[itime, :, 10]
+            #s4b = case.data[itime, :, 11]
+
+            smaxb = case.data[itime, :, 12]
+            sminb = case.data[itime, :, 13]
+            #MSc   = case.data[itime, :, 14]
+
+            eidsi = case.element # [:, 0]
+
+            i = np.searchsorted(eids, eidsi)
+            if len(i) != len(np.unique(i)):
+                print('ibar = %s' % i)
+                print('eids = %s' % eids)
+                msg = 'ibar=%s is not unique' % str(i)
+                raise RuntimeError(msg)
+
+            is_element_on[i] = 1.
+            oxx[i] = axial
+
+            ## TODO :not sure if this block is general for multiple CBAR elements
+            samax = np.amax([smaxa, smaxb], axis=0)
+            samin = np.amin([smaxa, smaxb], axis=0)
+            assert len(samax) == len(i), len(samax)
+            assert len(samin) == len(i)
+            savm = np.amax(np.abs(
+                [smina, sminb,
+                 smaxa, smaxb, axial]), axis=0)
+
+            max_principal[i] = samax
+            min_principal[i] = samin
+            ovm[i] = savm
+            del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
+    del bars
+    return vm_word
+
+def get_bar100_stress_strain(model, key, is_stress, vm_word, itime,
+                             oxx,
+                             max_principal, min_principal, ovm, is_element_on,
+                             eids, header_dict, keys_map):
+    """helper method for _fill_op2_time_centroidal_stress"""
+    if is_stress:
+        bars2 = model.cbar_stress_10nodes
+    else:
+        bars2 = model.cbar_strain_10nodes
+
+    if key in bars2:
+        case = bars2[key]
+        if case.is_complex:
+            pass
+        else:
+            dt = case._times[itime]
+            header = _get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+
+            #  0    1    2    3    4     5     6     7     8
+            # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
+
+            eidsi = case.element # [:, 0]
+            ueidsi = np.unique(eidsi)
+            istart = np.searchsorted(eidsi, ueidsi)
+            unused_iend = np.hstack(istart[1:], [len(eidsi)])
+            axial = case.data[itime, :, 5]
+
+            nbars = len(eidsi) // 10
+            assert nbars * 10 == len(eidsi), 'nbars=%s neids=%s' % (nbars, len(eidsi))
+            axial = case.data[itime, :, 5].reshape(nbars, 10).min(axis=1)
+            smax = case.data[itime, :, 6].reshape(nbars, 10).max(axis=1)
+            smin = case.data[itime, :, 7].reshape(nbars, 10).min(axis=1)
+
+
+            i = np.searchsorted(eids, eidsi)
+            if len(i) != len(np.unique(i)):
+                print('ibar = %s' % i)
+                print('eids = %s' % eids)
+                msg = 'ibar=%s is not unique' % str(i)
+                raise RuntimeError(msg)
+
+            is_element_on[i] = 1.
+            oxx[i] = axial
+
+            ## TODO :not sure if this block is general for multiple CBAR elements
+            svm = np.amax(np.abs([smin, smin]), axis=0)
+
+            max_principal[i] = smax
+            min_principal[i] = smin
+            ovm[i] = svm
+            #del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
+    del bars2
+    return vm_word
+
+def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
+                           oxx,
+                           max_principal, min_principal, ovm, is_element_on,
+                           header_dict, keys_map, eid_map):
+    """helper method for _fill_op2_time_centroidal_stress"""
+    if is_stress:
+        beams = model.cbeam_stress
+    else:
+        beams = model.cbeam_strain
+
+    if key in beams:
+        case = beams[key]
+        if case.is_complex:
+            pass
+        else:
+            eidsi = case.element_node[:, 0]
+            ueids = np.unique(eidsi)
+            #neids = len(ueids)
+
+            # sxc, sxd, sxe, sxf
+            # smax, smin, MSt, MSc
+            dt = case._times[itime]
+            header = _get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            sxc = case.data[itime, :, 0]
+            sxd = case.data[itime, :, 1]
+            sxe = case.data[itime, :, 2]
+            sxf = case.data[itime, :, 3]
+            smax = case.data[itime, :, 4]
+            smin = case.data[itime, :, 5]
+
+            imin = np.searchsorted(eidsi, ueids)
+            imax = np.searchsorted(eidsi, ueids, side='right')
+            #sxxi = smax[imin:imax]
+            for eid, imini, imaxi in zip(ueids, imin, imax):
+                oxxi = 0.
+                smaxi = 0.
+                smini = 0.
+                eid2 = eid_map[eid]
+                is_element_on[eid2] = 1.
+                oxxi = max(
+                    sxc[imini:imaxi].max(),
+                    sxd[imini:imaxi].max(),
+                    sxe[imini:imaxi].max(),
+                    sxf[imini:imaxi].max(),
+                )
+                smaxi = smax[imini:imaxi].max()
+                smini = smin[imini:imaxi].min()
+                ovmi = max(np.abs(smaxi), np.abs(smini))
+                oxxi = oxx[eid2]
+                max_principal[eid2] = smaxi
+                min_principal[eid2] = smini
+                ovm[eid2] = ovmi
+            del eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
+    del beams
+    return vm_word
+
+def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
+                            oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
+                            eids, header_dict, keys_map):
+    """helper method for _fill_op2_time_centroidal_stress"""
+    if is_stress:
+        plates = [
+            model.ctria3_stress, model.cquad4_stress,
+            model.ctria6_stress, model.cquad8_stress,
+            model.ctriar_stress, model.cquadr_stress,
+        ]
+    else:
+        plates = [
+            model.ctria3_strain, model.cquad4_strain,
+            model.ctria6_strain, model.cquad8_strain,
+            model.ctriar_strain, model.cquadr_strain,
+        ]
+
+    for result in plates:
+        if key not in result:
+            continue
+        case = result[key]
+        if case.is_complex:
+            continue
+
+        if case.is_von_mises:
+            vm_word = 'vonMises'
+        else:
+            vm_word = 'maxShear'
+
+        nnodes_per_element = case.nnodes
+        nlayers_per_element = nnodes_per_element * 2  # *2 for every other layer
+        eidsi = case.element_node[::nlayers_per_element, 0]  # ::2 is for layer skipping
+
+        i = np.searchsorted(eids, eidsi)
+        if len(i) != len(np.unique(i)):
+            print(case.element_node)
+            print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+            print('iplate = %s' % i)
+            print('eids = %s' % eids)
+            print('eidsiA = %s' % case.element_node[:, 0])
+            print('eidsiB = %s' % eidsi)
+            msg = 'iplate=%s is not unique' % str(i)
+            raise RuntimeError(msg)
+        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+        #                                         txy, angle,
+        #                                         majorP, minorP, ovm]
+        is_element_on[i] = 1.
+        ntotal = case.data.shape[1]  # (ndt, ntotal, nresults)
+        if nlayers_per_element == 1:
+            j = None
+        else:
+            j = np.arange(ntotal)[::nlayers_per_element]
+
+        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+        #                                         txy, angle,
+        #                                         majorP, minorP, ovm]
+        dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+        oxxi = case.data[itime, j, 1]
+        oyyi = case.data[itime, j, 2]
+        txyi = case.data[itime, j, 3]
+        o1i = case.data[itime, j, 5]
+        o3i = case.data[itime, j, 6]
+        ovmi = case.data[itime, j, 7]
+
+        #print("nlayers_per_element = ", case.element_name, nlayers_per_element)
+        for inode in range(1, nlayers_per_element):
+            #print('%s - ilayer = %s' % (case.element_name, inode))
+            #print(case.data[itime, j + inode, 1])
+            #print(case.data[itime, :, 1])
+            oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 1]]), axis=0)
+            oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 2]]), axis=0)
+            txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
+            o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 5]]), axis=0)
+            o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
+            ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 7]]), axis=0)
+            assert len(oxxi) == len(j)
+            #print('-------')
+
+        oxx[i] = oxxi
+        oyy[i] = oyyi
+        txy[i] = txyi
+        max_principal[i] = o1i
+        min_principal[i] = o3i
+        ovm[i] = ovmi
+    return vm_word
+
+def _get_nastran_header(case, dt, itime):
+    #if case is None:
+        #return None
+    try:
+        code_name = case.data_code['name']
+    except KeyError:
+        return 'Static'
+
+    if isinstance(dt, float):
+        header = ' %s = %.4E' % (code_name, dt)
+    else:
+        header = ' %s = %i' % (code_name, dt)
+
+    # cases:
+    #   1. lsftsfqs
+    #   2. loadIDs, eigrs
+    #   3. lsdvmns, eigrs
+    #   ???
+    if hasattr(case, 'mode_cycle'):
+        header += '; freq = %g Hz' % case.mode_cycles[itime]
+    elif hasattr(case, 'cycles'):
+        header += '; freq = %g Hz' % case.cycles[itime]
+    elif hasattr(case, 'eigis'):
+        eigi = case.eigis[itime]
+        cycle = np.abs(eigi) / (2. * np.pi)
+        header += '; freq = %g Hz' % cycle
+    elif hasattr(case, 'eigns'):  #  eign is not eigr; it's more like eigi
+        eigi = case.eigrs[itime] #  but |eigi| = sqrt(|eign|)
+        cycle = np.sqrt(np.abs(eigi)) / (2. * np.pi)
+        header += '; freq = %g Hz' % cycle
+    elif hasattr(case, 'dt'):
+        time = case._times[itime]
+        header += '; time = %g sec' % time
+    elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
+        pass
+        #raise RuntimeError(header)
+    else:
+        msg = 'unhandled case; header=%r\n%s' % (header, str(case))
+        print(msg)
+        #raise RuntimeError(msg)
+
+    return header.strip('; ')
+
+def get_composite_plate_stress_strain(model, key, is_stress, vm_word, itime,
+                                      oxx, oyy, txy, tyz, txz,
+                                      max_principal, min_principal, ovm, is_element_on,
+                                      header_dict, keys_map, eid_map):
+    """helper method for _fill_op2_time_centroidal_stress"""
+    if is_stress:
+        cplates = [
+            ('CTRIA3', model.ctria3_composite_stress),
+            ('CQUAD4', model.cquad4_composite_stress),
+            ('CTRIA6', model.ctria6_composite_stress),
+            ('CQUAD8', model.cquad8_composite_stress),
+            #model.ctriar_composite_stress,
+            #model.cquadr_composite_stress,
+        ]
+    else:
+        cplates = [
+            ('CTRIA3', model.ctria3_composite_strain),
+            ('CQUAD4', model.cquad4_composite_strain),
+            ('CTRIA6', model.ctria6_composite_strain),
+            ('CQUAD8', model.cquad8_composite_strain),
+            #model.ctriar_composite_strain,
+            #model.cquadr_composite_strain,
+        ]
+
+    for unused_cell_type, result in cplates:
+        if key not in result:
+            continue
+        case = result[key]
+        if case.is_complex:
+            continue
+
+        if case.is_von_mises:
+            vm_word = 'vonMises'
+        else:
+            vm_word = 'maxShear'
+
+        dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+        eidsi = case.element_layer[:, 0]
+        layers = case.element_layer[:, 1]
+        unused_ntotal = case.data.shape[1]
+
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
+        oxxs = case.data[itime, :, 0]
+        oyys = case.data[itime, :, 1]
+        txys = case.data[itime, :, 2]
+        txzs = case.data[itime, :, 3]
+        tyzs = case.data[itime, :, 4]
+        # angle
+        omaxs = case.data[itime, :, 6]
+        omins = case.data[itime, :, 7]
+        ovms = case.data[itime, :, 8]
+
+        j = 0
+        for eid in np.unique(eidsi):
+            ieid = np.where(eidsi == eid)[0]
+            ieid.sort()
+            layersi = layers[ieid]
+            eid2 = eid_map[eid]
+            is_element_on[eid2] = 1.
+
+            oxxi = 0.
+            oyyi = 0.
+            txyi = 0.
+            tyzi = 0.
+            txzi = 0.
+            omaxi = 0.
+            omini = 0.
+            ovmi = 0.
+            nlayers = len(layersi)
+            for unused_ilayer in range(nlayers):
+                oxxi = max(oxxs[j], oxxi)
+                oyyi = max(oyys[j], oyyi)
+                txyi = max(txys[j], txyi)
+                tyzi = max(tyzs[j], tyzi)
+                txzi = max(txzs[j], txzi)
+
+                omaxi = max(omaxs[j], omaxi)
+                omini = min(omins[j], omini)
+                ovmi = max(ovms[j], ovmi)
+                j += 1
+
+            oxx[eid2] = oxxi
+            oyy[eid2] = oyyi
+            txy[eid2] = txyi
+            tyz[eid2] = tyzi
+            txz[eid2] = txzi
+            max_principal[eid2] = omaxi
+            min_principal[eid2] = omini
+            ovm[eid2] = ovmi
+        del oxxi, oyyi, txyi, tyzi, txzi, omaxi, omini, ovmi, eid2, j, layers, eidsi
+    del cplates
+    return vm_word
+
+def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
+                            oxx, oyy, ozz, txy, tyz, txz,
+                            max_principal, mid_principal, min_principal, ovm, is_element_on,
+                            eids, header_dict, keys_map):
+    """helper method for _fill_op2_time_centroidal_stress"""
+    if is_stress:
+        solids = [(model.ctetra_stress),
+                  (model.cpenta_stress),
+                  (model.chexa_stress),]
+    else:
+        solids = [(model.ctetra_strain),
+                  (model.cpenta_strain),
+                  (model.chexa_strain),]
+
+    for result in solids:
+        if key not in result:
+            continue
+        case = result[key]
+        if case.is_complex:
+            continue
+
+        if case.is_von_mises:
+            vm_word = 'vonMises'
+        else:
+            vm_word = 'maxShear'
+
+        nnodes_per_element = case.nnodes
+        eidsi = case.element_cid[:, 0]
+        ntotal = len(eidsi)  * nnodes_per_element
+
+        i = np.searchsorted(eids, eidsi)
+        if len(i) != len(np.unique(i)):
+            print('isolid = %s' % str(i))
+            print('eids = %s' % eids)
+            print('eidsi = %s' % eidsi)
+            assert len(i) == len(np.unique(i)), 'isolid=%s is not unique' % str(i)
+
+        is_element_on[i] = 1
+        #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
+        #                                         txy, tyz, txz,
+        #                                         o1, o2, o3, ovm]
+
+        if nnodes_per_element == 1:
+            j = None
+        else:
+            j = np.arange(ntotal)[::nnodes_per_element]
+            ueidsi = np.unique(eidsi)
+            assert len(j) == len(ueidsi), 'j=%s ueidsi=%s' % (j, ueidsi)
+
+        dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+        oxxi = case.data[itime, j, 0]
+        oyyi = case.data[itime, j, 1]
+        ozzi = case.data[itime, j, 2]
+        txyi = case.data[itime, j, 3]
+        tyzi = case.data[itime, j, 4]
+        txzi = case.data[itime, j, 5]
+        o1i = case.data[itime, j, 6]
+        o2i = case.data[itime, j, 7]
+        o3i = case.data[itime, j, 8]
+        ovmi = case.data[itime, j, 9]
+
+        for inode in range(1, nnodes_per_element):
+            oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
+            oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
+            ozzi = np.amax(np.vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
+            txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
+            tyzi = np.amax(np.vstack([tyzi, case.data[itime, j + inode, 4]]), axis=0)
+            txzi = np.amax(np.vstack([txzi, case.data[itime, j + inode, 2]]), axis=0)
+
+            o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 6]]), axis=0)
+            o2i = np.amax(np.vstack([o2i, case.data[itime, j + inode, 7]]), axis=0)
+            o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 8]]), axis=0)
+            ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 9]]), axis=0)
+            assert len(oxxi) == len(j)
+
+        oxx[i] = oxxi
+        oyy[i] = oyyi
+        ozz[i] = ozzi
+        txy[i] = txyi
+        tyz[i] = tyzi
+        txz[i] = txzi
+        max_principal[i] = o1i
+        mid_principal[i] = o2i
+        min_principal[i] = o3i
+        ovm[i] = ovmi
+    del solids
+    return vm_word
+
+def _get_t123_tnorm(case, nids, nnodes):
+    """helper method for _fill_op2_oug_oqg"""
+    assert case.is_sort1, case.is_sort1
+
+    itime0 = 0
+    t1 = case.data[itime0, :, 0]
+    ndata = t1.shape[0]
+    if nnodes != ndata:
+        #print('nnodes=%s ndata=%s' % (nnodes, ndata))
+        nidsi = case.node_gridtype[:, 0]
+        #assert len(nidsi) == nnodes, 'nidsi=%s nnodes=%s' % (nidsi, nnodes)
+        j = np.searchsorted(nids, nidsi)  # searching for nidsi
+
+        try:
+            if not np.allclose(nids[j], nidsi):
+                msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+                raise RuntimeError(msg)
+        except IndexError:
+            msg = 'node_ids = %s\n' % list(nids)
+            msg += 'nidsi in disp = %s\n' % list(nidsi)
+            raise IndexError(msg)
+
+    # (itime, nnodes, xyz)
+    # (901, 6673, 3)
+    t123 = case.data[:, :, :3]
+    ntimes = case.ntimes
+
+    if nnodes != ndata:
+        t123i = np.zeros((ntimes, nnodes, 3), dtype='float32')
+        t123i[:, j, :] = t123
+        t123 = t123i
+
+        # (itime, nnodes, xyz)
+        # tnorm (901, 3)
+        tnorm = norm(t123, axis=2)   # I think this is wrong...
+        #print('tnorm.shape ', tnorm.shape)
+        assert len(tnorm) == t123.shape[0]
+    else:
+        # (itime, nnodes, xyz)
+        # tnorm (901, 3)
+
+        # float32s are apparently buggy in numpy if you have small numbers
+        # see models/elements/loadstep_elememnts.op2
+        try:
+            tnorm = norm(t123, axis=1)
+        except FloatingPointError:
+            t123 = t123.astype(dtype='float64')
+            tnorm = norm(t123, axis=1)
+
+            #print('skipping %s' % name)
+            #print(t123.max(axis=1))
+            #for itime, ti in enumerate(t123):
+                #print('itime=%s' % itime)
+                #print(ti.tolist())
+        assert len(tnorm) == t123.shape[0]
+
+    assert t123.shape[0] == ntimes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
+    assert t123.shape[1] == nnodes, 'shape=%s expected=(%s, %s, 3)' % (t123.shape, ntimes, nnodes)
+    return t123, tnorm, ntimes
+
+
+def _get_times(model, isubcase):
+    """
+    Get the times/frequencies/eigenvalues/loadsteps used on a given
+    subcase
+    """
+    table_types = model.get_table_types()
+    is_real = True
+    is_data = False
+    is_static = False
+    times = None
+    #print('isubcase =', isubcase)
+    #print('table_types =', table_types)
+    #print('model.eigenvectors.keys() =', model.eigenvectors.keys())
+    for table_type in table_types:
+        if not hasattr(model, table_type):
+            print('no table_type=%s' % table_type)
+            continue
+        table = getattr(model, table_type)
+        if len(table) == 0:
+            continue
+        #print(table)
+        if isubcase in table:
+            is_data = True
+            case = table[isubcase]
+            #print(case)
+            is_real = case.is_real
+            if case.nonlinear_factor is not None:
+                times = case._times
+                is_static = False
+            else:
+                is_static = True
+                times = np.zeros(1, dtype='int32')
+            #print('times = ', times)
+            break
+            #return is_data, is_static, is_real, times
+    #print('isubcase =', isubcase)
+    return is_data, is_static, is_real, times
