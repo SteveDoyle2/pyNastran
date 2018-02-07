@@ -2942,6 +2942,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             except Exception: #  as e
                 msg = traceback.format_exc()
                 self.log_error(msg)
+                print(msg)
                 #return
                 raise
 

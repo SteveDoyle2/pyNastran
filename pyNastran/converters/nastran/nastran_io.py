@@ -5678,8 +5678,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.unused_stress = {}
         self.unused_strain = {}
         for key in keys:
-            self.unused_stress[key] = StressObject(model, key, is_stress=True)
-            self.unused_strain[key] = StressObject(model, key, is_stress=False)
+            self.unused_stress[key] = StressObject(model, key, self.element_ids, is_stress=True)
+            self.unused_strain[key] = StressObject(model, key, self.element_ids, is_stress=False)
 
             #print('key = %r' % str(key))
             header_dict[(key, 0)] = '; Static'

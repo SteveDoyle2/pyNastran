@@ -1,5 +1,6 @@
 # pylint: disable=C1801, C0103
 from __future__ import print_function
+import sys
 from copy import deepcopy
 from collections import defaultdict
 import traceback
@@ -11,6 +12,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.nastran.geometry_helper import NastranGuiAttributes
 from pyNastran.converters.nastran.displacements import (
     DisplacementResults, ForceTableResults) #, TransientElementResults
+from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 
 class NastranGuiResults(NastranGuiAttributes):
     """
@@ -909,17 +911,23 @@ class NastranGuiResults(NastranGuiAttributes):
             oxx,
             max_principal, min_principal, ovm, is_element_on,
             header_dict, keys_map, self.eid_map)
-
         vm_word = get_plate_stress_strain(
             model, key, is_stress, vm_word, itime,
             oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
-            header_dict, keys_map)
+            eids, header_dict, keys_map)
 
-        vm_word = get_composite_plate_stress_strain(
-            model, key, is_stress, vm_word, itime,
-            oxx, oyy, txy, tyz, txz,
-            max_principal, mid_principal, min_principal, ovm, is_element_on,
-            eids, header_dict, keys_map, self.eid_map)
+        if is_stress:
+            stress_obj = self.unused_stress[key]
+        else:
+            stress_obj = self.unused_strain[key]
+
+        if len(stress_obj.composite_data_dict):
+            str(stress_obj)
+            vm_word = stress_obj.set_composite_stress_old(
+                key, itime, oxx, oyy, txy, tyz, txz,
+                max_principal, min_principal, ovm,
+                is_element_on, header_dict,
+            )
 
         vm_word = get_solid_stress_strain(
             model, key, is_stress, vm_word, itime,
@@ -942,7 +950,7 @@ class NastranGuiResults(NastranGuiAttributes):
         #            oyy
         #            ozz
 
-        if dt is None:
+        if vm_word is None:
             return icase
 
         header = ''
@@ -963,6 +971,10 @@ class NastranGuiResults(NastranGuiAttributes):
                 ioff = np.where(is_element_on == 0)[0]
                 print('stress_eids_off = %s' % np.array(self.element_ids[ioff]))
                 self.log_error('stress_eids_off = %s' % self.element_ids[ioff])
+                for eid in self.element_ids[ioff][:20]:
+                    print(self.model.elements[eid].rstrip())
+                print('-----------------------------------')
+
                 stress_res = GuiResult(
                     subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
                     location='centroid', scalar=oxx, data_format=fmt)
@@ -970,6 +982,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
                 icase += 1
 
+        #print('max/min', max_principal.max(), max_principal.min())
         if oxx.min() != oxx.max():
             oxx_res = GuiResult(subcase_id, header=word + 'XX', title=word + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)
@@ -1484,144 +1497,6 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
         ovm[i] = ovmi
     return vm_word
 
-def _get_nastran_header(case, dt, itime):
-    #if case is None:
-        #return None
-    try:
-        code_name = case.data_code['name']
-    except KeyError:
-        return 'Static'
-
-    if isinstance(dt, float):
-        header = ' %s = %.4E' % (code_name, dt)
-    else:
-        header = ' %s = %i' % (code_name, dt)
-
-    # cases:
-    #   1. lsftsfqs
-    #   2. loadIDs, eigrs
-    #   3. lsdvmns, eigrs
-    #   ???
-    if hasattr(case, 'mode_cycle'):
-        header += '; freq = %g Hz' % case.mode_cycles[itime]
-    elif hasattr(case, 'cycles'):
-        header += '; freq = %g Hz' % case.cycles[itime]
-    elif hasattr(case, 'eigis'):
-        eigi = case.eigis[itime]
-        cycle = np.abs(eigi) / (2. * np.pi)
-        header += '; freq = %g Hz' % cycle
-    elif hasattr(case, 'eigns'):  #  eign is not eigr; it's more like eigi
-        eigi = case.eigrs[itime] #  but |eigi| = sqrt(|eign|)
-        cycle = np.sqrt(np.abs(eigi)) / (2. * np.pi)
-        header += '; freq = %g Hz' % cycle
-    elif hasattr(case, 'dt'):
-        time = case._times[itime]
-        header += '; time = %g sec' % time
-    elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
-        pass
-        #raise RuntimeError(header)
-    else:
-        msg = 'unhandled case; header=%r\n%s' % (header, str(case))
-        print(msg)
-        #raise RuntimeError(msg)
-
-    return header.strip('; ')
-
-def get_composite_plate_stress_strain(model, key, is_stress, vm_word, itime,
-                                      oxx, oyy, txy, tyz, txz,
-                                      max_principal, min_principal, ovm, is_element_on,
-                                      header_dict, keys_map, eid_map):
-    """helper method for _fill_op2_time_centroidal_stress"""
-    if is_stress:
-        cplates = [
-            ('CTRIA3', model.ctria3_composite_stress),
-            ('CQUAD4', model.cquad4_composite_stress),
-            ('CTRIA6', model.ctria6_composite_stress),
-            ('CQUAD8', model.cquad8_composite_stress),
-            #model.ctriar_composite_stress,
-            #model.cquadr_composite_stress,
-        ]
-    else:
-        cplates = [
-            ('CTRIA3', model.ctria3_composite_strain),
-            ('CQUAD4', model.cquad4_composite_strain),
-            ('CTRIA6', model.ctria6_composite_strain),
-            ('CQUAD8', model.cquad8_composite_strain),
-            #model.ctriar_composite_strain,
-            #model.cquadr_composite_strain,
-        ]
-
-    for unused_cell_type, result in cplates:
-        if key not in result:
-            continue
-        case = result[key]
-        if case.is_complex:
-            continue
-
-        if case.is_von_mises:
-            vm_word = 'vonMises'
-        else:
-            vm_word = 'maxShear'
-
-        dt = case._times[itime]
-        header = _get_nastran_header(case, dt, itime)
-        header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-        eidsi = case.element_layer[:, 0]
-        layers = case.element_layer[:, 1]
-        unused_ntotal = case.data.shape[1]
-
-        #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
-        oxxs = case.data[itime, :, 0]
-        oyys = case.data[itime, :, 1]
-        txys = case.data[itime, :, 2]
-        txzs = case.data[itime, :, 3]
-        tyzs = case.data[itime, :, 4]
-        # angle
-        omaxs = case.data[itime, :, 6]
-        omins = case.data[itime, :, 7]
-        ovms = case.data[itime, :, 8]
-
-        j = 0
-        for eid in np.unique(eidsi):
-            ieid = np.where(eidsi == eid)[0]
-            ieid.sort()
-            layersi = layers[ieid]
-            eid2 = eid_map[eid]
-            is_element_on[eid2] = 1.
-
-            oxxi = 0.
-            oyyi = 0.
-            txyi = 0.
-            tyzi = 0.
-            txzi = 0.
-            omaxi = 0.
-            omini = 0.
-            ovmi = 0.
-            nlayers = len(layersi)
-            for unused_ilayer in range(nlayers):
-                oxxi = max(oxxs[j], oxxi)
-                oyyi = max(oyys[j], oyyi)
-                txyi = max(txys[j], txyi)
-                tyzi = max(tyzs[j], tyzi)
-                txzi = max(txzs[j], txzi)
-
-                omaxi = max(omaxs[j], omaxi)
-                omini = min(omins[j], omini)
-                ovmi = max(ovms[j], ovmi)
-                j += 1
-
-            oxx[eid2] = oxxi
-            oyy[eid2] = oyyi
-            txy[eid2] = txyi
-            tyz[eid2] = tyzi
-            txz[eid2] = txzi
-            max_principal[eid2] = omaxi
-            min_principal[eid2] = omini
-            ovm[eid2] = ovmi
-        del oxxi, oyyi, txyi, tyzi, txzi, omaxi, omini, ovmi, eid2, j, layers, eidsi
-    del cplates
-    return vm_word
 
 def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
                             oxx, oyy, ozz, txy, tyz, txz,
