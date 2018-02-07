@@ -696,61 +696,66 @@ class NastranGuiResults(NastranGuiAttributes):
             keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
 
             j = np.searchsorted(self.element_ids, ueids)
-            is_element_on[j] = 1.
             di = j[1:-1] - j[0:-2]
-            if di.max() != 2:
-                #print('di =', np.unique(di))
-                # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
-                ii = 0
-                unused_eid_old = eids[0]
-                fxi = defaultdict(list)
-                fyi = defaultdict(list)
-                fzi = defaultdict(list)
-                rxi = defaultdict(list)
-                ryi = defaultdict(list)
-                rzi = defaultdict(list)
-                for ii, eid in enumerate(eids):
-                    fxi[eid].append(case.data[:, ii, 5])
-                    fyi[eid].append(case.data[:, ii, 3])
-                    fzi[eid].append(case.data[:, ii, 4])
-
-                    rxi[eid].append(case.data[:, ii, 6])
-                    ryi[eid].append(case.data[:, ii, 1])
-                    rzi[eid].append(case.data[:, ii, 2])
-                    #if eidi == eid_old:
-                    #    fx[ii] = array([case.data[:, j, 5], case.data[:, j, 5]]).max(axis=0)
-                    #else:
-                for ii, eidi in zip(j, eids[j]):
-                    fx[ii] = max(fxi[eidi])
-                    fy[ii] = max(fyi[eidi])
-                    fz[ii] = max(fyi[eidi])
-                    rx[ii] = max(rxi[eidi])
-                    ry[ii] = max(ryi[eidi])
-                    rz[ii] = max(rzi[eidi])
+            if len(di) == 0:
+                # pload1
+                self.log_error('Error loading CBAR-100 forces; failed slicing element_ids')
             else:
-                # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
-                neids = len(np.unique(eids)) * 2
-                if len(eids) != len(np.unique(eids)) * 2:
-                    msg = 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
-                    raise RuntimeError(msg)
-                fx[i] = np.array(
-                    [case.data[itime, ::-1, 5],
-                     case.data[itime, 1::-1, 5]]).max(axis=0)
-                fy[i] = np.array(
-                    [case.data[itime, ::-1, 3],
-                     case.data[itime, 1::-1, 3]]).max(axis=0)
-                fz[i] = np.array(
-                    [case.data[itime, ::-1, 4],
-                     case.data[itime, 1::-1, 4]]).max(axis=0)
-                rx[i] = np.array(
-                    [case.data[itime, ::-1, 6],
-                     case.data[itime, 1::-1, 6]]).max(axis=0)
-                ry[i] = np.array(
-                    [case.data[itime, ::-1, 1],
-                     case.data[itime, 1::-1, 1]]).max(axis=0)
-                rz[i] = np.array(
-                    [case.data[itime, ::-1, 2],
-                     case.data[itime, 1::-1, 2]]).max(axis=0)
+                is_element_on[j] = 1.
+
+                if di.max() != 2:
+                    #print('di =', np.unique(di))
+                    # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
+                    ii = 0
+                    unused_eid_old = eids[0]
+                    fxi = defaultdict(list)
+                    fyi = defaultdict(list)
+                    fzi = defaultdict(list)
+                    rxi = defaultdict(list)
+                    ryi = defaultdict(list)
+                    rzi = defaultdict(list)
+                    for ii, eid in enumerate(eids):
+                        fxi[eid].append(case.data[:, ii, 5])
+                        fyi[eid].append(case.data[:, ii, 3])
+                        fzi[eid].append(case.data[:, ii, 4])
+
+                        rxi[eid].append(case.data[:, ii, 6])
+                        ryi[eid].append(case.data[:, ii, 1])
+                        rzi[eid].append(case.data[:, ii, 2])
+                        #if eidi == eid_old:
+                        #    fx[ii] = array([case.data[:, j, 5], case.data[:, j, 5]]).max(axis=0)
+                        #else:
+                    for ii, eidi in zip(j, eids[j]):
+                        fx[ii] = max(fxi[eidi])
+                        fy[ii] = max(fyi[eidi])
+                        fz[ii] = max(fyi[eidi])
+                        rx[ii] = max(rxi[eidi])
+                        ry[ii] = max(ryi[eidi])
+                        rz[ii] = max(rzi[eidi])
+                else:
+                    # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
+                    neids = len(np.unique(eids)) * 2
+                    if len(eids) != len(np.unique(eids)) * 2:
+                        msg = 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
+                        raise RuntimeError(msg)
+                    fx[i] = np.array(
+                        [case.data[itime, ::-1, 5],
+                         case.data[itime, 1::-1, 5]]).max(axis=0)
+                    fy[i] = np.array(
+                        [case.data[itime, ::-1, 3],
+                         case.data[itime, 1::-1, 3]]).max(axis=0)
+                    fz[i] = np.array(
+                        [case.data[itime, ::-1, 4],
+                         case.data[itime, 1::-1, 4]]).max(axis=0)
+                    rx[i] = np.array(
+                        [case.data[itime, ::-1, 6],
+                         case.data[itime, 1::-1, 6]]).max(axis=0)
+                    ry[i] = np.array(
+                        [case.data[itime, ::-1, 1],
+                         case.data[itime, 1::-1, 1]]).max(axis=0)
+                    rz[i] = np.array(
+                        [case.data[itime, ::-1, 2],
+                         case.data[itime, 1::-1, 2]]).max(axis=0)
         return found_force, fx, fy, fz, rx, ry, rz, is_element_on
 
     def _fill_op2_time_centroidal_force(self, cases, model,
@@ -874,18 +879,19 @@ class NastranGuiResults(NastranGuiAttributes):
         dt = None
 
         is_element_on = np.zeros(nelements, dtype='int8')  # is the element supported
-        oxx = np.zeros(nelements, dtype='float32')
-        oyy = np.zeros(nelements, dtype='float32')
-        ozz = np.zeros(nelements, dtype='float32')
+        oxx = np.full(nelements, np.nan, dtype='float32')
+        oyy = np.full(nelements, np.nan, dtype='float32')
+        ozz = np.full(nelements, np.nan, dtype='float32')
 
-        txy = np.zeros(nelements, dtype='float32')
-        tyz = np.zeros(nelements, dtype='float32')
-        txz = np.zeros(nelements, dtype='float32')
+        txy = np.full(nelements, np.nan, dtype='float32')
+        tyz = np.full(nelements, np.nan, dtype='float32')
+        txz = np.full(nelements, np.nan, dtype='float32')
 
-        max_principal = np.zeros(nelements, dtype='float32')  # max
-        mid_principal = np.zeros(nelements, dtype='float32')  # mid
-        min_principal = np.zeros(nelements, dtype='float32')  # min
-        ovm = np.zeros(nelements, dtype='float32')
+        max_principal = np.full(nelements, np.nan, dtype='float32')  # max
+        mid_principal = np.full(nelements, np.nan, dtype='float32')  # mid
+        min_principal = np.full(nelements, np.nan, dtype='float32')  # min
+        #max_shear = np.full(nelements, np.nan, dtype='float32')
+        ovm = np.full(nelements, np.nan, dtype='float32')
 
         vm_word = None
         vm_word = get_rod_stress_strain(
@@ -983,55 +989,55 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase += 1
 
         #print('max/min', max_principal.max(), max_principal.min())
-        if oxx.min() != oxx.max():
+        if np.any(np.isfinite(oxx)):
             oxx_res = GuiResult(subcase_id, header=word + 'XX', title=word + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
             form_dict[(key, itime)].append((word + 'XX', icase, []))
             icase += 1
-        if oyy.min() != oyy.max():
+        if np.any(np.isfinite(oxx)): #if oyy.min() != oyy.max():
             oyy_res = GuiResult(subcase_id, header=word + 'YY', title=word + 'YY',
                                 location='centroid', scalar=oyy, data_format=fmt)
             cases[icase] = (oyy_res, (subcase_id, word + 'YY'))
             form_dict[(key, itime)].append((word + 'YY', icase, []))
             icase += 1
-        if ozz.min() != ozz.max():
+        if np.any(np.isfinite(ozz)):
             ozz_res = GuiResult(subcase_id, header=word + 'ZZ', title=word + 'ZZ',
                                 location='centroid', scalar=ozz, data_format=fmt)
             cases[icase] = (ozz_res, (subcase_id, word + 'ZZ'))
             form_dict[(key, itime)].append((word + 'ZZ', icase, []))
             icase += 1
-        if txy.min() != txy.max():
+        if np.any(np.isfinite(txy)):
             oxy_res = GuiResult(subcase_id, header=word + 'XY', title=word + 'XY',
                                 location='centroid', scalar=txy, data_format=fmt)
             cases[icase] = (oxy_res, (subcase_id, word + 'XY'))
             form_dict[(key, itime)].append((word + 'XY', icase, []))
             icase += 1
-        if tyz.min() != tyz.max():
+        if np.any(np.isfinite(tyz)):
             oyz_res = GuiResult(subcase_id, header=word + 'YZ', title=word + 'YZ',
                                 location='centroid', scalar=tyz, data_format=fmt)
             cases[icase] = (oyz_res, (subcase_id, word + 'YZ'))
             form_dict[(key, itime)].append((word + 'YZ', icase, []))
             icase += 1
-        if txz.min() != txz.max():
+        if np.any(np.isfinite(txz)):
             oxz_res = GuiResult(subcase_id, header=word + 'XZ', title=word + 'XZ',
                                 location='centroid', scalar=txz, data_format=fmt)
             cases[icase] = (oxz_res, (subcase_id, word + 'XZ'))
             form_dict[(key, itime)].append((word + 'XZ', icase, []))
             icase += 1
-        if max_principal.min() != max_principal.max():
+        if np.any(np.isfinite(max_principal)):
             maxp_res = GuiResult(subcase_id, header='MaxPrincipal', title='MaxPrincipal',
                                  location='centroid', scalar=max_principal, data_format=fmt)
             cases[icase] = (maxp_res, (subcase_id, 'MaxPrincipal'))
             form_dict[(key, itime)].append(('Max Principal', icase, []))
             icase += 1
-        if mid_principal.min() != mid_principal.max():
+        if np.any(np.isfinite(mid_principal)):
             midp_res = GuiResult(subcase_id, header='MidPrincipal', title='MidPrincipal',
                                  location='centroid', scalar=mid_principal, data_format=fmt)
             cases[icase] = (midp_res, (subcase_id, 'MidPrincipal'))
             form_dict[(key, itime)].append(('Mid Principal', icase, []))
             icase += 1
-        if min_principal.min() != min_principal.max():
+        if np.any(np.isfinite(min_principal)):
             minp_res = GuiResult(subcase_id, header='MinPrincipal', title='MinPrincipal',
                                  location='centroid', scalar=min_principal, data_format=fmt)
             cases[icase] = (minp_res, (subcase_id, 'MinPrincipal'))

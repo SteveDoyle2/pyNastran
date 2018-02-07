@@ -973,19 +973,19 @@ class GetCard(GetMethods):
                     else:
                         elem_node_ids = elem.node_ids
                         if elem.type == 'CTETRA':
-                            #face1 = elem.get_face(load.g1.nid, load.g34.nid)
-                            facn = elem.get_face_area_centroid_normal(load.g1.nid, load.g34.nid)
+                            #face1 = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
+                            facn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
                             face, area, centroid, normal
                             #assert face == face1
                             nface = 3
                         elif elem.type == 'CHEXA':
-                            #face1 = elem.get_face(load.g34.nid, load.g1.nid)
-                            facn = elem.get_face_area_centroid_normal(load.g34.nid, load.g1.nid)
+                            #face1 = elem.get_face(load.g34_ref.nid, load.g1_ref.nid)
+                            facn = elem.get_face_area_centroid_normal(load.g34_ref.nid, load.g1_ref.nid)
                             face, area, centroid, normal = facn
                             #assert face == face1
                             nface = 4
                         elif elem.type == 'CPENTA':
-                            g1 = load.g1.nid
+                            g1 = load.g1_ref.nid
                             if load.g34 is None:
                                 #face1 = elem.get_face(g1)
                                 facn = elem.get_face_area_centroid_normal(g1)
@@ -993,7 +993,7 @@ class GetCard(GetMethods):
                                 nface = 3
                             else:
                                 #face1 = elem.get_face(g1, load.g34.nid)
-                                facn = elem.get_face_area_centroid_normal(g1, load.g34.nid)
+                                facn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
                                 face, area, centroid, normal = facn
                                 nface = 4
                             #assert face == face1
@@ -1142,7 +1142,7 @@ class GetCard(GetMethods):
 
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         #A, centroid, normal = elem.get_face_area_centroid_normal(
-                            #load.g34.nid, load.g1.nid)
+                            #load.g34_ref.nid, load.g1_ref.nid)
                         #r = centroid - p
                     else:
                         etypes_skipped.add(elem.type)
