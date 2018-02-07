@@ -438,6 +438,7 @@ class LegendPropertiesWindow(PyDialog):
             self.colormap_button.hide()
 
         self.animate_button = QPushButton('Create Animation')
+        #self.advanced_button = QPushButton('Advanced')
 
         if self._default_scale == 0.0 and self._default_arrow_scale == 0.0:
             self.animate_button.setEnabled(False)

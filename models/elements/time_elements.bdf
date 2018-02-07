@@ -42,7 +42,7 @@ TLOAD1	500	600		LOAD	8003
 
 $	SID	nid	cid	scale	fx	fy	fz
 FORCE	600	13	0	10000.	0.	0.	1.
-TSTEP,22, 100, 10.0
+TSTEP,22, 10, 10.0
 $ Defines Magnitude vs. Frequency
 $TABLEx TableID         InterpType
 $       Frequency       Magnitude       Frequency       Magnitude

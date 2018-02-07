@@ -5674,8 +5674,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         keys_map = {}
         key_itime = []
 
-        print(keys)
+        from pyNastran.op2.result_objects.stress_object import StressObject
+        self.unused_stress = {}
+        self.unused_strain = {}
         for key in keys:
+            self.unused_stress[key] = StressObject(model, key, is_stress=True)
+            self.unused_strain[key] = StressObject(model, key, is_stress=False)
+
             #print('key = %r' % str(key))
             header_dict[(key, 0)] = '; Static'
 
