@@ -662,7 +662,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         eids_array = results['eid']
         eid_res = GuiResult(subcase_id, 'iElement', 'iElement', 'centroid',
                             np.arange(len(eids_array), dtype='int32'),
-                            mask_value=0,
+                            mask_value=-1,
                             nlabels=None,
                             labelsize=None,
                             ncolors=None,
@@ -5707,22 +5707,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # stress
                 icase = self._fill_op2_stress(
                     cases, model, key, icase, itime,
-                    stress_dict, header_dict, keys_map, is_static)
+                    stress_dict, header_dict, keys_map)
 
                 # strain
                 icase = self._fill_op2_strain(
                     cases, model, key, icase, itime,
-                    strain_dict, header_dict, keys_map, is_static)
+                    strain_dict, header_dict, keys_map)
 
                 # force
                 icase = self._fill_op2_force(
                     cases, model, key, icase, itime,
-                    force_dict, header_dict, keys_map, is_static)
+                    force_dict, header_dict, keys_map)
 
                 # strain energy
                 icase = self._fill_op2_time_centroidal_strain_energy(
                     cases, model, key, icase, itime,
-                    strain_energy_dict, header_dict, keys_map, is_static)
+                    strain_energy_dict, header_dict, keys_map)
                 ncases = icase - ncases_old
                 new_key = (key, itime)
                 if ncases and new_key not in key_itime:

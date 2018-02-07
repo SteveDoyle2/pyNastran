@@ -1,6 +1,8 @@
+"""
+Interface for converting OP2 results to the GUI format
+"""
 # pylint: disable=C1801, C0103
 from __future__ import print_function
-import sys
 from copy import deepcopy
 from collections import defaultdict
 import traceback
@@ -12,7 +14,12 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.nastran.geometry_helper import NastranGuiAttributes
 from pyNastran.converters.nastran.displacements import (
     DisplacementResults, ForceTableResults) #, TransientElementResults
-from pyNastran.op2.result_objects.stress_object import _get_nastran_header
+from pyNastran.op2.result_objects.stress_object import (
+    _get_nastran_header,
+    get_rod_stress_strain,
+    get_bar_stress_strain, get_bar100_stress_strain, get_beam_stress_strain,
+    get_plate_stress_strain, get_solid_stress_strain)
+
 
 class NastranGuiResults(NastranGuiAttributes):
     """
@@ -22,6 +29,7 @@ class NastranGuiResults(NastranGuiAttributes):
         super(NastranGuiResults, self).__init__()
 
     def _fill_gpforces(self, model):
+        """unused"""
         pass
         #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is not really an OUG table
 
@@ -182,7 +190,7 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     #def _fill_op2_force2(self, cases, model, key, icase, itime,
-                         #form_dict, header_dict, is_static):
+                         #form_dict, header_dict):
         #"""creates the thermal loads"""
         #thermal_loads = [
             ## 3D
@@ -292,42 +300,32 @@ class NastranGuiResults(NastranGuiAttributes):
                 #icase += 7
 
     def _fill_op2_force(self, cases, model, key, icase, itime,
-                        form_dict, header_dict, keys_map, is_static):
+                        form_dict, header_dict, keys_map):
         """creates the force plots"""
         #assert isinstance(key, int), key
         assert isinstance(icase, int), icase
         assert isinstance(form_dict, dict), form_dict
-        try:
-            icase = self._fill_op2_time_centroidal_force(
-                cases, model, key, icase, itime,
-                form_dict, header_dict, keys_map, is_static)
-        except IndexError as e:
-            self.log_error('\n' + ''.join(traceback.format_stack()))
-            #traceback.print_exc(file=self.log_error)
-            self.log_error(str(e))
+        icase = self._fill_op2_time_centroidal_force(
+            cases, model, key, icase, itime,
+            form_dict, header_dict, keys_map)
         return icase
 
     def _fill_op2_stress(self, cases, model, key, icase, itime,
-                         form_dict, header_dict, keys_map, is_static, is_stress=True):
+                         form_dict, header_dict, keys_map, is_stress=True):
         """creates the stress plots"""
         assert isinstance(icase, int), icase
         assert isinstance(form_dict, dict), form_dict
-        try:
-            icase = self._fill_op2_time_centroidal_stress(
-                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
-                is_static, is_stress=is_stress)
-        except TypeError as e:
-            self.log_error('\n' + ''.join(traceback.format_stack()))
-            #traceback.print_exc(file=self.log_error)
-            self.log_error(str(e))
+        icase = self._fill_op2_time_centroidal_stress(
+            cases, model, key, icase, itime, form_dict, header_dict, keys_map,
+            is_stress=is_stress)
         return icase
 
     def _fill_op2_strain(self, cases, model, key, icase, itime,
-                         form_dict, header_dict, keys_map, is_static):
+                         form_dict, header_dict, keys_map):
         """creates the strain plots"""
         return self._fill_op2_stress(cases, model, key, icase, itime,
                                      form_dict, header_dict, keys_map,
-                                     is_static, is_stress=False)
+                                     is_stress=False)
 
     def _get_stress_times(self, model, isubcase):
         table_types = self._get_stress_table_types()
@@ -459,8 +457,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
     def _fill_op2_time_centroidal_strain_energy(self, cases, model,
                                                 key, icase, itime,
-                                                form_dict, unused_header_dict, keys_map,
-                                                unused_is_static):
+                                                form_dict, unused_header_dict, keys_map):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -566,30 +563,27 @@ class NastranGuiResults(NastranGuiAttributes):
         #except AttributeError:
             #pass
 
-        ese_res = GuiResult(subcase_id, header='Strain Energy',
-                            title='Strain Energy', data_format='%.3e',
-                            location='centroid', scalar=ese)
-        percent_res = GuiResult(subcase_id, header='Percent of Total',
-                                title='Percent of Total', data_format='%.3f',
-                                location='centroid', scalar=percent)
-        sed_res = GuiResult(subcase_id, header='Strain Energy Density',
-                            title='Strain Energy Density', data_format='%.3e',
-                            location='centroid', scalar=strain_energy_density)
+        if np.any(np.isfinite(ese)):
+            ese_res = GuiResult(subcase_id, header='Strain Energy',
+                                title='Strain Energy', data_format='%.3e',
+                                location='centroid', scalar=ese)
+            percent_res = GuiResult(subcase_id, header='Percent of Total',
+                                    title='Percent of Total', data_format='%.3f',
+                                    location='centroid', scalar=percent)
+            sed_res = GuiResult(subcase_id, header='Strain Energy Density',
+                                title='Strain Energy Density', data_format='%.3e',
+                                location='centroid', scalar=strain_energy_density)
 
-        cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
-        cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
-        cases[icase + 2] = (sed_res, (subcase_id, 'Strain Energy Density'))
+            cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
+            cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
+            cases[icase + 2] = (sed_res, (subcase_id, 'Strain Energy Density'))
 
-        form_dict[(key, itime)].append(('Strain Energy', icase, []))
-        form_dict[(key, itime)].append(('Percent', icase + 1, []))
-        form_dict[(key, itime)].append(('Strain Energy Density', icase + 1, []))
-        icase += 3
+            form_dict[(key, itime)].append(('Strain Energy', icase, []))
+            form_dict[(key, itime)].append(('Percent', icase + 1, []))
+            form_dict[(key, itime)].append(('Strain Energy Density', icase + 1, []))
+            icase += 3
 
         return icase
-
-    #icase = self._fill_op2_time_centroidal_force(
-        #cases, model, subcase_id, icase, itime, form_dict,
-        #is_static)
 
     def _create_op2_time_centroidal_force_arrays(self, model, nelements, key, itime,
                                                  header_dict, keys_map):
@@ -760,7 +754,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
     def _fill_op2_time_centroidal_force(self, cases, model,
                                         key, icase, itime,
-                                        form_dict, header_dict, keys_map, unused_is_static):
+                                        form_dict, header_dict, keys_map):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -863,12 +857,11 @@ class NastranGuiResults(NastranGuiAttributes):
 
     def _fill_op2_time_centroidal_stress(self, cases, model, key, icase, itime,
                                          form_dict, header_dict, keys_map,
-                                         is_static, is_stress=True):
+                                         is_stress=True):
         """
         Creates the time accurate stress objects for the pyNastranGUI
         """
         #new_cases = True
-        case = None
         #assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), icase
         #assert isinstance(itime, int), type(itime)
@@ -876,7 +869,6 @@ class NastranGuiResults(NastranGuiAttributes):
         eids = self.element_ids
         assert len(eids) > 0, eids
         nelements = self.nelements
-        dt = None
 
         is_element_on = np.zeros(nelements, dtype='int8')  # is the element supported
         oxx = np.full(nelements, np.nan, dtype='float32')
@@ -894,6 +886,14 @@ class NastranGuiResults(NastranGuiAttributes):
         ovm = np.full(nelements, np.nan, dtype='float32')
 
         vm_word = None
+        #-------------------------------------------------------------
+        #vm_word = get_spring_stress_strain(
+            #model, key, is_stress, vm_word, itime,
+            #oxx, txy,
+            #max_principal, min_principal, ovm, is_element_on,
+            #eids, header_dict, keys_map)
+
+        #-------------------------------------------------------------
         vm_word = get_rod_stress_strain(
             model, key, is_stress, vm_word, itime,
             oxx, txy,
@@ -917,10 +917,17 @@ class NastranGuiResults(NastranGuiAttributes):
             oxx,
             max_principal, min_principal, ovm, is_element_on,
             header_dict, keys_map, self.eid_map)
+        #-------------------------------------------------------------
         vm_word = get_plate_stress_strain(
             model, key, is_stress, vm_word, itime,
             oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
             eids, header_dict, keys_map)
+
+        #vm_word = get_shear_stress_strain(
+            #model, key, is_stress, vm_word, itime,
+            #oxx, txy,
+            #max_principal, min_principal, ovm, is_element_on,
+            #eids, header_dict, keys_map)
 
         if is_stress:
             stress_obj = self.unused_stress[key]
@@ -957,29 +964,15 @@ class NastranGuiResults(NastranGuiAttributes):
         #            ozz
 
         if vm_word is None:
+            #print('vm_word is None')
             return icase
-
-        header = ''
-        if not is_static:
-            #print('is_static = %s' % is_static)
-            if case is None:
-                unused_formis = None
-                return icase
-            header = _get_nastran_header(case, dt, itime)
-            #form_time[0] = header
 
         form0 = (word, None, [])
         formis = form0[2]
-        # subcase_id, icase, resultType, vector_size, location, dataFormat
         subcase_id = key[2]
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
-                ioff = np.where(is_element_on == 0)[0]
-                print('stress_eids_off = %s' % np.array(self.element_ids[ioff]))
-                self.log_error('stress_eids_off = %s' % self.element_ids[ioff])
-                for eid in self.element_ids[ioff][:20]:
-                    print(self.model.elements[eid].rstrip())
-                print('-----------------------------------')
+                print_empty_elements(self.model, self.element_ids, is_element_on, self.log_error)
 
                 stress_res = GuiResult(
                     subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
@@ -995,7 +988,7 @@ class NastranGuiResults(NastranGuiAttributes):
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
             form_dict[(key, itime)].append((word + 'XX', icase, []))
             icase += 1
-        if np.any(np.isfinite(oxx)): #if oyy.min() != oyy.max():
+        if np.any(np.isfinite(oyy)):
             oyy_res = GuiResult(subcase_id, header=word + 'YY', title=word + 'YY',
                                 location='centroid', scalar=oyy, data_format=fmt)
             cases[icase] = (oyy_res, (subcase_id, word + 'YY'))
@@ -1175,425 +1168,22 @@ class NastranGuiResults(NastranGuiAttributes):
                 #keys_order += keys
         return keys_order
 
-def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
-                          oxx, txy,
-                          max_principal, min_principal, ovm, is_element_on,
-                          eids, header_dict, keys_map):
-    """helper method for _fill_op2_time_centroidal_stress"""
-    if is_stress:
-        rods = [model.crod_stress, model.conrod_stress, model.ctube_stress,]
-    else:
-        rods = [model.crod_strain, model.conrod_strain, model.ctube_strain,]
+def print_empty_elements(model, element_ids, is_element_on, log_error, ):
+    ioff = np.where(is_element_on == 0)[0]
+    print('stress_eids_off = %s' % np.array(element_ids[ioff]))
+    log_error('stress_eids_off = %s' % element_ids[ioff])
 
-    for result in rods:
-        if key not in result:
-            continue
+    i = 0
+    imax = 20
+    for eid in element_ids[ioff]:
+        element = model.elements[eid]
+        if element.type not in ['CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4']:
+            print(element.rstrip())
+            i += 1
+            if i == imax:
+                break
+    print('-----------------------------------')
 
-        case = result[key]
-        if case.is_complex:
-            continue
-        eidsi = case.element
-        i = np.searchsorted(eids, eidsi)
-        if len(i) != len(np.unique(i)):
-            msg = 'irod=%s is not unique\n' % str(i)
-            print('eids = %s\n' % str(list(eids)))
-            print('eidsi = %s\n' % str(list(eidsi)))
-            raise RuntimeError(msg)
-
-        is_element_on[i] = 1
-        dt = case._times[itime]
-        header = _get_nastran_header(case, dt, itime)
-        header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-
-        # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
-        oxx[i] = case.data[itime, :, 0]
-        txy[i] = case.data[itime, :, 2]
-        try:
-            ovm[i] = np.sqrt(oxx[i]**2 + 3*txy[i]**2) # plane stress
-        except FloatingPointError:
-            ovm[i] = 0.
-            assert np.allclose(oxx[i], 0.)
-            assert np.allclose(txy[i], 0.)
-        # max_principal[i] = sqrt(oxx[i]**2 + txy[i]**2)
-        # min_principal[i] = max_principal[i] - 2 * txy[i]
-        # simplification of:
-        #   eig(A) = [oxx, txy]
-        #            [txy, 0.0]
-        # per Equation 7: http://www.soest.hawaii.edu/martel/Courses/GG303/Eigenvectors.pdf
-        try:
-            max_principal[i] = (oxx[i] + np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
-            min_principal[i] = (oxx[i] - np.sqrt(oxx[i]**2 + 4 * txy[i]**2)) / 2.
-        except FloatingPointError:
-            # underflow is a thing...we can promote the dtype from float32 to float64
-            # but we'll hold off until there's a real example
-            assert np.allclose(oxx[i], 0.)
-            assert np.allclose(txy[i], 0.)
-            max_principal[i] = 0.
-            min_principal[i] = 0.
-    del rods
-    return vm_word
-
-def get_bar_stress_strain(model, key, is_stress, vm_word, itime,
-                          oxx,
-                          max_principal, min_principal, ovm, is_element_on,
-                          eids, header_dict, keys_map):
-    """helper method for _fill_op2_time_centroidal_stress"""
-    if is_stress:
-        bars = model.cbar_stress
-    else:
-        bars = model.cbar_strain
-
-    if key in bars:
-        case = bars[key]
-        if case.is_complex:
-            pass
-        else:
-            dt = case._times[itime]
-            header = _get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-            #s1a = case.data[itime, :, 0]
-            #s2a = case.data[itime, :, 1]
-            #s3a = case.data[itime, :, 2]
-            #s4a = case.data[itime, :, 3]
-
-            axial = case.data[itime, :, 4]
-            smaxa = case.data[itime, :, 5]
-            smina = case.data[itime, :, 6]
-            #MSt = case.data[itime, :, 7]
-
-            #s1b = case.data[itime, :, 8]
-            #s2b = case.data[itime, :, 9]
-            #s3b = case.data[itime, :, 10]
-            #s4b = case.data[itime, :, 11]
-
-            smaxb = case.data[itime, :, 12]
-            sminb = case.data[itime, :, 13]
-            #MSc   = case.data[itime, :, 14]
-
-            eidsi = case.element # [:, 0]
-
-            i = np.searchsorted(eids, eidsi)
-            if len(i) != len(np.unique(i)):
-                print('ibar = %s' % i)
-                print('eids = %s' % eids)
-                msg = 'ibar=%s is not unique' % str(i)
-                raise RuntimeError(msg)
-
-            is_element_on[i] = 1.
-            oxx[i] = axial
-
-            ## TODO :not sure if this block is general for multiple CBAR elements
-            samax = np.amax([smaxa, smaxb], axis=0)
-            samin = np.amin([smaxa, smaxb], axis=0)
-            assert len(samax) == len(i), len(samax)
-            assert len(samin) == len(i)
-            savm = np.amax(np.abs(
-                [smina, sminb,
-                 smaxa, smaxb, axial]), axis=0)
-
-            max_principal[i] = samax
-            min_principal[i] = samin
-            ovm[i] = savm
-            del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
-    del bars
-    return vm_word
-
-def get_bar100_stress_strain(model, key, is_stress, vm_word, itime,
-                             oxx,
-                             max_principal, min_principal, ovm, is_element_on,
-                             eids, header_dict, keys_map):
-    """helper method for _fill_op2_time_centroidal_stress"""
-    if is_stress:
-        bars2 = model.cbar_stress_10nodes
-    else:
-        bars2 = model.cbar_strain_10nodes
-
-    if key in bars2:
-        case = bars2[key]
-        if case.is_complex:
-            pass
-        else:
-            dt = case._times[itime]
-            header = _get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-
-            #  0    1    2    3    4     5     6     7     8
-            # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
-
-            eidsi = case.element # [:, 0]
-            ueidsi = np.unique(eidsi)
-            istart = np.searchsorted(eidsi, ueidsi)
-            unused_iend = np.hstack(istart[1:], [len(eidsi)])
-            axial = case.data[itime, :, 5]
-
-            nbars = len(eidsi) // 10
-            assert nbars * 10 == len(eidsi), 'nbars=%s neids=%s' % (nbars, len(eidsi))
-            axial = case.data[itime, :, 5].reshape(nbars, 10).min(axis=1)
-            smax = case.data[itime, :, 6].reshape(nbars, 10).max(axis=1)
-            smin = case.data[itime, :, 7].reshape(nbars, 10).min(axis=1)
-
-
-            i = np.searchsorted(eids, eidsi)
-            if len(i) != len(np.unique(i)):
-                print('ibar = %s' % i)
-                print('eids = %s' % eids)
-                msg = 'ibar=%s is not unique' % str(i)
-                raise RuntimeError(msg)
-
-            is_element_on[i] = 1.
-            oxx[i] = axial
-
-            ## TODO :not sure if this block is general for multiple CBAR elements
-            svm = np.amax(np.abs([smin, smin]), axis=0)
-
-            max_principal[i] = smax
-            min_principal[i] = smin
-            ovm[i] = svm
-            #del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
-    del bars2
-    return vm_word
-
-def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
-                           oxx,
-                           max_principal, min_principal, ovm, is_element_on,
-                           header_dict, keys_map, eid_map):
-    """helper method for _fill_op2_time_centroidal_stress"""
-    if is_stress:
-        beams = model.cbeam_stress
-    else:
-        beams = model.cbeam_strain
-
-    if key in beams:
-        case = beams[key]
-        if case.is_complex:
-            pass
-        else:
-            eidsi = case.element_node[:, 0]
-            ueids = np.unique(eidsi)
-            #neids = len(ueids)
-
-            # sxc, sxd, sxe, sxf
-            # smax, smin, MSt, MSc
-            dt = case._times[itime]
-            header = _get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-            sxc = case.data[itime, :, 0]
-            sxd = case.data[itime, :, 1]
-            sxe = case.data[itime, :, 2]
-            sxf = case.data[itime, :, 3]
-            smax = case.data[itime, :, 4]
-            smin = case.data[itime, :, 5]
-
-            imin = np.searchsorted(eidsi, ueids)
-            imax = np.searchsorted(eidsi, ueids, side='right')
-            #sxxi = smax[imin:imax]
-            for eid, imini, imaxi in zip(ueids, imin, imax):
-                oxxi = 0.
-                smaxi = 0.
-                smini = 0.
-                eid2 = eid_map[eid]
-                is_element_on[eid2] = 1.
-                oxxi = max(
-                    sxc[imini:imaxi].max(),
-                    sxd[imini:imaxi].max(),
-                    sxe[imini:imaxi].max(),
-                    sxf[imini:imaxi].max(),
-                )
-                smaxi = smax[imini:imaxi].max()
-                smini = smin[imini:imaxi].min()
-                ovmi = max(np.abs(smaxi), np.abs(smini))
-                oxxi = oxx[eid2]
-                max_principal[eid2] = smaxi
-                min_principal[eid2] = smini
-                ovm[eid2] = ovmi
-            del eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
-    del beams
-    return vm_word
-
-def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
-                            oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
-                            eids, header_dict, keys_map):
-    """helper method for _fill_op2_time_centroidal_stress"""
-    if is_stress:
-        plates = [
-            model.ctria3_stress, model.cquad4_stress,
-            model.ctria6_stress, model.cquad8_stress,
-            model.ctriar_stress, model.cquadr_stress,
-        ]
-    else:
-        plates = [
-            model.ctria3_strain, model.cquad4_strain,
-            model.ctria6_strain, model.cquad8_strain,
-            model.ctriar_strain, model.cquadr_strain,
-        ]
-
-    for result in plates:
-        if key not in result:
-            continue
-        case = result[key]
-        if case.is_complex:
-            continue
-
-        if case.is_von_mises:
-            vm_word = 'vonMises'
-        else:
-            vm_word = 'maxShear'
-
-        nnodes_per_element = case.nnodes
-        nlayers_per_element = nnodes_per_element * 2  # *2 for every other layer
-        eidsi = case.element_node[::nlayers_per_element, 0]  # ::2 is for layer skipping
-
-        i = np.searchsorted(eids, eidsi)
-        if len(i) != len(np.unique(i)):
-            print(case.element_node)
-            print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
-            print('iplate = %s' % i)
-            print('eids = %s' % eids)
-            print('eidsiA = %s' % case.element_node[:, 0])
-            print('eidsiB = %s' % eidsi)
-            msg = 'iplate=%s is not unique' % str(i)
-            raise RuntimeError(msg)
-        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
-        #                                         txy, angle,
-        #                                         majorP, minorP, ovm]
-        is_element_on[i] = 1.
-        ntotal = case.data.shape[1]  # (ndt, ntotal, nresults)
-        if nlayers_per_element == 1:
-            j = None
-        else:
-            j = np.arange(ntotal)[::nlayers_per_element]
-
-        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
-        #                                         txy, angle,
-        #                                         majorP, minorP, ovm]
-        dt = case._times[itime]
-        header = _get_nastran_header(case, dt, itime)
-        header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-        oxxi = case.data[itime, j, 1]
-        oyyi = case.data[itime, j, 2]
-        txyi = case.data[itime, j, 3]
-        o1i = case.data[itime, j, 5]
-        o3i = case.data[itime, j, 6]
-        ovmi = case.data[itime, j, 7]
-
-        #print("nlayers_per_element = ", case.element_name, nlayers_per_element)
-        for inode in range(1, nlayers_per_element):
-            #print('%s - ilayer = %s' % (case.element_name, inode))
-            #print(case.data[itime, j + inode, 1])
-            #print(case.data[itime, :, 1])
-            oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 1]]), axis=0)
-            oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 2]]), axis=0)
-            txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
-            o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 5]]), axis=0)
-            o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
-            ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 7]]), axis=0)
-            assert len(oxxi) == len(j)
-            #print('-------')
-
-        oxx[i] = oxxi
-        oyy[i] = oyyi
-        txy[i] = txyi
-        max_principal[i] = o1i
-        min_principal[i] = o3i
-        ovm[i] = ovmi
-    return vm_word
-
-
-def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
-                            oxx, oyy, ozz, txy, tyz, txz,
-                            max_principal, mid_principal, min_principal, ovm, is_element_on,
-                            eids, header_dict, keys_map):
-    """helper method for _fill_op2_time_centroidal_stress"""
-    if is_stress:
-        solids = [(model.ctetra_stress),
-                  (model.cpenta_stress),
-                  (model.chexa_stress),]
-    else:
-        solids = [(model.ctetra_strain),
-                  (model.cpenta_strain),
-                  (model.chexa_strain),]
-
-    for result in solids:
-        if key not in result:
-            continue
-        case = result[key]
-        if case.is_complex:
-            continue
-
-        if case.is_von_mises:
-            vm_word = 'vonMises'
-        else:
-            vm_word = 'maxShear'
-
-        nnodes_per_element = case.nnodes
-        eidsi = case.element_cid[:, 0]
-        ntotal = len(eidsi)  * nnodes_per_element
-
-        i = np.searchsorted(eids, eidsi)
-        if len(i) != len(np.unique(i)):
-            print('isolid = %s' % str(i))
-            print('eids = %s' % eids)
-            print('eidsi = %s' % eidsi)
-            assert len(i) == len(np.unique(i)), 'isolid=%s is not unique' % str(i)
-
-        is_element_on[i] = 1
-        #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
-        #                                         txy, tyz, txz,
-        #                                         o1, o2, o3, ovm]
-
-        if nnodes_per_element == 1:
-            j = None
-        else:
-            j = np.arange(ntotal)[::nnodes_per_element]
-            ueidsi = np.unique(eidsi)
-            assert len(j) == len(ueidsi), 'j=%s ueidsi=%s' % (j, ueidsi)
-
-        dt = case._times[itime]
-        header = _get_nastran_header(case, dt, itime)
-        header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
-        oxxi = case.data[itime, j, 0]
-        oyyi = case.data[itime, j, 1]
-        ozzi = case.data[itime, j, 2]
-        txyi = case.data[itime, j, 3]
-        tyzi = case.data[itime, j, 4]
-        txzi = case.data[itime, j, 5]
-        o1i = case.data[itime, j, 6]
-        o2i = case.data[itime, j, 7]
-        o3i = case.data[itime, j, 8]
-        ovmi = case.data[itime, j, 9]
-
-        for inode in range(1, nnodes_per_element):
-            oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
-            oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
-            ozzi = np.amax(np.vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
-            txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
-            tyzi = np.amax(np.vstack([tyzi, case.data[itime, j + inode, 4]]), axis=0)
-            txzi = np.amax(np.vstack([txzi, case.data[itime, j + inode, 2]]), axis=0)
-
-            o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 6]]), axis=0)
-            o2i = np.amax(np.vstack([o2i, case.data[itime, j + inode, 7]]), axis=0)
-            o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 8]]), axis=0)
-            ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 9]]), axis=0)
-            assert len(oxxi) == len(j)
-
-        oxx[i] = oxxi
-        oyy[i] = oyyi
-        ozz[i] = ozzi
-        txy[i] = txyi
-        tyz[i] = tyzi
-        txz[i] = txzi
-        max_principal[i] = o1i
-        mid_principal[i] = o2i
-        min_principal[i] = o3i
-        ovm[i] = ovmi
-    del solids
-    return vm_word
 
 def _get_t123_tnorm(case, nids, nnodes):
     """helper method for _fill_op2_oug_oqg"""
