@@ -15,9 +15,9 @@ reading/writing/accessing of BDF data.  Such methods include:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
+from typing import List, Tuple, Any, Union, Dict
 
 from six import iteritems
-from typing import List, Tuple, Any, Union, Dict
 import numpy as np
 
 from pyNastran.utils import integer_types

@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
-from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
+#from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 from pyNastran.utils import integer_types, ChainMap
 
 
@@ -109,6 +109,7 @@ class GetMethods(BDFAttributes):
         return nodes
 
     def Point(self, nid, msg=''):
+        """Returns a POINT card"""
         if nid in self.points:
             return self.points[nid]
         else:
@@ -189,6 +190,10 @@ class GetMethods(BDFAttributes):
                            % (pid, msg, self.property_ids))
 
     def Properties(self, pids, msg=''):
+        """
+        gets one or more elemental property (e.g. PSOLID, PLSOLID,
+        PCOMP, PSHELL, PSHEAR); not mass property (PMASS)
+        """
         properties = []
         for pid in pids:
             properties.append(self.Property(pid, msg))
@@ -227,22 +232,27 @@ class GetMethods(BDFAttributes):
         )
         return keys
 
-
     def get_thermal_material_ids(self):
         """gets the thermal material ids"""
         return self.thermal_materials.keys()
 
     def Material(self, mid, msg=''):
+        """gets a structural or thermal material"""
         if mid in self.materials:
             return self.materials[mid]
         elif mid in self.thermal_materials:
             return self.thermal_materials[mid]
         else:
             msg = '\n' + msg
-            raise KeyError('Invalid Material ID:  mid=%s%s\nAllowed=%s' % (
-                mid, msg, np.unique(list(self.materials.keys())) ))
+            msg2 = (
+                'Invalid Material ID:  mid=%s%s\nAllowed=%s' % (
+                    mid, msg, np.unique(list(self.materials.keys()))
+                )
+            )
+            raise KeyError(msg2)
 
     def StructuralMaterial(self, mid, msg=''):
+        """gets a structural material"""
         try:
             mat = self.materials[mid]
         except KeyError:
@@ -251,6 +261,7 @@ class GetMethods(BDFAttributes):
         return mat
 
     def ThermalMaterial(self, mid, msg=''):
+        """gets a thermal material"""
         try:
             mat = self.thermal_materials[mid]
         except KeyError:
@@ -259,6 +270,7 @@ class GetMethods(BDFAttributes):
         return mat
 
     def HyperelasticMaterial(self, mid, msg=''):
+        """gets a hyperelastic material"""
         try:
             mat = self.hyperelastic_materials[mid]
         except KeyError:
@@ -267,6 +279,7 @@ class GetMethods(BDFAttributes):
         return mat
 
     def Materials(self, mids, msg=''):
+        """gets one or more Materials"""
         if isinstance(mids, integer_types):
             mids = [mids]
         materials = []
@@ -317,8 +330,10 @@ class GetMethods(BDFAttributes):
         else:
             dloads_ids = list(self.dload_entries.keys())
             dload_combination_ids = list(self.dloads.keys())
-            raise KeyError('cannot find DLOAD ID=%r%s.\nAllowed dloads (e.g., TLOAD1)=%s; DLOAD=%s' % (
-                sid, msg, np.unique(dloads_ids), np.unique(dload_combination_ids)))
+            raise KeyError('cannot find DLOAD ID=%r%s.\nAllowed dloads '
+                           '(e.g., TLOAD1)=%s; DLOAD=%s' % (
+                               sid, msg, np.unique(dloads_ids),
+                               np.unique(dload_combination_ids)))
         return dload
 
     def get_dload_entries(self, sid, msg=''):
@@ -415,7 +430,7 @@ class GetMethods(BDFAttributes):
 
         Parameters
         ---------
-        sid : int
+        nsm_id : int
             the LOAD id
         consider_nsmadd : bool; default=True
             NSMADDs should not be considered when referenced from an NSM card
@@ -423,7 +438,7 @@ class GetMethods(BDFAttributes):
         msg : str
             additional message to print when failing
         """
-        assert isinstance(nsm_id, integer_types), 'nsm_id=%s is not an integer\n' % sid
+        assert isinstance(nsm_id, integer_types), 'nsm_id=%s is not an integer\n' % nsm_id
         if consider_nsmadd and nsm_id in self.nsmadds:
             nsm = self.nsmadds[nsm_id]
         elif nsm_id in self.nsms:
@@ -431,8 +446,10 @@ class GetMethods(BDFAttributes):
         else:
             nsm_ids = list(self.nsms.keys())
             nsmadd_ids = list(self.nsmadds.keys())
-            raise KeyError('cannot find NSM ID=%r%s.\nAllowed NSMs (e.g., NSM1)=%s; NSMADDs=%s; consider_nsmadd=%s' % (
-                nsm_id, msg, np.unique(nsm_ids), np.unique(nsmadd_ids), consider_nsmadd))
+            raise KeyError('cannot find NSM ID=%r%s.\nAllowed NSMs (e.g., NSM1)=%s; '
+                           'NSMADDs=%s; consider_nsmadd=%s' % (
+                               nsm_id, msg, np.unique(nsm_ids), np.unique(nsmadd_ids),
+                               consider_nsmadd))
         return nsm
 
     #--------------------
@@ -664,6 +681,7 @@ class GetMethods(BDFAttributes):
     # SET CARDS
 
     def Set(self, sid, msg=''):
+        """gets a SET, SET1, SET2, or SET3 card"""
         try:
             return self.sets[sid]
         except KeyError:
