@@ -614,6 +614,11 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                     else:
                         msg = 'found nsm_type=%r...\n%s' % (nsm.nsm_type, str(nsm))
                         raise NotImplementedError(msg)
+        elif card_type in ['POINTAX', 'AXIC', 'RINGAX']:
+            pass
+            #for eid in ids:
+                #elem = model.plotels[eid]
+                #nids_used.update(elem.node_ids)
         else:
             raise NotImplementedError(card_type)
 
