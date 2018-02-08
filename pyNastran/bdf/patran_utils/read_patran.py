@@ -8,6 +8,7 @@ from collections import defaultdict
 import numpy as np
 from pyNastran.utils import print_bad_path
 
+
 def read_patran_format(patran_fmt_filename):
     """
     reads a file as shown below::
@@ -121,3 +122,53 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
         'headers' : headers,
     }
     return data_dict
+
+def load_patran_nod(nod_filename, node_ids):
+    """
+    Reads a Patran formatted *.nod file
+
+    Returns
+    -------
+    A : dict[key] = (n, m) array
+        the numpy arrays
+        key : str
+            the name
+        n : int
+            number of nodes/elements
+        m : int
+            secondary dimension
+            N/A : 1D array
+            3 : deflection
+    fmt_dict : dict[header] = fmt
+        the format of the arrays
+        header : str
+            the name
+        fmt : str
+            '%i', '%f'
+    headers : List[str]???
+        the titles???
+    """
+    data_dict = read_patran(nod_filename, fdtype='float32', idtype='int32')
+    nids = data_dict['nids']
+    data = data_dict['data']
+    data_headers = data_dict['headers']
+    ndata = data.shape[0]
+    if len(data.shape) == 1:
+        shape = (ndata, 1)
+        data = data.reshape(shape)
+
+    if ndata != node_ids.shape[0]:
+        inids = np.searchsorted(node_ids, nids)
+        assert np.array_equal(nids, node_ids[inids]), 'the node ids are invalid'
+        data2 = np.full(data.shape, np.nan, data.dtype)
+        data2[inids, :] = data
+    else:
+        data2 = data
+
+    A = {}
+    fmt_dict = {}
+    headers = data_headers['SEC']
+    for i, header in enumerate(headers):
+        A[header] = data2[:, i]
+        fmt_dict[header] = '%f'
+    return A, fmt_dict, headers

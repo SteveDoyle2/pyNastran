@@ -301,7 +301,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         origin = coord.origin
         beta = coord.beta().T
         self.create_coordinate_system(dim_max, label='%s' % cid, origin=origin,
-                                      matrix_3x3=beta, Type=cid_type)
+                                      matrix_3x3=beta, coord_type=cid_type)
 
     def _create_nastran_coords(self, model, dim_max):
         """

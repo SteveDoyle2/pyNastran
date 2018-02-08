@@ -1,3 +1,7 @@
+"""
+defines GuiAttributes, which defines Gui getter/setter methods
+and is inherited from many GUI classes
+"""
 from __future__ import print_function
 import os
 from collections import OrderedDict
@@ -6,7 +10,10 @@ import numpy as np
 
 from pyNastran.gui.gui_objects.settings import Settings
 from pyNastran.gui.utils.load_results import create_res_obj
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, create_vtk_cells_of_constant_element_type
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
+from pyNastran.bdf.cards.base_card import deprecated
+
 
 #class GuiAttributes(QMainWindow):
 class GuiAttributes(object):
@@ -200,28 +207,34 @@ class GuiAttributes(object):
     # geom
     @property
     def grid(self):
+        """gets the active grid"""
         #print('get grid; %r' % self.name)
         return self.main_grids[self.name]
 
     @grid.setter
     def grid(self, grid):
+        """sets the active grid"""
         #print('set grid; %r' % self.name)
         self.main_grids[self.name] = grid
 
     @property
     def grid_mapper(self):
+        """gets the active grid_mapper"""
         return self.main_grid_mappers[self.name]
 
     @grid_mapper.setter
     def grid_mapper(self, grid_mapper):
+        """sets the active grid_mapper"""
         self.main_grid_mappers[self.name] = grid_mapper
 
     @property
     def geom_actor(self):
+        """gets the active geom_actor"""
         return self.main_geometry_actors[self.name]
 
     @geom_actor.setter
     def geom_actor(self, geom_actor):
+        """sets the active geom_actor"""
         self.main_geometry_actors[self.name] = geom_actor
 
     #-------------------------------------------------------------------
@@ -236,10 +249,12 @@ class GuiAttributes(object):
 
     @property
     def edge_actor(self):
+        """gets the active edge_actor"""
         return self.main_edge_actors[self.name]
 
     @edge_actor.setter
     def edge_actor(self, edge_actor):
+        """sets the active edge_actor"""
         self.main_edge_actors[self.name] = edge_actor
 
     def set_glyph_scale_factor(self, scale):
@@ -247,33 +262,35 @@ class GuiAttributes(object):
         self.glyph_scale_factor = scale
         self.glyphs.SetScaleFactor(scale)
 
+    @property
+    def nid_map(self):
+        """gets the node_id map"""
+        return self.nid_maps[self.name]
+
+    @nid_map.setter
+    def nid_map(self, nid_map):
+        """sets the node_id map"""
+        self.nid_maps[self.name] = nid_map
+
+    @property
+    def eid_map(self):
+        """gets the element_id map"""
+        try:
+            return self.eid_maps[self.name]
+        except:
+            msg = 'KeyError: key=%r; keys=%s' % (self.name, list(self.eid_maps.keys()))
+            raise KeyError(msg)
+
+    @eid_map.setter
+    def eid_map(self, eid_map):
+        """sets the element_id map"""
+        self.eid_maps[self.name] = eid_map
+
     #-------------------------------------------------------------------
     def _load_patran_nod(self, nod_filename):
         """reads a Patran formatted *.nod file"""
-        from pyNastran.bdf.patran_utils.read_patran import read_patran
-        data_dict = read_patran(nod_filename, fdtype='float32', idtype='int32')
-        nids = data_dict['nids']
-        data = data_dict['data']
-        data_headers = data_dict['headers']
-        ndata = data.shape[0]
-        if len(data.shape) == 1:
-            shape = (ndata, 1)
-            data = data.reshape(shape)
-
-        if ndata != self.node_ids.shape[0]:
-            inids = np.searchsorted(self.node_ids, nids)
-            assert np.array_equal(nids, self.node_ids[inids]), 'the node ids are invalid'
-            data2 = np.full(data.shape, np.nan, data.dtype)
-            data2[inids, :] = data
-        else:
-            data2 = data
-
-        A = {}
-        fmt_dict = {}
-        headers = data_headers['SEC']
-        for i, header in enumerate(headers):
-            A[header] = data2[:, i]
-            fmt_dict[header] = '%f'
+        from pyNastran.bdf.patran_utils.read_patran import load_patran_nod
+        A, fmt_dict, headers = load_patran_nod(nod_filename, self.node_ids)
 
         out_filename_short = os.path.relpath(nod_filename)
         result_type = 'node'
@@ -391,7 +408,7 @@ class GuiAttributes(object):
         self.geometry_actors[name].Modified()
 
     def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
-                                 Type='xyz'):
+                                 coord_type='xyz'):
         """
         Creates a coordinate system
 
@@ -407,31 +424,11 @@ class GuiAttributes(object):
             the origin
         matrix_3x3 : (3, 3) ndarray
             a standard Nastran-style coordinate system
-        Type : str
+        coord_type : str
             a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
             that changes the axis names
         """
         pass
-
-    @property
-    def nid_map(self):
-        return self.nid_maps[self.name]
-
-    @nid_map.setter
-    def nid_map(self, nid_map):
-        self.nid_maps[self.name] = nid_map
-
-    @property
-    def eid_map(self):
-        try:
-            return self.eid_maps[self.name]
-        except:
-            msg = 'KeyError: key=%r; keys=%s' % (self.name, list(self.eid_maps.keys()))
-            raise KeyError(msg)
-
-    @eid_map.setter
-    def eid_map(self, eid_map):
-        self.eid_maps[self.name] = eid_map
 
     @property
     def displacement_scale_factor(self):
@@ -469,7 +466,7 @@ class GuiAttributes(object):
         for key in self.case_keys:
             #print(key)
             assert isinstance(key, int), key
-            obj, (i, name) = self.result_cases[key]
+            unused_obj, (i, unused_name) = self.result_cases[key]
             t = (i, [])
             data.append(t)
 

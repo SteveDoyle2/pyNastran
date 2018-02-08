@@ -1,3 +1,8 @@
+"""
+defines GuiCommon
+
+This file defines functions related to the result updating that are VTK specific
+"""
 # coding: utf-8
 # pylint: disable=C0111
 from __future__ import print_function, unicode_literals
@@ -173,9 +178,9 @@ class GuiCommon(GuiAttributes):
     def on_clear_results(self, show_msg=True):
         """clears the model of all results"""
         (obj, (i, name)) = self.result_cases[self.icase]
-        location = obj.get_location(i, name)
+        unused_location = obj.get_location(i, name)
 
-        name_str = self._names_storage.get_name_string(name)
+        unused_name_str = self._names_storage.get_name_string(name)
         grid = self.grid
 
         if self._is_displaced:
@@ -255,7 +260,7 @@ class GuiCommon(GuiAttributes):
             #self.res_widget.result_case_window.treeView.vector.setChecked(False)
 
             #is_legend_shown = False
-            self.set_normal_result(icase, name, subcase_id, subtitle, label)
+            self.set_normal_result(icase, name, subcase_id)
             # this is valid, but we want to skip out
             return is_valid, failed_data
 
@@ -284,7 +289,7 @@ class GuiCommon(GuiAttributes):
 
         #if min_value is None and max_value is None:
         min_value, max_value = obj.get_min_max(i, name)
-        subtitle, label = self.get_subtitle_label(subcase_id)
+        unused_subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
 
@@ -364,17 +369,17 @@ class GuiCommon(GuiAttributes):
         #-----
         # make results
         if len(case.shape) == 1:
-            normi = case
+            unused_normi = case
         else:
-            normi = norm(case, axis=1)
+            unused_normi = norm(case, axis=1)
 
         #if min_value is None and max_value is None:
-            #max_value = normi.max()
-            #min_value = normi.min()
+            #max_value = unused_normi.max()
+            #min_value = unused_normi.min()
 
         #if min_value is None and max_value is None:
         min_value, max_value = obj.get_min_max(i, name)
-        subtitle, label = self.get_subtitle_label(subcase_id)
+        unused_subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
 
@@ -528,11 +533,11 @@ class GuiCommon(GuiAttributes):
         if not is_valid:
             return
         (
-            icase, result_type, location, min_value, max_value, norm_value,
-            data_format, scale, phase, methods,
-            nlabels, labelsize, ncolors, colormap,
+            icase, unused_result_type, location, unused_min_value, unused_max_value, unused_norm_value,
+            unused_data_format, scale, unused_phase, unused_methods,
+            unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
             xyz_nominal, vector_data,
-            is_checked,
+            unused_is_checked,
         ) = data
         #deflects = obj.deflects(i, res_name)
 
@@ -656,7 +661,7 @@ class GuiCommon(GuiAttributes):
             #self.ncases -= 1
         self.log_command('delete_cases(icases_to_delete=%s, ask=%s)' % (icases_to_delete, ask))
 
-    def _get_sidebar_data(self, name):
+    def _get_sidebar_data(self, unused_name):
         """
         gets the form for the selected name
 
@@ -672,13 +677,13 @@ class GuiCommon(GuiAttributes):
         """
         return []
 
-    def _set_case(self, result_name, icase, explicit=False, cycle=False,
+    def _set_case(self, unused_result_name, icase, explicit=False, cycle=False,
                   skip_click_check=False, min_value=None, max_value=None,
                   is_legend_shown=None, show_msg=True):
         """
         Internal method for doing results updating
 
-        result_name : str
+        unused_result_name : str
             the name of the case for debugging purposes
         icase : int
             the case id
@@ -758,7 +763,7 @@ class GuiCommon(GuiAttributes):
         #================================================
         is_low_to_high = True
         if case is None:
-            return self.set_normal_result(icase, name, subcase_id, subtitle, label)
+            return self.set_normal_result(icase, name, subcase_id)
 
         elif self._is_normals and self.legend_shown:
             # we hacked the scalar bar to turn off for Normals
@@ -834,14 +839,11 @@ class GuiCommon(GuiAttributes):
         assert self.icase is not False, self.icase
         return self.icase
 
-    def set_normal_result(self, icase, name, subcase_id, subtitle, label):
+    def set_normal_result(self, icase, name, subcase_id):
         """plots a NormalResult"""
-        name_str = self._names_storage.get_name_string(name)
+        unused_name_str = self._names_storage.get_name_string(name)
         prop = self.geom_actor.GetProperty()
 
-        min_value = -1.
-        max_value = 1.
-        norm_value = 2.
         prop.SetColor(RED)
 
         # the backface property is null
@@ -1215,7 +1217,7 @@ class GuiCommon(GuiAttributes):
         for icase in sorted(iterkeys(self.result_cases)):
             #cases = self.result_cases[icase]
             if result_name == icase[1]:
-                found_case = True
+                unused_found_case = True
                 icase = i
                 break
             i += 1
@@ -1262,11 +1264,10 @@ class GuiCommon(GuiAttributes):
 
     def get_result_name(self, key):
         assert isinstance(key, integer_types), key
-        (obj, (i, name)) = self.result_cases[key]
+        (unused_obj, (unused_i, name)) = self.result_cases[key]
         return name
 
     def get_case_location(self, key):
         assert isinstance(key, integer_types), key
         (obj, (i, name)) = self.result_cases[key]
         return obj.get_location(i, name)
-

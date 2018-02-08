@@ -5,7 +5,6 @@ Interface for converting OP2 results to the GUI format
 from __future__ import print_function
 from copy import deepcopy
 from collections import defaultdict
-import traceback
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -31,14 +30,24 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_gpforces(self, model):
         """unused"""
         pass
-        #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is not really an OUG table
+        #[model.grid_point_forces, 'GridPointForces'],
 
     def _fill_op2_oug_oqg(self, cases, model, key, icase,
                           form_dict, header_dict, keys_map):
         """
+        loads nodal results bector results (e.g., dispalcements/temperatures)
+        """
+        icase = self._fill_nastran_displacements(cases, model, key, icase,
+                                                 form_dict, header_dict, keys_map)
+        icase = self._fill_nastran_temperatures(cases, model, key, icase,
+                                                form_dict, header_dict, keys_map)
+        return icase
+
+    def _fill_nastran_displacements(self, cases, model, key, icase,
+                                    form_dict, header_dict, keys_map):
+        """
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
-        #new_cases = True
         nnodes = self.nnodes
         displacement_like = [
             # slot, name, deflects
@@ -56,10 +65,8 @@ class NastranGuiResults(NastranGuiAttributes):
             (model.applied_loads, 'AppliedLoads', False),
             (model.force_vectors, 'ForceVectors', False),
         ]
-        temperature_like = [
-            (model.temperatures, 'Temperature'),
-        ]
         nids = self.node_ids
+
         for (result, name, deflects) in displacement_like:
             if key not in result:
                 continue
@@ -156,7 +163,16 @@ class NastranGuiResults(NastranGuiAttributes):
                     form_dict[(key, itime)].append(formii)
                     icase += 1
                 nastran_res.save_defaults()
+        return icase
 
+    def _fill_nastran_temperatures(self, cases, model, key, icase,
+                                   form_dict, header_dict, keys_map):
+        """loads the nodal temperatures"""
+        nnodes = self.nnodes
+        #nids = self.node_ids
+        temperature_like = [
+            (model.temperatures, 'Temperature'),
+        ]
         for (result, name) in temperature_like:
             if key not in result:
                 continue
@@ -188,116 +204,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict[(key, itime)].append((name, icase, []))
                 icase += 1
         return icase
-
-    #def _fill_op2_force2(self, cases, model, key, icase, itime,
-                         #form_dict, header_dict):
-        #"""creates the thermal loads"""
-        #thermal_loads = [
-            ## 3D
-            #model.chexa_thermal_load, model.ctetra_thermal_load,
-            #model.cpenta_thermal_load,
-        #]
-        #eids = self.element_ids
-        #name = 'thermal_load'
-        #for result in thermal_loads:
-            #if key not in result:
-                #continue
-
-            #title = name + 'XYZ'
-            #case = result[key]
-            #subcase_idi = case.isubcase
-            #if not hasattr(case, 'data'):
-                #print('str(%s) has no data...' % case.__class.__name__)
-                #continue
-            ##if not case.is_real:
-                ##print('complex results not supported...')
-                ##continue
-            ## transient
-            #if case.nonlinear_factor is not None:
-                ##code_name = case.data_code['name']
-                #has_cycle = hasattr(case, 'mode_cycle')
-            #else:
-                #has_cycle = False
-                #code_name = None
-            #assert case.is_sort1, case.is_sort1
-
-            #itime0 = 0
-            #t1 = case.data[itime0, :, 0]
-            #ndata = t1.shape[0]
-            #if nelements != ndata:
-                #eidsi = case.elements
-                #assert len(eidsi) == nelements
-                #j = np.searchsorted(eids, eidsi)  # searching for eidsi
-
-                #try:
-                    #if not np.allclose(eids[j], eidsi):
-                        #msg = 'nids[j]=%s eidsi=%s' % (eids[j], eidsi)
-                        #raise RuntimeError(msg)
-                #except IndexError:
-                    #msg = 'element_ids = %s\n' % list(eids)
-                    #msg += 'eidsi in force = %s\n' % list(eidsi)
-                    #raise IndexError(msg)
-
-            ## (itime, nelements, xyz)
-            #t123 = case.data[:, :, :3]
-            #if nelements != ndata:
-                #t123i = np.zeros((nelements, 3), dtype='float32')
-                #t123i[j, :] = t123
-                #t123 = t123i
-            #tnorm = norm(t123, axis=1)
-            #assert len(tnorm) == t123.shape[0]
-            #ntimes = case.ntimes
-            #titles = []
-            #scales = []
-            #headers = []
-            #for itime in range(ntimes):
-                #dt = case._times[itime]
-                #header = _get_nastran_header(case, dt, itime)
-                #header_dict[(key, itime)] = header
-
-                #loads = case.data[itime, :, :]
-                #txyz = norm(loads[:, :3], axis=1)
-                #rxyz = norm(loads[:, 3:6], axis=1)
-                #assert loads[:, :3].shape[1] == 3, loads.shape
-                #assert loads[:, 3:6].shape[1] == 3, loads.shape
-                #assert len(txyz) == nelements, 'len(txyz)=%s nnodes=%s' % (
-                    #len(txyz), nnodes)
-
-                #tx_res = GuiResult(subcase_idi, header=name + 'Tx', title=name + 'Tx',
-                                   #location='node', scalar=loads[:, 0])
-                #ty_res = GuiResult(subcase_idi, header=name + 'Ty', title=name + 'Ty',
-                                   #location='node', scalar=loads[:, 1])
-                #tz_res = GuiResult(subcase_idi, header=name + 'Tz', title=name + 'Tz',
-                                   #location='node', scalar=loads[:, 2])
-                #rx_res = GuiResult(subcase_idi, header=name + 'Rx', title=name + 'Rx',
-                                   #location='node', scalar=loads[:, 3])
-                #ry_res = GuiResult(subcase_idi, header=name + 'Ry', title=name + 'Ry',
-                                   #location='node', scalar=loads[:, 4])
-                #rz_res = GuiResult(subcase_idi, header=name + 'Rz', title=name + 'Rz',
-                                   #location='node', scalar=loads[:, 5])
-                #txyz_res = GuiResult(subcase_idi, header=name + 'Txyz',
-                                     #title=name + 'Txyz', location='node', scalar=txyz)
-                #rxyz_res = GuiResult(subcase_idi, header=name + 'Rxyz',
-                                     #title=name + 'Rxyz', location='node', scalar=rxyz)
-
-                #cases[icase] = (tx_res, (0, name + 'Tx'))
-                #cases[icase + 1] = (ty_res, (0, name + 'Ty'))
-                #cases[icase + 2] = (tz_res, (0, name + 'Tz'))
-                #cases[icase + 3] = (txyz_res, (0, name  + 'Txyz'))
-                #cases[icase + 4] = (rx_res, (0, name + 'Rx'))
-                #cases[icase + 5] = (ry_res, (0, name + 'Ry'))
-                #cases[icase + 6] = (rz_res, (0, name + 'Rz'))
-                #cases[icase + 7] = (rxyz_res, (0, name  + 'Rxyz'))
-
-                #form_dict[(key, itime)].append((name + 'Tx', icase, []))
-                #form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
-                #form_dict[(key, itime)].append((name + 'Tz', icase + 2, []))
-                #form_dict[(key, itime)].append((name + 'Txyz', icase + 3, []))
-                #form_dict[(key, itime)].append((name + 'Rx', icase + 4, []))
-                #form_dict[(key, itime)].append((name + 'Ry', icase + 5, []))
-                #form_dict[(key, itime)].append((name + 'Rz', icase + 6, []))
-                #form_dict[(key, itime)].append((name + 'Rxyz', icase + 7, []))
-                #icase += 7
 
     def _fill_op2_force(self, cases, model, key, icase, itime,
                         form_dict, header_dict, keys_map):
@@ -968,7 +874,7 @@ class NastranGuiResults(NastranGuiAttributes):
             return icase
 
         form0 = (word, None, [])
-        formis = form0[2]
+        unused_formis = form0[2]
         subcase_id = key[2]
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
@@ -988,48 +894,56 @@ class NastranGuiResults(NastranGuiAttributes):
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
             form_dict[(key, itime)].append((word + 'XX', icase, []))
             icase += 1
+
         if np.any(np.isfinite(oyy)):
             oyy_res = GuiResult(subcase_id, header=word + 'YY', title=word + 'YY',
                                 location='centroid', scalar=oyy, data_format=fmt)
             cases[icase] = (oyy_res, (subcase_id, word + 'YY'))
             form_dict[(key, itime)].append((word + 'YY', icase, []))
             icase += 1
+
         if np.any(np.isfinite(ozz)):
             ozz_res = GuiResult(subcase_id, header=word + 'ZZ', title=word + 'ZZ',
                                 location='centroid', scalar=ozz, data_format=fmt)
             cases[icase] = (ozz_res, (subcase_id, word + 'ZZ'))
             form_dict[(key, itime)].append((word + 'ZZ', icase, []))
             icase += 1
+
         if np.any(np.isfinite(txy)):
             oxy_res = GuiResult(subcase_id, header=word + 'XY', title=word + 'XY',
                                 location='centroid', scalar=txy, data_format=fmt)
             cases[icase] = (oxy_res, (subcase_id, word + 'XY'))
             form_dict[(key, itime)].append((word + 'XY', icase, []))
             icase += 1
+
         if np.any(np.isfinite(tyz)):
             oyz_res = GuiResult(subcase_id, header=word + 'YZ', title=word + 'YZ',
                                 location='centroid', scalar=tyz, data_format=fmt)
             cases[icase] = (oyz_res, (subcase_id, word + 'YZ'))
             form_dict[(key, itime)].append((word + 'YZ', icase, []))
             icase += 1
+
         if np.any(np.isfinite(txz)):
             oxz_res = GuiResult(subcase_id, header=word + 'XZ', title=word + 'XZ',
                                 location='centroid', scalar=txz, data_format=fmt)
             cases[icase] = (oxz_res, (subcase_id, word + 'XZ'))
             form_dict[(key, itime)].append((word + 'XZ', icase, []))
             icase += 1
+
         if np.any(np.isfinite(max_principal)):
             maxp_res = GuiResult(subcase_id, header='MaxPrincipal', title='MaxPrincipal',
                                  location='centroid', scalar=max_principal, data_format=fmt)
             cases[icase] = (maxp_res, (subcase_id, 'MaxPrincipal'))
             form_dict[(key, itime)].append(('Max Principal', icase, []))
             icase += 1
+
         if np.any(np.isfinite(mid_principal)):
             midp_res = GuiResult(subcase_id, header='MidPrincipal', title='MidPrincipal',
                                  location='centroid', scalar=mid_principal, data_format=fmt)
             cases[icase] = (midp_res, (subcase_id, 'MidPrincipal'))
             form_dict[(key, itime)].append(('Mid Principal', icase, []))
             icase += 1
+
         if np.any(np.isfinite(min_principal)):
             minp_res = GuiResult(subcase_id, header='MinPrincipal', title='MinPrincipal',
                                  location='centroid', scalar=min_principal, data_format=fmt)
@@ -1156,6 +1070,10 @@ class NastranGuiResults(NastranGuiAttributes):
                 #print('while keys ->', key)
                 (analysis_code, sort_method, count, subtitle) = key
                 #assert isubcase == isubcasei, 'isubcase=%s isubcasei=%s' % (isubcase, isubcasei)
+
+                # analysis_code is defined from 1-12 (e.g., 1=static, 2=modes, 5=freq)
+                # we loop over the analysis code to define static results before model/time/freq
+                #
                 assert analysis_code < 12, analysis_code
                 for ianalysis_code in range(12):
                     keyi = (ianalysis_code, sort_method, count, subtitle)
@@ -1168,7 +1086,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 #keys_order += keys
         return keys_order
 
-def print_empty_elements(model, element_ids, is_element_on, log_error, ):
+def print_empty_elements(model, element_ids, is_element_on, log_error):
+    """prints the first 20 elements that aren't supportedas part of the stress results"""
     ioff = np.where(is_element_on == 0)[0]
     print('stress_eids_off = %s' % np.array(element_ids[ioff]))
     log_error('stress_eids_off = %s' % element_ids[ioff])
