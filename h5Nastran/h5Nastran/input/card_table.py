@@ -154,31 +154,59 @@ class TableDef(object):
         return self.group + '/' + self.table_id
 
     def write_subdata(self, data):
-        assert isinstance(data, TableData)
+        names = []
 
-        if len(data.data) == 0:
+        is_dict = False
+
+        if isinstance(data, TableData):
+            data_len = len(data.data)
+        elif isinstance(data, dict):
+            names = list(self.dtype.names)
+            data_len = len(data['IDENTITY'][names[0]])
+            is_dict = True
+        else:
+            raise Exception
+
+        if data_len == 0:
             return
 
         table = self.get_table()
         table_row = table.row
 
-        for i in range(len(data.data)):
-            _write_data_to_table(self, table_row, data.data[i])
+        if not is_dict:
+            for i in range(len(data.data)):
+                _write_data_to_table(self, table_row, data.data[i])
+
+                for j in range(len(self.subtables)):
+                    if data.subdata_len[i, j] == 0:
+                        continue
+                    subtable = self.subtables[j]
+                    table_row[subtable.len_id] = data.subdata_len[i, j]
+                    table_row[subtable.pos_id] = self._pos[subtable.pos_id]
+                    self._pos[subtable.pos_id] += data.subdata_len[i, j]
+
+                table_row.append()
 
             for j in range(len(self.subtables)):
-                if data.subdata_len[i, j] == 0:
-                    continue
+                subdata = data.subdata[j]
                 subtable = self.subtables[j]
-                table_row[subtable.len_id] = data.subdata_len[i, j]
-                table_row[subtable.pos_id] = self._pos[subtable.pos_id]
-                self._pos[subtable.pos_id] += data.subdata_len[i, j]
+                subtable.write_subdata(subdata)
 
-            table_row.append()
+        else:
+            identity = data['IDENTITY']
+            names = list(self.dtype.names)
+            data_len = len(identity[names[0]])
+            _data = np.empty(data_len, dtype=self.dtype)
+            for name in names:
+                _data[name] = identity[name]
 
-        for j in range(len(self.subtables)):
-            subdata = data.subdata[j]
-            subtable = self.subtables[j]
-            subtable.write_subdata(subdata)
+            table.append(_data)
+
+            subtable_ids = data.get('_subtables', [])
+
+            for j in range(len(self.subtables)):
+                subtable = self.subtables[j]
+                subtable.write_subdata(data[subtable_ids[j]])
 
     def write_data(self, cards, domain, from_bdf):
         ids = sorted(cards.keys())
@@ -195,41 +223,44 @@ class TableDef(object):
             #     continue
 
             data = from_bdf(card)
-            assert isinstance(data, TableData)
+            if isinstance(data, TableData):
+                for i in range(len(data.data)):
+                    _write_data_to_table(self, table_row, data.data[i])
 
-            for i in range(len(data.data)):
-                _write_data_to_table(self, table_row, data.data[i])
+                    for j in range(len(self.subtables)):
+                        if data.subdata_len[i, j] == 0:
+                            continue
+                        subtable = self.subtables[j]
+                        table_row[subtable.len_id] = data.subdata_len[i, j]
+                        table_row[subtable.pos_id] = self._pos[subtable.pos_id]
+                        self._pos[subtable.pos_id] += data.subdata_len[i, j]
+
+                    table_row['DOMAIN_ID'] = domain
+                    table_row.append()
 
                 for j in range(len(self.subtables)):
-                    if data.subdata_len[i, j] == 0:
-                        continue
+                    subdata = data.subdata[j]
                     subtable = self.subtables[j]
-                    table_row[subtable.len_id] = data.subdata_len[i, j]
-                    table_row[subtable.pos_id] = self._pos[subtable.pos_id]
-                    self._pos[subtable.pos_id] += data.subdata_len[i, j]
+                    subtable.write_subdata(subdata)
+            elif isinstance(data, dict):
+                identity = data['IDENTITY']
+                names = list(self.dtype.names)[:-1]
+                data_len = len(identity[names[0]])
+                _data = np.empty(data_len, dtype=self.dtype)
+                for name in names:
+                    _data[name] = identity[name]
 
-                table_row['DOMAIN_ID'] = domain
-                table_row.append()
+                _data['DOMAIN_ID'] = domain
 
-            for j in range(len(self.subtables)):
-                subdata = data.subdata[j]
-                subtable = self.subtables[j]
-                subtable.write_subdata(subdata)
+                table.append(_data)
 
-            # _write_data_to_table(self, table_row, data.data[0])
-            #
-            # for i in range(len(self.subtables)):
-            #     if data.subdata_len[0, i] == 0:
-            #         continue
-            #     subdata = data.subdata[i]
-            #     subtable = self.subtables[i]
-            #     subtable.write_subdata(subdata)
-            #     table_row[subtable.len_id] = data.subdata_len[0, i]
-            #     table_row[subtable.pos_id] = self._pos[subtable.pos_id]
-            #     self._pos[subtable.pos_id] += data.subdata_len[0, i]
+                subtable_ids = data.get('_subtables', [])
 
-            # table_row['DOMAIN_ID'] = domain
-            # table_row.append()
+                for j in range(len(self.subtables)):
+                    subtable = self.subtables[j]
+                    subtable.write_subdata(data[subtable_ids[j]])
+            else:
+                raise Exception
 
         self.h5f.flush()
 

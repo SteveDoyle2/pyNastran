@@ -5,7 +5,8 @@ from six.moves import range
 import tables
 import numpy as np
 
-from ..result_table import ResultTable, TableDef
+from ..result_table import ResultTable, TableDef, DataGetter
+from ._shell_results import ShellElementStrainResultTable, ShellElementStrainResultTableComplex
 
 
 class Strain(object):
@@ -181,9 +182,8 @@ class Strain(object):
     def path(self):
         return self._elemental.path() + ['STRAIN']
 
-    def search(self, element_ids, domain_ids=(), subcase_ids=()):
-        # :type (List[int], List[int], List[int]) -> StrainResult
-        # TODO: consider subcase_ids here... convert to domain_ids and use domain_ids only
+    def search(self, element_ids, domain_ids=()):
+        # :type (List[int], List[int]) -> StrainResult
         result = StrainResult()
         _result = result.__dict__
         table_ids = self.__dict__.keys()
@@ -191,7 +191,7 @@ class Strain(object):
         for table_id in table_ids:
             if table_id.startswith('_'):  # not a table
                 continue
-            _result[table_id] = _tables[table_id].search(element_ids, domain_ids, subcase_ids)
+            _result[table_id] = _tables[table_id].search(element_ids, domain_ids)
 
         return result
 
@@ -833,9 +833,12 @@ class PENTA(ResultTable):
 ########################################################################################################################
 
 
-class QUAD4(ResultTable):
+class QUAD4(ResultTable, ShellElementStrainResultTable):
     result_type = 'ELEMENT STRAINS 33 QUAD4 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/QUAD4', result_type)
+    table_def.add_index_option('MATERIAL', None)
+    table_def.add_index_option('FIBER', None)
+    table_def.add_index_option('VONM', DataGetter(indices=[0, 2, 3, 4, 5, 10, 11, 12, 13]))
 
 
 ########################################################################################################################
@@ -857,7 +860,7 @@ class QUAD4_COMP_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class QUAD4_CPLX(ResultTable):
+class QUAD4_CPLX(ResultTable, ShellElementStrainResultTableComplex):
     result_type = 'ELEMENT STRAINS 33 QUAD4 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/QUAD4_CPLX', result_type)
 
@@ -1273,10 +1276,12 @@ class TETRA_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIA3(ResultTable):
+class TRIA3(ResultTable, ShellElementStrainResultTable):
     result_type = 'ELEMENT STRAINS 74 TRIA3 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/TRIA3', result_type)
-
+    table_def.add_index_option('MATERIAL', None)
+    table_def.add_index_option('FIBER', None)
+    table_def.add_index_option('VONM', DataGetter(indices=[0, 2, 3, 4, 5, 10, 11, 12, 13]))
 
 ########################################################################################################################
 
@@ -1313,7 +1318,7 @@ class TRIA3(ResultTable):
 ########################################################################################################################
 
 
-class TRIA3_CPLX(ResultTable):
+class TRIA3_CPLX(ResultTable, ShellElementStrainResultTableComplex):
     result_type = 'ELEMENT STRAINS 74 TRIA3 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/TRIA3_CPLX', result_type)
 
@@ -1345,7 +1350,7 @@ class TRIA3_FD_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIA6(ResultTable):
+class TRIA6(ResultTable, ShellElementStrainResultTable):
     result_type = 'ELEMENT STRAINS 75 TRIA6 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/TRIA6', result_type)
 
@@ -1369,7 +1374,7 @@ class TRIA6(ResultTable):
 ########################################################################################################################
 
 
-class TRIA6_CPLX(ResultTable):
+class TRIA6_CPLX(ResultTable, ShellElementStrainResultTableComplex):
     result_type = 'ELEMENT STRAINS 75 TRIA6 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRAIN/TRIA6_CPLX', result_type)
 

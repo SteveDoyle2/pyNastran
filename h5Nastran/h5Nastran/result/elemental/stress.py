@@ -6,6 +6,7 @@ import tables
 import numpy as np
 
 from ..result_table import ResultTable, TableDef, DataGetter
+from ._shell_results import ShellElementForceStressResultTable, ShellElementForceStressResultTableComplex
 
 
 class Stress(object):
@@ -181,9 +182,8 @@ class Stress(object):
     def path(self):
         return self._elemental.path() + ['STRESS']
 
-    def search(self, element_ids, domain_ids=(), subcase_ids=()):
-        # :type (List[int], List[int], List[int]) -> StressResult
-        # TODO: consider subcase_ids here... convert to domain_ids and use domain_ids only
+    def search(self, element_ids, domain_ids=()):
+        # :type (List[int], List[int]) -> StressResult
         result = StressResult()
         _result = result.__dict__
         table_ids = self.__dict__.keys()
@@ -191,7 +191,7 @@ class Stress(object):
         for table_id in table_ids:
             if table_id.startswith('_'):  # not a table
                 continue
-            _result[table_id] = _tables[table_id].search(element_ids, domain_ids, subcase_ids)
+            _result[table_id] = _tables[table_id].search(element_ids, domain_ids)
 
         return result
 
@@ -833,10 +833,11 @@ class PENTA_NL(ResultTable):
 ########################################################################################################################
 
 
-class QUAD4(ResultTable):
+class QUAD4(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT STRESSES 33 QUAD4 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/QUAD4', result_type)
     table_def.add_index_option('EFFE', DataGetter(indices=[0, 2, 3, 4, 5, 10, 11, 12, 13]))
+    table_def.add_index_option('VONM', DataGetter(indices=[0, 2, 3, 4, 5, 10, 11, 12, 13]))
 
 
 ########################################################################################################################
@@ -858,7 +859,7 @@ class QUAD4_COMP_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class QUAD4_CPLX(ResultTable):
+class QUAD4_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT STRESSES 33 QUAD4 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/QUAD4_CPLX', result_type)
 
@@ -962,7 +963,7 @@ class QUAD8_FD_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class QUADR(ResultTable):
+class QUADR(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT STRESSES 82 QUADR REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/QUADR', result_type)
 
@@ -986,7 +987,7 @@ class QUADR_COMP_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class QUADR_CPLX(ResultTable):
+class QUADR_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT STRESSES 82 QUADR COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/QUADR_CPLX', result_type)
 
@@ -1274,10 +1275,11 @@ class TETRA_NL(ResultTable):
 ########################################################################################################################
 
 
-class TRIA3(ResultTable):
+class TRIA3(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT STRESSES 74 TRIA3 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/TRIA3', result_type)
     table_def.add_index_option('EFFE', DataGetter(indices=[0, 2, 3, 4, 5, 10, 11, 12, 13]))
+    table_def.add_index_option('VONM', DataGetter(indices=[0, 2, 3, 4, 5, 10, 11, 12, 13]))
 
 
 ########################################################################################################################
@@ -1315,7 +1317,7 @@ class TRIA3_COMP_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIA3_CPLX(ResultTable):
+class TRIA3_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT STRESSES 74 TRIA3 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/TRIA3_CPLX', result_type)
 
@@ -1347,7 +1349,7 @@ class TRIA3_NL(ResultTable):
 ########################################################################################################################
 
 
-class TRIA6(ResultTable):
+class TRIA6(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT STRESSES 75 TRIA6 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/TRIA6', result_type)
 
@@ -1371,7 +1373,7 @@ class TRIA6_COMP_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIA6_CPLX(ResultTable):
+class TRIA6_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT STRESSES 75 TRIA6 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/TRIA6_CPLX', result_type)
 
@@ -1403,7 +1405,7 @@ class TRIA6_FD_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIAR(ResultTable):
+class TRIAR(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT STRESSES 70 TRIAR REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/TRIAR', result_type)
 
@@ -1427,7 +1429,7 @@ class TRIAR_COMP_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIAR_CPLX(ResultTable):
+class TRIAR_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT STRESSES 70 TRIAR COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/STRESS/TRIAR_CPLX', result_type)
 
