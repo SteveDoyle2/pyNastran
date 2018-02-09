@@ -16,10 +16,10 @@ pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'su2')
 
 
-class SU2_GUI(SU2_IO, FakeGUIMethods):
+class SU2_GUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        SU2_IO.__init__(self)
+        self.model = SU2_IO(self)
 
 
 class TestSU2GUI(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestSU2GUI(unittest.TestCase):
 
         test = SU2_GUI()
         test.log = log
-        test.load_su2_geometry(geometry_filename)
+        test.model.load_su2_geometry(geometry_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

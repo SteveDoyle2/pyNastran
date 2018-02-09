@@ -22,18 +22,8 @@ from pyNastran.bdf.errors import (CrossReferenceError, CardParseSyntaxError,
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.gui.formats import CLASS_MAP
 from pyNastran.converters.nastran.nastran_io import NastranIO
-from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
-from pyNastran.converters.panair.panair_io import PanairIO
 from pyNastran.converters.fast.fast_io import FastIO
-from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
-from pyNastran.converters.shabp.shabp_io import ShabpIO
-from pyNastran.converters.stl.stl_io import STL_IO
-from pyNastran.converters.su2.su2_io import SU2_IO
-from pyNastran.converters.tecplot.tecplot_io import TecplotIO
-from pyNastran.converters.tetgen.tetgen_io import TetgenIO
-from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
 from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
-from pyNastran.converters.dev.avus.avus_io import AvusIO
 
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 from pyNastran.converters.aflr.surf.surf_io import SurfIO
@@ -79,12 +69,10 @@ EXTENSION_TO_OUPUT_FORMATS = {
 #pkg_path = pyNastran.__path__[0]
 #model_path = os.path.join(pkg_path, '..', 'models')
 
-class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, ShabpIO,
-              PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
+class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
               #ADB_IO, DegenGeomIO, #Plot3d_io,
               # AbaqusIO,
-              AvusIO,
-              TecplotIO, FastIO, SurfIO, UGRID_IO, BEdge_IO, SU2_IO,
+              FastIO, SurfIO, UGRID_IO, BEdge_IO,
               DegenGeomIO, ADB_IO):
     """spoofs the gui for testing"""
 
@@ -100,24 +88,15 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, ShabpIO,
         self._formati = formati
         FakeGUIMethods.__init__(self, inputs=inputs)
         #ADB_IO.__init__(self)
-        #AvusIO.__init__(self)
         AbaqusIO.__init__(self)
         BEdge_IO.__init__(self)
         NastranIO.__init__(self)
         #DegenGeomIO.__init__(self)
         FastIO.__init__(self)
-        LaWGS_IO.__init__(self)
-        PanairIO.__init__(self)
         #Plot3d_io.__init__(self)
-        STL_IO.__init__(self)
-        ShabpIO.__init__(self)
         SurfIO.__init__(self)
-        TetgenIO.__init__(self)
-        TecplotIO.__init__(self)
-        Usm3dIO.__init__(self)
         UGRID_IO.__init__(self)
         #AbaqusIO.__init__(self)
-        SU2_IO.__init__(self)
 
     def load_geometry(self, input_filename):
         """loads a model"""
@@ -135,7 +114,10 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, ShabpIO,
     def load_results(self, output_filename):
         """loads a model"""
         load_results_name = 'load_%s_results' % self._formati
-        if hasattr(self, load_results_name):
+        if self._formati in CLASS_MAP:
+            cls = CLASS_MAP[self._formati](self)
+            getattr(cls, load_results_name)(output_filename)
+        elif hasattr(self, load_results_name):
             # self.load_nastran_ressults(op2_filename, None)
             getattr(self, load_results_name)(output_filename)
         else:
@@ -244,7 +226,8 @@ def run_docopt(argv=None):
 
 def main():
     """runs the gui"""
-    formati, input_filenames, output_filenames, failed_cases_filename, log_method, test = run_docopt()
+    (formati, input_filenames, output_filenames,
+     failed_cases_filename, log_method, test) = run_docopt()
     log = get_logger(log=None, level=log_method, encoding='utf-8')
     npass = 0
     nfailed = 0

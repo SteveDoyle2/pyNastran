@@ -17,8 +17,12 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class Usm3dIO(object):
-    def __init__(self):
-        pass
+    def __repr__(self):
+        return '<Usm3dIO class>'
+
+    def __init__(self, parent):
+        self.parent = parent
+        assert parent is not None
 
     def get_usm3d_wildcard_geometry_results_functions(self):
         data = ('Usm3D',
@@ -34,8 +38,8 @@ class Usm3dIO(object):
         # minimum is 1
         nstep = 100
 
-        assert self.out_filename is not None, self.out_filename
-        flo_filename = self.out_filename
+        assert self.parent.out_filename is not None, self.parent.out_filename
+        flo_filename = self.parent.out_filename
         dirname = os.path.dirname(flo_filename)
         if dirname == '':
             dirname = os.getcwd()
@@ -55,18 +59,18 @@ class Usm3dIO(object):
             else:
                 nnew = max(n_list)
                 if nnew == n:
-                    raise RuntimeError('%r is the last file' % self.out_filename)
+                    raise RuntimeError('%r is the last file' % self.parent.out_filename)
             #print("inn=%r nnew=%r" % (inn, nnew))
             flo_filename = model_name + '_%s.flo' % nnew
         else:
-            flo_filename = self.out_filename
+            flo_filename = self.parent.out_filename
             #msg = (
                 #'The current file is must have the format of '
                 #'xxx_%%i.flo, not %r' % self.out_filename)
             #raise RuntimeError(msg)
         #print("loading %r" % flo_filename)
         self.load_usm3d_results(flo_filename)
-        self.out_filename = os.path.join(dirname, flo_filename)
+        self.parent.out_filename = os.path.join(dirname, flo_filename)
 
         #print("done stepping...")
 
@@ -87,12 +91,12 @@ class Usm3dIO(object):
         #return None
 
     def load_usm3d_results(self, flo_filename):
-        model = Usm3d(log=self.log, debug=False)
-        npoints = self.nnodes
-        node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
+        model = Usm3d(log=self.parent.log, debug=False)
+        npoints = self.parent.nnodes
+        unused_node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
 
-        cases = self.result_cases
-        form = self.get_form()
+        cases = self.parent.result_cases
+        form = self.parent.get_form()
         bcs = None
         mapbc = None
         bcmap_to_bc_name = None
@@ -102,13 +106,13 @@ class Usm3dIO(object):
                                  is_geometry=False)
 
     def load_usm3d_geometry(self, cogsg_filename, name='main', plot=True):
-        skip_reading = self._remove_old_geometry(cogsg_filename)
+        skip_reading = self.parent._remove_old_geometry(cogsg_filename)
         if skip_reading:
             return
 
-        self.eid_maps[name] = {}
-        self.nid_maps[name] = {}
-        model = Usm3d(log=self.log, debug=False)
+        self.parent.eid_maps[name] = {}
+        self.parent.nid_maps[name] = {}
+        model = Usm3d(log=self.parent.log, debug=False)
 
         base_filename, ext = os.path.splitext(cogsg_filename)
         #node_filename = base_filename + '.node'
@@ -131,13 +135,13 @@ class Usm3dIO(object):
         mapbc = model.mapbc
         loads = model.loads
 
-        self.out_filename = None
+        self.parent.out_filename = None
         if flo_filename is not None:
-            self.out_filename = flo_filename
+            self.parent.out_filename = flo_filename
 
         bcmap_to_bc_name = model.bcmap_to_bc_name
 
-        self.nnodes = nodes.shape[0]
+        self.parent.nnodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if tris is not None:
@@ -150,28 +154,28 @@ class Usm3dIO(object):
             ntets = 0
         else:
             raise RuntimeError()
-        self.nelements = ntris + ntets
+        self.parent.nelements = ntris + ntets
 
-        self.log.debug("nnodes = %i" % self.nnodes)
-        self.log.debug("nelements = %i" % self.nelements)
+        self.parent.log.debug("nnodes = %i" % self.parent.nnodes)
+        self.parent.log.debug("nelements = %i" % self.parent.nelements)
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.parent.grid
+        grid.Allocate(self.parent.nelements, 1000)
 
-        self.nid_map = {}
-        self.eid_map = {}
+        self.parent.nid_map = {}
+        self.parent.eid_map = {}
 
         assert nodes is not None
-        nnodes = nodes.shape[0]
+        unused_nnodes = nodes.shape[0]
 
         points = numpy_to_vtk_points(nodes)
         if ntris:
-            self.element_ids = np.arange(1, ntris + 1, dtype='int32')
+            self.parent.element_ids = np.arange(1, ntris + 1, dtype='int32')
             etype = 5  # vtkTriangle().GetCellType()
             create_vtk_cells_of_constant_element_type(grid, tris, etype)
         else:
             ntets = tets.shape[0]
-            self.element_ids = np.arange(1, ntets + 1, dtype='int32')
+            self.parent.element_ids = np.arange(1, ntets + 1, dtype='int32')
 
         if dimension_flag == 2:
             pass
@@ -189,14 +193,14 @@ class Usm3dIO(object):
             grid.Update()
 
         # regions/loads
-        self.scalarBar.Modified()
+        self.parent.scalarBar.Modified()
 
         cases = {}
         form = []
         form, cases = self._fill_usm3d_results(cases, form,
                                                bcs, mapbc, bcmap_to_bc_name, loads,
                                                is_geometry=True)
-        self._finish_results_io2(form, cases)
+        self.parent._finish_results_io2(form, cases)
 
     def clear_usm3d(self):
         """dummy function"""
@@ -212,7 +216,7 @@ class Usm3dIO(object):
         else:
             note = ''
 
-        self.isubcase_name_map = {
+        self.parent.isubcase_name_map = {
             1: ['Usm3d%s' % note, ''],
             2: ['Usm3d%s' % note, ''],
         }
@@ -226,16 +230,16 @@ class Usm3dIO(object):
     def _fill_usm3d_case(self, cases, form,
                          bcs, mapbc, bcmap_to_bc_name, loads, is_geometry=True):
         """actually fills the sidebar"""
-        self.scalarBar.VisibilityOff()
+        self.parent.scalarBar.VisibilityOff()
 
         subcasemap_id = 1
         icase = len(cases)
         itime = 0
         if is_geometry:
-            assert self.element_ids is not None, self.element_ids
-            assert len(self.element_ids) > 0, self.element_ids
+            assert self.parent.element_ids is not None, self.parent.element_ids
+            assert len(self.parent.element_ids) > 0, self.parent.element_ids
             eid_res = GuiResult(
-                subcasemap_id, 'ElementID', 'ElementID', 'centroid', self.element_ids,
+                subcasemap_id, 'ElementID', 'ElementID', 'centroid', self.parent.element_ids,
                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                 data_format='%i', uname='GuiResult')
 
@@ -288,9 +292,9 @@ class Usm3dIO(object):
                     name = bcmap_to_bc_name[bcnum]
                 except KeyError:
                     name = '???'
-                self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
+                self.parent.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
 
-            self.scalarBar.VisibilityOn()
+            self.parent.scalarBar.VisibilityOn()
 
         subcasemap_id = 2
         if len(loads):
@@ -306,5 +310,5 @@ class Usm3dIO(object):
 
             if form0:
                 form.append(('Results', None, form0))
-        self.scalarBar.VisibilityOn()
+        self.parent.scalarBar.VisibilityOn()
         return form, cases

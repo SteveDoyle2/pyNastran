@@ -2437,7 +2437,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
 
             if fmt in CLASS_MAP:
-                cls = CLASS_MAP[fmt](None)
+                cls = CLASS_MAP[fmt](self)
                 data = getattr(cls, geom_results_funcs)()
             elif hasattr(self, geom_results_funcs):
                 data = getattr(self, geom_results_funcs)()
@@ -2940,6 +2940,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             load_function = None
 
             for fmt in self.fmts:
+                print(fmt)
                 fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
                 if geometry_format == fmt_name:
                     wildcard = _reswild
@@ -2980,6 +2981,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 return
                 #raise IOError(msg)
             self.last_dir = os.path.split(out_filenamei)[0]
+
             try:
                 load_function(out_filenamei)
             except Exception: #  as e

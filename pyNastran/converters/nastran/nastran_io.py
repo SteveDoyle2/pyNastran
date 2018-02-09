@@ -107,6 +107,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         super(NastranIO, self).__init__()
         self.nid_release_map = {}
 
+    @property
+    def parent(self):
+        return self
+
     def get_nastran_wildcard_geometry_results_functions(self):
         """
         gets the Nastran wildcard loader used in the file load menu
@@ -162,25 +166,25 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
             #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
         ]
-        #self.menu_help2 = self.menubar.addMenu('&HelpMenuNew')
-        #self.menu_help.menuAction().setVisible(False)
+        #self.parent.menu_help2 = self.parent.menubar.addMenu('&HelpMenuNew')
+        #self.parent.menu_help.menuAction().setVisible(False)
         if hasattr(self, 'nastran_toolbar'):
-            self.nastran_toolbar.setVisible(True)
-            self.actions['nastran'].setVisible(True)
+            self.parent.nastran_toolbar.setVisible(True)
+            self.parent.actions['nastran'].setVisible(True)
         else:
-            self.nastran_toolbar = self.addToolBar('Nastran Toolbar')
-            self.nastran_toolbar.setObjectName('nastran_toolbar')
-            #self.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
-            self.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
-            self.actions['nastran'].setStatusTip("Show/Hide application toolbar")
-        #self.file.menuAction().setVisible(False)
-        #self.menu_help.
+            self.parent.nastran_toolbar = self.addToolBar('Nastran Toolbar')
+            self.parent.nastran_toolbar.setObjectName('nastran_toolbar')
+            #self.parent.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
+            self.parent.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
+            self.parent.actions['nastran'].setStatusTip("Show/Hide application toolbar")
+        #self.parent.file.menuAction().setVisible(False)
+        #self.parent.menu_help.
 
-        #self.actions['about'].Disable()
+        #self.parent.actions['about'].Disable()
 
         menu_items = [
             #(self.menu_help2, ('about_nastran',)),
-            (self.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
+            (self.parent.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
             #(self.menu_window, tuple(menu_window)),
             #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
@@ -237,7 +241,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         geometry_properties = {}
         for name in names:
             try:
-                prop = self.geometry_properties[name]
+                prop = self.parent.geometry_properties[name]
             except KeyError:
                 continue
             geometry_properties[name] = prop
@@ -245,8 +249,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def on_update_geometry_properties_window(self, geometry_properties):
         """updates the 'Edit Geometry Properties' window"""
-        if self._edit_geometry_properties_window_shown:
-            self._edit_geometry_properties.on_update_geometry_properties_window(
+        if self.parent._edit_geometry_properties_window_shown:
+            self.parent._edit_geometry_properties.on_update_geometry_properties_window(
                 geometry_properties)
 
     def toggle_caero_sub_panels(self):
@@ -257,7 +261,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
 
         names = ['caero', 'caero_subpanels']
-        geometry_properties = self._get_geometry_properties_by_name(names)
+        geometry_properties = self.parent._get_geometry_properties_by_name(names)
 
         self.show_caero_sub_panels = not self.show_caero_sub_panels
         if self.show_caero_actor:
@@ -267,21 +271,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             else:
                 geometry_properties['caero'].is_visible = True
                 geometry_properties['caero_subpanels'].is_visible = False
-        self.on_update_geometry_properties_override_dialog(geometry_properties)
+        self.parent.on_update_geometry_properties_override_dialog(geometry_properties)
 
     def toggle_conms(self):
         """
         Toggle the visibility of the CONMS
         """
         name = 'conm2'
-        if name in self.geometry_actors:
+        if name in self.parent.geometry_actors:
             geometry_properties_change = {name : self.geometry_properties[name]}
             visibility_prev = geometry_properties_change[name].is_visible
             geometry_properties_change[name].is_visible = not visibility_prev
 
-            self.on_update_geometry_properties_override_dialog(geometry_properties_change)
+            self.parent.on_update_geometry_properties_override_dialog(geometry_properties_change)
 
-    def _create_coord(self, dim_max, cid, coord, cid_type):
+    def _create_coord(self, dim_max, cid, coord, coord_type):
         """
         Create a coordinate system
 
@@ -294,14 +298,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
            the coordinate system id
         coord : Coord()
            the Nastran coord object
-        cid_type : str
+        coord_type : str
             a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
             that changes the axis names
         """
         origin = coord.origin
         beta = coord.beta().T
-        self.create_coordinate_system(dim_max, label='%s' % cid, origin=origin,
-                                      matrix_3x3=beta, coord_type=cid_type)
+        self.parent.create_coordinate_system(
+            dim_max, label='%s' % cid, origin=origin,
+            matrix_3x3=beta, coord_type=coord_type)
 
     def _create_nastran_coords(self, model, dim_max):
         """

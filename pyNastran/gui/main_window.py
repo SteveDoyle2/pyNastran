@@ -26,9 +26,8 @@ from pyNastran.gui.utils.version import check_for_newer_version
 
 # pyNastran
 from pyNastran.gui.formats import (
-    NastranIO, DegenGeomIO, PanairIO, LaWGS_IO,
-    STL_IO, TecplotIO, TetgenIO, Usm3dIO, ShabpIO, ADB_IO, FastIO, # Plot3d_io,
-    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO, OpenFoamIO, ObjIO,
+    NastranIO, DegenGeomIO, ADB_IO, FastIO, # Plot3d_io,
+    SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, OpenFoamIO, ObjIO,
 )
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -50,9 +49,9 @@ except:
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
 
-class MainWindow(GuiCommon2, NastranIO, DegenGeomIO, ShabpIO, PanairIO,
-                 LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, ADB_IO, # Plot3d_io,
-                 FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
+class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
+                 ADB_IO,
+                 FastIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO,
                  OpenFoamIO, ObjIO, ):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
@@ -113,23 +112,14 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO, ShabpIO, PanairIO,
 
         if qt_version in [4, 5]:
             ADB_IO.__init__(self)
-            AvusIO.__init__(self)
             BEdge_IO.__init__(self)
             NastranIO.__init__(self)
             DegenGeomIO.__init__(self)
             FastIO.__init__(self)
-            LaWGS_IO.__init__(self)
-            PanairIO.__init__(self)
             #Plot3d_io.__init__(self)
-            STL_IO.__init__(self)
-            ShabpIO.__init__(self)
             SurfIO.__init__(self)
-            TetgenIO.__init__(self)
-            TecplotIO.__init__(self)
-            Usm3dIO.__init__(self)
             UGRID_IO.__init__(self)
             AbaqusIO.__init__(self)
-            SU2_IO.__init__(self)
             OpenFoamIO.__init__(self)
             ObjIO.__init__(self)
 

@@ -15,8 +15,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 class SU2_IO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_su2_wildcard_geometry_results_functions(self):
         data = ('SU2',
@@ -26,11 +26,11 @@ class SU2_IO(object):
 
     def load_su2_geometry(self, su2_filename, name='main', plot=True):
         #print("load_su2_geometry...")
-        skip_reading = self._remove_old_geometry(su2_filename)
+        skip_reading = self.parent._remove_old_geometry(su2_filename)
         if skip_reading:
             return
 
-        model = SU2(log=self.log, debug=False)
+        model = SU2(log=self.parent.log, debug=False)
         #self.model_type = model.model_type
         ndim, nodes, elements, regions = model.read_su2(su2_filename)
 
@@ -44,31 +44,33 @@ class SU2_IO(object):
         assert nnodes > 0, nnodes
         assert nelements > 0, nelements
 
-        self.nnodes = nnodes
-        self.nelements = nelements
+        self.parent.nnodes = nnodes
+        self.parent.nelements = nelements
 
-        self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
-        self.grid.Allocate(self.nelements, 1000)
+        self.parent.log.info('nnodes=%s nelements=%s' % (self.parent.nnodes, self.parent.nelements))
 
-        self.nid_map = {}
+        grid = self.parent.grid
+        grid.Allocate(self.parent.nelements, 1000)
+
+        self.parent.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
         if ndim == 3:
             xmax, ymax, zmax = nodes.max(axis=0)
             xmin, ymin, zmin = nodes.min(axis=0)
-            self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
-            self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
-            self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
+            self.parent.log.info('xmax=%s xmin=%s' % (xmax, xmin))
+            self.parent.log.info('ymax=%s ymin=%s' % (ymax, ymin))
+            self.parent.log.info('zmax=%s zmin=%s' % (zmax, zmin))
             dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
         elif ndim == 2:
             xmax, ymax = nodes.max(axis=0)
             xmin, ymin = nodes.min(axis=0)
-            self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
-            self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
+            self.parent.log.info('xmax=%s xmin=%s' % (xmax, xmin))
+            self.parent.log.info('ymax=%s ymin=%s' % (ymax, ymin))
             dim_max = max(xmax-xmin, ymax-ymin)
 
-        self.create_global_axes(dim_max)
+        self.parent.create_global_axes(dim_max)
 
         if ndim == 2:
             nodes = np.hstack([nodes, np.zeros((nnodes, 1), dtype=nodes.dtype)])
@@ -103,7 +105,8 @@ class SU2_IO(object):
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
-                    self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(5, elem.GetPointIds())
             elif etype == 9:
                 for eid in range(nsub_elements):
                     elem = vtk.vtkQuad()
@@ -112,26 +115,26 @@ class SU2_IO(object):
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
                     elem.GetPointIds().SetId(3, node_ids[3])
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
                 raise NotImplementedError(etype)
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
-            self.log_info("updated grid")
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
+            self.parent.log_info("updated grid")
 
         # loadSTLResults - regions/loads
-        self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        self.parent.scalarBar.VisibilityOff()
+        self.parent.scalarBar.Modified()
 
         cases = {}
         self.isubcase_name_map = {}
         ID = 1
 
         form, cases = self._fill_su2_case(cases, ID, nelements, nnodes)
-        self._finish_results_io2(form, cases)
+        self.parent._finish_results_io2(form, cases)
 
     def _fill_su2_case(self, cases, ID, nelements, nnodes):
         """adds the sidebar results"""

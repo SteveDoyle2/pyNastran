@@ -15,10 +15,10 @@ PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'stl')
 
 
-class STL_GUI(STL_IO, FakeGUIMethods):
+class STL_GUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        STL_IO.__init__(self)
+        self.model = STL_IO(self)
 
 
 class STL_GUITest(unittest.TestCase):
@@ -30,8 +30,8 @@ class STL_GUITest(unittest.TestCase):
 
         test = STL_GUI()
         test.log = log
-        #test.load_nastran_geometry(geometry_filename)
-        test.load_stl_geometry(geometry_filename)
+        #test.model.load_nastran_geometry(geometry_filename)
+        test.model.load_stl_geometry(geometry_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover
