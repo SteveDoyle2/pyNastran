@@ -20,6 +20,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, CardParseSyntaxError,
                                   DuplicateIDsError, MissingDeckSections)
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
+from pyNastran.gui.formats import CLASS_MAP
 from pyNastran.converters.nastran.nastran_io import NastranIO
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.panair.panair_io import PanairIO
@@ -78,7 +79,7 @@ EXTENSION_TO_OUPUT_FORMATS = {
 #pkg_path = pyNastran.__path__[0]
 #model_path = os.path.join(pkg_path, '..', 'models')
 
-class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
+class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, ShabpIO,
               PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO,
               #ADB_IO, DegenGeomIO, #Plot3d_io,
               # AbaqusIO,
@@ -103,7 +104,6 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
         AbaqusIO.__init__(self)
         BEdge_IO.__init__(self)
         NastranIO.__init__(self)
-        Cart3dIO.__init__(self)
         #DegenGeomIO.__init__(self)
         FastIO.__init__(self)
         LaWGS_IO.__init__(self)
@@ -122,7 +122,10 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO, Cart3dIO, ShabpIO,
     def load_geometry(self, input_filename):
         """loads a model"""
         load_geometry_name = 'load_%s_geometry' % self._formati
-        if hasattr(self, load_geometry_name):
+        if self._formati in CLASS_MAP:
+            cls = CLASS_MAP[self._formati](self)
+            getattr(cls, load_geometry_name)(input_filename)
+        elif hasattr(self, load_geometry_name):
             # self.load_nastran_geometry(bdf_filename, None)
             getattr(self, load_geometry_name)(input_filename)
         else:
