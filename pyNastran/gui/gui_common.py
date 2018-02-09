@@ -70,7 +70,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
-
+from pyNastran.gui.formats import CLASS_MAP
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -954,7 +954,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         axes.SetUserTransform(transform)
         axes.SetTotalLength(scale, scale, scale)
-        if Type == 'xyz':
+        if coord_type == 'xyz':
             if label:
                 xlabel = u'x%s' % label
                 ylabel = u'y%s' % label
@@ -963,7 +963,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 axes.SetYAxisLabelText(ylabel)
                 axes.SetZAxisLabelText(zlabel)
         else:
-            if Type == 'Rtz':  # cylindrical
+            if coord_type == 'Rtz':  # cylindrical
                 #x = u'R'
                 #y = u'θ'
                 #z = u'z'
@@ -971,7 +971,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 y = 't'
                 z = 'z'
 
-            elif Type == 'Rtp':  # spherical
+            elif coord_type == 'Rtp':  # spherical
                 #x = u'R'
                 #y = u'θ'
                 #z = u'Φ'
@@ -979,7 +979,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 y = 't'
                 z = 'p'
             else:
-                raise RuntimeError('invalid axis type; Type=%r' % Type)
+                raise RuntimeError('invalid axis type; coord_type=%r' % coord_type)
 
             xlabel = '%s%s' % (x, label)
             ylabel = '%s%s' % (y, label)
@@ -997,7 +997,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             is_visible = True
         else:
             label = 'Coord %s' % label
-        self.geometry_properties[label] = CoordProperties(label, Type, is_visible, scale)
+        self.geometry_properties[label] = CoordProperties(label, coord_type, is_visible, scale)
         self.geometry_actors[label] = axes
         self.coord_id += 1
         self.rend.AddActor(axes)
@@ -1005,7 +1005,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def create_global_axes(self, dim_max):
         self.create_coordinate_system(
-            dim_max, label='', origin=None, matrix_3x3=None, Type='xyz')
+            dim_max, label='', origin=None, matrix_3x3=None, coord_type='xyz')
 
     def create_corner_axis(self):
         """creates the axes that sits in the corner"""
@@ -2430,37 +2430,74 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log = log
 
     def build_fmts(self, fmt_order, stop_on_failure=False):
+        """populates the formats that will be supported"""
+        stop_on_failure=True
         fmts = []
         for fmt in fmt_order:
-            if hasattr(self, 'get_%s_wildcard_geometry_results_functions' % fmt):
-                func = 'get_%s_wildcard_geometry_results_functions' % fmt
-                data = getattr(self, func)()
-                msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
-                msg += 'data = %s'
-                if isinstance(data, tuple):
-                    assert len(data) == 5, msg % str(data)
-                    macro_name, geo_fmt, geo_func, res_fmt, res_func = data
-                    fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
-                elif isinstance(data, list):
-                    for datai in data:
-                        assert len(datai) == 5, msg % str(datai)
-                        macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
-                        fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
-                else:
-                    raise TypeError(data)
+            geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
+
+            if fmt in CLASS_MAP:
+                cls = CLASS_MAP[fmt](None)
+                data = getattr(cls, geom_results_funcs)()
+            elif hasattr(self, geom_results_funcs):
+                data = getattr(self, geom_results_funcs)()
             else:
                 if stop_on_failure:
                     func = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
                     raise RuntimeError(func)
+            self._add_fmt(fmts, fmt, geom_results_funcs, data)
 
         if len(fmts) == 0:
             RuntimeError('No formats...expected=%s' % fmt_order)
         self.fmts = fmts
+        #print("fmts =", fmts)
 
         self.supported_formats = [fmt[0] for fmt in fmts]
         print('supported_formats = %s' % self.supported_formats)
+        assert 'cart3d' in self.supported_formats, self.supported_formats
         if len(fmts) == 0:
             raise RuntimeError('no modules were loaded...')
+
+    def _add_fmt(self, fmts, fmt, geom_results_funcs, data):
+        """
+        Adds a format
+
+        Parameters
+        ----------
+        fmts : List[formats]
+            format : List[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
+            macro_name : ???
+                ???
+            geo_fmt : ???
+                ???
+            geo_func : ???
+                ???
+            res_fmt : ???
+                ???
+            res_func : ???
+                ???
+        fmt : str
+            nastran, cart3d, etc.
+        geom_results_funcs : str
+            'get_nastran_wildcard_geometry_results_functions'
+            'get_cart3d_wildcard_geometry_results_functions'
+        data : function
+            the outputs from ``get_nastran_wildcard_geometry_results_functions()``
+            so 1 or more formats (macro_name, geo_fmt, geo_func, res_fmt, res_func)
+        """
+        msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
+        msg += 'data = %s'
+        if isinstance(data, tuple):
+            assert len(data) == 5, msg % str(data)
+            macro_name, geo_fmt, geo_func, res_fmt, res_func = data
+            fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+        elif isinstance(data, list):
+            for datai in data:
+                assert len(datai) == 5, msg % str(datai)
+                macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
+                fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+        else:
+            raise TypeError(data)
 
     def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
                                 plot=True, raise_error=False):
@@ -2536,7 +2573,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             geometry_format = formats[filter_index]
             load_function = load_functions[filter_index]
             unused_has_results = has_results_list[filter_index]
-        return is_failed, (infile_name, load_function, filter_index, formats)
+        return is_failed, (infile_name, load_function, filter_index, formats, geometry_format)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
                          plot=True, raise_error=False):
@@ -2562,7 +2599,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if is_failed:
             return
 
-        infile_name, load_function, filter_index, formats = out
+        infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]
 
@@ -2603,7 +2640,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             try:
                 time0 = time_module.time()
-                has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
+
+                if geometry_format2 in CLASS_MAP:
+                    # intialize the class
+                    cls = CLASS_MAP[geometry_format](self)
+                    function_name = 'load_%s_geometry' % geometry_format2
+                    load_function2 = getattr(cls, function_name)
+                    has_results = load_function2(infile_name, name=name, plot=plot)
+                else:
+                    has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
+
                 dt = time_module.time() - time0
                 print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
                 #else:
@@ -2614,6 +2660,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #has_results = load_function(infile_name) # , self.last_dir
                     #form, cases = load_function(infile_name) # , self.last_dir
             except Exception as e:
+                #raise
                 msg = traceback.format_exc()
                 self.log_error(msg)
                 if raise_error or self.dev:
@@ -2634,7 +2681,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.out_filename = None
         #if self.out_filename is not None:
             #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
-        #else:
 
         if name == 'main':
             msg = '%s - %s' % (self.format, self.infile_name)
@@ -2913,7 +2959,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             for fmt in self.fmts:
                 fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
-                print('fmt_name=%r geometry_format=%r' % (fmt_name, geometry_format))
+                #print('fmt_name=%r geometry_format=%r' % (fmt_name, geometry_format))
                 if fmt_name == geometry_format:
                     load_function = _resfunc
                     break

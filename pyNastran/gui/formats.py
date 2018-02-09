@@ -1,7 +1,12 @@
 """import various codes with backup for failed imports"""
 #try:
+
 from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 is_cart3d = True
+CLASS_MAP = {
+    'cart3d' : Cart3dIO,
+}
+
 #except ImportError:
     #raise
     #class Cart3dIO(object):

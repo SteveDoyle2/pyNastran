@@ -26,7 +26,7 @@ from pyNastran.gui.utils.version import check_for_newer_version
 
 # pyNastran
 from pyNastran.gui.formats import (
-    NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
+    NastranIO, DegenGeomIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, ShabpIO, ADB_IO, FastIO, # Plot3d_io,
     AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO, OpenFoamIO, ObjIO,
 )
@@ -50,7 +50,7 @@ except:
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
 
-class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
+class MainWindow(GuiCommon2, NastranIO, DegenGeomIO, ShabpIO, PanairIO,
                  LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, ADB_IO, # Plot3d_io,
                  FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
                  OpenFoamIO, ObjIO, ):
@@ -116,7 +116,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             AvusIO.__init__(self)
             BEdge_IO.__init__(self)
             NastranIO.__init__(self)
-            Cart3dIO.__init__(self)
             DegenGeomIO.__init__(self)
             FastIO.__init__(self)
             LaWGS_IO.__init__(self)
