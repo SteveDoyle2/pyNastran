@@ -501,7 +501,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #load_geom = True
         if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             if IS_TESTING or self.is_testing_flag:
-                #self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+                self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
