@@ -7,13 +7,15 @@ Quick and easy way to view model.  Not a full blown gui.
 from typing import List, Dict
 from six import iteritems, itervalues, iterkeys
 import numpy as np
+from itertools import chain
 
 from pyNastran.bdf.bdf import BDF
+
+import vtk
 
 
 class VTKData(object):
     def __init__(self, ugrid, nid_list, nid_dict, eid_list, eid_dict):
-        import vtk
         self.ugrid = ugrid  # type: vtk.vtkUnstructuredGrid
         self.nid_list = nid_list  # type: List[int]
         self.nid_dict = nid_dict  # type: Dict[int, int]
@@ -21,8 +23,6 @@ class VTKData(object):
         self.eid_dict = eid_dict  # type: Dict[int, int]
 
     def visualize(self):
-        import vtk
-
         ugrid = self.ugrid
 
         mapper = vtk.vtkDataSetMapper()
@@ -48,14 +48,11 @@ class VTKData(object):
         lut.Build()
 
         mapper.SetLookupTable(lut)
-        actor.GetProperty().SetRepresentationToWireframe()
+        # actor.GetProperty().SetRepresentationToWireframe()
 
         iren.Initialize()
         rw.Render()
         iren.Start()
-
-
-_nastran_to_vtk = None
 
 
 def _basic_elem(elem, cells, nid_dict):
@@ -63,11 +60,21 @@ def _basic_elem(elem, cells, nid_dict):
     _cells = [nid_dict[nid] for nid in nids]
     cells.append(len(nids))
     cells.extend(_cells)
+    return elem.eid
+
+
+def _grid(grid, cells, nid_dict):
+    nid = grid.nid
+    _cells = [nid_dict[nid]]
+    cells.append(1)
+    cells.extend(_cells)
+    return grid.nid
 
 
 def _rbe2(elem, cells, nid_dict):
     independent = elem.gn
-    dependent = elem.gmi
+
+    dependent = elem.Gmi
 
     nids = []
 
@@ -77,11 +84,20 @@ def _rbe2(elem, cells, nid_dict):
 
     cells.append(len(nids))
     cells.extend(nids)
+    return elem.eid
 
 
 def _rbe3(elem, cells, nid_dict):
     independent = elem.refgrid
-    dependent = elem.Gijs
+    _dependent = elem.Gijs
+
+    dependent = []
+
+    for dep in _dependent:
+        if isinstance(dep, list):
+            dependent.extend(dep)
+        else:
+            dependent.append(dep)
 
     nids = []
 
@@ -91,27 +107,7 @@ def _rbe3(elem, cells, nid_dict):
 
     cells.append(len(nids))
     cells.extend(nids)
-
-
-def _get_nastran_to_vtk():
-    import vtk
-
-    global _nastran_to_vtk
-
-    if _nastran_to_vtk is not None:
-        return _nastran_to_vtk
-
-    _nastran_to_vtk = {
-        'CQUAD4': (vtk.VTK_QUAD, _basic_elem),
-        'CTRIA3': (vtk.VTK_TRIANGLE, _basic_elem),
-        'CBEAM': (vtk.VTK_LINE, _basic_elem),
-        'CBUSH': (vtk.VTK_LINE, _basic_elem),
-        'CBAR': (vtk.VTK_LINE, _basic_elem),
-        'RBE2': (vtk.VTK_POLY_LINE, _rbe2),
-        'RBE3': (vtk.VTK_POLY_LINE, _rbe3)
-    }
-
-    return _nastran_to_vtk
+    return elem.eid
 
 
 def to_vtk(bdf):
@@ -142,28 +138,37 @@ def to_vtk(bdf):
     cells = []
     cell_types = []
     cell_count = 0
+    elem_types = []
 
     eid_list = []
     eid_dict = {}
 
-    _nastran_to_vtk = _get_nastran_to_vtk()
+    _nastran_to_vtk = nastran_to_vtk
 
-    _element_codes = []
+    bdf_data_to_plot = chain(
+        itervalues(bdf.nodes),
+        itervalues(bdf.elements),
+        itervalues(bdf.rigid_elements)
+    )
 
-    for elem in itervalues(bdf.elements):
+    category_list = []
+
+    for elem in bdf_data_to_plot:
         elem_type = elem.type
-        cell_type, add_method = _nastran_to_vtk.get(elem_type, (None, None))
+        cell_type, add_method, category = _nastran_to_vtk.get(elem_type, (None, None, None))
 
         if cell_type is None:
             continue
 
         cell_types.append(cell_type)
-        _element_codes.append(element_codes[elem_type])
+        elem_types.append(elem_type)
 
-        add_method(elem, cells, nid_dict)
+        eid = add_method(elem, cells, nid_dict)  # returns element/grid id
 
-        eid_list.append(elem.eid)
-        eid_dict[elem.eid] = cell_count
+        eid_list.append(eid)
+        eid_dict[eid] = cell_count
+
+        category_list.append(categories[category])
 
         cell_count += 1
 
@@ -186,13 +191,34 @@ def to_vtk(bdf):
     ugrid.SetPoints(points)
 
     ugrid.SetCells(vtk_cell_types, vtk_cell_locations, vtk_cells)
+    
+    vtk_cell_locations.SetName('index')
+    ugrid.GetCellData().AddArray(vtk_cell_locations)
+    
+    _elem_types = vtk.vtkStringArray()
+    _elem_types.SetName('element_type')
+    _elem_types.SetNumberOfValues(len(elem_types))
+    
+    for i in range(len(elem_types)):
+        _elem_types.SetValue(i, elem_types[i])
 
-    _element_codes = np.array(_element_codes, dtype=np.int32)
-    ecode_array = vtk.vtkIntArray()
-    ecode_array.SetVoidArray(_element_codes, len(_element_codes), 1)
-    ecode_array.SetName('element_codes')
+    ugrid.GetCellData().AddArray(_elem_types)
 
-    ugrid.GetCellData().AddArray(ecode_array)
+    _cat_arr = np.array(category_list, dtype=np.int64)
+    _cat = vtk.vtkIdTypeArray()
+    _cat.SetNumberOfValues(len(category_list))
+    _cat.SetVoidArray(_cat_arr, len(_cat_arr), 1)
+    _cat.SetName('category')
+
+    ugrid.GetCellData().AddArray(_cat)
+
+    id_array = numpy_to_vtk(np.array(eid_list), deep=1, array_type=vtk.VTK_ID_TYPE)
+    
+    # id_array = vtk.vtkIdTypeArray()
+    # id_array.SetVoidArray(eid_list, len(eid_list), 1)
+    id_array.SetName('element_id')
+    
+    ugrid.GetCellData().AddArray(id_array)
 
     copy = vtk.vtkUnstructuredGrid()
     copy.DeepCopy(ugrid)
@@ -202,84 +228,23 @@ def to_vtk(bdf):
     return vtk_data
 
 
-element_codes = {
-    # grids and other points
-    'GRID': -1,
-    # various types of mpc's
-    'RBAR': -101,
-    'RBAR1': -102,
-    'RBAX3D': -103,
-    'RBE1': -104,
-    'RBE2': -105,
-    'RBE3': -106,
-    'RBE3U': -107,
-    'RBJOINT': -108,
-    'RCONN': -109,
-    # coordinate systems
-    'CORD1C': -201,
-    'CORD1R': -202,
-    'CORD1S': -203,
-    'CORD2C': -204,
-    'CORD2R': -205,
-    'CORD2S': -206,
-    'CORD3G': -207,
-    'CORD3R': -208,
-    # elements, defined by nastran item codes
-    'CAXIF2': 47,
-    'CAXIF3': 48,
-    'CAXIF4': 49,
-    'CAXISYM': 241,
-    'CBAR': 34,
-    'CBEAM': 2,
-    'CBEAM3': 184,
-    'CBEND': 69,
-    'CBUSH': 102,
-    'CBUSH1D': 40,
-    'CCONEAX': 35,
-    'CDUM3': 55,
-    'CDUM4': 56,
-    'CDUM5': 57,
-    'CDUM6': 58,
-    'CDUM7': 59,
-    'CDUM8': 60,
-    'CDUM9': 61,
-    'CELAS1': 11,
-    'CELAS2': 12,
-    'CELAS3': 13,
-    'CGAP': 86,
-    'CHEXA': 67,
-    'CHEXAFD': 202,
-    'CIFHEX': 65,
-    'CIFPENT': 66,
-    'CIFQDX': 73,
-    'CIFQUAD': 63,
-    'CONROD': 10,
-    'CPENTA': 68,
-    'CPENTAFD': 204,
-    'CQUAD4': 33,
-    'CQUAD8': 64,
-    'CQUADFD': 201,
-    'CQUADR': 82,
-    'CQUADX': 18,
-    'CQUADXFD': 214,
-    'CROD': 1,
-    'CSHEAR': 4,
-    'CSLOT3': 50,
-    'CSLOT4': 51,
-    'CTETRA': 39,
-    'CTETRAFD': 205,
-    'CTRIA3': 74,
-    'CTRIA6': 75,
-    'CTRIAFD': 206,
-    'CTRIAR': 70,
-    'CTRIAX': 17,
-    'CTRIAX6': 53,
-    'CTRIAXFD': 212,
-    'CTUBE': 3,
-    'CWELDP': 118,
-    'CWELDC': 117,
-    'CWELD': 200,
-    'VUHEXA': 145,
-    'VUPENTA': 146,
-    'VUTETRA': 147,
+categories = {
+    'grid': 0,
+    'element': 1,
+    'mpc': 2,
+    'force': 3,
+    'disp': 4,
+    'cord': 5
+}
+
+
+nastran_to_vtk = {
+    'GRID': (vtk.VTK_VERTEX, _grid, 'grid'),
+    'CQUAD4': (vtk.VTK_QUAD, _basic_elem, 'element'),
+    'CTRIA3': (vtk.VTK_TRIANGLE, _basic_elem, 'element'),
+    'CBEAM': (vtk.VTK_LINE, _basic_elem, 'element'),
+    'CBUSH': (vtk.VTK_LINE, _basic_elem, 'element'),
+    'CBAR': (vtk.VTK_LINE, _basic_elem, 'element'),
+    'RBE2': (vtk.VTK_POLY_LINE, _rbe2, 'mpc'),
+    'RBE3': (vtk.VTK_POLY_LINE, _rbe3, 'mpc')
 }

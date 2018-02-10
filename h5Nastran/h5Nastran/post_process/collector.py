@@ -299,8 +299,3 @@ class H5NastranCollector(object):
     def check_file_indices(self):
         for case in self.cases:
             case.check_file_index()
-
-
-if __name__ == '__main__':
-    fname = r'\\na\shares\structure\GAR1-STR-SA\13_F&DT\Fatigue_Loads\AeroModel\C8\Slim\FAT_C8_collector.h5nc'
-    collector = H5NastranCollector(fname)

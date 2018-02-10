@@ -2,11 +2,11 @@ from __future__ import print_function, absolute_import
 from six import iteritems, itervalues
 from six.moves import range
 
-import tables
 import numpy as np
 
 from .card_table import CardTable, TableDef, TableData
 from ..data_helper import DataHelper
+from ._shell_element_info import QuadShell, TriaShell, shell_element_info_format
 
 
 class Element(object):
@@ -135,6 +135,9 @@ class Element(object):
         self.wetelme = WETELME(self._h5n, self)
         self.wetelmg = WETELMG(self._h5n, self)
 
+        self._shell_element_info = None
+        self._shell_element_info_dict = None
+
     def path(self):
         return self._input.path() + ['ElEMENT']
 
@@ -146,6 +149,70 @@ class Element(object):
                 item.read()
             except AttributeError:
                 pass
+
+    def write_shell_element_info(self, bdf, cards):
+        if self._shell_element_info is not None:
+            return self._shell_element_info
+
+        tables = self.__dict__
+        table_ids = self.__dict__.keys()
+
+        element_info = None
+
+        for table_id in table_ids:
+            if table_id.startswith('_'):
+                continue
+
+            try:
+                _element_info = tables[table_id].get_shell_info(bdf, cards)
+            except AttributeError:
+                continue
+
+            if element_info is None:
+                element_info = _element_info
+            else:
+                element_info = np.append(element_info, _element_info)
+
+        element_info = element_info[element_info['EID'].argsort()]
+
+        h5f = self._h5n.h5f
+        table = h5f.create_table('/PRIVATE/INPUT', 'SHELL_ELEMENT_INFO', shell_element_info_format,
+                                 'SHELL ELEMENT INFO', expectedrows=len(element_info), createparents=True)
+        table.append(element_info)
+        h5f.flush()
+
+        self._shell_element_info = element_info
+
+        return element_info
+    
+    def get_shell_element_info(self):
+        if self._shell_element_info is None:
+            self._shell_element_info = self._h5n.h5f.get_node('/PRIVATE/INPUT/SHELL_ELEMENT_INFO').read()
+        return self._shell_element_info
+
+    def get_shell_element_info_dict(self):
+        if self._shell_element_info_dict is not None:
+            return self._shell_element_info_dict
+
+        element_shell_info = self.get_shell_element_info()
+
+        result = {'CENTER': {}, 'THETA_RAD': {}}
+
+        eid = element_shell_info['EID']
+        center = element_shell_info['CENTER']
+        theta = element_shell_info['THETA_RAD']
+
+        _center = result['CENTER']
+        _theta = result['THETA_RAD']
+
+        for i in range(len(eid)):
+            _center[eid[i]] = center[i]
+            _theta[eid[i]] = theta[i]
+
+        self._shell_element_info_dict = result
+
+        return self._shell_element_info_dict
+
 
 ########################################################################################################################
 
@@ -511,7 +578,7 @@ class CGAP(CardTable):
         x = card.x
         flag = DataHelper.unknown_int
         # TODO: CGAP flag
-        return [card.eid, card.pid, nids[0], nids[1], flag, x[0], x[1], x[2], card.g0, card.cid]
+        return TableData([[card.eid, card.pid, nids[0], nids[1], flag, x[0], x[1], x[2], card.g0, card.cid]])
 
 ########################################################################################################################
 
@@ -662,7 +729,7 @@ class CQUAD(CardTable):
 ########################################################################################################################
 
 
-class CQUAD4(CardTable):
+class CQUAD4(CardTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD4')
 
     @staticmethod
@@ -677,6 +744,7 @@ class CQUAD4(CardTable):
                 [card.T1, card.T2, card.T3, card.T4], mcid]
         return TableData([data])
 
+
 ########################################################################################################################
 
 
@@ -686,7 +754,7 @@ class CQUAD4FD(CardTable):
 ########################################################################################################################
 
 
-class CQUAD8(CardTable):
+class CQUAD8(CardTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD8')
 
 ########################################################################################################################
@@ -698,7 +766,7 @@ class CQUAD9FD(CardTable):
 ########################################################################################################################
 
 
-class CQUADR(CardTable):
+class CQUADR(CardTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUADR')
 
 ########################################################################################################################
@@ -767,7 +835,7 @@ class CTETRA(CardTable):
 ########################################################################################################################
 
 
-class CTRIA3(CardTable):
+class CTRIA3(CardTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA3')
 
     @staticmethod
@@ -791,7 +859,7 @@ class CTRIA3FD(CardTable):
 ########################################################################################################################
 
 
-class CTRIA6(CardTable):
+class CTRIA6(CardTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA6')
 
 ########################################################################################################################
@@ -809,7 +877,7 @@ class CTRIAH(CardTable):
 ########################################################################################################################
 
 
-class CTRIAR(CardTable):
+class CTRIAR(CardTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIAR')
 
 ########################################################################################################################
@@ -1111,3 +1179,4 @@ class WETELMG(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/WETELMG/IDENTITY')
 
 ########################################################################################################################
+
