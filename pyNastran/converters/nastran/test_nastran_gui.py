@@ -269,6 +269,36 @@ class TestNastranGUI(unittest.TestCase):
         #test.load_nastran_geometry(op2_filename)
         #test.load_nastran_results(op2_filename)
 
+    def test_gui_bar_bar(self):
+        """tests a PBARL/BAR"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_box(self):
+        """tests a PBARL/BOX"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_t(self):
+        """tests a PBARL/T"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_t2(self):
+        """tests a PBARL/T2"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t2.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_i(self):
+        """tests a PBARL/I"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_i.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
     def test_gui_thermal_01(self):
         """tests thermal"""
         #bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_test_153.bdf')
