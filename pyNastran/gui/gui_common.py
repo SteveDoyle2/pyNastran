@@ -1033,7 +1033,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
                                   bar_scale=0.0, representation=None, is_visible=True,
-                                  follower_nodes=None, is_pickable=False):
+                                  follower_nodes=None, is_pickable=False, ugrid=None):
         """
         Creates an AltGeometry object
 
@@ -1062,8 +1062,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
             can you pick a node/cell on this actor
         follower_nodes : List[int]
             the nodes that are brought along with a deflection
+        ugrid : vtk.vtkUnstructuredGrid(); default=None
+            the grid object; one will be created that you can fill
+            if None is passed in
         """
-        self.alt_grids[name] = vtk.vtkUnstructuredGrid()
+        if ugrid is None:
+            ugrid = vtk.vtkUnstructuredGrid()
+        self.alt_grids[name] = ugrid
         self.geometry_properties[name] = AltGeometry(
             self, name, color=color,
             line_width=line_width, opacity=opacity,
@@ -2599,6 +2604,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if is_failed:
             return
 
+        has_results = False
         infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]

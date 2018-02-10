@@ -7,8 +7,12 @@ from __future__ import print_function
 from collections import defaultdict
 import numpy as np
 from numpy.linalg import norm
-
+import vtk
 from pyNastran.utils import integer_types, iteritems
+from pyNastran.bdf.cards.elements.beam_connectivity import (
+    bar_faces, box_faces, i_faces, t_faces, t2_faces,)
+
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 piover2 = np.pi / 2.
@@ -72,8 +76,11 @@ class NastranGeometryHelper(NastranGuiAttributes):
         super(NastranGeometryHelper, self).__init__()
 
     def _get_bar_yz_arrays(self, model, bar_beam_eids, scale, debug):
+        import vtk
         lines_bar_y = []
         lines_bar_z = []
+
+        points_list = []
 
         bar_types = {
             # PBAR
@@ -114,6 +121,12 @@ class NastranGeometryHelper(NastranGuiAttributes):
             'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z', 'bar', 'beam',
         ]
 
+        geom_types = [
+            'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
+            'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
+            'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z',
+        ]
+
         # bar_types['bar'] = [ [...], [...], [...] ]
         #bar_types = defaultdict(lambda : defaultdict(list))
 
@@ -125,6 +138,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             lines_bar_z = []
             bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
             #bar_types[bar_type] = [eids, lines_bar_y, lines_bar_z]
+
+        ugrid = vtk.vtkUnstructuredGrid()
+        node0 = 0
 
         nid_release_map = defaultdict(list)
 
@@ -355,11 +371,84 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 msg = 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
                 raise RuntimeError(msg)
 
+            if bar_type in geom_types:
+
+                if bar_type in ['TUBE', 'TUBE2']:
+                    continue
+
+                if ptype in ['PBARL']:
+                    dim1 = dim2 = pid_ref.dim
+                    #bar_type = pid_ref.Type
+                elif ptype in ['PBEAML']:
+                    dim1 = pid_ref.dim[0, :]
+                    dim2 = pid_ref.dim[-1, :]
+                else:
+                    dim1 = dim2 = None
+
+                if bar_type == 'BAR':
+                    pointsi = bar_faces(n1, n2, ihat, yhat, zhat, dim1, dim2)
+                    elem = vtk.vtkHexahedron()
+                    point_ids = elem.GetPointIds()
+                    point_ids.SetId(0, node0 + 0)
+                    point_ids.SetId(1, node0 + 1)
+                    point_ids.SetId(2, node0 + 2)
+                    point_ids.SetId(3, node0 + 3)
+                    point_ids.SetId(4, node0 + 4)
+                    point_ids.SetId(5, node0 + 5)
+                    point_ids.SetId(6, node0 + 6)
+                    point_ids.SetId(7, node0 + 7)
+                    ugrid.InsertNextCell(12, point_ids)
+                    points_list.append(pointsi)
+                    node0 += 8
+                    continue
+                elif bar_type == 'BOX':
+                    faces, pointsi = box_faces(n1, n2, ihat, yhat, zhat, dim1, dim2)
+                    face_idlist = faces_to_element_facelist(faces, node0)
+                    node0 += 16
+                elif bar_type == 'T':
+                    faces, pointsi = t_faces(n1, n2, ihat, yhat, zhat, dim1, dim2)
+                    face_idlist = faces_to_element_facelist(faces, node0)
+                    node0 += 16
+                elif bar_type == 'T2':
+                    faces, pointsi = t2_faces(n1, n2, ihat, yhat, zhat, dim1, dim2)
+                    face_idlist = faces_to_element_facelist(faces, node0)
+                    node0 += 16
+                elif bar_type == 'I':
+                    faces, pointsi = i_faces(n1, n2, ihat, yhat, zhat, dim1, dim2)
+                    face_idlist = faces_to_element_facelist(faces, node0)
+                    node0 += 24
+                else:
+                    print('skipping %s' % bar_type)
+                    #continue
+                ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
+                points_list.append(pointsi)
+
+            if node0:
+                #GREEN = (0., 1., 0.)
+                BLUE = (0., 0., 1.)
+                #BLACK = (0., 0., 0.)
+                #LIGHT_GREEN = (0.5, 1., 0.5)
+                #PINK = (0.98, 0.4, 0.93)
+                #ORANGE = (219/255., 168/255., 13/255.)
+                #RED = (1., 0., 0.)
+                #YELLOW = (1., 1., 0.)
+                #PURPLE = (1., 0., 1.)
+                #if '3d_bars' not in self.alt_grids:
+                self.gui.create_alternate_vtk_grid(
+                    '3d_bars', color=BLUE, opacity=0.2,
+                    representation='surface', is_visible=True,
+                    ugrid=ugrid,
+                )
+
             bar_types[bar_type][0].append(eid)
             bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
             #if len(bar_types[bar_type][0]) > 5:
                 #break
+
+        if points_list:
+            points = numpy_to_vtk_points(np.vstack(points_list))
+            ugrid.SetPoints(points)
 
         #print('bar_types =', bar_types)
         for bar_type in list(bar_types):
@@ -709,3 +798,18 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
     min_thetai = thetas.min()
     max_thetai = thetas.max()
     return min_thetai, max_thetai, ideal_thetai, min_edge_length
+
+def faces_to_element_facelist(faces, node0):
+    """creates a series of faces for the custom elements"""
+    face_idlist = vtk.vtkIdList()
+
+    nfaces = len(faces)
+    face_idlist.InsertNextId(nfaces) # Number faces that make up the cell.
+    for face in faces: # Loop over all the faces
+        #print(face)
+        face_idlist.InsertNextId(len(face)) # Number of points in face
+        #for i in face:
+            #face_idlist.InsertNextId(i + node0)
+        [face_idlist.InsertNextId(i + node0) for i in face] # Insert the pointIds for the face
+
+    return face_idlist

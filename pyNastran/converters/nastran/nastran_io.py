@@ -108,7 +108,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.nid_release_map = {}
 
     @property
-    def parent(self):
+    def gui(self):
         return self
 
     def get_nastran_wildcard_geometry_results_functions(self):
@@ -166,25 +166,25 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
             #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
         ]
-        #self.parent.menu_help2 = self.parent.menubar.addMenu('&HelpMenuNew')
-        #self.parent.menu_help.menuAction().setVisible(False)
+        #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
+        #self.gui.menu_help.menuAction().setVisible(False)
         if hasattr(self, 'nastran_toolbar'):
-            self.parent.nastran_toolbar.setVisible(True)
-            self.parent.actions['nastran'].setVisible(True)
+            self.gui.nastran_toolbar.setVisible(True)
+            self.gui.actions['nastran'].setVisible(True)
         else:
-            self.parent.nastran_toolbar = self.addToolBar('Nastran Toolbar')
-            self.parent.nastran_toolbar.setObjectName('nastran_toolbar')
-            #self.parent.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
-            self.parent.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
-            self.parent.actions['nastran'].setStatusTip("Show/Hide application toolbar")
-        #self.parent.file.menuAction().setVisible(False)
-        #self.parent.menu_help.
+            self.gui.nastran_toolbar = self.addToolBar('Nastran Toolbar')
+            self.gui.nastran_toolbar.setObjectName('nastran_toolbar')
+            #self.gui.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
+            self.gui.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
+            self.gui.actions['nastran'].setStatusTip("Show/Hide application toolbar")
+        #self.gui.file.menuAction().setVisible(False)
+        #self.gui.menu_help.
 
-        #self.parent.actions['about'].Disable()
+        #self.gui.actions['about'].Disable()
 
         menu_items = [
             #(self.menu_help2, ('about_nastran',)),
-            (self.parent.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
+            (self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
             #(self.menu_window, tuple(menu_window)),
             #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
@@ -241,7 +241,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         geometry_properties = {}
         for name in names:
             try:
-                prop = self.parent.geometry_properties[name]
+                prop = self.gui.geometry_properties[name]
             except KeyError:
                 continue
             geometry_properties[name] = prop
@@ -249,8 +249,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def on_update_geometry_properties_window(self, geometry_properties):
         """updates the 'Edit Geometry Properties' window"""
-        if self.parent._edit_geometry_properties_window_shown:
-            self.parent._edit_geometry_properties.on_update_geometry_properties_window(
+        if self.gui._edit_geometry_properties_window_shown:
+            self.gui._edit_geometry_properties.on_update_geometry_properties_window(
                 geometry_properties)
 
     def toggle_caero_sub_panels(self):
@@ -261,7 +261,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
 
         names = ['caero', 'caero_subpanels']
-        geometry_properties = self.parent._get_geometry_properties_by_name(names)
+        geometry_properties = self.gui._get_geometry_properties_by_name(names)
 
         self.show_caero_sub_panels = not self.show_caero_sub_panels
         if self.show_caero_actor:
@@ -271,19 +271,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             else:
                 geometry_properties['caero'].is_visible = True
                 geometry_properties['caero_subpanels'].is_visible = False
-        self.parent.on_update_geometry_properties_override_dialog(geometry_properties)
+        self.gui.on_update_geometry_properties_override_dialog(geometry_properties)
 
     def toggle_conms(self):
         """
         Toggle the visibility of the CONMS
         """
         name = 'conm2'
-        if name in self.parent.geometry_actors:
+        if name in self.gui.geometry_actors:
             geometry_properties_change = {name : self.geometry_properties[name]}
             visibility_prev = geometry_properties_change[name].is_visible
             geometry_properties_change[name].is_visible = not visibility_prev
 
-            self.parent.on_update_geometry_properties_override_dialog(geometry_properties_change)
+            self.gui.on_update_geometry_properties_override_dialog(geometry_properties_change)
 
     def _create_coord(self, dim_max, cid, coord, coord_type):
         """
@@ -304,7 +304,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         origin = coord.origin
         beta = coord.beta().T
-        self.parent.create_coordinate_system(
+        self.gui.create_coordinate_system(
             dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type=coord_type)
 
@@ -327,7 +327,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         }
         self.create_global_axes(dim_max)
         for cid, coord in sorted(iteritems(model.coords)):
-            if cid == 0:
+            if cid in [0, -1]:
                 continue
             cid_type = cid_types[coord.Type]
             self._create_coord(dim_max, cid, coord, cid_type)
@@ -501,7 +501,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #load_geom = True
         if bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             if IS_TESTING or self.is_testing_flag:
-                self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
+                #self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
             else:
                 self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
@@ -578,7 +578,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #nconm2 += model.card_count['CMASS2']
 
         if nconm2 > 0:
-            self.create_alternate_vtk_grid(
+            self.gui.create_alternate_vtk_grid(
                 'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
                 representation='point')
 
@@ -1568,9 +1568,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.nelements = nelements  # approximate...
 
         out = self.make_caeros(model)
-        (caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
+        (has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
          ncaeros_points, ncaero_sub_points,
          has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
+        self.has_caero = has_caero
 
         self.log_info("nnodes=%i nelements=%i" % (self.nnodes, self.nelements))
         msg = model.get_bdf_stats(return_type='string')
@@ -1592,7 +1593,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # CMASS3, CMASS4 are applied to SPOINTs
 
         if nconm2 > 0:
-            self.create_alternate_vtk_grid(
+            self.gui.create_alternate_vtk_grid(
                 'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
                 representation='point')
 
@@ -1618,19 +1619,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             xyz_cid0, nid_cp_cd, self.nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
 
-        #if 0:
-            #nsprings = 0
-            #if 0:
-                #for eid, element in sorted(iteritems(model.elements)):
-                    #if(isinstance(element, LineElement) or
-                       #isinstance(element, SpringElement) or
-                       #element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                                        #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                        #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
-                                        #'CDAMP5', 'CVISC', ]):
-                        #node_ids = element.node_ids
-                        #if None in node_ids:
-                            #nsprings += 1
 
         # fill grids
         zfighting_offset0 = 0.001
@@ -1670,10 +1658,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
 
         make_spc_mpc_supports = True
+        geometry_names = []
         if make_spc_mpc_supports and xref_nodes:
             geometry_names = self.set_spc_mpc_suport_grid(model, nid_to_pid_map)
-        else:
-            geometry_names = []
 
         if xref_nodes:
             icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
@@ -1760,11 +1747,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         if self.has_caero:
             if 'caero' not in self.alt_grids:
-                self.create_alternate_vtk_grid(
+                self.gui.create_alternate_vtk_grid(
                     'caero', color=YELLOW, line_width=3, opacity=1.0,
                     representation='toggle', is_visible=True, is_pickable=False)
             if 'caero_subpanels' not in self.alt_grids:
-                self.create_alternate_vtk_grid(
+                self.gui.create_alternate_vtk_grid(
                     'caero_subpanels', color=YELLOW, line_width=3, opacity=1.0,
                     representation='toggle', is_visible=False, is_pickable=False)
 
@@ -1773,147 +1760,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if has_control_surface:
                 self.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
 
-    def make_caeros(self, model):
-        """
-        Creates the CAERO panel inputs including:
-         - caero
-         - caero_subpanels
-         - caero_control_surfaces
-         - N control surfaces
-
-        Parameters
-        ----------
-        model : BDF()
-            the bdf model
-
-        Returns
-        -------
-        caero_points : (N_aero_points, 3) float ndarray
-            the xyz points for the aero panels
-            N_aero_points can be 0
-        ncaeros : int
-            the number of aero sub-panels?
-        ncaeros_sub : int
-            ???
-        ncaeros_cs : int
-            ???
-        ncaeros_points : int
-            ???
-        ncaero_sub_points : int
-            ???
-        has_control_surface : bool
-            is there a control surface
-        box_id_to_caero_element_map : dict[box_id] = box_index
-            used to map the CAEROx box id to index in the ???
-            (aero panel elements) array, which will be used with
-            cs_box_ids
-        cs_box_ids : dict[control_surface_name] : List[panel ids]
-            list of panels used by each aero panel
-        """
-        ncaeros = 0
-        ncaeros_sub = 0
-        ncaeros_cs = 0
-        ncaeros_points = 0
-        ncaero_sub_points = 0
-        has_control_surface = False
-        box_id_to_caero_element_map = {}
-        cs_box_ids = defaultdict(list)
-
-        # when caeros is empty, SPLINEx/AESURF cannot be defined
-        if len(model.caeros) == 0:
-            #print('returning early')
-            caero_points = np.empty((0, 3))
-            out = (
-                caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
-                ncaeros_points, ncaero_sub_points,
-                has_control_surface, box_id_to_caero_element_map, cs_box_ids,
-            )
-            return out
-
-        # count caeros
-        # sorting doesn't matter here because we're just trying to size the array
-        for caero in itervalues(model.caeros):
-            if hasattr(caero, 'panel_points_elements'):
-                npoints, ncelements = caero.get_npanel_points_elements()
-                ncaeros_sub += npoints
-                ncaero_sub_points += ncelements
-            elif isinstance(caero, CAERO2):
-                pass
-            else:
-                print('%r doesnt support panel_points_elements' % caero.type)
-
-        for unused_eid, caero in sorted(iteritems(model.caeros)):
-            if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5)):
-                ncaeros_points += 4
-                ncaeros += 1
-            elif isinstance(caero, CAERO2):
-                points, elems = caero.get_points_elements_3d()
-                ncaeros_points += points.shape[0]
-                ncaeros += elems.shape[0]
-
-        num_prev = 0
-        ncaeros_sub = 0
-        if model.caeros:
-            caero_points = []
-            for unused_eid, caero in sorted(iteritems(model.caeros)):
-                if caero.type in ['CAERO1', 'CAERO4']:
-                    ncaeros_sub += 1
-                    pointsi, elementsi = caero.panel_points_elements()
-                    caero_points.append(pointsi)
-                    for i, box_id in enumerate(caero.box_ids.flat):
-                        box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
-                    num_prev += pointsi.shape[0]
-                elif caero.type == 'CAERO2':
-                    pass
-                else:
-                    print('caero\n%s' % caero)
-            if ncaeros_sub:
-                caero_points = np.vstack(caero_points)
-            self.has_caero = True
-        if ncaeros_sub == 0:
-            caero_points = np.empty((0, 3))
-
-        # check for any control surfcaes
-        if model.aesurf:
-            has_control_surface = True
-            #ncaero_cs_points = 0
-            if 'caero_control_surfaces' not in self.alt_grids:
-                self.create_alternate_vtk_grid(
-                    'caero_control_surfaces', color=PINK, line_width=5, opacity=1.0,
-                    representation='surface', is_visible=False)
-
-            # sort the control surfaces
-            labels_to_aesurfs = {aesurf.label: aesurf for aesurf in itervalues(model.aesurf)}
-            if len(labels_to_aesurfs) != len(model.aesurf):
-                msg = (
-                    'Expected same number of label->aesurf as aid->aesurf\n'
-                    'labels_to_aesurfs = %r\n'
-                    'model.aesurf = %r\n' % (labels_to_aesurfs, model.aesurf))
-                raise RuntimeError(msg)
-
-            for unused_label, aesurf in sorted(iteritems(model.aesurf)):
-                aelist = aesurf.alid1_ref
-                ncaeros_cs += len(aelist.elements)
-
-                cs_name = '%s_control_surface' % aesurf.label
-                if cs_name not in self.alt_grids:
-                    self.create_alternate_vtk_grid(
-                        cs_name, color=PINK, line_width=5, opacity=0.5,
-                        representation='surface')
-
-                cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
-                cs_box_ids[cs_name].extend(aelist.elements)
-                if aesurf.alid2 is not None:
-                    aelist = aesurf.alid2_ref
-                    ncaeros_cs += len(aelist.elements)
-                    cs_box_ids[cs_name].extend(aelist.elements)
-                    cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
-        out = (
-            caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
-            ncaeros_points, ncaero_sub_points,
-            has_control_surface, box_id_to_caero_element_map, cs_box_ids,
-        )
-        return out
 
     def _set_caero_representation(self, has_control_surface):
         """
@@ -1973,7 +1819,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 zfighting_offset = 0.0001 * (iaero + 1)
                 grid_name = 'spline_%s_structure_points' % spline_id
-                self.create_alternate_vtk_grid(
+                self.gui.create_alternate_vtk_grid(
                     grid_name, color=BLUE, opacity=1.0, point_size=5,
                     representation='point', is_visible=False)
                 msg = ', which is required by %r' % grid_name
@@ -1982,7 +1828,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 zfighting_offset = 0.0001 * (iaero + 2)
                 grid_name = 'spline_%s_boxes' % spline_id
-                self.create_alternate_vtk_grid(
+                self.gui.create_alternate_vtk_grid(
                     grid_name, color=BLUE, opacity=0.3,
                     line_width=4,
                     representation='toggle', is_visible=False)
@@ -1990,6 +1836,150 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     grid_name, aero_box_ids, box_id_to_caero_element_map, caero_points,
                     zfighting_offset=zfighting_offset)
                 iaero += 2
+
+    def make_caeros(self, model):
+        """
+        Creates the CAERO panel inputs including:
+         - caero
+         - caero_subpanels
+         - caero_control_surfaces
+         - N control surfaces
+
+        Parameters
+        ----------
+        model : BDF()
+            the bdf model
+
+        Returns
+        -------
+        caero_points : (N_aero_points, 3) float ndarray
+            the xyz points for the aero panels
+            N_aero_points can be 0
+        ncaeros : int
+            the number of aero sub-panels?
+        ncaeros_sub : int
+            ???
+        ncaeros_cs : int
+            ???
+        ncaeros_points : int
+            ???
+        ncaero_sub_points : int
+            ???
+        has_control_surface : bool
+            is there a control surface
+        box_id_to_caero_element_map : dict[box_id] = box_index
+            used to map the CAEROx box id to index in the ???
+            (aero panel elements) array, which will be used with
+            cs_box_ids
+        cs_box_ids : dict[control_surface_name] : List[panel ids]
+            list of panels used by each aero panel
+        """
+        has_caero = False
+        ncaeros = 0
+        ncaeros_sub = 0
+        ncaeros_cs = 0
+        ncaeros_points = 0
+        ncaero_sub_points = 0
+        has_control_surface = False
+        box_id_to_caero_element_map = {}
+        cs_box_ids = defaultdict(list)
+
+        # when caeros is empty, SPLINEx/AESURF cannot be defined
+        if len(model.caeros) == 0:
+            #print('returning early')
+            caero_points = np.empty((0, 3))
+            out = (
+                has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
+                ncaeros_points, ncaero_sub_points,
+                has_control_surface, box_id_to_caero_element_map, cs_box_ids,
+            )
+            return out
+
+        # count caeros
+        # sorting doesn't matter here because we're just trying to size the array
+        for caero in itervalues(model.caeros):
+            if hasattr(caero, 'panel_points_elements'):
+                npoints, ncelements = caero.get_npanel_points_elements()
+                ncaeros_sub += npoints
+                ncaero_sub_points += ncelements
+            elif isinstance(caero, CAERO2):
+                pass
+            else:
+                print('%r doesnt support panel_points_elements' % caero.type)
+
+        for unused_eid, caero in sorted(iteritems(model.caeros)):
+            if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5)):
+                ncaeros_points += 4
+                ncaeros += 1
+            elif isinstance(caero, CAERO2):
+                points, elems = caero.get_points_elements_3d()
+                ncaeros_points += points.shape[0]
+                ncaeros += elems.shape[0]
+
+        num_prev = 0
+        ncaeros_sub = 0
+        if model.caeros:
+            caero_points = []
+            for unused_eid, caero in sorted(iteritems(model.caeros)):
+                if caero.type in ['CAERO1', 'CAERO4']:
+                    ncaeros_sub += 1
+                    pointsi, elementsi = caero.panel_points_elements()
+                    caero_points.append(pointsi)
+                    for i, box_id in enumerate(caero.box_ids.flat):
+                        box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
+                    num_prev += pointsi.shape[0]
+                elif caero.type == 'CAERO2':
+                    pass
+                else:
+                    print('caero\n%s' % caero)
+            if ncaeros_sub:
+                caero_points = np.vstack(caero_points)
+            has_caero = True
+
+        if ncaeros_sub == 0:
+            caero_points = np.empty((0, 3))
+
+        # check for any control surfcaes
+        if model.aesurf:
+            has_control_surface = True
+            #ncaero_cs_points = 0
+            if 'caero_control_surfaces' not in self.alt_grids:
+                self.gui.create_alternate_vtk_grid(
+                    'caero_control_surfaces', color=PINK, line_width=5, opacity=1.0,
+                    representation='surface', is_visible=False)
+
+            # sort the control surfaces
+            labels_to_aesurfs = {aesurf.label: aesurf for aesurf in itervalues(model.aesurf)}
+            if len(labels_to_aesurfs) != len(model.aesurf):
+                msg = (
+                    'Expected same number of label->aesurf as aid->aesurf\n'
+                    'labels_to_aesurfs = %r\n'
+                    'model.aesurf = %r\n' % (labels_to_aesurfs, model.aesurf))
+                raise RuntimeError(msg)
+
+            for unused_label, aesurf in sorted(iteritems(model.aesurf)):
+                aelist = aesurf.alid1_ref
+                ncaeros_cs += len(aelist.elements)
+
+                cs_name = '%s_control_surface' % aesurf.label
+                if cs_name not in self.alt_grids:
+                    self.gui.create_alternate_vtk_grid(
+                        cs_name, color=PINK, line_width=5, opacity=0.5,
+                        representation='surface')
+
+                cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
+                cs_box_ids[cs_name].extend(aelist.elements)
+                if aesurf.alid2 is not None:
+                    aelist = aesurf.alid2_ref
+                    ncaeros_cs += len(aelist.elements)
+                    cs_box_ids[cs_name].extend(aelist.elements)
+                    cs_box_ids['caero_control_surfaces'].extend(aelist.elements)
+        out = (
+            has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
+            ncaeros_points, ncaero_sub_points,
+            has_control_surface, box_id_to_caero_element_map, cs_box_ids,
+        )
+        return out
 
     def set_caero_grid(self, ncaeros_points, model, j=0):
         """
@@ -2346,7 +2336,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 idsi = suport.node_ids
                 ids += idsi
             grid_name = 'SUPORT'
-            self.create_alternate_vtk_grid(
+            self.gui.create_alternate_vtk_grid(
                 grid_name, color=RED, opacity=1.0, point_size=4,
                 representation='point', is_visible=True)
 
@@ -2363,8 +2353,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """creates the spc secondary actors"""
         spc_name = 'spc_id=%i' % spc_id
         spc_names = [spc_name]
-        self.create_alternate_vtk_grid(spc_name, color=PURPLE, line_width=5, opacity=1.,
-                                       point_size=5, representation='point', is_visible=False)
+        self.gui.create_alternate_vtk_grid(
+            spc_name, color=PURPLE, line_width=5, opacity=1.,
+            point_size=5, representation='point', is_visible=False)
 
         # node_ids = model.get_SPCx_node_ids(spc_id)
         node_ids_c1 = model.get_SPCx_node_ids_c1(
@@ -2441,7 +2432,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.nid_release_map = nid_release_map
 
         bar_nids = list(bar_nids)
-        self.create_alternate_vtk_grid(
+        self.gui.create_alternate_vtk_grid(
             'Bar Nodes', color=RED, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=False)
         msg = ", which is required by 'Bar Nodes'"
@@ -2463,10 +2454,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 bar_y = bar_type + '_y'
                 bar_z = bar_type + '_z'
 
-                self.create_alternate_vtk_grid(
+                self.gui.create_alternate_vtk_grid(
                     bar_y, color=GREEN, line_width=5, opacity=1.,
                     point_size=5, representation='bar', bar_scale=scale, is_visible=False)
-                self.create_alternate_vtk_grid(
+                self.gui.create_alternate_vtk_grid(
                     bar_z, color=BLUE, line_width=5, opacity=1.,
                     point_size=5, representation='bar', bar_scale=scale, is_visible=False)
 
@@ -2535,13 +2526,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             depname = 'mpc_id=%i_dependent' % mpc_id
             indname = 'mpc_id=%i_independent' % mpc_id
             linename = 'mpc_id=%i_lines' % mpc_id
-        self.create_alternate_vtk_grid(
+        self.gui.create_alternate_vtk_grid(
             depname, color=GREEN, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
-        self.create_alternate_vtk_grid(
+        self.gui.create_alternate_vtk_grid(
             indname, color=LIGHT_GREEN, line_width=5, opacity=1.,
             point_size=5, representation='point', is_visible=False)
-        self.create_alternate_vtk_grid(
+        self.gui.create_alternate_vtk_grid(
             linename, color=LIGHT_GREEN, line_width=5, opacity=1.,
             point_size=5, representation='wire', is_visible=False)
 
@@ -2625,7 +2616,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if nspoints == 0:
             model.log.warning('0 spoints added for %r' % name)
             return
-        self.create_alternate_vtk_grid(
+        self.gui.create_alternate_vtk_grid(
             name, color=BLUE, line_width=1, opacity=1.,
             point_size=5, representation='point', bar_scale=0., is_visible=True)
 
@@ -2704,7 +2695,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _fill_suport(self, suport_id, unused_subcase_id, model):
         """creates SUPORT and SUPORT1 nodes"""
         suport_name = 'suport1_id=%i' % suport_id
-        self.create_alternate_vtk_grid(
+        self.gui.create_alternate_vtk_grid(
             suport_name, color=RED, line_width=5, opacity=1., point_size=4,
             representation='point', is_visible=False)
         suport_nids = self._get_suport_node_ids(model, suport_id)
@@ -3725,7 +3716,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 lines.append(node_ids)
             lines = np.array(lines, dtype='int32')
 
-            self.create_alternate_vtk_grid(
+            self.gui.create_alternate_vtk_grid(
                 'plotel', color=RED, line_width=2, opacity=0.8,
                 point_size=5, representation='wire', is_visible=True)
             self._add_nastran_lines_to_grid('plotel', lines, model)
