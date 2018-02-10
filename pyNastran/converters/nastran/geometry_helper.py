@@ -418,8 +418,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     face_idlist = faces_to_element_facelist(faces, node0)
                     node0 += 24
                 else:
-                    print('skipping %s' % bar_type)
-                    #continue
+                    print('skipping 3d bar_type = %r' % bar_type)
+                    continue
                 ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
                 points_list.append(pointsi)
 
