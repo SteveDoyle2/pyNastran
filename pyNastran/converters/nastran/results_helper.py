@@ -836,9 +836,9 @@ class NastranGuiResults(NastranGuiAttributes):
             #eids, header_dict, keys_map)
 
         if is_stress:
-            stress_obj = self.unused_stress[key]
+            stress_obj = self.stress[key]
         else:
-            stress_obj = self.unused_strain[key]
+            stress_obj = self.strain[key]
 
         if len(stress_obj.composite_data_dict):
             str(stress_obj)

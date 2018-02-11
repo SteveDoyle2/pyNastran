@@ -1,4 +1,6 @@
 import numpy as np
+
+
 def box_faces(n1, n2):
     """
     0----3
@@ -51,7 +53,7 @@ def i_faces(n1, n2):
     wflange_top = 0.5
     wflange_btm = 0.5
     hweb = 1.
-    ysc = 0.
+    #ysc = 0.
     tflange_top = 0.2
     tflange_btm = 0.2
     tweb = 0.1
@@ -299,8 +301,8 @@ def t2_faces(n1, n2):
     wweb = 0.1
     hweb = 1.
     t = 0.1
-    y = [0., 1., 0]
-    z = [0., 1., 0]
+    #y = [0., 1., 0]
+    #z = [0., 1., 0]
 
     points = [
         [n1[0], -wflange/2,  t/2], # 0

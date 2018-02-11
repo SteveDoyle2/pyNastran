@@ -1,5 +1,5 @@
 import vtk
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray, VTK_VERSION
+from pyNastran.gui.utils.vtk.vtk_utils import VTK_VERSION
 
 
 # Create polyhedron (cube)

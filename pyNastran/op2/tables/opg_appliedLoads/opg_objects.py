@@ -1,7 +1,7 @@
 from six.moves import zip
 from numpy import zeros
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e#, write_imag_floats_13e
+from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 
 
 class AppliedLoadsVectorArray(ScalarObject):
@@ -82,6 +82,8 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                  '\n',
                  '      EID SOURCE FX FY FZ MX MY MZ\n']
         #ntimes, ntotal = self.data.shape[:2]
+
+        eids = self.eids
         for itime, dt in enumerate(self._times):
             if self.nonlinear_factor is not None:
                 if isinstance(dt, float):
@@ -97,12 +99,13 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             m2 = self.data[itime, :, 4]
             m3 = self.data[itime, :, 5]
             source = ''
-            for f1i, f2i, f3i, m1i, m2i, m3i in zip(f1, f2, f3, m1, m2, m3):
+            for eid, f1i, f2i, f3i, m1i, m2i, m3i in zip(eids, f1, f2, f3, m1, m2, m3):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f06.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (  # TODO: fix this...
-                    node_id, eid, source, dx, dy, dz, rx, ry, rz))
+                f06.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    # TODO: fix this...
+                    eid, source, dx, dy, dz, rx, ry, rz))
             f06.write(page_stamp % page_num)
             page_num += 1
         return page_num-1
@@ -123,6 +126,8 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                  '\n',
                  '      EID SOURCE FX FY FZ MX MY MZ\n']
         #ntimes, ntotal, size = self.data.shape
+
+        eids = self.eids
         for itime, dt in enumerate(self._times):
             if self.nonlinear_factor is not None:
                 if isinstance(dt, float):
@@ -138,14 +143,16 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             m2 = self.data[itime, :, 4]
             m3 = self.data[itime, :, 5]
             source = ''
-            for f1i, f2i, f3i, m1i, m2i, m3i in zip(f1, f2, f3, m1, m2, m3):
+            #node_id = ''
+            for eid, f1i, f2i, f3i, m1i, m2i, m3i in zip(eids, f1, f2, f3, m1, m2, m3):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
-                vals2 = write_floats_13e(vals)
-                (dx, dy, dz, rx, ry, rz) = vals2
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                (dxr, dxi, dyr, dyi, dzr, dzi,
+                 rxr, rxi, ryr, ryi, rzr, rzi) = vals2  # TODO :verify
                 f06.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                           '%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                              node_id, eid, source, dxr, dyr, dzr, rxr, ryr, rzr,
-                              '', '', '', '',       dxi, dyi, dzi, rxi, ryi, rzi))
+                              eid, source, dxr, dyr, dzr, rxr, ryr, rzr,
+                              '', '', dxi, dyi, dzi, rxi, ryi, rzi))
             f06.write(page_stamp % page_num)
             page_num += 1
         return page_num-1
