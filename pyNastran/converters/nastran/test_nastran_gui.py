@@ -269,6 +269,12 @@ class TestNastranGUI(unittest.TestCase):
         #test.load_nastran_geometry(op2_filename)
         #test.load_nastran_results(op2_filename)
 
+    #def test_gui_bar_rod(self):
+        #"""tests a PBARL/ROD"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_rod.bdf')
+        #test = NastranGUI()
+        #test.load_nastran_geometry(bdf_filename)
+
     def test_gui_bar_bar(self):
         """tests a PBARL/BAR"""
         bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar.bdf')
@@ -277,7 +283,7 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_gui_bar_box(self):
         """tests a PBARL/BOX"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_box.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 

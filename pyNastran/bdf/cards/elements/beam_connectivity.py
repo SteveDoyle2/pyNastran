@@ -1,4 +1,55 @@
+"""
+defines the faces for representing the PBARL/PBEAML cards as 3D objects
+instead of just 1D elements
+"""
+from __future__ import print_function
 import numpy as np
+from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
+
+
+def rod_faces(n1, n2, ihat, yhat, zhat, dim1, dim2): # not checked
+    """
+    defines points in a circle with triangle based end caps
+    """
+    xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
+
+    thetas = np.radians(np.linspace(0., 360., 17)) # 4,8,12,16,... becomes 5,9,13,17,...
+    ntheta = len(thetas)
+
+    nfaces = 0
+    all_faces = []
+    points_list = []
+    x = np.zeros(ntheta)
+    for nid, dim in [(n1, dim1), (n2, dim2)]:
+        radius, = dim
+        y = radius * np.cos(thetas)
+        z = radius * np.sin(thetas)
+        xyz = np.vstack([x, y, z]).T
+        assert xyz.shape == (ntheta, 3), xyz.shape
+
+        pointsi = np.dot(xyz, xform) + nid
+        points_list.append(pointsi)
+
+        # the tri_cap is made from points that aren't defined yet
+        # (the n1/n2 end points)
+        tris = tri_cap(ntheta)
+
+        # we need to use the tolist because we're going to
+        # combine quads and tris (the elements have different
+        # lengths)
+        all_faces += (nfaces + tris).tolist()
+        nfaces += tris.shape[0]
+
+    # the main cylinder uses the points defined independent
+    # of the points n1/n2
+    faces = elements_from_quad(2, ntheta)
+    all_faces += faces.tolist()
+
+    # used by the tri_caps
+    points_list.append(n1)
+    points_list.append(n2)
+    points = np.vstack(points_list)
+    return all_faces, points, points.shape[0]
 
 def bar_faces(n1, n2, ihat, yhat, zhat, dim1, dim2):  # validaeted
     """

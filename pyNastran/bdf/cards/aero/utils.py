@@ -27,6 +27,30 @@ def elements_from_quad(nx, ny):
     elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
     return elements
 
+def tri_cap(nelements):
+    """
+    ::
+
+      1
+      *    *2
+      |   /      *3
+      |  /     /
+      | /   /
+      0  /---------*4
+
+    create a matrix with the point counter
+    """
+    npoints = nelements
+    ipoints = np.arange(npoints, dtype='int32')
+
+    # move around a circle and apply ipoints
+    elements = np.zeros((nelements, 3), dtype='int32')
+
+    # the 0 index defines the center point
+    elements[:len(ipoints)-1, 1] = ipoints[1:]
+    elements[:len(ipoints)-1, 2] = np.hstack([ipoints[2:], 1])
+    return elements
+
 def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     """
     Creates nodes and elements in a structured grid given 4 points.

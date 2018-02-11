@@ -10,6 +10,7 @@ from numpy.linalg import norm
 import vtk
 from pyNastran.utils import integer_types, iteritems
 from pyNastran.bdf.cards.elements.beam_connectivity import (
+    rod_faces,
     bar_faces, box_faces, i_faces, t_faces, t2_faces,)
 
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
@@ -401,6 +402,10 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     points_list.append(pointsi)
                     node0 += 8
                     continue
+                elif bar_type == 'ROD':
+                    faces, pointsi, dnode = rod_faces(n1, n2, ihat, yhat, zhat, dim1, dim2)
+                    face_idlist = faces_to_element_facelist(faces, node0)
+                    node0 += dnode
                 elif bar_type == 'BOX':
                     faces, pointsi = box_faces(n1, n2, ihat, yhat, zhat, dim1, dim2)
                     face_idlist = faces_to_element_facelist(faces, node0)
