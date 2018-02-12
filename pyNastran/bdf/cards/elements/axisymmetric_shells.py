@@ -1,4 +1,4 @@
-## pylint: disable=C0103,R0902,R0904,R0914,C0302
+## pylint: disable=C0103
 """
 All axisymmetric shell elements are defined in this file.  This includes:
  * CTRAX3
@@ -25,10 +25,10 @@ from pyNastran.bdf.field_writer_8 import (
     print_card_8, print_field_8)
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, integer_double_or_blank, double)
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.elements.shell import TriShell, _triangle_area_centroid_normal, _normal
-from pyNastran.bdf.cards.base_card import BaseCard, Element
+from pyNastran.bdf.cards.base_card import Element
 
 __all__ = ['CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
            'CQUADX', 'CQUADX4', 'CQUADX8']
@@ -63,7 +63,7 @@ class AxisymmetricTri(Element):
         return centroid
 
     def Mass(self):
-        n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
+        unused_n1, unused_n2, unused_n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return 0.
 
 class AxisymmetricQuad(Element):
@@ -85,7 +85,8 @@ class AxisymmetricQuad(Element):
         ]
 
     def Mass(self):
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
+        unused_n1, unused_n2, unused_n3, unused_n4 = self.get_node_positions(
+            nodes=self.nodes_ref[:4])
         return 0.
 
 class CTRAX3(AxisymmetricTri):
@@ -142,7 +143,7 @@ class CTRAX3(AxisymmetricTri):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -288,7 +289,7 @@ class CTRAX6(AxisymmetricTri):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -431,7 +432,7 @@ class CTRIAX(AxisymmetricTri):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -585,7 +586,7 @@ class CTRIAX6(TriShell):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        eid, mid, n1, n2, n3, n4, n5, n6, theta, undef1, undef2 = data
+        eid, mid, n1, n2, n3, n4, n5, n6, theta, unused_undef1, unused_undef2 = data
         nids = [n1, n2, n3, n4, n5, n6]
         return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
 
@@ -611,7 +612,7 @@ class CTRIAX6(TriShell):
     def _verify(self, xref):
         eid = self.eid
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert self.pid == -53, 'pid = %s' % self.pid
         assert isinstance(eid, integer_types)
@@ -635,7 +636,7 @@ class CTRIAX6(TriShell):
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, unused_n2, n3, unused_n4, n5, unused_n6) = self.get_node_positions()
         return _triangle_area_centroid_normal([n1, n3, n5], self)
 
     def Area(self):
@@ -643,7 +644,7 @@ class CTRIAX6(TriShell):
         Get the normal vector.
 
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_1-n_5) \rvert"""
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
+        (n1, unused_n2, n3, unused_n4, n5, unused_n6) = self.get_node_positions()
         a = n1 - n3
         b = n1 - n5
         area = 0.5 * norm(cross(a, b))
@@ -656,7 +657,7 @@ class CTRIAX6(TriShell):
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
-        n1, n2, n3, n4, n5, n6 = self.get_node_positions()
+        n1, unused_n2, n3, unused_n4, n5, unused_n6 = self.get_node_positions()
         centroid = (n1 + n3 + n5) / 3.
         return centroid
 
@@ -692,7 +693,7 @@ class CTRIAX6(TriShell):
              {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
         nodes = [self.nodes_ref[inid] for inid in [0, 2, 4]]
-        n1, n3, n5  = self.get_node_positions(nodes=nodes)
+        n1, n3, n5 = self.get_node_positions(nodes=nodes)
         try:
             n = _normal(n1 - n3, n1 - n5)
         except:

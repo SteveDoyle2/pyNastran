@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103
 """
 All mass properties are defined in this file.  This includes:
 
@@ -233,7 +233,7 @@ class NSM1x(Property):
             value = integer_or_string(card, 4, 'ID_1')
             if value != 'ALL' and not isinstance(value, int):
                 msg = ('*ID_1 = %r (field #4) on card must be an integer or ALL.\n'
-                       'card=%s' % (value, dcard))
+                       'card=%s' % (value, card))
                 raise SyntaxError(msg)
             ids = value
         else:

@@ -435,6 +435,17 @@ class TestBeams(unittest.TestCase):
             'NO', '1.0', '.238', '.238', None,
         ]
         model.add_card(fields, fields[0])
+
+        #fields = [
+            #'PBEAML', 625, 624,   None, 'BAR',  None,  None,  None,  None,
+                    #0.238, 0.238, None, 'NO',   0.166, 0.238, 0.238, None,
+                    #'NO',  0.51,  0.126, 0.126, None,  'NO',  0.565, 0.177,
+                    #0.117, None, 'NO',   0.619, 0.126, 0.126, None,  'NO',
+                    #0.963, 0.238, 0.238, None,  'NO',  1.0,   0.238, 0.238,
+                    #None, 'NO',
+        #]
+        #model.add_card(fields, fields[0])
+
         model.pop_parse_errors()
         str(model.properties[622])
         str(model.properties[623])

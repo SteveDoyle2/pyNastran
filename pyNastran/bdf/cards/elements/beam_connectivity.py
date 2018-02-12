@@ -1,3 +1,4 @@
+# pylint: disable=C0326
 """
 Defines the faces for representing the PBARL/PBEAML cards as 3D objects
 instead of just 1D elements.

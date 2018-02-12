@@ -952,7 +952,7 @@ class RBE2(RigidElement):
             the BDF object
         """
         msg = ' which is required by RBE2 eid=%s' % (self.eid)
-        self.Gmi_ref, missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
+        self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
     def uncross_reference(self):
@@ -1285,19 +1285,19 @@ class RBE3(RigidElement):
         self.refgrid_ref = model.Node(self.ref_grid_id, msg=msg)
 
         self.Gijs_ref = []
-        for i, Gij in enumerate(self.Gijs):
+        for Gij in self.Gijs:
             self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
-        self.Gmi_ref, missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
+        self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
 
         assert self.Gmi_ref is not None
         self.refgrid_ref = model.Node(self.ref_grid_id, msg=msg)
 
         self.Gijs_ref = []
-        for i, Gij in enumerate(self.Gijs):
+        for Gij in self.Gijs:
             nodes, msgi = model.safe_empty_nodes(Gij, msg=msg)
             if msgi:
                 model.log.warning(msgi)
@@ -1627,7 +1627,7 @@ class RSSCON(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by RSSCON eid=%s' % (self.eid)
+        unused_msg = ' which is required by RSSCON eid=%s' % (self.eid)
         #if self.rigid_type == 'ELEM':
             #self.shell_eid_ref = model.Element(self.shell_eid, msg=msg)
             #self.solid_eid_ref = model.Element(self.shell_eid, msg=msg)

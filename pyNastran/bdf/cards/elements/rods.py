@@ -1,4 +1,4 @@
-# pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
+# pylint: disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
@@ -9,7 +9,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element #, Mid
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank)
+    integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -134,7 +134,7 @@ class CROD(RodElement):
     def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
         assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(pid, int), 'pid=%r' % pid
         if xref:  # True
@@ -336,7 +336,7 @@ class CTUBE(RodElement):
 
     def _verify(self, xref):
         pid = self.Pid()
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
         assert isinstance(pid, int), 'pid=%r' % pid
         if xref:
             A = self.Area()
@@ -562,7 +562,7 @@ class CONROD(RodElement):
     def _verify(self, xref):
         pid = self.Pid()
         assert pid == -10, 'pid=%r' % pid
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
         if xref:  # True
             mid = self.Mid()
             L = self.Length()

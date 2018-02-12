@@ -59,30 +59,30 @@ class PBUSH(BushingProperty):
     }
     def update_by_pname_fid(self, name, value):
         if name == 'B1':
-            self.Bi[0]
+            self.Bi[0] = value
         elif name == 'B2':
-            self.Bi[1]
+            self.Bi[1] = value
         elif name == 'B3':
-            self.Bi[2]
+            self.Bi[2] = value
         elif name == 'B4':
-            self.Bi[3]
+            self.Bi[3] = value
         elif name == 'B5':
-            self.Bi[4]
+            self.Bi[4] = value
         elif name == 'B6':
-            self.Bi[5]
+            self.Bi[5] = value
 
         elif name == 'K1':
-            self.Ki[0]
+            self.Ki[0] = value
         elif name == 'K2':
-            self.Ki[1]
+            self.Ki[1] = value
         elif name == 'K3':
-            self.Ki[2]
+            self.Ki[2] = value
         elif name == 'K4':
-            self.Ki[3]
+            self.Ki[3] = value
         elif name == 'K5':
-            self.Ki[4]
+            self.Ki[4] = value
         elif name == 'K6':
-            self.Ki[5]
+            self.Ki[5] = value
 
         #elif name == 'M':
             #self.mass
@@ -243,7 +243,7 @@ class PBUSH(BushingProperty):
 
     @classmethod
     def _read_var(cls, card, var_prefix, istart, iend):
-        Ki = fields(double_or_blank, card, 'Ki', istart, iend)
+        Ki = fields(double_or_blank, card, var_prefix, istart, iend)
         return Ki
 
     @classmethod
@@ -439,10 +439,11 @@ class PBUSH1D(BushingProperty):
                     self.damper_idcdv = damper_idcdv
 
                 elif key == 'GENER':
-                    (gener_idt, gener_idc,
-                     gener_idtdu, gener_idcdu,
-                     gener_idtdv, gener_idcdv
-                     ) = values
+                    (
+                        gener_idt, gener_idc,
+                        gener_idtdu, gener_idcdu,
+                        gener_idtdv, gener_idcdv
+                    ) = values
 
                     self.gener_idt = gener_idt
                     self.gener_idc = gener_idc
@@ -622,10 +623,10 @@ class PBUSH1D(BushingProperty):
         """
         gener_idt = integer(card, istart + 2, 'generIDT')
         gener_idc = integer_or_blank(card, istart + 3,
-                                    'generIDC', gener_idt)
+                                     'generIDC', gener_idt)
         gener_idtdu = integer(card, istart + 4, 'generIDTDU')
         gener_idcdu = integer_or_blank(card, istart + 5,
-                                      'generIDCDU', gener_idtdu)
+                                       'generIDCDU', gener_idtdu)
         gener_idtdv = integer(card, istart + 6, 'generIDTDV')
         gener_idcdv = integer_or_blank(card, istart + 7,
                                        'generIDCDV', gener_idtdv)

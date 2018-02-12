@@ -1435,7 +1435,8 @@ class PBARL(LineProperty):
             ##print
             ##J = Ix + Iy
         #else:
-            #msg = 'I11 for beam_type=%r dim=%r on PBARL is not supported' % (self.beam_type, self.dim)
+            #msg = 'I11 for beam_type=%r dim=%r on PBARL is not supported' % (
+                #self.beam_type, self.dim)
             #raise NotImplementedError(msg)
         #return Ix
 
@@ -1552,26 +1553,26 @@ class PBARL(LineProperty):
             r = self.dim[0]
             Ixx = pi * r**4 / 4.
             Iyy = Ixx
-            Ixy = 0.
+            unused_Ixy = 0.
         elif self.beam_type in ['TUBE']:
             rout, rin = self.dim
             #rin = rout - 2*t
             Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
-            Ixy = 0.
+            unused_Ixy = 0.
         elif self.beam_type in ['TUBE2']:
             rout, t = self.dim
             rin = rout - 2*t
             Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
-            Ixy = 0.
+            unused_Ixy = 0.
         elif self.beam_type in ['BOX']:
             (d1, d2, d3, d4) = self.dim
             hout = d2
             wout = d1
             hin = d2 - 2. * d3
             win = d1 - 2. * d4
-            points, Area = self._points('BAR', [hout, wout])
+            points, unused_Area = self._points('BAR', [hout, wout])
             yi = points[0, :-1]
             yip1 = points[0, 1:]
             xi = points[1, :-1]
@@ -1583,7 +1584,7 @@ class PBARL(LineProperty):
             Iyy1 = 1/12 * sum((xi**2 + xi * xip1 + xip1**2)*ai)
             #Ixy1 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
 
-            points, Area = self._points('BAR', [hin, win])
+            points, unused_Area = self._points('BAR', [hin, win])
             yi = points[0, :-1]
             yip1 = points[0, 1:]
             xi = points[1, :-1]
@@ -1605,7 +1606,7 @@ class PBARL(LineProperty):
             #(Ix, Iy, Ixy) = self.I1_I2_I12()
             #J = Ix + Iy
         elif self.beam_type in ['BAR', 'CROSS', 'HEXA', 'T2', 'H']:
-            points, Area = self._points(self.beam_type, self.dim)
+            points, unused_Area = self._points(self.beam_type, self.dim)
             yi = points[0, :-1]
             yip1 = points[0, 1:]
 
@@ -1769,7 +1770,7 @@ class PBRSECT(LineProperty):
             line0 = line0.expandtabs()
 
         bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
-        line0_eq = line0[16:]
+        unused_line0_eq = line0[16:]
         lines_joined = ''.join(card[1:]).replace(' ', '')
 
         if lines_joined:

@@ -1,4 +1,4 @@
-## pylint: disable=C0103,R0902,R0904,R0914,C0302
+## pylint: disable=C0103
 """
 All shell elements are defined in this file.  This includes:
 
@@ -575,7 +575,7 @@ class CTRIA3(TriShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -771,7 +771,7 @@ class CPLSTN3(TriShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -987,7 +987,7 @@ class CTRIA6(TriShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -1297,8 +1297,8 @@ class CTRIAR(TriShell):
     def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
-        nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_nids = self.node_ids
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -1309,7 +1309,7 @@ class CTRIAR(TriShell):
             # PSHELL/PCOMP
             assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             t = self.Thickness()
-            a, c, normal = self.AreaCentroidNormal()
+            a, c, unused_normal = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
@@ -1716,7 +1716,7 @@ class CSHEAR(QuadShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -2254,7 +2254,7 @@ class CQUAD4(QuadShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
@@ -2429,7 +2429,7 @@ class CPLSTN4(QuadShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
@@ -2772,7 +2772,7 @@ class CPLSTN8(QuadShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -3034,7 +3034,7 @@ class CQUADR(QuadShell):
     def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
-        nids = self.node_ids
+        unused_nids = self.node_ids
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -3044,7 +3044,7 @@ class CQUADR(QuadShell):
         if xref:
             assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             t = self.Thickness()
-            a, c, n = self.AreaCentroidNormal()
+            a, c, unused_n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
@@ -3227,7 +3227,7 @@ class CPLSTS3(TriShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -3623,7 +3623,7 @@ class CQUAD8(QuadShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)

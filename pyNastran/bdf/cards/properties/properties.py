@@ -1,4 +1,4 @@
-#pylint: disable=C0103,C0111,R0902
+#pylint: disable=C0103
 """
 All ungrouped properties are defined in this file.  This includes:
  * PFAST
@@ -9,14 +9,12 @@ All ungrouped properties are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import range
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Property, Material
+from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank,
-    blank)
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -439,7 +437,7 @@ class PRAC2D(CrackProperty):
     def validate(self):
         if self.iplane not in [0, 1]:
             raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
-                               'only be 0,1 iPlane=%r' % iplane)
+                               'only be 0,1 iPlane=%r' % self.iplane)
 
     @classmethod
     def add_card(cls, card, comment=''):

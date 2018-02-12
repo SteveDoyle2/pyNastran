@@ -411,12 +411,11 @@ class PBEAM(IntegratedLineProperty):
 
 
         if self.cwa or self.cwb:  # if either is non-zero
-            for i, xxb, j in zip(count(), self.xxb, self.j):
-                if self.j[i] < 0.:
-                    ji = self.j[i]
+            for i, xxbi, ji in zip(count(), self.xxb, self.j):
+                if ji < 0.:
                     msg = 'Warping Check Error; j[%i] must be greater than 0.0' % i
                     msg += '  cwa=%s cwb=%s\n' % (self.cwa, self.cwb)
-                    msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxb, self.j, i, j)
+                    msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxbi, self.j, i, ji)
                     raise ValueError(msg)
         self.mid_ref = None
 
@@ -718,7 +717,7 @@ class PBEAM(IntegratedLineProperty):
         comment : str; default=''
             a comment for the card
         """
-        (pid, mid, nsegs, ccf, x) = data[:5]
+        (pid, mid, unused_nsegs, unused_ccf, unused_x) = data[:5]
 
         rows = data[5:]
         if len(rows) != 12:
@@ -775,7 +774,7 @@ class PBEAM(IntegratedLineProperty):
         #print('*xxb = %s' % xxb)
         #print('*i1 = %s' % i1)
 
-        (k1, k2, s1, s2, nsia, nsib, cwa, cwb,
+        (k1, k2, s1, s2, nsia, nsib, cwa, unused_cwb,
          m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = data[-1]
         return PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
                      c1, c2, d1, d2, e1, e2, f1, f2,
@@ -865,7 +864,7 @@ class PBEAM(IntegratedLineProperty):
         try:
             J = self.J()
         except NotImplementedError:
-            msg = "J is not implemented for pid.type=%s pid.Type=%s" % (self.type, self.Type)
+            msg = "J is not implemented for pid.type=%s pid.Type=%s" % (self.type, self.beam_type)
             print(msg)
             J = 0.0
         nsm = self.Nsm()
@@ -1053,7 +1052,7 @@ class PBEAML(IntegratedLineProperty):
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
         elif pname_fid.startswith('DIM'):
-            word, num = break_word_by_trailing_integer(pname_fid)
+            unused_word, num = break_word_by_trailing_integer(pname_fid)
             ndim = len(self.dim[0])
 
             num = int(num) - 1
@@ -1122,6 +1121,7 @@ class PBEAML(IntegratedLineProperty):
             msg = 'pid=%s; nsm=%s and must be a list/tuple/ndarray; type=%s' % (
                 pid, nsm, type(nsm))
             raise TypeError(msg)
+
         if so is None:
             so = ['YES'] * nxxb
         elif not isinstance(so, (list, tuple, ndarray)):
@@ -1133,8 +1133,8 @@ class PBEAML(IntegratedLineProperty):
             if not isinstance(dim, (list, ndarray)):
                 msg = 'dims = List[dim]; dim=List[floats]; type(dim)=%s' % (type(dim))
                 raise TypeError(msg)
-            assert len(dim) == ndim, 'Type=%s ndim=%s len(dim)=%s xxb=%s dim=%s' % (
-                Type, ndim, len(dim), xxbi, dim)
+            assert len(dim) == ndim, 'beam_type=%s ndim=%s len(dim)=%s xxb=%s dim=%s' % (
+                beam_type, ndim, len(dim), xxbi, dim)
 
             if not isinstance(xxbi, float_types):
                 raise TypeError('istation=%i xxb=%s and must be a float' % (
@@ -1153,7 +1153,12 @@ class PBEAML(IntegratedLineProperty):
         self.so = so
         self.nsm = np.asarray(nsm)
         self.mid_ref = None
-        A = self.Area()
+        unused_A = self.Area()
+
+    def validate(self):
+        uxxb = np.unique(self.xxb)
+        if len(self.xxb) != len(uxxb):
+            raise ValueError('xxb=%s unique(xxb)=%s' % (self.xxb, uxxb))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1183,7 +1188,7 @@ class PBEAML(IntegratedLineProperty):
         xxb = [0.]
 
         #: Output flag
-        so = ['YES']
+        so = ['YES']  # station 0
 
         #: non-structural mass :math:`nsm`
         nsm = []
@@ -1389,7 +1394,7 @@ class PBEAML(IntegratedLineProperty):
 
     def _J(self):
         j = []
-        for dims in self.dim:
+        for unused_dims in self.dim:
             pass
             #print("dims = ",dims)
             #IAreaL()
@@ -1848,7 +1853,7 @@ class PBCOMP(LineProperty):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         data1, data2 = data
-        (pid, mid, area, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, nsections) = data1
+        (pid, mid, area, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, unused_nsections) = data1
         y = []
         z = []
         c = []
