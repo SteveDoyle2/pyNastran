@@ -1,9 +1,9 @@
+# pylint: disable=C0103
 """
 defines:
  - CBEAM
  - BEAMOR
 """
-# pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import print_function
 from six import string_types
 import numpy as np
@@ -12,7 +12,9 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, init_x_g0
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, integer_double_string_or_blank)
+    integer, integer_or_blank, double_or_blank, integer_double_string_or_blank,
+    string_or_blank, integer_double_or_blank,
+)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -608,8 +610,8 @@ class CBEAM(CBAR):
 
     def _verify(self, xref):
         eid = self.eid
-        pid = self.Pid()
-        edges = self.get_edge_ids()
+        unused_pid = self.Pid()
+        unused_edges = self.get_edge_ids()
         if xref:  # True
             mid = self.Mid()
             nsm = self.Nsm()
@@ -664,7 +666,7 @@ class CBEAM(CBAR):
         card = self.repr_fields()
         return self.comment + print_card_16(card)
 
-def _init_offt_bit(card, eid):
+def _init_offt_bit(card, unused_eid):
     """
     offt doesn't exist in NX nastran
     """

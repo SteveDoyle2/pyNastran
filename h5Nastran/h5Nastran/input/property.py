@@ -622,6 +622,32 @@ class PCOMP(CardTable):
             'TSAI': 3,
             'STRN': 4
         }
+        
+        # can't do this right now because there's no way to determine ply_pos
+        # should allow this method to loop through all pcomps, instead of in the card_table write_data method
+        
+        # ply = {
+        #     'IDENTITY': {'MID': [], 'T': [], 'THETA': [], 'SOUT': []}
+        # }
+        # 
+        # ply_len = len(card.material_ids)
+        # 
+        # data = {
+        #     'IDENTITY': {'PID': [card.pid], 
+        #                  'NPLIES': [ply_len], 
+        #                  'Z0': [round(card.z0, 15)], 
+        #                  'NSM': [card.nsm], 
+        #                  'SB': [card.sb], 
+        #                  'FT': [_ft[card.ft]], 
+        #                  'TREF': [card.tref], 
+        #                  'GE': [card.ge],
+        #                  'PLY_POS': [], 
+        #                  'PLY_LEN': []},
+        #     'PLY': ply,
+        #     '_subtables': ['PLY',]
+        # }
+        # 
+        # ply = ply['IDENTITY']
 
         data = [card.pid, len(card.material_ids), round(card.z0, 15), card.nsm, card.sb, _ft[card.ft], card.tref, card.ge]
         data = TableData([data])

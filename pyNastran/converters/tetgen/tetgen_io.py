@@ -11,8 +11,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class TetgenIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_tetgen_wildcard_geometry_results_functions(self):
         data = ('Tetgen',
@@ -22,11 +22,11 @@ class TetgenIO(object):
 
     def load_tetgen_geometry(self, smesh_filename, name='main', plot=True):
         #print("load_tetgen_geometry...")
-        skip_reading = self._remove_old_geometry(smesh_filename)
+        skip_reading = self.parent._remove_old_geometry(smesh_filename)
         if skip_reading:
             return
 
-        model = Tetgen(log=self.log, debug=False)
+        model = Tetgen(log=self.parent.log, debug=False)
 
         base_filename, ext = os.path.splitext(smesh_filename)
         ext = ext.lower()
@@ -43,7 +43,7 @@ class TetgenIO(object):
         tris = model.tris
         tets = model.tets
 
-        self.nnodes = nodes.shape[0]
+        self.parent.nnodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if dimension_flag == 2:
@@ -52,17 +52,17 @@ class TetgenIO(object):
             ntets = tets.shape[0]
         else:
             raise RuntimeError()
-        self.nelements = ntris + ntets
+        self.parent.nelements = ntris + ntets
 
         #print("nnodes = ",self.nnodes)
         #print("nelements = ", self.nelements)
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.parent.grid
+        grid.Allocate(self.parent.nelements, 1000)
 
         assert nodes is not None
         points = numpy_to_vtk_points(nodes)
-        self.nid_map = {}
+        self.parent.nid_map = {}
 
         #elements -= 1
         if dimension_flag == 2:
@@ -80,14 +80,13 @@ class TetgenIO(object):
             grid.Update()
 
         # loadTetgenResults - regions/loads
-        self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        self.parent.scalarBar.VisibilityOff()
+        self.parent.scalarBar.Modified()
 
         cases = {}
         ID = 1
 
-        self._finish_results_io(cases)
+        self.parent._finish_results_io(cases)
 
     def _fill_tetgen_case(self, cases, ID, elements):
         return cases
-

@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103
 """
 All spring properties are defined in this file.  This includes:
 
@@ -10,7 +10,6 @@ All spring properties are SpringProperty and Property objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -298,4 +297,3 @@ class PELAST(SpringProperty):
 
     def raw_fields(self):
         return ['PELAST', self.pid, self.Tkid(), self.Tgeid(), self.Tknid()]
-

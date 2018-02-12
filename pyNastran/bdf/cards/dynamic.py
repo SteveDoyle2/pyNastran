@@ -104,12 +104,12 @@ class DELAY(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         nodes = [integer(card, 2, 'node')]
-        components = [integer(card, 3, 'components')]
+        components = [integer_or_blank(card, 3, 'components', 0)]
         delays = [double_or_blank(card, 4, 'delay')]
         assert components[0] in [0, 1, 2, 3, 4, 5, 6], components
         if card.field(5):
             nodes.append(integer(card, 5, 'node'))
-            components.append(integer(card, 6, 'components'))
+            components.append(integer_or_blank(card, 6, 'components', 0))
             delays.append(double_or_blank(card, 7, 'delay'))
             assert components[1] in [0, 1, 2, 3, 4, 5, 6], components
         return DELAY(sid, nodes, components, delays, comment=comment)
@@ -1663,8 +1663,12 @@ class TSTEP(BaseCard):
 
         for i in range(nrows):
             n = 8 * i + 1
-            ni = integer_or_blank(card, n + 1, 'N' + str(i), 1)
-            dt = double_or_blank(card, n + 2, 'dt' + str(i), 0.)
+            #if i == 0:
+            ni = integer(card, n + 1, 'Ntimes' + str(i))
+            dt = double(card, n + 2, 'dt' + str(i))
+            #else:
+            #ni = integer_or_blank(card, n + 1, 'N' + str(i), 1)
+            #dt = double_or_blank(card, n + 2, 'dt' + str(i), 0.)
             no = integer_or_blank(card, n + 3, 'NO' + str(i), 1)
             N.append(ni)
             DT.append(dt)

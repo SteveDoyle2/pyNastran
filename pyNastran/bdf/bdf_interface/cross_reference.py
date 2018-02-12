@@ -63,10 +63,10 @@ around the idea of cross-referencing, so it's recommended that you use it.
 # pylint: disable=R0902,R0904,R0914
 
 from __future__ import print_function
-from typing import List, Dict, Any
-from six import iteritems, itervalues
 from collections import defaultdict
 import traceback
+from typing import List, Dict, Any
+from six import iteritems, itervalues
 
 from numpy import zeros, argsort, arange, array_equal
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -203,7 +203,7 @@ class XrefMesh(BDFAttributes):
         for suport in self.suport:
             suport.cross_reference(self)
 
-        for suport1_id, suport1 in iteritems(self.suport1):
+        for unused_suport1_id, suport1 in iteritems(self.suport1):
             suport1.cross_reference(self)
 
         for se_suport in self.se_suport:
@@ -277,7 +277,7 @@ class XrefMesh(BDFAttributes):
                 # we don't need to check the ncaeros=1 case
                 i = 0
                 min_maxs = zeros((ncaeros, 2), dtype='int32')
-                for eid, caero in sorted(iteritems(self.caeros)):
+                for unused_eid, caero in sorted(iteritems(self.caeros)):
                     min_maxs[i, :] = caero.min_max_eid
                     i += 1
                 isort = argsort(min_maxs.ravel())
@@ -465,7 +465,7 @@ class XrefMesh(BDFAttributes):
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
-        for (lid, load_combinations) in iteritems(self.load_combinations):
+        for (unused_lid, load_combinations) in iteritems(self.load_combinations):
             for load_combination in load_combinations:
                 try:
                     load_combination.cross_reference(self)
@@ -476,7 +476,7 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for (lid, loads) in iteritems(self.loads):
+        for (unused_lid, loads) in iteritems(self.loads):
             for load in loads:
                 try:
                     load.cross_reference(self)
@@ -487,7 +487,7 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for (lid, sid) in iteritems(self.dloads):
+        for (unused_lid, sid) in iteritems(self.dloads):
             for load in sid:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
@@ -499,7 +499,7 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for (lid, sid) in iteritems(self.dload_entries):
+        for (unused_lid, sid) in iteritems(self.dload_entries):
             for load in sid:
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
@@ -512,7 +512,7 @@ class XrefMesh(BDFAttributes):
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
 
-        for key, darea in iteritems(self.dareas):
+        for unused_key, darea in iteritems(self.dareas):
             try:
                 darea.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
@@ -523,7 +523,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for key, tic in iteritems(self.tics):
+        for unused_key, tic in iteritems(self.tics):
             try:
                 tic.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
@@ -534,7 +534,7 @@ class XrefMesh(BDFAttributes):
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
 
-        for key, dphase in iteritems(self.dphases):
+        for unused_key, dphase in iteritems(self.dphases):
             try:
                 dphase.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
@@ -558,12 +558,12 @@ class XrefMesh(BDFAttributes):
             set_obj.cross_reference(self)
         for set_obj in self.qsets:
             set_obj.cross_reference(self)
-        for name, set_objs in iteritems(self.usets):
+        for unused_name, set_objs in iteritems(self.usets):
             for set_obj in set_objs:
                 set_obj.cross_reference(self)
 
         # superelements
-        for key, set_obj in iteritems(self.se_sets):
+        for unused_key, set_obj in iteritems(self.se_sets):
             set_obj.cross_reference(self)
         for set_obj in self.se_bsets:
             set_obj.cross_reference(self)
@@ -577,19 +577,19 @@ class XrefMesh(BDFAttributes):
     def _cross_reference_optimization(self):
         # type: () -> None
         """cross references the optimization objects"""
-        for key, deqatn in iteritems(self.dequations):
+        for unused_key, deqatn in iteritems(self.dequations):
             deqatn.cross_reference(self)
-        for key, dresp in iteritems(self.dresps):
+        for unused_key, dresp in iteritems(self.dresps):
             dresp.cross_reference(self)
-        for key, dconstrs in iteritems(self.dconstrs):
+        for unused_key, dconstrs in iteritems(self.dconstrs):
             for dconstr in dconstrs:
                 dconstr.cross_reference(self)
 
-        for key, dvcrel in iteritems(self.dvcrels):
+        for unused_key, dvcrel in iteritems(self.dvcrels):
             dvcrel.cross_reference(self)
-        for key, dvmrel in iteritems(self.dvmrels):
+        for unused_key, dvmrel in iteritems(self.dvmrels):
             dvmrel.cross_reference(self)
-        for key, dvprel in iteritems(self.dvprels):
+        for unused_key, dvprel in iteritems(self.dvprels):
             dvprel.cross_reference(self)
 
     def geom_check(self, geom_check, xref):
@@ -599,14 +599,14 @@ class XrefMesh(BDFAttributes):
         """
         if geom_check:
             if xref:
-                for eid, element in iteritems(self.elements):
+                for unused_eid, element in iteritems(self.elements):
                     #element.Mass()
                     element._verify(xref=True)
                 #if 'GEOMCHECK' in self.params:  # should this be an executive control parameter?
                     #for eid, element in model.elements:
                         #element._verify()
             else:
-                for eid, element in iteritems(self.elements):
+                for unused_eid, element in iteritems(self.elements):
                     element.verify_unique_node_ids()
                     element._verify(xref=False)
 
@@ -645,4 +645,3 @@ class XrefMesh(BDFAttributes):
             # pyram elpr <= 0.5
             # pyram detj <= 0.
             # pyram warp <= 0.707
-

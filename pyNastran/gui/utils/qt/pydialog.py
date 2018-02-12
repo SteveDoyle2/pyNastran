@@ -1,5 +1,10 @@
+"""
+defines:
+ - PyDialog()
+"""
 from __future__ import print_function
 
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont
 from qtpy.QtWidgets import QDialog
 
@@ -38,7 +43,7 @@ class PyDialog(QDialog):
         event.accept()
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Escape:
+        if event.key() == Qt.Key_Escape:
             self.on_cancel()
 
     @staticmethod
@@ -138,6 +143,5 @@ def check_format(cell):
     if is_valid:
         cell.setStyleSheet("QLineEdit{background: white;}")
         return text, True
-    else:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+    cell.setStyleSheet("QLineEdit{background: red;}")
+    return None, False

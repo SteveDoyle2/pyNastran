@@ -11,6 +11,7 @@ import pandas as pd
 
 from h5Nastran.msc import data_tables
 from ..punch import PunchTableData
+from .result_data import ResultData
 
 
 pd.options.mode.chained_assignment = None
@@ -268,6 +269,7 @@ class TableDef(object):
         self.table = None
 
         self.h5f = None
+        self.h5n = None
 
         if len_id is None:
             len_id = '%s_LEN' % self.table_id.replace('_', '')
@@ -330,22 +332,14 @@ class TableDef(object):
         self._index_offset = 0
 
         self._subcase_ids = set()
-
-    # this doesn't work when creating multiple databases in same python run... I don't know why it was done to begin with
-    # works without it, so will be getting rid of it
-    # def __deepcopy__(self, memodict=None):
-    #     from copy import copy
-    #     _copy = copy(self)
-    #     _copy.domain_count = 0
-    #     _copy._index_offset = 0
-    #     del _copy._index_data[:]
-    #     del _copy._subcase_index[:]
-    #     _copy._index_table = None
-    #     _copy._private_index_table = None
-    #
-    #     memodict[id(_copy)] = _copy
-    #
-    #     return _copy
+        
+        self._index_options = {}
+        
+        self.result_table = None
+    
+    def add_index_option(self, option, indices):
+        assert isinstance(indices, (DataGetter, type(None)))
+        self._index_options[option] = indices
 
     def finalize(self):
         if self.is_subtable:
@@ -357,6 +351,9 @@ class TableDef(object):
         if self.table is None:
             self.table = self._make_table()
         return self.table
+    
+    def set_result_table(self, result_table):
+        self.result_table = result_table
 
     def not_implemented(self):
         self.implemented = False
@@ -366,14 +363,16 @@ class TableDef(object):
 
         indices = np.array(indices, dtype='i8')
 
-        data = np.empty(len(indices), dtype=table._v_dtype)
-        table._read_elements(indices, data)
+        indices_len = len(indices)
+
+        data = np.empty(indices_len, dtype=table._v_dtype)
+
+        if indices_len > 0:
+            table._read_elements(indices, data)
 
         return data
 
-    def search(self, data_ids, domains=(), subcase_ids=()):
-        # TODO: consider subcase_ids
-        
+    def search(self, data_ids, domains=()):       
         private_index_table = self._get_private_index_table()
         
         if len(domains) == 0:
@@ -387,8 +386,10 @@ class TableDef(object):
             except IndexError:
                 continue
 
+            index_dict_get = index_dict.get
+
             for data_id in data_ids:
-                _indices = index_dict[data_id]
+                _indices = index_dict_get(data_id, {})
                 indices.update(set(index + offset for index in _indices))
 
         results = self.read(sorted(indices))
@@ -398,13 +399,41 @@ class TableDef(object):
     def path(self):
         return self.group + '/' + self.table_id
 
-    def set_h5f(self, h5f):
-        self.h5f = h5f
+    def set_h5n(self, h5n):
+        self.h5f = h5n.h5f
+        self.h5n = h5n
         for subtable in self.subtables:
-            subtable.set_h5f(h5f)
+            subtable.set_h5n(h5n)
 
-    def to_numpy(self, data):
-        result = np.empty(len(data), dtype=self.dtype)
+    def write_punch_data(self, data):
+        assert isinstance(data, PunchTableData)
+
+        options = data.header.options
+
+        indices = self.indices
+
+        for option in options:
+            try:
+                _indices = self._index_options[option]
+                if _indices is not None:
+                    indices = _indices
+            except KeyError:
+                msg = """
+                Result table '%s' is not supported!
+                A parameter in your bdf file directed Nastran to output the result table with an option that is
+                currently not supported.  This option might affect the format of the results file.  H5Nastran
+                needs to know the format.
+                This requires the following to be added to the result table definition:
+                table_def.add_index_option('%s', new_format)
+                where new_format might simply be None (no change to default format).
+                See RESULT/ELEMENTAL/STRESS/QUAD4 in the source code for an example.
+                Please create a new issue on github.com/SteveDoyle2/pyNastran to request this format to be supported.
+                """ % (data.header.results_type, option)
+                raise H5NastranException(msg)
+
+        data_ = data.data
+
+        result = np.empty(len(data_), dtype=self.dtype)
 
         validator = self.validator
 
@@ -412,32 +441,55 @@ class TableDef(object):
 
         _result = {name: result[name] for name in names}
 
-        for i in range(len(data)):
-            _data = validator(self.indices.get_data(data[i]))
-            _data.append(self.domain_count)
-
-            for j in range(len(names)):
+        for i in range(len(data_)):
+            _data = validator(indices.get_data(data_[i]))
+            for j in range(len(names)-1):
                 _result[names[j]][i] = _data[j]
 
-        return result
+        result_data = ResultData()
+        result_data.data = result
+        result_data.options.update(options)
+
+        result_data.set_result_type(data.header.results_type_basic)
+        result_data.subcase_id = data.header.subcase_id
+        result_data.punch_results()
+
+        self.write_data(result_data)
+
+    def write_op2_data(self, data):
+        raise NotImplementedError
 
     def write_data(self, data):
-        assert isinstance(data, PunchTableData)
+        assert isinstance(data, ResultData)
 
-        if len(data.data) == 0:
+        names = list(self.dtype.names)
+
+        data_len = len(data.data[names[0]])
+
+        if data_len == 0:
             return
 
         table = self.get_table()
 
-        subcase_id = data.header.subcase_id
+        if isinstance(data.data, np.ndarray) and data.data.dtype == self.dtype:
+            _data = data.data
+        else:
+            _data = np.empty(data_len, dtype=self.dtype)
+            for name in names:
+                _data[name][:] = data.data[name]
+
+        subcase_id = data.subcase_id
 
         if subcase_id not in self._subcase_ids:
             self.domain_count += 1
             self._subcase_ids.add(subcase_id)
 
-        data = self.to_numpy(data.data)
-        table.append(data)
-        self._record_data_indices(data)
+        _data['DOMAIN_ID'][:] = self.domain_count
+
+        self.result_table.apply_options(data)
+
+        table.append(_data)
+        self._record_data_indices(_data)
 
         self.h5f.flush()
 
@@ -700,20 +752,42 @@ class ResultTable(object):
         self._h5n = h5n
         self._parent = parent
         self._table_def = deepcopy(self.table_def)
-        self._table_def.set_h5f(self._h5n.h5f)
+        self._table_def.set_h5n(self._h5n)
+        self._table_def.set_result_table(self)
+        
+        if len(self.result_data_cols) == 0:
+            dtype = self.table_def.dtype
+            names = dtype.names
+            data_cols = []
+            for name in names:
+                if dtype[name] == 'float64':
+                    data_cols.append(name)
+            self.__class__.result_data_cols.extend(data_cols)
+
+        if len(self.result_data_group_by) == 0:
+            dtype = self.table_def.dtype
+            names = dtype.names
+            data_cols = []
+            for name in names:
+                if dtype[name] != 'float64':
+                    data_cols.append(name)
+            self.__class__.result_data_group_by.extend(data_cols)
 
         class _ResultTableData(ResultTableData):
             data_cols = pd.Index(self.result_data_cols)
             data_group_by = list(self.result_data_group_by)
-
-            @property
-            def _constructor(self):
-                return _ResultTableData
         
         self._table_def.result_table_data = _ResultTableData
 
         if self.result_type is not None:
             self._h5n.register_result_table(self)
+
+    def write_punch_data(self, data):
+        # type: (PunchTableData) -> None
+        self._table_def.write_punch_data(data)
+
+    def write_op2_data(self, data):
+        self._table_def.write_op2_data(data)
 
     def write_data(self, data):
         self._table_def.write_data(data)
@@ -724,9 +798,9 @@ class ResultTable(object):
     def read(self, indices):
         return self._table_def.read(indices)
 
-    def search(self, data_ids, domains=(), subcase_ids=()):
+    def search(self, data_ids, domains=(), **kwargs):
         try:
-            return self._table_def.search(data_ids, domains, subcase_ids)
+            return self._table_def.search(data_ids, domains)
         except tables.exceptions.NoSuchNodeError:
             return self._table_def.result_table_data()
 
@@ -746,6 +820,9 @@ class ResultTable(object):
 
         data = self._h5n.h5f.get_node(path).read()
 
+        return data
+    
+    def apply_options(self, data):
         return data
 
 
@@ -851,3 +928,7 @@ class ResultTableData(pd.DataFrame):
 
     def __rdiv__(self, other):
         return NotImplementedError
+
+
+class H5NastranException(Exception):
+    pass

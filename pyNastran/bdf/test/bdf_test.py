@@ -65,12 +65,14 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
         files2 = get_all_files(folders_file, '.bdf')
         files2 += get_all_files(folders_file, '.nas')
         files2 += get_all_files(folders_file, '.dat')
-        files2 += files
+        files2 = list(set(files2))
         files2.sort()
     else:
         print('failed_cases_filename = %r' % failed_cases_filename)
         files2 = get_failed_files(failed_cases_filename)
 
+    #for filename in files2:
+        #print(filename)
     skip_files = [
         'mp10a.dat',
         'mp20e.dat',
@@ -92,8 +94,6 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
              and 'tecplot' not in fname
              and os.path.basename(fname) not in skip_files]
 
-    # nstart = 0
-    # nstop = 10000
     if os.path.exists('skipped_cards.out'):
         os.remove('skipped_cards.out')
 
@@ -150,10 +150,6 @@ def main():
     msg += '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
     msg += '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
     msg += '                       (default=False -> on)\n'
-    #msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
-    #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
-    #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
-    #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
     if len(sys.argv) == 0:
         sys.exit(msg)
 

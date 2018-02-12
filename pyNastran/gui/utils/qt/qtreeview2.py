@@ -243,7 +243,6 @@ class RightClickTreeView(QTreeView2):
      - all the features of QTreeView2
      - a right click context menu with:
        - Clear Active Results
-       - Show Normals
        - Apply Results to Fringe
        - Apply Results to Displacement
        - Apply Results to Vector
@@ -257,11 +256,9 @@ class RightClickTreeView(QTreeView2):
         #
         self.right_click_menu = QMenu()
         self.clear = self.right_click_menu.addAction("Clear Results...")
-        self.normals = self.right_click_menu.addAction("Apply Normals to Fringe...")
         self.fringe = self.right_click_menu.addAction("Apply Results to Fringe...")
 
         self.clear.triggered.connect(self.on_clear_results)
-        self.normals.triggered.connect(self.on_normals)
         self.fringe.triggered.connect(self.on_fringe)
 
         self.disp = self.right_click_menu.addAction("Apply Results to Displacement...")
@@ -273,7 +270,6 @@ class RightClickTreeView(QTreeView2):
         self.delete = self.right_click_menu.addAction("Delete...")
         self.delete.triggered.connect(self.on_delete)
 
-        #self.normals.setCheckable(True)
         #self.fringe.setCheckable(True)
         #self.disp.setCheckable(True)
         #self.vector.setCheckable(True)
@@ -281,7 +277,6 @@ class RightClickTreeView(QTreeView2):
     def get_clicked(self):
         """gets the state of the clickable buttons"""
         is_clicked = {
-            'normals' : self.normals.isChecked(),
             'fringe' : self.fringe.isChecked(),
             'disp' : self.disp.isChecked(),
             'vector' : self.vector.isChecked(),
@@ -291,11 +286,6 @@ class RightClickTreeView(QTreeView2):
     def on_clear_results(self):
         """clears the active result"""
         self.parent.parent.on_clear_results()
-
-    def on_normals(self):
-        """applies surface normals"""
-        is_valid, icase = self.get_row()
-        self.parent.parent.on_normals(icase)
 
     def on_fringe(self):
         """applies a fringe result"""

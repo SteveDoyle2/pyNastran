@@ -978,18 +978,18 @@ class OEF(OP2Common):
                 n = func(self, data)
             except:
                 raise
-                print("----------")
-                try:
-                    print(self.obj)
-                except:
-                    print("error printing %r" % self.obj.__class__.__name__)
-                print(self.data_code)
-                if self.obj is not None:
-                    #from pyNastran.utils import object_attributes
-                    #print object_attributes(self.obj)
-                    print(self.obj.data_code)
-                print("----------")
-                raise
+                #print("----------")
+                #try:
+                    #print(self.obj)
+                #except:
+                    #print("error printing %r" % self.obj.__class__.__name__)
+                #print(self.data_code)
+                #if self.obj is not None:
+                    ##from pyNastran.utils import object_attributes
+                    ##print object_attributes(self.obj)
+                    #print(self.obj.data_code)
+                #print("----------")
+                #raise
             return n
         return new_func
 

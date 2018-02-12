@@ -14,7 +14,7 @@ from math import log10, ceil
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit)
+    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox, QComboBox)
 import vtk
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog
@@ -131,6 +131,61 @@ class PreferencesWindow(PyDialog):
         self.ok_button = QPushButton("OK")
         self.cancel_button = QPushButton("Cancel")
 
+    def create_legend_widgets(self):
+        """
+        Creates the widgets for the legend control
+
+        Name    Itailic  Bold     Font
+        ====    =======  =====  ========
+        Title    check   check  pulldown
+        Label    check   check  pulldown
+        """
+        self.name_label = QLabel("Name:")
+        self.italic_label = QLabel("Italic:")
+        self.bold_label = QLabel("Bold:")
+        self.font_label = QLabel("Font:")
+        self.legend_label = QLabel("Legend:")
+
+        self.legend_title_name = QLabel("Title")
+        self.legend_title_italic_check = QCheckBox()
+        self.legend_title_bold_check = QCheckBox()
+        self.legend_title_font_edit = QComboBox()
+        self.legend_title_font_edit.addItems(['cat', 'dog', 'frog'])
+
+        self.legend_label_italic_name = QLabel("Label")
+        self.legend_label_italic_check = QCheckBox()
+        self.legend_label_bold_check = QCheckBox()
+        self.legend_label_font_edit = QComboBox()
+        self.legend_label_font_edit.addItems(['cat2', 'dog2', 'frog2'])
+
+    def create_legend_layout(self):
+        """
+        Creates the layout for the legend control
+
+        Name    Itailic  Bold     Font
+        ====    =======  =====  ========
+        Title    check   check  pulldown
+        Label    check   check  pulldown
+        """
+        grid2 = QGridLayout()
+        grid2.addWidget(self.legend_label, 0, 0)
+
+        grid2.addWidget(self.name_label, 1, 0)
+        grid2.addWidget(self.italic_label, 1, 1)
+        grid2.addWidget(self.bold_label, 1, 2)
+        grid2.addWidget(self.font_label, 1, 3)
+
+        grid2.addWidget(self.legend_title_name, 2, 0)
+        grid2.addWidget(self.legend_title_italic_check, 2, 1)
+        grid2.addWidget(self.legend_title_bold_check, 2, 2)
+        grid2.addWidget(self.legend_title_font_edit, 2, 3)
+
+        grid2.addWidget(self.legend_label_italic_name, 3, 0)
+        grid2.addWidget(self.legend_label_italic_check, 3, 1)
+        grid2.addWidget(self.legend_label_bold_check, 3, 2)
+        grid2.addWidget(self.legend_label_font_edit, 3, 3)
+        return grid2
+
     def create_layout(self):
         grid = QGridLayout()
 
@@ -162,6 +217,8 @@ class PreferencesWindow(PyDialog):
         #grid.addWidget(self.clipping_max_edit, 7, 1)
         #grid.addWidget(self.clipping_max_button, 7, 2)
 
+        #self.create_legend_widgets()
+        #grid2 = self.create_legend_layout()
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
@@ -169,8 +226,10 @@ class PreferencesWindow(PyDialog):
 
         vbox = QVBoxLayout()
         vbox.addLayout(grid)
-
+        #vbox.addStretch()
+        #vbox.addLayout(grid2)
         vbox.addStretch()
+
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
 

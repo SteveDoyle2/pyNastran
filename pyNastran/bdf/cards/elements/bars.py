@@ -165,38 +165,39 @@ class BAROR(object):
     +-------+-----+---+---+---+-------+-----+-------+------+
     """
     type = 'BAROR'
-    def __init__(self):
+    def __init__(self, property_id, is_g0, g0, x, offt='GGG', comment=''):
+        if comment:
+            self.comment = comment
         self.n = 0
-        self.property_id = None
-        self.g0 = None
-        self.x = None
-        self.offt = None
+        self.property_id = property_id
+        self.is_g0 = is_g0
+        self.g0 = g0
+        self.x = x
+        self.offt = offt
 
     def add_card(self, card, comment=''):
         if self.n == 1:
             raise RuntimeError('only one BAROR is allowed')
         self.n = 1
-        if comment:
-            self.comment = comment
 
-        self.property_id = integer_or_blank(card, 2, 'pid')
+        property_id = integer_or_blank(card, 2, 'pid')
 
         # x / g0
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, integer_types):
-            self.is_g0 = True
-            self.g0 = field5
-            self.x = [0., 0., 0.]
+            is_g0 = True
+            g0 = field5
+            x = [0., 0., 0.]
         elif isinstance(field5, float):
-            self.is_g0 = False
-            self.g0 = None
-            self.x = np.array([field5,
-                               double_or_blank(card, 6, 'x2', 0.0),
-                               double_or_blank(card, 7, 'x3', 0.0)],
-                              dtype='float64')
-        self.offt = string_or_blank(card, 8, 'offt', 'GGG')
+            is_g0 = False
+            g0 = None
+            x = np.array([field5,
+                          double_or_blank(card, 6, 'x2', 0.0),
+                          double_or_blank(card, 7, 'x3', 0.0)],
+                         dtype='float64')
+        offt = string_or_blank(card, 8, 'offt', 'GGG')
         assert len(card) <= 8, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
-
+        return BAROR(property_id, is_g0, g0, x, offt=offt, comment=comment)
 
 class CBARAO(BaseCard):
     type = 'CBARAO'
@@ -438,7 +439,7 @@ class CBAR(LineElement):
             raise ValueError(msg)
 
         if isinstance(self.offt, integer_types):
-            assert self.offt in [1, 2], 'invalid offt; offt=%i' % self.offt
+            assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
             raise NotImplementedError('invalid offt; offt=%i' % self.offt)
         elif not isinstance(self.offt, string_types):
             raise SyntaxError('invalid offt expected a string of length 3 '
@@ -523,8 +524,8 @@ class CBAR(LineElement):
 
     def _verify(self, xref):
         eid = self.eid
-        pid = self.Pid()
-        edges = self.get_edge_ids()
+        unused_pid = self.Pid()
+        unused_edges = self.get_edge_ids()
         if xref:  # True
             assert self.pid_ref.type in ['PBAR', 'PBARL'], '%s%s' % (self, self.pid_ref)
             mid = self.Mid()
@@ -819,7 +820,7 @@ class CBEAM3(LineElement):  # was CBAR
                       integer_or_blank(card, 23, 'sc')], dtype='int32')
         assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
         return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
-                      wa, wb, wc, tw, s, comment='')
+                      wa, wb, wc, tw, s, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -926,7 +927,7 @@ class CBEAM3(LineElement):  # was CBAR
         return self.comment + print_card_16(card)
 
     def _verify(self, xref):
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
 
 class CBEND(LineElement):
@@ -1158,7 +1159,7 @@ class CBEND(LineElement):
         return self.pid_ref.Area()
 
     def _verify(self, xref):
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
     def cross_reference(self, model):
         """

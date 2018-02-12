@@ -62,7 +62,10 @@ class AnimationWindow(PyDialog):
 
         self._updated_animation = False
         self._active_deformation = 0.
-        self._icase = data['icase']
+        self._icase_fringe = data['icase_fringe']
+        self._icase_disp = data['icase_disp']
+        self._icase_vector = data['icase_vector']
+
         self._default_name = data['name']
         self._default_time = data['time']
         self._default_fps = data['frames/sec']
@@ -71,6 +74,9 @@ class AnimationWindow(PyDialog):
         self._scale = data['scale']
         self._default_scale = data['default_scale']
         self._default_is_scale = data['is_scale']
+
+        self._arrow_scale = data['arrow_scale']
+        self._default_arrow_scale = data['default_arrow_scale']
 
         self._phase = data['phase']
         self._default_phase = data['default_phase']
@@ -102,12 +108,12 @@ class AnimationWindow(PyDialog):
         """creates the menu objects"""
         icase_max = 1000  # TODO: update 1000
 
-        self.icase = QLabel("iCase:")
-        self.icase_edit = QSpinBox(self)
-        self.icase_edit.setRange(1, icase_max)
-        self.icase_edit.setSingleStep(1)
-        self.icase_edit.setValue(self._icase)
-        self.icase_edit.setToolTip(
+        self.icase_fringe = QLabel("iCase:")
+        self.icase_fringe_edit = QSpinBox(self)
+        self.icase_fringe_edit.setRange(1, icase_max)
+        self.icase_fringe_edit.setSingleStep(1)
+        self.icase_fringe_edit.setValue(self._icase_fringe)
+        self.icase_fringe_edit.setToolTip(
             'Case Number for the Scale/Phase Animation Type.\n'
             'Defaults to the result you had shown when you clicked "Create Animation".\n'
             'iCase can be seen by clicking "Apply" on a result.')
@@ -117,6 +123,16 @@ class AnimationWindow(PyDialog):
         self.scale_button = QPushButton("Default")
         self.scale_edit.setToolTip('Scale factor of the "deflection"')
         self.scale_button.setToolTip('Sets the scale factor of the gif to %s' % self._scale)
+
+        self.arrow_scale = QLabel("Arrow Scale:")
+        self.arrow_scale_edit = QLineEdit(str(self._scale))
+        self.arrow_scale_button = QPushButton("Default")
+        self.arrow_scale_edit.setToolTip('Scale factor of the "arrows"')
+        self.arrow_scale_button.setToolTip('Sets the arrow scale factor of the gif to %s' % self._arrow_scale)
+
+        self.arrow_scale.setVisible(False)
+        self.arrow_scale_edit.setVisible(False)
+        self.arrow_scale_button.setVisible(False)
 
         self.time = QLabel("Total Time (sec):")
         self.time_edit = QDoubleSpinBox(self)
@@ -152,14 +168,14 @@ class AnimationWindow(PyDialog):
         self.icase_start_edit = QSpinBox(self)
         self.icase_start_edit.setRange(0, icase_max)
         self.icase_start_edit.setSingleStep(1)
-        self.icase_start_edit.setValue(self._icase)
+        self.icase_start_edit.setValue(self._icase_fringe)
         self.icase_start_button = QPushButton("Default")
 
         self.icase_end = QLabel("iCase End:")
         self.icase_end_edit = QSpinBox(self)
         self.icase_end_edit.setRange(0, icase_max)
         self.icase_end_edit.setSingleStep(1)
-        self.icase_end_edit.setValue(self._icase)
+        self.icase_end_edit.setValue(self._icase_fringe)
         self.icase_end_button = QPushButton("Default")
 
         self.icase_delta = QLabel("iCase Delta:")
@@ -359,6 +375,7 @@ class AnimationWindow(PyDialog):
     def set_connections(self):
         """creates button actions"""
         self.scale_button.clicked.connect(self.on_default_scale)
+        self.arrow_scale_button.clicked.connect(self.on_default_arrow_scale)
         self.time_button.clicked.connect(self.on_default_time)
 
         self.fps_button.clicked.connect(self.on_default_fps)
@@ -508,8 +525,8 @@ class AnimationWindow(PyDialog):
         #self.max_value_edit.setEnabled(enabled)
         #self.max_value_button.setEnabled(enabled)
 
-        self.icase.setEnabled(not enabled)
-        self.icase_edit.setEnabled(not enabled)
+        self.icase_fringe.setEnabled(not enabled)
+        self.icase_fringe_edit.setEnabled(not enabled)
         self.fps.setEnabled(not enabled)
         self.fps_edit.setEnabled(not enabled)
         self.fps_button.setEnabled(not enabled)
@@ -584,6 +601,11 @@ class AnimationWindow(PyDialog):
         self.scale_edit.setText(str(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
+    def on_default_arrow_scale(self):
+        """sets the default arrow scale factor"""
+        self.arrow_scale_edit.setText(str(self._default_arrow_scale))
+        self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
+
     def on_default_time(self):
         """sets the default gif time"""
         self.time_edit.setValue(self._default_time)
@@ -600,40 +622,44 @@ class AnimationWindow(PyDialog):
         """displays the menu objects"""
         grid = QGridLayout()
 
-        grid.addWidget(self.icase, 0, 0)
-        grid.addWidget(self.icase_edit, 0, 1)
+        grid.addWidget(self.icase_fringe, 0, 0)
+        grid.addWidget(self.icase_fringe_edit, 0, 1)
 
         grid.addWidget(self.scale, 1, 0)
         grid.addWidget(self.scale_edit, 1, 1)
         grid.addWidget(self.scale_button, 1, 2)
 
-        grid.addWidget(self.time, 2, 0)
-        grid.addWidget(self.time_edit, 2, 1)
-        grid.addWidget(self.time_button, 2, 2)
+        grid.addWidget(self.arrow_scale, 2, 0)
+        grid.addWidget(self.arrow_scale_edit, 2, 1)
+        grid.addWidget(self.arrow_scale_button, 2, 2)
+
+        grid.addWidget(self.time, 3, 0)
+        grid.addWidget(self.time_edit, 3, 1)
+        grid.addWidget(self.time_button, 3, 2)
 
         # spacer
         spacer = QLabel('')
 
-        grid.addWidget(self.fps, 3, 0)
-        grid.addWidget(self.fps_edit, 3, 1)
-        grid.addWidget(self.fps_button, 3, 2)
+        grid.addWidget(self.fps, 4, 0)
+        grid.addWidget(self.fps_edit, 4, 1)
+        grid.addWidget(self.fps_button, 4, 2)
 
-        grid.addWidget(self.resolution, 4, 0)
-        grid.addWidget(self.resolution_edit, 4, 1)
-        grid.addWidget(self.resolution_button, 4, 2)
+        grid.addWidget(self.resolution, 5, 0)
+        grid.addWidget(self.resolution_edit, 5, 1)
+        grid.addWidget(self.resolution_button, 5, 2)
 
-        grid.addWidget(self.browse_folder, 5, 0)
-        grid.addWidget(self.browse_folder_edit, 5, 1)
-        grid.addWidget(self.browse_folder_button, 5, 2)
+        grid.addWidget(self.browse_folder, 6, 0)
+        grid.addWidget(self.browse_folder_edit, 6, 1)
+        grid.addWidget(self.browse_folder_button, 6, 2)
 
-        grid.addWidget(self.gif, 6, 0)
-        grid.addWidget(self.gif_edit, 6, 1)
-        grid.addWidget(self.gif_button, 6, 2)
+        grid.addWidget(self.gif, 7, 0)
+        grid.addWidget(self.gif_edit, 7, 1)
+        grid.addWidget(self.gif_button, 7, 2)
 
-        grid.addWidget(self.animation_type, 7, 0)
-        grid.addWidget(self.animation_type_edit, 7, 1)
+        grid.addWidget(self.animation_type, 8, 0)
+        grid.addWidget(self.animation_type_edit, 8, 1)
 
-        grid.addWidget(spacer, 8, 0)
+        grid.addWidget(spacer, 9, 0)
 
         #----------
         #Time
@@ -777,10 +803,11 @@ class AnimationWindow(PyDialog):
 
     def _make_gif(self, validate_out, istep=None, stop_animation=False):
         """interface for making the gif"""
-        (icase, scale, time, fps, animate_in_gui,
+        (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
          magnify, output_dir, gifbase,
          min_value, max_value) = validate_out
         fps = int(fps)
+        icase = icase_fringe
 
         gif_filename = None
         if not stop_animation and not animate_in_gui and gifbase is not None:
@@ -847,7 +874,10 @@ class AnimationWindow(PyDialog):
     def on_validate(self, wipe=False):
         """checks to see if the input is valid"""
         # requires no special validation
-        icase, flag0 = self.check_int(self.icase_edit)
+        icase_fringe, flag0 = self.check_int(self.icase_fringe_edit)
+        icase_disp = self._icase_disp
+        icase_vector = self._icase_vector
+
         scale, flag1 = self.check_float(self.scale_edit)
         time, flag2 = self.check_float(self.time_edit)
         fps, flag3 = self.check_float(self.fps_edit)
@@ -874,7 +904,7 @@ class AnimationWindow(PyDialog):
             output_dir, flag7 = self.check_path(self.browse_folder_edit)
             gifbase, flag8 = self.check_name(self.gif_edit)
             passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8])
-        return passed, (icase, scale, time, fps, animate_in_gui,
+        return passed, (icase_fringe, icase_disp, icase_vector, scale, time, fps, animate_in_gui,
                         magnify, output_dir, gifbase, min_value, max_value)
 
     @staticmethod
@@ -938,7 +968,10 @@ def main(): # pragma: no cover
 
     data2 = {
         'font_size' : 8,
-        'icase' : 1,
+        'icase_fringe' : 1,
+        'icase_disp' : 2,
+        'icase_vector' : 3,
+
         'name' : 'cat',
         'time' : 2,
         'frames/sec' : 30,
@@ -948,6 +981,10 @@ def main(): # pragma: no cover
         'dirname' : os.getcwd(),
         'scale' : 2.0,
         'default_scale' : 10,
+
+        'arrow_scale' : 3.0,
+        'default_arrow_scale' : 30,
+
         #'phase' : 0.,
         'phase' : None,
         'default_phase' : 120.,

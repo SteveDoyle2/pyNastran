@@ -570,9 +570,10 @@ class PCOMP(CompositeShellProperty):
         try:
             ply = self.plies[ilayer]
         except IndexError:
-            msg = 'PCOMP pid=%s; n=%s nnew=%s ilayer=%s slot=%r\n' % (self.pid, n, nnew, ilayer, slot)
+            msg = 'PCOMP pid=%s; n=%s nnew=%s ilayer=%s slot=%r\n' % (
+                self.pid, n, nnew, ilayer, slot)
             msg += ('On PCOMP pid=%r, ply %i is not defined.  '
-                   'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
+                    'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
             raise IndexError(msg)
 
         # ply = [mid, t, theta, sout]
@@ -1286,9 +1287,9 @@ class PLPLANE(ShellProperty):
         self.cid_ref = None
 
     def _verify(self, xref):
-        pid = self.Pid()
-        mid = self.Mid()
-        cid = self.Cid()
+        unused_pid = self.Pid()
+        unused_mid = self.Mid()
+        unused_cid = self.Cid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
             assert self.mid_ref.type in ['MATHE', 'MATHP'], 'PLPLANE: mid_ref.type=%s' % self.mid_ref.type
@@ -1383,8 +1384,8 @@ class PPLANE(ShellProperty):
         self.mid_ref = None
 
     def _verify(self, xref):
-        pid = self.Pid()
-        mid = self.Mid()
+        unused_pid = self.Pid()
+        unused_mid = self.Mid()
         #stress_strain_output_location = self.stress_strain_output_location
         if xref:
             assert self.mid_ref.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5', 'MAT8'], 'PPLANE: mid.type=%s' % self.mid.type
@@ -1770,7 +1771,7 @@ class PSHELL(ShellProperty):
 
         mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4]
                 if mid is not None]
-        material_ids = self.material_ids
+        unused_material_ids = self.material_ids
         assert len(mids) > 0
         if xref:
             assert isinstance(self.mid_ref, Material), 'mid=%r' % self.mid_ref

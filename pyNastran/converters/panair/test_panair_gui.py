@@ -10,10 +10,10 @@ PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'panair', 'M100')
 
 
-class PanairGUI(PanairIO, FakeGUIMethods):
+class PanairGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        PanairIO.__init__(self)
+        self.model = PanairIO(self)
 
 
 class TestPanairGUI(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestPanairGUI(unittest.TestCase):
 
         test = PanairGUI()
         test.log = log
-        test.load_panair_geometry(geometry_filename)
+        test.model.load_panair_geometry(geometry_filename)
 
     def test_m100_results(self):
         log = get_logger(level='warning')
@@ -36,8 +36,8 @@ class TestPanairGUI(unittest.TestCase):
 
         test = PanairGUI()
         test.log = log
-        test.load_panair_geometry(geometry_filename)
-        test.load_panair_results(agps_filename)
+        test.model.load_panair_geometry(geometry_filename)
+        test.model.load_panair_results(agps_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

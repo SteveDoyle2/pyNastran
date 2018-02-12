@@ -62,7 +62,7 @@ class GridPointForceSummationRequestList(object):
         self.load_factors = None  # type: Vector
 
     def set_db(self, db):
-        # type: (H5Nastran) -> None
+        # type: (Union[H5Nastran, H5NastranCollector]) -> None
         self.db = db
         # self.grid_pos = self.db.input.node.grid.grid_in_basic_dict()
 

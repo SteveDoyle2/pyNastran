@@ -28,19 +28,6 @@ class Nodal(object):
 
 
 class Displacement(ResultTable):
-    """
-    <dataset name="DISPLACEMENT" version="1">
-        <field name="ID" type="integer" description="Grid identifier"/>
-        <field name="X"  type="double" description="X component"/>
-        <field name="Y"  type="double" description="Y component"/>
-        <field name="Z"  type="double" description="Z component"/>
-        <field name="RX" type="double" description="RX component"/>
-        <field name="RY" type="double" description="RY component"/>
-        <field name="RZ" type="double" description="RZ component"/>
-        <field name="DOMAIN_ID" type="integer" description="Domain identifier"/>
-    </dataset>
-    """
-
     result_type = 'DISPLACEMENTS REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/DISPLACEMENT', result_type)
 
@@ -67,29 +54,14 @@ def _validator(data):
 
 
 class GridForce(ResultTable):
-    """
-    <dataset name="GRID_FORCE">
-        <field name="ID" type="integer"/>
-        <field name="EID" type="integer"/>
-        <field name="ELNAME" type="character" size="8"/>
-        <field name="F1" type="double"/>
-        <field name="F2" type="double"/>
-        <field name="F3" type="double"/>
-        <field name="M1" type="double"/>
-        <field name="M2" type="double"/>
-        <field name="M3" type="double"/>
-        <field name="DOMAIN_ID" type="integer"/>
-    </dataset>
-    """
-
     result_type = 'GRID POINT FORCE BALANCE REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/GRID_FORCE', result_type,
                                 indices=DataGetter(indices=[0, 2, 3, 5, 6, 7, 8, 9, 10]),
                                 validator=_validator
                                 )
     
-    def search(self, data_ids, domains=(), subcase_ids=(), convert_to_basic=False):
-        _data = super(GridForce, self).search(data_ids, domains, subcase_ids)
+    def search(self, data_ids, domains=(), convert_to_basic=False):
+        _data = super(GridForce, self).search(data_ids, domains)
         
         if not convert_to_basic:
             return _data
@@ -137,19 +109,6 @@ class GridForce(ResultTable):
 
 
 class MPCForce(ResultTable):
-    """
-    <dataset name="MPC_FORCE" version="1">
-        <field name="ID" type="integer" description="Grid identifier"/>
-        <field name="X"  type="double" description="X component"/>
-        <field name="Y"  type="double" description="Y component"/>
-        <field name="Z"  type="double" description="Z component"/>
-        <field name="RX" type="double" description="RX component"/>
-        <field name="RY" type="double" description="RY component"/>
-        <field name="RZ" type="double" description="RZ component"/>
-        <field name="DOMAIN_ID" type="integer" description="Domain identifier"/>
-    </dataset>
-    """
-
     result_type = 'MPCF REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/MPC_FORCE', result_type)
 
@@ -157,19 +116,6 @@ class MPCForce(ResultTable):
 
 
 class AppliedLoad(ResultTable):
-    """
-    <dataset name="APPLIED_LOAD" version="1">
-        <field name="ID" type="integer" description="Grid identifier"/>
-        <field name="X"  type="double" description="X component"/>
-        <field name="Y"  type="double" description="Y component"/>
-        <field name="Z"  type="double" description="Z component"/>
-        <field name="RX" type="double" description="RX component"/>
-        <field name="RY" type="double" description="RY component"/>
-        <field name="RZ" type="double" description="RZ component"/>
-        <field name="DOMAIN_ID" type="integer" description="Domain identifier"/>
-    </dataset>
-    """
-
     result_type = 'OLOADS REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/APPLIED_LOAD', result_type)
 
@@ -177,19 +123,6 @@ class AppliedLoad(ResultTable):
 
 
 class SPCForce(ResultTable):
-    """
-    <dataset name="SPC_FORCE" version="1">
-        <field name="ID" type="integer" description="Grid identifier"/>
-        <field name="X"  type="double" description="X component"/>
-        <field name="Y"  type="double" description="Y component"/>
-        <field name="Z"  type="double" description="Z component"/>
-        <field name="RX" type="double" description="RX component"/>
-        <field name="RY" type="double" description="RY component"/>
-        <field name="RZ" type="double" description="RZ component"/>
-        <field name="DOMAIN_ID" type="integer" description="Domain identifier"/>
-    </dataset>
-    """
-
     result_type = 'SPCF REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/NODAL/SPC_FORCE', result_type)
 

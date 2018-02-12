@@ -869,7 +869,7 @@ class NastranIO(NastranIO_xref):
                             pressures[eids.index(el.eid)] += p
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         #A, centroid, normal = elem.get_face_area_centroid_normal(
-                            #load.g34.nid, load.g1.nid)
+                            #load.g34_ref.nid, load.g1_ref.nid)
                         #r = centroid - p
 
             # if there is no applied pressure, don't make a plot

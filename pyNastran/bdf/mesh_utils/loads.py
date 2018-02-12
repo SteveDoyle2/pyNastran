@@ -390,13 +390,13 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
                     centroid = (n1 + n2 + n3 + n4) / 4.
                     nface = 4
                 elif etype == 'CTETRA':
-                    #face1 = elem.get_face(load.g1.nid, load.g34.nid)
+                    #face1 = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
                     face_acn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
                     face, area, centroid, normal = face_acn
                     #assert face == face1
                     nface = 3
                 elif etype == 'CHEXA':
-                    #face1 = elem.get_face(load.g34.nid, load.g1.nid)
+                    #face1 = elem.get_face(load.g34_ref.nid, load.g1_ref.nid)
                     face_acn = elem.get_face_area_centroid_normal(load.g34_ref.nid, load.g1_ref.nid)
                     face, area, centroid, normal = face_acn
                     #assert face == face1
@@ -911,7 +911,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                         face_acn = elem.get_face_area_centroid_normal(g1)
                         nface = 3
                     else:
-                        #face = elem.get_face(load.g1.nid, load.g34.nid)
+                        #face = elem.get_face(load.g1_ref.nid, load.g34_ref.nid)
                         face_acn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
                         nface = 4
                     face, area, centroid, normal = face_acn

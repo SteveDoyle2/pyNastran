@@ -5,7 +5,7 @@ import numpy as np
 from pyNastran.utils.atmosphere import (
     atm_density, atm_temperature, atm_pressure,
     atm_dynamic_viscosity_mu, atm_dynamic_pressure,
-    atm_velocity, atm_mach, get_alt_for_q_with_constant_mach,
+    atm_velocity, atm_mach,
     atm_unit_reynolds_number,
     atm_equivalent_airspeed,
     atm_kinematic_viscosity_nu,
@@ -32,6 +32,7 @@ from pyNastran.utils.atmosphere2 import (
     get_alt_for_eas_with_constant_mach as get_alt_for_eas_with_constant_mach2,
     atm_unit_reynolds_number as atm_unit_reynolds_number1b,
     atm_unit_reynolds_number2 as atm_unit_reynolds_number2b,
+    make_flfacts_alt_sweep, make_flfacts_mach_sweep,
 )
 
 
@@ -165,7 +166,7 @@ class TestAtm(unittest.TestCase):
         assert np.allclose(vel_ms_55_2b, 590.0560122641932), vel_ms_55_2b
 
         with self.assertRaises(RuntimeError):
-            vel_bad_55_2b = atm_velocity2(55000., 2.0, alt_units='ft', velocity_units='bad')
+            atm_velocity2(55000., 2.0, alt_units='ft', velocity_units='bad')
 
 
         self.assertAlmostEqual(vel_fts_55_2p4, 2323.0, delta=0.1)
@@ -333,6 +334,27 @@ class TestAtm(unittest.TestCase):
             assert np.allclose(rel_c, rel_d, atol=1e-3), 'rel_c=%s rel_d=%s' % (rel_c, rel_d)
 
             assert np.allclose(rel_a, rel_d, atol=1e-3), 'rel_a=%s rel_d=%s' % (rel_a, rel_d)
+
+    def test_sweep(self):
+        """tests FLFACT sweeps"""
+        mach = 0.8
+        alts = np.linspace(-10000, 80000.)
+        rho, mach, vel = make_flfacts_alt_sweep(
+            mach, alts, eas_limit=300., alt_units='m',
+            velocity_units='m/s',
+            density_units='kg/m^3',
+            eas_units='m/s')
+        del rho, mach, vel, alts
+
+        alt = 10000.
+        machs = np.linspace(0., 0.8)
+        rho, mach, vel = make_flfacts_mach_sweep(
+            alt, machs, eas_limit=300.,
+            alt_units='m',
+            velocity_units='m/s',
+            density_units='kg/m^3',
+            eas_units='m/s')
+        del rho, mach, vel, alt
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

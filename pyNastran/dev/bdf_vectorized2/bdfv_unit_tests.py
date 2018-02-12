@@ -16,14 +16,14 @@ class TestVectorized(unittest.TestCase):
         """tests solid_bending"""
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         model = read_bdfv(bdf_filename, validate=True, xref=False, punch=False,
-                          skip_cards=None, encoding=None, log=None, debug=True,
+                          skip_cards=None, encoding=None, log=None, debug=False,
                           mode='msc')
         #print(model.get_bdf_stats())
 
         #model.grids[10] = GRID(10, [0., 0., 0.])
-        print(model.grid)
-        print(model.grid[10]) # nid or index?
-        print(model.grid.get_by_nid(10))
+        str(model.grid)
+        str(model.grid[10]) # nid or index?
+        str(model.grid.get_by_nid(10))
         out_filename = 'spike.bdf'
         model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
                         interspersed=False, enddata=None,
@@ -33,7 +33,7 @@ class TestVectorized(unittest.TestCase):
         """tests bwb"""
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'BWB_saero.bdf')
         model = read_bdfv(bdf_filename, validate=True, xref=False, punch=False,
-                          skip_cards=None, encoding=None, log=None, debug=True,
+                          skip_cards=None, encoding=None, log=None, debug=False,
                           mode='msc')
         #print(model.get_bdf_stats())
 
@@ -54,10 +54,10 @@ class TestVectorized(unittest.TestCase):
         modelv.write_bdf(out_filename_v, encoding=None, size=8, is_double=False,
                          interspersed=False, enddata=None,
                          close=True)
-        print(modelv.cbush)
-        print(modelv.get_bdf_stats())
-        print(modelv.elements)
-        print(modelv.elements2)
+        str(modelv.cbush)
+        str(modelv.get_bdf_stats())
+        str(modelv.elements)
+        str(modelv.elements2)
 
         model_nv = read_bdf(bdf_filename, validate=True, xref=True, punch=False,
                             skip_cards=None, encoding=None, log=None, debug=True,
@@ -116,43 +116,43 @@ class TestVectorized(unittest.TestCase):
         """tests static_elements"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         model = read_bdfv(bdf_filename, validate=True, xref=False, punch=False,
-                          skip_cards=None, encoding=None, log=None, debug=True,
+                          skip_cards=None, encoding=None, log=None, debug=False,
                           mode='msc')
 
-        print(model.cquad4)
-        print(model.ctria3)
-        print(model.shells)
-        print(model.solids)
-        print(model.elements)
+        str(model.cquad4)
+        str(model.ctria3)
+        str(model.shells)
+        str(model.solids)
+        str(model.elements)
 
-        print(model.ctetra4)
-        print(model.cpenta6)
-        print(model.chexa8)
-        print(model.cpyram5)
-        print(model.ctetra10)
-        print(model.cpenta15)
-        print(model.chexa20)
-        print(model.cpyram13)
+        str(model.ctetra4)
+        str(model.cpenta6)
+        str(model.chexa8)
+        str(model.cpyram5)
+        str(model.ctetra10)
+        str(model.cpenta15)
+        str(model.chexa20)
+        str(model.cpyram13)
 
-        print(model.celas1)
-        print(model.celas2)
-        print(model.celas3)
-        print(model.celas4)
+        str(model.celas1)
+        str(model.celas2)
+        str(model.celas3)
+        str(model.celas4)
 
-        print(model.cdamp1)
-        print(model.cdamp2)
-        print(model.cdamp3)
-        print(model.cdamp4)
+        str(model.cdamp1)
+        str(model.cdamp2)
+        str(model.cdamp3)
+        str(model.cdamp4)
 
-        print(model.conrod)
-        print(model.crod)
-        print(model.ctube)
+        str(model.conrod)
+        str(model.crod)
+        str(model.ctube)
 
-        print(model.elements2)
+        str(model.elements2)
         len(model.elements2)
         #print(model.load_combinations)
-        print(model.loads)
-        print(model.get_bdf_stats())
+        str(model.loads)
+        str(model.get_bdf_stats())
 
         out_filename = 'spike.bdf'
         model.write_bdf(out_filename, encoding=None, size=8, is_double=False,

@@ -663,7 +663,7 @@ class Coord(BaseCard):
         """
         if self.cid == 0:
             return xyz
-        return self.transform_vector_to_global_assuming_rectangular(xyz) + self.origin
+        return self.transform_vector_to_global_assuming_rectangular(xyz) #+ self.origin
 
     def _transform_node_to_global_array(self, xyz):
         if self.cid == 0:

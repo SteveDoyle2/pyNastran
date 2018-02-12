@@ -5,7 +5,7 @@ defines:
    - load(self, settings)
    - save(self, settings)
    - on_increase_text_size(self)
-   - on_decrease_text_size(self)
+   - on_decrease_font_size(self)
    - on_set_font_size(self, font_size, show_command=True)
    - set_annotation_size_color(self, size=None, color=None)
    - set_annotation_size(self, size, render=True)
@@ -20,7 +20,6 @@ defines:
 from __future__ import print_function
 from six import itervalues, PY3
 import numpy as np
-import vtk
 from qtpy import QtGui
 
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
@@ -147,7 +146,7 @@ class Settings(object):
 
         If the registry key is not defined, the default is used.
         """
-        set_name = setting_names[0]
+        unused_set_name = setting_names[0]
         pull_name = None
         for key in setting_names:
             if key in setting_keys:
@@ -195,13 +194,16 @@ class Settings(object):
 
     #---------------------------------------------------------------------------
     # FONT SIZE
-    def on_increase_text_size(self):
+    def on_increase_font_size(self):
+        """shrinks the overall GUI font size"""
         self.on_set_font_size(self.font_size + 1)
 
-    def on_decrease_text_size(self):
+    def on_decrease_font_size(self):
+        """shrinks the overall GUI font size"""
         self.on_set_font_size(self.font_size - 1)
 
     def on_set_font_size(self, font_size, show_command=True):
+        """updates the GUI font size"""
         return self.parent.on_set_font_size(font_size, show_command=show_command)
 
     #---------------------------------------------------------------------------

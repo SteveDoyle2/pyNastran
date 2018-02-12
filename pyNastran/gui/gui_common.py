@@ -5,7 +5,7 @@ from __future__ import division, unicode_literals, print_function
 # standard library
 import sys
 import os.path
-import time
+import time as time_module
 import datetime
 import traceback
 from copy import deepcopy
@@ -27,19 +27,16 @@ from qtpy.QtWidgets import (
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction)
 from qtpy.compat import getsavefilename, getopenfilename
 
-
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
-
-
 import vtk
-from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
 import pyNastran
+from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
 
 from pyNastran.bdf.utils import write_patran_syntax_dict
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import print_bad_path, integer_types, object_methods
+from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
 from pyNastran.gui.utils.write_gif import (
@@ -61,18 +58,19 @@ from pyNastran.gui.menus.groups_modify.groups_modify import Group
 
 
 from pyNastran.gui.menus.results_sidebar import Sidebar
-from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
+from pyNastran.gui.menus.application_log import ApplicationLogWidget
+from pyNastran.gui.menus.python_console import PythonConsoleWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 
 from pyNastran.gui.styles.area_pick_style import AreaPickStyle
 from pyNastran.gui.styles.zoom_style import ZoomStyle
-from pyNastran.gui.styles.probe_style import ProbeResultStyle
+#from pyNastran.gui.styles.probe_style import ProbeResultStyle
 from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
-
+from pyNastran.gui.formats import CLASS_MAP
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -379,8 +377,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                             print(msg)
                         return
 
-        #is_geom_results = input_filename == results_filename and len(input_filenames) == 1
-        is_geom_results = False
+        #unused_is_geom_results = input_filename == results_filename and len(input_filenames) == 1
+        unused_is_geom_results = False
         for i, input_filename in enumerate(input_filenames):
             if i == 0:
                 name = 'main'
@@ -447,7 +445,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
 
             tools = file_tools + [
-                ('log_clear', 'Clear Application Log', '', None, 'Clear Application Log', self.clear_application_log),
                 ('label_clear', 'Clear Current Labels', '', None, 'Clear current labels', self.clear_labels),
                 ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
@@ -509,9 +506,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
-                ('text_size_increase', 'Increase Text Size', 'text_up.png', 'Ctrl+Plus', 'Increase Text Size', self.on_increase_text_size),
-                ('text_size_decrease', 'Decrease Text Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Text Size', self.on_decrease_text_size),
-                ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set Text Size', self.set_preferences_menu),
+                ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size),
+                ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size),
+                ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set GUI Preferences', self.set_preferences_menu),
 
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.on_area_pick),
@@ -526,11 +523,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.tools = tools
         self.checkables = checkables
 
-    def on_increase_text_size(self):
+    def on_increase_font_size(self):
         """used by the hidden_tools for Ctrl +"""
         self.on_set_font_size(self.font_size + 1)
 
-    def on_decrease_text_size(self):
+    def on_decrease_font_size(self):
         """used by the hidden_tools for Ctrl -"""
         self.on_set_font_size(self.font_size - 1)
 
@@ -607,7 +604,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'set_preferences', '',
-            'log_clear', 'label_clear', 'label_reset', '',
+            'label_clear', 'label_reset', '',
             'legend', 'geo_properties',
             #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
             #'anti_alias_4', 'anti_alias_8',],
@@ -641,7 +638,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
         hidden_tools = ('cycle_results', 'rcycle_results',
-                        'text_size_increase', 'text_size_decrease')
+                        'font_size_increase', 'font_size_decrease')
 
         menu_items = []
         if create_menu_bar:
@@ -709,7 +706,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self._create_plane_from_points(None)
 
     def _update_menu(self, menu_items):
-        for menu, items in menu_items:
+        for menu, unused_items in menu_items:
             menu.clear()
         self._populate_menu(menu_items)
 
@@ -899,7 +896,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log.simple_msg(msg, 'WARNING')
 
     def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
-                                 Type='xyz'):
+                                 coord_type='xyz'):
         """
         Creates a coordinate system
 
@@ -913,11 +910,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             the origin
         matrix_3x3 : (3, 3) ndarray
             a standard Nastran-style coordinate system
-        Type : str
+        coord_type : str
             a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
             that changes the axis names
 
-        .. todo::  Type is not supported ('xyz' ONLY)
+        .. todo::  coord_type is not supported ('xyz' ONLY)
         .. todo::  Can only set one coordinate system
 
         .. seealso::
@@ -957,7 +954,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         axes.SetUserTransform(transform)
         axes.SetTotalLength(scale, scale, scale)
-        if Type == 'xyz':
+        if coord_type == 'xyz':
             if label:
                 xlabel = u'x%s' % label
                 ylabel = u'y%s' % label
@@ -966,7 +963,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 axes.SetYAxisLabelText(ylabel)
                 axes.SetZAxisLabelText(zlabel)
         else:
-            if Type == 'Rtz':  # cylindrical
+            if coord_type == 'Rtz':  # cylindrical
                 #x = u'R'
                 #y = u'θ'
                 #z = u'z'
@@ -974,7 +971,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 y = 't'
                 z = 'z'
 
-            elif Type == 'Rtp':  # spherical
+            elif coord_type == 'Rtp':  # spherical
                 #x = u'R'
                 #y = u'θ'
                 #z = u'Φ'
@@ -982,7 +979,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 y = 't'
                 z = 'p'
             else:
-                raise RuntimeError('invalid axis type; Type=%r' % Type)
+                raise RuntimeError('invalid axis type; coord_type=%r' % coord_type)
 
             xlabel = '%s%s' % (x, label)
             ylabel = '%s%s' % (y, label)
@@ -1000,7 +997,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             is_visible = True
         else:
             label = 'Coord %s' % label
-        self.geometry_properties[label] = CoordProperties(label, Type, is_visible, scale)
+        self.geometry_properties[label] = CoordProperties(label, coord_type, is_visible, scale)
         self.geometry_actors[label] = axes
         self.coord_id += 1
         self.rend.AddActor(axes)
@@ -1008,7 +1005,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def create_global_axes(self, dim_max):
         self.create_coordinate_system(
-            dim_max, label='', origin=None, matrix_3x3=None, Type='xyz')
+            dim_max, label='', origin=None, matrix_3x3=None, coord_type='xyz')
 
     def create_corner_axis(self):
         """creates the axes that sits in the corner"""
@@ -1036,7 +1033,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
                                   bar_scale=0.0, representation=None, is_visible=True,
-                                  follower_nodes=None, is_pickable=False):
+                                  follower_nodes=None, is_pickable=False, ugrid=None):
         """
         Creates an AltGeometry object
 
@@ -1065,8 +1062,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
             can you pick a node/cell on this actor
         follower_nodes : List[int]
             the nodes that are brought along with a deflection
+        ugrid : vtk.vtkUnstructuredGrid(); default=None
+            the grid object; one will be created that you can fill
+            if None is passed in
         """
-        self.alt_grids[name] = vtk.vtkUnstructuredGrid()
+        if ugrid is None:
+            ugrid = vtk.vtkUnstructuredGrid()
+        self.alt_grids[name] = ugrid
         self.geometry_properties[name] = AltGeometry(
             self, name, color=color,
             line_width=line_width, opacity=opacity,
@@ -1281,7 +1283,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._measure_distance_pick_points = []
         self.setup_mouse_buttons('measure_distance', left_button_down=self._measure_distance_picker)
 
-    def _measure_distance_picker(self, obj, event):
+    def _measure_distance_picker(self, unused_obj, unused_event):
         picker = self.cell_picker
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
@@ -1408,7 +1410,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_quick_probe_result(self):
         self.revert_pressed('probe_result')
-        is_checked = self.actions['probe_result'].isChecked()
+        unused_is_checked = self.actions['probe_result'].isChecked()
         self.setup_mouse_buttons('probe_result', left_button_down=self._probe_picker, revert=True)
 
     def on_area_pick_callback(self, eids, nids):
@@ -1479,7 +1481,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.setup_mouse_buttons(mode='style', revert=True, style=style)
         #self.vtk_interactor.SetInteractorStyle(style)
 
-    def _probe_picker(self, obj, event):
+    def _probe_picker(self, unused_obj, unused_event):
         """pick a point and apply the label based on the current displayed result"""
         picker = self.cell_picker
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
@@ -1496,7 +1498,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 camera = self.rend.GetActiveCamera()
                 #focal_point = world_position
                 out = self.get_result_by_xyz_cell_id(world_position, cell_id)
-                _result_name, result_value, node_id, node_xyz = out
+                _result_name, result_value, unused_node_id, node_xyz = out
                 focal_point = node_xyz
                 self.log_info('focal_point = %s' % str(focal_point))
                 self.setup_mouse_buttons(mode='default')
@@ -1532,7 +1534,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 raise RuntimeError('invalid pick location=%r' % location)
 
-            return_flag, duplicate_key, result_value, result_name, xyz = out
+            return_flag, duplicate_key, result_value, unused_result_name, xyz = out
             if return_flag is True:
                 return
 
@@ -2433,37 +2435,74 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log = log
 
     def build_fmts(self, fmt_order, stop_on_failure=False):
+        """populates the formats that will be supported"""
+        stop_on_failure=True
         fmts = []
         for fmt in fmt_order:
-            if hasattr(self, 'get_%s_wildcard_geometry_results_functions' % fmt):
-                func = 'get_%s_wildcard_geometry_results_functions' % fmt
-                data = getattr(self, func)()
-                msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
-                msg += 'data = %s'
-                if isinstance(data, tuple):
-                    assert len(data) == 5, msg % str(data)
-                    macro_name, geo_fmt, geo_func, res_fmt, res_func = data
-                    fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
-                elif isinstance(data, list):
-                    for datai in data:
-                        assert len(datai) == 5, msg % str(datai)
-                        macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
-                        fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
-                else:
-                    raise TypeError(data)
+            geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
+
+            if fmt in CLASS_MAP:
+                cls = CLASS_MAP[fmt](self)
+                data = getattr(cls, geom_results_funcs)()
+            elif hasattr(self, geom_results_funcs):
+                data = getattr(self, geom_results_funcs)()
             else:
                 if stop_on_failure:
                     func = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
                     raise RuntimeError(func)
+            self._add_fmt(fmts, fmt, geom_results_funcs, data)
 
         if len(fmts) == 0:
             RuntimeError('No formats...expected=%s' % fmt_order)
         self.fmts = fmts
+        #print("fmts =", fmts)
 
         self.supported_formats = [fmt[0] for fmt in fmts]
         print('supported_formats = %s' % self.supported_formats)
+        assert 'cart3d' in self.supported_formats, self.supported_formats
         if len(fmts) == 0:
             raise RuntimeError('no modules were loaded...')
+
+    def _add_fmt(self, fmts, fmt, geom_results_funcs, data):
+        """
+        Adds a format
+
+        Parameters
+        ----------
+        fmts : List[formats]
+            format : List[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
+            macro_name : ???
+                ???
+            geo_fmt : ???
+                ???
+            geo_func : ???
+                ???
+            res_fmt : ???
+                ???
+            res_func : ???
+                ???
+        fmt : str
+            nastran, cart3d, etc.
+        geom_results_funcs : str
+            'get_nastran_wildcard_geometry_results_functions'
+            'get_cart3d_wildcard_geometry_results_functions'
+        data : function
+            the outputs from ``get_nastran_wildcard_geometry_results_functions()``
+            so 1 or more formats (macro_name, geo_fmt, geo_func, res_fmt, res_func)
+        """
+        msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
+        msg += 'data = %s'
+        if isinstance(data, tuple):
+            assert len(data) == 5, msg % str(data)
+            macro_name, geo_fmt, geo_func, res_fmt, res_func = data
+            fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+        elif isinstance(data, list):
+            for datai in data:
+                assert len(datai) == 5, msg % str(datai)
+                macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
+                fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+        else:
+            raise TypeError(data)
 
     def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
                                 plot=True, raise_error=False):
@@ -2491,9 +2530,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 if geometry_format == fmt_name:
                     load_function = geom_func
                     if res_wildcard is None:
-                        has_results = False
+                        unused_has_results = False
                     else:
-                        has_results = True
+                        unused_has_results = True
                     break
             else:
                 self.log_error('---invalid format=%r' % geometry_format)
@@ -2538,8 +2577,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             geometry_format = formats[filter_index]
             load_function = load_functions[filter_index]
-            has_results = has_results_list[filter_index]
-        return is_failed, (infile_name, load_function, filter_index, formats)
+            unused_has_results = has_results_list[filter_index]
+        return is_failed, (infile_name, load_function, filter_index, formats, geometry_format)
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
                          plot=True, raise_error=False):
@@ -2565,7 +2604,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if is_failed:
             return
 
-        infile_name, load_function, filter_index, formats = out
+        has_results = False
+        infile_name, load_function, filter_index, formats, geometry_format2 = out
         if load_function is not None:
             self.last_dir = os.path.split(infile_name)[0]
 
@@ -2605,9 +2645,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
 
             try:
-                time0 = time.time()
-                has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
-                dt = time.time() - time0
+                time0 = time_module.time()
+
+                if geometry_format2 in CLASS_MAP:
+                    # intialize the class
+                    cls = CLASS_MAP[geometry_format](self)
+                    function_name = 'load_%s_geometry' % geometry_format2
+                    load_function2 = getattr(cls, function_name)
+                    has_results = load_function2(infile_name, name=name, plot=plot)
+                else:
+                    has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
+
+                dt = time_module.time() - time0
                 print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
                 #else:
                     #name = load_function.__name__
@@ -2617,6 +2666,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     #has_results = load_function(infile_name) # , self.last_dir
                     #form, cases = load_function(infile_name) # , self.last_dir
             except Exception as e:
+                #raise
                 msg = traceback.format_exc()
                 self.log_error(msg)
                 if raise_error or self.dev:
@@ -2628,7 +2678,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # the model has been loaded, so we enable load_results
         if filter_index >= 0:
             self.format = formats[filter_index].lower()
-            enable = has_results
+            unused_enable = has_results
             #self.load_results.Enable(enable)
         else: # no file specified
             return
@@ -2637,7 +2687,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.out_filename = None
         #if self.out_filename is not None:
             #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
-        #else:
 
         if name == 'main':
             msg = '%s - %s' % (self.format, self.infile_name)
@@ -2695,7 +2744,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _update_menu_bar_to_format(self, fmt, method):
         self.menu_bar_format = fmt
         tools, menu_items = getattr(self, method)()
-        actions = self._prepare_actions(self._icon_path, tools, self.checkables)
+        unused_actions = self._prepare_actions(self._icon_path, tools, self.checkables)
         self._update_menu(menu_items)
 
     def update_menu_bar(self):
@@ -2727,7 +2776,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def on_load_custom_results(self, out_filename=None, restype=None):
         """will be a more generalized results reader"""
         is_failed = True
-        geometry_format = self.format
+        #unused_geometry_format = self.format
         if self.format is None:
             msg = 'on_load_results failed:  You need to load a file first...'
             self.log_error(msg)
@@ -2897,6 +2946,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             load_function = None
 
             for fmt in self.fmts:
+                print(fmt)
                 fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
                 if geometry_format == fmt_name:
                     wildcard = _reswild
@@ -2916,7 +2966,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             for fmt in self.fmts:
                 fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
-                print('fmt_name=%r geometry_format=%r' % (fmt_name, geometry_format))
+                #print('fmt_name=%r geometry_format=%r' % (fmt_name, geometry_format))
                 if fmt_name == geometry_format:
                     load_function = _resfunc
                     break
@@ -2937,11 +2987,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 return
                 #raise IOError(msg)
             self.last_dir = os.path.split(out_filenamei)[0]
+
             try:
                 load_function(out_filenamei)
             except Exception: #  as e
                 msg = traceback.format_exc()
                 self.log_error(msg)
+                print(msg)
                 #return
                 raise
 
@@ -2970,7 +3022,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # build GUI and restore saved application state
         #nice_blue = (0.1, 0.2, 0.4)
         qpos_default = self.pos()
-        pos_default = qpos_default.x(), qpos_default.y()
+        unused_pos_default = qpos_default.x(), qpos_default.y()
 
         self.reset_settings = False
         #if self.reset_settings or qt_version in [5, 'pyside']:
@@ -3287,14 +3339,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
 
         eids = np.unique(eids)
-        neids = len(eids)
+        unused_neids = len(eids)
         #centroids = np.zeros((neids, 3), dtype='float32')
         ieids = np.searchsorted(self.element_ids, eids)
         #print('ieids = ', ieids)
 
         for cell_id in ieids:
             centroid = self.cell_centroid(cell_id)
-            result_name, result_values, xyz = self.get_result_by_cell_id(
+            unused_result_name, result_values, unused_xyz = self.get_result_by_cell_id(
                 cell_id, centroid, icase_result)
             texti = '%s' % result_values
             xi, yi, zi = centroid
@@ -3363,7 +3415,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             for node_id in i:
                 #xyz = self.xyz_cid0[i, :]
                 out = self.get_result_by_xyz_node_id(world_position, node_id)
-                _result_name, result_value, node_id, node_xyz = out
+                _result_name, unused_result_value, node_id, node_xyz = out
+                xi, yi, zi = node_xyz
                 self._create_annotation(texti, self.label_actors[icase], xi, yi, zi)
         self.vtk_interactor.Render()
 
@@ -3382,7 +3435,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self.format, self.pick_state)
             if hasattr(self, method):
                 methodi = getattr(self, method)
-                return_flag, value = methodi(world_position, cell_id)
+                return_flag, unused_value = methodi(world_position, cell_id)
                 if return_flag is True:
                     return return_flag, None, None, None, None
             else:
@@ -3394,8 +3447,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return return_flag, duplicate_key, result_value, result_name, xyz
 
     def _get_closest_node_xyz(self, cell_id, world_position):
-        duplicate_key = None
-        (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
+        unused_duplicate_key = None
+        (result_name, unused_result_value, unused_node_id, xyz) = self.get_result_by_xyz_cell_id(
             world_position, cell_id)
         assert self.icase in self.label_actors, result_name
         assert not isinstance(xyz, int), xyz
@@ -3416,7 +3469,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self.format, self.pick_state)
             if hasattr(self, method):
                 methodi = getattr(self, method)
-                return_flag, value = methodi(world_position, cell_id)
+                return_flag, unused_value = methodi(world_position, cell_id)
                 if return_flag is True:
                     return return_flag, None, None, None, None
             else:
@@ -3442,7 +3495,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.setup_mouse_buttons(mode='probe_result')
         self.setup_mouse_buttons(mode='default')
 
-    def convert_units(self, result_name, result_value, xyz):
+    def convert_units(self, unused_result_name, result_value, xyz):
         #self.input_units
         #self.display_units
         return result_value, xyz
@@ -3505,14 +3558,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #camera.GetClippingRange()
         #camera.GetFocalPoint()
 
-    def _on_multi_pick(self, a):
+    def _on_multi_pick(self, unused_a):
         """
         vtkFrustumExtractor
         vtkAreaPicker
         """
         pass
 
-    def _on_cell_picker(self, a):
+    def _on_cell_picker(self, unused_a):
         self.vtk_interactor.SetPicker(self.cell_picker)
         picker = self.cell_picker
         world_position = picker.GetPickPosition()
@@ -3523,7 +3576,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_info("cell_id = %s" % cell_id)
         self.log_info("select_point = %s" % str(select_point))
 
-    def _on_node_picker(self, a):
+    def _on_node_picker(self, unused_a):
         self.vtk_interactor.SetPicker(self.node_picker)
         picker = self.node_picker
         world_position = picker.GetPickPosition()
@@ -3907,11 +3960,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     self.icase0 = -1
                     self.ncases = len(icases)
 
-                def execute(self, obj, event):
-                    iren = obj
+                def execute(self, obj, unused_event):
+                    unused_iren = obj
                     i = self.timer_count % self.ncases
                     #j = next(self.cycler)
-                    istep = isteps[i]
+                    unused_istep = isteps[i]
                     icase = icases[i]
                     scale = scales[i]
                     phase = phases[i]
@@ -3938,7 +3991,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # fps
             # -> frames_per_second = 1/fps
             delay = int(1. / fps * 1000)
-            timer_id = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
+            unused_timer_id = self.iren.CreateRepeatingTimer(delay)  # time in milliseconds
             return
 
         is_failed = True
@@ -4025,6 +4078,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         -------
         onesided : bool; default=True
             should the animation go up and back down
+            True : the video will use images [0...N]
+            False : the video will use images [0...N...0]
         nrepeat : int; default=0
             0 : loop infinitely
             1 : loop 1 time
@@ -4061,7 +4116,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         assert fps >= 1, fps
         nframes = ceil(analysis_time * fps)
         assert nframes >= 2, nframes
-        duration = time / nframes
+        unused_duration = time / nframes
         nframes = int(nframes)
 
         png_dirname = os.path.dirname(os.path.abspath(gif_filename))
@@ -4577,7 +4632,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         data = []
         for key in self.case_keys:
             assert isinstance(key, integer_types), key
-            obj, (i, name) = self.result_cases[key]
+            unused_obj, (i, unused_name) = self.result_cases[key]
             t = (i, [])
             data.append(t)
 
@@ -4614,7 +4669,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         case = self.result_cases[case_key]
 
         (obj, (i, res_name)) = case
-        subcase_id = obj.subcase_id
+        unused_subcase_id = obj.subcase_id
         case = obj.get_result(i, res_name)
 
         try:
@@ -4732,7 +4787,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         case = self.result_cases[case_key]
         assert isinstance(case_key, integer_types), case_key
         (obj, (i, res_name)) = case
-        subcase_id = obj.subcase_id
+        unused_subcase_id = obj.subcase_id
         case = obj.get_result(i, res_name)
         result_values = case[node_id]
         assert not isinstance(xyz, int), xyz
@@ -4755,7 +4810,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.case_keys[self.icase]
         assert isinstance(case_key, integer_types), case_key
-        obj, (i, name) = self.result_cases[case_key]
+        unused_obj, (unused_i, name) = self.result_cases[case_key]
         return name
 
     def finish_io(self, cases):
@@ -4847,8 +4902,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 actor = self.geometry_actors[name]
                 self.rend.RemoveActor(actor)
                 del self.geometry_actors[name]
+
             if name in self.geometry_properties:
-                prop = self.geometry_properties[name]
+                unused_prop = self.geometry_properties[name]
                 del self.geometry_properties[name]
             self.Render()
 
@@ -4911,7 +4967,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # existing geometry
         #icase = self.case_keys[self.icase]
         icase = self.icase
-        result_name = self.result_name
+        unused_result_name = self.result_name
 
         actors = self.label_actors[icase]
         for actor in actors:
@@ -5300,7 +5356,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #assert is_shown == False, is_shown
         key = self.case_keys[self.icase]
         name_vector = None
-        plot_value = self.result_cases[key] # scalar
+        unused_plot_value = self.result_cases[key] # scalar
         vector_size1 = 1
         update_3d = False
         assert isinstance(key, integer_types), key
@@ -5311,7 +5367,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         result_type = obj.get_title(i, res_name)
         vector_size = obj.get_vector_size(i, res_name)
         if vector_size == 3:
-            plot_value = obj.get_plot_value(i, res_name) # vector
+            unused_plot_value = obj.get_plot_value(i, res_name) # vector
             update_3d = True
             #print('setting scale=%s' % scale)
             assert isinstance(scale, float), scale
@@ -5402,7 +5458,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                                 #revert_displaced=revert_displaced)
 
         #self.is_horizontal_scalar_bar = is_horizontal
-        icase = i
+        #unused_icase = i
         msg = ('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
                '                      scale=%r, phase=%r,\n'
                '                      data_format=%r, is_low_to_high=%s, is_discrete=%s,\n'
@@ -5537,7 +5593,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #self.groups = out_data
         data = {}
-        for group_id, group in sorted(iteritems(out_data)):
+        for unused_group_id, group in sorted(iteritems(out_data)):
             if not isinstance(group, Group):
                 continue
             data[group.name] = group
@@ -5746,10 +5802,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         grid = self.alt_grids[name]
         points = grid.GetPoints()
         for i in range(nnodes):
-            p = points.GetPoint(2*i+1)
-            #print(p)
+            #unused_point = points.GetPoint(2*i+1)
+            #print(unused_point)
             node = xyz1[i, :] + length_xyz[i] * bar_scale * dxyz[i, :]
-            #print(p, node)
+            #print(unused_point, node)
             points.SetPoint(2 * i + 1, *node)
 
         if hasattr(grid, 'Update'):

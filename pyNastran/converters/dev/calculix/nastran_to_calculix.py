@@ -501,7 +501,7 @@ class CalculixConverter(BDF):
                         centroid = (n1 + n2 + n3 + n4) / 4.
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         area, centroid, normal = elem.get_face_area_centroid_normal(
-                            load.g34.nid, load.g1.nid)
+                            load.g34_ref.nid, load.g1_ref.nid)
                         nnodes = None
                     else:
                         self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (

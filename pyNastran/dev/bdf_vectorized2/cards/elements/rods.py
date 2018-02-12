@@ -240,7 +240,6 @@ class CONRODv(RodElement):
                 self.c = np.array(self._c, dtype='float64')
                 self.nsm = np.array(self._nsm, dtype='float64')
             assert len(self.eid) == len(np.unique(self.eid))
-            #print(self.nid)
             self._eid = []
             self._mid = []
             self._nids = []
@@ -249,8 +248,6 @@ class CONRODv(RodElement):
             self._c = []
             self._nsm = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
 
 
 class CRODv(RodElement):
@@ -341,13 +338,10 @@ class CRODv(RodElement):
                 self.pid = np.array(self._pid, dtype='int32')
                 self.nids = np.array(self._nids, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
-            #print(self.nid)
             self._eid = []
             self._pid = []
             self._nids = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
 
 
 class CTUBEv(RodElement):
@@ -437,11 +431,7 @@ class CTUBEv(RodElement):
                 self.pid = np.array(self._pid, dtype='int32')
                 self.nids = np.array(self._nids, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
-            #print(self.nid)
             self._eid = []
             self._pid = []
             self._nids = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
-

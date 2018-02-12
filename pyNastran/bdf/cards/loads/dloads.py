@@ -188,7 +188,7 @@ class ACSRCE(BaseCard):
 
         #load_ids2 = []
         #for load_id in self.load_ids:
-            #load_id2 = model.get_dload_entries(load_id, msg=msg)
+            #load_id2 = model.DLoad(load_id, consider_dload_combinations=False, msg=msg)
             #load_ids2.append(load_id2)
         #self.load_ids = load_ids2
         #self.load_ids_ref = self.load_ids
@@ -326,7 +326,7 @@ class DLOAD(LoadCombination):
         dload_ids2 = []
         msg = ' which is required by DLOAD=%s' % (self.sid)
         for dload_id in self.load_ids:
-            dload_id2 = model.get_dload_entries(dload_id, msg=msg)
+            dload_id2 = model.DLoad(dload_id, consider_dload_combinations=False, msg=msg)
             dload_ids2.append(dload_id2)
         self.load_ids_ref = dload_ids2
 
@@ -335,7 +335,7 @@ class DLOAD(LoadCombination):
         msg = ' which is required by DLOAD=%s' % (self.sid)
         for dload_id in self.load_ids:
             try:
-                dload_id2 = model.get_dload_entries(dload_id, msg=msg)
+                dload_id2 = model.DLoad(dload_id, consider_dload_combinations=False, msg=msg)
             except KeyError:
                 if debug:
                     msg = 'Couldnt find dload_id=%i, which is required by %s=%s' % (
@@ -1168,23 +1168,23 @@ class TLOAD2(DynamicLoad):
 
     for use in transient response analysis.
 
-    +--------+-----+----------+-------+------+-----+-----+-----+-----+
-    |    1   |  2  |     3    |   4   |   5  |  6  |  7  |  8  |  9  |
-    +========+=====+==========+=======+======+=====+=====+=====+=====+
-    | TLOAD2 | SID | EXCITEID | DELAY | TYPE | T1  | T2  |  F  |  P  |
-    +--------+-----+----------+-------+------+-----+-----+-----+-----+
-    |        |  C  |     B    |  US0  |  VS0 |     |     |     |     |
-    +--------+-----+----------+-------+------+-----+-----+-----+-----+
+    +--------+-----+----------+-------+------+-----+-----+--------+---------+
+    |    1   |  2  |     3    |   4   |   5  |  6  |  7  |    8   |    9    |
+    +========+=====+==========+=======+======+=====+=====+========+=========+
+    | TLOAD2 | SID | EXCITEID | DELAY | TYPE | T1  | T2  |  FREQ  |  PHASE  |
+    +--------+-----+----------+-------+------+-----+-----+--------+---------+
+    |        |  C  |     B    |  US0  |  VS0 |     |     |        |         |
+    +--------+-----+----------+-------+------+-----+-----+--------+---------+
 
     MSC 2016.1
 
-    +--------+-----+----------+-------+------+-----+-----+-----+-----+
-    |    1   |  2  |     3    |   4   |   5  |  6  |  7  |  8  |  9  |
-    +========+=====+==========+=======+======+=====+=====+=====+=====+
-    | TLOAD2 | SID | EXCITEID | DELAY | TYPE | T1  | T2  |  F  |  P  |
-    +--------+-----+----------+-------+------+-----+-----+-----+-----+
-    |        |  C  |     B    |       |      |     |     |     |     |
-    +--------+-----+----------+-------+------+-----+-----+-----+-----+
+    +--------+-----+----------+-------+------+-----+-----+--------+---------+
+    |    1   |  2  |     3    |   4   |   5  |  6  |  7  |    8   |    9    |
+    +========+=====+==========+=======+======+=====+=====+========+=========+
+    | TLOAD2 | SID | EXCITEID | DELAY | TYPE | T1  | T2  |  FREQ  |  PHASE  |
+    +--------+-----+----------+-------+------+-----+-----+--------+---------+
+    |        |  C  |     B    |       |      |     |     |        |         |
+    +--------+-----+----------+-------+------+-----+-----+--------+---------+
 
     NX 11
     """

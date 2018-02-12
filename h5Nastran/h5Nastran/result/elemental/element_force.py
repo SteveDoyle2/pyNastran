@@ -9,6 +9,7 @@ import numpy as np
 from pandas import DataFrame
 
 from ..result_table import ResultTable, TableDef, ResultTableData
+from ._shell_results import ShellElementForceStressResultTable, ShellElementForceStressResultTableComplex
 
 
 class ElementForce(object):
@@ -101,10 +102,8 @@ class ElementForce(object):
     def path(self):
         return self._elemental.path() + ['ELEMENT_FORCE']
 
-    # TODO: individual tables need to have data_ids first for consistency
-    def search(self, element_ids, domain_ids=(), subcase_ids=()):
-        # :type (List[int], List[int], List[int]) -> ElementForceResult
-        # TODO: consider subcase_ids here... convert to domain_ids and use domain_ids only
+    def search(self, element_ids, domain_ids=(), material_sys=False):
+        # :type (List[int], List[int]) -> ElementForceResult
         result = ElementForceResult()
         _result = result.__dict__
         table_ids = self.__dict__.keys()
@@ -112,7 +111,7 @@ class ElementForce(object):
         for table_id in table_ids:
             if table_id.startswith('_'):  # not a table
                 continue
-            _result[table_id] = _tables[table_id].search(element_ids, domain_ids, subcase_ids)
+            _result[table_id] = _tables[table_id].search(element_ids, domain_ids, material_sys=material_sys)
                 
         return result
     
@@ -526,9 +525,10 @@ class HBDYP(ResultTable):
 ########################################################################################################################
 
 
-class QUAD4(ResultTable):
+class QUAD4(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT FORCES 33 QUAD4 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4', result_type)
+    table_def.add_index_option('MATERIAL', None)
     result_data_cols = ['MX', 'MY', 'MXY', 'BMX', 'BMY', 'BMXY', 'TX', 'TY']
     result_data_group_by = ['EID', 'DOMAIN_ID']
 
@@ -560,7 +560,7 @@ class QUAD4_COMP(ResultTable):
 ########################################################################################################################
 
 
-class QUAD4_CPLX(ResultTable):
+class QUAD4_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT FORCES 33 QUAD4 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUAD4_CPLX', result_type)
 
@@ -592,7 +592,7 @@ class QUAD8_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class QUADR(ResultTable):
+class QUADR(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT FORCES 82 QUADR REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUADR', result_type)
 
@@ -600,7 +600,7 @@ class QUADR(ResultTable):
 ########################################################################################################################
 
 
-class QUADR_CPLX(ResultTable):
+class QUADR_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT FORCES 82 QUADR COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/QUADR_CPLX', result_type)
 
@@ -704,9 +704,12 @@ class SHEAR_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIA3(ResultTable):
+class TRIA3(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT FORCES 74 TRIA3 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA3', result_type)
+    table_def.add_index_option('MATERIAL', None)
+    result_data_cols = ['MX', 'MY', 'MXY', 'BMX', 'BMY', 'BMXY', 'TX', 'TY']
+    result_data_group_by = ['EID', 'DOMAIN_ID']
 
 
 ########################################################################################################################
@@ -720,7 +723,7 @@ class TRIA3_COMP(ResultTable):
 ########################################################################################################################
 
 
-class TRIA3_CPLX(ResultTable):
+class TRIA3_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT FORCES 74 TRIA3 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA3_CPLX', result_type)
 
@@ -728,7 +731,7 @@ class TRIA3_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIA6(ResultTable):
+class TRIA6(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT FORCES 75 TRIA6 REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA6', result_type)
 
@@ -744,7 +747,7 @@ class TRIA6_COMP(ResultTable):
 ########################################################################################################################
 
 
-class TRIA6_CPLX(ResultTable):
+class TRIA6_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT FORCES 75 TRIA6 COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIA6_CPLX', result_type)
 
@@ -752,7 +755,7 @@ class TRIA6_CPLX(ResultTable):
 ########################################################################################################################
 
 
-class TRIAR(ResultTable):
+class TRIAR(ResultTable, ShellElementForceStressResultTable):
     result_type = 'ELEMENT FORCES 70 TRIAR REAL'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIAR', result_type)
 
@@ -760,7 +763,7 @@ class TRIAR(ResultTable):
 ########################################################################################################################
 
 
-class TRIAR_CPLX(ResultTable):
+class TRIAR_CPLX(ResultTable, ShellElementForceStressResultTableComplex):
     result_type = 'ELEMENT FORCES 70 TRIAR COMPLEX'
     table_def = TableDef.create('/NASTRAN/RESULT/ELEMENTAL/ELEMENT_FORCE/TRIAR_CPLX', result_type)
 

@@ -72,6 +72,12 @@ class PunchHeaderData(object):
             self.lineno, self.title, self.subtitle, self.label, self._subcase_id, self._results_type, str(self.real_output),
             str(self.other)
         )
+    
+    @property
+    def options(self):
+        results_type = set(self.results_type.split())
+        no_options = set(self.results_type_no_options.split())
+        return results_type - no_options
 
     @property
     def results_type(self):
@@ -112,6 +118,16 @@ class PunchHeaderData(object):
             results_type_.remove(option)
 
         return ' '.join(results_type_)
+    
+    @property
+    def results_type_basic(self):
+        results_type = self.results_type_no_options
+        if 'ELEMENT' in results_type:
+            tmp = results_type.split()
+            del tmp[-2]
+            results_type = ' '.join(tmp)
+            
+        return results_type
 
     @property
     def subcase_id(self):

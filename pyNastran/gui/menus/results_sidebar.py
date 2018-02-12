@@ -269,9 +269,6 @@ class Sidebar(QWidget):
     def on_clear_results(self):
         if hasattr(self.parent, 'on_clear_results'):
             self.parent.on_clear_results()
-    def on_normals(self, icase):
-        if hasattr(self.parent, 'on_normals'):
-            self.parent.on_normals(icase)
     def on_fringe(self, icase):
         if hasattr(self.parent, 'on_fringe'):
             self.parent.on_fringe(icase)

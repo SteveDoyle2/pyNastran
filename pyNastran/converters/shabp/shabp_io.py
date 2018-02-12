@@ -1,6 +1,7 @@
 """
 Defines the GUI IO file for S/HABP.
 """
+from __future__ import print_function
 from six import iteritems
 import numpy as np
 from numpy import zeros, cross, amax, amin
@@ -12,12 +13,10 @@ from vtk import vtkQuad
 from pyNastran.converters.shabp.shabp import read_shabp
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
-is_shabp = True
-
 
 class ShabpIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_shabp_wildcard_geometry_results_functions(self):
         data = ('S/HABP',
@@ -26,18 +25,18 @@ class ShabpIO(object):
         return data
 
     def load_shabp_geometry(self, shabp_filename, name='main', plot=True):
-        self.eid_maps[name] = {}
-        self.nid_maps[name] = {}
+        self.parent.eid_maps[name] = {}
+        self.parent.nid_maps[name] = {}
 
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self._remove_old_geometry(shabp_filename)
+        skip_reading = self.parent._remove_old_geometry(shabp_filename)
         if skip_reading:
             return
 
-        self.model = read_shabp(shabp_filename, log=self.log, debug=self.debug)
-        self.model_type = 'shabp' # model.model_type
+        self.model = read_shabp(shabp_filename, log=self.parent.log, debug=self.parent.debug)
+        self.parent.model_type = 'shabp' # model.model_type
 
         nodes, elements, patches, components, impact, shadow = self.model.getPointsElementsRegions()
         #for nid,node in enumerate(nodes):
@@ -49,16 +48,16 @@ class ShabpIO(object):
         #print("nnodes = ",self.nnodes)
         #print("nelements = ", self.nelements)
 
-        self.grid.Allocate(self.nelements, 1000)
+        self.parent.grid.Allocate(self.parent.nelements, 1000)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nnodes)
+        points.SetNumberOfPoints(self.parent.nnodes)
 
         assert len(nodes) > 0
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
+        self.parent.create_global_axes(dim_max)
         for nid, node in enumerate(nodes):
             points.InsertPoint(nid, *node)
 
@@ -70,33 +69,34 @@ class ShabpIO(object):
             elem.GetPointIds().SetId(1, p2)
             elem.GetPointIds().SetId(2, p3)
             elem.GetPointIds().SetId(3, p4)
-            self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            self.parent.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        self.parent.grid.SetPoints(points)
+        self.parent.grid.Modified()
+        if hasattr(self.parent.grid, 'Update'):
+            self.parent.grid.Update()
 
         # loadShabpResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.parent.scalarBar.VisibilityOn()
+        self.parent.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['S/HABP', '']}
+        self.parent.isubcase_name_map = {1: ['S/HABP', '']}
         cases = {}
         ID = 1
 
-        self.log.debug("nNodes=%i nElements=%i" % (self.nnodes, self.nelements))
+        self.parent.log.debug("nNodes=%i nElements=%i" % (
+            self.parent.nnodes, self.parent.nelements))
         form, cases = self._fill_shabp_geometry_case(
             cases, ID, nodes, elements, patches, components, impact, shadow)
-        self._finish_results_io2(form, cases)
+        self.parent._finish_results_io2(form, cases)
 
     def clear_shabp(self):
-        del self.elements
+        del self.parent.elements
         del self.model
 
     def _fill_shabp_geometry_case(self, cases, ID, nodes, elements, patches,
                                   components, impact, shadow):
-        self.elements = elements
+        self.parent.elements = elements
 
         icase = 0
         location_form = [
@@ -143,7 +143,7 @@ class ShabpIO(object):
         cases[icase+3] = (shadow_res, (itime, 'Shadow'))
 
         XYZc = zeros((len(elements), 3), dtype='float32')
-        Normal = zeros((len(elements),3), dtype='float32')
+        Normal = zeros((len(elements), 3), dtype='float32')
         area = zeros(len(elements), dtype='float32')
 
         if 0:
@@ -187,25 +187,25 @@ class ShabpIO(object):
                              location='centroid', scalar=area) # data_format='%.2f
 
         cenx_res = GuiResult(ID, header='CentroidX', title='CentroidX',
-                           location='centroid', scalar=XYZc[:,0]) # data_format='%.2f
+                             location='centroid', scalar=XYZc[:, 0]) # data_format='%.2f
         ceny_res = GuiResult(ID, header='CentroidY', title='CentroidY',
-                             location='centroid', scalar=XYZc[:,1]) # data_format='%.2f
+                             location='centroid', scalar=XYZc[:, 1]) # data_format='%.2f
         cenz_res = GuiResult(ID, header='CentroidZ', title='CentroidZ',
-                             location='centroid', scalar=XYZc[:,2]) # data_format='%.2f
+                             location='centroid', scalar=XYZc[:, 2]) # data_format='%.2f
 
         nodex_res = GuiResult(ID, header='NodeX', title='NodeX',
-                           location='node', scalar=nodes[:, 0]) # data_format='%.2f
+                              location='node', scalar=nodes[:, 0]) # data_format='%.2f
         nodey_res = GuiResult(ID, header='NodeY', title='NodeY',
-                           location='node', scalar=nodes[:, 1]) # data_format='%.2f
+                              location='node', scalar=nodes[:, 1]) # data_format='%.2f
         nodez_res = GuiResult(ID, header='NodeZ', title='NodeZ',
-                           location='node', scalar=nodes[:, 2]) # data_format='%.2f
+                              location='node', scalar=nodes[:, 2]) # data_format='%.2f
 
         nx_res = GuiResult(ID, header='NormalX', title='NormalX',
-                           location='centroid', scalar=Normal[:,0]) # data_format='%.2f
+                           location='centroid', scalar=Normal[:, 0]) # data_format='%.2f
         ny_res = GuiResult(ID, header='NormalY', title='NormalY',
-                           location='centroid', scalar=Normal[:,1]) # data_format='%.2f
+                           location='centroid', scalar=Normal[:, 1]) # data_format='%.2f
         nz_res = GuiResult(ID, header='NormalZ', title='NormalZ',
-                           location='centroid', scalar=Normal[:,2]) # data_format='%.2f
+                           location='centroid', scalar=Normal[:, 2]) # data_format='%.2f
 
         cases[icase+4] = (area_res, (itime, 'Area'))
         cases[icase+5] = (cenx_res, (itime, 'CentroidX'))
@@ -223,10 +223,10 @@ class ShabpIO(object):
     def load_shabp_results(self, shabp_filename):
         Cpd, deltad = self.model.read_shabp_out(shabp_filename)
 
-        cases = self.result_cases
+        cases = self.parent.result_cases
         icase = len(cases)
         mach_results = []
-        form = self.form
+        form = self.parent.form
         form.append(('Results', None, mach_results))
         #self.result_cases = {}
         mach_forms = {}
@@ -246,5 +246,4 @@ class ShabpIO(object):
 
         for mach, mach_form in sorted(iteritems(mach_forms)):
             mach_results.append(mach_form)
-        self._finish_results_io2(form, cases)
-
+        self.parent._finish_results_io2(form, cases)

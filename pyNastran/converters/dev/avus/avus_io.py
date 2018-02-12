@@ -10,8 +10,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 class AvusIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_avus_wildcard_geometry_results_functions(self):
         data = ('Avus',
@@ -22,6 +22,34 @@ class AvusIO(object):
     #def removeOldGeometry(self, filename):
         #self._remove_old_cart3d_geometry(filename)
 
+    def _remove_old_cart3d_geometry(self, filename):
+        #return self._remove_old_geometry(filename)
+
+        self.parent.eid_map = {}
+        self.parent.nid_map = {}
+        if filename is None:
+            self.parent.scalarBar.VisibilityOff()
+            skip_reading = True
+        else:
+            self.parent.turn_text_off()
+            self.parent.grid.Reset()
+
+            self.parent.result_cases = {}
+            self.parent.ncases = 0
+            try:
+                del self.parent.case_keys
+                del self.parent.icase
+                del self.parent.isubcase_name_map
+            except:
+                # print("cant delete geo")
+                pass
+
+            #print(dir(self))
+            skip_reading = False
+        #self.scalarBar.VisibilityOff()
+        self.parent.scalarBar.Modified()
+        return skip_reading
+
     def load_avus_geometry(self, avus_filename, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -30,7 +58,7 @@ class AvusIO(object):
         if skip_reading:
             return
 
-        model = AvusGrid(log=self.log, debug=False)
+        model = AvusGrid(log=self.parent.log, debug=False)
         model.read_avus_grid(avus_filename)
 
         self.model_type = 'avus'
@@ -44,8 +72,8 @@ class AvusIO(object):
 
 
         # loadAvusResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.parent.scalarBar.VisibilityOn()
+        self.parent.scalarBar.Modified()
 
         loads = []
         assert loads is not None
@@ -54,12 +82,12 @@ class AvusIO(object):
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
-        self.isubcase_name_map = {1: ['Avus%s' % note, '']}
+        self.parent.isubcase_name_map = {1: ['Avus%s' % note, '']}
         cases = {}
         ID = 1
 
         form, cases = self._fill_avus_case(cases, ID, model, is_surface)
-        self._finish_results_io2(form, cases)
+        self.parent._finish_results_io2(form, cases)
 
         #if 0:
             # http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/AppendFilter
@@ -72,16 +100,17 @@ class AvusIO(object):
             #appendFilter.AddInputData()
             #appendFilter.Update()
 
+
     def _make_avus_geometry(self, model, quads_only=False):
         nodes = model.nodes
         #nnodes = self.nnodes
 
-        grid = self.grid
+        grid = self.parent.grid
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
+        self.parent.create_global_axes(dim_max)
         points = numpy_to_vtk_points(nodes)
 
         #elements = model.elements

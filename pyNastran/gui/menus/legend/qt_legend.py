@@ -50,8 +50,16 @@ class LegendPropertiesWindow(PyDialog):
         self._updated_legend = False
         self._animation_window_shown = False
 
-        self._icase = data['icase']
-        self._default_icase = self._icase
+        if win_parent is None:
+            self._icase_fringe = data['icase_fringe']
+            self._icase_disp = data['icase_disp']
+            self._icase_vector = data['icase_vector']
+        else:
+            self._icase_fringe = data['icase']
+            self._icase_disp = data['icase']
+            self._icase_vector = data['icase']
+
+        self._default_icase_fringe = self._icase_fringe
 
         self._default_name = data['name']
         self._default_min = data['min']
@@ -59,6 +67,13 @@ class LegendPropertiesWindow(PyDialog):
 
         self._default_scale = data['default_scale']
         self._scale = data['scale']
+
+        if win_parent is None:
+            self._default_arrow_scale = data['default_arrow_scale']
+            self._arrow_scale = data['arrow_scale']
+        else:
+            self._default_arrow_scale = data['default_scale']
+            self._arrow_scale = data['scale']
 
         self._default_phase = data['default_phase']
         self._phase = data['phase']
@@ -114,7 +129,7 @@ class LegendPropertiesWindow(PyDialog):
         if self._nlabels is None:
             self._nlabels = ''
 
-    def update_legend(self, icase, name,
+    def update_legend(self, icase_fringe, name,
                       min_value, max_value, data_format, scale, phase,
                       nlabels, labelsize,
                       ncolors, colormap,
@@ -128,10 +143,21 @@ class LegendPropertiesWindow(PyDialog):
         """
         We need to update the legend if there's been a result change request
         """
+        # TODO: update this
+        icase_disp = icase_vector = icase_fringe
+        default_arrow_scale = default_scale
+
         self.set_font_size(font_size)
-        if icase != self._default_icase:
-            self._icase = icase
-            self._default_icase = icase
+        if icase_fringe != self._default_icase_fringe:
+            self._icase_fringe = icase_fringe
+            self._default_icase_fringe = icase_fringe
+
+            self._icase_fringe = icase_disp
+            self._default_icase_fringe = icase_disp
+
+            self._icase_vector = icase_vector
+            self._default_icase_vector = icase_vector
+
             self._default_name = default_title
             self._default_min = default_min_value
             self._default_max = default_max_value
@@ -140,6 +166,7 @@ class LegendPropertiesWindow(PyDialog):
             self._default_is_discrete = True
             self._default_is_horizontal = is_horizontal_scalar_bar
             self._default_scale = default_scale
+            self._default_arrow_scale = default_arrow_scale
             self._default_phase = default_phase
             self._default_nlabels = default_nlabels
             self._default_labelsize = default_labelsize
@@ -168,6 +195,15 @@ class LegendPropertiesWindow(PyDialog):
                 self.scale.setEnabled(True)
                 self.scale_edit.setEnabled(True)
                 self.scale_button.setEnabled(True)
+
+            if self._default_arrow_scale == 0.0:
+                self.arrow_scale.setEnabled(False)
+                self.arrow_scale_edit.setEnabled(False)
+                self.arrow_scale_button.setEnabled(False)
+            else:
+                self.arrow_scale.setEnabled(True)
+                self.arrow_scale_edit.setEnabled(True)
+                self.arrow_scale_button.setEnabled(True)
 
             if self._default_phase is None:
                 self._phase = None
@@ -283,13 +319,21 @@ class LegendPropertiesWindow(PyDialog):
 
         #---------------------------------------
         # Scale
-        self.scale = QLabel("Scale:")
+        self.scale = QLabel("True Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
         self.scale_button = QPushButton("Default")
         if self._default_scale == 0.0:
             self.scale.setVisible(False)
             self.scale_edit.setVisible(False)
             self.scale_button.setVisible(False)
+
+        self.arrow_scale = QLabel("Arrow Scale:")
+        self.arrow_scale_edit = QLineEdit(str(self._arrow_scale))
+        self.arrow_scale_button = QPushButton("Default")
+        if self._default_arrow_scale == 0.0 or 1: # TODO: flip
+            self.arrow_scale.setVisible(False)
+            self.arrow_scale_edit.setVisible(False)
+            self.arrow_scale_button.setVisible(False)
 
         # Phase
         self.phase = QLabel("Phase (deg):")
@@ -394,8 +438,9 @@ class LegendPropertiesWindow(PyDialog):
             self.colormap_button.hide()
 
         self.animate_button = QPushButton('Create Animation')
+        #self.advanced_button = QPushButton('Advanced')
 
-        if self._default_scale == 0.0:
+        if self._default_scale == 0.0 and self._default_arrow_scale == 0.0:
             self.animate_button.setEnabled(False)
             self.animate_button.setToolTip('This must be a displacement-like result to animate')
 
@@ -427,25 +472,29 @@ class LegendPropertiesWindow(PyDialog):
         grid.addWidget(self.scale_edit, 4, 1)
         grid.addWidget(self.scale_button, 4, 2)
 
-        grid.addWidget(self.phase, 5, 0)
-        grid.addWidget(self.phase_edit, 5, 1)
-        grid.addWidget(self.phase_button, 5, 2)
+        grid.addWidget(self.arrow_scale, 5, 0)
+        grid.addWidget(self.arrow_scale_edit, 5, 1)
+        grid.addWidget(self.arrow_scale_button, 5, 2)
 
-        grid.addWidget(self.nlabels, 6, 0)
-        grid.addWidget(self.nlabels_edit, 6, 1)
-        grid.addWidget(self.nlabels_button, 6, 2)
+        grid.addWidget(self.phase, 6, 0)
+        grid.addWidget(self.phase_edit, 6, 1)
+        grid.addWidget(self.phase_button, 6, 2)
+
+        grid.addWidget(self.nlabels, 7, 0)
+        grid.addWidget(self.nlabels_edit, 7, 1)
+        grid.addWidget(self.nlabels_button, 7, 2)
 
         #grid.addWidget(self.labelsize, 6, 0)
         #grid.addWidget(self.labelsize_edit, 6, 1)
         #grid.addWidget(self.labelsize_button, 6, 2)
 
-        grid.addWidget(self.ncolors, 7, 0)
-        grid.addWidget(self.ncolors_edit, 7, 1)
-        grid.addWidget(self.ncolors_button, 7, 2)
+        grid.addWidget(self.ncolors, 8, 0)
+        grid.addWidget(self.ncolors_edit, 8, 1)
+        grid.addWidget(self.ncolors_button, 8, 2)
 
-        grid.addWidget(self.colormap, 8, 0)
-        grid.addWidget(self.colormap_edit, 8, 1)
-        grid.addWidget(self.colormap_button, 8, 2)
+        grid.addWidget(self.colormap, 9, 0)
+        grid.addWidget(self.colormap_edit, 9, 1)
+        grid.addWidget(self.colormap_button, 9, 2)
 
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
@@ -476,10 +525,6 @@ class LegendPropertiesWindow(PyDialog):
         vbox.addStretch()
         vbox.addLayout(ok_cancel_box)
 
-        #Create central widget, add layout and set
-        #central_widget = QtGui.QWidget()
-        #central_widget.setLayout(vbox)
-        #self.setCentralWidget(central_widget)
         self.setLayout(vbox)
 
     def set_connections(self):
@@ -489,6 +534,7 @@ class LegendPropertiesWindow(PyDialog):
         self.max_button.clicked.connect(self.on_default_max)
         self.format_button.clicked.connect(self.on_default_format)
         self.scale_button.clicked.connect(self.on_default_scale)
+        self.arrow_scale_button.clicked.connect(self.on_default_arrow_scale)
         self.phase_button.clicked.connect(self.on_default_phase)
 
         self.nlabels_button.clicked.connect(self.on_default_nlabels)
@@ -548,7 +594,9 @@ class LegendPropertiesWindow(PyDialog):
 
         data = {
             'font_size' : self.out_data['font_size'],
-            'icase' : self._icase,
+            'icase_fringe' : self._icase_fringe,
+            'icase_disp' : self._icase_disp,
+            'icase_vector' : self._icase_vector,
             'name' : name,
             'time' : 2,
             'frames/sec' : 30,
@@ -556,6 +604,9 @@ class LegendPropertiesWindow(PyDialog):
             'iframe' : 0,
             'scale' : scale,
             'default_scale' : self._default_scale,
+
+            'arrow_scale' : scale,
+            'default_arrow_scale' : self._default_arrow_scale,
 
             'is_scale' : self._default_phase is None,
             'phase' : self._phase,
@@ -606,6 +657,11 @@ class LegendPropertiesWindow(PyDialog):
         """action when user clicks 'Default' for scale factor"""
         self.scale_edit.setText(str(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_default_arrow_scale(self):
+        """action when user clicks 'Default' for arrow_scale factor"""
+        self.arrow_scale_edit.setText(str(self._default_arrow_scale))
+        self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_phase(self):
         """action when user clicks 'Default' for phase angle"""
@@ -738,13 +794,19 @@ def main(): # pragma: no cover
     app = QApplication(sys.argv)
     #The Main window
     data1 = {
-        'icase' : 1,
+        'icase_fringe' : 1,
+        'icase_disp' : None,
+        'icase_vector' : 3,
+
         'font_size' : 8,
         'name' : 'asdf',
         'min' : 0.,
         'max' : 10,
         'scale' : 1e-12,
         'default_scale' : 1.0,
+
+        'arrow_scale' : 2e-2,
+        'default_arrow_scale' : 2.0,
 
         'phase' : 0.0,
         #'default_phase' : 180.0,

@@ -16,8 +16,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class STL_IO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_stl_wildcard_geometry_results_functions(self):
         data = ('STL',
@@ -27,11 +27,11 @@ class STL_IO(object):
 
     def load_stl_geometry(self, stl_filename, name='main', plot=True):
         #print("load_stl_geometry...")
-        skip_reading = self._remove_old_geometry(stl_filename)
+        skip_reading = self.parent._remove_old_geometry(stl_filename)
         if skip_reading:
             return
 
-        model = read_stl(stl_filename, log=self.log, debug=False)
+        model = read_stl(stl_filename, log=self.parent.log, debug=False)
         #self.model_type = model.model_type
         nodes = model.nodes
         elements = model.elements
@@ -39,26 +39,26 @@ class STL_IO(object):
         normals = model.get_normals(elements, stop_on_failure=False)
         areas = model.get_area(elements, stop_on_failure=False)
         #nnormals = model.get_normals_at_nodes(elements)
-        self.nnodes = nodes.shape[0]
-        self.nelements = elements.shape[0]
+        self.parent.nnodes = nodes.shape[0]
+        self.parent.nelements = elements.shape[0]
 
-        self.log.info('nnodes=%s nelements=%s' % (self.nnodes, self.nelements))
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        self.parent.log.info('nnodes=%s nelements=%s' % (self.parent.nnodes, self.parent.nelements))
+        grid = self.parent.grid
+        grid.Allocate(self.parent.nelements, 1000)
 
         points = numpy_to_vtk_points(nodes)
-        self.nid_map = {}
+        self.parent.nid_map = {}
         #elem.SetNumberOfPoints(nnodes)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
-        self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
-        self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
-        self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
+        self.parent.log.info('xmax=%s xmin=%s' % (xmax, xmin))
+        self.parent.log.info('ymax=%s ymin=%s' % (ymax, ymin))
+        self.parent.log.info('zmax=%s zmin=%s' % (zmax, zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.create_global_axes(dim_max)
+        self.parent.create_global_axes(dim_max)
 
 
         etype = 5  # vtkTriangle().GetCellType()
@@ -68,22 +68,22 @@ class STL_IO(object):
         grid.Modified()
         if hasattr(grid, 'Update'):
             grid.Update()
-            self.log_info("updated grid")
+            self.parent.log_info("updated grid")
 
         # loadSTLResults - regions/loads
-        self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        self.parent.scalarBar.VisibilityOff()
+        self.parent.scalarBar.Modified()
 
         cases = {}
-        self.isubcase_name_map = {}
+        self.parent.isubcase_name_map = {}
         ID = 1
 
         form, cases = self._fill_stl_case(cases, ID, elements, nodes, normals, areas)
-        self._finish_results_io2(form, cases)
+        self.parent._finish_results_io2(form, cases)
 
     def _fill_stl_case(self, cases, ID, elements, nodes, normals, areas):
         """adds the sidebar results"""
-        self.isubcase_name_map[ID] = ('STL', '')
+        self.parent.isubcase_name_map[ID] = ('STL', '')
 
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]

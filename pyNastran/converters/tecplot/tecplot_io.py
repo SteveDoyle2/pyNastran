@@ -15,8 +15,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 class TecplotIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_tecplot_wildcard_geometry_results_functions(self):
         data = ('Tecplot Binary FEBlock',
@@ -28,7 +28,7 @@ class TecplotIO(object):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self._remove_old_cart3d_geometry(tecplot_filename)
+        skip_reading = self.parent._remove_old_cart3d_geometry(tecplot_filename)
         if skip_reading:
             return
 
@@ -37,10 +37,10 @@ class TecplotIO(object):
             #fnames = [os.path.join('time20000', fname) for fname in fnames]
             #model = merge_tecplot_files(fnames, tecplot_filename_out=None, log=self.log)
         #else:
-        model = read_tecplot(tecplot_filename, log=self.log, debug=False)
+        model = read_tecplot(tecplot_filename, log=self.parent.log, debug=False)
 
-        self.model_type = 'tecplot'
-        self.nnodes = model.nnodes
+        self.parent.model_type = 'tecplot'
+        self.parent.nnodes = model.nnodes
 
         #self._make_tecplot_geometry(model, self.nnodes, quads_only=True) # cart3d
         is_surface = self._make_tecplot_geometry(model, quads_only=False)
@@ -49,8 +49,8 @@ class TecplotIO(object):
 
 
         # loadTecplotResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.parent.scalarBar.VisibilityOn()
+        self.parent.scalarBar.Modified()
 
         loads = []
         assert loads is not None
@@ -64,7 +64,7 @@ class TecplotIO(object):
         ID = 1
 
         form, cases = self._fill_tecplot_case(cases, ID, model, is_surface)
-        self._finish_results_io2(form, cases)
+        self.parent._finish_results_io2(form, cases)
 
         #if 0:
             # http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/AppendFilter
@@ -79,13 +79,13 @@ class TecplotIO(object):
 
     def _make_tecplot_geometry(self, model, quads_only=False):
         nodes = model.xyz
-        nnodes = self.nnodes
-        grid = self.grid
+        nnodes = self.parent.nnodes
+        grid = self.parent.grid
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
+        self.parent.create_global_axes(dim_max)
 
         points = numpy_to_vtk_points(nodes)
 
@@ -105,7 +105,7 @@ class TecplotIO(object):
         if nshells:
             is_surface = True
             self._create_tecplot_shells(nquads, quads, ntris, tris)
-            self.nelements = nshells
+            self.parent.nelements = nshells
 
         elif nsolids:
             #if 0:
@@ -172,7 +172,7 @@ class TecplotIO(object):
         return is_surface
 
     def _create_tecplot_shells(self, is_quads, quads, is_tris, tris):
-        grid = self.grid
+        grid = self.parent.grid
         if is_quads:
             for face in quads:
                 elem = vtkQuad()
@@ -206,7 +206,7 @@ class TecplotIO(object):
         #result_names = ['rho', 'U', 'V', 'W', 'p']
         result_names = model.variables[3:]
         #nelements = elements.shape[0]
-        nelements = self.nelements
+        nelements = self.parent.nelements
         nnodes = model.nnodes
         #nnodes = nodes.shape[0]
 

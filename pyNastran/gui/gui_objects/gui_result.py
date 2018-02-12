@@ -308,13 +308,14 @@ class GuiResult(GuiResultCommon):
                 if len(inan_short):
                     # overly complicated way to allow us to use ~inan to invert the array
                     inan = np.in1d(np.arange(len(self.scalar)), inan_short)
+                    inan_remaining = self.scalar[~inan]
 
                     self.scalar = np.asarray(self.scalar, 'f')
                     self.data_type = self.scalar.dtype.str
                     self.data_format = '%.0f'
                     self.scalar[inan] = np.nan
-                    self.min_default = self.scalar[~inan].min()
-                    self.max_default = self.scalar[~inan].max()
+                    self.min_default = inan_remaining.min()
+                    self.max_default = inan_remaining.max()
         else:
             # handling VTK NaN oddinty
             # filtering the inf values and replacing them with NaN

@@ -1,3 +1,8 @@
+"""
+This is used mainly so the data contained in the dict isn't inadvertently mutated.
+
+"""
+
 from collections import Mapping
 from types import MappingProxyType
 
@@ -8,8 +13,8 @@ class ImmutableDict(Mapping):
     https://stackoverflow.com/questions/9997176/immutable-dictionary-only-use-as-a-key-for-another-dictionary/39673094#39673094
     """
     def __init__(self, somedict):
-        dictcopy = dict(somedict) # make a copy
-        self._dict = MappingProxyType(dictcopy) # lock it
+        dictcopy = dict(somedict)  # make a copy
+        self._dict = MappingProxyType(dictcopy)  # lock it
         self._hash = None
 
     def __getitem__(self, key):
@@ -27,7 +32,10 @@ class ImmutableDict(Mapping):
         return self._hash
 
     def __eq__(self, other):
-        return self._dict == other._dict
+        try:
+            return self._dict == other._dict
+        except AttributeError:
+            return False
 
     def __repr__(self):
         return str(self._dict)

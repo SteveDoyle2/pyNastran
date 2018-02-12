@@ -15,9 +15,9 @@ reading/writing/accessing of BDF data.  Such methods include:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
+from typing import List, Tuple, Any, Union, Dict
 
 from six import iteritems
-from typing import List, Tuple, Any, Union, Dict
 import numpy as np
 
 from pyNastran.utils import integer_types
@@ -65,7 +65,6 @@ class BDFMethods(BDFAttributes):
             'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
             'PCOMPS', 'PVISC', 'PBCOMP', 'PBEND',
         ]
-        #skip_elems = []
 
         pid_eids = self.get_element_ids_dict_with_pids(
             property_ids, msg=' which is required by get_area_breakdown')
@@ -131,20 +130,20 @@ class BDFMethods(BDFAttributes):
             volumes = []
             if prop.type == 'PSHELL':
                 # TODO: doesn't support PSHELL differential thicknesses
-                t = prop.t
+                thickness = prop.t
                 areas = []
                 for eid in eids:
                     elem = self.elements[eid]
                     areas.append(elem.Area())
-                volumesi = [area * t for area in areas]
+                volumesi = [area * thickness for area in areas]
                 volumes.extend(volumesi)
             elif prop.type in ['PCOMP', 'PCOMPG',]:
                 areas = []
                 for eid in eids:
                     elem = self.elements[eid]
                     areas.append(elem.Area())
-                t = prop.Thickness()
-                volumesi = [area * t for area in areas]
+                thickness = prop.Thickness()
+                volumesi = [area * thickness for area in areas]
                 volumes.extend(volumesi)
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 # what should I do here?
@@ -167,12 +166,12 @@ class BDFMethods(BDFAttributes):
                             skipped_eid_pid.add(key)
                             self.log.debug('skipping volume %s' % str(key))
             elif prop.type == 'PSHEAR':
-                t = prop.t
+                thickness = prop.t
                 areas = []
                 for eid in eids:
                     elem = self.elements[eid]
                     areas.append(elem.Area())
-                volumesi = [area * t for area in areas]
+                volumesi = [area * thickness for area in areas]
                 volumes.extend(volumesi)
             elif prop.type in no_volume:
                 pass
@@ -215,18 +214,24 @@ class BDFMethods(BDFAttributes):
             else:
                 mass_type_to_mass[elem.type] += elem.Mass()
 
+        properties_to_skip = [
+            'PLPLANE', 'PPLANE', 'PELAS',
+            'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
+            'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
+            'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
+            'PVISC', 'PBCOMP', 'PBEND']
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
             masses = []
             if prop.type == 'PSHELL':
                 # TODO: doesn't support PSHELL differential thicknesses
-                t = prop.t
+                thickness = prop.t
                 nsm = prop.nsm
                 rho = prop.Rho()
                 for eid in eids:
                     elem = self.elements[eid]
                     area = elem.Area()
-                    masses.append(area * (rho * t + nsm))
+                    masses.append(area * (rho * thickness + nsm))
             elif prop.type in ['PCOMP', 'PCOMPG']:
                 for eid in eids:
                     elem = self.elements[eid]
@@ -234,7 +239,11 @@ class BDFMethods(BDFAttributes):
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 # what should I do here?
                 nsm = prop.nsm
-                rho = prop.Rho()
+                try:
+                    rho = prop.Rho()
+                except AttributeError:
+                    print(prop)
+                    raise
                 for eid in eids:
                     elem = self.elements[eid]
                     area = prop.Area()
@@ -251,20 +260,16 @@ class BDFMethods(BDFAttributes):
                         if key not in skipped_eid_pid:
                             skipped_eid_pid.add(key)
                             self.log.debug('skipping mass %s' % str(key))
-            elif prop.type in ['PLPLANE', 'PPLANE', 'PELAS',
-                               'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
-                               'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
-                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
-                               'PVISC', 'PBCOMP', 'PBEND']:
+            elif prop.type in properties_to_skip:
                 pass
             elif prop.type == 'PSHEAR':
-                t = prop.t
+                thickness = prop.t
                 nsm = prop.nsm
                 rho = prop.Rho()
                 for eid in eids:
                     elem = self.elements[eid]
                     area = elem.Area()
-                    masses.append(area * (rho * t + nsm))
+                    masses.append(area * (rho * thickness + nsm))
             else:
                 raise NotImplementedError(prop)
             if masses:
@@ -349,7 +354,8 @@ class BDFMethods(BDFAttributes):
         elif isinstance(reference_point, integer_types):
             reference_point = self.nodes[reference_point].get_position()
 
-        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(self, element_ids, mass_ids)
+        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
+            self, element_ids, mass_ids)
         mass, cg, I = _mass_properties(
             self, elements, masses,
             reference_point=reference_point)
@@ -377,7 +383,8 @@ class BDFMethods(BDFAttributes):
             type : int
                 the node id
         sym_axis : str, optional
-            The axis to which the model is symmetric. If AERO cards are used, this can be left blank
+            The axis to which the model is symmetric.
+            If AERO cards are used, this can be left blank.
             allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
         scale : float, optional
             The WTMASS scaling value.
@@ -431,7 +438,8 @@ class BDFMethods(BDFAttributes):
         elif isinstance(reference_point, integer_types):
             reference_point = self.nodes[reference_point].get_position()
 
-        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(self, element_ids, mass_ids)
+        element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
+            self, element_ids, mass_ids)
         #nelements = len(elements) + len(masses)
 
         mass, cg, I = _mass_properties_no_xref(

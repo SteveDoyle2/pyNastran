@@ -59,13 +59,10 @@ class ShearElement(object):
             self.pid = self.pid[isort]
             self.nids = self.nids[isort, :]
 
-            #print(self.nid)
             self._eid = []
             self._pid = []
             self._nids = []
             self.is_current = True
-        #else:
-            #print('no GRIDs')
 
     def cross_reference(self, model):
         """does this do anything?"""

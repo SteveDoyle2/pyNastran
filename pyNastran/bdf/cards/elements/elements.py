@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=C0103
 """
 All ungrouped elements are defined in this file.  This includes:
 
@@ -516,7 +516,7 @@ class CRAC2D(CrackElement):
     def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
-        nids = self.node_ids
+        unused_nids = self.node_ids
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
@@ -594,7 +594,7 @@ class CRAC3D(CrackElement):
     def _verify(self, xref):
         eid = self.eid
         pid = self.Pid()
-        nids = self.node_ids
+        unused_nids = self.node_ids
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
 

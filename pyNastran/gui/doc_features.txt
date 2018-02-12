@@ -8,7 +8,9 @@ GUI formats
  - panair input/output
  - tetgen input
  - S/HABP input
- - OpenVSP adb input/output (remove this...)
+ - OpenVSP
+   - degen_geom input
+   - adb input/output (TODO: currently broken)
  - fast
  - AFLR2, AFLR3
    - bedge
@@ -31,7 +33,6 @@ GUI formats
 
 PyQt4/PyQt5/PySide unique
 =========================
-
  - logger
 
  - buttons/pulldowns for:
@@ -86,7 +87,12 @@ PyQt4/PyQt5/PySide unique
    - pretty window title that tells you your "format - infile - outfile"
      - TODO: outfile is incorrect listed if you load a new geometry
 
- - zoom/rotate/snap buttons
+ - zoom
+   - button
+   - TODO: come up with better method for zooming; it doesn't work right (does a double zoom)
+
+ - rotate/snap buttons
+
  - command line
    - loading of geometry/results from command line
    - python scripting
@@ -118,7 +124,8 @@ PyQt4/PyQt5/PySide unique
      - animations
    - powerful tool for quickly creating a command line script
    - syntax highlighting with QScintilla (PyQt4)
-   -  - font is courier new
+     - TODO: remove QScintilla because it's inconsistent???
+     - font is courier new
 
  - groups
    - create groups by Nastran properties (Nastran-specific)

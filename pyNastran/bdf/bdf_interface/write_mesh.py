@@ -519,7 +519,7 @@ class WriteMesh(BDFAttributes):
             msg = ['$CONSTRAINTS\n']  # type: List[str]
             for suport in self.suport:
                 msg.append(suport.write_card(size, is_double))
-            for suport_id, suport in sorted(iteritems(self.suport1)):
+            for unused_suport_id, suport in sorted(iteritems(self.suport1)):
                 msg.append(suport.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
@@ -648,8 +648,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(tic.write_card(size, is_double))
 
             for (unused_id, tfs) in sorted(iteritems(self.transfer_functions)):
-                for tf in tfs:
-                    msg.append(tf.write_card(size, is_double))
+                for transfer_function in tfs:
+                    msg.append(transfer_function.write_card(size, is_double))
             bdf_file.write(''.join(msg))
 
     def _write_loads(self, bdf_file, size=8, is_double=False):
@@ -673,7 +673,7 @@ class WriteMesh(BDFAttributes):
                         print('failed printing load...type=%s key=%r'
                               % (load.type, key))
                         raise
-            for key, tempd in sorted(iteritems(self.tempds)):
+            for unused_key, tempd in sorted(iteritems(self.tempds)):
                 msg.append(tempd.write_card(size, is_double))
             bdf_file.write(''.join(msg))
         self._write_dloads(bdf_file, size=size, is_double=is_double)
@@ -783,12 +783,12 @@ class WriteMesh(BDFAttributes):
         if self.points:
             msg = []
             msg.append('$POINTS\n')
-            for point_id, point in sorted(iteritems(self.points)):
+            for unused_point_id, point in sorted(iteritems(self.points)):
                 msg.append(point.write_card(size, is_double))
             bdf_file.write(''.join(msg))
         if self.axic:
             bdf_file.write(self.axic.write_card(size, is_double))
-            for nid, ringax_pointax in iteritems(self.ringaxs):
+            for unused_nid, ringax_pointax in iteritems(self.ringaxs):
                 bdf_file.write(ringax_pointax.write_card(size, is_double))
 
         self._write_grids(bdf_file, size=size, is_double=is_double)
@@ -904,7 +904,7 @@ class WriteMesh(BDFAttributes):
         """
         if self.params or self.dti:
             msg = ['$PARAMS\n']  # type: List[str]
-            for name, dti in sorted(iteritems(self.dti)):
+            for unused_name, dti in sorted(iteritems(self.dti)):
                 msg.append(dti.write_card(size=size, is_double=is_double))
 
             if self.is_long_ids:
@@ -1018,7 +1018,7 @@ class WriteMesh(BDFAttributes):
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.qsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
-            for name, usets in sorted(iteritems(self.usets)):  # dict
+            for unused_name, usets in sorted(iteritems(self.usets)):  # dict
                 for set_obj in usets:  # list
                     msg.append(set_obj.write_card(size, is_double))
             bdf_file.write(''.join(msg))
@@ -1036,9 +1036,9 @@ class WriteMesh(BDFAttributes):
                 msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.se_qsets:  # list
                 msg.append(set_obj.write_card(size, is_double))
-            for (set_id, set_obj) in sorted(iteritems(self.se_sets)):  # dict
+            for (unused_set_id, set_obj) in sorted(iteritems(self.se_sets)):  # dict
                 msg.append(set_obj.write_card(size, is_double))
-            for name, usets in sorted(iteritems(self.se_usets)):  # dict
+            for unused_name, usets in sorted(iteritems(self.se_usets)):  # dict
                 for set_obj in usets:  # list
                     msg.append(set_obj.write_card(size, is_double))
             for suport in self.se_suport:  # list
@@ -1096,4 +1096,3 @@ class WriteMesh(BDFAttributes):
             for (unused_mid, material) in sorted(iteritems(self.thermal_materials)):
                 msg.append(material.write_card(size, is_double))
             bdf_file.write(''.join(msg))
-

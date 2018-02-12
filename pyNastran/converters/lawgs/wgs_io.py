@@ -2,7 +2,6 @@
 Defines the GUI IO file for LaWGS.
 """
 from __future__ import print_function
-from six import iteritems
 import vtk
 from vtk import vtkQuad
 from numpy import array, arange, cross
@@ -11,8 +10,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class LaWGS_IO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_lawgs_wildcard_geometry_results_functions(self):
         data = ('LaWGS',
@@ -23,19 +22,19 @@ class LaWGS_IO(object):
     def load_lawgs_geometry(self, lawgs_filename, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
-        self.eid_maps[name] = {}
-        self.nid_maps[name] = {}
+        self.parent.eid_maps[name] = {}
+        self.parent.nid_maps[name] = {}
 
-        skip_reading = self._remove_old_geometry(lawgs_filename)
+        skip_reading = self.parent._remove_old_geometry(lawgs_filename)
         if skip_reading:
             return
 
-        model = read_lawgs(lawgs_filename, log=self.log, debug=False)
-        self.model_type = model.model_type
+        model = read_lawgs(lawgs_filename, log=self.parent.log, debug=False)
+        self.parent.model_type = model.model_type
 
         nodes, elements, regions = model.get_points_elements_regions()
-        self.nnodes = len(nodes)
-        self.nelements = len(elements)
+        self.parent.nnodes = len(nodes)
+        self.parent.nelements = len(elements)
 
         nodes = array(nodes, dtype='float32')
         elements = array(elements, dtype='int32')
@@ -43,11 +42,11 @@ class LaWGS_IO(object):
         #print("nNodes = ",self.nnodes)
         #print("nElements = ", self.nelements)
 
-        self.grid.Allocate(self.nelements, 1000)
+        self.parent.grid.Allocate(self.parent.nelements, 1000)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nnodes)
-        self.nid_map = {}
+        points.SetNumberOfPoints(self.parent.nnodes)
+        self.parent.nid_map = {}
 
         assert len(nodes) > 0, len(nodes)
         assert len(elements) > 0, len(elements)
@@ -56,7 +55,7 @@ class LaWGS_IO(object):
 
         elem = vtkQuad()
         etype = elem.GetCellType()
-        for eid, element in enumerate(elements):
+        for unused_eid, element in enumerate(elements):
             (p1, p2, p3, p4) = element
             elem = vtkQuad()
             pts = elem.GetPointIds()
@@ -64,24 +63,24 @@ class LaWGS_IO(object):
             pts.SetId(1, p2)
             pts.SetId(2, p3)
             pts.SetId(3, p4)
-            self.grid.InsertNextCell(etype, elem.GetPointIds())
+            self.parent.grid.InsertNextCell(etype, elem.GetPointIds())
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        self.parent.grid.SetPoints(points)
+        self.parent.grid.Modified()
+        if hasattr(self.parent.grid, 'Update'):
+            self.parent.grid.Update()
 
         # loadCart3dResults - regions/loads
         #self.scalarBar.VisibilityOn()
         #self.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['LaWGS', '']}
+        self.parent.isubcase_name_map = {1: ['LaWGS', '']}
         cases = {}
         ID = 1
 
         #print("nElements = %s" % nElements)
         form, cases = self._fill_lawgs_case(cases, ID, nodes, elements, regions)
-        self._finish_results_io2(form, cases)
+        self.parent._finish_results_io2(form, cases)
 
     def _fill_lawgs_case(self, cases, ID, nodes, elements, regions):
         eids = arange(1, len(elements) + 1, dtype='int32')

@@ -80,6 +80,8 @@ nosetests.xml
 *.err
 *.rej
 *.db
+*.asg
+*.debug.f06
 
 # VTK
 *.vtu

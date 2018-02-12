@@ -115,13 +115,13 @@ class Usm3d(object):
             mapbc[int(patch_id)] = [int(bc), int(family), int(surf), surf_ids]
         return mapbc
 
-    def read_usm3d(self, basename, dimension_flag, read_loads=True):
+    def read_usm3d(self, basename, unused_dimension_flag, read_loads=True):
         """
         Parameters
         ----------
         basename : str
             the root path to the *.cogsg, *.bc, *.mapbc, *.face, *.front files
-        dimension_flag : int; unused
+        unused_dimension_flag : int; unused
             ???
             2?/3
         read_loads : bool; default=True
@@ -158,8 +158,8 @@ class Usm3d(object):
         """
         cogsg_filename = basename + '.cogsg'
         bc_filename = basename + '.bc'
-        face_filename = basename + '.face'
-        front_filename = basename + '.front'
+        unused_face_filename = basename + '.face'
+        unused_front_filename = basename + '.front'
         mapbc_filename = basename + '.mapbc'
         flo_filename = None
 
@@ -188,7 +188,7 @@ class Usm3d(object):
 
         nodes, elements = self.read_cogsg(cogsg_filename)
         try:
-            header, tris, bcs = self.read_bc(bc_filename)
+            unused_header, tris, bcs = self.read_bc(bc_filename)
         except IOError:
             tris = None
             bcs = None
@@ -206,7 +206,7 @@ class Usm3d(object):
         if read_loads and os.path.exists(flo_filename):
             npoints = nodes.shape[0]
             try:
-                node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
+                unused_node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
             except:
                 self.log.error('Had trouble reading %r...' % flo_filename)
                 raise
@@ -249,7 +249,7 @@ class Usm3d(object):
             for i in range(ntris):
                 line = lines[i+2].strip()
                 #print('%r' % line)
-                (n, isurf, n1, n2, n3) = line.split()
+                (unused_n, isurf, n1, n2, n3) = line.split()
                 lbouf[i, :] = [isurf, n1, n2, n3]
             return header, lbouf
         else:
@@ -257,7 +257,7 @@ class Usm3d(object):
             bcs = zeros(ntris, dtype='int32')
 
             for i in range(ntris):
-                (n, isurf, n1, n2, n3) = lines[i+2].split()
+                (unused_n, isurf, n1, n2, n3) = lines[i+2].split()
                 tris[i] = [n1, n2, n3]
                 bcs[i] = isurf
             tris = tris - 1
@@ -353,32 +353,17 @@ class Usm3d(object):
             else:
                 if self.precision == 'double':
                     str_format = '>%sd' % nnodes
-                    node_array_format = 'float64'
+                    unused_node_array_format = 'float64'
                 elif self.precision == 'single':
                     str_format = '>%sd' % nnodes
-                    node_array_format = 'float32'
+                    unused_node_array_format = 'float32'
                 else:
                     raise RuntimeError('precision = %r' % self.precision)
 
-                if 0:
-                    data = cogsg_file.read(data_length)
-                    X = unpack(str_format, data)
-                    data = cogsg_file.read(data_length)
-                    Y = unpack(str_format, data)
-                    data = cogsg_file.read(data_length)
-                    Z = unpack(str_format, data)
-                    nodes = np.array([X, Y, Z])
-
-                    nodes = np.zeros((nnodes, 3), node_array_format)
-                    nodes[:, 0] = X
-                    nodes[:, 1] = Y
-                    nodes[:, 2] = Z
-                    del X, Y, Z
-                else:
-                    data = cogsg_file.read(3 * data_length)
-                    assert self.precision == 'single', self.precision
-                    nodes = np.frombuffer(data, '>4f').reshape(3, nnodes).T.copy()
-                    #nodes = np.frombuffer(data, '>4f').reshape(nnodes, 3).copy()
+                data = cogsg_file.read(3 * data_length)
+                assert self.precision == 'single', self.precision
+                nodes = np.frombuffer(data, '>4f').reshape(3, nnodes).T.copy()
+                #nodes = np.frombuffer(data, '>4f').reshape(nnodes, 3).copy()
 
 
             cogsg_file.read(nnodes * 3 * 8)  # 3 -> xyz, 8 -> double precision ???
@@ -632,7 +617,7 @@ class Usm3d(object):
                             assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
                             ni += 1
                         else:
-                            line1 = flo_file.readline()
+                            unused_line1 = flo_file.readline()
                 else:  # dynamic nvars=5
                     for i in range(1, nmax):
                         if i in node_ids_minus_1:
@@ -652,8 +637,8 @@ class Usm3d(object):
                             assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
                             ni += 1
                         else:
-                            line1 = flo_file.readline()
-                            line2 = flo_file.readline()
+                            unused_line1 = flo_file.readline()
+                            unused_line2 = flo_file.readline()
 
         assert len(rho) == ni
 
@@ -717,15 +702,15 @@ class Usm3d(object):
             loads['W'] = rhoW / rho
         return node_id, loads
 
-#def parse_float(svalue):
-    #"""floats a value"""
-    #try:
-        #val = float(sval)
-    #except:
-        #val = 0.0
-    #return val
+def parse_float(svalue):
+    """floats a value"""
+    try:
+        val = float(svalue)
+    except:
+        val = 0.0
+    return val
 
-def parse_floats(sline, n):
+def parse_floats(sline, unused_n):
     """floats a series of values"""
     vals = []
     for val in sline:
@@ -855,7 +840,7 @@ def main():  # pragma: no cover
 
         #model.read_usm3d(basename, 3)
 
-        node_ids, loads = model.read_flo(flo_filename, node_ids=[10])
+        unused_node_ids, unused_loads = model.read_flo(flo_filename, node_ids=[10])
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -1,3 +1,4 @@
+"""tests the NastranIO class"""
 import os
 import unittest
 from pyNastran.gui.testing_methods import FakeGUIMethods
@@ -49,6 +50,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
 
     def test_beam_modes_01(self):
+        """CBAR/CBEAM - PARAM,POST,-1"""
         bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
         op2_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes_m1.op2')
 
@@ -57,6 +59,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename)
 
     def test_beam_modes_02(self):
+        """CBAR/CBEAM - PARAM,POST,-2"""
         bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
         op2_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes_m2.op2')
 
@@ -105,6 +108,7 @@ class TestNastranGUI(unittest.TestCase):
         #test.load_nastran_results(op2_filename)
 
     def test_fsi(self):
+        """tests -1 coordinate systems (flag for a fluid contact face)"""
         bdf_filename = os.path.join(MODEL_PATH, 'fsi', 'fsi.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'fsi', 'fsi.op2')
 
@@ -152,6 +156,14 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        test.on_fringe(icase=43)
+        test.on_vector(icase=43)# force_xyz
+        test.on_disp(icase=45)# disp
+        test.on_clear_results()
+
+        test.on_fringe(icase=43)
+        test.on_vector(icase=43)# force_xyz
+        test.on_disp(icase=45)# disp
 
     def test_gui_elements_02(self):
         """tests a large number of elements and results in SOL 101"""
@@ -200,6 +212,160 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
+
+    def test_gui_elements_08(self):
+        """tests a large number of elements and results in SOL 109-linear time"""
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_elements.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_pload_01(self):
+        """tests a PLOAD4/CTETRA"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'ctetra.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctetra.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_pload_02(self):
+        """tests a PLOAD4/CHEXA"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'chexa.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'chexa.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_pload_03(self):
+        """tests a PLOAD4/CPENTA"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'cpenta.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cpenta.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_pload_04(self):
+        """tests a PLOAD4/CQUAD4"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'cquad4.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cquad4.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_pload_05(self):
+        """tests a PLOAD4/CTRIA3"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'ctria3.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctria3.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+
+    #def test_gui_pload_06(self):
+        #"""tests a PLOAD1/CBAR"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'pload1.bdf')
+        #op2_filename = os.path.join(MODEL_PATH, 'pload4', 'pload1.op2')
+        #test = NastranGUI()
+        #test.load_nastran_geometry(op2_filename)
+        #test.load_nastran_results(op2_filename)
+
+    #def test_gui_bar_rod(self):
+        #"""tests a PBARL/ROD"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_rod.bdf')
+        #test = NastranGUI()
+        #test.load_nastran_geometry(bdf_filename)
+
+    #def test_gui_bar_tube2(self):
+    def test_gui_bar_tube(self):
+        """tests a PBARL/TUBE"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_tube.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_chan(self):
+        """tests a PBARL/CHAN"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_chan.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_chan1(self):
+        """tests a PBARL/CHAN1"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_chan1.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+    #def test_gui_bar_chan2(self):
+
+    def test_gui_bar_bar(self):
+        """tests a PBARL/BAR"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_box(self):
+        """tests a PBARL/BOX"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_box.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_z(self):
+        """tests a PBARL/Z"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_z.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_t(self):
+        """tests a PBARL/T"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_t1(self):
+        """tests a PBARL/T1"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t1.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_t2(self):
+        """tests a PBARL/T2"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t2.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_hexa(self):
+        """tests a PBARL/HEXA"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_hexa.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_hat(self):
+        """tests a PBARL/HAT"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_hat.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_i(self):
+        """tests a PBARL/I"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_i.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_i1(self):
+        """tests a PBARL/I1"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_i1.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_h(self):
+        """tests a PBARL/H"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_h.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_beam_l(self):
+        """tests a PBEAML/L"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbeaml_l.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
 
     def test_gui_thermal_01(self):
         """tests thermal"""

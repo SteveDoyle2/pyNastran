@@ -258,12 +258,12 @@ class OP2(object):
                 raise RuntimeError('Could not decipher file.  First'
                                    '4-byte integer should be 4 or 8.')
             if sys.byteorder == 'little':
-                self._endian = '>'
+                self._endian = b'>'
             else:
-                self._endian = '<'
+                self._endian = b'<'
         else:
             self._swap = False
-            self._endian = '='
+            self._endian = b'='
 
         self._Str4 = struct.Struct(self._endian + b'i')
         if reclen == 4:

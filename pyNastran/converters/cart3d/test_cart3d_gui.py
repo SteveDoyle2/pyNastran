@@ -15,10 +15,10 @@ pkg_path = pyNastran.__path__[0]
 model_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
 
 
-class Cart3dGUI(Cart3dIO, FakeGUIMethods):
+class Cart3dGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        Cart3dIO.__init__(self)
+        self.model = Cart3dIO(self)
 
 
 class TestCart3dGUI(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
 
     def test_cart3d_geometry_02(self):
         """tests the binary three plugs model"""
@@ -39,7 +39,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
 
     def test_cart3d_geometry_03(self):
         """tests the business jet model"""
@@ -48,7 +48,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
 
     def test_cart3d_bcs(self):
         """tests the power cube model"""
@@ -57,7 +57,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
 
     def test_cart3d_results(self):
         log = get_logger(level='warning', encoding='utf-8')
@@ -96,7 +96,7 @@ class TestCart3dGUI(unittest.TestCase):
         test = Cart3dGUI()
         test.log = log
         #test.load_nastran_geometry(geometry_filename)
-        test.load_cart3d_geometry(geometry_filename)
+        test.model.load_cart3d_geometry(geometry_filename)
         os.remove(geometry_filename)
 
     def test_nastran_to_cart3d_01(self):
@@ -126,7 +126,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(cart3d_filename)
+        test.model.load_cart3d_geometry(cart3d_filename)
         os.remove(bdf_filename)
         os.remove(cart3d_filename)
         os.remove(cart3d_filename_out)
@@ -158,7 +158,7 @@ class TestCart3dGUI(unittest.TestCase):
 
         test = Cart3dGUI()
         test.log = log
-        test.load_cart3d_geometry(cart3d_filename)
+        test.model.load_cart3d_geometry(cart3d_filename)
         os.remove(bdf_filename)
         os.remove(cart3d_filename)
         os.remove(cart3d_filename_out)

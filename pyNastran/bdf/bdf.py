@@ -99,15 +99,14 @@ from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT3, MATT4, MATT5,
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP
-from pyNastran.bdf.cards.aero import (
-    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
-    AESURF, AESURFS, AERO, AEROS, CSSCHD,
+from pyNastran.bdf.cards.aero.aero import (
+    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3,
-    FLFACT, FLUTTER, GUST, MKAERO1,
-    MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
-    SPLINE5, TRIM, DIVERG)
+    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, DIVERG
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import (
     DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
     DRESP1, DRESP2, DRESP3,
@@ -804,117 +803,117 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """runs some checks on the input data beyond just type checking"""
         #for eid, elem in sorted(iteritems(model.elements)):
             #elem.validate()
-        for nid, node in sorted(iteritems(self.nodes)):
+        for unused_nid, node in sorted(iteritems(self.nodes)):
             node.validate()
-        for cid, coord in sorted(iteritems(self.coords)):
+        for unused_cid, coord in sorted(iteritems(self.coords)):
             coord.validate()
-        for eid, elem in sorted(iteritems(self.elements)):
+        for unused_eid, elem in sorted(iteritems(self.elements)):
             elem.validate()
-        for pid, prop in sorted(iteritems(self.properties)):
+        for unused_pid, prop in sorted(iteritems(self.properties)):
             prop.validate()
 
-        for eid, elem in sorted(iteritems(self.rigid_elements)):
+        for unused_eid, elem in sorted(iteritems(self.rigid_elements)):
             elem.validate()
-        for eid, plotel in sorted(iteritems(self.plotels)):
+        for unused_eid, plotel in sorted(iteritems(self.plotels)):
             plotel.validate()
-        for eid, mass in sorted(iteritems(self.masses)):
+        for unused_eid, mass in sorted(iteritems(self.masses)):
             mass.validate()
-        for pid, property_mass in sorted(iteritems(self.properties_mass)):
+        for unused_pid, property_mass in sorted(iteritems(self.properties_mass)):
             property_mass.validate()
 
         #------------------------------------------------
-        for mid, mat in sorted(iteritems(self.materials)):
+        for unused_mid, mat in sorted(iteritems(self.materials)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.thermal_materials)):
+        for unused_mid, mat in sorted(iteritems(self.thermal_materials)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATS1)):
+        for unused_mid, mat in sorted(iteritems(self.MATS1)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATS3)):
+        for unused_mid, mat in sorted(iteritems(self.MATS3)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATS8)):
+        for unused_mid, mat in sorted(iteritems(self.MATS8)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT1)):
+        for unused_mid, mat in sorted(iteritems(self.MATT1)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT2)):
+        for unused_mid, mat in sorted(iteritems(self.MATT2)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT3)):
+        for unused_mid, mat in sorted(iteritems(self.MATT3)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT4)):
+        for unused_mid, mat in sorted(iteritems(self.MATT4)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT5)):
+        for unused_mid, mat in sorted(iteritems(self.MATT5)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT8)):
+        for unused_mid, mat in sorted(iteritems(self.MATT8)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.MATT9)):
+        for unused_mid, mat in sorted(iteritems(self.MATT9)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.creep_materials)):
+        for unused_mid, mat in sorted(iteritems(self.creep_materials)):
             mat.validate()
-        for mid, mat in sorted(iteritems(self.hyperelastic_materials)):
+        for unused_mid, mat in sorted(iteritems(self.hyperelastic_materials)):
             mat.validate()
 
         #------------------------------------------------
-        for key, load_combinations in sorted(iteritems(self.load_combinations)):
+        for unused_key, load_combinations in sorted(iteritems(self.load_combinations)):
             for loadi in load_combinations:
                 loadi.validate()
-        for key, loads in sorted(iteritems(self.loads)):
+        for unused_key, loads in sorted(iteritems(self.loads)):
             for loadi in loads:
                 loadi.validate()
-        for key, tic in sorted(iteritems(self.tics)):
+        for unused_key, tic in sorted(iteritems(self.tics)):
             tic.validate()
-        for key, dloads in sorted(iteritems(self.dloads)):
+        for unused_key, dloads in sorted(iteritems(self.dloads)):
             for dload in dloads:
                 dload.validate()
-        for key, dload_entries in sorted(iteritems(self.dload_entries)):
+        for unused_key, dload_entries in sorted(iteritems(self.dload_entries)):
             for dload_entry in dload_entries:
                 dload_entry.validate()
 
         #------------------------------------------------
-        for key, nlpci in sorted(iteritems(self.nlpcis)):
+        for unused_key, nlpci in sorted(iteritems(self.nlpcis)):
             nlpci.validate()
-        for key, nlparm in sorted(iteritems(self.nlparms)):
+        for unused_key, nlparm in sorted(iteritems(self.nlparms)):
             nlparm.validate()
-        for key, rotor in sorted(iteritems(self.rotors)):
+        for unused_key, rotor in sorted(iteritems(self.rotors)):
             rotor.validate()
-        for key, tstep in sorted(iteritems(self.tsteps)):
+        for unused_key, tstep in sorted(iteritems(self.tsteps)):
             tstep.validate()
-        for key, tstepnl in sorted(iteritems(self.tstepnls)):
+        for unused_key, tstepnl in sorted(iteritems(self.tstepnls)):
             tstepnl.validate()
-        for key, transfer_functions in sorted(iteritems(self.transfer_functions)):
+        for unused_key, transfer_functions in sorted(iteritems(self.transfer_functions)):
             for transfer_function in transfer_functions:
                 transfer_function.validate()
-        for key, delay in sorted(iteritems(self.delays)):
+        for unused_key, delay in sorted(iteritems(self.delays)):
             delay.validate()
 
         #------------------------------------------------
         if self.aeros is not None:
             self.aeros.validate()
-        for caero_id, caero in sorted(iteritems(self.caeros)):
+        for unused_caero_id, caero in sorted(iteritems(self.caeros)):
             caero.validate()
-        for key, paero in sorted(iteritems(self.paeros)):
+        for unused_key, paero in sorted(iteritems(self.paeros)):
             paero.validate()
-        for spline_id, spline in sorted(iteritems(self.splines)):
+        for unused_spline_id, spline in sorted(iteritems(self.splines)):
             spline.validate()
 
-        for key, aecomp in sorted(iteritems(self.aecomps)):
+        for unused_key, aecomp in sorted(iteritems(self.aecomps)):
             aecomp.validate()
-        for key, aefact in sorted(iteritems(self.aefacts)):
+        for unused_key, aefact in sorted(iteritems(self.aefacts)):
             aefact.validate()
-        for key, aelinks in sorted(iteritems(self.aelinks)):
+        for unused_key, aelinks in sorted(iteritems(self.aelinks)):
             for aelink in aelinks:
                 aelink.validate()
-        for key, aeparam in sorted(iteritems(self.aeparams)):
+        for unused_key, aeparam in sorted(iteritems(self.aeparams)):
             aeparam.validate()
-        for key, aesurf in sorted(iteritems(self.aesurf)):
+        for unused_key, aesurf in sorted(iteritems(self.aesurf)):
             aesurf.validate()
-        for key, aesurfs in sorted(iteritems(self.aesurfs)):
+        for unused_key, aesurfs in sorted(iteritems(self.aesurfs)):
             aesurfs.validate()
-        for key, aestat in sorted(iteritems(self.aestats)):
+        for unused_key, aestat in sorted(iteritems(self.aestats)):
             aestat.validate()
-        for key, trim in sorted(iteritems(self.trims)):
+        for unused_key, trim in sorted(iteritems(self.trims)):
             trim.validate()
-        for key, diverg in sorted(iteritems(self.divergs)):
+        for unused_key, diverg in sorted(iteritems(self.divergs)):
             diverg.validate()
-        for key, csschd in sorted(iteritems(self.csschds)):
+        for unused_key, csschd in sorted(iteritems(self.csschds)):
             csschd.validate()
         for mkaero in self.mkaeros:
             mkaero.validate()
@@ -924,85 +923,85 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         #------------------------------------------------
         if self.aero is not None:
             self.aero.validate()
-        for key, flfact in sorted(iteritems(self.flfacts)):
+        for unused_key, flfact in sorted(iteritems(self.flfacts)):
             flfact.validate()
-        for key, flutter in sorted(iteritems(self.flutters)):
+        for unused_key, flutter in sorted(iteritems(self.flutters)):
             flutter.validate()
-        for key, gust in sorted(iteritems(self.gusts)):
+        for unused_key, gust in sorted(iteritems(self.gusts)):
             gust.validate()
 
         #------------------------------------------------
-        for key, bcs in sorted(iteritems(self.bcs)):
+        for unused_key, bcs in sorted(iteritems(self.bcs)):
             for bc in bcs:
                 bc.validate()
-        for key, phbdy in sorted(iteritems(self.phbdys)):
+        for unused_key, phbdy in sorted(iteritems(self.phbdys)):
             phbdy.validate()
-        for key, convection_property in sorted(iteritems(self.convection_properties)):
+        for unused_key, convection_property in sorted(iteritems(self.convection_properties)):
             convection_property.validate()
-        for key, tempd in sorted(iteritems(self.tempds)):
+        for unused_key, tempd in sorted(iteritems(self.tempds)):
             tempd.validate()
         #------------------------------------------------
-        for key, bcrpara in sorted(iteritems(self.bcrparas)):
+        for unused_key, bcrpara in sorted(iteritems(self.bcrparas)):
             bcrpara.validate()
-        for key, bctadd in sorted(iteritems(self.bctadds)):
+        for unused_key, bctadd in sorted(iteritems(self.bctadds)):
             bctadd.validate()
-        for key, bctpara in sorted(iteritems(self.bctparas)):
+        for unused_key, bctpara in sorted(iteritems(self.bctparas)):
             bctpara.validate()
-        for key, bctset in sorted(iteritems(self.bctsets)):
+        for unused_key, bctset in sorted(iteritems(self.bctsets)):
             bctset.validate()
-        for key, bsurf in sorted(iteritems(self.bsurf)):
+        for unused_key, bsurf in sorted(iteritems(self.bsurf)):
             bsurf.validate()
-        for key, bsurfs in sorted(iteritems(self.bsurfs)):
+        for unused_key, bsurfs in sorted(iteritems(self.bsurfs)):
             bsurfs.validate()
 
         #------------------------------------------------
-        for key, suport1 in sorted(iteritems(self.suport1)):
+        for unused_key, suport1 in sorted(iteritems(self.suport1)):
             suport1.validate()
         for suport in self.suport:
             suport.validate()
         for se_suport in self.se_suport:
             se_suport.validate()
 
-        for key, spcadds in sorted(iteritems(self.spcadds)):
+        for unused_key, spcadds in sorted(iteritems(self.spcadds)):
             for spcadd in spcadds:
                 spcadd.validate()
-        for key, spcs in sorted(iteritems(self.spcs)):
+        for unused_key, spcs in sorted(iteritems(self.spcs)):
             for spc in spcs:
                 spc.validate()
 
-        for key, mpcadds in sorted(iteritems(self.mpcadds)):
+        for unused_key, mpcadds in sorted(iteritems(self.mpcadds)):
             for mpcadd in mpcadds:
                 mpcadd.validate()
-        for key, mpcs in sorted(iteritems(self.mpcs)):
+        for unused_key, mpcs in sorted(iteritems(self.mpcs)):
             for mpc in mpcs:
                 mpc.validate()
 
         #------------------------------------------------
-        for key, darea in sorted(iteritems(self.dareas)):
+        for unused_key, darea in sorted(iteritems(self.dareas)):
             darea.validate()
-        for key, dphase in sorted(iteritems(self.dphases)):
+        for unused_key, dphase in sorted(iteritems(self.dphases)):
             dphase.validate()
 
-        for pid, pbusht in sorted(iteritems(self.pbusht)):
+        for unused_pid, pbusht in sorted(iteritems(self.pbusht)):
             pbusht.validate()
-        for pid, pdampt in sorted(iteritems(self.pdampt)):
+        for unused_pid, pdampt in sorted(iteritems(self.pdampt)):
             pdampt.validate()
-        for pid, pelast in sorted(iteritems(self.pelast)):
+        for unused_pid, pelast in sorted(iteritems(self.pelast)):
             pelast.validate()
 
-        for pid, freqs in sorted(iteritems(self.frequencies)):
+        for unused_pid, freqs in sorted(iteritems(self.frequencies)):
             for freq in freqs:
                 freq.validate()
         #------------------------------------------------
-        for key, dmi in sorted(iteritems(self.dmis)):
+        for unused_key, dmi in sorted(iteritems(self.dmis)):
             dmi.validate()
-        for key, dmig in sorted(iteritems(self.dmigs)):
+        for unused_key, dmig in sorted(iteritems(self.dmigs)):
             dmig.validate()
-        for key, dmij in sorted(iteritems(self.dmijs)):
+        for unused_key, dmij in sorted(iteritems(self.dmijs)):
             dmij.validate()
-        for key, dmiji in sorted(iteritems(self.dmijis)):
+        for unused_key, dmiji in sorted(iteritems(self.dmijis)):
             dmiji.validate()
-        for key, dmik in sorted(iteritems(self.dmiks)):
+        for unused_key, dmik in sorted(iteritems(self.dmiks)):
             dmik.validate()
         #------------------------------------------------
         #self.asets = []
@@ -1018,9 +1017,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         #self.se_usets = {}
         #self.se_sets = {}
 
-        for key, sets in sorted(iteritems(self.sets)):
+        for unused_key, sets in sorted(iteritems(self.sets)):
             sets.validate()
-        for key, uset in sorted(iteritems(self.usets)):
+        for unused_key, uset in sorted(iteritems(self.usets)):
             for useti in uset:
                 useti.validate()
 
@@ -1035,9 +1034,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         for qset in self.qsets:
             qset.validate()
 
-        for key, se_set in sorted(iteritems(self.se_sets)):
+        for unused_key, se_set in sorted(iteritems(self.se_sets)):
             se_set.validate()
-        for key, se_uset in sorted(iteritems(self.se_usets)):
+        for unused_key, se_uset in sorted(iteritems(self.se_usets)):
             se_uset.validate()
         for se_bset in self.se_bsets:
             se_bset.validate()
@@ -1046,51 +1045,51 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         for se_qset in self.se_qsets:
             se_qset.validate()
         #------------------------------------------------
-        for key, table in sorted(iteritems(self.tables)):
+        for unused_key, table in sorted(iteritems(self.tables)):
             table.validate()
-        for key, table in sorted(iteritems(self.tables_d)):
+        for unused_key, table in sorted(iteritems(self.tables_d)):
             table.validate()
-        for key, table in sorted(iteritems(self.tables_m)):
+        for unused_key, table in sorted(iteritems(self.tables_m)):
             table.validate()
-        for key, random_table in sorted(iteritems(self.random_tables)):
+        for unused_key, random_table in sorted(iteritems(self.random_tables)):
             random_table.validate()
-        for key, table_sdamping in sorted(iteritems(self.tables_sdamping)):
+        for unused_key, table_sdamping in sorted(iteritems(self.tables_sdamping)):
             table_sdamping.validate()
         #------------------------------------------------
-        for key, method in sorted(iteritems(self.methods)):
+        for unused_key, method in sorted(iteritems(self.methods)):
             method.validate()
-        for key, cmethod in sorted(iteritems(self.cMethods)):
+        for unused_key, cmethod in sorted(iteritems(self.cMethods)):
             cmethod.validate()
         #------------------------------------------------
-        for key, dconadd in sorted(iteritems(self.dconadds)):
+        for unused_key, dconadd in sorted(iteritems(self.dconadds)):
             dconadd.validate()
-        for key, dconstrs in sorted(iteritems(self.dconstrs)):
+        for unused_key, dconstrs in sorted(iteritems(self.dconstrs)):
             for dconstr in dconstrs:
                 dconstr.validate()
-        for key, desvar in sorted(iteritems(self.desvars)):
+        for unused_key, desvar in sorted(iteritems(self.desvars)):
             desvar.validate()
-        for key, ddval in sorted(iteritems(self.ddvals)):
+        for unused_key, ddval in sorted(iteritems(self.ddvals)):
             ddval.validate()
-        for key, dlink in sorted(iteritems(self.dlinks)):
+        for unused_key, dlink in sorted(iteritems(self.dlinks)):
             dlink.validate()
-        for key, dresp in sorted(iteritems(self.dresps)):
+        for unused_key, dresp in sorted(iteritems(self.dresps)):
             dresp.validate()
 
         if self.dtable is not None:
             self.dtable.validate()
         if self.doptprm is not None:
             self.doptprm.validate()
-        for key, dequation in sorted(iteritems(self.dequations)):
+        for unused_key, dequation in sorted(iteritems(self.dequations)):
             dequation.validate()
-        for key, dvprel in sorted(iteritems(self.dvprels)):
+        for unused_key, dvprel in sorted(iteritems(self.dvprels)):
             dvprel.validate()
-        for key, dvmrel in sorted(iteritems(self.dvmrels)):
+        for unused_key, dvmrel in sorted(iteritems(self.dvmrels)):
             dvmrel.validate()
-        for key, dvcrel in sorted(iteritems(self.dvcrels)):
+        for unused_key, dvcrel in sorted(iteritems(self.dvcrels)):
             dvcrel.validate()
-        for key, dscreen in sorted(iteritems(self.dscreen)):
+        for unused_key, dscreen in sorted(iteritems(self.dscreen)):
             dscreen.validate()
-        for dvid, dvgrids in iteritems(self.dvgrids):
+        for unused_dvid, dvgrids in iteritems(self.dvgrids):
             for dvgrid in dvgrids:
                 dvgrid.validate()
         #------------------------------------------------
@@ -1276,7 +1275,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         # type : (None) -> None
         """fills the DMIx cards with the column data that's been stored"""
         for name, card_comments in iteritems(self._dmig_temp):
-            card0, comment0 = card_comments[0]
+            card0, unused_comment0 = card_comments[0]
             card_name = card0[0]
             card_name = card_name.rstrip(' *').upper()
 
@@ -2290,7 +2289,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     del self._card_parser[card_name]
                 self._card_parser_prepare[card_name] = self.reject_card_obj2
 
-    def reject_card_obj2(self, card_name, card_obj):
+    def reject_card_obj2(self, unused_card_name, card_obj):
         """rejects a card object"""
         self.reject_cards.append(card_obj)
 
@@ -2332,7 +2331,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 raise RuntimeError('No executive/case control deck was defined.')
             self.log.info('    rejecting card_name = %s' % card_name)
 
-    def _prepare_ctetra(self, card, card_obj, comment=''):
+    def _prepare_ctetra(self, unused_card, card_obj, comment=''):
         """adds a CTETRA4/CTETRA10"""
         if len(card_obj) == 7:
             elem = CTETRA4.add_card(card_obj, comment=comment)
@@ -2341,7 +2340,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._add_element_object(elem)
         return elem
 
-    def _prepare_cpyram(self, card, card_obj, comment=''):
+    def _prepare_cpyram(self, unused_card, card_obj, comment=''):
         """adds a CPYRAM5/CPYRAM13"""
         if len(card_obj) == 8:
             elem = CPYRAM5.add_card(card_obj, comment=comment)
@@ -2350,7 +2349,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._add_element_object(elem)
         return elem
 
-    def _prepare_cpenta(self, card, card_obj, comment=''):
+    def _prepare_cpenta(self, unused_card, card_obj, comment=''):
         # type: (List[str], BDFCard, str) -> None
         """adds a CPENTA6/CPENTA15"""
         if len(card_obj) == 9:
@@ -2360,7 +2359,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._add_element_object(elem)
         return elem
 
-    def _prepare_chexa(self, card, card_obj, comment=''):
+    def _prepare_chexa(self, unused_card, card_obj, comment=''):
         # type: (BDFCard, List[str], str) -> None
         """adds a CHEXA8/CHEXA20"""
         if len(card_obj) == 11:
@@ -2370,45 +2369,45 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self._add_element_object(elem)
         return elem
 
-    def _prepare_bctset(self, card, card_obj, comment=''):
+    def _prepare_bctset(self, unused_card, card_obj, comment=''):
         # type: (BDFCard, List[str], str) -> None
         """adds a BCTSET"""
         card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
         self._add_bctset_object(card)
 
-    def _prepare_grdset(self, card, card_obj, comment=''):
+    def _prepare_grdset(self, unused_card, card_obj, comment=''):
         # type: (BDFCard, List[str], str) -> None
         """adds a GRDSET"""
         self.grdset = GRDSET.add_card(card_obj, comment=comment)
 
-    def _prepare_cdamp4(self, card, card_obj, comment=''):
+    def _prepare_cdamp4(self, unused_card, card_obj, comment=''):
         """adds a CDAMP4"""
         self._add_damper_object(CDAMP4.add_card(card_obj, comment=comment))
         if card_obj.field(5):
             self._add_damper_object(CDAMP4.add_card(card_obj, 1, comment=''))
         return card_obj
 
-    def _prepare_convm(self, card, card_obj, comment=''):
+    def _prepare_convm(self, unused_card, card_obj, comment=''):
         """adds a CONVM"""
         boundary_condition = CONVM.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
 
-    def _prepare_conv(self, card, card_obj, comment=''):
+    def _prepare_conv(self, unused_card, card_obj, comment=''):
         """adds a CONV"""
         boundary_condition = CONV.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
 
-    def _prepare_radm(self, card, card_obj, comment=''):
+    def _prepare_radm(self, card, unused_card_obj, comment=''):
         """adds a RADM"""
         boundary_condition = RADM.add_card(card, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
 
-    def _prepare_radbc(self, card, card_obj, comment=''):
+    def _prepare_radbc(self, unused_card, card_obj, comment=''):
         """adds a RADBC"""
         boundary_condition = RADBC.add_card(card_obj, comment=comment)
         self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
 
-    def _prepare_tempd(self, card, card_obj, comment=''):
+    def _prepare_tempd(self, unused_card, card_obj, comment=''):
         """adds a TEMPD"""
         self._add_tempd_object(TEMPD.add_card(card_obj, 0, comment=comment))
         if card_obj.field(3):
@@ -2418,14 +2417,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 if card_obj.field(7):
                     self._add_tempd_object(TEMPD.add_card(card_obj, 3, comment=''))
 
-    def _prepare_tempax(self, card, card_obj, comment=''):
+    def _prepare_tempax(self, unused_card, card_obj, comment=''):
         """adds a TEMPAX"""
         self._add_load_object(TEMPAX.add_card(card_obj, 0, comment=comment))
         if card_obj.field(5):
             self._add_load_object(TEMPAX.add_card(card_obj, 1, comment=''))
         return card_obj
 
-    def _prepare_dequatn(self, card, card_obj, comment=''):
+    def _prepare_dequatn(self, unused_card, card_obj, comment=''):
         """adds a DEQATN"""
         self._add_deqatn_object(DEQATN.add_card(card_obj, comment=comment))
 
@@ -2440,7 +2439,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.reject_cards.append(card_obj)
             self._write_reject_message(card_name, card_obj, comment=comment)
 
-    def _prepare_dmig(self, card, card_obj, comment=''):
+    def _prepare_dmig(self, unused_card, card_obj, comment=''):
         """adds a DMIG"""
         name = string(card_obj, 1, 'name')
         field2 = integer_or_string(card_obj, 2, 'flag')
@@ -2470,23 +2469,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             name = string(card_obj, 1, 'name')
             self._dmig_temp[name].append((card_obj, comment))
 
-    def _prepare_dmi(self, card, card_obj, comment=''):
+    def _prepare_dmi(self, unused_card, card_obj, comment=''):
         """adds a DMI"""
         self._prepare_dmix(DMI, self._add_dmi_object, card_obj, comment=comment)
 
-    def _prepare_dmij(self, card, card_obj, comment=''):
+    def _prepare_dmij(self, unused_card, card_obj, comment=''):
         """adds a DMIJ"""
         self._prepare_dmix(DMIJ, self._add_dmij_object, card_obj, comment=comment)
 
-    def _prepare_dmik(self, card, card_obj, comment=''):
+    def _prepare_dmik(self, unused_card, card_obj, comment=''):
         """adds a DMIK"""
         self._prepare_dmix(DMIK, self._add_dmik_object, card_obj, comment=comment)
 
-    def _prepare_dmiji(self, card, card_obj, comment=''):
+    def _prepare_dmiji(self, unused_card, card_obj, comment=''):
         """adds a DMIJI"""
         self._prepare_dmix(DMIJI, self._add_dmiji_object, card_obj, comment=comment)
 
-    def _prepare_cmass4(self, card, card_obj, comment=''):
+    def _prepare_cmass4(self, unused_card, card_obj, comment=''):
         """adds a CMASS4"""
         class_instance = CMASS4.add_card(card_obj, icard=0, comment=comment)
         self._add_mass_object(class_instance)
@@ -2494,7 +2493,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             class_instance = CMASS4.add_card(card_obj, icard=1, comment=comment)
             self._add_mass_object(class_instance)
 
-    def _prepare_pelas(self, card, card_obj, comment=''):
+    def _prepare_pelas(self, unused_card, card_obj, comment=''):
         """adds a PELAS"""
         class_instance = PELAS.add_card(card_obj, icard=0, comment=comment)
         self._add_property_object(class_instance)
@@ -2502,7 +2501,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             class_instance = PELAS.add_card(card_obj, icard=1, comment=comment)
             self._add_property_object(class_instance)
 
-    def _prepare_nsm(self, card, card_obj, comment=''):
+    def _prepare_nsm(self, unused_card, card_obj, comment=''):
         """adds an NSM"""
         nfields = len(card_obj)
         ncards = (nfields - 3) // 2
@@ -2513,7 +2512,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             class_instance = NSM.add_card(card_obj, icard, comment=comment)
             self._add_nsm_object(class_instance)
 
-    def _prepare_nsml(self, card, card_obj, comment=''):
+    def _prepare_nsml(self, unused_card, card_obj, comment=''):
         """adds an NSML"""
         nfields = len(card_obj)
         ncards = (nfields - 3) // 2
@@ -2524,7 +2523,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             class_instance = NSML.add_card(card_obj, icard, comment=comment)
             self._add_nsm_object(class_instance)
 
-    def _prepare_pvisc(self, card, card_obj, comment=''):
+    def _prepare_pvisc(self, unused_card, card_obj, comment=''):
         """adds a PVISC"""
         class_instance = PVISC.add_card(card_obj, icard=0, comment=comment)
         self._add_property_object(class_instance)
@@ -2532,7 +2531,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             class_instance = PVISC.add_card(card_obj, icard=1, comment=comment)
             self._add_property_object(class_instance)
 
-    def _prepare_pdamp(self, card, card_obj, comment=''):
+    def _prepare_pdamp(self, unused_card, card_obj, comment=''):
         """adds a PDAMP"""
         class_instance = PDAMP.add_card(card_obj, icard=0, comment=comment)
         self._add_property_object(class_instance)
@@ -2546,7 +2545,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             class_instance = PDAMP.add_card(card_obj, icard=3, comment=comment)
             self._add_property_object(class_instance)
 
-    def _prepare_pmass(self, card, card_obj, comment=''):
+    def _prepare_pmass(self, unused_card, card_obj, comment=''):
         """adds a PMASS"""
         card_instance = PMASS.add_card(card_obj, icard=0, comment=comment)
         self._add_property_mass_object(card_instance)
@@ -2555,7 +2554,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 card_instance = PMASS.add_card(card_obj, icard=i+1, comment=comment)
                 self._add_property_mass_object(card_instance)
 
-    def _prepare_cord1r(self, card, card_obj, comment=''):
+    def _prepare_cord1r(self, unused_card, card_obj, comment=''):
         """adds a CORD1R"""
         class_instance = CORD1R.add_card(card_obj, comment=comment)
         self._add_coord_object(class_instance)
@@ -2563,7 +2562,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             class_instance = CORD1R.add_card(card_obj, icard=1, comment=comment)
             self._add_coord_object(class_instance)
 
-    def _prepare_cord1c(self, card, card_obj, comment=''):
+    def _prepare_cord1c(self, unused_card, card_obj, comment=''):
         """adds a CORD1C"""
         class_instance = CORD1C.add_card(card_obj, comment=comment)
         self._add_coord_object(class_instance)
@@ -2571,7 +2570,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             class_instance = CORD1C.add_card(card_obj, icard=1, comment=comment)
             self._add_coord_object(class_instance)
 
-    def _prepare_cord1s(self, card, card_obj, comment=''):
+    def _prepare_cord1s(self, unused_card, card_obj, comment=''):
         """adds a CORD1S"""
         class_instance = CORD1S.add_card(card_obj, comment=comment)
         self._add_coord_object(class_instance)
@@ -2646,8 +2645,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                   created.
         """
         card_name = card_name.upper()
-        card_obj, card = self.create_card_object(card_lines, card_name,
-                                                 is_list=is_list, has_none=has_none)
+        card_obj, unused_card = self.create_card_object(
+            card_lines, card_name,
+            is_list=is_list, has_none=has_none)
         self._add_card_helper(card_obj, card_name, card_name, comment)
         return card_obj
 
@@ -3279,8 +3279,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 xyz_cp, nids, icp_transform,
                 cid=1)
 
-        F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\heli112em7.dat
         """
+        #F:\work\pyNastran\examples\femap_examples\Support\nast\tpl\heli112em7.dat
         if self.is_bdf_vectorized:
             # this is used when xref=False (only for vectorized=True)
             # we now require nids, where the other approach
@@ -3400,7 +3400,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         if do_checks and not np.allclose(xyz_cid0, xyz_cid0_correct, atol=atol):
             #np.array_equal(xyz_cid, xyz_cid_alt):
             out = self.get_displacement_index_xyz_cp_cd(fdtype=xyz_cid0.dtype, sort_ids=True)
-            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+            unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
             msg = ('xyz_cid0:\n%s\n'
                    'xyz_cid0_correct:\n%s\n'
                    'nid_cp_cd:\n%s\n'
@@ -3432,7 +3432,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _transform(self, cps_to_check0, icp_transform,
                    nids, xyz_cp, xyz_cid0, xyz_cid0_correct,
-                   in_place, do_checks):
+                   unused_in_place, do_checks):
         """helper method for ``transform_xyzcp_to_xyz_cid``"""
         cps_to_check = []
         cps_checked = []
@@ -3694,7 +3694,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             self.card_count[card_name] = count_num
 
 
-    def _parse_cards(self, cards, card_count):
+    def _parse_cards(self, cards, unused_card_count):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
 
@@ -3842,19 +3842,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             xref = self._xref
         #for key, card in sorted(iteritems(self.params)):
             #card._verify(xref)
-        for key, card in sorted(iteritems(self.nodes)):
+        for unused_key, card in sorted(iteritems(self.nodes)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.coords)):
+        for unused_key, card in sorted(iteritems(self.coords)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.elements)):
+        for unused_key, card in sorted(iteritems(self.elements)):
             try:
                 card._verify(xref)
             except Exception:
@@ -3871,45 +3871,45 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 print(str(cbarao))
                 raise
 
-        for key, card in sorted(iteritems(self.properties)):
+        for unused_key, card in sorted(iteritems(self.properties)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.materials)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-
-        for key, card in sorted(iteritems(self.dresps)):
+        for unused_key, card in sorted(iteritems(self.materials)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
 
-        for key, card in sorted(iteritems(self.dvcrels)):
+        for unused_key, card in sorted(iteritems(self.dresps)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.dvmrels)):
+
+        for unused_key, card in sorted(iteritems(self.dvcrels)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.dvprels)):
+        for unused_key, card in sorted(iteritems(self.dvmrels)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, cards in sorted(iteritems(self.dvgrids)):
+        for unused_key, card in sorted(iteritems(self.dvprels)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for unused_key, cards in sorted(iteritems(self.dvgrids)):
             for card in cards:
                 try:
                     card._verify(xref)
@@ -3917,7 +3917,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     print(str(card))
                     raise
 
-        for key, card in sorted(iteritems(self.gusts)):
+        for unused_key, card in sorted(iteritems(self.gusts)):
             try:
                 card._verify(self, xref)
             except:
@@ -3992,7 +3992,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         assert isinstance(cards_out, dict), cards_out
         return cards_out
 
-    def _parse_cards_hdf5(self, cards, card_count):
+    def _parse_cards_hdf5(self, cards, unused_card_count):
         """creates card objects and adds the parsed cards to the deck"""
         self.echo = False
         cards_out = {}
@@ -4082,8 +4082,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         created.
         """
         card_name = card_name.upper()
-        card_obj, card = self.create_card_object(card_lines, card_name,
-                                                 is_list=is_list, has_none=has_none)
+        card_obj, unused_card = self.create_card_object(
+            card_lines, card_name,
+            is_list=is_list, has_none=has_none)
         class_instance = self._add_card_helper_hdf5(card_obj, card_name, card_name, comment)
         return class_instance
 

@@ -1,18 +1,33 @@
+# pylint: disable=C0103
 """
 defines NastranGuiAttributes, which defines
 GUI specific geometry functions that don't involve PyQt/VTK
+this is no longer true...but should be
 """
-# pylint: disable=E1101
 from __future__ import print_function
 from collections import defaultdict
 import numpy as np
 from numpy.linalg import norm
-
+import vtk
 from pyNastran.utils import integer_types, iteritems
+from pyNastran.bdf.cards.elements.beam_connectivity import (
+    rod_faces, tube_faces, chan1_faces,
+    bar_faces, box_faces, i_faces, t_faces, t1_faces, t2_faces,
+    h_faces, i1_faces, chan_faces, l_faces, z_faces,
+    hexa_faces, hat_faces,
+)
+
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
-piover2 = np.pi / 2.
-piover3 = np.pi / 3.
+PIOVER2 = np.pi / 2.
+PIOVER3 = np.pi / 3.
+BLUE = (0., 0., 1.)
+BEAM_GEOM_TYPES = [
+    'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
+    'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
+    'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z',
+]
 
 
 class NastranGuiAttributes(object):
@@ -74,6 +89,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
     def _get_bar_yz_arrays(self, model, bar_beam_eids, scale, debug):
         lines_bar_y = []
         lines_bar_z = []
+        points_list = []
 
         bar_types = {
             # PBAR
@@ -126,6 +142,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
             #bar_types[bar_type] = [eids, lines_bar_y, lines_bar_z]
 
+        ugrid = vtk.vtkUnstructuredGrid()
+        node0 = 0
+
         nid_release_map = defaultdict(list)
 
         #debug = True
@@ -134,29 +153,20 @@ class NastranGeometryHelper(NastranGuiAttributes):
         for eid in bar_beam_eids:
             if eid not in self.eid_map:
                 self.log.error('eid=%s is not a valid bar/beam element...' % eid)
-                if debug:
+                if debug:  # pragma: no cover
                     print('eid=%s is not a valid bar/beam element...' % eid)
                 continue
-            ieid = self.eid_map[eid]
+            #unused_ieid = self.eid_map[eid]
             elem = model.elements[eid]
             pid_ref = elem.pid_ref
             if pid_ref is None:
                 pid_ref = model.Property(elem.pid)
             assert not isinstance(pid_ref, integer_types), elem
-            ptype = pid_ref.type
-            if ptype in ['PBAR', 'PBEAM']:
-                bar_type = 'bar'
-            elif ptype in ['PBEAM']:
-                bar_type = 'beam'
-            elif ptype in ['PBARL', 'PBEAML']:
-                bar_type = pid_ref.Type
-            else:
-                if debug:
-                    print('NotImplementedError(pid_ref)')
-                raise NotImplementedError(pid_ref)
-            #print('bar_type =', bar_type)
 
-            if debug:
+            ptype = pid_ref.type
+            bar_type = _get_bar_type(ptype, pid_ref)
+
+            if debug:  # pragma: no cover
                 print('%s' % elem)
                 print('  bar_type =', bar_type)
             found_bar_types.add(bar_type)
@@ -168,167 +178,32 @@ class NastranGeometryHelper(NastranGuiAttributes):
             n1 = node1.get_position()
             n2 = node2.get_position()
             centroid = (n1 + n2) / 2.
+
+            ## TODO: should wa/wb be considered in ihat?
             i = n2 - n1
             Li = norm(i)
             ihat = i / Li
 
             if elem.pa != 0:
-                #assert elem.pa in [], elem.pa
                 nid_release_map[nid1].append((eid, elem.pa))
             if elem.pb != 0:
                 nid_release_map[nid2].append((eid, elem.pb))
 
 
-            # OFFT flag
-            # ---------
-            # ABC or A-B-C (an example is G-G-G or B-G-G)
-            # while the slots are:
-            #  - A -> orientation; values=[G, B]
-            #  - B -> End A; values=[G, O]
-            #  - C -> End B; values=[G, O]
-            #
-            # and the values for A,B,C mean:
-            #  - B -> basic
-            #  - G -> global
-            #  - O -> orientation
-            #
-            # so for example G-G-G, that's global for all terms.
-            # BOG means basic orientation, orientation end A, global end B
-            #
-            # so now we're left with what does basic/global/orientation mean?
-            # - basic -> the glboal coordinate system defined by cid=0
-            # - global -> the local coordinate system defined by the
-            #             CD field on the GRID card, but referenced by
-            #             the CBAR/CBEAM
-            # - orientation -> ???
-            #
-            if elem.g0:
-                #debug = False
-                msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
-                g0_ref = model.Node(elem.g0, msg=msg)
-                if debug:
-                    print('  g0 = %s' % elem.g0)
-                    print('  g0_ref = %s' % g0_ref)
-                n0 = g0_ref.get_position()
-                v = n0 - n1
-            else:
-                #debug = False
-                ga = model.nodes[elem.Ga()]
-                cda = ga.Cd()
-                cda_ref = model.Coord(cda)
-                v = cda_ref.transform_node_to_global(elem.x)
-                if debug:
-                    print('  ga = %s' % elem.ga)
-                    if cda != 0:
-                        print('  cd = %s' % cda_ref)
-                    else:
-                        print('  cd = 0')
-
-                    print('  x = %s' % elem.x)
-                    print('  v = %s' % v)
-                #v = elem.x
-
-            offt_vector, offt_end_a, offt_end_b = elem.offt
-            if debug:
-                print('  offt vector,A,B=%r' % (elem.offt))
-            # if offt_end_a == 'G' or (offt_end_a == 'O' and offt_vector == 'G'):
-
-            cd1 = node1.Cd()
-            cd2 = node2.Cd()
-            cd1_ref = model.Coord(cd1)
-            cd2_ref = model.Coord(cd2)
-            # node1.cd_ref, node2.cd_ref
-
-            if offt_vector == 'G':
-                # end A
-                # global - cid != 0
-                if cd1 != 0:
-                    v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
-                    #if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
-                        #msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
-                            #node1.cd_ref.type, node1.nid)
-                        #self.log.error(msg)
-                        #continue
-                        #raise NotImplementedError(node1.cd)
-            elif offt_vector == 'B':
-                # basic - cid = 0
-                pass
-            else:
-                msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
-                self.log.error(msg)
+            v, wa, wb = self._rotate_v_wa_wb(model, elem, n1, n2, node1, node2, debug)
+            if wb is None:
+                # one or more of v, wa, wb are bad
                 continue
-                #raise NotImplementedError(msg)
-            #print('v = %s' % v)
 
-            # rotate wa
-            wa = elem.wa
-            if offt_end_a == 'G':
-                if cd1 != 0:
-                    #if node1.cd.type not in ['CORD2R', 'CORD1R']:
-                        #continue # TODO: support CD transform
-                    # TODO: fixme
-                    wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
-            elif offt_end_a == 'B':
-                pass
-            elif offt_end_a == 'O':
-                # TODO: fixme
-                wa = cd1_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
-            else:
-                msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
-                self.log.error(msg)
-                continue
-                #raise NotImplementedError(msg)
-
-            #print('wa = %s' % wa)
-            # rotate wb
-            wb = elem.wb
-            if offt_end_b == 'G':
-                if cd2 != 0:
-                    #if cd2_ref.type not in ['CORD2R', 'CORD1R']:
-                        #continue # TODO: MasterModelTaxi
-                    # TODO: fixme
-                    wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
-
-            elif offt_end_b == 'B':
-                pass
-            elif offt_end_b == 'O':
-                # TODO: fixme
-                wb = cd1_ref.transform_node_to_global(n2 - wb)
-            else:
-                msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
-                model.log.error(msg)
-                continue
-                #raise NotImplementedError(msg)
-
-            #print('wb =', wb)
             ## concept has a GOO
             #if not elem.offt in ['GGG', 'BGG']:
                 #msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (
                     #elem.offt, eid)
                 #self.log.error(msg)
                 #continue
+            yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li)
 
-            vhat = v / norm(v) # j
-            try:
-                z = np.cross(ihat, vhat) # k
-            except ValueError:
-                msg = 'Invalid vector length\n'
-                msg += 'n1  =%s\n' % str(n1)
-                msg += 'n2  =%s\n' % str(n2)
-                msg += 'nid1=%s\n' % str(nid1)
-                msg += 'nid2=%s\n' % str(nid2)
-                msg += 'i   =%s\n' % str(i)
-                msg += 'Li  =%s\n' % str(Li)
-                msg += 'ihat=%s\n' % str(ihat)
-                msg += 'v   =%s\n' % str(v)
-                msg += 'vhat=%s\n' % str(vhat)
-                msg += 'z=cross(ihat, vhat)'
-                print(msg)
-                raise ValueError(msg)
-
-            zhat = z / norm(z)
-            yhat = np.cross(zhat, ihat) # j
-            if debug:
+            if debug:  # pragma: no cover
                 print('  centroid = %s' % centroid)
                 print('  ihat = %s' % ihat)
                 print('  yhat = %s' % yhat)
@@ -337,14 +212,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
             #if eid == 5570:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
-
-            if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
-                print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
-                    eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
-            elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
-                print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
-                      ' v=%s i=%s n%s=%s n%s=%s' % (
-                          eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
 
             #print('adding bar %s' % bar_type)
             #print('   centroid=%s' % centroid)
@@ -355,11 +222,31 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 msg = 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
                 raise RuntimeError(msg)
 
+            if bar_type in BEAM_GEOM_TYPES:
+                xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
+                node0 = add_3d_bar_element(
+                    bar_type, ptype, pid_ref,
+                    n1+wa, n2+wb, xform,
+                    ugrid, node0, points_list)
+
+            if node0: # and '3d_bars' not in self.alt_grids:
+                self.gui.create_alternate_vtk_grid(
+                    '3d_bars', color=BLUE, opacity=0.2,
+                    representation='surface', is_visible=True,
+                    ugrid=ugrid,
+                )
+
             bar_types[bar_type][0].append(eid)
             bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
-            #if len(bar_types[bar_type][0]) > 5:
-                #break
+
+        if points_list:
+            if len(points_list) == 1:
+                points_array = points_list[0]
+            else:
+                points_array = np.vstack(points_list)
+            points = numpy_to_vtk_points(points_array)
+            ugrid.SetPoints(points)
 
         #print('bar_types =', bar_types)
         for bar_type in list(bar_types):
@@ -371,7 +258,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             #bar_types[bar_type][2] = np.array(bars[2], dtype='float32')  # lines_bar_z
 
         debug = False
-        if debug:
+        if debug:  # pragma: no cover
             #np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
             for bar_type, data in sorted(iteritems(bar_types)):
                 eids, lines_bar_y, lines_bar_z = data
@@ -389,94 +276,249 @@ class NastranGeometryHelper(NastranGuiAttributes):
                    #no_0_56, no_56_456, no_0_6, no_0_16)
         return bar_nids, bar_types, nid_release_map
 
-    def _get_suport_node_ids(self, model, suport_id):
-        """gets the nodes where SUPORTs and SUPORT1s are defined"""
-        node_ids = []
-        # list
-        #for suport in model.suport:
-            #node_ids += suport.IDs
+    def _rotate_v_wa_wb(self, model, elem, n1, n2, node1, node2, debug):
+        """
+        Rotates v, wa, wb
 
-        # dict
-        if suport_id in model.suport1:
-            suport1 = model.suport1[suport_id]
-            node_ids += suport1.nodes
+        OFFT flag
+        ---------
+        ABC or A-B-C (an example is G-G-G or B-G-G)
+        while the slots are:
+         - A -> orientation; values=[G, B]
+         - B -> End A; values=[G, O]
+         - C -> End B; values=[G, O]
+
+        and the values for A,B,C mean:
+         - B -> basic
+         - G -> global
+         - O -> orientation
+
+        so for example G-G-G, that's global for all terms.
+        BOG means basic orientation, orientation end A, global end B
+
+        so now we're left with what does basic/global/orientation mean?
+        - basic -> the glboal coordinate system defined by cid=0
+        - global -> the local coordinate system defined by the
+                    CD field on the GRID card, but referenced by
+                    the CBAR/CBEAM
+        - orientation -> ???
+        """
+        if elem.g0:
+            #debug = False
+            msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
+            g0_ref = model.Node(elem.g0, msg=msg)
+            if debug:  # pragma: no cover
+                print('  g0 = %s' % elem.g0)
+                print('  g0_ref = %s' % g0_ref)
+            n0 = g0_ref.get_position()
+            v = n0 - n1
         else:
-            for suport in model.suport:  # TODO: shouldn't this be included?
-                if suport_id in suport.nodes:
-                    node_ids.append(suport_id)
-        return np.unique(node_ids)
+            #debug = False
+            ga = model.nodes[elem.Ga()]
+            cda = ga.Cd()
+            cda_ref = model.Coord(cda)
+            v = cda_ref.transform_node_to_global(elem.x)
+            if debug:  # pragma: no cover
+                print('  ga = %s' % elem.ga)
+                if cda != 0:
+                    print('  cd = %s' % cda_ref)
+                else:
+                    print('  cd = 0')
+                print('  x = %s' % elem.x)
+                print('  v = %s' % v)
 
-    def _get_material_arrays(self, model, mids):
-        """gets e11, e22, e33"""
-        #e11 = np.zeros(mids.shape, dtype='float32')
-        #e22 = np.zeros(mids.shape, dtype='float32')
-        #e33 = np.zeros(mids.shape, dtype='float32')
-        #rho = np.zeros(mids.shape, dtype='float32')
-        #bulk = np.zeros(mids.shape, dtype='float32')
-        #speed_of_sound = np.zeros(mids.shape, dtype='float32')
 
-        e11 = np.full(mids.shape, np.nan, dtype='float32')
-        e22 = np.full(mids.shape, np.nan, dtype='float32')
-        e33 = np.full(mids.shape, np.nan, dtype='float32')
-        rho = np.full(mids.shape, np.nan, dtype='float32')
-        bulk = np.full(mids.shape, np.nan, dtype='float32')
-        speed_of_sound = np.full(mids.shape, np.nan, dtype='float32')
+        offt_vector, offt_end_a, offt_end_b = elem.offt
+        if debug:  # pragma: no cover
+            print('  offt vector,A,B=%r' % (elem.offt))
 
-        has_mat8 = False
-        #has_mat10 = False
-        has_mat11 = False
-        for umid in np.unique(mids):
-            if umid == 0:
-                continue
-            e11i = e22i = e33i = 0.
-            rhoi = 0.
-            bulki = 0.
-            speed_of_soundi = 0.
-            try:
-                mat = model.materials[umid]
-            except KeyError:
-                print("can't find mid=%s" % umid)
-                print('  mids = %s' % mids)
-                print('  mids = %s' % model.materials.keys())
-                continue
-                #raise
-            if mat.type == 'MAT1':
-                e11i = e22i = e33i = mat.e
-                rhoi = mat.rho
-            elif mat.type == 'MAT8':
-                e11i = e33i = mat.e11
-                e22i = mat.e22
-                has_mat8 = True
-                rhoi = mat.rho
-            #elif mat.type == 'MAT9':
-                # Defines the material properties for linear, temperature-independent,
-                #anisotropic materials for solid isoparametric elements (PSOLID)
-            elif mat.type in ['MAT11', 'MAT3D']:
-                e11i = mat.e1
-                e22i = mat.e2
-                e33i = mat.e3
-                has_mat11 = True
-                rhoi = mat.rho
-            elif mat.type == 'MAT10':
-                bulki = mat.bulk
-                rhoi = mat.rho
-                speed_of_soundi = mat.c
-                #has_mat10 = True
-                #self.log.info('skipping\n%s' % mat)
-                #continue
-            else:
-                print('skipping\n%s' % mat)
-                continue
-                #raise NotImplementedError(mat)
-            #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))
-            i = np.where(umid == mids)[0]
-            e11[i] = e11i
-            e22[i] = e22i
-            e33[i] = e33i
-            rho[i] = rhoi
-            bulk[i] = bulki
-            speed_of_sound[i] = speed_of_soundi
-        return has_mat8, has_mat11, e11, e22, e33
+        cd1 = node1.Cd()
+        cd2 = node2.Cd()
+        cd1_ref = model.Coord(cd1)
+        cd2_ref = model.Coord(cd2)
+
+        # rotate v
+        if offt_vector == 'G':
+            # end A
+            # global - cid != 0
+            if cd1 != 0:
+                v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
+        elif offt_vector == 'B':
+            # basic - cid = 0
+            pass
+        else:
+            msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
+            self.log.error(msg)
+            return None, None, None
+        #print('v = %s' % v)
+
+        # rotate wa
+        wa = elem.wa
+        if offt_end_a == 'G':
+            if cd1 != 0:
+                # TODO: fixme
+                wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
+        elif offt_end_a == 'B':
+            pass
+        elif offt_end_a == 'O':
+            # TODO: fixme
+            wa = cd1_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
+        else:
+            msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
+            self.log.error(msg)
+            return v, None, None
+
+        #print('wa = %s' % wa)
+        # rotate wb
+        wb = elem.wb
+        if offt_end_b == 'G':
+            if cd2 != 0:
+                # TODO: fixme;  MasterModelTaxi
+                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+
+        elif offt_end_b == 'B':
+            pass
+        elif offt_end_b == 'O':
+            # TODO: fixme
+            wb = cd1_ref.transform_node_to_global(n2 - wb)
+        else:
+            msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
+            model.log.error(msg)
+            return v, wa, None
+        return v, wa, wb
+
+def _get_bar_type(ptype, pid_ref):
+    """helper method for _get_bar_yz_arrays"""
+    if ptype in ['PBAR', 'PBEAM']:
+        bar_type = 'bar'
+    elif ptype in ['PBEAM']:
+        bar_type = 'beam'
+    elif ptype in ['PBARL', 'PBEAML']:
+        bar_type = pid_ref.Type
+    else:
+        raise NotImplementedError(pid_ref)
+    return bar_type
+
+def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
+    """helper method for _get_bar_yz_arrays"""
+    vhat = v / norm(v) # j
+    try:
+        z = np.cross(ihat, vhat) # k
+    except ValueError:
+        msg = 'Invalid vector length\n'
+        msg += 'n1  =%s\n' % str(n1)
+        msg += 'n2  =%s\n' % str(n2)
+        msg += 'nid1=%s\n' % str(nid1)
+        msg += 'nid2=%s\n' % str(nid2)
+        msg += 'i   =%s\n' % str(i)
+        msg += 'Li  =%s\n' % str(Li)
+        msg += 'ihat=%s\n' % str(ihat)
+        msg += 'v   =%s\n' % str(v)
+        msg += 'vhat=%s\n' % str(vhat)
+        msg += 'z=cross(ihat, vhat)'
+        print(msg)
+        raise ValueError(msg)
+
+    zhat = z / norm(z)
+    yhat = np.cross(zhat, ihat) # j
+
+    if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
+        print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+            eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+    elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
+        print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
+              ' v=%s i=%s n%s=%s n%s=%s' % (
+                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+    return yhat, zhat
+
+def get_suport_node_ids(model, suport_id):
+    """gets the nodes where SUPORTs and SUPORT1s are defined"""
+    node_ids = []
+    # list
+    #for suport in model.suport:
+        #node_ids += suport.IDs
+
+    # dict
+    if suport_id in model.suport1:
+        suport1 = model.suport1[suport_id]
+        node_ids += suport1.nodes
+    else:
+        for suport in model.suport:  # TODO: shouldn't this be included?
+            if suport_id in suport.nodes:
+                node_ids.append(suport_id)
+    return np.unique(node_ids)
+
+def get_material_arrays(model, mids):
+    """gets e11, e22, e33"""
+    #e11 = np.zeros(mids.shape, dtype='float32')
+    #e22 = np.zeros(mids.shape, dtype='float32')
+    #e33 = np.zeros(mids.shape, dtype='float32')
+    #rho = np.zeros(mids.shape, dtype='float32')
+    #bulk = np.zeros(mids.shape, dtype='float32')
+    #speed_of_sound = np.zeros(mids.shape, dtype='float32')
+
+    e11 = np.full(mids.shape, np.nan, dtype='float32')
+    e22 = np.full(mids.shape, np.nan, dtype='float32')
+    e33 = np.full(mids.shape, np.nan, dtype='float32')
+    rho = np.full(mids.shape, np.nan, dtype='float32')
+    bulk = np.full(mids.shape, np.nan, dtype='float32')
+    speed_of_sound = np.full(mids.shape, np.nan, dtype='float32')
+
+    has_mat8 = False
+    #has_mat10 = False
+    has_mat11 = False
+    for umid in np.unique(mids):
+        if umid == 0:
+            continue
+        e11i = e22i = e33i = 0.
+        rhoi = 0.
+        bulki = 0.
+        speed_of_soundi = 0.
+        try:
+            mat = model.materials[umid]
+        except KeyError:
+            print("can't find mid=%s" % umid)
+            print('  mids = %s' % mids)
+            print('  mids = %s' % model.materials.keys())
+            continue
+            #raise
+        if mat.type == 'MAT1':
+            e11i = e22i = e33i = mat.e
+            rhoi = mat.rho
+        elif mat.type == 'MAT8':
+            e11i = e33i = mat.e11
+            e22i = mat.e22
+            has_mat8 = True
+            rhoi = mat.rho
+        #elif mat.type == 'MAT9':
+            # Defines the material properties for linear, temperature-independent,
+            #anisotropic materials for solid isoparametric elements (PSOLID)
+        elif mat.type in ['MAT11', 'MAT3D']:
+            e11i = mat.e1
+            e22i = mat.e2
+            e33i = mat.e3
+            has_mat11 = True
+            rhoi = mat.rho
+        elif mat.type == 'MAT10':
+            bulki = mat.bulk
+            rhoi = mat.rho
+            speed_of_soundi = mat.c
+            #has_mat10 = True
+            #self.log.info('skipping\n%s' % mat)
+            #continue
+        else:
+            print('skipping\n%s' % mat)
+            continue
+            #raise NotImplementedError(mat)
+        #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))
+        i = np.where(umid == mids)[0]
+        e11[i] = e11i
+        e22[i] = e22i
+        e33[i] = e33i
+        rho[i] = rhoi
+        bulk[i] = bulki
+        speed_of_sound[i] = speed_of_soundi
+    return has_mat8, has_mat11, e11, e22, e33
 
 def tri_quality(p1, p2, p3):
     """gets the quality metrics for a tri"""
@@ -527,7 +569,7 @@ def tri_quality(p1, p2, p3):
     thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
     min_thetai = thetas.min()
     max_thetai = thetas.max()
-    dideal_thetai = max(max_thetai - piover3, piover3 - min_thetai)
+    dideal_thetai = max(max_thetai - PIOVER3, PIOVER3 - min_thetai)
 
     #theta_deg = np.degrees(np.arccos(max_cos_theta))
     #if theta_deg < 60.:
@@ -633,7 +675,7 @@ def quad_quality(p1, p2, p3, p4):
         [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
     min_thetai = theta.min()
     max_thetai = theta.max()
-    dideal_thetai = max(max_thetai - piover2, piover2 - min_thetai)
+    dideal_thetai = max(max_thetai - PIOVER2, PIOVER2 - min_thetai)
     #print('theta_max = ', theta_max)
 
     #if 0:
@@ -674,7 +716,7 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
             cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
             cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3])
-            ideal_theta.extend([piover3, piover3, piover3])
+            ideal_theta.extend([PIOVER3, PIOVER3, PIOVER3])
         elif len(face) == 4:
             try:
                 node_ids = (all_node_ids[face[0]], all_node_ids[face[1]],
@@ -699,7 +741,7 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             cos_theta3 = np.dot(v43, -v32) / (length43 * length32)
             cos_theta4 = np.dot(v14, -v43) / (length14 * length43)
             cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
-            ideal_theta.extend([piover2, piover2, piover2, piover2])
+            ideal_theta.extend([PIOVER2, PIOVER2, PIOVER2, PIOVER2])
         else:
             raise NotImplementedError(face)
     thetas = np.arccos(cos_thetas)
@@ -709,3 +751,117 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
     min_thetai = thetas.min()
     max_thetai = thetas.max()
     return min_thetai, max_thetai, ideal_thetai, min_edge_length
+
+def faces_to_element_facelist(faces, node0):
+    """creates a series of faces for the custom elements"""
+    face_idlist = vtk.vtkIdList()
+
+    nfaces = len(faces)
+    face_idlist.InsertNextId(nfaces) # Number faces that make up the cell.
+    for face in faces: # Loop over all the faces
+        #print(face)
+        face_idlist.InsertNextId(len(face)) # Number of points in face
+        #for i in face:
+            #face_idlist.InsertNextId(i + node0)
+        [face_idlist.InsertNextId(i + node0) for i in face] # Insert the pointIds for the face
+
+    return face_idlist
+
+def add_3d_bar_element(bar_type, ptype, pid_ref,
+                       n1, n2, xform,
+                       ugrid, node0, points_list):
+    """adds a 3d bar element to the unstructured grid"""
+    if ptype in ['PBARL']:
+        dim1 = dim2 = pid_ref.dim
+        #bar_type = pid_ref.Type
+    elif ptype in ['PBEAML']:
+        dim1 = pid_ref.dim[0, :]
+        dim2 = pid_ref.dim[-1, :]
+    else:
+        dim1 = dim2 = None
+
+    if bar_type == 'BAR':
+        pointsi = bar_faces(n1, n2, xform, dim1, dim2)
+        elem = vtk.vtkHexahedron()
+        point_ids = elem.GetPointIds()
+        point_ids.SetId(0, node0 + 0)
+        point_ids.SetId(1, node0 + 1)
+        point_ids.SetId(2, node0 + 2)
+        point_ids.SetId(3, node0 + 3)
+        point_ids.SetId(4, node0 + 4)
+        point_ids.SetId(5, node0 + 5)
+        point_ids.SetId(6, node0 + 6)
+        point_ids.SetId(7, node0 + 7)
+        ugrid.InsertNextCell(12, point_ids)
+        points_list.append(pointsi)
+        node0 += 8
+        return node0
+    elif bar_type == 'ROD':
+        faces, pointsi, dnode = rod_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += dnode
+    elif bar_type == 'TUBE':
+        faces, pointsi, dnode = tube_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += dnode
+    elif bar_type == 'BOX':
+        faces, pointsi = box_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
+    elif bar_type == 'L':
+        faces, pointsi = l_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 12
+    elif bar_type == 'CHAN':
+        faces, pointsi = chan_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
+    elif bar_type == 'CHAN1':
+        faces, pointsi = chan1_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
+    elif bar_type == 'T':
+        faces, pointsi = t_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
+    elif bar_type == 'T1':
+        faces, pointsi = t1_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
+    elif bar_type == 'T2':
+        faces, pointsi = t2_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
+    elif bar_type == 'I':
+        faces, pointsi = i_faces(n1, n2, xform, dim1, dim2)
+        assert pointsi.shape[0] == 24, pointsi.shape
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 24
+    elif bar_type == 'I1':
+        faces, pointsi = i1_faces(n1, n2, xform, dim1, dim2)
+        assert pointsi.shape[0] == 24, pointsi.shape
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 24
+    elif bar_type == 'H':
+        faces, pointsi = h_faces(n1, n2, xform, dim1, dim2)
+        assert pointsi.shape[0] == 24, pointsi.shape
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 24
+    elif bar_type == 'Z':
+        faces, pointsi = z_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
+    elif bar_type == 'HEXA':
+        faces, pointsi = hexa_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 12
+    elif bar_type == 'HAT':
+        faces, pointsi = hat_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 24
+    else:
+        print('skipping 3d bar_type = %r' % bar_type)
+        return node0
+    ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
+    points_list.append(pointsi)
+    return node0

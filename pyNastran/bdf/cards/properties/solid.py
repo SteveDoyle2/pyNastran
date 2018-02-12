@@ -171,6 +171,8 @@ class PCOMPS(SolidProperty):
                  cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
                  failure_theories=None, interlaminar_failure_theories=None,
                  souts=None, comment=''):
+        if comment:
+            self.comment = comment
         nplies = len(mids)
         if failure_theories is None:
             failure_theories = [None] * nplies
@@ -525,5 +527,3 @@ class PIHEX(PSOLID):
         fields = ['PIHEX', self.pid, self.Mid(), cordm, self.integ,
                   self.stress, self.isop, fctn]
         return fields
-
-

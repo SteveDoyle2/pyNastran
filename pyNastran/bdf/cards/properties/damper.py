@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+# pylint: disable=C0103
 """
 All damper properties are defined in this file.  This includes:
 

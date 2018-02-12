@@ -289,6 +289,8 @@ def write_gif(gif_filename, png_filenames, time=2.0,
     -------
     onesided : bool; default=True
         should the animation go up and back down
+        True : the video will use images [0...N]
+        False : the video will use images [0...N...0]
     nrepeat : int; default=0
         0 : loop infinitely
         1 : loop 1 time

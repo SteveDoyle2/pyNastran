@@ -16,7 +16,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, string, parse_components, interpret_value)
+    integer, integer_or_blank, double, string, string_or_blank,
+    parse_components, interpret_value)
 
 
 class DTI(BaseCard):
@@ -73,7 +74,7 @@ class DTI(BaseCard):
             force = string(card, 4, 'force')
             length = string(card, 5, 'length')
             time = string(card, 6, 'time')
-            temp_stress = string(card, 7, 'stress/temperature')
+            temp_stress = string_or_blank(card, 7, 'stress/temperature')
             fields = {
                 'mass' : mass,
                 'force' : force,

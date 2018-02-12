@@ -6,7 +6,7 @@ from six import iteritems, PY2
 import pyNastran
 from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
 from pyNastran.utils.dev import get_files_of_type
-pkg_path = pyNastran.__path__[0]
+PKG_PATH = pyNastran.__path__[0]
 
 def parse_skipped_cards(fname):
     with open(fname, 'r') as skip_file:
@@ -38,29 +38,55 @@ def parse_skipped_cards(fname):
 
 
 def get_all_files(folders_file, file_type):
+    """
+    Gets all the files in the folder and subfolders.  Ignores missing folders.
+
+    Parameters
+    ----------
+    folders_file : str
+        path to the file with a list of folders
+    file_type : str
+        a file extension
+
+    Returns
+    -------
+    filenames : List[str]
+        a series of filenames that were found
+    """
     with open(folders_file, 'r') as f:
         lines = f.readlines()
 
     files2 = []
     for line in lines:
-        move_dir = os.path.join('r"' + line.strip() + '"')
-        move_dir = line.strip()
-        if move_dir and move_dir[0] != '#':
+        line = line.strip()
+        if line == '' or line.startswith('#'):
+            continue
+        if '"' in line:
+            # "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast"
+            line = line.strip('"')
+            pthi = line.split('\\')
+            pth = os.path.join(*pthi)
+            move_dir = os.path.join(line)
+        else:
+            # C:\MSC.Software\MSC.Nastran\msc20051\nast\doc
+            move_dir = os.path.join(line)
+        #move_dir = line.strip()
+        if move_dir:
             if not os.path.exists(move_dir):
-                print("***move_dir doesn't exist = %s" % move_dir)
+                print("***move_dir doesn't exist = %r" % move_dir)
                 continue
             print("move_dir = %s" % move_dir)
             #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
-            files2 += get_files_of_type(move_dir, file_type, max_size=4.2)
+            files_in_dir = get_files_of_type(move_dir, file_type, max_size=4.2)
+            files2 += files_in_dir
     return files2
-
 
 def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
         save_cases=True, debug=False, write_f06=True, compare=True, short_stats=False):
     # works
     files = get_files_of_type('tests', '.op2')
 
-    folders_file = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
+    folders_file = os.path.join(PKG_PATH, 'bdf', 'test', 'tests', 'foldersRead.txt')
 
     isubcases = []
     write_op2 = False
@@ -78,11 +104,10 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     elif regenerate:
         files2 = get_all_files(folders_file, '.op2')
         files2 += files
-        files2.sort()
     else:
         print('failed_cases_filename = %r' % failed_cases_filename)
         files2 = get_failed_files(failed_cases_filename)
-    files = files2
+    files = list(set(files2)).sort()
 
     skip_files = []
     #skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant

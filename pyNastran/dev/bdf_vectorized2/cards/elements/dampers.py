@@ -3,19 +3,22 @@ from collections import defaultdict
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank)
+    integer, integer_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class Springs(object):
-    """intializes the Springs"""
+class Dampers(object):
+    """intializes the Dampers"""
     def __init__(self, model):
         self.model = model
-        self.celas1 = model.celas1
-        self.celas2 = model.celas2
-        self.celas3 = model.celas3
-        self.celas4 = model.celas4
+        self.cdamp1 = model.cdamp1
+        self.cdamp2 = model.cdamp2
+        self.cdamp3 = model.cdamp3
+        self.cdamp4 = model.cdamp4
+        self.cvisc = model.cvisc    # TODO: temp
+        self.plotel = model.plotel  # TODO: temp
+        #self.cdamp5 = model.cdamp5
         self._eids = set([])
 
     def add(self, eid):
@@ -26,44 +29,53 @@ class Springs(object):
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
-        if len(self.celas1):
-            self.celas1.write_card(size, is_double, bdf_file)
-        if len(self.celas2):
-            self.celas2.write_card(size, is_double, bdf_file)
-        if len(self.celas3):
-            self.celas3.write_card(size, is_double, bdf_file)
-        if len(self.celas4):
-            self.celas4.write_card(size, is_double, bdf_file)
+        if len(self.cdamp1):
+            self.cdamp1.write_card(size, is_double, bdf_file)
+        if len(self.cdamp2):
+            self.cdamp2.write_card(size, is_double, bdf_file)
+        if len(self.cdamp3):
+            self.cdamp3.write_card(size, is_double, bdf_file)
+        if len(self.cdamp4):
+            self.cdamp4.write_card(size, is_double, bdf_file)
+        #if len(self.cdamp5):
+            #self.cdamp5.write_card(size, is_double, bdf_file)
+        if len(self.cvisc):
+            self.cvisc.write_card(size, is_double, bdf_file)
+        if len(self.plotel):
+            self.plotel.write_card(size, is_double, bdf_file)
 
     def make_current(self):
-        self.celas1.make_current()
-        self.celas2.make_current()
-        self.celas3.make_current()
-        self.celas4.make_current()
+        self.cdamp1.make_current()
+        self.cdamp2.make_current()
+        self.cdamp3.make_current()
+        self.cdamp4.make_current()
+        #self.cdamp5.make_current()
+        self.cvisc.make_current()
+        self.plotel.make_current()
 
     def __len__(self):
-        return(len(self.celas1) + len(self.celas2) +
-               len(self.celas3) + len(self.celas4))
+        return(len(self.cdamp1) + len(self.cdamp2) +
+               len(self.cdamp3) + len(self.cdamp4) +
+               len(self.cvisc) + len(self.plotel)) #+ len(self.cdamp5)
 
     def repr_indent(self, indent='  '):
-        msg = '%s<Springs> : nelements=%s\n' % (indent, len(self))
-        msg += '%s  CELAS1:  %s\n' % (indent, len(self.celas1))
-        msg += '%s  CELAS2:  %s\n' % (indent, len(self.celas2))
-        msg += '%s  CELAS3:  %s\n' % (indent, len(self.celas3))
-        msg += '%s  CELAS4:  %s\n' % (indent, len(self.celas4))
+        msg = '%s<Dampers> : nelements=%s\n' % (indent, len(self))
+        msg += '%s  CDAMP1:  %s\n' % (indent, len(self.cdamp1))
+        msg += '%s  CDAMP2:  %s\n' % (indent, len(self.cdamp2))
+        msg += '%s  CDAMP3:  %s\n' % (indent, len(self.cdamp3))
+        msg += '%s  CDAMP4:  %s\n' % (indent, len(self.cdamp4))
+        #msg += '%s  CDAMP5:  %s\n' % (indent, len(self.cdamp5))
+        msg += '%s  CVISC:  %s\n' % (indent, len(self.cvisc))
+        msg += '%s  PLOTEL:  %s\n' % (indent, len(self.plotel))
         return msg
 
     def __repr__(self):
         return self.repr_indent(indent='')
 
 
-class SpringElement(object):
-    """base class for CELAS1, CELAS2, CELAS3, and CELAS4"""
+class DamperElement(object):
+    """base class for CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5"""
     card_name = ''
-
-    def __init__(self, model):
-        self.model = model
-        self.is_current = True
 
     def check_if_current(self, eid, eids):
         """we split this up to reason about it easier"""
@@ -96,49 +108,30 @@ class SpringElement(object):
         if hasattr(self, 'pid'):
             upid = np.unique(self.pid)
             if len(upid) == 1:
-                msg += '%s  upid = %s\n' % (indent, upid)
+                msg += '%s  upid = %s' % (indent, upid)
             else:
-                msg += '%s  pid = %s\n' % (indent, self.pid)
+                msg += '%s  pid = %s' % (indent, self.pid)
         else:
-            msg += '%s  k = %s\n' % (indent, self.k)
-
-        if hasattr(self, 's'):
-            msg += '%s  s = %s\n' % (indent, self.s)
-            msg += '%s  ge = %s\n' % (indent, self.ge)
-        return msg.rstrip()
-
-        #umcid = np.unique(self.mcid)
-        #if len(umcid) == 1 and umcid[0] == 0:
-            #msg += '  umcid = %s\n' % umcid
-        #else:
-            #msg += '  umcid = %s\n' % umcid
-            #msg += '  mcid = %s\n' % self.mcid
-
-        #utheta = np.unique(self.theta)
-        #if len(utheta) == 1 and umcid[0] == 0:
-            #msg += '  utheta = %s\n' % utheta
-        #else:
-            #msg += '  theta = %s\n' % self.theta
-        #msg += '  is_theta = %s\n' % self.is_theta
-        #msg += '  nid =\n%s' % self.nid
-        #return msg
+            msg += '%s  b = %s' % (indent, self.b)
+        return msg
 
     def __repr__(self):
         return self.repr_indent(indent='')
 
 
-class CELAS1(SpringElement):
+class CDAMP1(DamperElement):
     """
     +--------+-----+-----+----+----+----+----+
     |    1   |  2  |  3  |  4 |  5 |  6 |  7 |
     +========+=====+=====+====+====+====+====+
-    | CELAS1 | EID | PID | G1 | C1 | G2 | C2 |
+    | CDAMP1 | EID | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
     """
-    card_name = 'CELAS1'
+    card_name = 'CDAMP1'
 
     def __init__(self, model):
-        SpringElement.__init__(self, model)
+        self.model = model
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
@@ -152,7 +145,7 @@ class CELAS1(SpringElement):
 
     def add(self, eid, pid, nids, dofs, comment=''):
         """
-        Creates a CELAS1 card
+        Creates a CDAMP1 card
 
         Parameters
         ----------
@@ -178,7 +171,7 @@ class CELAS1(SpringElement):
 
     def add_card(self, card, comment=''):
         """
-        Adds a CELAS1 card from ``BDF.add_card(...)``
+        Adds a CDAMP1 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -194,7 +187,7 @@ class CELAS1(SpringElement):
         #: component number
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, 'len(CDAMP1 card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, pid, nids, [c1, c2], comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -202,7 +195,7 @@ class CELAS1(SpringElement):
         self.make_current()
         msg = ''
         for eid, pid, nodes, dofs in zip(self.eid, self.pid, self.nids, self.dofs):
-            list_fields = ['CELAS1', eid, pid, nodes[0], dofs[0], nodes[1], dofs[1]]
+            list_fields = ['CDAMP1', eid, pid, nodes[0], dofs[0], nodes[1], dofs[1]]
             msgi = print_card_8(list_fields)
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
@@ -223,8 +216,7 @@ class CELAS1(SpringElement):
                 self.nids = np.array(self._nids, dtype='int32')
                 self.dofs = np.array(self._dofs, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
-            #print(self.nids)
-            assert self.nids[:, 0].min() > 0, self.nids
+            #print(self.nid)
             self._eid = []
             self._pid = []
             self._nids = []
@@ -234,34 +226,31 @@ class CELAS1(SpringElement):
             #print('no GRIDs')
 
 
-class CELAS2(SpringElement):
+class CDAMP2(DamperElement):
     """
-    +--------+-----+-----+----+----+----+----+----+----+
-    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |  8 |  9 |
-    +========+=====+=====+====+====+====+====+====+====+
-    | CELAS2 | EID |  K  | G1 | C1 | G2 | C2 | GE | S  |
-    +--------+-----+-----+----+----+----+----+----+----+
+    +--------+-----+-----+----+----+----+----+
+    |    1   |  2  |  3  |  4 |  5 |  6 |  7 |
+    +========+=====+=====+====+====+====+====+
+    | CDAMP2 | EID |  B  | G1 | C1 | G2 | C2 |
+    +--------+-----+-----+----+----+----+----+
     """
-    card_name = 'CELAS2'
+    card_name = 'CDAMP2'
 
     def __init__(self, model):
-        SpringElement.__init__(self, model)
+        self.model = model
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
-        self.k = np.array([], dtype='float64')
+        self.b = np.array([], dtype='float64')
         self.nids = np.array([], dtype='int32')
         self.dofs = np.array([], dtype='int32')
-        self.ge = np.array([], dtype='float64')
-        self.s = np.array([], dtype='float64')
 
         self._eid = []
-        self._k = []
+        self._b = []
         self._nids = []
         self._dofs = []
-        self._ge = []
-        self._s = []
         self.comment = defaultdict(str)
 
-    def add(self, eid, k, nids, dofs, ge, s, comment=''):
+    def add(self, eid, b, nids, dofs, comment=''):
         """
         Creates a CELAS1 card
 
@@ -269,8 +258,8 @@ class CELAS2(SpringElement):
         ----------
         eid : int
             element id
-        k : float
-            spring stiffness
+        b : float
+            spring damping
         nids : List[int]
             GRID/SPOINT ids; n=2
         dofs : List[int]
@@ -285,11 +274,9 @@ class CELAS2(SpringElement):
         self.model.solids.add(eid)
         self.is_current = False
         self._eid.append(eid)
-        self._k.append(k)
+        self._b.append(b)
         self._nids.append(nids)
         self._dofs.append(dofs)
-        self._ge.append(ge)
-        self._s.append(s)
         if comment:
             self.comment[eid] = _format_comment(comment)
 
@@ -305,22 +292,20 @@ class CELAS2(SpringElement):
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        k = double(card, 2, 'k')
+        b = double(card, 2, 'b')
         nids = [integer_or_blank(card, 3, 'g1', 0),
                 integer_or_blank(card, 5, 'g2', 0)]
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        ge = double_or_blank(card, 7, 'ge', 0.)
-        s = double_or_blank(card, 8, 's', 0.)
-        assert len(card) <= 9, 'len(CELAS2 card) = %i\ncard=%s' % (len(card), card)
-        self.add(eid, k, nids, [c1, c2], ge, s, comment=comment)
+        assert len(card) <= 9, 'len(CDAMP2 card) = %i\ncard=%s' % (len(card), card)
+        self.add(eid, b, nids, [c1, c2], comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, k, nodes, dofs, ge, s in zip(self.eid, self.k, self.nids, self.dofs, self.ge, self.s):
-            list_fields = ['CELAS2', eid, k, nodes[0], dofs[0], nodes[1], dofs[1], ge, s]
+        for eid, b, nodes, dofs in zip(self.eid, self.b, self.nids, self.dofs):
+            list_fields = ['CDAMP2', eid, b, nodes[0], dofs[0], nodes[1], dofs[1]]
             msgi = print_card_8(list_fields)
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
@@ -331,45 +316,39 @@ class CELAS2(SpringElement):
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
                 self.eid = np.hstack([self.eid, self._eid])
-                self.k = np.vstack([self.k, self._k])
+                self.b = np.vstack([self.b, self._b])
                 self.nids = np.hstack([self.nids, self._nids])
                 self.dofs = np.hstack([self.dofs, self._dofs])
-                self.ge = np.hstack([self.ge, self._ge])
-                self.s = np.hstack([self.s, self._s])
                 # don't need to handle comments
             else:
                 self.eid = np.array(self._eid, dtype='int32')
-                self.k = np.array(self._k, dtype='float64')
+                self.b = np.array(self._b, dtype='float64')
                 self.nids = np.array(self._nids, dtype='int32')
                 self.dofs = np.array(self._dofs, dtype='int32')
-                self.ge = np.array(self._ge, dtype='float64')
-                self.s = np.array(self._s, dtype='float64')
             assert len(self.eid) == len(np.unique(self.eid))
-            assert self.nids[:, 0].min() > 0, self.nids
             #print(self.nid)
             self._eid = []
-            self._k = []
+            self._b = []
             self._nids = []
             self._dofs = []
-            self._ge = []
-            self._s = []
             self.is_current = True
         #else:
             #print('no GRIDs')
 
 
-class CELAS3(SpringElement):
+class CDAMP3(DamperElement):
     """
     +--------+-----+-----+----+----+
     |    1   |  2  |  3  |  4 |  5 |
     +========+=====+=====+====+====+
-    | CELAS3 | EID | PID | S1 | S2 |
+    | CDAMP3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
     """
-    card_name = 'CELAS3'
+    card_name = 'CDAMP3'
 
     def __init__(self, model):
-        SpringElement.__init__(self, model)
+        self.model = model
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
         self.pid = np.array([], dtype='int32')
         self.nids = np.array([], dtype='int32')
@@ -418,7 +397,7 @@ class CELAS3(SpringElement):
 
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, 'len(CDAMP3 card) = %i\ncard=%s' % (len(card), card)
         self.add(eid, pid, [s1, s2], comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -426,7 +405,7 @@ class CELAS3(SpringElement):
         self.make_current()
         msg = ''
         for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
-            list_fields = ['CELAS3', eid, pid, nodes[0], nodes[1]]
+            list_fields = ['CDAMP3', eid, pid, nodes[0], nodes[1]]
             msgi = print_card_8(list_fields)
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
@@ -445,7 +424,6 @@ class CELAS3(SpringElement):
                 self.pid = np.array(self._pid, dtype='int32')
                 self.nids = np.array(self._nids, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
-            assert self.nids[:, 0].min() > 0, self.nids
             #print(self.nid)
             self._eid = []
             self._pid = []
@@ -454,38 +432,45 @@ class CELAS3(SpringElement):
         #else:
             #print('no GRIDs')
 
+class CDAMP5(DamperElement):  # TODO: temp
+    def __init__(self, model):
+        self.model = model
+        self.is_current = True
+    def __len__(self):
+        return 0
 
-class CELAS4(SpringElement):
+class CDAMP4(DamperElement):
     """
     +--------+-----+-----+----+----+
     |    1   |  2  |  3  |  4 |  5 |
     +========+=====+=====+====+====+
-    | CELAS4 | EID |  K  | S1 | S2 |
+    | CDAMP4 | EID |  B  | S1 | S2 |
     +--------+-----+-----+----+----+
     """
-    card_name = 'CELAS4'
+    card_name = 'CDAMP4'
 
     def __init__(self, model):
-        SpringElement.__init__(self, model)
+        self.model = model
+        self.is_current = True
         self.eid = np.array([], dtype='int32')
-        self.k = np.array([], dtype='float64')
+        self.b = np.array([], dtype='float64')
         self.nids = np.array([], dtype='int32')
 
         self._eid = []
-        self._k = []
+        self._b = []
         self._nids = []
         self.comment = defaultdict(str)
 
-    def add(self, eid, k, nids, comment=''):
+    def add(self, eid, b, nids, comment=''):
         """
-        Creates a CELAS4 card
+        Creates a CDAMP4 card
 
         Parameters
         ----------
         eid : int
             element id
-        k : float
-            spring stiffness
+        b : float
+            spring damping
         nids : List[int]
             SPOINT ids; n=2
         comment : str; default=''
@@ -494,15 +479,15 @@ class CELAS4(SpringElement):
         self.model.springs.add(eid)
         self.is_current = False
         self._eid.append(eid)
-        assert isinstance(k, float), k
-        self._k.append(k)
+        assert isinstance(b, float), b
+        self._b.append(b)
         self._nids.append(nids)
         if comment:
             self.comment[eid] = _format_comment(comment)
 
     def add_card(self, card, comment=''):
         """
-        Adds a CELAS4 card from ``BDF.add_card(...)``
+        Adds a CDAMP4 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -512,18 +497,18 @@ class CELAS4(SpringElement):
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        k = double(card, 2, 'k')
+        b = double(card, 2, 'k')
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS4 card) = %i\ncard=%s' % (len(card), card)
-        self.add(eid, k, [s1, s2], comment=comment)
+        assert len(card) <= 5, 'len(CDAMP4 card) = %i\ncard=%s' % (len(card), card)
+        self.add(eid, b, [s1, s2], comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
         assert bdf_file is not None
         self.make_current()
         msg = ''
-        for eid, k, nodes in zip(self.eid, self.k, self.nids):
-            list_fields = ['CELAS4', eid, k, nodes[0], nodes[1]]
+        for eid, b, nodes in zip(self.eid, self.b, self.nids):
+            list_fields = ['CDAMP4', eid, b, nodes[0], nodes[1]]
             msgi = print_card_8(list_fields)
             msg += self.comment[eid] + msgi.rstrip() + '\n'
         bdf_file.write(msg)
@@ -534,19 +519,204 @@ class CELAS4(SpringElement):
         if not self.is_current:
             if len(self.eid) > 0: # there are already elements in self.eid
                 self.eid = np.hstack([self.eid, self._eid])
-                self.k = np.vstack([self.k, self._k])
+                self.b = np.vstack([self.b, self._b])
                 self.nids = np.hstack([self.nids, self._nids])
                 # don't need to handle comments
             else:
                 self.eid = np.array(self._eid, dtype='int32')
-                self.k = np.array(self._k, dtype='float64')
+                self.b = np.array(self._b, dtype='float64')
                 self.nids = np.array(self._nids, dtype='int32')
             assert len(self.eid) == len(np.unique(self.eid))
-            assert self.nids[:, 0].min() > 0, self.nids
             #print(self.nid)
             self._eid = []
-            self._k = []
+            self._b = []
             self._nids = []
             self.is_current = True
         #else:
             #print('no GRIDs')
+
+
+class CVISCv(DamperElement):
+    """
+    Viscous Damper Connection
+    Defines a viscous damper element.
+
+    +-------+-----+-----+----+----+
+    |   1   |  2  |  3  | 4  | 5  |
+    +=======+=====+=====+====+====+
+    | CVISC | EID | PID | G1 | G2 |
+    +-------+-----+-----+----+----+
+    """
+    card_name = 'CVISC'
+
+    def __init__(self, model):
+        self.model = model
+        self.is_current = True
+        self.eid = np.array([], dtype='int32')
+        self.pid = np.array([], dtype='int32')
+        self.nids = np.array([], dtype='int32')
+
+        self._eid = []
+        self._pid = []
+        self._nids = []
+        self.comment = defaultdict(str)
+
+    def add(self, eid, pid, nids, comment=''):
+        """
+        Creates a CVISC card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PVISC)
+        nids : List[int, int]
+            GRID ids
+        comment : str; default=''
+            a comment for the card
+        """
+        self.model.bushes.add(eid)
+        self.is_current = False
+        self._eid.append(eid)
+        self._pid.append(pid)
+        self._nids.append(nids)
+        if comment:
+            self.comment[eid] = _format_comment(comment)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a CVISC card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        nids = [integer_or_blank(card, 3, 'n1', 0),
+                integer_or_blank(card, 4, 'n2', 0)]
+        assert len(card) <= 5, 'len(CVISC card) = %i\ncard=%s' % (len(card), card)
+        self.add(eid, pid, nids, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for eid, pid, nodes in zip(self.eid, self.pid, self.nids):
+            list_fields = ['CVISC', eid, pid, nodes[0], nodes[1]]
+            msgi = print_card_8(list_fields)
+            msg += self.comment[eid] + msgi.rstrip() + '\n'
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.eid) > 0: # there are already elements in self.eid
+                self.eid = np.hstack([self.eid, self._eid])
+                self.pid = np.vstack([self.pid, self._pid])
+                self.nids = np.hstack([self.nids, self._nids])
+                # don't need to handle comments
+            else:
+                self.eid = np.array(self._eid, dtype='int32')
+                self.pid = np.array(self._pid, dtype='int32')
+                self.nids = np.array(self._nids, dtype='int32')
+            assert len(self.eid) == len(np.unique(self.eid))
+            self._eid = []
+            self._pid = []
+            self._nids = []
+            self.is_current = True
+
+class PLOTELv(DamperElement):
+    """
+    Defines a 1D dummy element used for plotting.
+
+    This element is not used in the model during any of the solution
+    phases of a problem. It is used to simplify plotting of
+    structures with large numbers of colinear grid points, where the
+    plotting of each grid point along with the elements connecting
+    them would result in a confusing plot.
+
+    +--------+-----+-----+-----+
+    |   1    |  2  |  3  |  4  |
+    +========+=====+=====+=====+
+    | PLOTEL | EID | G1  | G2  |
+    +--------+-----+-----+-----+
+    """
+    card_name = 'PLOTEL'
+
+    def __init__(self, model):
+        self.model = model
+        self.is_current = True
+        self.eid = np.array([], dtype='int32')
+        self.nids = np.array([], dtype='int32')
+
+        self._eid = []
+        self._nids = []
+        self.comment = defaultdict(str)
+
+    def add(self, eid, nids, comment=''):
+        """
+        Adds a PLOTEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        self.model.bushes.add(eid)
+        self.is_current = False
+        self._eid.append(eid)
+        self._nids.append(nids)
+        if comment:
+            self.comment[eid] = _format_comment(comment)
+
+    def add_card(self, card, comment=''):
+        """
+        Adds a PLOTEL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = integer(card, 1, 'eid')
+        nodes = [
+            integer(card, 2, 'g1'),
+            integer(card, 3, 'g2'),
+        ]
+        assert len(card) <= 4, 'len(PLOTEL card) = %i\ncard=%s' % (len(card), card)
+        self.add(eid, nodes, comment=comment)
+
+    def write_card(self, size=8, is_double=False, bdf_file=None):
+        assert bdf_file is not None
+        self.make_current()
+        msg = ''
+        for eid, nodes in zip(self.eid, self.nids):
+            msgi = 'PLOTEL  %8i%8i%8i\n' % (eid, nodes[0], nodes[1])
+            msg += self.comment[eid] + msgi
+        bdf_file.write(msg)
+        return msg
+
+    def make_current(self):
+        """creates an array of the elements"""
+        if not self.is_current:
+            if len(self.eid) > 0: # there are already elements in self.eid
+                self.eid = np.hstack([self.eid, self._eid])
+                self.nids = np.hstack([self.nids, self._nids])
+                # don't need to handle comments
+            else:
+                self.eid = np.array(self._eid, dtype='int32')
+                self.nids = np.array(self._nids, dtype='int32')
+            assert len(self.eid) == len(np.unique(self.eid))
+            self._eid = []
+            self._nids = []
+            self.is_current = True

@@ -1,38 +1,74 @@
 ---DONE---
 
-----------------------------------------------------
----Half Finished---
+General GUI Behavior
+====================
+ - Python 3 doesn't save/reload the GUI state
+ - Press OK/Cancel/Close to close window; don't use Escape
 
+----------------------------------------------------
+Half Finished
+=============
 - missing buttons/pulldowns for:
  - background image
 
-#-------------------------
-#BUGS
- - Press OK/Cancel/Close to close window; don't use Escape
 
-VTK
-=======
+#-------------------------
+General GUI Behavior
+====================
+- legend cancel should do nothing
+
+- right click on sidebar:
+  - merge fringe/normals
+  - figure out new legend menu
+    - true scale
+    - vector scale
+  - redo animation menu
+    - animate scale/phase:
+      - fringe is constant (as is now)
+      - icase goes away
+      - replace with active fringe, displacement, and vector
+    - animate time:
+      - start/end time (int/float depending; slider?)
+        - integer that turns into the float value
+        - float value that finds closest integer value
+      - frame skip (int; slider?)
+      - fringe: if it's a time result; adjust the icase
+      - disp:   if it's a time result; adjust the icase
+      - vector: if it's a time result; adjust the icase
+      
+  - bold fringe, color displacement (what color?), italics vector
+  - hide disp/vector based on context...meaning???
+
+VTK bugs
+========
 1.  Mouse Rotation after animation
   - rotation don't work in:
   - rotation work in:
-- 
-Qt
+
+VTK features
+============
+1.  elemental marker plot (shell normals, shell offsets, theta)
+
+Qt bugs
 =======
-- results selector window doesn't update on cycling
+
+- load new result:
+  - menu shrinks down instead of staying as user had it
+
+General GUI Behavior
+====================
 - loading a new geometry over a result doesn't overwrite the old name
-- legend cancel doesn't return to baseline state (should it?)
+- results selector window doesn't update on cycling
 - QScintilla doesn't always work (PyQt4)
   - PySide doesn't have this
   - PyQt5 probably doesn't have this
-- Python 3 doesn't save/reload the GUI state
 
 ----------------------------------------------------
 ---NOT DONE---
- - marker plots (arrows) & scale
  - usm3d surface/boundary layer/incomplete volume
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys
- - unbreak hotkeys (p, r, X, Y, Z, ???)
+ - unbreak hotkeys (r, x, y, z, X, Y, Z???)
  - maybe add explcit pulldown for formats
  - Improved Picking
    - area picking

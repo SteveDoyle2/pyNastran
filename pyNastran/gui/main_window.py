@@ -12,8 +12,6 @@ import os.path
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
 
-from six.moves import range
-
 
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
@@ -28,23 +26,22 @@ from pyNastran.gui.utils.version import check_for_newer_version
 
 # pyNastran
 from pyNastran.gui.formats import (
-    NastranIO, Cart3dIO, DegenGeomIO, PanairIO, LaWGS_IO,
-    STL_IO, TecplotIO, TetgenIO, Usm3dIO, ShabpIO, ADB_IO, FastIO, # Plot3d_io,
-    AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO, OpenFoamIO, ObjIO,
+    NastranIO, DegenGeomIO, ADB_IO, FastIO, # Plot3d_io,
+    SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, OpenFoamIO, ObjIO,
 )
 from pyNastran.gui.gui_common import GuiCommon2
 
 try:
-    pkg_path = sys._MEIPASS #@UndefinedVariable
-    script_path = os.path.join(pkg_path, 'scripts')
-    icon_path = os.path.join(pkg_path, 'icons')
+    PKG_PATH = sys._MEIPASS #@UndefinedVariable
+    SCRIPT_PATH = os.path.join(PKG_PATH, 'scripts')
+    ICON_PATH = os.path.join(PKG_PATH, 'icons')
 except:
-    pkg_path = pyNastran.__path__[0]
-    script_path = os.path.join(pkg_path, 'gui', 'scripts')
-    icon_path = os.path.join(pkg_path, 'gui', 'icons')
+    PKG_PATH = pyNastran.__path__[0]
+    SCRIPT_PATH = os.path.join(PKG_PATH, 'gui', 'scripts')
+    ICON_PATH = os.path.join(PKG_PATH, 'gui', 'icons')
 
-#print('script_path = %s' % script_path)
-#print('icon_path = %s' % icon_path)
+#print('SCRIPT_PATH = %s' % SCRIPT_PATH)
+#print('ICON_PATH = %s' % ICON_PATH)
 
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
@@ -52,11 +49,10 @@ except:
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
 
-class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
-                 LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, ADB_IO, # Plot3d_io,
-                 FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, SU2_IO,
-                 OpenFoamIO, ObjIO,
-                 ):
+class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
+                 ADB_IO,
+                 FastIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO,
+                 OpenFoamIO, ObjIO, ):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -116,33 +112,23 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
 
         if qt_version in [4, 5]:
             ADB_IO.__init__(self)
-            AvusIO.__init__(self)
             BEdge_IO.__init__(self)
             NastranIO.__init__(self)
-            Cart3dIO.__init__(self)
             DegenGeomIO.__init__(self)
             FastIO.__init__(self)
-            LaWGS_IO.__init__(self)
-            PanairIO.__init__(self)
             #Plot3d_io.__init__(self)
-            STL_IO.__init__(self)
-            ShabpIO.__init__(self)
             SurfIO.__init__(self)
-            TetgenIO.__init__(self)
-            TecplotIO.__init__(self)
-            Usm3dIO.__init__(self)
             UGRID_IO.__init__(self)
             AbaqusIO.__init__(self)
-            SU2_IO.__init__(self)
             OpenFoamIO.__init__(self)
             ObjIO.__init__(self)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 
-        logo = os.path.join(icon_path, 'logo.png')
+        logo = os.path.join(ICON_PATH, 'logo.png')
         self.logo = logo
-        self.set_script_path(script_path)
-        self.set_icon_path(icon_path)
+        self.set_script_path(SCRIPT_PATH)
+        self.set_icon_path(ICON_PATH)
 
         self.setup_gui()
         self.setup_post(inputs)
@@ -158,7 +144,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         """
         #import time
         #time0 = time.time()
-        version_latest, version_current, is_newer = check_for_newer_version()
+        version_latest, unused_version_current, is_newer = check_for_newer_version()
         if is_newer:
             url = pyNastran.__website__
             from pyNastran.gui.menus.download import DownloadWindow
@@ -167,7 +153,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         #dt = time.time() - time0
         #print('dt_version_check = %.2f' % dt)
 
-    def mousePressEvent(self, ev):
+    def mousePressEvent(self, event):
         if not self.run_vtk:
             return
         #print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
@@ -176,16 +162,16 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             #self.___saveY = ev.y()
             pass
         else:
-            self.iren.mousePressEvent(ev)
+            self.iren.mousePressEvent(event)
 
     #def LeftButtonPressEvent(self, ev):
 
-    def mouseReleaseEvent(self, ev):
+    def mouseReleaseEvent(self, event):
         #print('release x,y = (%s, %s)' % (ev.x(), ev.y()))
         if self.is_pick:
             pass
         else:
-            self.iren.mousePressEvent(ev)
+            self.iren.mousePressEvent(event)
 
     def about_dialog(self):
         """ Display about dialog """
@@ -255,7 +241,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         method for a given format.
         """
         camera = self.get_camera_data()
-        Title = self.title
+        unused_title = self.title
         case = self.icase
 
         on_reload_name = 'on_reload_%s' % self.format
@@ -273,7 +259,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         self.cycle_results(case)
         self.on_set_camera_data(camera, show_log=False)
 
-    def closeEvent(self, event):
+    def closeEvent(self, unused_event):
         """
         Handling saving state before application when application is
         being closed.
