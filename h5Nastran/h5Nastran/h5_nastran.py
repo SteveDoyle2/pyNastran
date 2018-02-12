@@ -46,8 +46,6 @@ class H5Nastran(object):
         self._f06 = None
         self._op2 = None
 
-        self._bdf_domain = 1
-
         self._element_results_tables = {}
 
         if mode == 'w':
@@ -107,7 +105,7 @@ class H5Nastran(object):
                 continue
 
             try:
-                table.write_data(cards[card_name], self._bdf_domain)
+                table.write_data(cards[card_name])
             except NotImplementedError:
                 print(card_name, 'not supported')
                 unsupported.append(card_name)
@@ -118,8 +116,6 @@ class H5Nastran(object):
             table.finalize()
 
         self._unsupported_cards(unsupported)
-
-        self._bdf_domain += 1
 
         self._save_bdf()
         

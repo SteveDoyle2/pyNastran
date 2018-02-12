@@ -14,6 +14,7 @@ from .load import Load
 from .property import Property
 from .node import Node
 from .material import Material
+from .parameter import Parameter
 
 
 class Input(object):
@@ -33,7 +34,7 @@ class Input(object):
         # self.matrix = None
         # self.modules = None
         self.node = Node(self._h5n, self)
-        # self.parameter = None
+        self.parameter = Parameter(self._h5n, self)
         # self.partition = None
         self.property = Property(self._h5n, self)
         # self.table = None

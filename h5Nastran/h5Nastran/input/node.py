@@ -6,7 +6,7 @@ import tables
 import numpy as np
 from typing import Dict
 
-from .card_table import CardTable, TableDef, TableData
+from .card_table import CardTable, TableDef, DataHelper
 from h5Nastran.utilities import ImmutableDict
 
 
@@ -47,10 +47,39 @@ class GRID(CardTable):
         self._grid_in_basic_dict = None
         self._grid_index.clear()
 
-    @staticmethod
-    def from_bdf(card):
-        data = [card.nid, card.cp, card.xyz, card.cd, card.ps, card.seid]
-        return TableData([data])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        id_ = data['ID']
+        cp = data['CP']
+        x = data['X']
+        cd = data['CD']
+        ps = data['PS']
+        seid = data['SEID']
+
+        def _get_val(val, default):
+            if val in ('', None):
+                val = default
+            return val
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            id_[i] = card.nid
+            cp[i] = card.cp
+            x[i] = card.xyz
+            cd[i] = card.cd
+            ps[i] = _get_val(card.ps, DataHelper.default_int)
+            seid[i] = card.seid
+
+        result = {'IDENTITY': data}
+
+        return result
 
     def get_grid(self, nid):
         try:

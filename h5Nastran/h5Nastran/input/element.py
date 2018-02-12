@@ -1,10 +1,10 @@
 from __future__ import print_function, absolute_import
-from six import iteritems, itervalues
+from six import iteritems, itervalues, iterkeys
 from six.moves import range
 
 import numpy as np
 
-from .card_table import CardTable, TableDef, TableData
+from .card_table import CardTable, TableDef
 from ..data_helper import DataHelper
 from ._shell_element_info import QuadShell, TriaShell, shell_element_info_format
 
@@ -184,7 +184,7 @@ class Element(object):
         self._shell_element_info = element_info
 
         return element_info
-    
+
     def get_shell_element_info(self):
         if self._shell_element_info is None:
             self._shell_element_info = self._h5n.h5f.get_node('/PRIVATE/INPUT/SHELL_ELEMENT_INFO').read()
@@ -220,11 +220,13 @@ class Element(object):
 class AEQUAD4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/AEQUAD4')
 
+
 ########################################################################################################################
 
 
 class AEROD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/AEROD')
+
 
 ########################################################################################################################
 
@@ -232,11 +234,13 @@ class AEROD(CardTable):
 class AEROQ4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/AEROQ4')
 
+
 ########################################################################################################################
 
 
 class AEROT3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/AEROT3')
+
 
 ########################################################################################################################
 
@@ -244,11 +248,13 @@ class AEROT3(CardTable):
 class AETRIA3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/AETRIA3')
 
+
 ########################################################################################################################
 
 
 class BEAMAERO(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/BEAMAERO')
+
 
 ########################################################################################################################
 
@@ -256,11 +262,13 @@ class BEAMAERO(CardTable):
 class BOLT(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/BOLT/IDENTITY')
 
+
 ########################################################################################################################
 
 
 class CAABSF(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAABSF')
+
 
 ########################################################################################################################
 
@@ -268,11 +276,13 @@ class CAABSF(CardTable):
 class CACINF3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CACINF3')
 
+
 ########################################################################################################################
 
 
 class CACINF4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CACINF4')
+
 
 ########################################################################################################################
 
@@ -280,11 +290,13 @@ class CACINF4(CardTable):
 class CAERO1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAERO1')
 
+
 ########################################################################################################################
 
 
 class CAERO2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAERO2')
+
 
 ########################################################################################################################
 
@@ -292,11 +304,13 @@ class CAERO2(CardTable):
 class CAERO3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAERO3')
 
+
 ########################################################################################################################
 
 
 class CAERO4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAERO4')
+
 
 ########################################################################################################################
 
@@ -304,11 +318,13 @@ class CAERO4(CardTable):
 class CAERO5(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAERO5')
 
+
 ########################################################################################################################
 
 
 class CAXIF2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAXIF2')
+
 
 ########################################################################################################################
 
@@ -316,11 +332,13 @@ class CAXIF2(CardTable):
 class CAXIF3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAXIF3')
 
+
 ########################################################################################################################
 
 
 class CAXIF4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAXIF4')
+
 
 ########################################################################################################################
 
@@ -328,43 +346,86 @@ class CAXIF4(CardTable):
 class CAXISYM(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAXISYM')
 
+
 ########################################################################################################################
 
 
 class CBAR(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBAR')
 
-    @staticmethod
-    def from_bdf(card):
-        x = card.x
-        if x is None:
-            x = [None, None, None]
-        else:
-            x = x.tolist()
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
 
-        # MSC 2018 DMAP p. 209
-        # flag = 0, basic coordinate system
-        # flag = 1, global coordinate system
-        # flag = 2, grid option
-        # TODO: what does *F = FE bit-wise AND with 3 mean in DMAP guide?
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        flag = data['FLAG']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        go = data['GO']
+        pa = data['PA']
+        pb = data['PB']
+        w1a = data['W1A']
+        w2a = data['W2A']
+        w3a = data['W3A']
+        w1b = data['W1B']
+        w2b = data['W2B']
+        w3b = data['W3B']
+        # domain_id = data['DOMAIN_ID']
 
-        g0 = card.g0
+        i = -1
 
-        if x[0] is None:
-            flag = 2
-        elif g0 in ('', None):
-            flag = 0
-        else:
-            flag = 1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+            x = card.x
+            if x is None:
+                x = [None, None, None]
+            else:
+                x = x.tolist()
 
-        data = [card.eid, card.pid]
-        data += card.node_ids
-        data.append(flag)
-        data += x
-        data += [card.g0, card.pa, card.pb]  # card.offt not used...
-        data += card.wa.tolist()
-        data += card.wb.tolist()
-        return TableData([data])
+            # MSC 2018 DMAP p. 209
+            # flag = 0, basic coordinate system
+            # flag = 1, global coordinate system
+            # flag = 2, grid option
+            # TODO: what does *F = FE bit-wise AND with 3 mean in DMAP guide?
+
+            g0 = card.g0
+
+            if x[0] is None:
+                _flag = 2
+            elif g0 in ('', None):
+                g0 = DataHelper.default_int
+                _flag = 0
+            else:
+                _flag = 1
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            ga[i], gb[i] = card.node_ids
+            flag[i] = _flag
+
+            if x[0] is None:
+                x1[i], x2[i], x3[i] = [DataHelper.default_double] * 3
+            else:
+                x1[i], x2[i], x3[i] = x
+
+            go[i] = g0
+            pa[i] = card.pa
+            pb[i] = card.pb
+            w1a[i], w2a[i], w3a[i] = card.wa.tolist()
+            w1b[i], w2b[i], w3b[i] = card.wb.tolist()
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -382,9 +443,28 @@ class CBARAO_SPEC(object):
 class CBARAO(CardTable):
     table_def = TableDef.create(CBARAO_SPEC)
 
-    @staticmethod
-    def from_bdf(card):
-        return TableData([[card.eid, card.scale, card.x]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        scale = data['SCALE']
+        x = data['X']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+            eid[i] = card.eid
+            scale[i] = card.scale
+            x[i] = card.x
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -393,19 +473,53 @@ class CBARAO(CardTable):
 class CBEAM(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBEAM')
 
-    @staticmethod
-    def from_bdf(card):
-        x = card.x
-        if x is None:
-            x = [None, None, None]
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
 
-        flag = DataHelper.unknown_int
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        sa = data['SA']
+        sb = data['SB']
+        x = data['X']
+        g0 = data['G0']
+        f = data['F']
+        pa = data['PA']
+        pb = data['PB']
+        wa = data['WA']
+        wb = data['WB']
 
-        # TODO: CBEAM flag
-        node_ids = card.node_ids
-        data = [card.eid, card.pid, node_ids[0], node_ids[1], card.sa, card.sb, x, card.g0, flag, card.pa, card.pb,
-                card.wa, card.wb]
-        return TableData([data])
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            _x = card.x
+            if _x is None:
+                _x = [DataHelper.default_double, DataHelper.default_double, DataHelper.default_double]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            ga[i], gb[i] = card.node_ids
+            sa[i] = card.sa
+            sb[i] = card.sb
+            x[i] = _x
+            g0[i] = card.g0
+            f[i] = DataHelper.unknown_int  # TODO: CBEAM flag
+            pa[i] = card.pa
+            pb[i] = card.pb
+            wa[i] = card.wa
+            wb[i] = card.wb
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -413,20 +527,48 @@ class CBEAM(CardTable):
 class CBEAM3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBEAM3')
 
+
 ########################################################################################################################
 
 
 class CBEND(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBEND')
 
-    @staticmethod
-    def from_bdf(card):
-        node_ids = card.node_ids
-        # TODO: CBEND flag
-        x = card.x
-        g0 = card.g0
-        flag = DataHelper.unknown_int
-        return TableData([[card.eid, card.pid, node_ids[0], node_ids[1], flag, x[0], x[1], x[2], g0, card.geom]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        flag = data['FLAG']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        go = data['GO']
+        geom = data['GEOM']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            ga[i], gb[i] = card.node_ids
+            flag[i] = DataHelper.unknown_int  # TODO: CBEND flag
+            x1[i], x2[i], x3[i] = card.x
+            go[i] = card.g0
+            geom[i] = card.geom
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -434,22 +576,57 @@ class CBEND(CardTable):
 class CBUSH(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBUSH')
 
-    @staticmethod
-    def from_bdf(card):
-        x = card.x
-        if x is None:
-            x = [None, None, None]
-        cid = card.cid
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
 
-        flag = DataHelper.unknown_int
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        flag = data['FLAG']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        go = data['GO']
+        cid = data['CID']
+        s = data['S']
+        ocid = data['OCID']
+        s1 = data['S1']
+        s2 = data['S2']
+        s3 = data['S3']
 
-        # TODO: CBUSH flag
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
 
-        node_ids = card.node_ids
-        si = card.si
-        data = [card.eid, card.pid, node_ids[0], node_ids[1], flag, x[0], x[1], x[2], card.g0, cid, card.s,
-                card.ocid, si[0], si[1], si[2]]
-        return TableData([data])
+            _x = card.x
+            if _x is None:
+                _x = [DataHelper.default_double, DataHelper.default_double, DataHelper.default_double]
+
+            _g0 = card.g0
+            if _g0 is None:
+                _g0 = DataHelper.default_int
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            ga[i], gb[i] = card.node_ids
+            flag[i] = DataHelper.unknown_int  # TODO: CBUSH flag
+            x1[i], x2[i], x3[i] = _x
+            go[i] = _g0
+            cid[i] = card.cid
+            s[i] = card.s
+            ocid[i] = card.ocid
+            s1[i], s2[i], s3[i] = card.si
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -457,9 +634,32 @@ class CBUSH(CardTable):
 class CBUSH1D(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBUSH1D')
 
-    @staticmethod
-    def from_bdf(card):
-        return TableData([[card.eid, card.pid, card.node_ids, card.cid]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        cid = data['CID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = card.node_ids
+            cid[i] = card.cid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -467,9 +667,36 @@ class CBUSH1D(CardTable):
 class CBUSH2D(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CBUSH2D')
 
-    @staticmethod
-    def from_bdf(card):
-        return TableData([[card.eid, card.pid, card.node_ids, card.cid, card.plane, card.sptid]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        cid = data['CID']
+        plane = data['PLANE']
+        sptid = data['SPTID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = card.node_ids
+            cid[i] = card.cid
+            plane[i] = card.plane
+            sptid[i] = card.sptid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -477,10 +704,31 @@ class CBUSH2D(CardTable):
 class CCONEAX(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CCONEAX')
 
-    @staticmethod
-    def from_bdf(card):
-        r = card.ring_ids
-        return TableData([[card.eid, card.pid, r[0], r[1]]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        ra = data['RA']
+        rb = data['RB']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            ra[i], rb[i] = card.ring_ids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -488,11 +736,13 @@ class CCONEAX(CardTable):
 class CDAMP1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP1')
 
+
 ########################################################################################################################
 
 
 class CDAMP2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP2')
+
 
 ########################################################################################################################
 
@@ -500,11 +750,13 @@ class CDAMP2(CardTable):
 class CDAMP3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP3')
 
+
 ########################################################################################################################
 
 
 class CDAMP4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP4')
+
 
 ########################################################################################################################
 
@@ -512,11 +764,13 @@ class CDAMP4(CardTable):
 class CDAMP5(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP5')
 
+
 ########################################################################################################################
 
 
 class CELAS1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS1')
+
 
 ########################################################################################################################
 
@@ -524,11 +778,13 @@ class CELAS1(CardTable):
 class CELAS2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS2')
 
+
 ########################################################################################################################
 
 
 class CELAS3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS3')
+
 
 ########################################################################################################################
 
@@ -536,11 +792,13 @@ class CELAS3(CardTable):
 class CELAS4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS4')
 
+
 ########################################################################################################################
 
 
 class CFAST(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CFAST')
+
 
 ########################################################################################################################
 
@@ -548,11 +806,13 @@ class CFAST(CardTable):
 class CFASTP(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CFASTP')
 
+
 ########################################################################################################################
 
 
 class CFLUID2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CFLUID2')
+
 
 ########################################################################################################################
 
@@ -560,11 +820,13 @@ class CFLUID2(CardTable):
 class CFLUID3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CFLUID3')
 
+
 ########################################################################################################################
 
 
 class CFLUID4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CFLUID4')
+
 
 ########################################################################################################################
 
@@ -572,13 +834,49 @@ class CFLUID4(CardTable):
 class CGAP(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CGAP')
 
-    @staticmethod
-    def from_bdf(card):
-        nids = card.node_ids
-        x = card.x
-        flag = DataHelper.unknown_int
-        # TODO: CGAP flag
-        return TableData([[card.eid, card.pid, nids[0], nids[1], flag, x[0], x[1], x[2], card.g0, card.cid]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        ga = data['GA']
+        gb = data['GB']
+        f = data['F']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        go = data['GO']
+        cid = data['CID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            _x = card.x
+            if _x[0] is None:
+                _x = [DataHelper.default_double] * 3
+
+            _g0 = card.g0
+            if _g0 is None:
+                _g0 = DataHelper.default_int
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            ga[i], gb[i] = card.node_ids
+            f[i] = DataHelper.unknown_int  # TODO: CGAP flag
+            x1[i], x2[i], x3[i] = _x
+            go[i] = _g0
+            cid[i] = card.cid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -586,11 +884,13 @@ class CGAP(CardTable):
 class CHACAB(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHACAB')
 
+
 ########################################################################################################################
 
 
 class CHACBR(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHACBR')
+
 
 ########################################################################################################################
 
@@ -598,11 +898,13 @@ class CHACBR(CardTable):
 class CHBDYE(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHBDYE')
 
+
 ########################################################################################################################
 
 
 class CHBDYG(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHBDYG')
+
 
 ########################################################################################################################
 
@@ -610,19 +912,42 @@ class CHBDYG(CardTable):
 class CHBDYP(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHBDYP')
 
+
 ########################################################################################################################
 
 
 class CHEXA(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHEXA')
 
-    @staticmethod
-    def from_bdf(card):
-        node_ids = list(card.node_ids)
-        diff = 20 - len(node_ids)
-        if diff > 0:
-            node_ids += [0] * diff
-        return TableData([[card.eid, card.pid, node_ids]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            node_ids = list(card.node_ids)
+            diff = 20 - len(node_ids)
+            if diff > 0:
+                node_ids += [0] * diff
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = node_ids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -630,11 +955,13 @@ class CHEXA(CardTable):
 class CHEXAL(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHEXAL')
 
+
 ########################################################################################################################
 
 
 class CHEXP(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CHEXP')
+
 
 ########################################################################################################################
 
@@ -642,11 +969,13 @@ class CHEXP(CardTable):
 class CIFHEX(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CIFHEX')
 
+
 ########################################################################################################################
 
 
 class CIFPENT(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CIFPENT')
+
 
 ########################################################################################################################
 
@@ -654,11 +983,13 @@ class CIFPENT(CardTable):
 class CIFQDX(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CIFQDX')
 
+
 ########################################################################################################################
 
 
 class CIFQUAD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CIFQUAD')
+
 
 ########################################################################################################################
 
@@ -666,11 +997,13 @@ class CIFQUAD(CardTable):
 class CMASS1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CMASS1')
 
+
 ########################################################################################################################
 
 
 class CMASS2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CMASS2')
+
 
 ########################################################################################################################
 
@@ -678,11 +1011,13 @@ class CMASS2(CardTable):
 class CMASS3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CMASS3')
 
+
 ########################################################################################################################
 
 
 class CMASS4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CMASS4')
+
 
 ########################################################################################################################
 
@@ -690,11 +1025,13 @@ class CMASS4(CardTable):
 class CONM2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CONM2')
 
+
 ########################################################################################################################
 
 
 class CONROD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CONROD')
+
 
 ########################################################################################################################
 
@@ -702,11 +1039,13 @@ class CONROD(CardTable):
 class CONTRLT(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CONTRLT')
 
+
 ########################################################################################################################
 
 
 class CPENTA(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CPENTA')
+
 
 ########################################################################################################################
 
@@ -714,11 +1053,13 @@ class CPENTA(CardTable):
 class CQDX4FD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQDX4FD')
 
+
 ########################################################################################################################
 
 
 class CQDX9FD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQDX9FD')
+
 
 ########################################################################################################################
 
@@ -726,23 +1067,54 @@ class CQDX9FD(CardTable):
 class CQUAD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD')
 
+
 ########################################################################################################################
 
 
 class CQUAD4(CardTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD4')
 
-    @staticmethod
-    def from_bdf(card):
-        theta = card.theta_mcid
-        if not isinstance(theta, float):
-            mcid = theta
-            theta = None
-        else:
-            mcid = None
-        data = [card.eid, card.pid, card.node_ids, theta, card.zoffset, card.tflag,
-                [card.T1, card.T2, card.T3, card.T4], mcid]
-        return TableData([data])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            theta_mcid = card.theta_mcid
+            if not isinstance(theta_mcid, float):
+                _mcid = theta_mcid
+                _theta = DataHelper.default_double
+            else:
+                _mcid = DataHelper.default_int
+                _theta = theta_mcid
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = card.node_ids
+            theta[i] = _theta
+            zoffs[i] = card.zoffset
+            tflag[i] = card.tflag
+            t[i] = [card.T1, card.T2, card.T3, card.T4]
+            mcid[i] = _mcid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -751,11 +1123,13 @@ class CQUAD4(CardTable, QuadShell):
 class CQUAD4FD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD4FD')
 
+
 ########################################################################################################################
 
 
 class CQUAD8(CardTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD8')
+
 
 ########################################################################################################################
 
@@ -763,17 +1137,20 @@ class CQUAD8(CardTable, QuadShell):
 class CQUAD9FD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD9FD')
 
+
 ########################################################################################################################
 
 
 class CQUADR(CardTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUADR')
 
+
 ########################################################################################################################
 
 
 class CQUADX(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUADX')
+
 
 ########################################################################################################################
 
@@ -782,15 +1159,37 @@ class CRBE1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CRBE1/IDENTITY',
                                 rename={'LAGMULTIPL_POS': 'LAGM_POS', 'LAGMULTIPL_LEN': 'LAGM_LEN'})
 
+
 ########################################################################################################################
 
 
 class CROD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CROD')
 
-    @staticmethod
-    def from_bdf(card):
-        return TableData([[card.eid, card.pid, card.node_ids]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = card.node_ids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -798,11 +1197,13 @@ class CROD(CardTable):
 class CSEAM(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CSEAM')
 
+
 ########################################################################################################################
 
 
 class CSEAMP(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CSEAMP')
+
 
 ########################################################################################################################
 
@@ -810,9 +1211,30 @@ class CSEAMP(CardTable):
 class CSHEAR(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CSHEAR')
 
-    @staticmethod
-    def from_bdf(card):
-        return TableData([[card.eid, card.pid, card.node_ids]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = card.node_ids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -820,11 +1242,13 @@ class CSHEAR(CardTable):
 class CSLOT3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CSLOT3')
 
+
 ########################################################################################################################
 
 
 class CSLOT4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CSLOT4')
+
 
 ########################################################################################################################
 
@@ -832,23 +1256,55 @@ class CSLOT4(CardTable):
 class CTETRA(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTETRA')
 
+
 ########################################################################################################################
 
 
 class CTRIA3(CardTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA3')
 
-    @staticmethod
-    def from_bdf(card):
-        theta = card.theta_mcid
-        if not isinstance(theta, float):
-            mcid = theta
-            theta = None
-        else:
-            mcid = None
-        data = [card.eid, card.pid, card.node_ids, theta, card.zoffset, card.tflag,
-                [card.T1, card.T2, card.T3], mcid]
-        return TableData([data])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            theta_mcid = card.theta_mcid
+            if not isinstance(theta_mcid, float):
+                _mcid = theta_mcid
+                _theta = DataHelper.default_double
+            else:
+                _mcid = DataHelper.default_int
+                _theta = theta_mcid
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = card.node_ids
+            theta[i] = _theta
+            zoffs[i] = card.zoffset
+            tflag[i] = card.tflag
+            t[i] = [card.T1, card.T2, card.T3]
+            mcid[i] = _mcid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -856,11 +1312,13 @@ class CTRIA3(CardTable, TriaShell):
 class CTRIA3FD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA3FD')
 
+
 ########################################################################################################################
 
 
 class CTRIA6(CardTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA6')
+
 
 ########################################################################################################################
 
@@ -868,11 +1326,13 @@ class CTRIA6(CardTable, TriaShell):
 class CTRIA6FD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA6FD')
 
+
 ########################################################################################################################
 
 
 class CTRIAH(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIAH')
+
 
 ########################################################################################################################
 
@@ -880,11 +1340,13 @@ class CTRIAH(CardTable):
 class CTRIAR(CardTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIAR')
 
+
 ########################################################################################################################
 
 
 class CTRIAX(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIAX')
+
 
 ########################################################################################################################
 
@@ -892,11 +1354,13 @@ class CTRIAX(CardTable):
 class CTRIAX6(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIAX6')
 
+
 ########################################################################################################################
 
 
 class CTRIX3FD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIX3FD')
+
 
 ########################################################################################################################
 
@@ -904,11 +1368,13 @@ class CTRIX3FD(CardTable):
 class CTRIX6FD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIX6FD')
 
+
 ########################################################################################################################
 
 
 class CTUBE(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTUBE')
+
 
 ########################################################################################################################
 
@@ -916,11 +1382,13 @@ class CTUBE(CardTable):
 class CVISC(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CVISC')
 
+
 ########################################################################################################################
 
 
 class CWELD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CWELD')
+
 
 ########################################################################################################################
 
@@ -928,11 +1396,13 @@ class CWELD(CardTable):
 class CWELDC(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CWELDC')
 
+
 ########################################################################################################################
 
 
 class CWELDP(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CWELDP')
+
 
 ########################################################################################################################
 
@@ -949,11 +1419,13 @@ class CWELDP(CardTable):
 class PLOTEL(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PLOTEL')
 
+
 ########################################################################################################################
 
 
 class PRIM1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PRIM1')
+
 
 ########################################################################################################################
 
@@ -961,11 +1433,13 @@ class PRIM1(CardTable):
 class PRIM2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PRIM2')
 
+
 ########################################################################################################################
 
 
 class PRIM3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PRIM3')
+
 
 ########################################################################################################################
 
@@ -973,11 +1447,13 @@ class PRIM3(CardTable):
 class PRIM4(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PRIM4')
 
+
 ########################################################################################################################
 
 
 class PRIM5(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PRIM5')
+
 
 ########################################################################################################################
 
@@ -985,11 +1461,13 @@ class PRIM5(CardTable):
 class PRIM6(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PRIM6')
 
+
 ########################################################################################################################
 
 
 class PRIM7(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PRIM7')
+
 
 ########################################################################################################################
 
@@ -997,11 +1475,13 @@ class PRIM7(CardTable):
 class PRIM8(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PRIM8')
 
+
 ########################################################################################################################
 
 
 class RADCOL(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RADCOL')
+
 
 ########################################################################################################################
 
@@ -1009,17 +1489,20 @@ class RADCOL(CardTable):
 class RBAR(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RBAR')
 
+
 ########################################################################################################################
 
 
 class RBAR1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RBAR1')
 
+
 ########################################################################################################################
 
 
 class RBE1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RBE1/IDENTITY')
+
 
 ########################################################################################################################
 
@@ -1030,26 +1513,49 @@ class RBE2(CardTable):
         subtables=[TableDef.create('/NASTRAN/INPUT/ELEMENT/RBE2/GM')],
     )
 
-    @staticmethod
-    def from_bdf(card):
-        data = TableData()
-        data.data = [[card.eid, card.gn, card.cm, card.alpha]]
-        data.subdata_len = np.array([[len(card.Gmi)]])
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
 
-        gmi = np.array(card.Gmi)
-        gmi = gmi.reshape((gmi.shape[0], 1))
+        gm = {
+            'IDENTITY': {'ID': []}
+        }
 
-        subdata = TableData()
-        subdata.data = gmi
+        result = {
+            'IDENTITY': {'EID': [], 'GN': [], 'CM': [], 'GM_POS': [], 'GM_LEN': [], 'ALPHA': [],
+                         'DOMAIN_ID': []},
+            'GM': gm,
+            '_subtables': ['GM']
+        }
 
-        data.subdata.append(subdata)
+        identity = result['IDENTITY']
 
-        try:
-            data.validate()
-        except AssertionError:
-            raise AssertionError('RBE2')
+        eid = identity['EID']
+        gn = identity['GN']
+        cm = identity['CM']
+        gm_pos = identity['GM_POS']
+        gm_len = identity['GM_LEN']
+        alpha = identity['ALPHA']
+        id = gm['IDENTITY']['ID']
 
-        return data
+        _pos = 0
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid.append(card.eid)
+            gn.append(card.gn)
+            cm.append(card.cm)
+            alpha.append(card.alpha)
+            gm_pos.append(_pos)
+            _gm_len = len(card.Gmi)
+            gm_len.append(_gm_len)
+            _pos += _gm_len
+            id += list(card.Gmi)
+
+        return result
+
 
 ########################################################################################################################
 
@@ -1057,72 +1563,100 @@ class RBE2(CardTable):
 class RBE2GS(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RBE2GS/IDENTITY')
 
+
 ########################################################################################################################
 
 
 class RBE3(CardTable):
     table_def = TableDef.create(
         '/NASTRAN/INPUT/ELEMENT/RBE3/IDENTITY',
-    subtables=[
-        TableDef.create('/NASTRAN/INPUT/ELEMENT/RBE3/GM'),
-        TableDef.create(
-            '/NASTRAN/INPUT/ELEMENT/RBE3/WTCG',
-            subtables=[TableDef.create('/NASTRAN/INPUT/ELEMENT/RBE3/G')]
-        ),
-    ]
+        subtables=[
+            TableDef.create('/NASTRAN/INPUT/ELEMENT/RBE3/GM'),
+            TableDef.create(
+                '/NASTRAN/INPUT/ELEMENT/RBE3/WTCG',
+                subtables=[TableDef.create('/NASTRAN/INPUT/ELEMENT/RBE3/G')]
+            ),
+        ]
     )
 
-    g_len = 0
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
 
-    @staticmethod
-    def from_bdf(card):
-        data = TableData()
-        data.data = [[card.eid, card.refgrid, card.refc, card.alpha]]
+        g = {'IDENTITY': {'ID': []}}
+        wtcg = {
+            'IDENTITY': {'WT1': [], 'C': [], 'G_POS': [], 'G_LEN': []},
+            'G': g,
+            '_subtables': ['G']
+        }
+        gm = {'IDENTITY': {'GM': [], 'CM': []}}
 
-        #################################
+        result = {'IDENTITY': {'EID': [], 'REFG': [], 'REFC': [], 'WTCG_POS': [],
+                               'WTCG_LEN': [], 'GM_POS': [], 'GM_LEN': [], 'ALPHA': [],
+                               'DOMAIN_ID': []},
+                  'WTCG': wtcg, 'GM': gm,
+                  '_subtables': ['GM', 'WTCG']
+                  }
 
-        Gmi = card.Gmi
-        Cmi = card.Cmi
+        id = g['IDENTITY']['ID']
+        _gm = gm['IDENTITY']
+        gm = _gm['GM']
+        cm = _gm['CM']
+        _wtcg = wtcg['IDENTITY']
+        wt1 = _wtcg['WT1']
+        c = _wtcg['C']
+        g_pos = _wtcg['G_POS']
+        g_len = _wtcg['G_LEN']
+        identity = result['IDENTITY']
+        eid = identity['EID']
+        refg = identity['REFG']
+        refc = identity['REFC']
+        wtcg_pos = identity['WTCG_POS']
+        wtcg_len = identity['WTCG_LEN']
+        gm_pos = identity['GM_POS']
+        gm_len = identity['GM_LEN']
+        alpha = identity['ALPHA']
 
-        gm = [(Gmi[i], Cmi[i]) for i in range(len(Gmi))]
+        _gm_pos = 0
+        _wtcg_pos = 0
+        _g_pos = 0
 
-        subdata = TableData(gm)
+        for card_id in card_ids:
+            card = cards[card_id]
 
-        data.subdata.append(subdata)
-        gm_len = len(subdata.data)
+            eid.append(card.eid)
+            refg.append(card.refgrid)
+            refc.append(card.refc)
+            alpha.append(card.alpha)
 
-        ################################
+            wtcg_pos.append(_wtcg_pos)
+            _wtcg_len = len(card.weights)
+            wtcg_len.append(_wtcg_len)
+            _wtcg_pos += _wtcg_len
 
-        weights = card.weights
-        comps = card.comps
+            gm_pos.append(_gm_pos)
+            _gm_len = len(card.Gmi)
+            gm_len.append(_gm_len)
+            _gm_pos += _gm_len
 
-        wtcg = [(weights[i], comps[i]) for i in range(len(weights))]
+            gm += list(card.Gmi)
+            cm += list(card.Cmi)
 
-        subdata = TableData(wtcg)
+            wt1.extend(list(card.weights))
+            c.extend(list(card.comps))
 
-        Gijs = card.Gijs
-        subdata.subdata_len = np.array([[len(Gijs[i])] for i in range(len(Gijs))])
+            gijs = []
+            for gij in card.Gijs:
+                gijs += gij
+                g_pos.append(_g_pos)
+                _g_len = len(gij)
+                g_len.append(_g_len)
+                _g_pos += _g_len
 
-        gijs = [Gijs[i] for i in range(len(Gijs))]
+            id += gijs
 
-        all_gijs = []
+        return result
 
-        for gij in gijs:
-            all_gijs.extend(gij)
-
-        gijs = TableData(np.array(all_gijs).reshape((len(all_gijs), 1)))
-
-        subdata.subdata = [gijs]
-
-        data.subdata.append(subdata)
-        data.subdata_len = np.array([[gm_len, len(subdata.data)]])
-
-        try:
-            data.validate()
-        except AssertionError:
-            raise AssertionError('RBE3')
-
-        return data
 
 ########################################################################################################################
 
@@ -1130,11 +1664,13 @@ class RBE3(CardTable):
 class RINGAX(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RINGAX')
 
+
 ########################################################################################################################
 
 
 class RJOINT(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RJOINT')
+
 
 ########################################################################################################################
 
@@ -1142,11 +1678,13 @@ class RJOINT(CardTable):
 class RROD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RROD')
 
+
 ########################################################################################################################
 
 
 class RSSCON(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RSSCON')
+
 
 ########################################################################################################################
 
@@ -1154,11 +1692,13 @@ class RSSCON(CardTable):
 class RTRPLT(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RTRPLT')
 
+
 ########################################################################################################################
 
 
 class RTRPLT1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RTRPLT1')
+
 
 ########################################################################################################################
 
@@ -1166,11 +1706,13 @@ class RTRPLT1(CardTable):
 class SECTAX(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/SECTAX')
 
+
 ########################################################################################################################
 
 
 class WETELME(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/WETELME')
+
 
 ########################################################################################################################
 
@@ -1179,4 +1721,3 @@ class WETELMG(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/WETELMG/IDENTITY')
 
 ########################################################################################################################
-

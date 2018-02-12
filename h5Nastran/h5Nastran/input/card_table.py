@@ -49,7 +49,7 @@ class TableDef(object):
         if isinstance(table_def, str):
             table_def = data_tables[table_def]
         if subtables is None:
-            subtables = [TableDef.create(data_tables[_], rename=rename) for _ in table_def.subtables]
+            subtables = [TableDef.create(data_tables.get(_, _), rename=rename) for _ in table_def.subtables]
         return cls(table_def.name, table_def.path, _get_dtype(table_def), defaults, len_id, pos_id, subtables, rename)
 
     def __init__(self, table_id, group, dtype, defaults=None, len_id=None, pos_id=None, subtables=None, rename=None):
@@ -152,122 +152,55 @@ class TableDef(object):
 
     def path(self):
         return self.group + '/' + self.table_id
+                
+    def write_data(self, data):
+        identity = data['IDENTITY']
+        names = list(self.dtype.names)
 
-    def write_subdata(self, data):
-        names = []
+        if names[-1] == 'DOMAIN_ID':
+            names.pop()
 
-        is_dict = False
-
-        if isinstance(data, TableData):
-            data_len = len(data.data)
-        elif isinstance(data, dict):
-            names = list(self.dtype.names)
-            data_len = len(data['IDENTITY'][names[0]])
-            is_dict = True
-        else:
-            raise Exception
+        data_len = len(identity[names[0]])
 
         if data_len == 0:
             return
 
-        table = self.get_table()
-        table_row = table.row
-
-        if not is_dict:
-            for i in range(len(data.data)):
-                _write_data_to_table(self, table_row, data.data[i])
-
-                for j in range(len(self.subtables)):
-                    if data.subdata_len[i, j] == 0:
-                        continue
-                    subtable = self.subtables[j]
-                    table_row[subtable.len_id] = data.subdata_len[i, j]
-                    table_row[subtable.pos_id] = self._pos[subtable.pos_id]
-                    self._pos[subtable.pos_id] += data.subdata_len[i, j]
-
-                table_row.append()
-
-            for j in range(len(self.subtables)):
-                subdata = data.subdata[j]
-                subtable = self.subtables[j]
-                subtable.write_subdata(subdata)
-
-        else:
-            identity = data['IDENTITY']
-            names = list(self.dtype.names)
-            data_len = len(identity[names[0]])
-            _data = np.empty(data_len, dtype=self.dtype)
-            for name in names:
+        _data = np.empty(data_len, dtype=self.dtype)
+        for name in names:
+            try:
                 _data[name] = identity[name]
+            except ValueError as e:
+                print(name)
+                raise e
 
-            table.append(_data)
-
-            subtable_ids = data.get('_subtables', [])
-
-            for j in range(len(self.subtables)):
-                subtable = self.subtables[j]
-                subtable.write_subdata(data[subtable_ids[j]])
-
-    def write_data(self, cards, domain, from_bdf):
-        ids = sorted(cards.keys())
+        # FIXME: bdf input domains need to be corrected, for now, just assuming there are no super elements
+        #        need an easy way to determine super element ids, does pyNastran have a method to do so?
+    
+        try:
+            _data['DOMAIN_ID'] = 1
+        except (ValueError, KeyError):
+            pass
 
         table = self.get_table()
-        table_row = table.row
-
-        for card_id in ids:
-            card = cards[card_id]
-
-            # if isinstance(card, list):
-            #     card_data = [from_bdf(card[i]).data[0] for i in range(len(card))]
-            #     self.write_subdata(TableData(card_data))
-            #     continue
-
-            data = from_bdf(card)
-            if isinstance(data, TableData):
-                for i in range(len(data.data)):
-                    _write_data_to_table(self, table_row, data.data[i])
-
-                    for j in range(len(self.subtables)):
-                        if data.subdata_len[i, j] == 0:
-                            continue
-                        subtable = self.subtables[j]
-                        table_row[subtable.len_id] = data.subdata_len[i, j]
-                        table_row[subtable.pos_id] = self._pos[subtable.pos_id]
-                        self._pos[subtable.pos_id] += data.subdata_len[i, j]
-
-                    table_row['DOMAIN_ID'] = domain
-                    table_row.append()
-
-                for j in range(len(self.subtables)):
-                    subdata = data.subdata[j]
-                    subtable = self.subtables[j]
-                    subtable.write_subdata(subdata)
-            elif isinstance(data, dict):
-                identity = data['IDENTITY']
-                names = list(self.dtype.names)[:-1]
-                data_len = len(identity[names[0]])
-                _data = np.empty(data_len, dtype=self.dtype)
-                for name in names:
-                    _data[name] = identity[name]
-
-                _data['DOMAIN_ID'] = domain
-
-                table.append(_data)
-
-                subtable_ids = data.get('_subtables', [])
-
-                for j in range(len(self.subtables)):
-                    subtable = self.subtables[j]
-                    subtable.write_subdata(data[subtable_ids[j]])
-            else:
-                raise Exception
-
-        self.h5f.flush()
+        table.append(_data)
+    
+        subtable_ids = data.get('_subtables', [])
+    
+        for j in range(len(self.subtables)):
+            subtable = self.subtables[j]
+            subtable.write_data(data[subtable_ids[j]])
+            
+        table.flush()
 
     def read(self):
-        table = self.get_table()
+        try:
+            table = self.h5f.get_node(self.path())
+        except tables.NoSuchNodeError:
+            table = None
+
         if table is None:
             return np.empty(0, dtype=self.dtype)
+
         return table.read()
 
 
@@ -281,62 +214,16 @@ def _get_value(value, default):
     return value
 
 
-def _write_data_to_table(table_def, table_row, data, append=False):
-    attrs = table_def.attrs
-    defaults = table_def.defaults
-
-    # if len(data) == 0:
-    #     return
-
-    for i in range(len(attrs)):
-        attr = attrs[i]
-        table_row[attr] = _get_value(data[i], defaults[attr])
-
-    if append:
-        table_row.append()
-
-
-class TableData(object):
-    def __init__(self, data=None, subdata_len=None, subdata=None):
-
-        if data is None:
-            data = []
-
-        if subdata_len is None:
-            subdata_len = np.zeros((1, 1))
-
-        if subdata is None:
-            subdata = []
-
-        self.data = data
-        self.subdata_len = subdata_len  # type: np.ndarray
-        self.subdata = subdata  # type: list[TableData]
-
-    def __repr__(self):
-        result = [str(self.data)]
-        for subdata in self.subdata:
-            result.append(subdata.__repr__())
-        return ';'.join(result)
-
-    def validate(self):
-        if len(self.subdata) > 0:
-            shape = self.subdata_len.shape
-            assert shape[0] == len(self.data), (shape[0], len(self.data))
-            assert shape[1] == len(self.subdata), (shape[1], len(self.subdata))
-        for subdata in self.subdata:
-            subdata.validate()
-
-
 class CardTable(object):
     card_id = ''
     table_def = None  # type: TableDef
 
     @staticmethod
-    def from_bdf(card):
+    def to_bdf(data):
         raise NotImplementedError
 
-    @staticmethod
-    def to_bdf(data):
+    @classmethod
+    def from_bdf(cls, cards):
         raise NotImplementedError
 
     def __init__(self, h5n, parent):
@@ -352,11 +239,11 @@ class CardTable(object):
 
             self._h5n.register_card_table(self)
 
-    def write_data(self, cards, domain):
-        if self.from_bdf is CardTable.from_bdf:
-            self._table_def.not_implemented()
+    def write_data(self, cards):
+        if self.from_bdf is not CardTable.from_bdf:
+            self._table_def.write_data(self.from_bdf(cards))
+        else:
             raise NotImplementedError
-        self._table_def.write_data(cards, domain, self.from_bdf)
 
     def finalize(self):
         pass
