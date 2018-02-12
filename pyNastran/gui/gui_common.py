@@ -4095,7 +4095,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 png_filenames.append(png_filename)
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
-        if png_filenames:
+        if gif_filename is not None and png_filenames:
             is_failed = write_gif(
                 gif_filename, png_filenames, time=time,
                 onesided=onesided,
