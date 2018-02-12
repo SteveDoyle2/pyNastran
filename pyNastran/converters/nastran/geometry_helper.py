@@ -12,8 +12,9 @@ import vtk
 from pyNastran.utils import integer_types, iteritems
 from pyNastran.bdf.cards.elements.beam_connectivity import (
     rod_faces, tube_faces, chan1_faces,
-    bar_faces, box_faces, i_faces, t_faces, t2_faces,
-    h_faces, i1_faces, chan_faces, l_faces,
+    bar_faces, box_faces, i_faces, t_faces, t1_faces, t2_faces,
+    h_faces, i1_faces, chan_faces, l_faces, z_faces,
+    hexa_faces, hat_faces,
 )
 
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
@@ -823,6 +824,10 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         faces, pointsi = t_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 16
+    elif bar_type == 'T1':
+        faces, pointsi = t1_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
     elif bar_type == 'T2':
         faces, pointsi = t2_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
@@ -840,6 +845,18 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
     elif bar_type == 'H':
         faces, pointsi = h_faces(n1, n2, xform, dim1, dim2)
         assert pointsi.shape[0] == 24, pointsi.shape
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 24
+    elif bar_type == 'Z':
+        faces, pointsi = z_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 16
+    elif bar_type == 'HEXA':
+        faces, pointsi = hexa_faces(n1, n2, xform, dim1, dim2)
+        face_idlist = faces_to_element_facelist(faces, node0)
+        node0 += 12
+    elif bar_type == 'HAT':
+        faces, pointsi = hat_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 24
     else:

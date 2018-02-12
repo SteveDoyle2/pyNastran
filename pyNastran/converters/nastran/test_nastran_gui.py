@@ -307,16 +307,39 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
+    def test_gui_bar_z(self):
+        """tests a PBARL/Z"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_z.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
     def test_gui_bar_t(self):
         """tests a PBARL/T"""
         bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
-    #def test_gui_bar_t1(self):
+    def test_gui_bar_t1(self):
+        """tests a PBARL/T1"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t1.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
     def test_gui_bar_t2(self):
         """tests a PBARL/T2"""
         bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t2.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_hexa(self):
+        """tests a PBARL/HEXA"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_hexa.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+    def test_gui_bar_hat(self):
+        """tests a PBARL/HAT"""
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_hat.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 

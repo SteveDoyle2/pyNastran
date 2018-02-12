@@ -13,24 +13,24 @@ The following shapes are fully supported:
  - BOX
  - L
  - H
- - I1
+ - I1  (I1 is handled correctly because it's doubly symmetric)
  - T
+ - T1
  - T2
+ - Z
+ - HEXA
 
 The following shapes don't do the shear center correctly:
  - CHAN
  - CHAN1
- - I (I1 is handled correctly because it's doubly symmetric)
+ - I
+ - HAT
 
 The following shapes aren't supported:
  - CROSS
- - T1
- - Z
- - HEXA
  - TUBE2
  - CHAN2 (will be a shear center issue)
  - BOX1  (will be a shear center issue)
- - HAT   (will be a shear center issue)
  - HAT1  (will be a shear center issue)
  - DBOX  (will be a shear center issue)
 """
@@ -575,6 +575,109 @@ def chan1_faces(n1, n2, xform, dim1, dim2):
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
+def z_faces(n1, n2, xform, dim1, dim2):
+    """
+           ^ y
+           |
+    0--------7        ^ hall
+    |      | |        |
+    1----2 | |        |  ^
+         | | |   z    |  | hin
+         | +-|--->    |  |
+         |   |        |  v
+         |   6-----5  |
+         |         |  |
+         3---------4  v
+         <---> tweb
+             <-----> bfoot
+       <-----------> bflange
+    """
+    faces = [
+        # front face
+        [0, 1, 2, 7],
+        [2, 3, 6, 7],
+        [3, 4, 5, 6],
+
+        # back face
+        [8, 9, 10, 15],
+        [10, 11, 14, 15],
+        [11, 12, 13, 14],
+
+        # around the C (counter-clockwise)
+        [0, 8, 9, 1],
+        [1, 9, 10, 2],
+        [2, 10, 11, 3],
+        [3, 11, 12, 4],
+        [4, 12, 13, 5],
+        [5, 13, 14, 6],
+        [6, 14, 15, 7],
+        [7, 15, 8, 0],
+    ]
+    points_list = []
+    for nid, dim in [(n1, dim1), (n2, dim2)]:
+        bfoot, tweb, hin, hall = dim
+        wall = bfoot * 2. + tweb
+        tflange = (hall - hin) / 2.
+        points = np.array([
+            [0., hall/2,           -wall/2],  # 0
+            [0., hall/2 - tflange, -wall/2],  # 1
+            [0., hall/2 - tflange, -tweb/2],  # 2
+            [0., -hall/2,          -tweb/2],  # 3
+            [0., -hall/2,           wall/2], # 4
+            [0., -hall/2 + tflange, wall/2], # 5
+            [0., -hall/2 + tflange, tweb/2],  # 6
+            [0., hall/2, tweb/2],             # 7
+        ])  # 16 x 3
+        pointsi = np.dot(points, xform) + nid
+        points_list.append(pointsi)
+    return faces, np.vstack(points_list)
+
+def hexa_faces(n1, n2, xform, dim1, dim2):
+    """
+          ^ y
+          |
+       0-----5        ^ hall
+      /   |   \       |
+     /    |    \      |
+    1     +-----4---z |
+    \           /     |
+     \         /      |
+      2_______3       v
+              <-> wtri
+    <-----------> wall
+    """
+    faces = [
+        # front face
+        [0, 1, 2, 5],
+        [5, 2, 3, 4],
+
+        # back face
+        [6, 7, 8, 11],
+        [11, 8, 9, 10],
+
+        # around the C (counter-clockwise)
+        [0, 6, 7, 1],
+        [1, 7, 8, 2],
+        [2, 8, 9, 3],
+        [3, 9, 10, 4],
+        [4, 10, 11, 5],
+        [5, 11, 6, 0],
+    ]
+    points_list = []
+    for nid, dim in [(n1, dim1), (n2, dim2)]:
+        wtri, wall, hall = dim
+        points = np.array([
+            [0., hall/2,  -wall/2 + wtri],  # 0
+            [0., 0.,      -wall/2],  # 1
+            [0., -hall/2, -wall/2 + wtri],  # 2
+            [0., -hall/2,  wall/2 - wtri],  # 3
+            [0., 0.,       wall/2], # 4
+            [0., hall/2,   wall/2 - wtri], # 5
+        ])  # 12 x 3
+        pointsi = np.dot(points, xform) + nid
+        points_list.append(pointsi)
+    return faces, np.vstack(points_list)
+
 def l_faces(n1, n2, xform, dim1, dim2):
     """
        ^y
@@ -686,6 +789,63 @@ def t_faces(n1, n2, xform, dim1, dim2):  # validated
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
+def t1_faces(n1, n2, xform, dim1, dim2):  # validated
+    """
+                 ^ y
+                 |
+               6---5       ^ hall
+               | | |       |
+               | | |       |
+    0----------7 | |       | ^
+    |            +-|---> z | | tflange
+    1----------2   |       | v
+               |   |       |
+               |   |       |
+               3---4       v
+    <---------><--->
+     bfoot      tweb
+
+      bflange
+    <---------->
+    """
+    faces = [
+        # front face
+        [0, 1, 2, 7],
+        [2, 3, 4, 5, 6, 7],
+
+        # back face
+        [8, 9, 10, 15],
+        [10, 11, 12, 13, 14, 15],
+
+        # around the T (counter-clockwise)
+        [0, 8, 9, 1],
+        [1, 9, 10, 2],
+        [2, 10, 11, 3],
+        [3, 11, 12, 4],
+        [4, 12, 13, 5],
+        [5, 13, 14, 6],
+        [6, 14, 15, 7],
+        [7, 15, 8, 0],
+    ]
+
+    points_list = []
+    for nid, dim in [(n1, dim1), (n2, dim2)]:
+        hall, bfoot, tweb, tflange = dim
+        #htotal = tflange + hweb
+        points = np.array([
+            [0.,  tflange/2,  -bfoot - tweb/2], # 0
+            [0., -tflange/2, -bfoot - tweb/2], # 1
+            [0., -tflange/2, -tweb/2], # 2
+            [0., -hall/2,    -tweb/2], # 3
+            [0., -hall/2,     tweb/2], # 4
+            [0.,  hall/2,     tweb/2], # 5
+            [0.,  hall/2,    -tweb/2], # 6
+            [0.,  tflange/2, -tweb/2], # 7
+        ])  # 16 x 3
+        pointsi = np.dot(points, xform) + nid
+        points_list.append(pointsi)
+    return faces, np.vstack(points_list)
+
 def t2_faces(n1, n2, xform, dim1, dim2):  # validated
     """
          ^y
@@ -736,6 +896,83 @@ def t2_faces(n1, n2, xform, dim1, dim2):  # validated
             [0., tflange/2,        tweb/2],  # 6
             [0., hweb + tflange/2, tweb/2],  # 7
         ])  # 16 x 3
+        pointsi = np.dot(points, xform) + nid
+        points_list.append(pointsi)
+    return faces, np.vstack(points_list)
+
+
+def hat_faces(n1, n2, xform, dim1, dim2):
+    """
+            <--------d3------->
+
+            0----------------11              ^   --y3
+       d4   |        A        |   d4         |
+     <----> +-d2-5-------6-d2-+ <---->       |   --y2
+            | B  |       |  B |              | d1
+     2------1----+       +----10-----9       |   --y1
+     |     C     |       |     C     | t=d2  |
+     3-----------4       7-----------8       v   --y0
+     |
+     -z0    |-z1 |-z2    |z2  |z1    |z0
+    """
+    faces = [
+        # front face
+        [1, 2, 3, 4],
+        [0, 1, 4, 5],
+        [0, 5, 6, 11],
+        [6, 7, 10, 11],
+        [7, 8, 9, 10],
+
+        # back face
+        [13, 14, 15, 16],
+        [12, 13, 16, 17],
+        [12, 17, 18, 23],
+        [18, 19, 22, 23],
+        [19, 20, 21, 22],
+
+        # around the T (counter-clockwise)
+        [0, 12, 13, 1],
+        [1, 13, 14, 2],
+        [2, 14, 15, 3],
+        [3, 15, 16, 4],
+        [4, 16, 17, 5],
+        [5, 17, 18, 6],
+        [6, 18, 19, 7],
+        [7, 19, 20, 8],
+        [8, 20, 21, 9],
+        [9, 21, 22, 10,],
+        [10, 22, 23, 11,],
+        [11, 23, 12, 0],
+    ]
+
+    points_list = []
+    for nid, dim in [(n1, dim1), (n2, dim2)]:
+        d1, d2, d3, d4 = dim
+        #hall, that, wmid, bfoot
+        z0 = d3/2 + d4
+        z1 = d3/2.
+        z2 = d3/2 - d2
+        y0 = 0.
+        y1 = y0 + d2
+        y2 = d1 - d2
+        y3 = d1
+        points = np.array([
+            # x, y, z
+            [0., y3, -z1],  # 0
+            [0., y1, -z1],  # 1
+            [0., y1, -z0],  # 2
+            [0., y0, -z0],  # 3
+
+            [0., y0, -z2],  # 4
+            [0., y2, -z2],  # 5
+            [0., y2,  z2],  # 6
+            [0., y0,  z2],  # 7
+
+            [0., y0, z0],  # 3
+            [0., y1, z0],  # 2
+            [0., y1, z1],  # 1
+            [0., y3, z1],  # 0
+        ])  # 24 x 3
         pointsi = np.dot(points, xform) + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
