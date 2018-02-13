@@ -22,7 +22,7 @@ from six.moves.cPickle import load, dump, dumps  # type: ignore
 import numpy as np  # type: ignore
 
 from pyNastran.utils import object_attributes, print_bad_path
-from pyNastran.utils.log import get_logger2
+from pyNastran.utils.log import get_logger2, write_error
 from pyNastran.bdf.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck, parse_patran_syntax)
 
@@ -801,55 +801,57 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def validate(self):
         # type : (None) -> None
         """runs some checks on the input data beyond just type checking"""
-        #for eid, elem in sorted(iteritems(model.elements)):
-            #elem.validate()
-        for unused_nid, node in sorted(iteritems(self.nodes)):
-            node.validate()
-        for unused_cid, coord in sorted(iteritems(self.coords)):
-            coord.validate()
-        for unused_eid, elem in sorted(iteritems(self.elements)):
-            elem.validate()
-        for unused_pid, prop in sorted(iteritems(self.properties)):
-            prop.validate()
+        def _validate_dict(objects):
+            # type : (dict) -> None
+            """helper method for validate"""
+            #assert isinstance(objects, dict), type(objects)
+            ifailed = 0
+            nmax_failed = 20
+            for unused_id, obj in sorted(iteritems(objects)):
+                try:
+                    obj.validate()
+                except(ValueError, AssertionError, RuntimeError) as e:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    # format_tb(exc_traceback)  # works; ugly
+                    # format_exc(e) # works; short
+                    #traceback.format_stack()
+                    write_error(
+                        '\nTraceback (most recent call last):\n' +
+                        ''.join(traceback.format_stack()[:-1])
+                    )
+                    write_error(''.join(traceback.format_tb(exc_traceback)) + '\n')
+                    self.log.error('\n' + obj.rstrip())
+                    write_error('----------------------------------------------------------------\n')
+                    ifailed += 1
+                    if ifailed > nmax_failed:
+                        raise
+            if ifailed:
+                raise
 
-        for unused_eid, elem in sorted(iteritems(self.rigid_elements)):
-            elem.validate()
-        for unused_eid, plotel in sorted(iteritems(self.plotels)):
-            plotel.validate()
-        for unused_eid, mass in sorted(iteritems(self.masses)):
-            mass.validate()
-        for unused_pid, property_mass in sorted(iteritems(self.properties_mass)):
-            property_mass.validate()
+        _validate_dict(self.nodes)
+        _validate_dict(self.coords)
+        _validate_dict(self.elements)
+        _validate_dict(self.properties)
+        _validate_dict(self.rigid_elements)
+        _validate_dict(self.plotels)
+        _validate_dict(self.masses)
+        _validate_dict(self.properties_mass)
 
         #------------------------------------------------
-        for unused_mid, mat in sorted(iteritems(self.materials)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.thermal_materials)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATS1)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATS3)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATS8)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATT1)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATT2)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATT3)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATT4)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATT5)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATT8)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.MATT9)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.creep_materials)):
-            mat.validate()
-        for unused_mid, mat in sorted(iteritems(self.hyperelastic_materials)):
-            mat.validate()
+        _validate_dict(self.materials)
+        _validate_dict(self.thermal_materials)
+        _validate_dict(self.MATS1)
+        _validate_dict(self.MATS3)
+        _validate_dict(self.MATS8)
+        _validate_dict(self.MATT1)
+        _validate_dict(self.MATT2)
+        _validate_dict(self.MATT3)
+        _validate_dict(self.MATT4)
+        _validate_dict(self.MATT5)
+        _validate_dict(self.MATT8)
+        _validate_dict(self.MATT9)
+        _validate_dict(self.creep_materials)
+        _validate_dict(self.hyperelastic_materials)
 
         #------------------------------------------------
         for unused_key, load_combinations in sorted(iteritems(self.load_combinations)):
@@ -868,53 +870,39 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 dload_entry.validate()
 
         #------------------------------------------------
-        for unused_key, nlpci in sorted(iteritems(self.nlpcis)):
-            nlpci.validate()
-        for unused_key, nlparm in sorted(iteritems(self.nlparms)):
-            nlparm.validate()
-        for unused_key, rotor in sorted(iteritems(self.rotors)):
-            rotor.validate()
-        for unused_key, tstep in sorted(iteritems(self.tsteps)):
-            tstep.validate()
-        for unused_key, tstepnl in sorted(iteritems(self.tstepnls)):
-            tstepnl.validate()
+        _validate_dict(self.nlpcis)
+        _validate_dict(self.nlparms)
+        _validate_dict(self.rotors)
+        _validate_dict(self.tsteps)
+        _validate_dict(self.tstepnls)
+        _validate_dict(self.MATT3)
         for unused_key, transfer_functions in sorted(iteritems(self.transfer_functions)):
             for transfer_function in transfer_functions:
                 transfer_function.validate()
-        for unused_key, delay in sorted(iteritems(self.delays)):
-            delay.validate()
+
+        _validate_dict(self.delays)
 
         #------------------------------------------------
         if self.aeros is not None:
             self.aeros.validate()
-        for unused_caero_id, caero in sorted(iteritems(self.caeros)):
-            caero.validate()
-        for unused_key, paero in sorted(iteritems(self.paeros)):
-            paero.validate()
-        for unused_spline_id, spline in sorted(iteritems(self.splines)):
-            spline.validate()
+        _validate_dict(self.caeros)
+        _validate_dict(self.paeros)
+        _validate_dict(self.splines)
+        _validate_dict(self.aecomps)
+        _validate_dict(self.aefacts)
 
-        for unused_key, aecomp in sorted(iteritems(self.aecomps)):
-            aecomp.validate()
-        for unused_key, aefact in sorted(iteritems(self.aefacts)):
-            aefact.validate()
         for unused_key, aelinks in sorted(iteritems(self.aelinks)):
             for aelink in aelinks:
                 aelink.validate()
-        for unused_key, aeparam in sorted(iteritems(self.aeparams)):
-            aeparam.validate()
-        for unused_key, aesurf in sorted(iteritems(self.aesurf)):
-            aesurf.validate()
-        for unused_key, aesurfs in sorted(iteritems(self.aesurfs)):
-            aesurfs.validate()
-        for unused_key, aestat in sorted(iteritems(self.aestats)):
-            aestat.validate()
-        for unused_key, trim in sorted(iteritems(self.trims)):
-            trim.validate()
-        for unused_key, diverg in sorted(iteritems(self.divergs)):
-            diverg.validate()
-        for unused_key, csschd in sorted(iteritems(self.csschds)):
-            csschd.validate()
+
+        _validate_dict(self.aeparams)
+        _validate_dict(self.aesurf)
+        _validate_dict(self.aesurfs)
+        _validate_dict(self.aestats)
+        _validate_dict(self.trims)
+
+        _validate_dict(self.divergs)
+        _validate_dict(self.csschds)
         for mkaero in self.mkaeros:
             mkaero.validate()
         for monitor in self.monitor_points:
@@ -923,40 +911,28 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         #------------------------------------------------
         if self.aero is not None:
             self.aero.validate()
-        for unused_key, flfact in sorted(iteritems(self.flfacts)):
-            flfact.validate()
-        for unused_key, flutter in sorted(iteritems(self.flutters)):
-            flutter.validate()
-        for unused_key, gust in sorted(iteritems(self.gusts)):
-            gust.validate()
+
+        _validate_dict(self.flfacts)
+        _validate_dict(self.flutters)
+        _validate_dict(self.gusts)
 
         #------------------------------------------------
         for unused_key, bcs in sorted(iteritems(self.bcs)):
             for bc in bcs:
                 bc.validate()
-        for unused_key, phbdy in sorted(iteritems(self.phbdys)):
-            phbdy.validate()
-        for unused_key, convection_property in sorted(iteritems(self.convection_properties)):
-            convection_property.validate()
-        for unused_key, tempd in sorted(iteritems(self.tempds)):
-            tempd.validate()
+        _validate_dict(self.phbdys)
+        _validate_dict(self.convection_properties)
+        _validate_dict(self.tempds)
         #------------------------------------------------
-        for unused_key, bcrpara in sorted(iteritems(self.bcrparas)):
-            bcrpara.validate()
-        for unused_key, bctadd in sorted(iteritems(self.bctadds)):
-            bctadd.validate()
-        for unused_key, bctpara in sorted(iteritems(self.bctparas)):
-            bctpara.validate()
-        for unused_key, bctset in sorted(iteritems(self.bctsets)):
-            bctset.validate()
-        for unused_key, bsurf in sorted(iteritems(self.bsurf)):
-            bsurf.validate()
-        for unused_key, bsurfs in sorted(iteritems(self.bsurfs)):
-            bsurfs.validate()
+        _validate_dict(self.bcrparas)
+        _validate_dict(self.bctadds)
+        _validate_dict(self.bctparas)
+        _validate_dict(self.bctsets)
+        _validate_dict(self.bsurf)
+        _validate_dict(self.bsurfs)
 
         #------------------------------------------------
-        for unused_key, suport1 in sorted(iteritems(self.suport1)):
-            suport1.validate()
+        _validate_dict(self.suport1)
         for suport in self.suport:
             suport.validate()
         for se_suport in self.se_suport:
@@ -977,32 +953,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 mpc.validate()
 
         #------------------------------------------------
-        for unused_key, darea in sorted(iteritems(self.dareas)):
-            darea.validate()
-        for unused_key, dphase in sorted(iteritems(self.dphases)):
-            dphase.validate()
+        _validate_dict(self.dareas)
+        _validate_dict(self.dphases)
 
-        for unused_pid, pbusht in sorted(iteritems(self.pbusht)):
-            pbusht.validate()
-        for unused_pid, pdampt in sorted(iteritems(self.pdampt)):
-            pdampt.validate()
-        for unused_pid, pelast in sorted(iteritems(self.pelast)):
-            pelast.validate()
+        _validate_dict(self.pbusht)
+        _validate_dict(self.pdampt)
+        _validate_dict(self.pelast)
 
         for unused_pid, freqs in sorted(iteritems(self.frequencies)):
             for freq in freqs:
                 freq.validate()
         #------------------------------------------------
-        for unused_key, dmi in sorted(iteritems(self.dmis)):
-            dmi.validate()
-        for unused_key, dmig in sorted(iteritems(self.dmigs)):
-            dmig.validate()
-        for unused_key, dmij in sorted(iteritems(self.dmijs)):
-            dmij.validate()
-        for unused_key, dmiji in sorted(iteritems(self.dmijis)):
-            dmiji.validate()
-        for unused_key, dmik in sorted(iteritems(self.dmiks)):
-            dmik.validate()
+        _validate_dict(self.dmis)
+        _validate_dict(self.dmigs)
+        _validate_dict(self.dmijs)
+        _validate_dict(self.dmijis)
+        _validate_dict(self.dmiks)
         #------------------------------------------------
         #self.asets = []
         #self.bsets = []
@@ -1017,8 +983,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         #self.se_usets = {}
         #self.se_sets = {}
 
-        for unused_key, sets in sorted(iteritems(self.sets)):
-            sets.validate()
+        _validate_dict(self.sets)
         for unused_key, uset in sorted(iteritems(self.usets)):
             for useti in uset:
                 useti.validate()
@@ -1034,10 +999,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         for qset in self.qsets:
             qset.validate()
 
-        for unused_key, se_set in sorted(iteritems(self.se_sets)):
-            se_set.validate()
-        for unused_key, se_uset in sorted(iteritems(self.se_usets)):
-            se_uset.validate()
+        _validate_dict(self.se_sets)
+        _validate_dict(self.se_usets)
         for se_bset in self.se_bsets:
             se_bset.validate()
         for se_cset in self.se_csets:
@@ -1045,48 +1008,36 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         for se_qset in self.se_qsets:
             se_qset.validate()
         #------------------------------------------------
-        for unused_key, table in sorted(iteritems(self.tables)):
-            table.validate()
-        for unused_key, table in sorted(iteritems(self.tables_d)):
-            table.validate()
-        for unused_key, table in sorted(iteritems(self.tables_m)):
-            table.validate()
-        for unused_key, random_table in sorted(iteritems(self.random_tables)):
-            random_table.validate()
-        for unused_key, table_sdamping in sorted(iteritems(self.tables_sdamping)):
-            table_sdamping.validate()
+        _validate_dict(self.tables)
+        _validate_dict(self.tables_d)
+        _validate_dict(self.tables_m)
+        _validate_dict(self.random_tables)
+        _validate_dict(self.tables_sdamping)
+        _validate_dict(self.sets)
+
         #------------------------------------------------
-        for unused_key, method in sorted(iteritems(self.methods)):
-            method.validate()
-        for unused_key, cmethod in sorted(iteritems(self.cMethods)):
-            cmethod.validate()
+        _validate_dict(self.methods)
+        _validate_dict(self.cMethods)
         #------------------------------------------------
-        for unused_key, dconadd in sorted(iteritems(self.dconadds)):
-            dconadd.validate()
+        _validate_dict(self.dconadds)
         for unused_key, dconstrs in sorted(iteritems(self.dconstrs)):
             for dconstr in dconstrs:
                 dconstr.validate()
-        for unused_key, desvar in sorted(iteritems(self.desvars)):
-            desvar.validate()
-        for unused_key, ddval in sorted(iteritems(self.ddvals)):
-            ddval.validate()
-        for unused_key, dlink in sorted(iteritems(self.dlinks)):
-            dlink.validate()
-        for unused_key, dresp in sorted(iteritems(self.dresps)):
-            dresp.validate()
+
+        _validate_dict(self.desvars)
+        _validate_dict(self.ddvals)
+        _validate_dict(self.dlinks)
+        _validate_dict(self.dresps)
 
         if self.dtable is not None:
             self.dtable.validate()
         if self.doptprm is not None:
             self.doptprm.validate()
-        for unused_key, dequation in sorted(iteritems(self.dequations)):
-            dequation.validate()
-        for unused_key, dvprel in sorted(iteritems(self.dvprels)):
-            dvprel.validate()
-        for unused_key, dvmrel in sorted(iteritems(self.dvmrels)):
-            dvmrel.validate()
-        for unused_key, dvcrel in sorted(iteritems(self.dvcrels)):
-            dvcrel.validate()
+
+        _validate_dict(self.dequations)
+        _validate_dict(self.dvprels)
+        _validate_dict(self.dvmrels)
+        _validate_dict(self.dvcrels)
         for unused_key, dscreen in sorted(iteritems(self.dscreen)):
             dscreen.validate()
         for unused_dvid, dvgrids in iteritems(self.dvgrids):
