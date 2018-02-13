@@ -24,6 +24,7 @@ WHITE = (1., 1., 1.)
 BLUE = (0., 0., 1.)
 RED = (1., 0., 0.)
 
+
 class GuiCommon(GuiAttributes):
     def __init__(self, **kwds):
         inputs = kwds['inputs']
@@ -275,13 +276,7 @@ class GuiCommon(GuiAttributes):
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
 
-        # setup
-        #-----
-        # make results
-        if len(case.shape) == 1:
-            normi = case
-        else:
-            normi = norm(case, axis=1)
+        normi = self._get_normalized_data(icase)
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -312,6 +307,61 @@ class GuiCommon(GuiAttributes):
         )
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
+
+    def export_case_data(self, icases=None):
+        """exports CSVs of the requested cases"""
+        if icases is None:
+            icases = self.result_cases.keys()
+        for icase in icases:
+            (obj, (i, name)) = self.result_cases[icase]
+            subcase_id = obj.subcase_id
+            location = obj.get_location(i, name)
+
+            #normi = self._get_normalized_data(icase)
+            case = obj.get_result(i, name)
+            if case is None:
+                continue # normals
+            subtitle, label = self.get_subtitle_label(subcase_id)
+            label2 = obj.get_header(i, name)
+            data_format = obj.get_data_format(i, name)
+            vector_size = obj.get_vector_size(i, name)
+            print(subtitle, label, label2, location, name)
+
+            word, eids_nids = self.get_mapping_for_location(location)
+
+            # fixing cast int data
+            header = '%s(%%i),%s(%s)' % (word, label2, data_format)
+            if 'i' in data_format and isinstance(case.dtype, np.floating):
+                header = '%s(%%i),%s' % (word, label2)
+
+            fname = '%s_%s.csv' % (icase, name)
+            out_data = np.column_stack([eids_nids, case])
+            np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
+
+    def get_mapping_for_location(self, location):
+        """helper method for ``export_case_data``"""
+        if location == 'centroid':
+            word = 'ElementID'
+            eids_nids = self.element_ids
+        elif location == 'node':
+            word = 'NodeID'
+            eids_nids = self.node_ids
+        else:
+            raise NotImplementedError(location)
+        return word, eids_nids
+
+    def _get_normalized_data(self, icase):
+        """helper method for ``export_case_data``"""
+        (obj, (i, name)) = self.result_cases[icase]
+        case = obj.get_result(i, name)
+        if case is None:
+            return None
+
+        if len(case.shape) == 1:
+            normi = case
+        else:
+            normi = norm(case, axis=1)
+        return normi
 
     def _get_disp_data(self, icase, is_disp):
         """helper for ``on_disp``"""
@@ -368,14 +418,14 @@ class GuiCommon(GuiAttributes):
         # setup
         #-----
         # make results
-        if len(case.shape) == 1:
-            unused_normi = case
-        else:
-            unused_normi = norm(case, axis=1)
+        #if len(case.shape) == 1:
+            #normi = case
+        #else:
+            #normi = norm(case, axis=1)
 
         #if min_value is None and max_value is None:
-            #max_value = unused_normi.max()
-            #min_value = unused_normi.min()
+            #max_value = normi.max()
+            #min_value = normi.min()
 
         #if min_value is None and max_value is None:
         min_value, max_value = obj.get_min_max(i, name)
