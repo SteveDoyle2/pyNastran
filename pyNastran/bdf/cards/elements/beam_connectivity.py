@@ -215,15 +215,15 @@ def box_faces(n1, n2, xform, dim1, dim2):  # validated
         hbox_in = hbox - 2*th
         wbox_in = wbox - 2*tw
         points = np.array([
-            [0., -wbox/2., hbox/2], # 0
-            [0., -wbox/2, -hbox/2], # 1
-            [0.,  wbox/2, -hbox/2], # 2
-            [0.,  wbox/2,  hbox/2], # 3
+            [0., -hbox/2., wbox/2], # 0
+            [0., -hbox/2, -wbox/2], # 1
+            [0.,  hbox/2, -wbox/2], # 2
+            [0.,  hbox/2,  wbox/2], # 3
 
-            [0., -wbox_in/2., hbox_in/2], # 4
-            [0., -wbox_in/2, -hbox_in/2], # 5
-            [0.,  wbox_in/2, -hbox_in/2], # 6
-            [0.,  wbox_in/2,  hbox_in/2], # 7
+            [0., -hbox_in/2., wbox_in/2], # 4
+            [0., -hbox_in/2, -wbox_in/2], # 5
+            [0.,  hbox_in/2, -wbox_in/2], # 6
+            [0.,  hbox_in/2,  wbox_in/2], # 7
         ])
         pointsi = np.dot(points, xform) + nid
         points_list.append(pointsi)
