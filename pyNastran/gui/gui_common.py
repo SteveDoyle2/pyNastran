@@ -1033,7 +1033,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
                                   bar_scale=0.0, representation=None, is_visible=True,
-                                  follower_nodes=None, is_pickable=False, ugrid=None):
+                                  follower_nodes=None, follower_function=None,
+                                  is_pickable=False, ugrid=None):
         """
         Creates an AltGeometry object
 
@@ -1062,6 +1063,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             can you pick a node/cell on this actor
         follower_nodes : List[int]
             the nodes that are brought along with a deflection
+        follower_function : function
+            a custom follower_node update function
         ugrid : vtk.vtkUnstructuredGrid(); default=None
             the grid object; one will be created that you can fill
             if None is passed in
@@ -1076,6 +1079,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             representation=representation, is_visible=is_visible, is_pickable=is_pickable)
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
+        if follower_function is not None:
+            self.follower_functions[name] = follower_function
 
     def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
                                      opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,

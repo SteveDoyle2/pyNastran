@@ -17,7 +17,7 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
     hexa_faces, hat_faces,
 )
 
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 
 
 PIOVER2 = np.pi / 2.
@@ -229,24 +229,77 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     n1+wa, n2+wb, xform,
                     ugrid, node0, points_list)
 
-            if node0: # and '3d_bars' not in self.alt_grids:
-                self.gui.create_alternate_vtk_grid(
-                    '3d_bars', color=BLUE, opacity=0.2,
-                    representation='surface', is_visible=True,
-                    ugrid=ugrid,
-                )
-
             bar_types[bar_type][0].append(eid)
             bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
 
-        if points_list:
-            if len(points_list) == 1:
-                points_array = points_list[0]
-            else:
-                points_array = np.vstack(points_list)
-            points = numpy_to_vtk_points(points_array)
-            ugrid.SetPoints(points)
+        if node0: # and '3d_bars' not in self.alt_grids:
+            def update_grid_function(nid_map, ugrid, points, nodes):
+                """custom function to update the 3d bars"""
+                points_list = []
+                node0b = 0
+                for eid in bar_beam_eids:
+                    elem = self.model.elements[eid]
+                    pid_ref = elem.pid_ref
+                    if pid_ref is None:
+                        pid_ref = self.model.Property(elem.pid)
+                    assert not isinstance(pid_ref, integer_types), elem
+
+                    ptype = pid_ref.type
+                    bar_type = _get_bar_type(ptype, pid_ref)
+
+                    nids = elem.nodes
+                    (nid1, nid2) = elem.node_ids
+                    node1 = model.nodes[nid1]
+                    node2 = model.nodes[nid2]
+
+                    i1, i2 = np.searchsorted(self.node_ids, [nid1, nid2])
+                    n1 = nodes[i1, :]
+                    n2 = nodes[i2, :]
+                    centroid = (n1 + n2) / 2.
+
+                    i = n2 - n1
+                    Li = norm(i)
+                    ihat = i / Li
+
+                    v, wa, wb = self._rotate_v_wa_wb(model, elem, n1, n2, node1, node2, debug)
+                    if wb is None:
+                        # one or more of v, wa, wb are bad
+                        continue
+                    yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li)
+                    xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
+
+                    v, wa, wb = self._rotate_v_wa_wb(model, elem, n1, n2, node1, node2, debug)
+                    ugridi = None
+                    node0b = add_3d_bar_element(
+                        bar_type, ptype, pid_ref,
+                        n1+wa, n2+wb, xform,
+                        ugridi, node0b, points_list, add_to_ugrid=False)
+
+                points_array = _make_points_array(points_list)
+
+                points_array2 = numpy_to_vtk(
+                    num_array=points_array,
+                    deep=1,
+                    array_type=vtk.VTK_FLOAT,
+                )
+                points.SetData(points_array2)
+
+                ugrid.SetPoints(points)
+                points.Modified()
+                ugrid.Modified()
+                return
+
+            if points_list:
+                self.gui.create_alternate_vtk_grid(
+                    '3d_bars', color=BLUE, opacity=0.2,
+                    representation='surface', is_visible=True,
+                    follower_function=update_grid_function,
+                    ugrid=ugrid,
+                )
+                points_array = _make_points_array(points_list)
+                points = numpy_to_vtk_points(points_array)
+                ugrid.SetPoints(points)
 
         #print('bar_types =', bar_types)
         for bar_type in list(bar_types):
@@ -386,6 +439,19 @@ class NastranGeometryHelper(NastranGuiAttributes):
             model.log.error(msg)
             return v, wa, None
         return v, wa, wb
+
+def _make_points_array(points_list):
+    if len(points_list) == 1:
+        points_array = points_list[0]
+    else:
+        points_array = np.vstack(points_list)
+    return points_array
+
+def _apply_points_list(points_list, ugrid):
+    if points_list:
+        points_array = _make_points_array(points_list)
+        points = numpy_to_vtk_points(points_array)
+        ugrid.SetPoints(points)
 
 def _get_bar_type(ptype, pid_ref):
     """helper method for _get_bar_yz_arrays"""
@@ -769,7 +835,7 @@ def faces_to_element_facelist(faces, node0):
 
 def add_3d_bar_element(bar_type, ptype, pid_ref,
                        n1, n2, xform,
-                       ugrid, node0, points_list):
+                       ugrid, node0, points_list, add_to_ugrid=True):
     """adds a 3d bar element to the unstructured grid"""
     if ptype in ['PBARL']:
         dim1 = dim2 = pid_ref.dim
@@ -792,7 +858,8 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         point_ids.SetId(5, node0 + 5)
         point_ids.SetId(6, node0 + 6)
         point_ids.SetId(7, node0 + 7)
-        ugrid.InsertNextCell(12, point_ids)
+        if add_to_ugrid:
+            ugrid.InsertNextCell(12, point_ids)
         points_list.append(pointsi)
         node0 += 8
         return node0
@@ -862,6 +929,7 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
     else:
         print('skipping 3d bar_type = %r' % bar_type)
         return node0
-    ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
+    if add_to_ugrid:
+        ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
     points_list.append(pointsi)
     return node0

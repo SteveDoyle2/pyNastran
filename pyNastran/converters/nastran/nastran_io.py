@@ -581,9 +581,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #nconm2 += model.card_count['CMASS2']
 
         if nconm2 > 0:
+            def update_conm2s_function(nid_map, ugrid, points, nodes):
+                pass
             self.gui.create_alternate_vtk_grid(
                 'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
-                representation='point')
+                representation='point', follower_function=update_conm2s_function)
 
         # Allocate grids
         self.gui.grid.Allocate(self.nelements, 1000)

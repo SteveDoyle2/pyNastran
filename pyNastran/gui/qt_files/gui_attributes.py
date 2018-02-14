@@ -120,6 +120,7 @@ class GuiAttributes(object):
         #}
         self.geometry_properties = OrderedDict()
         self.follower_nodes = {}
+        self.follower_functions = {}
 
         self.itext = 0
 

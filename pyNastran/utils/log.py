@@ -402,6 +402,9 @@ def _write_screen(typ, msg):
     else: # error / other
         sys.stdout.write(Fore.RED + msg)
 
+def write_error(msg):
+    sys.stdout.write(Fore.RED + msg)
+
 if __name__ == '__main__':  # pragma: no cover
     # how to use a simple logger
     for nam in ['debug', 'info']:

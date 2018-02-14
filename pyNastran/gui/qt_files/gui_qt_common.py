@@ -317,7 +317,6 @@ class GuiCommon(GuiAttributes):
             subcase_id = obj.subcase_id
             location = obj.get_location(i, name)
 
-            #normi = self._get_normalized_data(icase)
             case = obj.get_result(i, name)
             if case is None:
                 continue # normals
@@ -557,17 +556,17 @@ class GuiCommon(GuiAttributes):
         self.vtk_interactor.Render()
         self.res_widget.result_case_window.treeView.fringe.setChecked(True)
 
-    def on_disp(self, icase, show_msg=True):
+    def on_disp(self, icase, apply_fringe=False, show_msg=True):
         is_disp = True
-        self._on_disp_vector(icase, is_disp, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.disp.setChecked(True)
 
-    def on_vector(self, icase, show_msg=True):
+    def on_vector(self, icase, apply_fringe=False, show_msg=True):
         is_disp = False
-        self._on_disp_vector(icase, is_disp, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
 
-    def _on_disp_vector(self, icase, is_disp, show_msg=True):
+    def _on_disp_vector(self, icase, is_disp, apply_fringe=False, show_msg=True):
         """
         Sets the icase data to the active displacement
 
@@ -644,12 +643,12 @@ class GuiCommon(GuiAttributes):
                 #self._is_displaced = False
                 self._is_forces = True
                 #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
-                self._update_forces(vector_data, set_scalars=False, scale=scale)
+                self._update_forces(vector_data, set_scalars=apply_fringe, scale=scale)
             else:
                 #self._is_displaced = False
                 self._is_forces = True
                 #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
-                self._update_elemental_vectors(vector_data, set_scalars=False, scale=scale)
+                self._update_elemental_vectors(vector_data, set_scalars=apply_fringe, scale=scale)
 
         #is_low_to_high = True
         #self.log_info('min_value=%s, max_value=%s' % (min_value, max_value))
@@ -1197,11 +1196,12 @@ class GuiCommon(GuiAttributes):
         #print('mag =', mag[inonzero])
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-        vtk_mag = numpy_to_vtk(mag, deep=1)
 
         grid.GetPointData().SetVectors(vtk_vectors)
         if set_scalars:
+            vtk_mag = numpy_to_vtk(mag, deep=1)
             grid.GetPointData().SetScalars(vtk_mag)
+            grid.GetCellData().SetScalars(None)
         self.arrow_actor.SetVisibility(True)
         grid.Modified()
         self.grid_selected.Modified()
@@ -1225,12 +1225,13 @@ class GuiCommon(GuiAttributes):
         #print('mag =', mag[inonzero])
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-        vtk_mag = numpy_to_vtk(mag, deep=1)
 
         grid.GetPointData().SetVectors(None)
         #print('_update_elemental_vectors; shape=%s' % (str(new_forces.shape)))
         grid.GetCellData().SetVectors(vtk_vectors)
         if set_scalars:
+            vtk_mag = numpy_to_vtk(mag, deep=1)
+            grid.GetPointData().SetScalars(None)
             grid.GetCellData().SetScalars(vtk_mag)
         self.arrow_actor_centroid.SetVisibility(True)
         grid.Modified()
@@ -1247,6 +1248,7 @@ class GuiCommon(GuiAttributes):
         grid.Modified()
         self.grid_selected.Modified()
         self._update_follower_grids(nodes)
+        self._update_follower_grids_complex(nodes)
 
     def _update_follower_grids(self, nodes):
         """updates grids that use the same ids as the parent model"""
@@ -1256,6 +1258,14 @@ class GuiCommon(GuiAttributes):
             for j, nid in enumerate(nids):
                 i = self.nid_map[nid]
                 points.SetPoint(j, *nodes[i, :])
+            grid.Modified()
+
+    def _update_follower_grids_complex(self, nodes):
+        """updates grids that use a complicated update method"""
+        for name, follower_function in iteritems(self.follower_functions):
+            grid = self.alt_grids[name]
+            points = grid.GetPoints()
+            follower_function(self.nid_map, grid, points, nodes)
             grid.Modified()
 
     def _get_icase(self, result_name):
