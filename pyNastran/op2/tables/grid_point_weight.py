@@ -288,6 +288,23 @@ class GridPointWeight(object):
         n += i
 
     def write_f06(self, f, page_stamp, page_num):
+        """
+        writes the f06
+
+        Parameters
+        ----------
+        f : file / StringIO
+            a file-like object
+        page_stamp : str
+            the page formatter (e.g., 'PAGE %i')
+        page_num : int
+            the active page number
+
+        Returns
+        -------
+        page_num : int
+            the new page number
+        """
         if self.reference_point is None:
             return page_num
         msg = ['                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R']
