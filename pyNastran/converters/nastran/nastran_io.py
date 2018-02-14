@@ -581,8 +581,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #nconm2 += model.card_count['CMASS2']
 
         if nconm2 > 0:
-            def update_conm2s_function(nid_map, ugrid, points, nodes):
-                pass
             self.gui.create_alternate_vtk_grid(
                 'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
                 representation='point', follower_function=update_conm2s_function)
@@ -1598,8 +1596,42 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # CMASS3, CMASS4 are applied to SPOINTs
 
         if nconm2 > 0:
+            def update_conm2s_function(nid_map, ugrid, points, nodes):
+                j2 = 0
+                for unused_eid, element in sorted(iteritems(model.masses)):
+                    if isinstance(element, CONM2):
+                        nid = element.nid
+                        inid = np.searchsorted(self.node_ids, nid)
+                        xyz_nid = nodes[inid, :]
+                        centroid = element.offset(xyz_nid)
+                        points.SetPoint(j2, *centroid)
+
+                    elif element.type in ['CMASS1', 'CMASS2']:
+                        n1, n2 = element.nodes
+                        if element.nodes[0] is not None:
+                            inid = np.searchsorted(self.node_ids, n1)
+                            p1 = nodes[inid, :]
+                            factor += 1.
+                        if element.nodes[1] is not None:
+                            inid = np.searchsorted(self.node_ids, n2)
+                            p2 = nodes[inid, :]
+                            factor += 1.
+                        centroid = (p1 + p2) / factor
+                        points.SetPoint(j2, *centroid)
+
+                        elem = vtk.vtkVertex()
+                        elem.GetPointIds().SetId(0, j2)
+                        self.alt_grids['conm2'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    else:
+                        continue
+                        #self.gui.log_info("skipping %s" % element.type)
+                    j2 += 1
+                return
+
             self.gui.create_alternate_vtk_grid(
                 'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
+                follower_function=update_conm2s_function,
+
                 representation='point')
 
         # Allocate grids
@@ -1659,7 +1691,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     zfighting_offset += zfighting_offset0
 
         if nconm2 > 0 and xref_nodes:
-            self._set_conm_grid(nconm2, dim_max, model)
+            self._set_conm_grid(nconm2, model)
 
 
         make_spc_mpc_supports = True
@@ -2219,7 +2251,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.alt_grids[name].SetPoints(points)
         return j
 
-    def _set_conm_grid(self, nconm2, dim_max, model, j=0):
+    def _set_conm_grid(self, nconm2, model):
         """
         creates the mass secondary actor called:
          - conm2
@@ -2231,14 +2263,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         because it's really a "mass" actor
         """
+        j = 0
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nconm2)
 
         #sphere_size = self._get_sphere_size(dim_max)
         for unused_eid, element in sorted(iteritems(model.masses)):
             if isinstance(element, CONM2):
-                #xyz = element.nid.get_position()
-                centroid = element.Centroid()
+                xyz_nid = element.nid_ref.get_position()
+                centroid = element.offset(xyz_nid)
+                centroid_old = element.Centroid()
+                #assert np.all(np.allclose(centroid_old, centroid)), 'centroid_old=%s new=%s' % (centroid_old, centroid)
                 #d = norm(xyz - c)
                 points.InsertPoint(j, *centroid)
 
@@ -2253,9 +2288,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.alt_grids['conm2'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 1
             elif element.type in ['CMASS1', 'CMASS2']:
-                unused_n1 = element.G1()
-                unused_n2 = element.G1()
                 centroid = element.Centroid()
+                #n1 = element.G1()
+                #n2 = element.G2()
                 #print('n1=%s n2=%s centroid=%s' % (n1, n2, centroid))
                 points.InsertPoint(j, *centroid)
 
@@ -2263,7 +2298,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(0, j)
                 self.alt_grids['conm2'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 1
-
             else:
                 self.gui.log_info("skipping %s" % element.type)
         self.alt_grids['conm2'].SetPoints(points)

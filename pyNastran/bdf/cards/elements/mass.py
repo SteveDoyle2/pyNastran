@@ -189,18 +189,18 @@ class CMASS1(PointMassElement):
         Centroid is assumed to be c=(g1+g2)/2.
         If g2 is blank, then the centroid is the location of g1.
         """
-        f = 0.
+        factor = 0.
         p1 = np.array([0., 0., 0.])
         p2 = np.array([0., 0., 0.])
         if self.nodes_ref[0] is not None:
             p1 = self.nodes_ref[0].get_position()
-            f += 1.
+            factor += 1.
 
         g2 = self.G2()
         if g2 not in [None, 0]:
             p2 = self.nodes_ref[1].get_position()
-            f += 1.
-        c = (p1 + p2) / f
+            factor += 1.
+        c = (p1 + p2) / factor
         return c
 
     def center_of_mass(self):
@@ -371,17 +371,17 @@ class CMASS2(PointMassElement):
         Centroid is assumed to be c=(g1+g2)/2.
         If g2 is blank, then the centroid is the location of g1.
         """
-        f = 0.
+        factor = 0.
         p1 = np.array([0., 0., 0.])
         p2 = np.array([0., 0., 0.])
         if self.nodes[0] is not None:
             p1 = self.nodes_ref[0].get_position()
-            f += 1.
+            factor += 1.
         if self.nodes[1] is not None:
             p2 = self.nodes_ref[1].get_position()
-            f += 1.
+            factor += 1.
         assert f > 0., str(self)
-        c = (p1 + p2) / f
+        c = (p1 + p2) / factor
         return c
 
     def center_of_mass(self):
@@ -1156,6 +1156,38 @@ class CONM2(PointMassElement):
             raise NotImplementedError('CONM2 intertia method for CID != 0 is not implemented.')
             #A2 = A * matrix
             #return A2  # correct for offset using dx???
+
+    def offset(self, xyz_nid):
+        cid = self.Cid()
+        if cid == 0:
+            # no transform needed
+            X2 = xyz_nid + self.X
+        elif cid == -1:
+            # case X1, X2, X3 are the coordinates, not offsets, of the center of gravity of
+            # the mass in the basic coordinate system.
+
+            # 4. If CID = -1, offsets are internally computed as the difference between the grid
+            # point location and X1, X2, X3.
+            # this statement is not supported...
+            return self.X
+        else:
+            # Offset distances from the grid point to the center of gravity of the mass
+            # in the coordinate system
+
+            # If CID > 0, then X1, X2, and X3 are defined by a local Cartesian system, even
+            # if CID references a spherical or cylindrical coordinate system. This is similar
+            # to the manner in which displacement coordinate systems are defined.
+            # this statement is not supported...
+
+            # convert self.X into the global frame
+            x = self.cid_ref.transform_node_to_global(self.X)
+
+            # self.X is an offset
+            dx = x - self.cid_ref.origin
+
+            # the actual position of the CONM2
+            X2 = xyz_nid + dx
+        return X2
 
     def Centroid(self):
         """
