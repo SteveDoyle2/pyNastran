@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef, TableData
+from .card_table import CardTable, TableDef
 
 
 class Constraint(object):
@@ -170,50 +170,49 @@ class SPC(CardTable):
 class SPC1_G(CardTable):
     card_id = 'SPC1'
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPC1/SPC1_G/IDENTITY')
+    
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
 
-    """
-    <group name="SPC1_G" description="SPC1 defined in point list format">
-        <dataset name="G" description="The grid or scalar points list">
-            <field name="ID" type="integer"/>
-        </dataset>
-        <dataset name="IDENTITY">
-            <field name="SID" type="integer"/>
-            <field name="C" type="integer"/>
-            <field name="G_POS" type="integer" description="Start position of points in G dataset"/>
-            <field name="G_LEN" type="integer" description="Length of points in G dataset"/>
-            <field name="DOMAIN_ID" type="integer"/>
-        </dataset>
-    </group>
-    """
+        g = {
+            'IDENTITY': {'ID': []}
+        }
 
-    @staticmethod
-    def from_bdf(card):
-        card_list = card
+        result = {
+            'IDENTITY': {'SID': [], 'C': [], 'G_POS': [], 'G_LEN': [], 'DOMAIN_ID': []},
+            'G': g,
+            '_subtables': ['G']
+        }
 
-        all_data = TableData()
-        _data = all_data.data
+        identity = result['IDENTITY']
 
-        subdata_len = []
-        subdata = []
+        sid = identity['SID']
+        c = identity['C']
+        g_pos = identity['G_POS']
+        g_len = identity['G_LEN']
+        id = g['IDENTITY']['ID']
 
-        for card in card_list:
-            _data.append([card.conid, card.components])
+        _pos = 0
+        for card_id in card_ids:
+            card_list = sorted(cards[card_id], key=lambda x: x.conid)
+            for card in card_list:
+                nids = []
+                for nid in card.node_ids:
+                    if nid is None:
+                        continue
+                    nids.append(nid)
 
-            nids = []
+                sid.append(card.conid)
+                c.append(card.components)
+                g_pos.append(_pos)
+                _g_len = len(nids)
+                _pos += _g_len
+                g_len.append(_g_len)
+                id += nids
 
-            for nid in card.node_ids:
-                if nid is None:
-                    continue
-                nids.append(nid)
+        return result
 
-            subdata_len.append([len(nids)])
-
-            subdata.extend([[nids[i]] for i in range(len(nids))])
-
-        all_data.subdata_len = np.array(subdata_len)
-        all_data.subdata.append(TableData(subdata))
-
-        return all_data
 
 ########################################################################################################################
 
