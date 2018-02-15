@@ -263,7 +263,8 @@ class FakeGUIMethods(GuiCommon):
     def create_alternate_vtk_grid(self, name, color=None, line_width=None,
                                   opacity=None, point_size=None, bar_scale=None,
                                   representation=None, is_visible=True,
-                                  follower_nodes=None, is_pickable=False, ugrid=None):
+                                  follower_nodes=None, follower_function=None,
+                                  is_pickable=False, ugrid=None):
         """Fake creates an AltGeometry object"""
         self.alt_grids[name] = MockGrid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
@@ -273,6 +274,8 @@ class FakeGUIMethods(GuiCommon):
         self.geometry_properties[name] = geom
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
+        if follower_function is not None:
+            self.follower_functions[name] = follower_function
 
     def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
                                      opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
