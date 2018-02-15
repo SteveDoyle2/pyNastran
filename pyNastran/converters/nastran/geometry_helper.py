@@ -189,8 +189,13 @@ class NastranGeometryHelper(NastranGuiAttributes):
             if elem.pb != 0:
                 nid_release_map[nid2].append((eid, elem.pb))
 
-
-            v, wa, wb = self._rotate_v_wa_wb(model, elem, n1, n2, node1, node2, debug)
+            v, wa, wb, xform = self._rotate_v_wa_wb(
+                model, elem,
+                n1, n2, node1, node2,
+                ihat, i, eid, Li,
+                debug)
+            yhat = xform[1, :]
+            zhat = xform[2, :]
             if wb is None:
                 # one or more of v, wa, wb are bad
                 continue
@@ -201,14 +206,13 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     #elem.offt, eid)
                 #self.log.error(msg)
                 #continue
-            yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li)
 
-            if debug:  # pragma: no cover
-                print('  centroid = %s' % centroid)
-                print('  ihat = %s' % ihat)
-                print('  yhat = %s' % yhat)
-                print('  zhat = %s' % zhat)
-                print('  scale = %s' % scale)
+            #if debug:  # pragma: no cover
+                #print('  centroid = %s' % centroid)
+                #print('  ihat = %s' % ihat)
+                #print('  yhat = %s' % yhat)
+                #print('  zhat = %s' % zhat)
+                #print('  scale = %s' % scale)
             #if eid == 5570:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
@@ -223,7 +227,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 raise RuntimeError(msg)
 
             if bar_type in BEAM_GEOM_TYPES:
-                xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
                 node0 = add_3d_bar_element(
                     bar_type, ptype, pid_ref,
                     n1+wa, n2+wb, xform,
@@ -329,7 +332,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
                    #no_0_56, no_56_456, no_0_6, no_0_16)
         return bar_nids, bar_types, nid_release_map
 
-    def _rotate_v_wa_wb(self, model, elem, n1, n2, node1, node2, debug):
+    def _rotate_v_wa_wb(self, model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid,
+                        Li_offset, debug):
         """
         Rotates v, wa, wb
 
@@ -380,7 +384,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 print('  x = %s' % elem.x)
                 print('  v = %s' % v)
 
-
+        #--------------------------------------------------------------------------
         offt_vector, offt_end_a, offt_end_b = elem.offt
         if debug:  # pragma: no cover
             print('  offt vector,A,B=%r' % (elem.offt))
@@ -402,9 +406,13 @@ class NastranGeometryHelper(NastranGuiAttributes):
         else:
             msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
             self.log.error(msg)
-            return None, None, None
+            return None, None, None, None
         #print('v = %s' % v)
+        yhat_offset, zhat_offset = get_bar_yz_transform(v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
+                                          i_offset, Li_offset)
+        xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
 
+        #--------------------------------------------------------------------------
         # rotate wa
         wa = elem.wa
         if offt_end_a == 'G':
@@ -414,31 +422,40 @@ class NastranGeometryHelper(NastranGuiAttributes):
         elif offt_end_a == 'B':
             pass
         elif offt_end_a == 'O':
-            # TODO: fixme
-            wa = cd1_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
+            # rotate point p2 from the local frame to the global frame
+            wa = np.dot(wa, xform_offset)
         else:
             msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
             self.log.error(msg)
-            return v, None, None
+            return v, None, None, xform_offset
 
         #print('wa = %s' % wa)
+        #--------------------------------------------------------------------------
         # rotate wb
         wb = elem.wb
         if offt_end_b == 'G':
             if cd2 != 0:
                 # TODO: fixme;  MasterModelTaxi
-                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb-n2)
 
         elif offt_end_b == 'B':
             pass
         elif offt_end_b == 'O':
-            # TODO: fixme
-            wb = cd1_ref.transform_node_to_global(n2 - wb)
+            # rotate point p2 from the local frame to the global frame
+            wb = np.dot(wb, xform_offset)
         else:
             msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
             model.log.error(msg)
             return v, wa, None
-        return v, wa, wb
+
+        #--------------------------------------------------------------------------
+        i = (n2 + wb) - (n1 + wa)
+        Li = norm(i)
+        ihat = i/Li
+        yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, node1.nid, node2.nid, i, Li)
+        xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
+
+        return v, wa, wb, xform
 
 def _make_points_array(points_list):
     if len(points_list) == 1:

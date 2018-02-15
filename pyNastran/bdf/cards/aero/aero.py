@@ -4485,7 +4485,7 @@ class SPLINE2(Spline):
     }
 
     def __init__(self, eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=0,
-                 dthx=None, dthy=None, usage='BOTH', comment=''):
+                 dthx=0., dthy=0., usage='BOTH', comment=''):
         """
         Creates a SPLINE2 card, which defines a beam spline.
 
@@ -4509,7 +4509,7 @@ class SPLINE2(Spline):
         cid : int; default=0
             Rectangular coordinate system for which the y-axis defines the
             axis of the spline. Not used for bodies, CAERO2
-        dthx : float; default=None
+        dthx : float; default=0.
             Rotational attachment flexibility.
             DTHX : Used for rotation about the spline's x-axis (in-plane
                    bending rotations).  It is not used for bodies (CAERO2).
@@ -4563,8 +4563,8 @@ class SPLINE2(Spline):
         dz = double_or_blank(card, 6, 'dz', 0.0)
         dtor = double_or_blank(card, 7, 'dtor', 1.0)
         cid = integer_or_blank(card, 8, 'cid', 0)
-        dthx = double_or_blank(card, 9, 'dthx')
-        dthy = double_or_blank(card, 10, 'dthy')
+        dthx = double_or_blank(card, 9, 'dthx', 0.)
+        dthy = double_or_blank(card, 10, 'dthy', 0.)
 
         usage = string_or_blank(card, 12, 'usage', 'BOTH')
         assert len(card) <= 13, 'len(SPLINE2 card) = %i\ncard=%s' % (len(card), card)

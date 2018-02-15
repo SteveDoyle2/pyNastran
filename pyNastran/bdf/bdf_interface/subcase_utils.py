@@ -197,7 +197,7 @@ def write_set(set_id, values, spaces=''):
 
     Parameters
     ----------
-    value : List[int]
+    values : List[int]
         the Set values
     options : int / str; default=''
         the Set ID
@@ -232,8 +232,8 @@ def write_set(set_id, values, spaces=''):
     msg = ''
     nchars = len(msg2)
     is_valid = True
-    for value in values:
-        if not isinstance(value, integer_types):
+    for valuei in values:
+        if not isinstance(valuei, integer_types):
             is_valid = False
             break
 

@@ -562,6 +562,21 @@ class CTRIA3(TriShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
+    def safe_cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by CTRIA3 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
+        #if isinstance(self.theta_mcid, integer_types):
+            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()
@@ -1969,6 +1984,21 @@ class CQUAD4(QuadShell):
         self.pid_ref = model.Property(self.pid, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+
+    def safe_cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by CQUAD4 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
+        #if isinstance(self.theta_mcid, integer_types):
+            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     #def x(self, eta, xi, xs):
         #"""Calculate the x-coordinate within the element.

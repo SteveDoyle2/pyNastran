@@ -2003,7 +2003,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         As this is somewhat Nastran specific, create_groups_by_visible_result exists as well.
         """
-        self._create_groups_by_name('PropertyID', 'property')
+        self._create_groups_by_name('PropertyID', 'property', nlimit=500)
         self.log_command('create_groups_by_property_id()')
 
     def _create_groups_by_name(self, name, prefix, nlimit=50):
@@ -4155,7 +4155,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 png_filenames.append(png_filename)
                 assert os.path.exists(png_filename), 'png_filename=%s' % png_filename
 
-        if png_filenames:
+        if gif_filename is not None and png_filenames:
             is_failed = write_gif(
                 gif_filename, png_filenames, time=time,
                 onesided=onesided,
