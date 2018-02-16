@@ -177,7 +177,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
             node2 = model.nodes[nid2]
             n1 = node1.get_position()
             n2 = node2.get_position()
-            centroid = (n1 + n2) / 2.
 
             ## TODO: should wa/wb be considered in ihat?
             i = n2 - n1
@@ -194,11 +193,12 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 n1, n2, node1, node2,
                 ihat, i, eid, Li,
                 debug)
-            yhat = xform[1, :]
-            zhat = xform[2, :]
             if wb is None:
                 # one or more of v, wa, wb are bad
                 continue
+
+            yhat = xform[1, :]
+            zhat = xform[2, :]
 
             ## concept has a GOO
             #if not elem.offt in ['GGG', 'BGG']:
@@ -232,6 +232,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     n1+wa, n2+wb, xform,
                     ugrid, node0, points_list)
 
+            centroid = (n1 + n2) / 2.
             bar_types[bar_type][0].append(eid)
             bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
@@ -259,20 +260,24 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     i1, i2 = np.searchsorted(self.node_ids, [nid1, nid2])
                     n1 = nodes[i1, :]
                     n2 = nodes[i2, :]
-                    centroid = (n1 + n2) / 2.
+                    #centroid = (n1 + n2) / 2.
 
                     i = n2 - n1
                     Li = norm(i)
                     ihat = i / Li
 
-                    v, wa, wb = self._rotate_v_wa_wb(model, elem, n1, n2, node1, node2, debug)
+                    v, wa, wb, xform = self._rotate_v_wa_wb(
+                        model, elem,
+                        n1, n2, node1, node2,
+                        ihat, i, eid, Li,
+                        debug)
                     if wb is None:
                         # one or more of v, wa, wb are bad
                         continue
-                    yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li)
-                    xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
 
-                    v, wa, wb = self._rotate_v_wa_wb(model, elem, n1, n2, node1, node2, debug)
+                    yhat = xform[1, :]
+                    zhat = xform[2, :]
+
                     ugridi = None
                     node0b = add_3d_bar_element(
                         bar_type, ptype, pid_ref,
@@ -354,19 +359,19 @@ class NastranGeometryHelper(NastranGuiAttributes):
         BOG means basic orientation, orientation end A, global end B
 
         so now we're left with what does basic/global/orientation mean?
-        - basic -> the glboal coordinate system defined by cid=0
+        - basic -> the global coordinate system defined by cid=0
         - global -> the local coordinate system defined by the
                     CD field on the GRID card, but referenced by
                     the CBAR/CBEAM
-        - orientation -> ???
+        - orientation -> wa/wb are defined in the xform_offset (yz) frame; 
+                         this is likely the easiest frame for a user
         """
+        # get the vector v, which defines the projection on to the elemental
+        # coordinate frame
         if elem.g0:
             #debug = False
             msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
             g0_ref = model.Node(elem.g0, msg=msg)
-            if debug:  # pragma: no cover
-                print('  g0 = %s' % elem.g0)
-                print('  g0_ref = %s' % g0_ref)
             n0 = g0_ref.get_position()
             v = n0 - n1
         else:
@@ -375,19 +380,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             cda = ga.Cd()
             cda_ref = model.Coord(cda)
             v = cda_ref.transform_node_to_global(elem.x)
-            if debug:  # pragma: no cover
-                print('  ga = %s' % elem.ga)
-                if cda != 0:
-                    print('  cd = %s' % cda_ref)
-                else:
-                    print('  cd = 0')
-                print('  x = %s' % elem.x)
-                print('  v = %s' % v)
 
         #--------------------------------------------------------------------------
         offt_vector, offt_end_a, offt_end_b = elem.offt
-        if debug:  # pragma: no cover
-            print('  offt vector,A,B=%r' % (elem.offt))
 
         cd1 = node1.Cd()
         cd2 = node2.Cd()
@@ -407,13 +402,14 @@ class NastranGeometryHelper(NastranGuiAttributes):
             msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
             self.log.error(msg)
             return None, None, None, None
-        #print('v = %s' % v)
+
         yhat_offset, zhat_offset = get_bar_yz_transform(v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
                                           i_offset, Li_offset)
         xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
 
         #--------------------------------------------------------------------------
         # rotate wa
+        # wa defines the offset at end A
         wa = elem.wa
         if offt_end_a == 'G':
             if cd1 != 0:
@@ -422,7 +418,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         elif offt_end_a == 'B':
             pass
         elif offt_end_a == 'O':
-            # rotate point p2 from the local frame to the global frame
+            # rotate point wa from the local frame to the global frame
             wa = np.dot(wa, xform_offset)
         else:
             msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
@@ -432,6 +428,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         #print('wa = %s' % wa)
         #--------------------------------------------------------------------------
         # rotate wb
+        # wb defines the offset at end B
         wb = elem.wb
         if offt_end_b == 'G':
             if cd2 != 0:
@@ -441,7 +438,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         elif offt_end_b == 'B':
             pass
         elif offt_end_b == 'O':
-            # rotate point p2 from the local frame to the global frame
+            # rotate point wb from the local frame to the global frame
             wb = np.dot(wb, xform_offset)
         else:
             msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)

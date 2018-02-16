@@ -89,7 +89,7 @@ class SimpleLogger(object):
         """
         if log_func is None:
             log_func = self.stdout_logging
-        assert level in ('info', 'debug', 'warning', 'error'), 'logging level=%r' % level
+        assert level in ('info', 'debug', 'warning', 'error', 'critical'), 'logging level=%r' % level
         #assert encoding in ['utf-8', 'latin-1', 'ascii'], encoding
         self.level = level
         self.log_func = log_func
@@ -190,7 +190,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
-        if self.level in ('error', ):
+        if self.level in ('error', 'critical'):
             return
         assert msg is not None, msg
         self.msg_typ('WARNING', msg)
@@ -204,6 +204,8 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        if self.level in ('critical', ):
+            return
         assert msg is not None, msg
         self.msg_typ('ERROR', msg)
 
@@ -217,7 +219,7 @@ class SimpleLogger(object):
             message to be logged
         """
         assert msg is not None, msg
-        self.msg_typ('ERROR', msg)
+        self.msg_typ('EXCEPTION', msg)
 
     def critical(self, msg):
         """
