@@ -4,7 +4,7 @@ from six.moves import range
 from copy import deepcopy
 from typing import Iterable, List, Tuple, Union, Dict, Any
 
-from ...h5_nastran import H5Nastran
+from ...h5nastran import H5Nastran
 from ..collector import H5NastranCollector
 from .grid_point_force_summation_data import GridPointForceSummationCalculator, Vector, Matrix, GridPointForceSummationData
 
@@ -57,7 +57,6 @@ class GridPointForceSummationRequestList(object):
         self.calculator = GridPointForceSummationCalculator()
         self.db = None  # type: H5Nastran
         self.domain_ids = []  # type: Iterable[int]
-        self.subcase_ids = []  # type: Iterable[int]
         self.grid_pos = None
         self.load_factors = None  # type: Vector
 
@@ -93,7 +92,7 @@ class GridPointForceSummationRequestList(object):
 
     def _run_h5n(self):
         all_nodes = self.nodes()
-        grid_forces = self.db.result.nodal.grid_force.search(all_nodes, self.domain_ids, self.subcase_ids, True)
+        grid_forces = self.db.result.nodal.grid_force.search(all_nodes, self.domain_ids, True)
 
         if self.grid_pos is None:
             self.grid_pos = self.db.input.node.grid.grid_in_basic_dict()
@@ -107,10 +106,10 @@ class GridPointForceSummationRequestList(object):
         db = self.db  # type: H5NastranCollector
         db.open()
 
-        if len(self.subcase_ids) == 0:
+        if len(self.domain_ids) == 0:
             subcase_ids = list(range(1, len(db.cases)+1))
         else:
-            subcase_ids = self.subcase_ids
+            subcase_ids = self.domain_ids
 
         db.set_selection_by_case_id(subcase_ids)
 
@@ -125,7 +124,7 @@ class GridPointForceSummationRequestList(object):
             h5n = db.h5n[i]
             # domains = db.model_case_selection[i]
             # TODO: need to handle loadcase selection better
-            grid_forces = h5n.result.nodal.grid_force.search(all_nodes, (), (), True)
+            grid_forces = h5n.result.nodal.grid_force.search(all_nodes, (), True)
 
             grid_pos = h5n.input.node.grid.grid_in_basic_dict()
 

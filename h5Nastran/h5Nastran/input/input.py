@@ -15,6 +15,9 @@ from .property import Property
 from .node import Node
 from .material import Material
 from .parameter import Parameter
+from .table import Table
+from .dynamic import Dynamic
+from .design import Design
 
 
 class Input(object):
@@ -24,9 +27,9 @@ class Input(object):
         self.constraint = Constraint(self._h5n, self)
         # self.contact = Contact(self.h5n, self)
         self.coordinate_system = CoordinateSystem(self._h5n, self)
-        # self.design = None
+        self.design = Design(self._h5n, self)
         # self.domains = None
-        # self.dynamic = None
+        self.dynamic = Dynamic(self._h5n, self)
         self.element = Element(self._h5n, self)
         # self.fatigue = None
         self.load = Load(self._h5n, self)
@@ -37,7 +40,7 @@ class Input(object):
         self.parameter = Parameter(self._h5n, self)
         # self.partition = None
         self.property = Property(self._h5n, self)
-        # self.table = None
+        self.table = Table(self._h5n, self)
         # self.uds = None
 
     def path(self):

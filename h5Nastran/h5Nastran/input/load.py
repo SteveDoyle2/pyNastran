@@ -14,6 +14,7 @@ class Load(object):
         self._h5n = h5n
         self._input = input
 
+        self.dload = DLOAD(self._h5n, self)
         self.force = FORCE(self._h5n, self)
         self.load = LOAD(self._h5n, self)
         self.moment = MOMENT(self._h5n, self)
@@ -30,6 +31,52 @@ class Load(object):
                 item.read()
             except AttributeError:
                 pass
+
+########################################################################################################################
+
+
+class DLOAD(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/LOAD/DLOAD/IDENTITY')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        sl = {'IDENTITY': {'SI': [], 'LI': []}}
+
+        result = {
+            'IDENTITY': {
+                'SID': [], 'S': [], 'SL_LEN': [], 'SL_POS': [], 'DOMAIN_ID': []
+            },
+            'SL': sl,
+            '_subtables': ['SL']
+        }
+
+        si = sl['IDENTITY']['SI']
+        li= sl['IDENTITY']['LI']
+
+        identity = result['IDENTITY']
+        sid = identity['SID']
+        s = identity['S']
+        sl_len = identity['SL_LEN']
+        sl_pos = identity['SL_POS']
+
+        _pos = 0
+        for card_id in card_ids:
+            card_list = cards[card_id]
+
+            for card in card_list:
+                sid.append(card.sid)
+                s.append(card.scale)
+                sl_pos.append(_pos)
+                _len = len(card.scale_factors)
+                sl_len.append(_len)
+                _pos += _len
+                si += card.scale_factors
+                li += card.load_ids
+
+        return result
+
 
 ########################################################################################################################
 
@@ -55,9 +102,9 @@ class FORCE(CardTable):
         n = identity['N']
 
         for card_id in card_ids:
-            cards = sorted(cards[card_id], key=lambda x: x.node)
+            card_list = sorted(cards[card_id], key=lambda x: x.node)
 
-            for card in cards:
+            for card in card_list:
                 sid.append(card.sid)
                 g.append(card.node)
                 cid.append(card.cid)
@@ -141,9 +188,9 @@ class MOMENT(CardTable):
         n = identity['N']
 
         for card_id in card_ids:
-            cards = sorted(cards[card_id], key=lambda x: x.node)
+            card_list = sorted(cards[card_id], key=lambda x: x.node)
 
-            for card in cards:
+            for card in card_list:
                 sid.append(card.sid)
                 g.append(card.node)
                 cid.append(card.cid)

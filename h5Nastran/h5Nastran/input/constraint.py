@@ -164,6 +164,31 @@ class SPBLND2(CardTable):
 class SPC(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPC')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        result = {
+            'IDENTITY': {'SID': [], 'G': [], 'C': [], 'D': [], 'DOMAIN_ID': []},
+        }
+
+        identity = result['IDENTITY']
+
+        sid = identity['SID']
+        g = identity['G']
+        c = identity['C']
+        d = identity['D']
+
+        for card_id in card_ids:
+            card_list = sorted(cards[card_id], key=lambda x: x.conid)
+            for card in card_list:
+                sid += [card.conid] * len(card.gids)
+                g += card.gids
+                c += card.components
+                d += card.enforced
+
+        return result
+
 ########################################################################################################################
 
 
@@ -226,6 +251,39 @@ class SPC1_THRU(CardTable):
 
 class SPCADD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPCADD/IDENTITY')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+    
+        s = {
+            'IDENTITY': {'S': []}
+        }
+    
+        result = {
+            'IDENTITY': {'SID': [], 'S_POS': [], 'S_LEN': [], 'DOMAIN_ID': []},
+            'S': s,
+            '_subtables': ['S']
+        }
+    
+        identity = result['IDENTITY']
+    
+        sid = identity['SID']
+        s_pos = identity['S_POS']
+        s_len = identity['S_LEN']
+        s = s['IDENTITY']['S']
+    
+        _pos = 0
+        for card_id in card_ids:
+            card_list = sorted(cards[card_id], key=lambda x: x.conid)
+            for card in card_list:
+                sid.append(card.conid)
+                s_pos.append(_pos)
+                _s_len = len(card.sets)
+                s_len.append(_s_len)
+                s += card.sets
+    
+        return result
 
 ########################################################################################################################
 
