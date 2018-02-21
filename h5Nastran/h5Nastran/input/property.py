@@ -442,7 +442,10 @@ def _resize(arr, size):
     last = arr[-1]
 
     del arr[0]
-    del arr[-1]
+    try:
+        del arr[-1]
+    except IndexError:
+        pass
 
     size -= 2
 
@@ -603,7 +606,9 @@ class PBEAML(CardTable):
                    'DIMS': dims,
                    '_subtables': ['DIMS']}
         result = {'IDENTITY': {'PID': [], 'MID': [], 'GROUP': [], 'TYPE': [],
-                               'SECTION_POS': [], 'SECTION_LEN': [], 'DOMAIN_ID': []}}
+                               'SECTION_POS': [], 'SECTION_LEN': [], 'DOMAIN_ID': []},
+                  'SECTION': section,
+                  '_subtables': ['SECTION']}
 
         section = section['IDENTITY']
         identity = result['IDENTITY']
@@ -863,6 +868,108 @@ class PCOMPF(CardTable):
 
 class PCOMPG(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCOMPG/IDENTITY')
+    
+    @classmethod
+    def from_bdf(cls, cards):
+        _ft = {
+            None: DataHelper.default_int,
+            '': DataHelper.default_int,
+            'HILL': 1,
+            'HOFF': 2,
+            'TSAI': 3,
+            'STRN': 4
+        }
+
+        # TODO: check that sout is correct
+        _convert_sout = {'YES': 1, 'NO': 0}
+
+        ply = {
+            'IDENTITY': {'GPLYID': [], 'MID': [], 'THICK': [], 'THETA': [], 'SOUT': [], 'MIDMTX': [],
+                         'VF': [], 'VV': [], 'CTEMP': [], 'MOIST': [], 'CRIT': [], 'NFTI': [], 'FTI': []}
+        }
+
+        result = {
+            'IDENTITY': {'PID': [],
+                         'NPLIES': [],
+                         'Z0': [],
+                         'NSM': [],
+                         'SB': [],
+                         'FT': [],
+                         'TREF': [],
+                         'GE': [],
+                         'MICRO': [],
+                         'PLY_POS': [],
+                         'PLY_LEN': [],
+                         'DOMAIN_ID': []
+                         },
+            'PLY': ply,
+            '_subtables': ['PLY']
+        }
+
+        identity = result['IDENTITY']
+        pid = identity['PID']
+        nplies = identity['NPLIES']
+        z0 = identity['Z0']
+        nsm = identity['NSM']
+        sb = identity['SB']
+        ft = identity['FT']
+        tref = identity['TREF']
+        ge = identity['GE']
+        micro = identity['MICRO']
+        ply_pos = identity['PLY_POS']
+        ply_len = identity['PLY_LEN']
+
+        ply = ply['IDENTITY']
+        gplyid = ply['GPLYID']
+        mid = ply['MID']
+        thick = ply['THICK']
+        theta = ply['THETA']
+        sout = ply['SOUT']
+        midmtx = ply['MIDMTX']
+        vf = ply['VF']
+        vv = ply['VV']
+        ctemp = ply['CTEMP']
+        moist = ply['MOIST']
+        crit = ply['CRIT']
+        nfti = ply['NFTI']
+        fti = ply['FTI']
+
+        card_ids = sorted(iterkeys(cards))
+        
+        _pos = 0
+        for card_id in card_ids:
+            card = cards[card_id]
+            
+            pid.append(card.pid)
+            n = len(card.thicknesses)
+            nplies.append(n)
+            z0.append(card.z0)
+            nsm.append(card.nsm)
+            sb.append(card.sb)
+            ft.append(_ft[card.ft])
+            tref.append(card.tref)
+            ge.append(card.ge)
+            micro.append(DataHelper.unknown_str)
+            ply_pos.append(_pos)
+            ply_len.append(n)
+            _pos += n
+
+            gplyid += list(card.global_ply_ids)
+            mid += list(card.mids)
+            thick += list(card.thicknesses)
+            theta += list(card.thetas)
+            sout += [_convert_sout[_] for _ in card.souts]
+            midmtx += [DataHelper.unknown_int] * n
+            vf += [DataHelper.unknown_double] * n
+            vv += [DataHelper.unknown_double] * n
+            ctemp += [DataHelper.unknown_double] * n
+            moist += [DataHelper.unknown_double] * n
+            crit += [DataHelper.unknown_str] * n
+            nfti += [DataHelper.unknown_int] * n
+            fti += [DataHelper.unknown_str] * n
+            
+        return result
+            
 
 ########################################################################################################################
 
@@ -917,6 +1024,32 @@ class PDAMPT(CardTable):
 
 class PELAS(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PELAS')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+    
+        pid = data['PID']
+        k = data['K']
+        ge = data['GE']
+        s = data['S']
+    
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+    
+            pid[i] = card.pid
+            k[i] = card.k
+            ge[i] = card.ge
+            s[i] = card.s
+    
+        result = {
+            'IDENTITY': data
+        }
+    
+        return result
 
 ########################################################################################################################
 
@@ -1128,6 +1261,49 @@ class PSLDN1(CardTable):
 
 class PSOLID(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSOLID')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        mid = data['MID']
+        cordm = data['CORDM']
+        in_ = data['IN']
+        stress = data['STRESS']
+        isop = data['ISOP']
+        fctn = data['FCTN']
+            
+        _integ = {
+            0: 0, 1: 1, 2: 2, 3: 3, 'BUBBLE': 0, 'GAUSS': 1, 'TWO': 2, 'THREE': 3, 
+            '': DataHelper.default_int, None: DataHelper.default_int
+        }
+        
+        _stress = {
+            'GRID': DataHelper.default_int, 'GAUSS': 1, '': DataHelper.default_int, None: DataHelper.default_int,
+            1: 1
+        }
+        
+        _isop = {0: 0, 1: 1, 'REDUCED': 0, 'FULL': 1, '': DataHelper.default_int, None: DataHelper.default_int}
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            pid[i] = card.pid
+            mid[i] = card.mid
+            cordm[i] = card.cordm
+            in_[i] = _integ[card.integ]
+            stress[i] = _stress[card.stress]
+            isop[i] = _isop[card.isop]
+            fctn[i] = card.fctn
+
+        result = {'IDENTITY': data}
+
+        return result
 
 ########################################################################################################################
 

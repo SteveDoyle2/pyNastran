@@ -40,6 +40,7 @@ class H5Nastran(object):
 
         self._tables = set()
         self._unsupported_tables = set()
+        self._unsupported_bdf_cards = set()
 
         self._bdf = None
         self._punch = None
@@ -329,6 +330,9 @@ class H5Nastran(object):
         cards = np.array(cards, dtype='S8')
         self.h5f.create_array('/PRIVATE/NASTRAN/INPUT', 'UNSUPPORTED_CARDS', obj=cards, title='UNSUPPORTED BDF CARDS',
                               createparents=True)
+        
+        self._unsupported_bdf_cards.clear()
+        self._unsupported_bdf_cards.update(set(cards))
 
     def _unsupported_table(self, table_data):
         print('Unsupported table %s' % table_data.header.results_type)

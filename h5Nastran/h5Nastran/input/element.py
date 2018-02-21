@@ -375,10 +375,8 @@ class CBAR(CardTable):
         w1b = data['W1B']
         w2b = data['W2B']
         w3b = data['W3B']
-        # domain_id = data['DOMAIN_ID']
 
         i = -1
-
         for card_id in card_ids:
             i += 1
             card = cards[card_id]
@@ -501,13 +499,17 @@ class CBEAM(CardTable):
             if _x is None:
                 _x = [DataHelper.default_double, DataHelper.default_double, DataHelper.default_double]
 
+            _g0 = card.g0
+            if _g0 is None:
+                _g0 = DataHelper.default_int
+
             eid[i] = card.eid
             pid[i] = card.pid
             ga[i], gb[i] = card.node_ids
             sa[i] = card.sa
             sb[i] = card.sb
             x[i] = _x
-            g0[i] = card.g0
+            g0[i] = _g0
             f[i] = DataHelper.unknown_int  # TODO: CBEAM flag
             pa[i] = card.pa
             pb[i] = card.pb
@@ -743,12 +745,68 @@ class CDAMP1(CardTable):
 class CDAMP2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP2')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+    
+        eid = data['EID']
+        b = data['B']
+        g1 = data['G1']
+        g2 = data['G2']
+        c1 = data['C1']
+        c2 = data['C2']
+    
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+    
+            eid[i] = card.eid
+            b[i] = card.b
+            g1[i], g2[i] = card.node_ids
+            c1[i] = card.c1
+            c2[i] = card.c2
+    
+        result = {
+            'IDENTITY': data
+        }
+    
+        return result
+
 
 ########################################################################################################################
 
 
 class CDAMP3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CDAMP3')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            nids = [nid if nid else 0 for nid in card.node_ids]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            s1[i], s2[i] = nids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -771,6 +829,37 @@ class CDAMP5(CardTable):
 class CELAS1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS1')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g1 = data['G1']
+        g2 = data['G2']
+        c1 = data['C1']
+        c2 = data['C2']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            nids = [nid if nid is not None else DataHelper.default_int for nid in card.node_ids]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g1[i], g2[i] = nids
+            c1[i] = card.c1
+            c2[i] = card.c2
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -778,12 +867,74 @@ class CELAS1(CardTable):
 class CELAS2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS2')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        k = data['K']
+        g1 = data['G1']
+        g2 = data['G2']
+        c1 = data['C1']
+        c2 = data['C2']
+        ge = data['GE']
+        s = data['S']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            nids = [nid if nid is not None else DataHelper.default_int for nid in card.node_ids]
+
+            eid[i] = card.eid
+            k[i] = card.k
+            g1[i], g2[i] = nids
+            c1[i] = card.c1
+            c2[i] = card.c2
+            ge[i] = card.ge
+            s[i] = card.s
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
 
 class CELAS3(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CELAS3')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        s1 = data['S1']
+        s2 = data['S2']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            nids = [nid if nid is not None else DataHelper.default_int for nid in card.node_ids]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            s1[i], s2[i] = nids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -1021,9 +1172,79 @@ class CMASS4(CardTable):
 
 ########################################################################################################################
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
 
+        eid = data['EID']
+        g = data['G']
+        cid = data['CID']
+        m = data['M']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        i1 = data['I1']
+        i2 = data['I2']
+        i3 = data['I3']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            g[i] = card.nid
+            cid[i] = card.cid
+            m[i] = card.mass
+            x1[i], x2[i], x3[i] = card.X
+            i1[i] = card.I[0]
+            i2[i] = card.I[1:3]
+            i3[i] = card.I[3:]
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 class CONM2(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CONM2')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        g = data['G']
+        cid = data['CID']
+        m = data['M']
+        x1 = data['X1']
+        x2 = data['X2']
+        x3 = data['X3']
+        i1 = data['I1']
+        i2 = data['I2']
+        i3 = data['I3']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            g[i] = card.nid
+            cid[i] = card.cid
+            m[i] = card.mass
+            x1[i], x2[i], x3[i] = card.X
+            i1[i] = card.I[0]
+            i2[i] = card.I[1:3]
+            i3[i] = card.I[3:]
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -1031,6 +1252,39 @@ class CONM2(CardTable):
 
 class CONROD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CONROD')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        g1 = data['G1']
+        g2 = data['G2']
+        mid = data['MID']
+        a = data['A']
+        j = data['J']
+        c = data['C']
+        nsm = data['NSM']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            g1[i], g2[i] = card.node_ids
+            mid[i] = card.mid
+            a[i] = card.A
+            j[i] = card.j
+            c[i] = card.c
+            nsm[i] = card.nsm
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -1045,6 +1299,37 @@ class CONTRLT(CardTable):
 
 class CPENTA(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CPENTA')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+
+            nids = [nid if nid is not None else 0 for nid in card.node_ids]
+
+            diff_len = 15 - len(nids)
+            if diff_len > 0:
+                nids += [0] * diff_len
+
+            g[i] = nids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -1256,6 +1541,37 @@ class CSLOT4(CardTable):
 class CTETRA(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTETRA')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+
+            nids = [nid if nid is not None else 0 for nid in card.node_ids]
+
+            diff_len = 10 - len(nids)
+            if diff_len > 0:
+                nids += [0] * diff_len
+
+            g[i] = nids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -1318,6 +1634,50 @@ class CTRIA3FD(CardTable):
 
 class CTRIA6(CardTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA6')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        t = data['T']
+        tflag = data['TFLAG']
+        mcid = data['MCID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            theta_mcid = card.theta_mcid
+            if not isinstance(theta_mcid, float):
+                _mcid = theta_mcid
+                _theta = DataHelper.default_double
+            else:
+                _mcid = DataHelper.default_int
+                _theta = theta_mcid
+
+            nids = [nid if nid else 0 for nid in card.node_ids]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = nids
+            theta[i] = _theta
+            zoffs[i] = card.zoffset
+            tflag[i] = card.tflag
+            t[i] = [card.T1, card.T2, card.T3]
+            mcid[i] = _mcid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -1418,6 +1778,30 @@ class CWELDP(CardTable):
 
 class PLOTEL(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/PLOTEL')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        g = data['G']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            nids = [nid if nid else 0 for nid in card.node_ids]
+
+            eid[i] = card.eid
+            g[i] = nids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################

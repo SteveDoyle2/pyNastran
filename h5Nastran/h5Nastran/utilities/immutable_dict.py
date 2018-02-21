@@ -4,7 +4,14 @@ This is used mainly so the data contained in the dict isn't inadvertently mutate
 """
 
 from collections import Mapping
-from types import MappingProxyType
+
+try:
+    from types import MappingProxyType
+except ImportError:
+    # workaround for https://github.com/SteveDoyle2/pyNastran/issues/481
+    # might just get rid of the ImmutableDict in the future, if you change the data in the dict, user beware
+    def MappingProxyType(obj):
+        return obj
 
 
 class ImmutableDict(Mapping):
