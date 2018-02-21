@@ -429,12 +429,21 @@ def _lines_to_decks(lines, punch):
         for i, line in enumerate(lines):
             #print(flag, line.rstrip())
             if flag == 1:
-                #line = line.upper()
+                # I don't think we need to handle the comment because
+                # this uses a startswith
                 if line.upper().startswith('CEND'):
                     assert flag == 1
                     flag = 2
                 executive_control_lines.append(line.rstrip())
+
             elif flag == 2:
+                # we have to handle the comment because we could incorrectly
+                # flag the model as flipping to the BULK data section if we
+                # have BEGIN BULK in a comment
+                if '$' in line:
+                    line, comment = line.split('$', 1)
+                    case_control_lines.append('$' + comment.rstrip())
+
                 uline = line.upper()
                 if 'BEGIN' in uline and ('BULK' in uline or 'SUPER' in uline):
                     assert flag == 2

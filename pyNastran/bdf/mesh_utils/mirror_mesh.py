@@ -21,6 +21,7 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
                         enddata=None, close=True, plane='xz'):
     """
     Writes the BDF as a symmetric model.
+    Does not equivalence nodes on the centerline.
 
     Parameters
     ----------
