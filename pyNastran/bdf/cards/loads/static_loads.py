@@ -198,7 +198,13 @@ class LOAD(LoadCombination):
         load_ids = self.get_load_ids()
         for (scale_factor, load_id) in zip(self.scale_factors, load_ids):
             list_fields += [scale_factor, self.LoadID(load_id)]
-        assert len(load_ids) == len(self.scale_factors), print_card_8(list_fields)
+        if len(load_ids) != len(self.scale_factors):
+            msg = 'nload_ids=%s nscale_factors=%s and arent the same\n' % (
+                len(load_ids), len(self.scale_factors))
+            msg = 'load_ids=%s\n' % (load_ids)
+            msg += 'scale_factors=%s\n' % (self.scale_factors)
+            msg += print_card_8(list_fields)
+            raise IndexError(msg)
         return list_fields
 
     def repr_fields(self):
@@ -2378,6 +2384,12 @@ class PLOAD4(Load):
 
         if comment:
             self.comment = comment
+        if isinstance(eids, integer_types):
+            eids = [eids]
+        if isinstance(eids, float_types):
+            pressures = [pressures] * 4
+        # TODO: handle default pressure as input
+
         self.sid = sid
 
         # these can be greater than 1 if it's a shell (not a solid)

@@ -5992,11 +5992,13 @@ class AddCards(AddMethods):
         self._add_ddval_object(ddval)
         return ddval
 
-    def add_dlink(self, oid, ddvid, IDv, Ci, c0=0., cmult=1., comment=''):
+    def add_dlink(self, oid, dependent_desvar,
+                  independent_desvars, coeffs, c0=0., cmult=1., comment=''):
         """
         Creates a DLINK card
         """
-        dlink = DLINK(oid, ddvid, IDv, Ci, c0=c0, cmult=cmult, comment=comment)
+        dlink = DLINK(oid, dependent_desvar,
+                      independent_desvars, coeffs, c0=c0, cmult=cmult, comment=comment)
         self._add_dlink_object(dlink)
         return dlink
 
@@ -6004,6 +6006,17 @@ class AddCards(AddMethods):
                     highfq=1.e20, comment=''):
         """
         Creates a DCONSTR card
+
+        Parameters
+        ----------
+        oid : int
+            unique optimization id
+        dresp_id : int
+            DRESP1/2 id
+        lid / uid=-1.e20 / 1.e20
+            lower/upper bound
+        lowfq / highfq : float; default=0. / 1.e20
+            lower/upper end of the frequency range
         """
         dconstr = DCONSTR(oid, dresp_id, lid=lid, uid=uid, lowfq=lowfq,
                           highfq=highfq, comment=comment)

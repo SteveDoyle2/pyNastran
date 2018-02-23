@@ -1135,7 +1135,7 @@ class TestLoads(unittest.TestCase):
 
     def test_load(self):
         """makes sure LOAD cards don't get sorted"""
-        model = BDF(debug=False)
+        model = BDF(debug=False, log=log)
 
         load = model.add_load(sid=13, scale=1., scale_factors=[0.5, 0.1], load_ids=[11, 10])
         msg8 = load.write_card(size=8, is_double=False)
@@ -1151,7 +1151,7 @@ class TestLoads(unittest.TestCase):
 
         load2 = model.add_load(sid=14, scale=1.,
                                scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(IndexError):
             model.validate()
 
     def test_sload(self):

@@ -36,6 +36,7 @@ class Load(BaseCard):
 
     @property
     def node_ids(self):
+        """get the node ids"""
         try:
             return self._node_ids()
         except:
@@ -43,7 +44,7 @@ class Load(BaseCard):
             raise RuntimeError('error processing nodes for \n%s' % str(self))
 
     def _node_ids(self, nodes=None):
-        """returns nodeIDs for repr functions"""
+        """returns node ids for repr functions"""
         if not nodes:
             nodes = self.nodes
         if isinstance(nodes[0], integer_types):
@@ -52,7 +53,7 @@ class Load(BaseCard):
             return [node.nid for node in nodes]
 
 
-class LoadCombination(Load):
+class LoadCombination(BaseCard):
     """Common method for LOAD, DLOAD"""
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         """
@@ -71,7 +72,7 @@ class LoadCombination(Load):
         comment : str; default=''
             a comment for the card
         """
-        Load.__init__(self)
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
 

@@ -845,7 +845,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     F += f
                     M += m
                 else:
-                    model.log.debug('case=%s etype=%r loadtype=%r not supported' % (
+                    model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
                         loadcase_id, elem.type, load.type))
         elif load.type == 'PLOAD4':
             assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
@@ -916,8 +916,8 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                         nface = 4
                     face, area, centroid, normal = face_acn
                 else:
-                    model.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (
-                        loadcase_id, eid, etype, load.type))
+                    model.log.warning('case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (
+                        loadcase_id, eid, etype, load.type, str(load), str(elem)))
                     continue
                 r = centroid - p
 
@@ -966,6 +966,6 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
             unsupported_types.add(load.type)
 
     for loadtype in unsupported_types:
-        model.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, loadtype))
+        model.log.warning('case=%s loadtype=%r not supported' % (loadcase_id, loadtype))
     #model.log.info("case=%s F=%s M=%s\n" % (loadcase_id, F, M))
     return (F, M)

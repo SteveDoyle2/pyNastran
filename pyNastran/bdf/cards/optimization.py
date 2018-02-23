@@ -376,7 +376,18 @@ class DCONSTR(OptConstraint):
     def __init__(self, oid, dresp_id, lid=-1.e20, uid=1.e20,
                  lowfq=0., highfq=1.e20, comment=''):
         """
+        Creates a DCONSTR card
 
+        Parameters
+        ----------
+        oid : int
+            unique optimization id
+        dresp_id : int
+            DRESP1/2 id
+        lid / uid=-1.e20 / 1.e20
+            lower/upper bound
+        lowfq / highfq : float; default=0. / 1.e20
+            lower/upper end of the frequency range
         """
         if comment:
             self.comment = comment
@@ -814,7 +825,8 @@ class DOPTPRM(OptConstraint):
 class DLINK(OptConstraint):
     type = 'DLINK'
 
-    def __init__(self, oid, ddvid, IDv, coeffs, c0=0., cmult=1., comment=''):
+    def __init__(self, oid, dependent_desvar,
+                 independent_desvars, coeffs, c0=0., cmult=1., comment=''):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables.
@@ -830,11 +842,27 @@ class DLINK(OptConstraint):
         if comment:
             self.comment = comment
         self.oid = oid
-        self.ddvid = ddvid
+        self.dependent_desvar = dependent_desvar
         self.c0 = c0
         self.cmult = cmult
-        self.IDv = IDv
+        self.independent_desvars = independent_desvars
         self.coeffs = coeffs
+
+    @property
+    def ddvid(self):
+        return self.dependent_desvar
+
+    @ddvid.setter
+    def ddvid(self, dependent_desvar):
+        self.dependent_desvar = dependent_desvar
+
+    @property
+    def IDv(self):
+        return self.independent_desvars
+
+    @IDv.setter
+    def IDv(self, independent_desvars):
+        self.independent_desvars = independent_desvars
 
     @property
     def Ci(self):
@@ -857,34 +885,34 @@ class DLINK(OptConstraint):
             a comment for the card
         """
         oid = integer(card, 1, 'oid')
-        ddvid = integer(card, 2, 'ddvid')
+        dependent_desvar = integer(card, 2, 'dependent_desvar')
         c0 = double_or_blank(card, 3, 'c0', 0.)
         cmult = double_or_blank(card, 4, 'cmult', 1.)
 
         nfields = len(card) - 4
         n = nfields // 2
-        idvs = []
+        independent_desvars = []
         coeffs = []
 
         for i in range(n):
             j = 2 * i + 5
-            idv = integer(card, j, 'IDv' + str(i))
-            ci = double(card, j + 1, 'Ci' + str(i))
-            idvs.append(idv)
-            coeffs.append(ci)
-        return DLINK(oid, ddvid, idvs, coeffs, c0=c0, cmult=cmult, comment=comment)
+            desvar = integer(card, j, 'independent_desvar_%i' % i)
+            coeff = double(card, j + 1, 'coeff_%i' % i)
+            independent_desvars.append(desvar)
+            coeffs.append(coeff)
+        return DLINK(oid, dependent_desvar, independent_desvars, coeffs, c0=c0, cmult=cmult, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
-        for (idv, ci) in zip(self.IDv, self.coeffs):
+        list_fields = ['DLINK', self.oid, self.dependent_desvar, self.c0, self.cmult]
+        for (idv, ci) in zip(self.independent_desvars, self.coeffs):
             list_fields += [idv, ci]
         return list_fields
 
     def repr_fields(self):
         c0 = set_blank_if_default(self.c0, 0.)
         cmult = set_blank_if_default(self.cmult, 1.)
-        list_fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
-        for (idv, ci) in zip(self.IDv, self.coeffs):
+        list_fields = ['DLINK', self.oid, self.dependent_desvar, c0, cmult]
+        for (idv, ci) in zip(self.independent_desvars, self.coeffs):
             list_fields += [idv, ci]
         return list_fields
 
@@ -1343,6 +1371,8 @@ class DRESP1(OptConstraint):
         self.region = region
         if isinstance(atti, integer_types):
             atti = [atti]
+        elif atti is None:
+            atti = []
         assert isinstance(atti, list), 'atti=%s type=%s' % (atti, type(atti))
 
         if validate:
