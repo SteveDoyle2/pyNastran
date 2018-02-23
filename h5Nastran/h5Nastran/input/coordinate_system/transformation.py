@@ -201,12 +201,14 @@ class Cord2(Cord):
         V2b = self.basic_vectors['V2']
         V3b = self.basic_vectors['V3']
 
+        basic_origins = self.basic_origins['POS']
+
         for i in range(self.data.shape[0]):
             V1b[i] = self.vector_to_basic(V1[i], rid[i])
             V2b[i] = self.vector_to_basic(V2[i], rid[i])
             V3b[i] = self.vector_to_basic(V3[i], rid[i])
 
-            self.basic_origins[i] = self.position_to_basic(np.array([A1[i], A2[i], A3[i]]), rid[i])
+            basic_origins[i] = self.position_to_basic(np.array([A1[i], A2[i], A3[i]]), rid[i])
     
     
 class Cord2c(Cord2):
