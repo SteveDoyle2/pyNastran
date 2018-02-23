@@ -30,7 +30,7 @@ def stl_to_nastran(stl_filename, bdf_filename,
 
     nid = nnodes_offset + 1
     cid = None
-    load_id = 10
+    unused_load_id = 10
 
     #nodal_normals = model.get_normals_at_nodes(model.elements)
 
@@ -49,7 +49,7 @@ def stl_to_nastran(stl_filename, bdf_filename,
         #bdf.write('LOAD = %s\n' % load_id)
         bdf.write('BEGIN BULK\n')
         nid2 = 1
-        magnitude = 100.
+        unused_magnitude = 100.
 
         for x, y, z in model.nodes:
             card = ['GRID', nid, cid, x, y, z]
@@ -82,22 +82,22 @@ def stl_to_nastran(stl_filename, bdf_filename,
     return bdf
 
 
-def main():  # pragma: no cover
-    import os
+#def main():  # pragma: no cover
+    #import os
 
-    import pyNastran
-    root_path = pyNastran.__path__[0]
-    print("root_path = %s" % root_path)
+    #import pyNastran
+    #root_path = pyNastran.__path__[0]
+    #print("root_path = %s" % root_path)
 
-    from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
+    #from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 
-    cart3d_filename = os.path.join(root_path, 'converters', 'cart3d', 'threePlugs_bin.tri')
-    stl_filename = os.path.join(root_path, 'converters', 'stl', 'threePlugs.stl')
-    bdf_filename = os.path.join(root_path, 'converters', 'stl', 'threePlugs.bdf')
+    #cart3d_filename = os.path.join(root_path, 'converters', 'cart3d', 'threePlugs_bin.tri')
+    #stl_filename = os.path.join(root_path, 'converters', 'stl', 'threePlugs.stl')
+    #bdf_filename = os.path.join(root_path, 'converters', 'stl', 'threePlugs.bdf')
 
-    cart3d_to_stl_filename(cart3d_filename, stl_filename)
-    stl_to_nastran(stl_filename, bdf_filename)
+    #cart3d_to_stl_filename(cart3d_filename, stl_filename)
+    #stl_to_nastran(stl_filename, bdf_filename)
 
 
-if __name__ == '__main__':  # pragma: no cover
-    main()
+#if __name__ == '__main__':  # pragma: no cover
+    #main()

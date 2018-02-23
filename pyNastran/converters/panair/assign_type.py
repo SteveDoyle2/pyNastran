@@ -1,4 +1,14 @@
+"""
+defines methods for reading panair values:
+ - double(value, name)
+ - integer(value, name)
+ - integer_or_blank(value, name, default=None)
+ - double_or_blank(value, name, default=None)
 
+defines methods for writing panair values:
+
+ - fortran_value(value)
+"""
 def double(value, name):
     """casts to an float value"""
     if isinstance(value, float):

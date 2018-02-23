@@ -1,5 +1,9 @@
+"""
+dfeines:
+ - read_shabp(shabp_filename, log=None, debug=False)
+ - SHABP(log=None, debug=False)
+"""
 from __future__ import print_function
-import sys
 from six.moves import range
 from numpy import array, zeros, arange, ones, cross
 from numpy.linalg import norm  # type: ignore
@@ -9,12 +13,28 @@ from pyNastran.converters.shabp.shabp_results import ShabpOut
 from pyNastran.utils.log import get_logger2
 
 def read_shabp(shabp_filename, log=None, debug=False):
-    model = SHABP(log=None, debug=False)
+    """reads an S/HABP file"""
+    model = SHABP(log=log, debug=debug)
     model.read_shabp(shabp_filename)
     return model
 
 class SHABP(ShabpOut):
+    """defines the SHABP class"""
     def __init__(self, log=None, debug=False):
+        """
+        Initializes the SHABP object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         ShabpOut.__init__(self, log, debug)
         #self.xyz = {}
         self.X = {}
@@ -34,9 +54,11 @@ class SHABP(ShabpOut):
         self.shabp_cases = {}
 
     def write_shabp(self, out_filename):
+        """writes an S/HABP file"""
         pass
 
     def get_area_xlength_by_component(self, components=None):
+        """gets the area and length of a set of components"""
         if components is None:
             components = self.component_name_to_patch.keys()
         #ncomponents = len(components)
@@ -51,7 +73,7 @@ class SHABP(ShabpOut):
             patches = self.component_name_to_patch[name]
 
             area = 0.
-            for i, ipatch in enumerate(patches):
+            for unused_i, ipatch in enumerate(patches):
                 X = self.X[ipatch-1]
                 nrows, ncols = X.shape
 
@@ -84,6 +106,7 @@ class SHABP(ShabpOut):
         return areas
 
     def get_area_by_component(self, components=None):
+        """gets the area of a set of components"""
         if components is None:
             components = self.component_name_to_patch.keys()
         #ncomponents = len(components)
@@ -98,10 +121,11 @@ class SHABP(ShabpOut):
         return areas
 
     def get_area_by_patch(self, ipatches=None):
+        """gets the area of a set of patches"""
         if ipatches is None:
             ipatches = arange(ipatches)
 
-        areas = zeros(len(ipatches), dtype='float64')
+        areas = zeros(len(ipatches), dtype='float32')
         for i, ipatch in enumerate(ipatches):
             X = self.X[ipatch-1]
             nrows, ncols = X.shape
@@ -260,7 +284,7 @@ class SHABP(ShabpOut):
         self.build_patches(patches)
         try:
             self.parse_trailer()
-        except:
+        except (RuntimeError, ValueError):
             #raise
             self.log.warning('failed parsing trailer')
 
@@ -291,8 +315,7 @@ class SHABP(ShabpOut):
         self.Z = Z
         #self.XYZ = XYZ
 
-
-    def getPointsElementsRegions(self):
+    def get_points_elements_regions(self):
         npatches = len(self.X)
         npoints = 0
         nelements = 0
@@ -357,19 +380,21 @@ class SHABP(ShabpOut):
         return xyz, elements2, patches, components, impact, shadow
 
     def parse_trailer(self):
-        out = parse_trailer(self.trailer)
-        order, component_names, cases, components = out
-        print('order = %s' % order)
-        print('component_names = %s' % component_names)
-        print('cases = %s' % cases)
-        print('components = %s' % components)
-        return out
+        """parses the case information (e.g., number of angles of attack, control surface info)"""
+        #out = parse_trailer(self.trailer)
+        #order, component_names, cases, components = out
+        #print('order = %s' % order)
+        #print('component_names = %s' % component_names)
+        #print('cases = %s' % cases)
+        #print('components = %s' % components)
+        #return out
+
         #for line in self.trailer:
             #print line.rstrip()
         self.title = self.trailer[0].strip()
         print('title = %r' % self.title)
         line2 = self.trailer[1]
-        npatches = line2[:2]
+        unused_npatches = line2[:2]
 
         mach_line = self.trailer[2].rstrip()
         mach = float(mach_line[0 :10].strip())
@@ -467,7 +492,7 @@ class SHABP(ShabpOut):
         for icomp in range(ncomps):
             line = self.trailer[i]
             #print "line =", line.strip()
-            npatches = int(line[:2])
+            unused_npatches = int(line[:2])
             name = line[2:].strip()
 
             line = self.trailer[i+1] + ' '
@@ -490,14 +515,3 @@ class SHABP(ShabpOut):
         # 2noseconeright
         #3142
         #print 'done with trailer'
-
-def main():
-    model = SHABP()
-    model.read_shabp(sys.argv[1])
-    model.read_shabp_out('SHABP.OUT')
-    #model.get_area_by_component()
-    #model.get_area_xlength_by_component()
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

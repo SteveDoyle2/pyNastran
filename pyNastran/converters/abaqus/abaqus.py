@@ -9,7 +9,7 @@ from pyNastran.converters.abaqus.abaqus_cards import Material, Part, SolidSectio
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
     """reads an abaqus model"""
-    model = Abaqus(log=None, debug=False)
+    model = Abaqus(log=log, debug=debug)
     model.read_abaqus_inp(abaqus_inp_filename)
     return model
 
@@ -949,4 +949,3 @@ def main(): # pragma: no cover
 
 if __name__ == '__main__': # pragma: no cover
     main()
-

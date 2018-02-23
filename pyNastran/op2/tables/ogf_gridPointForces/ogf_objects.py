@@ -1197,7 +1197,8 @@ class ComplexGridPointForcesArray(ScalarObject):
         #ind = ravel([searchsorted(self.node_element[:, 0] == eid) for eid in eids])
         #return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = self._get_f06_msg(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -1207,7 +1208,7 @@ class ComplexGridPointForcesArray(ScalarObject):
             for itime in range(ntimes):
                 dt = self._times[itime]
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
-                f.write(''.join(header + msg))
+                f06_file.write(''.join(header + msg))
 
                 #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -1232,19 +1233,21 @@ class ComplexGridPointForcesArray(ScalarObject):
                     vals2 = write_imag_floats_13e(vals, is_mag_phase)
                     [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                     if eid == 0:
-                        f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        f06_file.write(
+                            '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                            '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                 nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
                                 '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,
                         ))
                         zero = '0'
                     else:
-                        f.write('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        f06_file.write(
+                            '%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                            '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                 zero, nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
                                 '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,))
                         zero = ' '
-                f.write(page_stamp % page_num)
+                f06_file.write(page_stamp % page_num)
                 page_num += 1
         else:
             eids = self.node_element[:, 1]
@@ -1253,7 +1256,7 @@ class ComplexGridPointForcesArray(ScalarObject):
             for itime in range(ntimes):
                 dt = self._times[itime]
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
-                f.write(''.join(header + msg))
+                f06_file.write(''.join(header + msg))
 
                 #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -1273,19 +1276,21 @@ class ComplexGridPointForcesArray(ScalarObject):
                     vals2 = write_imag_floats_13e(vals, is_mag_phase)
                     [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                     if eid == 0:
-                        f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        f06_file.write(
+                            '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                            '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                 nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
                                 '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,
                         ))
                         zero = '0'
                     else:
-                        f.write('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        f06_file.write(
+                            '%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                            '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                 zero, nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
                                 '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,))
                         zero = ' '
-                f.write(page_stamp % page_num)
+                f06_file.write(page_stamp % page_num)
                 page_num += 1
                 eids = self.node_element[:, 1]
                 nids = self.node_element[:, 0]
@@ -1294,7 +1299,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                 for itime in range(ntimes):
                     dt = self._times[itime]
                     header = _eigenvalue_header(self, header, itime, ntimes, dt)
-                    f.write(''.join(header + msg))
+                    f06_file.write(''.join(header + msg))
 
                     #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -1314,19 +1319,21 @@ class ComplexGridPointForcesArray(ScalarObject):
                         vals2 = write_imag_floats_13e(vals, is_mag_phase)
                         [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                         if eid == 0:
-                            f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                                    '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            f06_file.write(
+                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                     nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
                                     '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,
                             ))
                             zero = '0'
                         else:
-                            f.write('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                                    '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            f06_file.write(
+                                '%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                                '   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                     zero, nid, eid, ename, f1r, f2r, f3r, m1r, m2r, m3r,
                                     '', '', '', f1i, f2i, f3i, m1i, m2i, m3i,))
                             zero = ' '
-                    f.write(page_stamp % page_num)
+                    f06_file.write(page_stamp % page_num)
                     page_num += 1
         return page_num - 1
 

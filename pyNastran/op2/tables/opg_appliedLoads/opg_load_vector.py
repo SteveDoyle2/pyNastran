@@ -7,7 +7,8 @@ class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = ['                                                     L O A D   V E C T O R\n', ]
@@ -15,10 +16,10 @@ class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal
         write_words = True
         if self.nonlinear_factor is not None:
             return self._write_f06_transient_block(
-                words, header, page_stamp, page_num, f, write_words,
+                words, header, page_stamp, page_num, f06_file, write_words,
                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(
-            words, header, page_stamp, page_num, f, write_words,
+            words, header, page_stamp, page_num, f06_file, write_words,
             is_mag_phase=False, is_sort1=True
         )
 
@@ -27,19 +28,21 @@ class ComplexLoadVectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = ['                                               C O M P L E X   L O A D   V E C T O R\n', ]
         return self._write_f06_transient_block(
-            words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+            words, header, page_stamp, page_num, f06_file, is_mag_phase, is_sort1)
 
 
 class RealTemperatureVectorArray(RealScalarTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = [
@@ -51,16 +54,17 @@ class RealTemperatureVectorArray(RealScalarTableArray):
         write_words = False
         if self.nonlinear_factor is not None:
             return self._write_f06_transient_block(
-                words, header, page_stamp, page_num, f, write_words,
+                words, header, page_stamp, page_num, f06_file, write_words,
                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        return self._write_f06_block(words, header, page_stamp, page_num, f, write_words,
+        return self._write_f06_block(words, header, page_stamp, page_num, f06_file, write_words,
                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
 class RealThermalVelocityVectorArray(RealScalarTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = [
@@ -72,8 +76,8 @@ class RealThermalVelocityVectorArray(RealScalarTableArray):
         write_words = False
         if self.nonlinear_factor is not None:
             return self._write_f06_transient_block(
-                words, header, page_stamp, page_num, f, write_words,
+                words, header, page_stamp, page_num, f06_file, write_words,
                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(
-            words, header, page_stamp, page_num, f, write_words,
+            words, header, page_stamp, page_num, f06_file, write_words,
             is_mag_phase=is_mag_phase, is_sort1=is_sort1)

@@ -6,6 +6,20 @@ from pyNastran.utils import print_bad_path
 
 class FGridReader(object):
     def __init__(self, log=None, debug=False):
+        """
+        Initializes the FGridReader object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         self.log = log
         self.debug = debug
         self.nodes = None
@@ -27,7 +41,7 @@ class FGridReader(object):
             # I think this goes xxx, yyy, zzz
             # instead of x, y, z
             #            x, y, z
-            for i in range(nnodes):
+            for unused_i in range(nnodes):
                 #nodes[i, :] = fgrid.readline().split()
                 #nodes[i0:i1] = fgrid.readline().split()
                 sline = fgrid.readline().split()

@@ -129,14 +129,14 @@ class SurfIO(object):
     #def _load_surf_results(self, openfoam_filename):
         #raise NotImplementedError()
 
-    def _fill_surf_case(self, surf_filename, cases, ID, nnodes, nelements, model):
+    def _fill_surf_case(self, surf_filename, cases, unused_ID, nnodes, nelements, model):
         """builds the results for the *.surf AFLR3 input file"""
         base, ext = os.path.splitext(surf_filename)
         assert ext == '.surf', surf_filename
 
         tag_filename = base + '.tags'
 
-        cases_new = []
+        unused_cases_new = []
         has_tag_data = False
         results_form = []
         geometry_form = [

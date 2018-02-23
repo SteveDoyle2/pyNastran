@@ -172,19 +172,19 @@ class RealSpringArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase)
 
         if self.is_sort1:
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp)
         else:
             raise NotImplementedError(self.code_information())
-            #page_num = self._write_sort2_as_sort2(header, page_stamp, page_num, f, msg_temp)
+            #page_num = self._write_sort2_as_sort2(header, page_stamp, page_num, f06_file, msg_temp)
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp):
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -195,7 +195,7 @@ class RealSpringArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
             stress = self.data[itime, :, 0]
 
             out = []
@@ -203,19 +203,19 @@ class RealSpringArray(OES_Object):
                 out.append([eid, write_float_13e(stressi)])
 
             for i in range(0, nrows * 4, 4):
-                f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
+                f06_file.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
                     tuple(out[i] + out[i + 1] + out[i + 2] + out[i + 3])))
 
             i = nrows * 4
             if nleftover == 3:
-                f.write('    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
+                f06_file.write('    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
                     tuple(out[i] + out[i + 1] + out[i + 2])))
             elif nleftover == 2:
-                f.write('    %10i  %13s    %10i  %13s\n' % (
+                f06_file.write('    %10i  %13s    %10i  %13s\n' % (
                     tuple(out[i] + out[i + 1])))
             elif nleftover == 1:
-                f.write('    %10i  %13s\n' % tuple(out[i]))
-            f.write(page_stamp % page_num)
+                f06_file.write('    %10i  %13s\n' % tuple(out[i]))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -420,7 +420,8 @@ class RealNonlinearSpringStressArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         if self.is_sort1:
@@ -437,7 +438,7 @@ class RealNonlinearSpringStressArray(OES_Object):
                 '         ELEMENT-ID          FORCE         STRESS                    ELEMENT-ID          FORCE         STRESS\n' % nspring
                 #'         5.000000E-02     2.000000E+01   1.000000E+01                1.000000E-01     4.000000E+01   2.000000E+01'
             ]
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg)
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg)
         else:
             msg = [
                 '          N O N L I N E A R   F O R C E S  A N D  S T R E S S E S  I N   S C A L A R   S P R I N G S    ( C E L A S %i )\n'
@@ -448,7 +449,7 @@ class RealNonlinearSpringStressArray(OES_Object):
             raise NotImplementedError('RealNonlinearSpringStressArray-sort2')
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp):
         """
         ::
               ELEMENT-ID =      20
@@ -469,25 +470,26 @@ class RealNonlinearSpringStressArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
             force = self.data[itime, :, 0]
             stress = self.data[itime, :, 1]
             for i, eid, forcei, stressi, in zip(count(step=2), eids[:neids:2], force[:neids:2], stress[:neids:2]):
-                f.write('         %-13i   %-13s  %-13s                %-13s   %-13s  %s\n' % (
-                    eid,
-                    write_float_13e(forcei),
-                    write_float_13e(stressi),
-                    eids[i + 1],
-                    write_float_13e(force[i + 1]),
-                    write_float_13e(stress[i + 1])
+                f06_file.write(
+                    '         %-13i   %-13s  %-13s                %-13s   %-13s  %s\n' % (
+                        eid,
+                        write_float_13e(forcei),
+                        write_float_13e(stressi),
+                        eids[i + 1],
+                        write_float_13e(force[i + 1]),
+                        write_float_13e(stress[i + 1])
                 ))
             if is_odd:
-                f.write('         %-13i   %-13s  %s\n' % (
+                f06_file.write('         %-13i   %-13s  %s\n' % (
                     eids[neids],
                     write_float_13e(force[neids]),
                     write_float_13e(stress[neids])
                 ))
 
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

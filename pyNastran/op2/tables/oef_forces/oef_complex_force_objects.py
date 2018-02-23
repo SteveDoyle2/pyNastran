@@ -406,7 +406,8 @@ class ComplexCShearForceArray(ScalarObject):
             raise NotImplementedError('sort2')
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -419,7 +420,7 @@ class ComplexCShearForceArray(ScalarObject):
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -471,20 +472,21 @@ class ComplexCShearForceArray(ScalarObject):
                 #'            25  0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0'
                 #'                0.0           0.0           0.0           0.0           0.0           0.0           0.0           0.0'
 
-                f.write('      %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
-                        '               %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
-                        '                      %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
-                        '                      %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'% (
-                            eid,
-                            force41r, force14r, force21i, force12r, force32r, force23r, force43r, force34r,
-                            kick_force1r, kick_force2r, kick_force3r, kick_force4r,
-                            shear12r, shear23r, shear34r, shear41r,
+                f06_file.write(
+                    '      %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
+                    '               %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
+                    '                      %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'
+                    '                      %-13s %-13s %-13s %-13s %-13s %-13s %-13s  %s\n'% (
+                        eid,
+                        force41r, force14r, force21i, force12r, force32r, force23r, force43r, force34r,
+                        kick_force1r, kick_force2r, kick_force3r, kick_force4r,
+                        shear12r, shear23r, shear34r, shear41r,
 
-                            force41i, force14i, force21i, force12i, force32i, force23i, force43i, force34i,
-                            kick_force1i, kick_force2i, kick_force3i, kick_force4i,
-                            shear12i, shear23i, shear34i, shear41i
-                        ))
-            f.write(page_stamp % page_num)
+                        force41i, force14i, force21i, force12i, force32i, force23i, force43i, force34i,
+                        kick_force1i, kick_force2i, kick_force3i, kick_force4i,
+                        shear12i, shear23i, shear34i, shear41i
+                ))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -876,7 +878,8 @@ class ComplexViscForceArray(ScalarObject):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -896,7 +899,7 @@ class ComplexViscForceArray(ScalarObject):
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
@@ -908,8 +911,9 @@ class ComplexViscForceArray(ScalarObject):
                 #ELEMENT                             AXIAL                                       TORSIONAL
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0
-                f.write('      %8i   %-13s / %-13s   %-13s / %s\n' % (eid, raxial, iaxial, rtorsion, itorsion))
-            f.write(page_stamp % page_num)
+                f06_file.write('      %8i   %-13s / %-13s   %-13s / %s\n' %
+                               (eid, raxial, iaxial, rtorsion, itorsion))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -1096,7 +1100,7 @@ class ComplexPlateForceArray(ScalarObject):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -1109,7 +1113,7 @@ class ComplexPlateForceArray(ScalarObject):
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             mx = self.data[itime, :, 0]
@@ -1132,11 +1136,12 @@ class ComplexPlateForceArray(ScalarObject):
                                   #358.3129      358.0245      177.5593        177.5292      178.2112        0.0907        358.1465      179.4567
                 #"""
                 #                fx     fy     fxy     mx     my     mxy    qx      qy
-                f.write('0  %8i   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n'
-                        '   %8s   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % (
+                f06_file.write(
+                    '0  %8i   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n'
+                    '   %8s   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % (
                         eid, smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
                         '', smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -1341,7 +1346,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -1354,7 +1359,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             mx = self.data[itime, :, 0]
@@ -1377,11 +1382,12 @@ class ComplexPlate2ForceArray(ScalarObject):
                                   #358.3129      358.0245      177.5593        177.5292      178.2112        0.0907        358.1465      179.4567
                 #"""
                 #                fx     fy     fxy     mx     my     mxy    qx      qy
-                f.write('0  %8i   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n'
-                        '   %8s   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % (
-                            eid, smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
-                            '', smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi))
-            f.write(page_stamp % page_num)
+                f06_file.write(
+                    '0  %8i   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n'
+                    '   %8s   %-13s  %-13s  %-13s   %-13s  %-13s  %-13s   %-13s  %s\n' % (
+                        eid, smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
+                        '', smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -1533,7 +1539,8 @@ class ComplexCBarForceArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
@@ -1570,9 +1577,9 @@ class ComplexCBarForceArray(ScalarObject):
         if self.is_sort1:
             assert self.is_sort1 == True, str(self)
             if is_sort1:
-                page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+                page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase)
             else:
-                self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+                self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase)
         else:
             assert self.is_sort1 == True, str(self)
         return page_num - 1
@@ -1827,7 +1834,7 @@ class ComplexCBeamForceArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         # option B
@@ -1876,14 +1883,14 @@ class ComplexCBeamForceArray(ScalarObject):
         if self.is_sort1:
             assert self.is_sort1 == True, str(self)
             #if is_sort1:
-            page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+            page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase)
             #else:
-                #self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+                #self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase)
         else:
             assert self.is_sort1 == True, str(self)
         return page_num - 1
 
-    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+    def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
         eids = self.element
         times = self._times
         ntimes = self.data.shape[0]
@@ -1892,7 +1899,7 @@ class ComplexCBeamForceArray(ScalarObject):
             dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
             header[1] = dt_line
             msg = header + msg_temp
-            f.write(''.join(msg))
+            f06_file.write(''.join(msg))
 
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
             assert self.is_sort1 == True, str(self)
@@ -1912,11 +1919,11 @@ class ComplexCBeamForceArray(ScalarObject):
                 (sdir, bm1ir, bm2ir, ts1ir, ts2ir, afir, ttrqir, wtrqir,
                  sdii, bm1ii, bm2ii, ts1ii, ts2ii, afii, ttrqii, wtrqii) = vals2
 
-                f.write('0%16i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                        ' %14s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                            eid, sdir, bm1ir, bm2ir, ts1ir, ts2ir, afir, ttrqir, wtrqir,
-                            '', sdii, bm1ii, bm2ii, ts1ii, ts2ii, afii, ttrqii, wtrqii))
-            f.write(page_stamp % page_num)
+                f06_file.write('0%16i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               ' %14s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   eid, sdir, bm1ir, bm2ir, ts1ir, ts2ir, afir, ttrqir, wtrqir,
+                                   '', sdii, bm1ii, bm2ii, ts1ii, ts2ii, afii, ttrqii, wtrqii))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
@@ -2107,7 +2114,8 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
             raise NotImplementedError('sort2')
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #'                           C O M P L E X   F O R C E S   I N   B E N D    E L E M E N T S   ( C B E N D )'
@@ -2130,7 +2138,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             bending_moment_1a = self.data[itime, :, 0]
@@ -2159,7 +2167,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
                      [bending_moment_1ai, bending_moment_2ai, shear_1ai, shear_2ai, axial_ai, torque_ai,
                       bending_moment_1bi, bending_moment_2bi, shear_1bi, shear_2bi, axial_bi, torque_bi],
                      is_mag_phase)
-                f.write(
+                f06_file.write(
                     '0  %8s%8s      A    %13s %13s  %13s %13s  %13s  %s\n'
                     '                              %13s %13s  %13s %13s  %13s  %s\n'
                     '0  %8s%8s      B    %13s %13s  %13s %13s  %13s  %s\n'
@@ -2171,7 +2179,7 @@ class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
                         '', nid_bi,
                         bending_moment_1bri, bending_moment_2bri, shear_1bri, shear_2bri, axial_bri, torque_bri,
                         bending_moment_1bii, bending_moment_2bii, shear_1bii, shear_2bii, axial_bii, torque_bii,))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -2356,7 +2364,8 @@ class ComplexSolidPressureForceArray(ScalarObject):
         ##ind.sort()
         #return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -2372,7 +2381,7 @@ class ComplexSolidPressureForceArray(ScalarObject):
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             ax = self.data[itime, :, 0]
@@ -2390,11 +2399,11 @@ class ComplexSolidPressureForceArray(ScalarObject):
                 #'       1000    HEXPR      1.582050E-08    5.505425E+06    2.598164E-09    -8.884337E-10  -4.806934E+04   1.046571E-10   9.968034E+01'
                 #'                         -1.116439E-08   -6.040572E+05    1.315160E-09    -1.258955E-09  -4.381078E+05  -2.067553E-10'
 
-                f.write('      %8i %8s %-13s %-13s %-13s %-13s %-13s %-13s %s\n'
-                        '      %8s %8s %-13s %-13s %-13s %-13s %-13s %s\n\n'
-                        % (eid, etypei, saxr, sayr, sazr, svxr, svyr, svzr, spressurer,
-                           '', '',      saxi, sayi, sazi, svxi, svyi, svzi))
-            f.write(page_stamp % page_num)
+                f06_file.write('      %8i %8s %-13s %-13s %-13s %-13s %-13s %-13s %s\n'
+                               '      %8s %8s %-13s %-13s %-13s %-13s %-13s %s\n\n'
+                               % (eid, etypei, saxr, sayr, sazr, svxr, svyr, svzr, spressurer,
+                                  '', '',      saxi, sayi, sazi, svxi, svyi, svzi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -2529,7 +2538,8 @@ class ComplexCBushForceArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
@@ -2565,9 +2575,9 @@ class ComplexCBushForceArray(ScalarObject):
         ]
         if self.is_sort1:
             if is_sort1:
-                page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+                page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase)
             else:
-                page_num = self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+                page_num = self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase)
         else:
             assert self.is_sort1 == True, str(self)
         return page_num - 1
@@ -2867,7 +2877,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         return ind
 
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         """
                  C O M P L E X   F O R C E S   I N   P - V E R S I O N   B E A M   E L E M E N T S   ( B E A M )
                                                                 (REAL/IMAGINARY)
@@ -2950,23 +2960,25 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
                  fxii, fyii, fzii, mxii, myii, mzii] = out
 
                         #   nid   xxb
-                f.write('   %9i     %.3f    %13.6E %13.6E    %13.6E %13.6E    %13.6E    %13.6E\n'
-                        '                          %13.6E %13.6E    %13.6E %13.6E    %13.6E    %13.6E\n' % (
-                    nid, xxbi.real,
-                    myi.real, mzi.real, fyi.real, fzi.real, fxi.real, mxi.real,
-                    myi.imag, mzi.imag, fyi.imag, fzi.imag, fxi.imag, mxi.imag,
+                f06_file.write(
+                    '   %9i     %.3f    %13.6E %13.6E    %13.6E %13.6E    %13.6E    %13.6E\n'
+                    '                          %13.6E %13.6E    %13.6E %13.6E    %13.6E    %13.6E\n' % (
+                        nid, xxbi.real,
+                        myi.real, mzi.real, fyi.real, fzi.real, fxi.real, mxi.real,
+                        myi.imag, mzi.imag, fyi.imag, fzi.imag, fxi.imag, mxi.imag,
                 ))
 
                 # stress/strain
-                #f.write('   %9i     %.3s      %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n'
-                #'                          %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n' % (
-                #nid, xxbi.real,
-                #fxi.real, fyi.real, fzi.real, mxi.real, myi.real, mzi.real,
-                #fxi.imag, fyi.imag, fzi.imag, mxi.imag, myi.imag, mzi.imag,
+                #f06_file.write(
+                    #'   %9i     %.3s      %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n'
+                    #'                          %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n' % (
+                        #nid, xxbi.real,
+                        #fxi.real, fyi.real, fzi.real, mxi.real, myi.real, mzi.real,
+                        #fxi.imag, fyi.imag, fzi.imag, mxi.imag, myi.imag, mzi.imag,
                 #))
 
                 if i == 1:
-                    f.write(page_stamp % page_num + '\n')
+                    f06_file.write(page_stamp % page_num + '\n')
                     page_num += 1
         return page_num - 1
 

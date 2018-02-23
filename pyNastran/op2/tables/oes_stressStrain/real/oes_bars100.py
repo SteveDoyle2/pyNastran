@@ -200,13 +200,13 @@ class RealBar10NodesArray(OES_Object):
         ##ind.sort()
         #return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = self._get_msgs()
         #print('CBAR ntimes=%s ntotal=%s' % (ntimes, ntotal))
         if self.is_sort1:
-            page_num = self._write_sort1_as_sort1(f, header, page_stamp, msg, page_num)
+            page_num = self._write_sort1_as_sort1(f06_file, header, page_stamp, msg, page_num)
         else:
             raise RuntimeError()
         return page_num

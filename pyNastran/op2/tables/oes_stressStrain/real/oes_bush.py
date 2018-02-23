@@ -172,7 +172,8 @@ class RealBushArray(OES_Object):
         ind = np.ravel([np.searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = self._get_msgs()
@@ -182,7 +183,7 @@ class RealBushArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06_file.write(''.join(header + msg))
             #[tx, ty, tz, rx, ry, rz]
             tx = self.data[itime, :, 0]
             ty = self.data[itime, :, 1]
@@ -197,9 +198,9 @@ class RealBushArray(OES_Object):
                 vals = [txi, tyi, tzi, rxi, ryi, rzi]
                 vals2 = write_floats_13e(vals)
                 [txi, tyi, tzi, rxi, ryi, rzi] = vals2
-                f.write('0                   %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                f06_file.write('0                   %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (
                         eid, txi, tyi, tzi, rxi, ryi, rzi))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         if self.nonlinear_factor is None:
             page_num -= 1

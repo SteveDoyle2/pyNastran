@@ -33,6 +33,20 @@ def read_bedge(bedge_filename, beta_reverse=179.7, log=None, debug=False):
 class AFLR2(object):
     """defines methods for reading interfacing with AFLR2"""
     def __init__(self, log=None, debug=False):
+        """
+        Initializes the AFLR2 object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         self.log = get_logger2(log=log, debug=debug)
         self.debug = debug
 
@@ -61,6 +75,7 @@ class AFLR2(object):
         inode_curve_max = [None] * ncurves
 
         nsubcurves_per_curve = [None] * ncurves
+        icurve = 0
         for icurve in range(ncurves):
             nsubcurvesi = int(data[i])
             nsubcurves_per_curve[icurve] = nsubcurvesi
@@ -74,6 +89,7 @@ class AFLR2(object):
         self.log.debug('data[%i] = %s; nnodes[0]\n' % (i, data[i]))
 
         nnodes_pack = [None] * nsubcurves
+        isubcurve = 0
         for isubcurve in range(nsubcurves):
             nnodesi = int(data[i])
             nnodes_pack[isubcurve] = nnodesi
@@ -87,7 +103,9 @@ class AFLR2(object):
 
         inode = 0
         isubcurve = 0
+        isubcurvei = 0
         isubcurve_to_curve_map = [None] * nsubcurves
+        icurve = 0
         for icurve in range(ncurves):
             nsubcurvesi = nsubcurves_per_curve[icurve]
             inode_curve_min[icurve] = inode
@@ -350,7 +368,7 @@ class AFLR2(object):
         """writes a *.csv file that can be read by pyNastranGUI to show the points"""
         with open(fixed_points_filename, 'w') as point_file:
             for i, node in enumerate(self.nodes):
-                x, y, z = node
+                x, y, unused_z = node
                 #print('bars = \n%s' % self.bars)
                 ix, iy = where(i == self.bars)
                 #print('ix[%s]=%s iy[%s]=%s' % (i, ix, i, iy))

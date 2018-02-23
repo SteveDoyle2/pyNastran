@@ -244,7 +244,7 @@ class RealCompositePlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -301,7 +301,7 @@ class RealCompositePlateArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06_file.write(''.join(header + msg))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -321,9 +321,9 @@ class RealCompositePlateArray(OES_Object):
 
                 [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e([
                  o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
-                f.write('0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %s\n'
-                        % (eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi))
-            f.write(page_stamp % page_num)
+                f06_file.write('0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %s\n'
+                               % (eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

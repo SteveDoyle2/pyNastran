@@ -226,7 +226,8 @@ class ComplexSolidArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
@@ -243,7 +244,7 @@ class ComplexSolidArray(OES_Object):
             dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
             header[1] = dt_line
             msg = header + msg_temp
-            f.write('\n'.join(msg))
+            f06_file.write('\n'.join(msg))
 
             oxx = self.data[itime, :, 0]
             oyy = self.data[itime, :, 1]
@@ -261,13 +262,22 @@ class ComplexSolidArray(OES_Object):
                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,] = write_imag_floats_13e([doxx, doyy, dozz,
                                                                                dtxy, dtyz, dtxz], is_mag_phase)
                 if node == 0:  # CENTER
-                    f.write('0 %12i %11sGRID CS %2i GP\n' % (deid, cid, nnodes))
-                    f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('CENTER', oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('', oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                    f06_file.write(
+                        '0 %12i %11sGRID CS %2i GP\n'
+                        '0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n'
+                        '    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (
+                            deid, cid, nnodes,
+                            'CENTER', oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                            '', oxxi, oyyi, ozzi, txyi, tyzi, txzi,
+                    ))
                 else:
-                    f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (node, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('', oxxi, oyyi, ozzi, txyi, tyzi, txzi))
-            f.write(page_stamp % page_num)
+                    f06_file.write(
+                        '0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n'
+                        '    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (
+                            node, oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                            '', oxxi, oyyi, ozzi, txyi, tyzi, txzi,
+                    ))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

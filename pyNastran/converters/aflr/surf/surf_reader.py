@@ -50,6 +50,20 @@ def combine_surfs(surf_filenames, surf_out_filename=None):
 
 class SurfReader(object):
     def __init__(self, log=None, debug=False):
+        """
+        Initializes the SurfReader object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         self.log = log
         self.debug = debug
 
@@ -60,6 +74,8 @@ class SurfReader(object):
         self.tri_props = None
         self.quads = None
         self.quad_props = None
+
+        self.nodes_failed = None
 
     def read_surf(self, surf_filename):
         """

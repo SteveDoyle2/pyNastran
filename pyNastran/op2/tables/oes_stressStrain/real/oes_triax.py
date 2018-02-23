@@ -181,7 +181,8 @@ class RealTriaxArray(OES_Object):
         ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = self._get_msgs()
@@ -192,7 +193,7 @@ class RealTriaxArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06_file.write(''.join(header + msg))
 
             #[radial, azimuthal, axial, shear, omax, oms, ovm]
             radial = self.data[itime, :, 0]
@@ -209,9 +210,10 @@ class RealTriaxArray(OES_Object):
                 vals = [radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi]
                 vals2 = write_floats_13e(vals)
                 [radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi] = vals2
-                f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
-                        % (eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi))
-            f.write(page_stamp % page_num)
+                f06_file.write(
+                    '0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
+                    % (eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         if self.nonlinear_factor is None:
             page_num -= 1

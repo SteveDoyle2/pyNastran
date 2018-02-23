@@ -165,7 +165,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = [
@@ -182,7 +182,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             xgrad = self.data[itime, :, 0]
             #ygrad = self.data[itime, :, 1]
@@ -195,9 +195,9 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
                 (sxgradi, sxfluxi) = write_floats_13e([xgradi, xfluxi])
 
                 # TODO: hopa is probably the wrong type
-                f.write(' %8i  %8s %-13s %-13s %-13s %s\n' % (
-                        eid, etypei, sxgradi, '', '', sxfluxi))
-            f.write(page_stamp % page_num)
+                f06_file.write(' %8i  %8s %-13s %-13s %-13s %s\n' % (
+                    eid, etypei, sxgradi, '', '', sxfluxi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -357,7 +357,8 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         ## TODO: add the f06 header
@@ -375,7 +376,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             # [xgrad, ygrad, zgrad, xflux, yflux, zflux]
             #nids = self.int_data[itime, :, 0]
@@ -390,9 +391,10 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
 
             for (vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi) in zip(
                  vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
-                f.write('         %10i    %-13E    %-13E    %-13E    %-13E    %-13E    %-13E\n' % (
-                    vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi))
-            f.write(page_stamp % page_num)
+                f06_file.write(
+                    '         %10i    %-13E    %-13E    %-13E    %-13E    %-13E    %-13E\n' % (
+                        vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -624,7 +626,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         ## TODO: add the f06 header
@@ -642,7 +644,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             # [xgrad, ygrad, zgrad, xflux, yflux, zflux]
             #nids = self.int_data[itime, :, 0]
@@ -657,9 +659,9 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
 
             for (vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi) in zip(
                  vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
-                f.write('         %10i    %-13E    %-13E    %-13E    %-13E    %-13E    %-13E\n' % (
+                f06_file.write('         %10i    %-13E    %-13E    %-13E    %-13E    %-13E    %-13E\n' % (
                     vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -916,7 +918,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         asdf
@@ -936,7 +938,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             vugrids = self.vugrid[itime, :, 0]
             # [xgrad, ygrad, zgrad, xflux, yflux, zflux]
@@ -953,9 +955,9 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
                     [fappliedi, free_convi, force_convi, fradi, ftotali])
                 [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
 
-                f.write('         %10i    %13E    %13E    %13E    %13E    %13E    %13E\n' % (
+                f06_file.write('         %10i    %13E    %13E    %13E    %13E    %13E    %13E\n' % (
                     eid, sfapplied, sfree_conv, sforce_conv, sfrad, sftotal))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -1064,7 +1066,7 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
             self.data_frame = df1.join(df2)
         #print(self.data_frame)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = [
@@ -1074,9 +1076,9 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.get_table_marker()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, page_stamp, page_num, f,
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        return self._write_f06_block(words, header, page_stamp, page_num, f,
+        return self._write_f06_block(words, header, page_stamp, page_num, f06_file,
                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
     def get_headers(self):
@@ -1225,7 +1227,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = [
@@ -1243,20 +1245,20 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             # [free_conv, free_conv_k]
             free_conv = self.data[itime, :, 0]
             free_conv_k = self.data[itime, :, 1]
 
             for (eid, nid, free_convi, free_conv_ki) in zip(eids, nids, free_conv, free_conv_k):
-                f.write(' %8i  %-13s %-13s %s\n' % (
+                f06_file.write(' %8i  %-13s %-13s %s\n' % (
                     eid,
                     write_float_13e(free_convi),
                     nid,
                     write_float_13e(free_conv_ki)
                 ))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -1400,7 +1402,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
 
@@ -1422,7 +1424,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             # [fapplied, free_conv, force_conv, frad, ftotal]
             fapplied = self.data[itime, :, 0]
@@ -1437,8 +1439,8 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                     #[fappliedi, free_convi, force_convi, fradi, ftotali])
                 #[sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
 
-                f.write('                 %8i     %13E     %13E     %13E     %13E     %13E\n' % (
+                f06_file.write('                 %8i     %13E     %13E     %13E     %13E     %13E\n' % (
                     eid, fappliedi, free_convi, force_convi, fradi, ftotali))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

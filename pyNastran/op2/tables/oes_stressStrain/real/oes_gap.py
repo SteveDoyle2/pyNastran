@@ -190,7 +190,7 @@ class NonlinearGapStressArray(OES_Object):
         ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1,
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
                   is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -200,7 +200,7 @@ class NonlinearGapStressArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06_file.write(''.join(header + msg))
 
             #comp_x, shear_y, shear_z, axial_u, shear_v, shear_w, slip_v, slip_w
             comp_x = self.data[itime, :, 0]
@@ -218,10 +218,11 @@ class NonlinearGapStressArray(OES_Object):
                 vals2 = write_floats_13e(vals)
                 [comp_xi, shear_yi, shear_zi, axial_ui,
                  shear_vi, shear_wi, slip_vi, slip_wi] = vals2
-                f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
-                        % (eid, comp_xi, shear_yi, shear_zi, axial_ui,
-                           shear_vi, shear_wi, slip_vi, slip_wi))
-            f.write(page_stamp % page_num)
+                f06_file.write(
+                    '0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
+                    % (eid, comp_xi, shear_yi, shear_zi, axial_ui,
+                       shear_vi, shear_wi, slip_vi, slip_wi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         if self.nonlinear_factor is None:
             page_num -= 1

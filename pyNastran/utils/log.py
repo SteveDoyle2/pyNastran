@@ -140,7 +140,7 @@ class SimpleLogger(object):
         name = '%-8s' % (typ + ':')
         #if not IS_TERMINAL or not typ:
         _write(typ, name, msg, self.encoding)
-        sys.stdout.flush()
+        #sys.stdout.flush()
 
     def msg_typ(self, typ, msg):
         """

@@ -242,7 +242,7 @@ class RealNonlinearPlateArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #msg, nnodes, cen = _get_plate_msg(self)
@@ -272,10 +272,10 @@ class RealNonlinearPlateArray(OES_Object):
         #' \n'
         #'    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
         #'       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
-        ##'0         1  -2.500000E-02  -4.829193E+00  -1.640651E-05                 -1.907010E-04   4.829185E+00   0.0            0.0\n'
-        ##'                            -4.829188E-05   1.448741E-05                 -4.958226E-09\n'
-        ##'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
-        ##'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
+        #'0         1  -2.500000E-02  -4.829193E+00  -1.640651E-05                 -1.907010E-04   4.829185E+00   0.0            0.0\n'
+        #'                            -4.829188E-05   1.448741E-05                 -4.958226E-09\n'
+        #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
+        #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
         #]
 
 
@@ -288,7 +288,7 @@ class RealNonlinearPlateArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06_file.write(''.join(header + msg))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -318,7 +318,7 @@ class RealNonlinearPlateArray(OES_Object):
                 #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
                 #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
                 if i == 0:
-                    f.write(
+                    f06_file.write(
                         '0  %8i  %-13s  %-13s  %-13s                 %-13s  %-13s  %-13s  %s\n'
                         '                            %-13s  %-13s                 %s\n' % (
                             # A
@@ -347,7 +347,7 @@ class RealNonlinearPlateArray(OES_Object):
                             write_float_13e(exyi),
                         ))
                 else:
-                    f.write(
+                    f06_file.write(
                         '             %-13s  %-13s  %-13s                 %-13s  %-13s  %-13s  %s\n'
                         '                            %-13s  %-13s                 %s\n' % (
                             write_float_13e(fdi),
@@ -364,6 +364,6 @@ class RealNonlinearPlateArray(OES_Object):
                         )
                     )
 
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

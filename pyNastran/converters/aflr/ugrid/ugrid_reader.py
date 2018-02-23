@@ -222,9 +222,9 @@ class UGRID(object):
                     raise RuntimeError('not a volume grid')
 
                 data = ugrid_file.read(4)
-                nBL_tets = unpack(endian + 'i', data)
+                nboundary_layer_tets = unpack(endian + 'i', data)
                 self.n += 4
-                self.log.debug('nBL_tets=%s' % (nBL_tets)) # trash
+                self.log.debug('nboundary_layer_tets=%s' % (nboundary_layer_tets)) # trash
 
 
                 data = ugrid_file.read(nvol_elements * 4)
@@ -284,7 +284,7 @@ class UGRID(object):
                 nnodes = self.nodes.shape[0]
                 all_nids = np.arange(nnodes, dtype='int32')
                 inid = np.searchsorted(all_nids, nids_to_write)
-                nodes = self.nodes[inid, :]
+                unused_nodes = self.nodes[inid, :]
 
                 for i, nid in enumerate(nids_to_write):
                     node = self.nodes[i, :]
@@ -337,7 +337,7 @@ class UGRID(object):
         self.log.debug('checking hanging nodes')
         tris = self.tris
         quads = self.quads
-        pids = self.pids
+        unused_pids = self.pids
 
 
         nnodes = self.nodes.shape[0]
@@ -415,7 +415,7 @@ class UGRID(object):
     def write_ugrid(self, ugrid_filename_out, check_shells=True, check_solids=True):
         """writes a UGrid model"""
         outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename_out)
-        ndarray_float, float_fmt, nfloat, endian, ugrid_filename = outi
+        unused_ndarray_float, float_fmt, unused_nfloat, endian, ugrid_filename = outi
 
         nodes = self.nodes
         nnodes = nodes.shape[0]
@@ -573,8 +573,8 @@ class UGRID(object):
             faces2 = self.tets[:, [0, 1, 3]]
             faces3 = self.tets[:, [1, 2, 3]]
             faces4 = self.tets[:, [0, 2, 3]]
-            tris[       :  ntets] = faces1
-            tris[  ntets:2*ntets] = faces2
+            tris[:ntets] = faces1
+            tris[ntets:2*ntets] = faces2
             tris[2*ntets:3*ntets] = faces3
             tris[3*ntets:4*ntets] = faces4
             ntri_start += 4*ntets
@@ -592,8 +592,8 @@ class UGRID(object):
             faces4 = self.hexas[:, [1, 2, 6, 5]]
             faces5 = self.hexas[:, [0, 1, 5, 4]]
             faces6 = self.hexas[:, [3, 2, 6, 7]]
-            quads[         : nhexas] = faces1
-            quads[  nhexas:2*nhexas] = faces2
+            quads[: nhexas] = faces1
+            quads[nhexas:2*nhexas] = faces2
             quads[2*nhexas:3*nhexas] = faces3
             quads[3*nhexas:4*nhexas] = faces4
             quads[4*nhexas:5*nhexas] = faces5
@@ -643,11 +643,11 @@ class UGRID(object):
             #tris = tris.sort()
             for tri in tris:
                 tri_set.add(tuple(tri))
-            tri_array = array(list(tri_set))
+            unused_tri_array = array(list(tri_set))
 
         if nquads:
             quads.sort()
-            quad_set = set([])
+            unused_quad_set = set([])
             # if tris:
                 # tris = vstack(tris)
                 # tris.sort(axis=0)
@@ -673,7 +673,7 @@ def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename=None):
         assert ugrid_filename is not None, ugrid_filename
 
     try:
-        base, file_format, ext = os.path.basename(ugrid_filename).split('.')
+        unused_base, file_format, ext = os.path.basename(ugrid_filename).split('.')
     except ValueError:
         msg = ('expected file of the form "model.b8.ugrid" '
                'or "model.lb4.ugrid"; actual=%r' % ugrid_filename)
@@ -704,4 +704,3 @@ def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename=None):
         msg = 'file_format=%r ugrid_filename=%s' % (file_format, ugrid_filename)
         raise NotImplementedError(msg)
     return ndarray_float, float_fmt, nfloat, endian, ugrid_filename
-

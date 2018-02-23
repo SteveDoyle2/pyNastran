@@ -38,7 +38,7 @@ class ShabpIO(object):
         self.model = read_shabp(shabp_filename, log=self.parent.log, debug=self.parent.debug)
         self.parent.model_type = 'shabp' # model.model_type
 
-        nodes, elements, patches, components, impact, shadow = self.model.getPointsElementsRegions()
+        nodes, elements, patches, components, impact, shadow = self.model.get_points_elements_regions()
         #for nid,node in enumerate(nodes):
             #print "node[%s] = %s" %(nid,str(node))
 

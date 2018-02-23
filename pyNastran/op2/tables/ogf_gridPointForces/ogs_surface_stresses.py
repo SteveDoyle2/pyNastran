@@ -71,7 +71,8 @@ class GridPointStressesArray(ScalarObject):
         headers = ['nx', 'ny', 'txy', 'angle', 'majorP', 'minorP', 'tmax', 'ovm']
         return headers
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg = header + [
@@ -89,7 +90,7 @@ class GridPointStressesArray(ScalarObject):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             nx = self.data[itime, :, 0]
             ny = self.data[itime, :, 1]
@@ -103,9 +104,11 @@ class GridPointStressesArray(ScalarObject):
                 eids, nx, ny, txy, angle, majorp, minorp, tmax, ovm):
                 [eid, nxi, nyi, txyi, anglei, majorpi, minorpi, tmaxi, ovmi] = write_floats_12e([
                     eid, nxi, nyi, txyi, anglei, majorpi, minorpi, tmaxi, ovmi])
-                f.write('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (
-                    zero, ekey2, eid, elem_name, nxi, nyi, txyi, anglei, majorpi, minorpi, tmaxi, ovmi))
-            f.write(page_stamp % page_num)
+                f06_file.write(
+                    '%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (
+                        zero, ekey2, eid, elem_name, nxi, nyi, txyi, anglei, majorpi, minorpi,
+                        tmaxi, ovmi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -264,11 +267,11 @@ class GridPointStresses(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+            return self._write_f06_transient(header, page_stamp, page_num, f06_file, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         msg = header + [
             '                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
@@ -299,12 +302,11 @@ class GridPointStresses(ScalarObject):
                     eid = zero
                 angle = write_floats_8p4f([angle])
                 anglei = angle[0]
-                msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (
+                f06_file.write('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (
                     zero, ekey2, eid, elem_name, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
                 zero = ' '
                 ekey2 = ' '
-        msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
+        f06_file.write(page_stamp % page_num)
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
@@ -468,15 +470,16 @@ class GridPointStressesVolume(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        f.write('GridPointStressesVolume write_f06 is not implemented...\n')
+        f06_file.write('GridPointStressesVolume write_f06 is not implemented...\n')
         return page_num
 
         #raise NotImplementedError()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+            return self._write_f06_transient(header, page_stamp, page_num, f06_file, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -502,12 +505,12 @@ class GridPointStressesVolume(ScalarObject):
                 vals = [nx, ny, nz, txy, tyz, txz, pressure, ovm]
                 vals2 = write_floats_10e(vals)
                 [nx, ny, nz, txy, tyz, txz, pressure, ovm] = vals2
-                msg.append('%s%8s  %s %s %s   %s %s %s %s  %-s\n' % (zero, ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm.rstrip()))
+                f06_file.write('%s%8s  %s %s %s   %s %s %s %s  %-s\n' % (
+                    zero, ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm.rstrip()))
                 zero = ' '
                 ekey2 = ' '
 
-        msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
+        f06_file.write(page_stamp % page_num)
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):

@@ -263,7 +263,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         f.write(page_stamp % page_num)
         return page_num
 
-    def _write_sort1_as_sort2(self, f, page_num, page_stamp, header, words):
+    def _write_sort1_as_sort2(self, f06_file, page_num, page_stamp, header, words):
         element = self.element
         element_type = self.element_data_type
         times = self._times
@@ -278,18 +278,18 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             r3 = self.data[:, inode, 5].ravel()
 
             header[1] = ' POINT-ID = %10i\n' % node_id
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                f06_file.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                     write_float_12e(dt), etypei, dx, dy, dz, rx, ry, rz))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, words):
+    def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, words):
         element = self.element
         element_type = self.element_data_type
         times = self._times
@@ -307,18 +307,18 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for element_id, etypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(element, element_type, t1, t2, t3, r1, r2, r3):
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                     element_id, etypei, dx, dy, dz, rx, ry, rz))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def _write_sort2_as_sort2(self, f, page_num, page_stamp, header, words):
+    def _write_sort2_as_sort2(self, f06_file, page_num, page_stamp, header, words):
         element = self.element
         element_type = self.element_data_type
         times = self._times
@@ -331,18 +331,18 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             r3 = self.data[ieid, :, 5]
 
             header[1] = ' POINT-ID = %10i\n' % node_id
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                f06_file.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                     write_float_12e(dt), etypei, dx, dy, dz, rx, ry, rz))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06,
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06_file,
                                    is_mag_phase=False, is_sort1=True):
         #words += self.getTableMarker()
 
@@ -352,11 +352,11 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         is_sort2 = not is_sort1
         if self.is_sort1 or self.nonlinear_factor is None:
             if is_sort2 and self.nonlinear_factor is not None:
-                page_num = self._write_sort1_as_sort2(f06, page_num, page_stamp, header, words)
+                page_num = self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, words)
             else:
-                page_num = self._write_sort1_as_sort1(f06, page_num, page_stamp, header, words)
+                page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, words)
         else:
-            page_num = self._write_sort2_as_sort2(f06, page_num, page_stamp, header, words)
+            page_num = self._write_sort2_as_sort2(f06_file, page_num, page_stamp, header, words)
         return page_num - 1
 
     def extract_xyplot(self, element_ids, index):
@@ -419,10 +419,10 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
     #def data_type(self):
         #return 'complex64'
 
-    ##def _write_f06_block(self, words, header, page_stamp, page_num, f, is_mag_phase):
-        ##self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+    ##def _write_f06_block(self, words, header, page_stamp, page_num, f06_file, is_mag_phase):
+        ##self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file, is_mag_phase, is_sort1)
 
-    #def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06,
+    #def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06_file,
                                    #is_mag_phase, is_sort1):
         #if is_mag_phase:
             #words += ['                                                         (MAGNITUDE/PHASE)\n', ]
@@ -435,16 +435,16 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         #if self.is_sort1:
             #if is_sort1:
                 #words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-                #page_num = self.write_sort1_as_sort1(f06, page_num, page_stamp, header, words, is_mag_phase)
+                #page_num = self.write_sort1_as_sort1(f06_file, page_num, page_stamp, header, words, is_mag_phase)
             #else:
                 #words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
-                #page_num = self.write_sort1_as_sort2(f06, page_num, page_stamp, header, words, is_mag_phase)
+                #page_num = self.write_sort1_as_sort2(f06_file, page_num, page_stamp, header, words, is_mag_phase)
         #else:
             #words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
-            #page_num = self.write_sort2_as_sort2(f06, page_num, page_stamp, header, words, is_mag_phase)
+            #page_num = self.write_sort2_as_sort2(f06_file, page_num, page_stamp, header, words, is_mag_phase)
         #return page_num - 1
 
-    #def write_sort1_as_sort1(self, f06, page_num, page_stamp, header, words, is_mag_phase):
+    #def write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
         #assert self.ntimes == len(self._times), 'ntimes=%s len(self._times)=%s' % (self.ntimes, self._times)
         #for itime, dt in enumerate(self._times):
             #node = self.node_gridtype[:, 0]
@@ -465,12 +465,12 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 #[dxr, dyr, dzr, rxr, ryr, rzr,
                  #dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 #if sgridtype == 'G':
-                    #f06.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                    #f06_file.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
                               #'  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
                                   #node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
                                   #'', '', dxi, dyi, dzi, rxi, ryi, rzi))
                 #elif sgridtype == 'S':
-                    #f06.write('0 %12i %6s     %-13s\n'
+                    #f06_file.write('0 %12i %6s     %-13s\n'
                               #'  %12s %6s     %-13s\n' % (node_id, sgridtype, dxr, '', '', dxi))
                 #else:
                     #raise NotImplementedError(sgridtype)
@@ -478,7 +478,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
             #page_num += 1
         #return page_num
 
-    #def write_sort1_as_sort2(self, f06, page_num, page_stamp, header, words, is_mag_phase):
+    #def write_sort1_as_sort2(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
         #node = self.node_gridtype[:, 0]
         #gridtype = self.node_gridtype[:, 1]
 
@@ -506,22 +506,22 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 #sdt = write_float_12e(dt)
                 ##if not is_all_zeros:
                 #if sgridtype == 'G':
-                    #f06.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                    #f06_file.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
                               #'  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
                                   #sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
                                   #'', '', dxi, dyi, dzi, rxi, ryi, rzi))
                 #elif sgridtype == 'S':
-                    #f06.write('0 %12s %6s     %-13s\n'
+                    #f06_file.write('0 %12s %6s     %-13s\n'
                               #'  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
                 #else:
                     #msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
                         #node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
                     #raise NotImplementedError(msg)
-            #f06.write(page_stamp % page_num)
+            #f06_file.write(page_stamp % page_num)
             #page_num += 1
         #return page_num
 
-    #def write_sort2_as_sort2(self, f06, page_num, page_stamp, header, words, is_mag_phase):
+    #def write_sort2_as_sort2(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
         #node = self.node_gridtype[:, 0]
         #gridtype = self.node_gridtype[:, 1]
 
@@ -549,18 +549,18 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 #sdt = write_float_12e(dt)
                 ##if not is_all_zeros:
                 #if sgridtype == 'G':
-                    #f06.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                    #f06_file.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
                               #'  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
                                   #sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
                                   #'', '', dxi, dyi, dzi, rxi, ryi, rzi))
                 #elif sgridtype == 'S':
-                    #f06.write('0 %12s %6s     %-13s\n'
+                    #f06_file.write('0 %12s %6s     %-13s\n'
                               #'  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
                 #else:
                     #msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
                         #node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
                     #raise NotImplementedError(msg)
-            #f06.write(page_stamp % page_num)
+            #f06_file.write(page_stamp % page_num)
             #page_num += 1
         #return page_num
 

@@ -164,7 +164,7 @@ class ComplexShearArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         """
                 C O M P L E X   F O R C E S   A C T I N G   O N   S H E A R   P A N E L   E L E M E N T S   (CSHEAR)
@@ -194,7 +194,7 @@ class ComplexShearArray(OES_Object):
                     dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                     header[1] = dt_line
                     msg = header + msg_temp
-                    f.write('\n'.join(msg))
+                    f06_file.write('\n'.join(msg))
 
                     max_shear = self.data[itime, :, 0]
                     avg_shear = self.data[itime, :, 1]
@@ -206,9 +206,10 @@ class ComplexShearArray(OES_Object):
                          ,] = write_imag_floats_13e([max_sheari, avg_sheari], is_mag_phase)
 
                         #f.write('                      28                  0.0          /  0.0                           0.0          /  0.0\n')
-                        f.write('%24s                 %-13s / %-13s                 %-13s / %-13s\n' % (
-                            eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
-                    f.write(page_stamp % page_num)
+                        f06_file.write(
+                            '%24s                 %-13s / %-13s                 %-13s / %-13s\n' % (
+                                eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
+                    f06_file.write(page_stamp % page_num)
                     page_num += 1
             else:
                 # TODO: write in SORT2
@@ -220,11 +221,13 @@ class ComplexShearArray(OES_Object):
                         [rmax_shear, imax_shear, ravg_shear, iavg_shear
                          ] = write_imag_floats_13e([max_sheari, avg_sheari], is_mag_phase)
 
-                        #f.write('   %6s   %-13s / %-13s     %-13s / %-13s\n' % (
-                            #eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
-                        f.write('%24s                 %-13s / %-13s                 %-13s / %-13s\n' % (
-                            eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
-                    f.write(page_stamp % page_num)
+                        #f06_file.write(
+                            #'   %6s   %-13s / %-13s     %-13s / %-13s\n' % (
+                                #eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
+                        f06_file.write(
+                            '%24s                 %-13s / %-13s                 %-13s / %-13s\n' % (
+                                eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
+                    f06_file.write(page_stamp % page_num)
                     page_num += 1
         else:
             raise NotImplementedError('ComplexShearArray-sort2')

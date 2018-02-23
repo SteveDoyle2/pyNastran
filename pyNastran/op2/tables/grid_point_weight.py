@@ -287,13 +287,13 @@ class GridPointWeight(object):
         #print("Q =", self.Q)
         n += i
 
-    def write_f06(self, f, page_stamp, page_num):
+    def write_f06(self, f06_file, page_stamp, page_num):
         """
         writes the f06
 
         Parameters
         ----------
-        f : file / StringIO
+        f06_file : file / StringIO
             a file-like object
         page_stamp : str
             the page formatter (e.g., 'PAGE %i')
@@ -339,6 +339,6 @@ class GridPointWeight(object):
         for i in range(3):
             msg.append('                                           * %13.6E %13.6E %13.6E *' % tuple(self.Q[i, :]))
         msg.append('\n' + page_stamp % page_num + '\n')
-        f.write('\n'.join(msg))
+        f06_file.write('\n'.join(msg))
         #print('\n'.join(msg))
         return page_num + 1

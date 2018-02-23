@@ -1,7 +1,8 @@
 from __future__ import print_function
 from numpy import zeros
 from pyNastran.converters.openfoam.openfoam_parser import (
-    write_dict, FoamFile, convert_to_dict)
+    #write_dict,
+    FoamFile, convert_to_dict)
 from pyNastran.bdf.field_writer import print_card_8
 
 
@@ -73,7 +74,7 @@ class Faces(object):
 def main():
     fp = Points()
     nodes = fp.read_points()
-    nnodes = nodes.shape[0]
+    unused_nnodes = nodes.shape[0]
 
     fe = Faces()
     quads = fe.read_faces()
