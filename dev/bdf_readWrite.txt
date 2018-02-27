@@ -74,6 +74,7 @@ PSHELL  (done)
 PCOMP   (done)
 PCOMPG  (done)
 PLPLANE (done)
+SNORM   (done)
 
 ----Shear (Elements/Properties)----:
 CSHEAR  (done)
@@ -157,6 +158,14 @@ RBAR1 (done)
 RBE1  (done)
 RBE2  (done)
 RBE3  (done)
+RSPLINE
+RTRPLT
+RBE2GS
+RBJOINT
+RBJSTIF
+RJOINT
+RTRPLT1
+MATRIG
 
 ----Materials----:
 CREEP (done)
@@ -246,6 +255,8 @@ QBDY2  (done)
 QBDY3  (done)
 
 QVOL  (done)
+VIEW   (done)
+VIEW3D (done)
 
 ----Thermal Elements----:
 CHBDYE (done)
@@ -279,7 +290,7 @@ AELIST  (done)
 AEPARAM (done)
 AESTAT  (done)
 AESURF  (done)
-AESURFS (not integrated)
+AESURFS (done)
 
 CAERO1  (done)
 CAERO2  (done)
@@ -321,8 +332,8 @@ FREQ  (done)
 FREQ1 (done)
 FREQ2 (done)
 FREQ3 (done)
-FREQ4
-FREQ5
+FREQ4 (done)
+FREQ5 (done)
 
 ----Optimization----:
 DEQATN   (done)
@@ -465,6 +476,9 @@ AXIC
 OMITAX
 SECTAX
 
+---- Plot Elements----:
+PLOTEL   (done)
+
 -----------------------------------------------
 ----Equation Geometry----:
 GMLOAD  (done)
@@ -478,18 +492,7 @@ Not supported - ask for the cards you want
 ---- Elements w/ Properties----:
 
 ---- Elements----:
-PLOTEL   (done)
 MBOLTUS
-
----- Rigid Elements----:
-RSPLINE
-RTRPLT
-RBE2GS
-RBJOINT
-RBJSTIF
-RJOINT
-RTRPLT1
-MATRIG
 
 ----Loads----:
 QVECT
@@ -499,9 +502,6 @@ RADMT
 
 TEMPP1
 TEMPRB
-
-VIEW
-VIEW3D
 
 ----Nodes----:
 EGRID   (done)

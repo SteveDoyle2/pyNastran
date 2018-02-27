@@ -774,8 +774,9 @@ class TestCoords(unittest.TestCase):
         model = BDF(debug=False)
         #model.echo = True
         #cards, card_count = model.get_bdf_cards(bulk_data_lines)
-        cards, card_count = model.get_bdf_cards_dict(bulk_data_lines)
-        model._parse_cards(cards, card_count)
+        cards_list = []
+        cards_dict, card_count = model.get_bdf_cards_dict(bulk_data_lines)
+        model._parse_cards(cards_list, cards_dict, card_count)
 
         #print(model.card_count)
         assert model.card_count['CORD1R'] == 1, model.card_count

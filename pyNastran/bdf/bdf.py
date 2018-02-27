@@ -804,6 +804,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
     def validate(self):
         # type : (None) -> None
         """runs some checks on the input data beyond just type checking"""
+        def _print_card(card):
+            try:
+                return card.write_card(size=8)
+            except RuntimeError:
+                return ''
 
         def _validate_dict_list(objects_dict):
             """helper method for validate"""
@@ -818,7 +823,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     try:
                         obj.validate()
                     except(ValueError, AssertionError, RuntimeError, IndexError) as e:
-                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        #exc_type, exc_value, exc_traceback = sys.exc_info()
                         # format_tb(exc_traceback)  # works; ugly
                         # format_exc(e) # works; short
                         #traceback.format_stack()
@@ -826,14 +831,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                         #print('traceback.format_stack()[:-1] = \n', ''.join(traceback.format_stack()[:-1]))
                         #self.log.info('info2')
                         #self.log.error('error2')
-                        msg = (
-                            '\nTraceback (most recent call last):\n' +
-                            ''.join(traceback.format_stack()) +
-                            #''.join(traceback.format_tb(exc_traceback)) + #'\n' +
-                            '%s: %s\n' % (exc_type.__name__, exc_value) +
-                            obj.get_stats() +
-                            '----------------------------------------------------------------\n')
-                        self.log.error(msg)
+                        #msg = (
+                            #'\nTraceback (most recent call last):\n' +
+                            #''.join(traceback.format_stack()) +
+                            ##''.join(traceback.format_tb(exc_traceback)) + #'\n' +
+                            #'%s: %s\n' % (exc_type.__name__, exc_value) +
+                            #obj.get_stats() +
+                            #'----------------------------------------------------------------\n')
+                        #self.log.error(msg)
+                        self.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
                         ifailed += 1
                         if ifailed > nmax_failed:
                             raise
@@ -850,18 +856,20 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 try:
                     obj.validate()
                 except(ValueError, AssertionError, RuntimeError, IndexError) as e:
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    #exc_type, exc_value, exc_traceback = sys.exc_info()
                     # format_tb(exc_traceback)  # works; ugly
                     # format_exc(e) # works; short
                     #traceback.format_stack()
-                    msg = (
-                        '\nTraceback (most recent call last):\n' +
-                        ''.join(traceback.format_stack()[:-1])
-                    )
-                    write_error(msg)
-                    write_error(''.join(traceback.format_tb(exc_traceback)) + '\n')
-                    self.log.error('\n' + obj.rstrip())
-                    write_error('----------------------------------------------------------------\n')
+                    #msg = (
+                        #'\nTraceback (most recent call last):\n' +
+                        #''.join(traceback.format_stack()[:-1])
+                    #)
+                    #write_error(msg)
+                    #write_error(''.join(traceback.format_tb(exc_traceback)) + '\n')
+                    #self.log.error('\n' + obj.rstrip())
+                    #write_error('----------------------------------------------------------------\n')
+                    self.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
+                    _print_card(obj)
                     ifailed += 1
                     if ifailed > nmax_failed:
                         raise
@@ -878,16 +886,17 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 try:
                     obj.validate()
                 except(ValueError, AssertionError, RuntimeError) as e:
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    #exc_type, exc_value, exc_traceback = sys.exc_info()
                     # format_tb(exc_traceback)  # works; ugly
                     # format_exc(e) # works; short
                     #traceback.format_stack()
-                    self.log.error(
-                        '\nTraceback (most recent call last):\n' +
-                        ''.join(traceback.format_stack()[:-1]) +
-                        ''.join(traceback.format_tb(exc_traceback)) + '\n' +
-                        '\n' + obj.rstrip() +
-                        '----------------------------------------------------------------\n')
+                    #self.log.error(
+                        #'\nTraceback (most recent call last):\n' +
+                        #''.join(traceback.format_stack()[:-1]) +
+                        #''.join(traceback.format_tb(exc_traceback)) + '\n' +
+                        #'\n' + obj.rstrip() +
+                        #'----------------------------------------------------------------\n')
+                    self.log.error(('\n' + obj.get_stats() + '\n' + _print_card(obj)).rstrip())
                     ifailed += 1
                     if ifailed > nmax_failed:
                         raise
@@ -1549,12 +1558,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             #print('end_add %s' % card_lines)
 
             # old dictionary version
-            cards[old_card_name].append([backup_comment + full_comment, card_lines])
+            cards_dict[old_card_name].append([backup_comment + full_comment, card_lines])
 
             # new list version
             #cards.append([old_card_name, backup_comment + full_comment, card_lines])
             card_count[old_card_name] += 1
-        return cards, card_count
+        return cards_dict, card_count
 
     def update_solution(self, sol, method, sol_iline):
         """
@@ -1844,7 +1853,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'CTUBE' : (CTUBE, self._add_element_object),
             'PTUBE' : (PTUBE, self._add_property_object),
 
-            'CBAR' : (CBAR, self._add_element_object),
             'BAROR' : (BAROR, self._add_baror_object),
             'CBARAO' : (CBARAO, self._add_ao_object),
             'PBAR' : (PBAR, self._add_property_object),
@@ -2322,7 +2330,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _prepare_cbar(self, unused_card, card_obj, comment=''):
         """adds a CBAR"""
-        elem = CBEAM.add_card(card_obj, baror=self.baror, comment=comment)
+        elem = CBAR.add_card(card_obj, baror=self.baror, comment=comment)
         self._add_element_object(elem)
 
     def _prepare_cbeam(self, unused_card, card_obj, comment=''):

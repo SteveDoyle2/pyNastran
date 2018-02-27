@@ -1149,6 +1149,9 @@ class TestLoads(unittest.TestCase):
         assert msg8.rstrip() == load2_expected, '%r' % msg8
         model.validate()
 
+    def test_load_sort(self):
+        """makes sure LOAD cards don't get sorted"""
+        model = BDF(debug=False, log=log)
         load2 = model.add_load(sid=14, scale=1.,
                                scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
         with self.assertRaises(IndexError):

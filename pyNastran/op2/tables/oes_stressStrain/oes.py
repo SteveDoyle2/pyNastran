@@ -3613,7 +3613,7 @@ class OES(OP2Common):
                      sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                      ex1, ey1, ez1, exy1) = out
                     eid = eid_device // 10
-                    obj.add_new_eid(
+                    obj.add_new_eid_sort1(
                         dt, eid, self.element_type, fd1,
                         sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                         ex1, ey1, ez1, exy1)

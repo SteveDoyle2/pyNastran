@@ -53,10 +53,12 @@ PTUBE   (done)
 CBAR    (done)
 PBAR    (done)
 PBARL   (done)
+BAROR   (NA)
 PBRSECT
 
 # beam
 CBEAM   (done)
+BEAMOR  (NA)
 PBMSECT
 
 # beam3
@@ -85,6 +87,7 @@ PSHELL  (done)
 PCOMP   (done)
 PCOMPG  (done)
 PLPLANE (???)
+SNORM   (???)
 
 ----Shear (Elements/Properties)----:
 CSHEAR  (done)
@@ -256,7 +259,9 @@ QBDY1  (???)
 QBDY2  (???)
 QBDY3  (???)
 
-QVOL  (???)
+QVOL   (???)
+VIEW   (no)
+VIEW3D (no)
 
 ----Thermal Elements----:
 CHBDYE (???)
@@ -425,6 +430,7 @@ DMIJ        (NA)
 DMIJI       (NA)
 DMIK        (NA)
 DMI
+
 ----Contact----:
 BCTPARA (???)
 BCRPARA (???)

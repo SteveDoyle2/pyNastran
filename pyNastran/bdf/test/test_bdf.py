@@ -24,7 +24,7 @@ from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
-from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf, BDFInputPy
+from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
@@ -1040,7 +1040,7 @@ def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
 
         #assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
     if 'DESSUB' in subcase:
-        value, options = subcase.get_parameter('DESSUB')
+        value = subcase.get_parameter('DESSUB')[0]
         if value not in fem2.dconstrs:
             msg = 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (
                 value, np.unique(list(fem2.dconstrs.keys())))

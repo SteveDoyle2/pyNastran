@@ -201,11 +201,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
             zhat = xform[2, :]
 
             ## concept has a GOO
-            #if not elem.offt in ['GGG', 'BGG']:
-                #msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (
-                    #elem.offt, eid)
-                #self.log.error(msg)
-                #continue
 
             #if debug:  # pragma: no cover
                 #print('  centroid = %s' % centroid)
@@ -213,15 +208,15 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 #print('  yhat = %s' % yhat)
                 #print('  zhat = %s' % zhat)
                 #print('  scale = %s' % scale)
-            #if eid == 5570:
+            #if eid == 616211:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
 
-            #print('adding bar %s' % bar_type)
-            #print('   centroid=%s' % centroid)
-            #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
-            #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
-            #print('   Li=%s scale=%s' % (Li, scale))
+                #print('adding bar %s' % bar_type)
+                #print('   centroid=%s' % centroid)
+                #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
+                #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
+                #print('   Li=%s scale=%s' % (Li, scale))
             if bar_type not in allowed_types:
                 msg = 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
                 raise RuntimeError(msg)

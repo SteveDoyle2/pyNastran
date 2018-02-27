@@ -103,7 +103,7 @@ class LoadCombination(BaseCard):
         if len(self.scale_factors) != len(self.load_ids):
             msg += 'scale_factors=%s load_ids=%s\n' % (self.scale_factors, self.load_ids)
         if msg:
-            raise RuntimeError(msg)
+            raise IndexError(msg)
         for scalei, load_id in zip(self.scale_factors, self.get_load_ids()):
             assert isinstance(scalei, float_types), scalei
             assert isinstance(load_id, integer_types), load_id

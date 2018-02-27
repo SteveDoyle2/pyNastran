@@ -85,12 +85,14 @@ def get_all_files(folders_file, file_type):
         #move_dir = line.strip()
         if move_dir:
             if not os.path.exists(move_dir):
-                print("***move_dir doesn't exist = %r" % move_dir)
+                #print("***move_dir doesn't exist = %r" % move_dir)
                 continue
             print("move_dir = %s" % move_dir)
             #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
             files_in_dir = get_files_of_type(move_dir, file_type, max_size=4.2)
             files2 += files_in_dir
+            #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
+    #print('nfiles = %s' % len(files2))
     return files2
 
 def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
@@ -116,11 +118,13 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     elif regenerate:
         files2 = get_all_files(folders_file, '.op2')
         files2 += files
+        assert len(files2) > 0, files2
     else:
         print('failed_cases_filename = %r' % failed_cases_filename)
         files2 = get_failed_files(failed_cases_filename)
-    assert len(files) > 0, files
-    files = list(set(files2)).sort()
+    assert len(files2) > 0, files2
+    files = list(set(files2))
+    files.sort()
 
     skip_files = []
     #skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant

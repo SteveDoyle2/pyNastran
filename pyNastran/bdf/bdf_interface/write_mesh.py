@@ -181,15 +181,18 @@ class WriteMesh(BDFAttributes):
             should the output file be closed
         """
         # required for MasterModelTaxi
-        if (self.nodes and max(self.nodes) > 100000000 or
-            self.coords and max(self.coords) > 100000000 or
-            self.elements and max(self.elements) > 100000000 or
-            self.properties and max(self.properties) > 100000000 or
-            self.materials and max(self.materials) > 100000000 or
-            self.thermal_materials and max(self.thermal_materials) > 100000000 or
-            self.nsms and max(self.nsms) > 100000000 or
-            self.nsmadds and max(self.nsmadds) > 100000000):
-            size = 16
+        if self.is_bdf_vectorized:
+            pass
+        else:
+            if (self.nodes and max(self.nodes) > 100000000 or
+                self.coords and max(self.coords) > 100000000 or
+                self.elements and max(self.elements) > 100000000 or
+                self.properties and max(self.properties) > 100000000 or
+                self.materials and max(self.materials) > 100000000 or
+                self.thermal_materials and max(self.thermal_materials) > 100000000 or
+                self.nsms and max(self.nsms) > 100000000 or
+                self.nsmadds and max(self.nsmadds) > 100000000):
+                size = 16
 
         #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
