@@ -4666,7 +4666,7 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBEAM':
-        if var_to_change in ['A', 'I1', 'I2']:
+        if var_to_change in ['A', 'I1', 'I2', 'I1(B)']:
             pass
         elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)

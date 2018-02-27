@@ -34,7 +34,7 @@ from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
 from pyNastran.gui.arg_handling import determine_format
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.dev import get_files_of_type
-from pyNastran.op2.test.test_op2 import get_failed_files
+from pyNastran.op2.test.op2_test import get_failed_files
 
 FORMAT_TO_EXTENSION = {
     #'abaqus' : ['.inp'],

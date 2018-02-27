@@ -11,7 +11,7 @@ from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by,
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, double, integer_or_blank, double_or_blank,
-    integer_or_string, string, blank)
+    integer_or_string, string, blank, string_or_blank)
 
 
 class ThermalCard(BaseCard):
@@ -1616,8 +1616,10 @@ class RADM(ThermalBC):
         else:
             self.emissivity = emissivity
 
+    def validate(self):
         assert self.radmid > 0, str(self)
-        assert 0. <= self.absorb <= 1.0, str(self)
+        if self.absorb is not None:
+            assert 0. <= self.absorb <= 1.0, str(self)
         for e in self.emissivity:
             assert 0. <= e <= 1.0, str(self)
 
@@ -1635,7 +1637,7 @@ class RADM(ThermalBC):
         """
         nfields = card.nfields
         radmid = integer(card, 1, 'radmid')
-        absorb = double(card, 2, 'absorb')
+        absorb = double_or_blank(card, 2, 'absorb')
         emissivity = fields(double, card, 'emissivity', i=3, j=nfields)
         return RADM(radmid, absorb, emissivity, comment=comment)
 
@@ -1788,3 +1790,218 @@ class RADBC(ThermalBC):
 
 # Boundary Conditions
 #-------------------------------------------------------
+# View Factors
+class VIEW(BaseCard):
+    """
+    Defines radiation cavity and shadowing for radiation
+    view factor calculations.
+
+    +------+-------+---------+-------+----+----+--------+
+    |   1  |   2   |    3    |   4   | 5  |  6 |    7   |
+    +======+=======+=========+=======+====+====+========+
+    | VIEW | IVIEW | ICAVITY | SHADE | NB | NG | DISLIN |
+    +------+-------+---------+-------+----+----+--------+
+    | VIEW |   1   |    1    | BOTH  | 2  | 3  |  0.25  |
+    +------+-------+---------+-------+----+----+--------+
+    """
+    type = 'VIEW'
+
+    def __init__(self, iview, icavity, shade='BOTH', nb=1, ng=1, dislin=0.0, comment=''):
+        """
+        Creates a VIEW, which defines a 2D view factor
+
+        Parameters
+        ----------
+        iview : int
+            Identification number
+        icavity : int
+            Cavity identification number for grouping the radiant exchange faces of
+            CHBDYi elements
+        shade : str; default='BOTH'
+            Shadowing flag for the face of CHBDYi element
+            - NONE means the face can neither shade nor be shaded by other faces
+            - KSHD means the face can shade other faces
+            - KBSHD means the face can be shaded by other faces
+            - BOTH means the face can both shade and be shaded by other faces
+        nb / ng : int; default=1 / 1
+            Subelement mesh size in the beta/gamma direction. (Integer > 0)
+        dislin : float; default=0.0
+            The displacement of a surface perpendicular to the surface
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        #: Material identification number
+        self.iview = iview
+        self.icavity = icavity
+        self.shade = shade
+        self.nb = nb
+        self.ng = ng
+        self.dislin = dislin
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a VIEW card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        iview = integer(card, 1, 'iview')
+        icavity = integer(card, 2, 'icavity')
+        shade = string_or_blank(card, 3, 'shade', default='BOTH')
+        nb = integer_or_blank(card, 4, 'nb', default=1)
+        ng = integer_or_blank(card, 5, 'ng', default=1)
+        dislin = double_or_blank(card, 6, 'dislin', default=0.0)
+        return VIEW(iview, icavity, shade=shade, nb=nb, ng=ng, dislin=dislin, comment=comment)
+
+    #def cross_reference(self, model):
+        #pass
+
+    def raw_fields(self):
+        list_fields = ['VIEW', self.iview, self.icavity, self.shade, self.nb, self.ng, self.dislin]
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = ['VIEW', self.iview, self.icavity, self.shade, self.nb, self.ng, self.dislin]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
+class VIEW3D(BaseCard):
+    """
+    View Factor Definition - Gaussian Integration Method
+
+    Defines parameters to control and/or request the Gaussian Integration
+    method of view factor calculation for a specified cavity.
+
+    +--------+---------+------+------+------+------+--------+------+--------+
+    |    1   |    2    |   3  |  4   |   5  |   6  |    7   |   8  |    9   |
+    +========+=========+======+======+======+======+========+======+========+
+    | VIEW3D | ICAVITY | GITB | GIPS | CIER | ETOL |  ZTOL  | WTOL | RADCHK |
+    +--------+---------+------+------+------+------+--------+------+--------+
+    | VIEW3D |    1    |   2  |   2  |   4  |      | 1.0E-6 |      |        |
+    +--------+---------+------+------+------+------+--------+------+--------+
+    """
+    type = 'VIEW3D'
+
+    def __init__(self, icavity, gitb=4, gips=4, cier=4,
+                 error_tol=0.1, zero_tol=1e-10, warp_tol=0.01,
+                 rad_check=3, comment=''):
+        """
+        Creates a VIEW3D, which defines a 3D view factor
+
+        Parameters
+        ----------
+        icavity : int
+            Radiant cavity identification number on RADCAV entry. (Integer > 0)
+        gitb : int; default=4
+            Gaussian integration order to be implemented in calculating net
+            effective view factors in the presence of third-body shadowing.
+            (Integer 2, 3, 4, 5, 6 or 10)
+        gips : int; default=4
+            Gaussian integration order to be implemented in calculating net
+            effective view factors in the presence of self-shadowing.
+            (Integer 2, 3, 4, 5, 6 or 10)
+        cier : int; default=4
+            Discretization level used in the semi-analytic contour integration
+            method. (1 < Integer < 20)
+        error_tol : float; default=0.1
+            Error estimate above which a corrected view factor is calculated
+            using the semi-analytic contour integration method. (Real > 0.0)
+        zero_tol : float; default=1e-10
+            Assumed level of calculation below which the numbers are considered
+            to be zero. (Real > 0.0)
+        warp_tol : float; default=0.01
+            Assumed degree of warpage above which the actual value of will be
+            calculated. (0.0 < Real < 1.0)
+        rad_check : int; default=3
+             Type of diagnostic output desired for the radiation exchange surfaces.
+        comment : str; default=''
+            a comment for the card
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+
+        #: Material identification number
+        self.icavity = icavity
+        self.gitb = gitb
+        self.gips = gips
+        self.cier = cier
+        self.error_tol = error_tol
+        self.zero_tol = zero_tol
+        self.warp_tol = warp_tol
+        self.rad_check = rad_check
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a VIEW3D card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        icavity = integer(card, 1, 'icavity')
+        gitb = integer_or_blank(card, 2, 'gitb', 4)
+        gips = integer_or_blank(card, 3, 'gips', 4)
+        cier = integer_or_blank(card, 4, 'cier', 4)
+        error_tol = double_or_blank(card, 5, 'error_tol', 0.1)
+        zero_tol = double_or_blank(card, 6, 'zero_tol', 1e-10)
+        warp_tol = double_or_blank(card, 7, 'warp_tol', 0.01)
+        rad_check = integer_or_blank(card, 8, 'rad_check', 3)
+        return VIEW3D(icavity, gitb=gitb, gips=gips, cier=cier,
+                      error_tol=error_tol, zero_tol=zero_tol, warp_tol=warp_tol,
+                      rad_check=rad_check, comment=comment)
+
+    #def cross_reference(self, model):
+        #pass
+
+    def raw_fields(self):
+        list_fields = ['VIEW3D', self.icavity, self.gitb, self.gips, self.cier,
+                       self.error_tol, self.zero_tol, self.warp_tol, self.rad_check]
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = ['VIEW3D', self.icavity, self.gitb, self.gips, self.cier,
+                       self.error_tol, self.zero_tol, self.warp_tol, self.rad_check]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+        """
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+

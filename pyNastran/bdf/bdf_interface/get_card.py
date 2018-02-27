@@ -1490,8 +1490,8 @@ class GetCard(GetMethods):
                 rbe_nids = independent_nodes | dependent_nodes
                 if nids.intersection(rbe_nids):
                     rbes.append(eid)
-            elif elem.type == 'RSSCON':
-                msg = 'skipping card in get_rigid_elements_with_node_ids\n%s' % str(elem)
+            elif rigid_element.type == 'RSSCON':
+                msg = 'skipping card in get_rigid_elements_with_node_ids\n%s' % str(rigid_element)
                 self.log.warning(msg)
             else:
                 raise RuntimeError(rigid_element.type)

@@ -16,6 +16,7 @@ All shell elements are defined in this file.  This includes:
  * CPLSTN4
  * CPLSTN6
  * CPLSTN8
+ * SNORM
 
 All tris are TriShell, ShellElement, and Element objects.
 All quads are QuadShell, ShellElement, and Element objects.
@@ -31,7 +32,7 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
-from pyNastran.bdf.cards.base_card import Element
+from pyNastran.bdf.cards.base_card import Element, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
@@ -3761,3 +3762,100 @@ class CQUAD8(QuadShell):
         if size == 8 or len(card) == 11: # to last node
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+class SNORM(BaseCard):
+    """
+    +--------+-------+-------+----+-----+----+
+    |   1    |   2   |   3   |  4 |  5  |  6 |
+    +========+=======+=======+====+=====+====+
+    |  SNORM |  GID  |  CID  | N1 |  N2 | N3 |
+    +--------+-------+-------+----+-----+----+
+    |  SNORM |   3   |   2   | 0. | -1. | 0. |
+    +--------+-------+-------+----+-----+----+
+    """
+    type = 'SNORM'
+    def __init__(self, nid, normal, cid=0, comment=''):
+        """
+        Creates a CTRIAR card
+
+        Parameters
+        ----------
+        nid : int
+            node id
+        cid : int
+            coordinate system
+        normal : List[float, float, float]
+            normal vector
+        comment : str; default=''
+            a comment for the card
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.nid = nid
+        self.cid = cid
+
+        self.normal = np.asarray(normal)
+        self.cid_ref = None  # type: Optional[Any]
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds an SNORM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        nid = integer(card, 1, 'nid')
+        cid = integer_or_blank(card, 2, 'cid', default=0)
+
+        normal = [
+            double_or_blank(card, 3, 'n1', default=0.0),
+            double_or_blank(card, 4, 'n2', default=0.0),
+            double_or_blank(card, 5, 'n3', default=0.0),
+        ]
+
+        assert len(card) <= 6, 'len(SNORM card) = %i\ncard=%s' % (len(card), card)
+        return SNORM(nid, normal, cid=cid, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by CTRIAR eid=%s' % self.eid
+        self.cid_ref = model.Coord(self.cid, msg=msg)
+
+    def uncross_reference(self):
+        self.cid = self.Cid()
+        self.cid_ref = None
+
+    def Cid(self):
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
+
+    def raw_fields(self):
+        list_fields = ['SNORM', self.nid, self.Cid()] + list(self.normal)
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = ['SNORM', self.nid, self.Cid()] + list(self.normal)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = wipe_empty_fields(self.repr_fields())
+        if size == 8 or len(card) == 5: # to last node
+            msg = self.comment + print_card_8(card)
+        else:
+            msg = self.comment + print_card_16(card)
+        return msg

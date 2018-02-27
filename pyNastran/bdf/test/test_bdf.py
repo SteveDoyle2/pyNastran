@@ -24,7 +24,7 @@ from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
-from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
+from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf, BDFInputPy
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
@@ -214,7 +214,7 @@ def memory_usage_psutil():
 
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
-            cid=None, mesh_form='combined', is_folder=False, print_stats=False,
+            cid=None, mesh_form='separate', is_folder=False, print_stats=False,
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
@@ -325,6 +325,7 @@ def run_and_compare_fems(
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
     fem1 = BDF(debug=debug, log=None)
+    fem1.dumplines = dumplines
 
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
                            nxref_errors=nerrors, stop_on_xref_error=True)
@@ -337,9 +338,14 @@ def run_and_compare_fems(
     fem2 = None
     diff_cards = []
 
+    mesh_opt_cards = [
+        'GRIDG', 'CGEN', 'SPCG', 'EQUIV', 'FEEDGE', 'FEFACE', 'ADAPT',
+        'PVAL', 'GMCURV', 'GMSURF',
+    ]
+    #nastran_cmd = 'nastran scr=yes bat=no old=no news=no '
+    nastran_cmd = ''
+    is_mesh_opt = False
     try:
-        #nastran_cmd = 'nastran scr=yes bat=no old=no news=no '
-        nastran_cmd = ''
         #try:
 
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
@@ -347,6 +353,10 @@ def run_and_compare_fems(
                         run_extract_bodies=run_extract_bodies,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
                         pickle_obj=pickle_obj, stop=stop)
+        is_mesh_opt = any([card_name in fem1.card_count for card_name in mesh_opt_cards])
+        if dev and is_mesh_opt:
+            return None, None, None
+
         if stop:
             if not quiet:
                 print('card_count:')
@@ -383,11 +393,11 @@ def run_and_compare_fems(
         print('failed test because MissingDeckSections...ignoring')
     except DuplicateIDsError as e:
         # only temporarily uncomment this when running lots of tests
-        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+        if not dev:
+            raise
+        elif is_mesh_opt:
             print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
             print(e)
-        elif not dev:
-            raise
         else:
             print('failed test because DuplicateIDsError...ignoring')
     except DisabledCardError as e:
@@ -397,7 +407,7 @@ def run_and_compare_fems(
         # only temporarily uncomment this when running lots of tests
         if not dev:
             raise
-        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+        elif is_mesh_opt:
             print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
             print(e)
         else:
@@ -408,7 +418,7 @@ def run_and_compare_fems(
         # only temporarily uncomment this when running lots of tests
         if not dev:
             raise
-        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+        elif is_mesh_opt:
             print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
             print(e)
         else:
@@ -416,7 +426,7 @@ def run_and_compare_fems(
     except KeyError as e:  # only temporarily uncomment this when running lots of tests
         if not dev:
             raise
-        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+        elif is_mesh_opt:
             print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
             print(e)
         else:
@@ -1092,19 +1102,24 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
             value = subcase.get_parameter('TSTEP')[0]
         else:
             raise NotImplementedError(subcase)
-        assert value in fem2.tsteps, fem2.tsteps
+        assert value in fem2.tsteps, 'value=%s\n tsteps=%s\n subcase:\n%s' % (value, str(fem2.tsteps), str(subcase))
 
     if 'TSTEPNL' in subcase:
         value = subcase.get_parameter('TSTEPNL')[0]
-        assert value in fem2.tstepnls, fem2.tstepnls
+        assert value in fem2.tstepnls, 'value=%s\n tstepnls=%s\n subcase:\n%s' % (value, str(fem2.tstepnls), str(subcase))
 
     if 'SUPORT1' in subcase:
         value = subcase.get_parameter('SUPORT1')[0]
-        assert value in fem2.suport1, fem2.suport1
+        assert value in fem2.suport1, 'value=%s\n suport1=%s\n subcase:\n%s' % (value, str(fem2.suport1), str(subcase))
 
     if 'TRIM' in subcase:
         trim_id = subcase.get_parameter('TRIM')[0]
-        assert trim_id in fem2.trims, fem2.trims
+        if trim_id not in fem2.trims:
+            msg = (
+                'TRIM = %s\n'
+                'trims=%s\n'
+                'subcase:\n%s' % (value, str(fem2.trims), str(subcase)))
+            raise RuntimeError(msg)
         trim = fem2.trims[trim_id]
 
         suport1 = None
@@ -1127,7 +1142,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
 
     if 'DIVERG' in subcase:
         value = subcase.get_parameter('DIVERG')[0]
-        assert value in fem2.divergs, fem2.divergs
+        assert value in fem2.divergs, 'value=%s\n divergs=%s\n subcase:\n%s' % (value, str(fem2.divergs), str(subcase))
         assert 'TRIM' not in subcase, subcase
 
     if 'METHOD' in subcase:
@@ -1233,7 +1248,17 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
 
     if 'SDAMPING' in subcase:
         sdamping_id = subcase.get_parameter('SDAMPING')[0]
-        sdamping_table = fem2.tables_sdamping[sdamping_id]
+        sdamp_sols = [110, 111, 112, 145, 146, 200]
+        if not sdamping_id in fem2.tables_sdamping and fem2.sol in sdamp_sols:
+            msg = 'SDAMPING = %s; not in TABDMP1, but must since its SOL %i\n' % (
+                sdamping_id, fem2.sol)
+            msg += 'TABDMP1 = %s\n' % list(fem2.tables_sdamping.keys())
+            raise RuntimeError(msg)
+        if not(sdamping_id in fem2.tables_sdamping or fem2.tables_d):
+            msg = 'SDAMPING = %s; not in TABDMP1/TABLEDi' % sdamping_id
+            msg += 'TABDMP1 = %s\n' % list(fem2.tables_sdamping.keys())
+            msg += 'TABLEDi = %s\n' % list(fem2.tables_d.keys())
+            raise RuntimeError(msg)
 
     if 'LOADSET' in subcase:
         loadset_id = subcase.get_parameter('LOADSET')[0]
@@ -1242,7 +1267,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
 
     if 'DLOAD' in subcase:
         assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
-                       153, 159, 400, 401, 601], 'sol=%s DLOAD\n%s' % (sol, subcase)
+                       153, 159, 200, 400, 401, 601], 'sol=%s DLOAD\n%s' % (sol, subcase)
         dload_id = subcase.get_parameter('DLOAD')[0]
         fem2.get_reduced_dloads(dload_id)
         #if 'LOADSET' in subcase:
@@ -1496,18 +1521,18 @@ def get_element_stats(fem1, fem2, quiet=False):
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
     mass1, cg1, inertia1 = fem1.mass_properties(reference_point=None, sym_axis=None)
-    mass2, cg2, inertia2 = fem1._mass_properties_new(reference_point=None, sym_axis=None)
+    #mass2, cg2, inertia2 = fem1._mass_properties_new(reference_point=None, sym_axis=None)
     if not quiet:
         print("mass = %s" % mass1)
         print("cg   = %s" % cg1)
         print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s" % tuple(inertia1))
-    assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
-    assert np.allclose(cg1, cg2), 'mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
-    assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
+    #assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
+    #assert np.allclose(cg1, cg2), 'mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
+    #assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
 
-    for nsm_id in chain(fem1.nsms, fem1.nsmadds):
-        mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None, nsm_id=nsm_id)
-        print('mass[nsm=%i] = %s' % (nsm_id, mass))
+    #for nsm_id in chain(fem1.nsms, fem1.nsmadds):
+        #mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None, nsm_id=nsm_id)
+        #print('mass[nsm=%i] = %s' % (nsm_id, mass))
 
 
 def get_matrix_stats(fem1, fem2):

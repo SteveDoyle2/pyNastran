@@ -128,19 +128,6 @@ def parse_table_names_from_f06(f06_filename):
     return names
 
 
-def get_failed_files(filename):
-    """Gets the list of failed files"""
-    with open(filename, 'r') as infile:
-        lines = infile.readlines()
-
-    files = []
-    for line in lines:
-        line = line.strip()
-        if line not in files:
-            files.append(line)
-    return files
-
-
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, skip_dataframe=False, write_op2=False,
                       debug=True, skip_files=None,

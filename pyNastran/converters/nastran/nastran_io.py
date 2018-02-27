@@ -4588,7 +4588,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if np.isnan(max_thetai) and etype not in NO_THETA:
                 print('eid=%s theta=%s...setting to 360. deg' % (eid, max_thetai))
-                print(str(element).rstrip())
+                print(element.rstrip())
                 if isinstance(element.nodes[0], integer_types):
                     print('  nodes = %s' % element.nodes)
                 else:

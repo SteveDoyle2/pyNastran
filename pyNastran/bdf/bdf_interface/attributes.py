@@ -275,6 +275,12 @@ class BDFAttributes(object):
 
         #: stores CBARAO, CBEAMAO
         self.ao_element_flags = {}  # type: Dict[int, Any]
+        #: stores BAROR
+        self.baror = None
+        #: stores BEAMOR
+        self.beamor = None
+        #: stores SNORM
+        self.normals = {}
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}  # type: Dict[int, Any]
@@ -527,6 +533,11 @@ class BDFAttributes(object):
         #: stores TEMPD
         self.tempds = {}  # type: Dict[int, Any]
 
+        #: stores VIEW
+        self.views = {}
+        #: stores VIEW3D
+        self.view3ds = {}
+
         # -------------------------contact cards-------------------------------
         self.bcrparas = {}  # type: Dict[int, Any]
         self.bctadds = {}  # type: Dict[int, Any]
@@ -574,6 +585,7 @@ class BDFAttributes(object):
                 # thermal
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
             ],
+            'normals' : ['SNORM'],
             'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1'],
             'nsmadds' : ['NSMADD'],
             'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
@@ -771,6 +783,8 @@ class BDFAttributes(object):
             'bctsets' : ['BCTSET'],
             'bsurf' : ['BSURF'],
             'bsurfs' : ['BSURFS'],
+            'views' : ['VIEW'],
+            'view3ds' : ['VIEW3D'],
 
             ## other
             #'INCLUDE',  # '='

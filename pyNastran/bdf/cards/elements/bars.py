@@ -165,25 +165,22 @@ class BAROR(object):
     +-------+-----+---+---+---+-------+-----+-------+------+
     """
     type = 'BAROR'
-    def __init__(self, property_id, is_g0, g0, x, offt='GGG', comment=''):
+    def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
         if comment:
             self.comment = comment
         self.n = 0
-        self.property_id = property_id
+        self.pid = pid
         self.is_g0 = is_g0
         self.g0 = g0
         self.x = x
         self.offt = offt
 
-    def add_card(self, card, comment=''):
-        if self.n == 1:
-            raise RuntimeError('only one BAROR is allowed')
-        self.n = 1
-
-        property_id = integer_or_blank(card, 2, 'pid')
+    @classmethod
+    def add_card(cls, card, baror=None, comment=''):
+        pid = integer_or_blank(card, 2, 'pid')
 
         # x / g0
-        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.)
         if isinstance(field5, integer_types):
             is_g0 = True
             g0 = field5
@@ -192,12 +189,14 @@ class BAROR(object):
             is_g0 = False
             g0 = None
             x = np.array([field5,
-                          double_or_blank(card, 6, 'x2', 0.0),
-                          double_or_blank(card, 7, 'x3', 0.0)],
+                          double_or_blank(card, 6, 'x2', 0.),
+                          double_or_blank(card, 7, 'x3', 0.)],
                          dtype='float64')
-        offt = string_or_blank(card, 8, 'offt', 'GGG')
+        offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
+        if isinstance(offt, integer_types):
+            raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
         assert len(card) <= 8, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
-        return BAROR(property_id, is_g0, g0, x, offt=offt, comment=comment)
+        return BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
 class CBARAO(BaseCard):
     type = 'CBARAO'
@@ -456,7 +455,7 @@ class CBAR(LineElement):
         assert self.offt[2] in ['G', 'O', 'E'], msg
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, baror=None, comment=''):
         """
         Adds a CBAR card from ``BDF.add_card(...)``
 
@@ -464,17 +463,33 @@ class CBAR(LineElement):
         ----------
         card : BDFCard()
             a BDFCard object
+        beamor : BAROR() or None
+            defines the defaults
         comment : str; default=''
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid_default = eid
+        x1_default, x2_default, x3_default = 0., 0., 0.
+        offt_default = 'GGG'
+        if baror is not None:
+            if baror.pid is not None:
+                pid_default = baror.pid
+            if baror.x is None:
+                x1_default = baror.g0
+                x2_default = None
+                x3_default = None
+            else:
+                x1_default, x2_default, x3_default = baror.x
+            offt_default = baror.offt
+
+        pid = integer_or_blank(card, 2, 'pid', pid_default)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
-        x, g0 = init_x_g0(card, eid)
+        x, g0 = init_x_g0(card, eid, x1_default, x2_default, x3_default)
 
         # doesn't exist in NX nastran
-        offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
+        offt = integer_string_or_blank(card, 8, 'offt', offt_default)
         #print('cls.offt = %r' % (cls.offt))
 
         pa = integer_or_blank(card, 9, 'pa', 0)
@@ -1201,17 +1216,18 @@ class CBEND(LineElement):
         else:
             return self.comment + print_card_16(card)
 
-def init_x_g0(card, eid):
+def init_x_g0(card, eid, x1_default, x2_default, x3_default):
     """common method to read the x/g0 field for the CBAR, CBEAM, CBEAM3"""
-    field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+    field5 = integer_double_or_blank(card, 5, 'g0_x1', x1_default)
+
     if isinstance(field5, integer_types):
         g0 = field5
         x = None
     elif isinstance(field5, float):
         g0 = None
         x = np.array([field5,
-                      double_or_blank(card, 6, 'x2', 0.0),
-                      double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+                      double_or_blank(card, 6, 'x2', x2_default),
+                      double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
         if norm(x) == 0.0:
             msg = 'G0 vector defining plane 1 is not defined.\n'
             msg += 'G0 = %s\n' % g0

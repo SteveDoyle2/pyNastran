@@ -380,7 +380,7 @@ class CMASS2(PointMassElement):
         if self.nodes[1] is not None:
             p2 = self.nodes_ref[1].get_position()
             factor += 1.
-        assert f > 0., str(self)
+        assert factor > 0., str(self)
         c = (p1 + p2) / factor
         return c
 
@@ -743,6 +743,23 @@ class CONM1(PointMassElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
+    def update_by_cp_name(self, name, value):
+        if name == 'M11':
+            self.mass_matrix[0, 0] = value
+        #elif name == 'M21':
+            #self.mass_matrix[1, 0] = value
+        elif name == 'M22':
+            self.mass_matrix[1, 1] = value
+        elif name == 'M33':
+            self.mass_matrix[2, 2] = value
+        elif name == 'M44':
+            self.mass_matrix[3, 3] = value
+        #elif name == 'X1':
+            #self.X[0] = value
+        else:
+            raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
+                self.type, name))
+
     def __init__(self, eid, nid, mass_matrix, cid=0, comment=''):
         """
         Creates a CONM1 card
@@ -959,6 +976,19 @@ class CONM2(PointMassElement):
             self.X[2] = value
         elif name == 'X3':
             self.X[3] = value
+        elif name == 'I11':
+            #I11, I21, I22, I31, I32, I33 = I
+            self.I[0] = value
+        elif name == 'I21':
+            self.I[1] = value
+        elif name == 'I22':
+            self.I[2] = value
+        elif name == 'I31':
+            self.I[3] = value
+        elif name == 'I32':
+            self.I[4] = value
+        elif name == 'I33':
+            self.I[5] = value
         else:
             raise NotImplementedError('element_type=%r has not implemented %r in cp_name_map' % (
                 self.type, name))

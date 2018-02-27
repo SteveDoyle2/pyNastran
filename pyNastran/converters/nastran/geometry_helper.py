@@ -302,7 +302,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 self.gui.create_alternate_vtk_grid(
                     '3d_bars', color=BLUE, opacity=0.2,
                     representation='surface', is_visible=True,
-                    follower_function=update_grid_function,
+                    #follower_function=update_grid_function,
                     ugrid=ugrid,
                 )
                 points_array = _make_points_array(points_list)
@@ -363,19 +363,17 @@ class NastranGeometryHelper(NastranGuiAttributes):
         - global -> the local coordinate system defined by the
                     CD field on the GRID card, but referenced by
                     the CBAR/CBEAM
-        - orientation -> wa/wb are defined in the xform_offset (yz) frame; 
+        - orientation -> wa/wb are defined in the xform_offset (yz) frame;
                          this is likely the easiest frame for a user
         """
         # get the vector v, which defines the projection on to the elemental
         # coordinate frame
         if elem.g0:
-            #debug = False
             msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
             g0_ref = model.Node(elem.g0, msg=msg)
             n0 = g0_ref.get_position()
             v = n0 - n1
         else:
-            #debug = False
             ga = model.nodes[elem.Ga()]
             cda = ga.Cd()
             cda_ref = model.Coord(cda)
@@ -403,14 +401,16 @@ class NastranGeometryHelper(NastranGuiAttributes):
             self.log.error(msg)
             return None, None, None, None
 
-        yhat_offset, zhat_offset = get_bar_yz_transform(v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
-                                          i_offset, Li_offset)
+        yhat_offset, zhat_offset = get_bar_yz_transform(
+            v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
+            i_offset, Li_offset)
         xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
 
         #--------------------------------------------------------------------------
         # rotate wa
         # wa defines the offset at end A
         wa = elem.wa
+        #ia = n1
         if offt_end_a == 'G':
             if cd1 != 0:
                 # TODO: fixme
@@ -420,36 +420,50 @@ class NastranGeometryHelper(NastranGuiAttributes):
         elif offt_end_a == 'O':
             # rotate point wa from the local frame to the global frame
             wa = np.dot(wa, xform_offset)
+            #ia = n1 + wa
         else:
             msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
             self.log.error(msg)
             return v, None, None, xform_offset
 
-        #print('wa = %s' % wa)
         #--------------------------------------------------------------------------
         # rotate wb
         # wb defines the offset at end B
         wb = elem.wb
+        #ib = n2
         if offt_end_b == 'G':
             if cd2 != 0:
                 # TODO: fixme;  MasterModelTaxi
-                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb-n2)
+                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
 
         elif offt_end_b == 'B':
             pass
         elif offt_end_b == 'O':
             # rotate point wb from the local frame to the global frame
             wb = np.dot(wb, xform_offset)
+            #ib = n2 + wb
         else:
             msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
             model.log.error(msg)
-            return v, wa, None
+            return v, wa, None, xform_offset
 
         #--------------------------------------------------------------------------
+        #i = ib - ia # (n2 + wb) - (n1 + wa)
         i = (n2 + wb) - (n1 + wa)
+        i = i_offset
         Li = norm(i)
-        ihat = i/Li
+        ihat = i / Li
         yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, node1.nid, node2.nid, i, Li)
+
+        #print('  n1=%s n2=%s' % (n1, n2))
+        #print('  ib=%s ia=%s' % (ib, ia))
+        #print('  wa=%s wb=%s' % (wa, wb))
+        #print('  ioffset=%s i=%s' % (i_offset, i))
+        #print('  ihat=%s' % (ihat))
+        #print('  yhat=%s' % (yhat))
+        #print('  zhat=%s' % (zhat))
+        #print("")
+
         xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
 
         return v, wa, wb, xform
@@ -859,6 +873,7 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         dim2 = pid_ref.dim[-1, :]
     else:
         dim1 = dim2 = None
+        return node0
 
     if bar_type == 'BAR':
         pointsi = bar_faces(n1, n2, xform, dim1, dim2)
@@ -941,7 +956,7 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 24
     else:
-        print('skipping 3d bar_type = %r' % bar_type)
+        #print('skipping 3d bar_type = %r' % bar_type)
         return node0
     if add_to_ugrid:
         ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)

@@ -4,9 +4,21 @@ import sys
 from six import iteritems, PY2
 
 import pyNastran
-from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
 from pyNastran.utils.dev import get_files_of_type
 PKG_PATH = pyNastran.__path__[0]
+
+def get_failed_files(filename):
+    """Gets the list of failed files"""
+    with open(filename, 'r') as infile:
+        lines = infile.readlines()
+
+    files = []
+    for line in lines:
+        line = line.strip()
+        if line not in files:
+            files.append(line)
+    return files
+
 
 def parse_skipped_cards(fname):
     with open(fname, 'r') as skip_file:
@@ -107,6 +119,7 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     else:
         print('failed_cases_filename = %r' % failed_cases_filename)
         files2 = get_failed_files(failed_cases_filename)
+    assert len(files) > 0, files
     files = list(set(files2)).sort()
 
     skip_files = []
@@ -122,6 +135,8 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     print("nfiles = %s" % len(files))
     import time
     time0 = time.time()
+
+    from pyNastran.op2.test.test_op2 import run_lots_of_files
     failed_files = run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                                      write_f06=write_f06, delete_f06=delete_f06,
                                      skip_dataframe=skip_dataframe,

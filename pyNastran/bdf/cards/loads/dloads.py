@@ -1121,7 +1121,7 @@ class TLOAD1(DynamicLoad):
         elif self.delay == 0 or self.delay is None:
             tau = 0.0
         else:
-            tau = self.delay.get_delay_at_time(time)
+            tau = self.delay_ref.get_delay_at_time(time)
 
         i = np.where(time - tau > 0)
         time2 = time[i]

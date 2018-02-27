@@ -741,6 +741,111 @@ class SPCD(Load):
         return self.comment + print_card_8(card)
 
 
+class DEFORM(Load):
+    """
+    Defines an enforced displacement value for static analysis.
+
+     +--------+-----+-----+------+----+----+----+----+
+     |    1   |  2  |  3  |   5  |  6 |  8 |  6 |  8 |
+     +========+=====+=====+======+====+====+====+====+
+     | DEFORM | SID |  E1 |  D1  | E2 | D2 | E3 | D3 |
+     +--------+-----+-----+------+----+----+----+----+
+     | DEFORM | 100 | 32  | -2.6 | 5  | .9 | 6  | .9 |
+     +--------+-----+-----+------+----+----+----+----+
+    """
+    type = 'DEFORM'
+
+    def __init__(self, sid, eid, deformation, comment=''):
+        """
+        Creates an DEFORM card, which defines applied deformation on
+        a 1D elemment.  Links to the DEFORM card in the case control
+        deck.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            CTUBE/CROD/CONROD/CBAR/CBEAM element id
+        deformation : float
+            the applied deformation
+        """
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.eid = eid
+        self.deformation = deformation
+        self.eid_ref = None
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a DEFORM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        offset = 2 * icard
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2 + offset, 'eid')
+        deformation = double(card, 3 + offset, 'D1')
+        return DEFORM(sid, eid, deformation, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds an DEFORM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = data[0]
+        eid = data[1]
+        defomation = data[2]
+        return DEFORM(sid, eid, deformation, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        return
+
+    def safe_cross_reference(self, model, debug=True):
+        self.eid_ref = model.Element(self.eid, msg)
+
+    def uncross_reference(self):
+        self.eid = self.Eid()
+        self.eid_ref = None
+
+    def get_loads(self):
+        return [self]
+
+    def Eid(self):
+        if self.eid_ref is None:
+            return self.eid
+        return self.eid_ref.eid
+    def raw_fields(self):
+        fields = ['DEFORM', self.sid, self.Eid(), self.deformation]
+        return fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+
 class SLOAD(Load):
     """
     Static Scalar Load

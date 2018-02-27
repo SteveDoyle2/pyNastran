@@ -498,8 +498,11 @@ class Coord(BaseCard):
 
     def resolve(self):
         if not self.is_resolved:
-            if isinstance(self.rid, integer_types) and self.rid != 0:
-                raise RuntimeError("BDF has not been cross referenced.")
+            #if self.rid_ref is None and self.rid != 0:
+                #msg = "BDF has not been cross referenced; rid=%s rid_ref:\n%s" % (
+                    #self.rid, self.rid_ref,
+                #)
+                #raise RuntimeError(msg)
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 self.rid_ref.setup()
             else:

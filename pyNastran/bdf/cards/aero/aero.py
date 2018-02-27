@@ -3258,19 +3258,23 @@ class PAERO5(BaseCard):
         model : BDF()
             the BDF object
         """
-        self.lxis_ref = model.AEFact(self.lxis_id)
-        self.ltaus_ref = model.AEFact(self.ltaus_id)
+        if self.lxis != 0:
+            self.lxis_ref = model.AEFact(self.lxis_id)
+        if self.ltaus != 0:
+            self.ltaus_ref = model.AEFact(self.ltaus_id)
 
     def safe_cross_reference(self, model):
-        try:
-            self.lxis_ref = model.AEFact(self.lxis_id)
-        except KeyError:
-            pass
+        if self.lxis != 0:
+            try:
+                self.lxis_ref = model.AEFact(self.lxis_id)
+            except KeyError:
+                pass
 
-        try:
-            self.ltaus_ref = model.AEFact(self.ltaus_id)
-        except KeyError:
-            pass
+        if self.ltaus != 0:
+            try:
+                self.ltaus_ref = model.AEFact(self.ltaus_id)
+            except KeyError:
+                pass
 
     def uncross_reference(self):
         self.lxis = self.lxis_id

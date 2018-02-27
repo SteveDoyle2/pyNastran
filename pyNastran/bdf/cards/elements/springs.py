@@ -213,6 +213,7 @@ class CELAS2(SpringElement):
     _field_map = {
         1: 'eid', 2:'k', 4:'c1', 6:'c2',
     }
+    cp_name_map = {'K' : 'k', 'GE' : 'ge', 'S' : 's'}
     def _update_field_helper(self, n, value):
         if n == 3:
             self.nodes[0] = value

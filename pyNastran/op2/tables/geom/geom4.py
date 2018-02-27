@@ -596,6 +596,7 @@ class GEOM4(GeomCommon):
         struct_5i = Struct(self._endian + b'5i')
         ntotal = 20
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         elements = []
         for i in range(nelements):
             edata = data[n:n + ntotal]
@@ -603,6 +604,7 @@ class GEOM4(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  RROD=%s\n' % str(out))
             (eid, ga, gb, cma, cmb) = out
+            assert eid > 0, out
             out = (eid, ga, gb, cma, cmb, 0.0) # alpha
             elem = RROD.add_op2_data(out)
             elements.append(elem)
@@ -614,6 +616,7 @@ class GEOM4(GeomCommon):
         s = Struct(self._endian + b'5if')
         ntotal = 24
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         elements = []
         for i in range(nelements):
             edata = data[n:n + ntotal]
@@ -621,6 +624,7 @@ class GEOM4(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  RROD=%s\n' % str(out))
             #(eid, ga, gb, cma, cmb, alpha) = out
+            assert out[0] > 0, out
             elem = RROD.add_op2_data(out)
             elements.append(elem)
             n += ntotal

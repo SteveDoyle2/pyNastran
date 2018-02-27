@@ -210,7 +210,9 @@ class PTUBE(Property):
     """
     type = 'PTUBE'
     pname_fid_map = {
+        4 : 'OD1', 'OD' : 'OD1',
         5 : 't', 'T' : 't',
+        7 : 'OD2', 'OD2' : 'OD2',
     }
 
     def __init__(self, pid, mid, OD1, t=None, nsm=0., OD2=None, comment=''):

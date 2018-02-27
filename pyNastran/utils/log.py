@@ -30,7 +30,11 @@ USE_COLORAMA = IS_COLORAMA and IS_TERMINAL and not USE_HTML
 if USE_COLORAMA:
     # if we're writing to a file
     def _write(typ, name, msg, encoding):
-        _write_colorama_screen(typ, name + msg)
+        try:
+            _write_colorama_screen(typ, name + msg)
+        except IOError:
+            sys.stdout.write('eror writing line...encoding=%r\n' % (encoding))
+            sys.stdout.write(msg)
 
 elif USE_HTML:
     from IPython.core.display import display, HTML

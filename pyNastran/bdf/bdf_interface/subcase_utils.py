@@ -11,6 +11,52 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
+def expand_thru_int(set_value):   # pragma: no cover
+    """
+    27,35,25,41234,123,thru,134,9701,9901
+    1,thru,9,by,2
+    9,THRU,19,EXCEPT,12
+    0.1 0.3 0.5 1.0 3.0 5.0 10.0 14.0
+    """
+    packs = []
+    assert '/' not in set_value, set_value
+    values = ','.join(set_value.split()).split(',')
+    nvalues = len(values)
+    i = 0
+    while i < nvalues:
+        start = int(values[i])
+        # A, THRU, B, BY, C
+        if i < (nvalues - 2):
+            values.append(start)
+            i += 1
+            continue
+
+        thru_value = values[i + 1].upper()
+        if thru_value != 'THRU':
+            values.append(start)
+            i += 1
+            continue
+
+        # there is a thru
+        stop = int(values[i + 2])
+        if i < (nvalues - 4):
+            values += range(start, stop, 1)
+            i += 3
+            continue
+
+
+        by_value = values[i + 3].upper()
+        if by_value != 'BY':
+            values += range(start, stop, 1)
+            i += 3
+            continue
+
+        by = int(values[i+4])
+        values += range(start, stop, by)
+        values.append(by)
+        i += 4
+
+
 def expand_thru_case_control(set_value):
     """
     Expands a case control SET card

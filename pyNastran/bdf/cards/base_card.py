@@ -316,6 +316,9 @@ class BaseCard(object):
         """
         raise NotImplementedError('%s has not overwritten write_card' % self.__class__.__name__)
 
+    def write_card_16(self, is_double=False):
+        fields = self.repr_fields()
+        return print_card(fields, size=16, is_double=False)
 
 class Property(BaseCard):
     """Base Property Class"""

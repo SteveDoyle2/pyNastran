@@ -447,12 +447,12 @@ class PBEAM(IntegratedLineProperty):
         j = [ja]
         nsm = [nsma]
 
-        assert area[0] >= 0., area
-        assert i1[0] >= 0., i1
-        assert i2[0] >= 0., i2
+        assert area[0] >= 0., 'PBEAM pid=%s area=%s' % (pid, area)
+        assert i1[0] >= 0., 'PBEAM pid=%s i1=%s' % (pid, i1)
+        assert i2[0] >= 0., 'PBEAM pid=%s i2=%s' % (pid, i2)
 
         # we'll do a check for warping later; cwa/cwb -> j > 0.0
-        assert j[0] >= 0., j
+        assert j[0] >= 0., 'PBEAM pid=%s j=%s' % (pid, j)
 
         if i1a * i2a - i12a ** 2 <= 0.:
             msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End A\n'

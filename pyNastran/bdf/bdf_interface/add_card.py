@@ -39,6 +39,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
     CPLSTS3, #CPLSTS4,
+    SNORM,
 )
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
@@ -109,7 +110,7 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, CONVM, RADM, RADBC)
+                                                 PHBDY, CONV, CONVM, RADM, RADBC, VIEW, VIEW3D)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,

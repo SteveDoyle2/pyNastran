@@ -23,6 +23,7 @@ F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
 # MSC 2005
 C:\Users\sdoyle\Dropbox\pyNastran_examples
 C:\Users\sdoyle\Desktop\move
+C:\Users\sdoyle\Dropbox\move_tpl
 C:\MSC.Software\MSC.Nastran\msc20051\nast\nast
 C:\MSC.Software\MSC.Nastran\msc20051\nast\demo
 C:\MSC.Software\MSC.Nastran\msc20051\nast\doc
@@ -36,8 +37,9 @@ C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl
 
 # nx 12.0
 "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast"
-
-
+"C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\doc"
+"C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\demo"
+"C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\tpl"
 #-------------------------------------------------
 # laptop
 D:\work\move

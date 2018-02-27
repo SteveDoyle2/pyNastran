@@ -10,10 +10,10 @@ import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, init_x_g0
+from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, init_x_g0, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_string_or_blank,
-    string_or_blank, integer_double_or_blank,
+    string_or_blank, integer_double_or_blank, integer_string_or_blank,
 )
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -163,7 +163,7 @@ class CBEAM(CBAR):
         self.g0_vector = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, beamor=None, comment=''):
         """
         Adds a CBEAM card from ``BDF.add_card(...)``
 
@@ -171,16 +171,33 @@ class CBEAM(CBAR):
         ----------
         card : BDFCard()
             a BDFCard object
+        beamor : BEAMOR() or None
+            defines the defaults
         comment : str; default=''
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+
+        pid_default = eid
+        x1_default, x2_default, x3_default = 0., 0., 0.
+        offt_default = 'GGG'
+        if beamor is not None:
+            if beamor.pid is not None:
+                pid_default = beamor.pid
+            if beamor.x is None:
+                x1_default = beamor.g0
+                x2_default = None
+                x3_default = None
+            else:
+                x1_default, x2_default, x3_default = beamor.x
+            offt_default = beamor.offt
+
+        pid = integer_or_blank(card, 2, 'pid', pid_default)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
 
-        x, g0 = init_x_g0(card, eid)
-        offt, bit = _init_offt_bit(card, eid)# offt doesn't exist in NX nastran
+        x, g0 = init_x_g0(card, eid, x1_default, x2_default, x3_default)
+        offt, bit = _init_offt_bit(card, eid, offt_default)# offt doesn't exist in NX nastran
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
 
@@ -666,11 +683,11 @@ class CBEAM(CBAR):
         card = self.repr_fields()
         return self.comment + print_card_16(card)
 
-def _init_offt_bit(card, unused_eid):
+def _init_offt_bit(card, unused_eid, offt_default):
     """
     offt doesn't exist in NX nastran
     """
-    field8 = integer_double_string_or_blank(card, 8, 'field8')
+    field8 = integer_double_string_or_blank(card, 8, 'field8', offt_default)
     if isinstance(field8, float):
         offt = None
         bit = field8
@@ -691,7 +708,7 @@ def _init_offt_bit(card, unused_eid):
     return offt, bit
 
 
-class BEAMOR(object):
+class BEAMOR(BaseCard):
     """
     +--------+-----+---+---+---+-------+-----+-------+------+
     |    1   |  2  | 3 | 4 | 5 |   6   |  7  |   8   |  9   |
@@ -702,34 +719,36 @@ class BEAMOR(object):
     +--------+-----+---+---+---+-------+-----+-------+------+
     """
     type = 'BEAMOR'
-    def __init__(self):
-        self.n = 0
-        self.property_id = None
-        self.g0 = None
-        self.x = None
-        self.offt = None
-
-    def add_card(self, card, comment=''):
-        if self.n == 1:
-            raise RuntimeError('only one CBEAMOR is allowed')
-        self.n = 1
+    def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
         if comment:
             self.comment = comment
+        self.pid = pid
+        self.g0 = g0
+        self.x = x
+        self.offt = offt
 
-        self.property_id = integer_or_blank(card, 2, 'pid')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer_or_blank(card, 2, 'pid')
 
         # x / g0
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, integer_types):
-            self.is_g0 = True
-            self.g0 = field5
-            self.x = [0., 0., 0.]
+            is_g0 = True
+            g0 = field5
+            x = [0., 0., 0.]
         elif isinstance(field5, float):
-            self.is_g0 = False
-            self.g0 = None
-            self.x = np.array([field5,
-                               double_or_blank(card, 6, 'x2', 0.0),
-                               double_or_blank(card, 7, 'x3', 0.0)],
-                              dtype='float64')
-        self.offt = string_or_blank(card, 8, 'offt', 'GGG')
+            is_g0 = False
+            g0 = None
+            x = np.array([field5,
+                          double_or_blank(card, 6, 'x2', 0.0),
+                          double_or_blank(card, 7, 'x3', 0.0)],
+                         dtype='float64')
+        offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
+        if isinstance(offt, integer_types):
+            raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
         assert len(card) <= 8, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
+        return BEAMOR(pid, is_g0, g0, x, offt=offt, comment=comment)
+
+    def raw_fields(self):
+        return ['BEAMOR', None, self.pid, None, None] + list(self.x) + [self.offt]

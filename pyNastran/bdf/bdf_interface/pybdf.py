@@ -607,7 +607,7 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
                 line = bdf_file.readline().rstrip()
             except UnicodeDecodeError:
                 iline0 = max([iline - nlines_previous, 0])
-                self.log.error('filename=%s' % self.bdf_filename)
+                self.log.error('filename=%s' % bdf_filename)
                 for iline1, line in enumerate(lines[iline0:iline]):
                     self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
                 msg = "\n%s encoding error on line=%s of %s; not '%s'" % (
