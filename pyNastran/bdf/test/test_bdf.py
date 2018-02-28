@@ -24,7 +24,7 @@ from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
-from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
@@ -150,15 +150,16 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         is_passed = False
         try:
             for size, is_double, post in size_doubles_post:
-                fem1, fem2, diff_cards2 = run_bdf(folder, filename, debug=debug,
-                                                  xref=xref, check=check, punch=punch,
-                                                  cid=cid, encoding=encoding,
-                                                  is_folder=True, dynamic_vars={},
-                                                  nastran=nastran, size=size, is_double=is_double,
-                                                  nerrors=0,
-                                                  post=post, sum_load=sum_load, dev=dev,
-                                                  crash_cards=crash_cards,
-                                                  run_extract_bodies=False, pickle_obj=pickle_obj)
+                fem1, fem2, unused_diff_cards2 = run_bdf(
+                    folder, filename, debug=debug,
+                    xref=xref, check=check, punch=punch,
+                    cid=cid, encoding=encoding,
+                    is_folder=True, dynamic_vars={},
+                    nastran=nastran, size=size, is_double=is_double,
+                    nerrors=0,
+                    post=post, sum_load=sum_load, dev=dev,
+                    crash_cards=crash_cards,
+                    run_extract_bodies=False, pickle_obj=pickle_obj)
                 del fem1
                 del fem2
             diff_cards += diff_cards
@@ -218,7 +219,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
-            nerrors=0, dev=False, crash_cards=None, safe_xref=True, pickle_obj=False, safe=False,
+            nerrors=0, dev=False, crash_cards=None, safe_xref=True, pickle_obj=False,
             stop_on_failure=True):
     """
     Runs a single BDF
@@ -687,7 +688,7 @@ def check_for_cd_frame(fem1):
     grid point force transformation
     """
     if any([card_name in fem1.card_count for card_name in ['GRID', 'SPOINT', 'EPOINT', 'RINGAX']]):
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = fem1.get_displacement_index_xyz_cp_cd(
+        unused_icd_transform, unused_icp_transform, unused_xyz_cp, nid_cp_cd = fem1.get_displacement_index_xyz_cp_cd(
             fdtype='float64', idtype='int32', sort_ids=True)
         cds = np.unique(nid_cp_cd[:, 2])
         cd_coords = []
@@ -788,13 +789,13 @@ def _assert_has_spc(subcase, fem):
     """
     if 'SPC' not in subcase:
         has_ps = False
-        for nid, node in iteritems(fem.nodes):
+        for unused_nid, node in iteritems(fem.nodes):
             if node.ps:
                 has_ps = True
                 break
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
-def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
+def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, unused_sol_200_map,
                           stop_on_failure=True):
     for isubcase in subcase_keys[1:]:  # drop isubcase = 0
         subcase = subcases[isubcase]
@@ -825,15 +826,15 @@ def check_for_flag_in_subcases(fem2, subcase, parameters):
     a much finer time step/increased number of convergence iterations.
     """
     if not any(subcase.has_parameter(*parameters)):
-        subcases = fem2.subcases
+        unused_subcases = fem2.subcases
         #subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
         has_flag = False
-        for isubcase, subcasei in iteritems(fem2.subcases):
+        for unused_isubcase, subcasei in iteritems(fem2.subcases):
             if any(subcasei.has_parameter(*parameters)):
                 has_flag = True
         if not has_flag:
             msg = 'sol=%r; %s not in subcase\n' % (fem2.sol, str(parameters))
-            for isubcase, subcasei in iteritems(fem2.subcases):
+            for unused_isubcase, subcasei in iteritems(fem2.subcases):
                 msg += str(subcasei)
             raise RuntimeError(msg)
 
@@ -1097,20 +1098,20 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
     """helper method for ``check_case``"""
     if any(subcase.has_parameter('TIME', 'TSTEP')):
         if 'TIME' in subcase:
-            value = subcase.get_parameter('TIME')[0]
+            time_tstep_id = subcase.get_parameter('TIME')[0]
         elif 'TSTEP' in subcase:
-            value = subcase.get_parameter('TSTEP')[0]
+            time_tstep_id = subcase.get_parameter('TSTEP')[0]
         else:
             raise NotImplementedError(subcase)
-        assert value in fem2.tsteps, 'value=%s\n tsteps=%s\n subcase:\n%s' % (value, str(fem2.tsteps), str(subcase))
+        assert time_tstep_id in fem2.tsteps, 'time_tstep_id=%s\n tsteps=%s\n subcase:\n%s' % (time_tstep_id, str(fem2.tsteps), str(subcase))
 
     if 'TSTEPNL' in subcase:
-        value = subcase.get_parameter('TSTEPNL')[0]
-        assert value in fem2.tstepnls, 'value=%s\n tstepnls=%s\n subcase:\n%s' % (value, str(fem2.tstepnls), str(subcase))
+        tstepnl_id = subcase.get_parameter('TSTEPNL')[0]
+        assert tstepnl_id in fem2.tstepnls, 'tstepnl_id=%s\n tstepnls=%s\n subcase:\n%s' % (tstepnl_id, str(fem2.tstepnls), str(subcase))
 
     if 'SUPORT1' in subcase:
-        value = subcase.get_parameter('SUPORT1')[0]
-        assert value in fem2.suport1, 'value=%s\n suport1=%s\n subcase:\n%s' % (value, str(fem2.suport1), str(subcase))
+        suport1_id = subcase.get_parameter('SUPORT1')[0]
+        assert suport1_id in fem2.suport1, 'suport1_id=%s\n suport1=%s\n subcase:\n%s' % (suport1_id, str(fem2.suport1), str(subcase))
 
     if 'TRIM' in subcase:
         trim_id = subcase.get_parameter('TRIM')[0]
@@ -1118,7 +1119,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
             msg = (
                 'TRIM = %s\n'
                 'trims=%s\n'
-                'subcase:\n%s' % (value, str(fem2.trims), str(subcase)))
+                'subcase:\n%s' % (trim_id, str(fem2.trims), str(subcase)))
             raise RuntimeError(msg)
         trim = fem2.trims[trim_id]
 
@@ -1148,7 +1149,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
     if 'METHOD' in subcase:
         method_id = subcase.get_parameter('METHOD')[0]
         if method_id in fem2.methods:
-            method = fem2.methods[method_id]
+            unused_method = fem2.methods[method_id]
         #elif method_id in fem2.cMethods:
             #method = fem2.cMethods[method_id]
         else:
@@ -1161,16 +1162,16 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
     if 'CMETHOD' in subcase:
         cmethod_id = subcase.get_parameter('CMETHOD')[0]
         if cmethod_id in fem2.cMethods:
-            method = fem2.cMethods[cmethod_id]
+            unused_method = fem2.cMethods[cmethod_id]
         #elif method_id in fem2.cMethods:
-            #method = fem2.cMethods[method_id]
+            #unused_method = fem2.cMethods[method_id]
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
         assert sol in [10, 110, 111, 145], 'sol=%s CMETHOD\n%s' % (sol, subcase)
 
     if 'RMETHOD' in subcase:
-        rmethod_id = subcase.get_parameter('RMETHOD')[0]
+        unused_rmethod_id = subcase.get_parameter('RMETHOD')[0]
         #if method_id in fem2.methods:
             #method = fem2.methods[method_id]
         #elif method_id in fem2.cMethods:
@@ -1183,8 +1184,8 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
 
     if 'FMETHOD' in subcase:
         # FLUTTER
-        method_id = subcase.get_parameter('FMETHOD')[0]
-        method = fem2.flutters[method_id]
+        fmethod_id = subcase.get_parameter('FMETHOD')[0]
+        unused_fmethod = fem2.flutters[fmethod_id]
         assert sol in [145, 200], 'sol=%s FMETHOD\n%s' % (sol, subcase)
 
     nid_map = fem2.nid_map
@@ -1262,7 +1263,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
 
     if 'LOADSET' in subcase:
         loadset_id = subcase.get_parameter('LOADSET')[0]
-        lseq = fem2.Load(loadset_id)
+        unused_lseq = fem2.Load(loadset_id)
         fem2.get_reduced_loads(loadset_id)
 
     if 'DLOAD' in subcase:
@@ -1501,10 +1502,10 @@ def compute(cards1, cards2, quiet=False):
             print(msg)
 
 
-def get_element_stats(fem1, fem2, quiet=False):
+def get_element_stats(fem1, unused_fem2, quiet=False):
     # type: (BDF, BDF, bool) -> None
     """verifies that the various element methods work"""
-    for (key, loads) in sorted(iteritems(fem1.loads)):
+    for (unused_key, loads) in sorted(iteritems(fem1.loads)):
         for load in loads:
             try:
                 all_loads = load.get_loads()
@@ -1521,7 +1522,7 @@ def get_element_stats(fem1, fem2, quiet=False):
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
     mass1, cg1, inertia1 = fem1.mass_properties(reference_point=None, sym_axis=None)
-    #mass2, cg2, inertia2 = fem1._mass_properties_new(reference_point=None, sym_axis=None)
+    mass2, cg2, inertia2 = fem1._mass_properties_new(reference_point=None, sym_axis=None)
     if not quiet:
         print("mass = %s" % mass1)
         print("cg   = %s" % cg1)
@@ -1535,12 +1536,12 @@ def get_element_stats(fem1, fem2, quiet=False):
         #print('mass[nsm=%i] = %s' % (nsm_id, mass))
 
 
-def get_matrix_stats(fem1, fem2):
+def get_matrix_stats(fem1, unused_fem2):
     # type: (BDF, BDF) -> None
     """
     Verifies the dmig.get_matrix() method works.
     """
-    for (key, dmig) in sorted(iteritems(fem1.dmigs)):
+    for (unused_key, dmig) in sorted(iteritems(fem1.dmigs)):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.get_matrix()
@@ -1552,7 +1553,7 @@ def get_matrix_stats(fem1, fem2):
                   % (dmig.type, dmig.name, str(dmig)))
             raise
 
-    for (key, dmi) in sorted(iteritems(fem1.dmis)):
+    for (unused_key, dmi) in sorted(iteritems(fem1.dmis)):
         try:
             if isinstance(dmi, NastranMatrix):
                 dmi.get_matrix()
@@ -1564,7 +1565,7 @@ def get_matrix_stats(fem1, fem2):
                   % (dmi.type, dmi.name, str(dmi)))
             raise
 
-    for (key, dmij) in sorted(iteritems(fem1.dmijs)):
+    for (unused_key, dmij) in sorted(iteritems(fem1.dmijs)):
         try:
             if isinstance(dmij, NastranMatrix):
                 dmij.get_matrix()
@@ -1576,7 +1577,7 @@ def get_matrix_stats(fem1, fem2):
                   % (dmij.type, dmij.name, str(dmij)))
             raise
 
-    for (key, dmiji) in sorted(iteritems(fem1.dmijis)):
+    for (unused_key, dmiji) in sorted(iteritems(fem1.dmijis)):
         try:
             if isinstance(dmiji, NastranMatrix):
                 dmiji.get_matrix()
@@ -1588,7 +1589,7 @@ def get_matrix_stats(fem1, fem2):
                   % (dmiji.type, dmiji.name, str(dmiji)))
             raise
 
-    for (key, dmik) in sorted(iteritems(fem1.dmiks)):
+    for (unused_key, dmik) in sorted(iteritems(fem1.dmiks)):
         try:
             if isinstance(dmik, NastranMatrix):
                 dmik.get_matrix()

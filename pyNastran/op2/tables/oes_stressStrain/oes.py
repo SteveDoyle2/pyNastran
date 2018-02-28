@@ -3591,7 +3591,7 @@ class OES(OP2Common):
                 if obj.itime == 0:
                     ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 13).copy()
                     eids = ints[:, 0] // 10
-                    obj.element_node[ielement:ielement2, 0] = eids
+                    obj.element[ielement:ielement2] = eids
 
                 floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 13).copy()
 
@@ -3617,7 +3617,7 @@ class OES(OP2Common):
                         dt, eid, self.element_type, fd1,
                         sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                         ex1, ey1, ez1, exy1)
-                n += ntotal
+                    n += ntotal
         elif self.format_code == 1 and self.num_wide == 25 and self.element_type in [88, 90]:
             # TODO: vectorize
             #     ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP

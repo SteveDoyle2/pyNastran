@@ -122,29 +122,21 @@ class RealNonlinearPlateArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()[1:]
-
         nelements = self.element.shape[0]
-        if self.is_fiber_distance:
-            fiber_distance = ['Top', 'Bottom'] * nelements
-        else:
-            fiber_distance = ['Mean', 'Curvature'] * nelements
-        fd = np.array(fiber_distance, dtype='unicode')
-        element = np.vstack([self.element, self.element]).T.ravel()
-        element_fd = [element, fd]
 
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=element_fd, minor_axis=headers).to_frame()
+            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Location', 'Item']
+            self.data_frame.index.names = ['ElementID', 'Item']
         else:
             # option B - nice!
-            df1 = pd.DataFrame(element_fd).T
-            df1.columns = ['ElementID', 'Location']
+            df1 = pd.DataFrame(self.element).T
+            df1.columns = ['ElementID']
             df2 = pd.DataFrame(self.data[0, :, 1:])
             df2.columns = headers
             self.data_frame = df1.join(df2)
-        self.data_frame = self.data_frame.reset_index().set_index(['ElementID', 'Location'])
+        self.data_frame = self.data_frame.reset_index().set_index(['ElementID'])
         #print(self.data_frame)
 
     #def add_new_eid(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
