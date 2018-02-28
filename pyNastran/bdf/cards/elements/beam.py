@@ -10,10 +10,11 @@ import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.elements.bars import CBAR, LineElement, init_x_g0, BaseCard
+from pyNastran.bdf.cards.elements.bars import (
+    CBAR, LineElement, init_x_g0, BaseCard, rotate_v_wa_wb)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_string_or_blank,
-    string_or_blank, integer_double_or_blank, integer_string_or_blank,
+    integer_double_or_blank, integer_string_or_blank,
 )
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -334,192 +335,61 @@ class CBEAM(CBAR):
         #x = self.get_orientation_vector()
         return (ga + gb) / 2.
 
-    def get_axes(self, model, debug=False):
+    def get_axes(self, model):
         """
-        OFFT flag
-        ---------
-        ABC or A-B-C (an example is G-G-G or B-G-G)
-        while the slots are:
-         - A -> orientation; values=[G, B]
-         - B -> End A; values=[G, O]
-         - C -> End B; values=[G, O]
+        Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        and the values for A,B,C mean:
-         - B -> basic
-         - G -> global
-         - O -> orientation
+        See
+        ---
+        ``_rotate_v_wa_wb`` for a description of the OFFT flag.
 
-        so for example G-G-G, that's global for all terms.
-        BOG means basic orientation, orientation end A, global end B
-
-        so now we're left with what does basic/global/orientation mean?
-        - basic -> the global coordinate system defined by cid=0
-        - global -> the local coordinate system defined by the
-                    CD field on the GRID card, but referenced by
-                    the CBAR/CBEAM
-        - orientation -> ???
-
-        NX Nastran uses GGG implicitly
+        TODO: not integrated with CBAR yet...
         """
+        is_failed = True
+        ihat = None
+        yhat = None
+        zhat = None
         eid = self.eid
         (nid1, nid2) = self.node_ids
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
         n1 = node1.get_position()
         n2 = node2.get_position()
-        centroid = (n1 + n2) / 2.
+        #centroid = (n1 + n2) / 2.
+        #i = n2 - n1
+        #Li = norm(i)
+        #ihat = i / Li
+
+        elem = model.elements[eid]
+        pid_ref = elem.pid_ref
+        if pid_ref is None:
+            pid_ref = model.Property(elem.pid)
+        assert not isinstance(pid_ref, integer_types), elem
+
+        (nid1, nid2) = elem.node_ids
+        node1 = model.nodes[nid1]
+        node2 = model.nodes[nid2]
+        n1 = node1.get_position()
+        n2 = node2.get_position()
+
+        # wa/wb are not considered in i_offset
+        # they are considered in ihat
         i = n2 - n1
         Li = norm(i)
-        ihat = i / Li
+        i_offset = i / Li
 
-        is_failed = True
-        if self.g0:
-            #debug = False
-            msg = 'which is required by %s eid=%s\n%s' % (self.type, self.g0, str(self))
-            g0_ref = model.Node(self.g0, msg=msg)
-            if debug:  # pragma: no cover
-                print('  g0 = %s' % self.g0)
-                print('  g0_ref = %s' % g0_ref)
-            n0 = g0_ref.get_position()
-            v = n0 - n1
-        else:
-            #debug = False
-            ga = model.nodes[self.Ga()]
-            cda = ga.Cd()
-            cda_ref = model.Coord(cda)
-            v = cda_ref.transform_node_to_global(self.x)
-            if debug:  # pragma: no cover
-                print('  ga = %s' % self.ga)
-                if cda != 0:
-                    print('  cd = %s' % cda_ref)
-                else:
-                    print('  cd = 0')
+        unused_v, wa, wb, xform = rotate_v_wa_wb(
+            model, elem,
+            n1, n2, node1, node2,
+            i_offset, i, eid, Li)
+        if wb is None:
+            # one or more of v, wa, wb are bad
+            return is_failed, (wa, wb, ihat, yhat, zhat)
 
-                print('  x = %s' % self.x)
-                print('  v = %s' % v)
-            #v = self.x
+        ihat = xform[0, :]
+        yhat = xform[1, :]
+        zhat = xform[2, :]
 
-        offt_vector, offt_end_a, offt_end_b = self.offt
-        if debug:  # pragma: no cover
-            print('  offt vector,A,B=%r' % (self.offt))
-        # if offt_end_a == 'G' or (offt_end_a == 'O' and offt_vector == 'G'):
-
-        cd1 = node1.Cd()
-        cd2 = node2.Cd()
-        cd1_ref = model.Coord(cd1)
-        cd2_ref = model.Coord(cd2)
-        # node1.cd_ref, node2.cd_ref
-
-        if offt_vector == 'G':
-            # end A
-            # global - cid != 0
-            if cd1 != 0:
-                v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
-                #if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
-                    #msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
-                        #node1.cd_ref.type, node1.nid)
-                    #self.log.error(msg)
-                    #continue
-                    #raise NotImplementedError(node1.cd)
-        elif offt_vector == 'B':
-            # basic - cid = 0
-            pass
-        else:
-            msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, self.offt)
-            #self.log.error(msg)
-            return is_failed, msg
-            #raise NotImplementedError(msg)
-        #print('v = %s' % v)
-
-        # rotate wa
-        wa = self.wa
-        if offt_end_a == 'G':
-            if cd1 != 0:
-                #if node1.cd.type not in ['CORD2R', 'CORD1R']:
-                    #continue # TODO: support CD transform
-                # TODO: fixme
-                wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
-        elif offt_end_a == 'B':
-            pass
-        elif offt_end_a == 'O':
-            # TODO: fixme
-            wa = cd1_ref.transform_node_to_global_assuming_rectangular(n1 - wa)
-        else:
-            msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, self.offt)
-            return is_failed, msg
-            #raise NotImplementedError(msg)
-
-        #print('wa = %s' % wa)
-        # rotate wb
-        wb = self.wb
-        if offt_end_b == 'G':
-            if cd2 != 0:
-                #if cd2_ref.type not in ['CORD2R', 'CORD1R']:
-                    #continue # TODO: MasterModelTaxi
-                # TODO: fixme
-                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
-
-        elif offt_end_b == 'B':
-            pass
-        elif offt_end_b == 'O':
-            # TODO: fixme
-            wb = cd1_ref.transform_node_to_global_assuming_rectangular(n2 - wb)
-        else:
-            msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, self.offt)
-            model.log.error(msg)
-            return is_failed, msg
-            #raise NotImplementedError(msg)
-
-        #print('wb =', wb)
-        ## concept has a GOO
-        #if not self.offt in ['GGG', 'BGG']:
-            #msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (
-                #self.offt, eid)
-            #self.log.error(msg)
-            #continue
-
-        vhat = v / norm(v) # j
-        try:
-            z = np.cross(ihat, vhat) # k
-        except ValueError:
-            msg = 'Invalid vector length\n'
-            msg += 'n1  =%s\n' % str(n1)
-            msg += 'n2  =%s\n' % str(n2)
-            msg += 'nid1=%s\n' % str(nid1)
-            msg += 'nid2=%s\n' % str(nid2)
-            msg += 'i   =%s\n' % str(i)
-            msg += 'Li  =%s\n' % str(Li)
-            msg += 'ihat=%s\n' % str(ihat)
-            msg += 'v   =%s\n' % str(v)
-            msg += 'vhat=%s\n' % str(vhat)
-            msg += 'z=cross(ihat, vhat)'
-            print(msg)
-            raise ValueError(msg)
-
-        zhat = z / norm(z)
-        yhat = np.cross(zhat, ihat) # j
-        if debug:
-            print('  centroid = %s' % centroid)
-            print('  ihat = %s' % ihat)
-            print('  yhat = %s' % yhat)
-            print('  zhat = %s' % zhat)
-        #if eid == 5570:
-            #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
-                  #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
-
-        if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
-            print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
-                eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
-        elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
-            print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
-                  ' v=%s i=%s n%s=%s n%s=%s' % (
-                      eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
-
-        #print('adding bar %s' % bar_type)
-        #print('   centroid=%s' % centroid)
-        #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
-        #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
-        #print('   Li=%s' % (Li))
         is_failed = False
         return is_failed, (wa, wb, ihat, yhat, zhat)
 
@@ -720,6 +590,7 @@ class BEAMOR(BaseCard):
     """
     type = 'BEAMOR'
     def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.pid = pid

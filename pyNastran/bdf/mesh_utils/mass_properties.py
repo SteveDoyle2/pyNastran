@@ -1,4 +1,5 @@
 # coding: utf-8
+# pylint: disable=C0103
 """
 Defines:
   - mass_poperties
@@ -1080,7 +1081,7 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
     nsm_centroids = np.vstack(nsm_centroids)[isort]
     return all_eids_pids, area_length, is_area, nsm_centroids
 
-def _combine_weighted_area_length_simple(
+def _combine_prop_weighted_area_length_simple(
         eids, area, centroids, is_area_bool,
         nsm_value, reference_point, mass, cg, I,
         debug=True):
@@ -1130,8 +1131,9 @@ def _combine_weighted_area_length_simple(
         print('%s sum = %s' % (word, area_sum))
     return mass
 
-def _combine_weighted_area_length(areas_ipids, nsm_centroidsi, is_area_bool, area_sum,
-                                  nsm_value, reference_point, mass, cg, I, debug=True):
+def _combine_prop_weighted_area_length(
+        areas_ipids, nsm_centroidsi, is_area_bool, area_sum,
+        nsm_value, reference_point, mass, cg, I, debug=True):
     """
     Calculates the contribution of NSML cards on mass properties.
     Area/Length are abstracted, so if you have a shell element, the area_sum
@@ -1274,17 +1276,12 @@ def _apply_nsm(model, nsm_id,
             print('-' * 80)
             print(nsm)
             print("nsm_type=%r value=%s" % (nsm_type, nsm_value))
-        #if nsm_type == 'ELEMENT':
-            #return
-            #continue
-        #if nsm.type == 'NSML':
-            #print(nsm)
+
         if nsm.type == 'NSML1':
             if nsm_type == 'PSHELL': # area
                 if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
                     model.log.warning('  *skipping NSML1/PSHELL/ALL\n%s' % str(nsm))
-                    #continue
-                    return mass
+                    continue
                 #print(nsm.rstrip())
 
                 ids = np.array(nsm.ids, dtype='int32')
@@ -1328,16 +1325,16 @@ def _apply_nsm(model, nsm_id,
                     print("area_sum =", area_sum)
                 nsm_centroidsi = nsm_centroids_area[nsm_type]
                 is_area_bool = True
-                mass = _combine_weighted_area_length(areas_ipids, nsm_centroidsi,
-                                                     is_area_bool, area_sum,
-                                                     nsm_value, reference_point, mass, cg, I,
-                                                     debug=debug)
+                mass = _combine_prop_weighted_area_length(
+                    areas_ipids, nsm_centroidsi,
+                    is_area_bool, area_sum,
+                    nsm_value, reference_point, mass, cg, I,
+                    debug=debug)
 
             elif nsm_type in ['PBAR', 'PBEAM', 'PROD', 'PTUBE']:
                 if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
                     model.log.warning('  *skipping NSML1/BAR/ALL\n%s' % str(nsm))
-                    return mass
-                    #continue
+                    continue
                 #print(nsm.rstrip())
 
                 ids = np.array(nsm.ids, dtype='int32')
@@ -1379,18 +1376,19 @@ def _apply_nsm(model, nsm_id,
 
                 nsm_centroidsi = nsm_centroids_length[nsm_type]
                 is_area_bool = False
-                mass = _combine_weighted_area_length(lengths_ipids, nsm_centroidsi,
-                                                     is_area_bool, length_sum,
-                                                     nsm_value, reference_point, mass, cg, I,
-                                                     debug=debug)
+                mass = _combine_prop_weighted_area_length(
+                    lengths_ipids, nsm_centroidsi,
+                    is_area_bool, length_sum,
+                    nsm_value, reference_point, mass, cg, I,
+                    debug=debug)
 
             elif nsm_type in ['ELEMENT', 'CONROD']:
                 if len(nsm.ids) == 1 and nsm.ids[0] == 'ALL':
                     model.log.warning('  *skipping NSML1/%s/ALL\n%s' % (nsm_type, str(nsm)))
                     continue
                 if len(all_eids_pids) == 0:
-                    model.log.debug('  *skipping NSML1/%s/ALL because there are no elements\n%s' % (
-                        nsm_type, str(nsm)))
+                    model.log.debug('  *skipping NSML1/%s/ALL because there '
+                                    'are no elements\n%s' % (nsm_type, str(nsm)))
                     continue
 
                 mass = _nsm1_element(model, nsm, all_eids_pids, area_length, is_area, nsm_centroids,
@@ -1433,7 +1431,7 @@ def _apply_nsm(model, nsm_id,
                         print('  nsm_centroids_area =', centroidsi)
                         print('  centroidsi =', centroidsi)
 
-                    mass = _combine_weighted_area_length_simple(
+                    mass = _combine_prop_weighted_area_length_simple(
                         all_eids, areasi, centroidsi, is_area_bool,
                         nsm_value, reference_point, mass, cg, I,
                         debug=debug)
@@ -1441,8 +1439,7 @@ def _apply_nsm(model, nsm_id,
                 pids = nsm.ids
                 if len(pids) == 1 and pids[0] == 'ALL':
                     model.log.warning('  *skipping %s/BAR/ALL\n%s' % (nsm.type, str(nsm)))
-                    #continue
-                    return mass
+                    continue
                 #debug = True
                 #print(nsm.rstrip())
                 eids_pids = length_eids_pids[nsm_type]
@@ -1470,7 +1467,7 @@ def _apply_nsm(model, nsm_id,
                         print('  nsm_centroids_lengthi =', centroidsi)
                         print('  centroidsi =', centroidsi)
 
-                    mass = _combine_weighted_area_length_simple(
+                    mass = _combine_prop_weighted_area_length_simple(
                         eidsi, areasi, centroidsi, is_area_bool,
                         nsm_value, reference_point, mass, cg, I,
                         debug=debug)
@@ -1488,7 +1485,6 @@ def _apply_nsm(model, nsm_id,
                 raise NotImplementedError(nsm_type)
         else:
             model.log.warning('skipping %s\n%s' % (nsm.type, str(nsm)))
-            return mass
 
 
     #print('area:')
@@ -1550,6 +1546,7 @@ def _nsm1_element(model, nsm, all_eids_pids, area_length, is_area, nsm_centroids
     if debug:  # pragma: no cover
         print('  isort_1 =', isort)
         print('  ipassed =', ipassed)
+
     isort = isort[ipassed]
     if len(isort) == 0:
         model.log.warning('  *no ids found')
@@ -1557,6 +1554,7 @@ def _nsm1_element(model, nsm, all_eids_pids, area_length, is_area, nsm_centroids
     if debug:  # pragma: no cover
         print('  isort_2 =', isort)
         print('  eids[isort] =', eids[isort])
+
     iwhere = eids[isort] == ids
     eids_actual = eids[isort][iwhere]
     area_length_actual = area_length[isort][iwhere]
@@ -1569,6 +1567,7 @@ def _nsm1_element(model, nsm, all_eids_pids, area_length, is_area, nsm_centroids
         for eid in eids_actual:
             msg += str(model.elements[eid])
         raise RuntimeError(msg)
+
     is_area_bool = is_area_actual[0]
     if debug:  # pragma: no cover
         #print('  is_area_actual =', is_area_actual)
@@ -1606,7 +1605,7 @@ def _nsm1_element(model, nsm, all_eids_pids, area_length, is_area, nsm_centroids
         mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     return mass
 
-def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I):
+def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
     """
     Scales the mass & moement of inertia based on the symmetry axes
     and the PARAM WTMASS card
@@ -1657,34 +1656,34 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I):
             # y intertias are 0
             cg[1] = 0.0
             mass *= 2.0
-            I[0] *= 2.0
-            I[1] *= 2.0
-            I[2] *= 2.0
-            I[3] *= 0.0  # Ixy
-            I[4] *= 2.0  # Ixz; no y
-            I[5] *= 0.0  # Iyz
+            inertia[0] *= 2.0
+            inertia[1] *= 2.0
+            inertia[2] *= 2.0
+            inertia[3] *= 0.0  # Ixy
+            inertia[4] *= 2.0  # Ixz; no y
+            inertia[5] *= 0.0  # Iyz
 
         if 'xy' in sym_axis:
             # z intertias are 0
             cg[2] = 0.0
             mass *= 2.0
-            I[0] *= 2.0
-            I[1] *= 2.0
-            I[2] *= 2.0
-            I[3] *= 2.0  # Ixy; no z
-            I[4] *= 0.0  # Ixz
-            I[5] *= 0.0  # Iyz
+            inertia[0] *= 2.0
+            inertia[1] *= 2.0
+            inertia[2] *= 2.0
+            inertia[3] *= 2.0  # Ixy; no z
+            inertia[4] *= 0.0  # Ixz
+            inertia[5] *= 0.0  # Iyz
 
         if 'yz' in sym_axis:
             # x intertias are 0
             cg[0] = 0.0
             mass *= 2.0
-            I[0] *= 2.0
-            I[1] *= 2.0
-            I[2] *= 2.0
-            I[3] *= 0.0  # Ixy
-            I[4] *= 0.0  # Ixz
-            I[5] *= 2.0  # Iyz; no x
+            inertia[0] *= 2.0
+            inertia[1] *= 2.0
+            inertia[2] *= 2.0
+            inertia[3] *= 0.0  # Ixy
+            inertia[4] *= 0.0  # Ixz
+            inertia[5] *= 2.0  # Iyz; no x
 
     if scale is None and 'WTMASS' in model.params:
         param = model.params['WTMASS']
@@ -1695,5 +1694,5 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I):
     elif scale is None:
         scale = 1.0
     mass *= scale
-    I *= scale
-    return (mass, cg, I)
+    inertia *= scale
+    return (mass, cg, inertia)

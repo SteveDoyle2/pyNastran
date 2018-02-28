@@ -355,9 +355,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             self.gui.result_cases = {}
             self.gui.ncases = 0
-        for i in ('case_keys', 'icase', 'isubcase_name_map'):
-            if hasattr(self, i):  # TODO: is this correct???
-                del i
+
+        # TODO: is this doing anything?
+        for name in ('case_keys', 'icase', 'isubcase_name_map'):
+            if hasattr(self, name):
+                del name
         return skip_reading
 
     def get_xyz_in_coord(self, model, cid=0, fdtype='float32'):
@@ -378,7 +380,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #print("transform_xyzcp_to_xyz_cid")
         xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
-            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0,
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=cid,
             in_place=False)
 
         nid_map = self.gui.nid_map
@@ -408,7 +410,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print("transform_xyzcp_to_xyz_cid")
         #model.nodes.cp = nid_cp_cd[:, 1]
         xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
-            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=0,
+            xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=cid,
             in_place=False)
         model.nodes.xyz_cid0 = xyz_cid0
         model.nodes.nids = nid_cp_cd[:, 0]
@@ -909,7 +911,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cell_type_hexa8 = vtkHexahedron().GetCellType()
         cell_type_hexa20 = vtkQuadraticHexahedron().GetCellType()
 
-        all_eids = model.elements2.eids
+        unused_all_eids = model.elements2.eids
         #print('type(eids) =', type(all_eids)) # list
         #print('all_eids =', all_eids)
 
@@ -1479,7 +1481,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #print(list(key for key in model.card_count.keys() if key not in skip_cards))
 
         #xref_loads = False
-        xref_aero = len(model.caeros) > 0
+        #xref_aero = len(model.caeros) > 0
         #model.cross_reference(
             #xref=True,
             #xref_nodes=True,
@@ -1595,8 +1597,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nconm2 += model.card_count['CMASS2']
         # CMASS3, CMASS4 are applied to SPOINTs
 
+        update_conm2s_function = None
         if nconm2 > 0:
-            def update_conm2s_function(nid_map, ugrid, points, nodes):
+            def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes):
                 j2 = 0
                 for unused_eid, element in sorted(iteritems(model.masses)):
                     if isinstance(element, CONM2):
@@ -1608,6 +1611,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                     elif element.type in ['CMASS1', 'CMASS2']:
                         n1, n2 = element.nodes
+                        factor = 0.
                         if element.nodes[0] is not None:
                             inid = np.searchsorted(self.node_ids, n1)
                             p1 = nodes[inid, :]
@@ -1669,7 +1673,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.set_caero_control_surface_grid(
                     cs_name, cs_box_ids[cs_name],
                     box_id_to_caero_element_map, caero_points,
-                    zfighting_offset=zfighting_offset, j=0)
+                    zfighting_offset=zfighting_offset)
                 zfighting_offset += zfighting_offset0
 
                 # sort the control surfaces
@@ -1687,7 +1691,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     self.set_caero_control_surface_grid(
                         cs_name, cs_box_ids[cs_name],
                         box_id_to_caero_element_map, caero_points, label=aesurf.label,
-                        zfighting_offset=zfighting_offset, j=0)
+                        zfighting_offset=zfighting_offset)
                     zfighting_offset += zfighting_offset0
 
         if nconm2 > 0 and xref_nodes:
@@ -2134,6 +2138,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         for unused_eid, element in sorted(iteritems(model.caeros)):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 pointsi, elementsi = element.panel_points_elements()
+
+                ipoint = 0
                 for ipoint, pointii in enumerate(pointsi):
                     points.InsertPoint(j + ipoint, *pointii)
 
@@ -2154,7 +2160,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def set_caero_control_surface_grid(self, name, cs_box_ids,
                                        box_id_to_caero_element_map,
                                        caero_points, label=None,
-                                       zfighting_offset=0.001, j=0):
+                                       zfighting_offset=0.001):
         """
         Creates a single CAERO control surface?
 
@@ -2179,35 +2185,33 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             z-fighting is when two elements "fight" for who is in front
             leading.  The standard way to fix this is to bump the
             element.
-        j : int; default=0
-            ???
 
         Returns
         -------
         j : int
             ???
         """
-        points_list = []
+        j = 0
+        #points_list = []
         missing_boxes = []
         for box_id in cs_box_ids:
             try:
-                ipoints = box_id_to_caero_element_map[box_id]
+                unused_ipoints = box_id_to_caero_element_map[box_id]
             except KeyError:
                 missing_boxes.append(box_id)
                 continue
-            points_list.append(caero_points[ipoints, :])
+            #points_list.append(caero_points[ipoints, :])
         if missing_boxes:
             msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
             self.gui.log_error(msg)
 
-        points_list = np.array(points_list)
-        ncaero_sub_points = len(np.unique(points_list.ravel()))
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(ncaero_sub_points)
+        #points_list = np.array(points_list)
 
         areas = []
         centroids = []
         vtk_type = vtkQuad().GetCellType()
+
+        all_points = []
         for box_id in cs_box_ids:
             try:
                 elementi = box_id_to_caero_element_map[box_id]
@@ -2220,12 +2224,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if area == 0.0:
                 print('box_id=%i has 0 area' % box_id)
                 continue
-            for ipoint, point in enumerate(pointsi):
-                #print('point[%i, %i] = %s; A=%s' % (ibox, ipoint, point, area))
-                # shift z to remove z-fighting with caero in surface representation
-                point[1] += zfighting_offset
-                point[2] += zfighting_offset
-                points.InsertPoint(j + ipoint, *point)
 
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, j)
@@ -2233,9 +2231,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elem.GetPointIds().SetId(2, j + 2)
             elem.GetPointIds().SetId(3, j + 3)
             self.alt_grids[name].InsertNextCell(vtk_type, elem.GetPointIds())
+            all_points.append(pointsi)
             centroids.append(centroid)
             areas.append(area)
-            j += ipoint + 1
+            j += 4
+
+        # combine all the points
+        all_points_array = np.vstack(all_points)
+
+        # shift z to remove z-fighting with caero in surface representation
+        all_points_array[:, [1, 2]] += zfighting_offset
+
+        # get the vtk object
+        points = numpy_to_vtk_points(all_points_array, deep=0)
 
         #if missing_boxes:
             #msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
@@ -2249,7 +2257,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self._create_annotation(text, slot, x, y, z)
 
         self.alt_grids[name].SetPoints(points)
-        return j
 
     def _set_conm_grid(self, nconm2, model):
         """
@@ -2272,7 +2279,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if isinstance(element, CONM2):
                 xyz_nid = element.nid_ref.get_position()
                 centroid = element.offset(xyz_nid)
-                centroid_old = element.Centroid()
+                #centroid_old = element.Centroid()
                 #assert np.all(np.allclose(centroid_old, centroid)), 'centroid_old=%s new=%s' % (centroid_old, centroid)
                 #d = norm(xyz - c)
                 points.InsertPoint(j, *centroid)
@@ -4988,7 +4995,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form_checks.append(('OffsetZ', icase + 3, []))
             icase += 4
 
-            if 0:
+            if 0:  # pragma: no cover
                 xyz_offset = np.vstack([xoffset, yoffset, zoffset]).T
                 titles = ['Offset XYZ']
                 headers = titles
@@ -5519,7 +5526,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if ext == '.op2':
                 model = OP2(log=self.log, debug=True)
 
-                if 0:
+                if 0:  # pragma: no cover
                     model._results.saved = set([])
                     all_results = model.get_all_results()
                     desired_results = [

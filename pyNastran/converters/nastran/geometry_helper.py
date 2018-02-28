@@ -16,6 +16,7 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
     h_faces, i1_faces, chan_faces, l_faces, z_faces,
     hexa_faces, hat_faces,
 )
+from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 
@@ -178,7 +179,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
             n1 = node1.get_position()
             n2 = node2.get_position()
 
-            ## TODO: should wa/wb be considered in ihat?
+            # wa/wb are not considered in i_offset
+            # they are considered in ihat
             i = n2 - n1
             Li = norm(i)
             ihat = i / Li
@@ -188,11 +190,10 @@ class NastranGeometryHelper(NastranGuiAttributes):
             if elem.pb != 0:
                 nid_release_map[nid2].append((eid, elem.pb))
 
-            v, wa, wb, xform = self._rotate_v_wa_wb(
+            unused_v, wa, wb, xform = rotate_v_wa_wb(
                 model, elem,
                 n1, n2, node1, node2,
-                ihat, i, eid, Li,
-                debug)
+                ihat, i, eid, Li)
             if wb is None:
                 # one or more of v, wa, wb are bad
                 continue
@@ -233,7 +234,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
 
         if node0: # and '3d_bars' not in self.alt_grids:
-            def update_grid_function(nid_map, ugrid, points, nodes):
+            def update_grid_function(nid_map, ugrid, points, nodes):  # pragma: no cover
                 """custom function to update the 3d bars"""
                 points_list = []
                 node0b = 0
@@ -247,7 +248,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     ptype = pid_ref.type
                     bar_type = _get_bar_type(ptype, pid_ref)
 
-                    nids = elem.nodes
+                    #nids = elem.nodes
                     (nid1, nid2) = elem.node_ids
                     node1 = model.nodes[nid1]
                     node2 = model.nodes[nid2]
@@ -261,17 +262,13 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     Li = norm(i)
                     ihat = i / Li
 
-                    v, wa, wb, xform = self._rotate_v_wa_wb(
+                    unused_v, wa, wb, xform = rotate_v_wa_wb(
                         model, elem,
                         n1, n2, node1, node2,
-                        ihat, i, eid, Li,
-                        debug)
+                        ihat, i, eid, Li)
                     if wb is None:
                         # one or more of v, wa, wb are bad
                         continue
-
-                    yhat = xform[1, :]
-                    zhat = xform[2, :]
 
                     ugridi = None
                     node0b = add_3d_bar_element(
@@ -331,137 +328,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
         #no_dofs = (no_bending, no_bending_bad, no_6_16, no_0_456,
                    #no_0_56, no_56_456, no_0_6, no_0_16)
         return bar_nids, bar_types, nid_release_map
-
-    def _rotate_v_wa_wb(self, model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid,
-                        Li_offset, debug):
-        """
-        Rotates v, wa, wb
-
-        OFFT flag
-        ---------
-        ABC or A-B-C (an example is G-G-G or B-G-G)
-        while the slots are:
-         - A -> orientation; values=[G, B]
-         - B -> End A; values=[G, O]
-         - C -> End B; values=[G, O]
-
-        and the values for A,B,C mean:
-         - B -> basic
-         - G -> global
-         - O -> orientation
-
-        so for example G-G-G, that's global for all terms.
-        BOG means basic orientation, orientation end A, global end B
-
-        so now we're left with what does basic/global/orientation mean?
-        - basic -> the global coordinate system defined by cid=0
-        - global -> the local coordinate system defined by the
-                    CD field on the GRID card, but referenced by
-                    the CBAR/CBEAM
-        - orientation -> wa/wb are defined in the xform_offset (yz) frame;
-                         this is likely the easiest frame for a user
-        """
-        # get the vector v, which defines the projection on to the elemental
-        # coordinate frame
-        if elem.g0:
-            msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
-            g0_ref = model.Node(elem.g0, msg=msg)
-            n0 = g0_ref.get_position()
-            v = n0 - n1
-        else:
-            ga = model.nodes[elem.Ga()]
-            cda = ga.Cd()
-            cda_ref = model.Coord(cda)
-            v = cda_ref.transform_node_to_global(elem.x)
-
-        #--------------------------------------------------------------------------
-        offt_vector, offt_end_a, offt_end_b = elem.offt
-
-        cd1 = node1.Cd()
-        cd2 = node2.Cd()
-        cd1_ref = model.Coord(cd1)
-        cd2_ref = model.Coord(cd2)
-
-        # rotate v
-        if offt_vector == 'G':
-            # end A
-            # global - cid != 0
-            if cd1 != 0:
-                v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
-        elif offt_vector == 'B':
-            # basic - cid = 0
-            pass
-        else:
-            msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
-            self.log.error(msg)
-            return None, None, None, None
-
-        yhat_offset, zhat_offset = get_bar_yz_transform(
-            v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
-            i_offset, Li_offset)
-        xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
-
-        #--------------------------------------------------------------------------
-        # rotate wa
-        # wa defines the offset at end A
-        wa = elem.wa
-        #ia = n1
-        if offt_end_a == 'G':
-            if cd1 != 0:
-                # TODO: fixme
-                wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
-        elif offt_end_a == 'B':
-            pass
-        elif offt_end_a == 'O':
-            # rotate point wa from the local frame to the global frame
-            wa = np.dot(wa, xform_offset)
-            #ia = n1 + wa
-        else:
-            msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
-            self.log.error(msg)
-            return v, None, None, xform_offset
-
-        #--------------------------------------------------------------------------
-        # rotate wb
-        # wb defines the offset at end B
-        wb = elem.wb
-        #ib = n2
-        if offt_end_b == 'G':
-            if cd2 != 0:
-                # TODO: fixme;  MasterModelTaxi
-                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
-
-        elif offt_end_b == 'B':
-            pass
-        elif offt_end_b == 'O':
-            # rotate point wb from the local frame to the global frame
-            wb = np.dot(wb, xform_offset)
-            #ib = n2 + wb
-        else:
-            msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
-            model.log.error(msg)
-            return v, wa, None, xform_offset
-
-        #--------------------------------------------------------------------------
-        #i = ib - ia # (n2 + wb) - (n1 + wa)
-        i = (n2 + wb) - (n1 + wa)
-        i = i_offset
-        Li = norm(i)
-        ihat = i / Li
-        yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, node1.nid, node2.nid, i, Li)
-
-        #print('  n1=%s n2=%s' % (n1, n2))
-        #print('  ib=%s ia=%s' % (ib, ia))
-        #print('  wa=%s wb=%s' % (wa, wb))
-        #print('  ioffset=%s i=%s' % (i_offset, i))
-        #print('  ihat=%s' % (ihat))
-        #print('  yhat=%s' % (yhat))
-        #print('  zhat=%s' % (zhat))
-        #print("")
-
-        xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
-
-        return v, wa, wb, xform
 
 def _make_points_array(points_list):
     if len(points_list) == 1:
@@ -532,7 +398,8 @@ def get_suport_node_ids(model, suport_id):
         suport1 = model.suport1[suport_id]
         node_ids += suport1.nodes
     else:
-        for suport in model.suport:  # TODO: shouldn't this be included?
+        # TODO: shouldn't this block always be included?
+        for suport in model.suport:
             if suport_id in suport.nodes:
                 node_ids.append(suport_id)
     return np.unique(node_ids)
@@ -850,9 +717,11 @@ def faces_to_element_facelist(faces, node0):
     for face in faces: # Loop over all the faces
         #print(face)
         face_idlist.InsertNextId(len(face)) # Number of points in face
+
+        # Insert the pointIds for the face
         #for i in face:
             #face_idlist.InsertNextId(i + node0)
-        [face_idlist.InsertNextId(i + node0) for i in face] # Insert the pointIds for the face
+        [face_idlist.InsertNextId(i + node0) for i in face]
 
     return face_idlist
 

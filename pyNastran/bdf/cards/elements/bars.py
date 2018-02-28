@@ -1238,3 +1238,170 @@ def init_x_g0(card, eid, x1_default, x2_default, x3_default):
                'type=%s' % (card.field(0), eid, field5, type(field5)))
         raise RuntimeError(msg)
     return x, g0
+
+
+def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid,
+                   Li_offset):
+    """
+    Rotates v, wa, wb
+
+    OFFT flag
+    ---------
+    ABC or A-B-C (an example is G-G-G or B-G-G)
+    while the slots are:
+     - A -> orientation; values=[G, B]
+     - B -> End A; values=[G, O]
+     - C -> End B; values=[G, O]
+
+    and the values for A,B,C mean:
+     - B -> basic
+     - G -> global
+     - O -> orientation
+
+    so for example G-G-G, that's global for all terms.
+    BOG means basic orientation, orientation end A, global end B
+
+    so now we're left with what does basic/global/orientation mean?
+    - basic -> the global coordinate system defined by cid=0
+    - global -> the local coordinate system defined by the
+                CD field on the GRID card, but referenced by
+                the CBAR/CBEAM
+    - orientation -> wa/wb are defined in the xform_offset (yz) frame;
+                     this is likely the easiest frame for a user
+    """
+    cd1 = node1.Cd()
+    cd2 = node2.Cd()
+    cd1_ref = model.Coord(cd1)
+    cd2_ref = model.Coord(cd2)
+    #cd1_ref = elem.nodes_ref[0].cp_ref
+    #cd2_ref = elem.nodes_ref[1].cp_ref
+    #cd1 = cd1_ref.cid
+    #cd2 = cd2_ref.cid
+
+    # get the vector v, which defines the projection on to the elemental
+    # coordinate frame
+    if elem.g0:
+        #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
+        g0_ref = model.Node(elem.g0, msg=msg)
+        #n0 = elem.g0_ref.get_position()
+        v = n0 - n1
+    else:
+        #ga = elem.ga_ref
+        #cda_ref = cd1_ref
+        ga = model.nodes[elem.Ga()]
+        cda = ga.Cd()
+        cda_ref = model.Coord(cda)
+        v = cda_ref.transform_node_to_global(elem.x)
+
+    #--------------------------------------------------------------------------
+    offt_vector, offt_end_a, offt_end_b = elem.offt
+
+    # rotate v
+    if offt_vector == 'G':
+        # end A
+        # global - cid != 0
+        if cd1 != 0:
+            v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
+    elif offt_vector == 'B':
+        # basic - cid = 0
+        pass
+    else:
+        msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
+        return None, None, None, None, msg
+
+    yhat_offset, zhat_offset = get_bar_yz_transform(
+        v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
+        i_offset, Li_offset)
+    xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
+
+    #--------------------------------------------------------------------------
+    # rotate wa
+    # wa defines the offset at end A
+    wa = elem.wa
+    #ia = n1
+    if offt_end_a == 'G':
+        if cd1 != 0:
+            wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
+    elif offt_end_a == 'B':
+        pass
+    elif offt_end_a == 'O':
+        # rotate point wa from the local frame to the global frame
+        wa = np.dot(wa, xform_offset)
+        #ia = n1 + wa
+    else:
+        msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
+        self.log.error(msg)
+        return v, None, None, xform_offset
+
+    #--------------------------------------------------------------------------
+    # rotate wb
+    # wb defines the offset at end B
+    wb = elem.wb
+    #ib = n2
+    if offt_end_b == 'G':
+        if cd2 != 0:
+            # MasterModelTaxi
+            wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+    elif offt_end_b == 'B':
+        pass
+    elif offt_end_b == 'O':
+        # rotate point wb from the local frame to the global frame
+        wb = np.dot(wb, xform_offset)
+        #ib = n2 + wb
+    else:
+        msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
+        model.log.error(msg)
+        return v, wa, None, xform_offset
+
+    #--------------------------------------------------------------------------
+    #i = ib - ia # (n2 + wb) - (n1 + wa)
+    i = (n2 + wb) - (n1 + wa)
+    i = i_offset
+    Li = norm(i)
+    ihat = i / Li
+    yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, node1.nid, node2.nid, i, Li)
+
+    #print('  n1=%s n2=%s' % (n1, n2))
+    #print('  ib=%s ia=%s' % (ib, ia))
+    #print('  wa=%s wb=%s' % (wa, wb))
+    #print('  ioffset=%s i=%s' % (i_offset, i))
+    #print('  ihat=%s' % (ihat))
+    #print('  yhat=%s' % (yhat))
+    #print('  zhat=%s' % (zhat))
+    #print("")
+
+    xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
+
+    return v, wa, wb, xform
+
+def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
+    """helper method for _get_bar_yz_arrays"""
+    vhat = v / norm(v) # j
+    try:
+        z = np.cross(ihat, vhat) # k
+    except ValueError:
+        msg = 'Invalid vector length\n'
+        msg += 'n1  =%s\n' % str(n1)
+        msg += 'n2  =%s\n' % str(n2)
+        msg += 'nid1=%s\n' % str(nid1)
+        msg += 'nid2=%s\n' % str(nid2)
+        msg += 'i   =%s\n' % str(i)
+        msg += 'Li  =%s\n' % str(Li)
+        msg += 'ihat=%s\n' % str(ihat)
+        msg += 'v   =%s\n' % str(v)
+        msg += 'vhat=%s\n' % str(vhat)
+        msg += 'z=cross(ihat, vhat)'
+        print(msg)
+        raise ValueError(msg)
+
+    zhat = z / norm(z)
+    yhat = np.cross(zhat, ihat) # j
+
+    if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
+        print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+            eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+    elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
+        print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
+              ' v=%s i=%s n%s=%s n%s=%s' % (
+                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+    return yhat, zhat
