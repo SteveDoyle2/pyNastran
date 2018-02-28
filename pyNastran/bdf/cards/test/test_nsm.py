@@ -1,16 +1,22 @@
 """defines various shell element tests"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import os
 import unittest
 from six import iteritems
 from six.moves import StringIO
 import numpy as np
 from numpy import array
 
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import _mass_properties_new
+import pyNastran
+
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+
 
 class TestNsm(unittest.TestCase):
     def test_nsm_cquad4(self):
@@ -124,11 +130,14 @@ class TestNsm(unittest.TestCase):
             2005, 2006,
         ]
         for nsm_id in sorted(model.nsms):
-            mass, cg, I = _mass_properties_new(model, nsm_id=nsm_id, dev=True)
+            mass1, cg, I = _mass_properties_new(model, nsm_id=nsm_id, debug=False)
             if nsm_id in not_handled:
-                self.assertEqual(mass, 0.0)
+                self.assertEqual(mass1, 0.0)
             else:
-                self.assertTrue(mass > 0)
+                if mass1 == 0.0:
+                    mass2 = _mass_properties_new(model, nsm_id=nsm_id, debug=True)[0]
+                    assert mass1 == mass2, 'mass1=%s mass2=%s' % (mass1, mass2)
+                #self.assertTrue(mass1 > 0)
             #print('mass[%s] = %s' % (nsm_id, mass))
             #print('----------------------------------------------')
 
@@ -152,7 +161,7 @@ class TestNsm(unittest.TestCase):
 
         # don't crash on the null case
         for nsm_id in sorted(model2.nsms):
-            mass, cg, I = _mass_properties_new(model2, nsm_id=nsm_id, dev=True)
+            mass, cg, I = _mass_properties_new(model2, nsm_id=nsm_id, debug=False)
             self.assertEqual(mass, 0.0)
             #print('mass[%s] = %s' % (nsm_id, mass))
         #print('done with null')
@@ -219,6 +228,17 @@ class TestNsm(unittest.TestCase):
         self.assertAlmostEqual(mass, 8.0)
         model2 = save_load_deck(model)
         mass, cg, I = model2._mass_properties_new(nsm_id=5000)
+
+    def test_nsm(self):
+        """tests a complete nsm example"""
+        bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'nsm.bdf')
+        model = read_bdf(bdf_filename)
+        mass, cg, I = model._mass_properties_new(nsm_id=100, debug=False)
+        area_breakdown = model.get_area_breakdown()
+
+        print('mass = %s' % mass)
+        for pid in [20000, 20010]:
+            print('pid=%s area=%.3f' % (pid, area_breakdown[pid]))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
