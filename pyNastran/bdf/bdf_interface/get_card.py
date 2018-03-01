@@ -2149,6 +2149,14 @@ class GetCard(GetMethods):
             pid_to_eids_map[pid] = []
 
         elem_count = 0
+        #element_type_to_dmap_id = {
+            #'CONROD' : -10,
+            #'CELAS2' : -12,
+            #'CELAS4' : -14,
+            #'CDAMP2' : -21,
+            #'CDAMP4' : -23,
+            #'CHBDYG' : -108,
+        #}
         elements_without_properties = ['CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'CHBDYG']
         for eid, element in iteritems(self.elements):
             try:

@@ -638,20 +638,18 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     if xref:
         check_for_cd_frame(fem1)
 
-        try:
-            fem1.get_area_breakdown()
-            fem1.get_volume_breakdown()
-        except:
-            if len(fem1.masses) > 0:
-                fem1.log.warning('no elements with area/volume found, but elements with mass were')
-            else:
-                fem1.log.warning('no elements found')
-
-        if len(fem1.elements) + len(fem1.masses) > 0:
-            try:
-                fem1.get_mass_breakdown()
-            except RuntimeError:
-                fem1.log.warning('no elements with mass found')
+        if len(fem1.elements) == 0 and len(fem1.masses) == 0:
+            fem1.log.warning('no elements found')
+        elif len(fem1.elements) == 0:
+            fem1.get_mass_breakdown(stop_if_no_mass=False)
+            fem1.log.warning('no elements with length/area/volume found, but elements with mass were')
+        else:
+            # len(elements) > 0
+            fem1.get_length_breakdown(stop_if_no_length=False)
+            fem1.get_area_breakdown(stop_if_no_area=False)
+            fem1.get_volume_breakdown(stop_if_no_volume=False)
+            fem1.get_mass_breakdown(stop_if_no_mass=False)
+            fem1.log.warning('no elements with mass found')
     return fem1
 
 
@@ -687,7 +685,9 @@ def check_for_cd_frame(fem1):
     A cylindrical/spherical CD frame will cause problems with the
     grid point force transformation
     """
-    if any([card_name in fem1.card_count for card_name in ['GRID', 'SPOINT', 'EPOINT', 'RINGAX']]):
+    is_grid_points = any([card_name in fem1.card_count
+                          for card_name in ['GRID', 'SPOINT', 'EPOINT', 'RINGAX']])
+    if is_grid_points:
         unused_icd_transform, unused_icp_transform, unused_xyz_cp, nid_cp_cd = fem1.get_displacement_index_xyz_cp_cd(
             fdtype='float64', idtype='int32', sort_ids=True)
         cds = np.unique(nid_cp_cd[:, 2])
