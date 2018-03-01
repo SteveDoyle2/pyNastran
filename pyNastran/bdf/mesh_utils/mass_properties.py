@@ -1308,7 +1308,7 @@ def _apply_nsm(model, nsm_id,
                     if nsm_type == 'CONROD':
                         nsm_ids = model._type_to_id_map[nsm_type]
                     else:
-                        nsm_ids = model.elements.keys()
+                        nsm_ids = list(model.elements.keys())
                 else:
                     nsm_ids = nsm.ids
                 #eids_pids = length_eids_pids[nsm_type]
@@ -1414,7 +1414,7 @@ def _apply_nsm(model, nsm_id,
                     if nsm_type == 'CONROD':
                         nsm_ids = model._type_to_id_map[nsm_type]
                     else:
-                        nsm_ids = model.elements.keys()
+                        nsm_ids = list(model.elements.keys())
                 else:
                     nsm_ids = nsm.ids
 
