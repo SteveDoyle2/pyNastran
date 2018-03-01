@@ -1527,13 +1527,16 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
         print("mass = %s" % mass1)
         print("cg   = %s" % cg1)
         print("Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s" % tuple(inertia1))
-    #assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
-    #assert np.allclose(cg1, cg2), 'mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
-    #assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
+    assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
+    assert np.allclose(cg1, cg2), 'mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
+    assert np.allclose(inertia1, inertia2), 'mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
 
-    #for nsm_id in chain(fem1.nsms, fem1.nsmadds):
-        #mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None, nsm_id=nsm_id)
-        #print('mass[nsm=%i] = %s' % (nsm_id, mass))
+    for nsm_id in chain(fem1.nsms, fem1.nsmadds):
+        mass, cg, inertia = fem1._mass_properties_new(reference_point=None, sym_axis=None, nsm_id=nsm_id)
+        print('nsm_id=%s' % nsm_id)
+        print('  mass = %s' % mass)
+        print("  cg = %s" % cg1)
+        print("  Ixx=%s, Iyy=%s, Izz=%s \n  Ixy=%s, Ixz=%s, Iyz=%s" % tuple(inertia1))
 
 
 def get_matrix_stats(fem1, unused_fem2):
