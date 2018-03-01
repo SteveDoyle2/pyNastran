@@ -6207,7 +6207,7 @@ class AddCards(AddMethods):
         self._add_tstepnl_object(tstepnl)
         return tstepnl
 
-    def add_nlparm(self, nlparm_id, ninc=10, dt=0.0, kmethod='AUTO', kstep=5,
+    def add_nlparm(self, nlparm_id, ninc=None, dt=0.0, kmethod='AUTO', kstep=5,
                    max_iter=25, conv='PW', int_out='NO', eps_u=0.01,
                    eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None, max_ls=4,
                    fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment=''):

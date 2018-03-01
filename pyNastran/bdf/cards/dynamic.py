@@ -821,12 +821,68 @@ class NLPARM(BaseCard):
     """
     type = 'NLPARM'
 
-    def __init__(self, nlparm_id, ninc=10, dt=0.0, kmethod='AUTO', kstep=5,
+    def __init__(self, nlparm_id, ninc=None, dt=0.0, kmethod='AUTO', kstep=5,
                  max_iter=25, conv='PW', int_out='NO',
                  eps_u=0.01, eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None, max_ls=4,
                  fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment=''):
+        """
+        Creates an NLPARM card
+
+        Parameters
+        ----------
+        nlparm_id : int
+            NLPARM id; points to the Case Control NLPARM
+        ninc :int; default=None
+            The default ninc changes default based on the solution/element
+            type & params.  The default for NINC is 10, except if there is
+            a GAP, Line Contact, Heat Transfer or PARAM,NLTOL,0, in which
+            case the default is 1.
+        dt : float; default=0.0
+            ???
+        kmethod : str; default='AUTO'
+            ???
+        kstep : int; default=5
+            ???
+        max_iter : int; default=25
+            ???
+        conv : str; default='PW'
+            ???
+        int_out : str; default='NO'
+            ???
+        eps_u : float; default=0.01
+            ???
+        eps_p : float; default=0.01
+            ???
+        eps_w : float; default=0.01
+            ???
+        max_div : int; default=3
+            ???
+        max_qn; default=None -> varies
+            ???
+        max_ls : int; default=4
+            ???
+        fstress : float; default=0.2
+            ???
+        ls_tol : float; default=0.5
+            ???
+        max_bisect : int; default=5
+            ???
+        max_r : float; default=20.
+            ???
+        rtol_b : float; default=20.
+            ???
+        comment : str; default=''
+            a comment for the card
+        """
         if comment:
             self.comment = comment
+
+        if max_qn is None:
+            if kmethod == 'PFNT':
+                max_qn = 0
+            else:
+                max_qn = max_iter
+
         self.nlparm_id = nlparm_id
         self.ninc = ninc
         self.dt = dt
@@ -850,12 +906,6 @@ class NLPARM(BaseCard):
         self.max_bisect = max_bisect
         self.max_r = max_r
         self.rtol_b = rtol_b
-
-        if self.max_qn is None:
-            if kmethod == 'PFNT':
-                self.max_qn = 0
-            else:
-                self.max_qn = max_iter
 
     @classmethod
     def add_card(cls, card, comment=''):
