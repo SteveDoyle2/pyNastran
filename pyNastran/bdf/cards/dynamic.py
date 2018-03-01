@@ -870,7 +870,13 @@ class NLPARM(BaseCard):
             a comment for the card
         """
         nlparm_id = integer(card, 1, 'nlparm_id')
-        ninc = integer_or_blank(card, 2, 'ninc', 10)
+
+        # ninc changes default based on the solution/element type & params
+        #
+        # The default for NINC is 10, except if there is a GAP, Line Contact, Heat Transfer or
+        # PARAM,NLTOL,0, in which case the default is 1.
+        ninc = integer_or_blank(card, 2, 'ninc')
+
         dt = double_or_blank(card, 3, 'dt', 0.0)
         kmethod = string_or_blank(card, 4, 'kmethod', 'AUTO')
         kstep = integer_or_blank(card, 5, 'kstep', 5)
@@ -972,7 +978,10 @@ class NLPARM(BaseCard):
         return list_fields
 
     def repr_fields(self):
-        ninc = set_blank_if_default(self.ninc, 10)
+        # ninc changes default based on the solution/element type & params
+        #
+        # The default for NINC is 10, except if there is a GAP, Line Contact, Heat Transfer or
+        # PARAM,NLTOL,0, in which case the default is 1.
         dt = set_blank_if_default(self.dt, 0.0)
         kmethod = set_blank_if_default(self.kmethod, 'AUTO')
         kstep = set_blank_if_default(self.kstep, 5)
@@ -991,7 +1000,7 @@ class NLPARM(BaseCard):
         max_r = set_blank_if_default(self.max_r, 20.)
         rtol_b = set_blank_if_default(self.rtol_b, 20.)
 
-        list_fields = ['NLPARM', self.nlparm_id, ninc, dt, kmethod, kstep, max_iter,
+        list_fields = ['NLPARM', self.nlparm_id, self.ninc, dt, kmethod, kstep, max_iter,
                        conv, int_out, eps_u, eps_p, eps_w, max_div, max_qn, max_ls,
                        fstress, ls_tol, max_bisect, None, None, None, max_r, None,
                        rtol_b]
