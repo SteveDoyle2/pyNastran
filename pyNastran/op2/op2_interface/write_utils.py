@@ -57,12 +57,12 @@ def export_to_hdf5(self, group, log):
         #if name in ['dt', 'nonlinear_factor', 'element'] and value is None:
             #continue
 
-        # H5py doesn't support unicode, so we have to turn the data into ASCII.
+        # h5py doesn't support unicode, so we have to turn the data into ASCII.
         # All these are fine, but this routine will probably fail at some point
         # on the subtitle/label being actual unicode.
         if name in ['element_names']:  # grid point forces
             value = np.asarray(value, dtype='|S8').tolist()
-        elif name in ['headers', 'data_names', 'words', 'gridtype_str', 'element_data_type']:
+        elif name in ['headers', 'data_names', 'words', 'gridtype_str', 'element_data_type', 'location']:
             svalue = [str(valuei) for valuei in value]
 
             # the size of the array is the |S8 or |S12 or whatever
@@ -76,8 +76,8 @@ def export_to_hdf5(self, group, log):
             else:
                 # unicode
                 #value = value.tolist()
-
                 value = np.asarray(value, dtype='|S8').tolist()
+
         #if hasattr(value, 'export_to_hdf5'):
             #msg = 'sub-object export_to_hdf5 not supported\nkey=%s value=%s' % (key, value)
             #raise NotImplementedError(msg)
