@@ -281,11 +281,16 @@ class TestNsm(unittest.TestCase):
     #def test_nsm(self):
         #"""tests a complete nsm example"""
         #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'nsm.bdf')
+        #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'TEST_NSM_SOL101.bdf')
         #model = read_bdf(bdf_filename)
-        #mass, cg, I = model._mass_properties_new(nsm_id=100, debug=False)
-        #area_breakdown = model.get_area_breakdown()
+        #from itertools import chain
+        #print('    %6s %-9s %s' % ('nsm_id', 'mass', 'nsm'))
+        #mass0 = model._mass_properties_new(debug=False)[0]
+        #for nsm_id in sorted(chain(model.nsms, model.nsmadds)):
+            #mass, cg, I = model._mass_properties_new(nsm_id=nsm_id, debug=False)
+            #print('    %-6s %-9.4g %.4g' % (nsm_id, mass, mass-mass0))
 
-        #print('mass = %s' % mass)
+        #area_breakdown = model.get_area_breakdown()
         #for pid in [20000, 20010]:
             #print('pid=%s area=%.3f' % (pid, area_breakdown[pid]))
 

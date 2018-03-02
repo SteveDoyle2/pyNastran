@@ -79,7 +79,7 @@ class BDFMethods(BDFAttributes):
                 for eid in eids:
                     elem = self.elements[eid]
                     try:
-                        lengths = [elem.Length()]
+                        lengths.append(elem.Length())
                     except AttributeError:
                         print(prop)
                         print(elem)
@@ -112,6 +112,11 @@ class BDFMethods(BDFAttributes):
         #'PBEND',
         #'PIHEX',
         #'PCOMPS',
+
+        sum_bar_area : bool; default=True
+            True : sum the areas for CBAR/CBEAM/CROD/CONROD/CTUBE elements
+            False : only get the cross sectional propeerties
+            TODO: why is True even an option?
         """
         skip_props = [
             'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',

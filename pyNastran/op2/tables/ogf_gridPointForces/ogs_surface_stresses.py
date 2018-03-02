@@ -54,6 +54,7 @@ class GridPointStressesArray(ScalarObject):
             dtype = 'int32'
 
         self._times = zeros(self.ntimes, dtype=dtype)
+        self.is_built = True
 
     #def build_dataframe(self):
         #headers = self.get_headers()
@@ -96,11 +97,11 @@ class GridPointStressesArray(ScalarObject):
             msg.append('  type=%s nelements=%i\n'
                        % (self.__class__.__name__, nelements))
             ntimes_word = '1'
-        msg.append('  eType\n')
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  grid_element.shape = %s\n' % str(self.grid_element.shape).replace('L', ''))
+        msg.append('  node_element.shape = %s\n' % str(self.node_element.shape).replace('L', ''))
+        msg.append('  location.shape = %s\n' % str(self.location.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg += self.get_data_code()
 

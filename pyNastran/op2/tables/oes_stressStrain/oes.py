@@ -3569,7 +3569,6 @@ class OES(OP2Common):
         #print(self.code_information())
 
         if self.format_code == 1 and self.num_wide == 13 and self.element_type in [88, 90]:  # real
-            # TODO: vectorize
             # single layered hyperelastic (???) ctria3, cquad4
             ntotal = 52  # 4*13
             nelements = ndata // ntotal

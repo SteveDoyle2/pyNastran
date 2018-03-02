@@ -102,21 +102,21 @@ class OGS(OP2Common):
             # OGS1 - grid point stresses - surface
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table26(data, ndata)
-        elif self.table_code == 27:
+        #elif self.table_code == 27:
             # OGS1 - grid point stresses - volume direct
-            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_ogs1_table27(data, ndata)
-        elif self.table_code == 28:
+            #assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            #n = self._read_ogs1_table27(data, ndata)
+        #elif self.table_code == 28:
             # OGS1- grid point stresses - principal
-            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_ogs1_table28(data, ndata)
-        elif self.table_code == 35:
+            #assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            #n = self._read_ogs1_table28(data, ndata)
+        #elif self.table_code == 35:
             # OGS - Grid point stress discontinuities (plane strain)
-            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_ogs1_table35(data, ndata)
+            #assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            #n = self._read_ogs1_table35(data, ndata)
         else:
-            msg = 'table_code=%s table_name=%s' % (self.table_code, self.table_name)
-            raise NotImplementedError(msg)
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
     def _read_ogs1_table28(self, data, ndata):
