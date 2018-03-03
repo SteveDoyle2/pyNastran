@@ -792,19 +792,12 @@ class GuiCommon(GuiAttributes):
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
         #default_max, default_min = obj.get_default_min_max(i, name)
-        if min_value is None and max_value is None:
-            min_value, max_value = obj.get_min_max(i, name)
-
-        #if 0:
-            # my poor attempts at supporting NaN colors
-            #if min_value is None and max_value is None:
-                #max_value = case.max()
-                #min_value = case.min()
-            #if np.isnan(max_value):
-                #inotnan = not np.isnan(case)
-                #max_value = case[inotnan].max()
-                #min_value = case[inotnan].min()
-                #print('max_value = ', max_value)
+        if min_value is None or max_value is None:
+            min_valuei, max_valuei = obj.get_min_max(i, name)
+            if min_value is None:
+                min_value = min_valuei
+            if max_value is None:
+                max_value = max_valuei
 
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:

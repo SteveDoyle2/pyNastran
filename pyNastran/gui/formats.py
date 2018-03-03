@@ -1,29 +1,65 @@
 """import various codes with backup for failed imports"""
-#try:
+CLASS_MAP = {}
 
-from pyNastran.converters.dev.avus.avus_io import AvusIO
-from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
-from pyNastran.converters.panair.panair_io import PanairIO
-from pyNastran.converters.stl.stl_io import STL_IO
-from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
-from pyNastran.converters.tecplot.tecplot_io import TecplotIO
-from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
-from pyNastran.converters.tetgen.tetgen_io import TetgenIO
-from pyNastran.converters.shabp.shabp_io import ShabpIO
-from pyNastran.converters.su2.su2_io import SU2_IO
+try:
+    from pyNastran.converters.dev.avus.avus_io import AvusIO
+    CLASS_MAP['avus'] = AvusIO
+except ImportError:  # pragma: no cover
+    pass
 
-CLASS_MAP = {
-    'cart3d' : Cart3dIO,
-    'avus' : AvusIO,
-    'panair' : PanairIO,
-    'stl' : STL_IO,
-    'usm3d' : Usm3dIO,
-    'tecplot' : TecplotIO,
-    'lawgs' : LaWGS_IO,
-    'tetgen' : TetgenIO,
-    'shabp' : ShabpIO,
-    'su2' : SU2_IO,
-}
+try:
+    from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
+    CLASS_MAP['cart3d'] = Cart3dIO
+except ImportError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.panair.panair_io import PanairIO
+    CLASS_MAP['panair'] = PanairIO
+except ImportError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.stl.stl_io import STL_IO
+    CLASS_MAP['stl'] = STL_IO
+except ImportError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
+    CLASS_MAP['usm3d'] = Usm3dIO
+except ImportError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.tecplot.tecplot_io import TecplotIO
+    CLASS_MAP['tecplot'] = TecplotIO
+except ImportError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
+    CLASS_MAP['lawgs'] = LaWGS_IO
+except ImportError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.tetgen.tetgen_io import TetgenIO
+    CLASS_MAP['tetgen'] = TetgenIO
+except ImportError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.shabp.shabp_io import ShabpIO
+    CLASS_MAP['shabp'] = ShabpIO
+except ImportError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.su2.su2_io import SU2_IO
+    CLASS_MAP['su2'] = SU2_IO
+except ImportError:
+    pass
 
 
 from pyNastran.converters.nastran.nastran_io import NastranIO
@@ -31,8 +67,6 @@ is_nastran = True
 
 
 #from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
-
-
 
 from pyNastran.converters.fast.fast_io import FastIO
 is_fast = True

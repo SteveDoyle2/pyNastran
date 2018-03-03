@@ -3984,7 +3984,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     phase = phases[i]
                     if icase != self.icase0:
                         #self.cycle_results(case=icase)
-                        parent.cycle_results_explicit(icase, explicit=True)
+                        parent.cycle_results_explicit(icase, explicit=True,
+                                                      min_value=min_value, max_value=max_value)
                     try:
                         parent.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
                     except AttributeError:
