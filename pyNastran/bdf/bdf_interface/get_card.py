@@ -624,8 +624,8 @@ class GetCard(GetMethods):
         ----------
         nelements : int
             the number of elements
-        pids : int ndarray; length=nelements
-            the
+        pids : (nelements,) int ndarray
+            properties array to map the results to
         fdtype : str; default='float32'
             the type of the init/min/max arrays
         idtype : str; default='int32'
@@ -636,12 +636,12 @@ class GetCard(GetMethods):
         dvprel_dict[key] : (design_region, dvprel_init, dvprel_min, dvprel_max)
             key : str
                 the optimization string
-            design_region : int ndarray; length=nelements
-            dvprel_init : float ndarray; length=nelements
+            design_region : (nelements,) int ndarray
+            dvprel_init : (nelements,) float ndarray
                 the initial values of the variable
-            dvprel_min : float ndarray; length=nelements
+            dvprel_min : (nelements,)float ndarray
                 the min values of the variable
-            dvprel_max : float ndarray; length=nelements
+            dvprel_max : (nelements,)float ndarray
                 the max values of the variable
         """
         dvprel_dict = {}
@@ -657,22 +657,22 @@ class GetCard(GetMethods):
             return design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max
 
         for dvprel_key, dvprel in iteritems(self.dvprels):
+            prop_type = dvprel.prop_type
+            desvars = dvprel.dvids
+            if dvprel.pid_ref is not None:
+                pid = dvprel.pid_ref.pid
+            else:
+                pid = dvprel.pid
+            var_to_change = dvprel.pname_fid
+
+            prop = self.properties[pid]
+            if not prop.type == prop_type:
+                raise RuntimeError('Property type mismatch\n%s%s' % (str(dvprel), str(prop)))
+
+            key, msg = get_dvprel_key(dvprel, prop)
             if dvprel.type == 'DVPREL1':
-                prop_type = dvprel.prop_type
-                desvars = dvprel.dvids
-                coeffs = dvprel.coeffs
-                if dvprel.pid_ref is not None:
-                    pid = dvprel.pid_ref.pid
-                else:
-                    pid = dvprel.pid
-                var_to_change = dvprel.pname_fid
                 assert len(desvars) == 1, len(desvars)
-
-                prop = self.properties[pid]
-                if not prop.type == prop_type:
-                    raise RuntimeError('Property type mismatch\n%s%s' % (str(dvprel), str(prop)))
-
-                key, msg = get_dvprel_key(dvprel, prop)
+                coeffs = dvprel.coeffs
                 if msg:
                     self.log.warning(msg)
                     continue
@@ -683,7 +683,9 @@ class GetCard(GetMethods):
                 assert len(i) > 0, i
                 design_region, dvprel_init, dvprel_min, dvprel_max = get_dvprel_data(key)
 
-                design_region[i] = dvprel.oid
+                optimization_region = dvprel.oid
+                assert optimization_region > 0, str(self)
+                design_region[i] = optimization_region
                 #value = 0.
                 lower_bound = 0.
                 upper_bound = 0.
@@ -712,6 +714,8 @@ class GetCard(GetMethods):
                 dvprel_init[i] = xinit
                 dvprel_min[i] = lower_bound
                 dvprel_max[i] = upper_bound
+            #elif dvprel.type == 'DVPREL2':
+                #print(dvprel.get_stats())
             else:
                 msg = 'dvprel.type=%r; dvprel=\n%s' % (dvprel.type, str(dvprel))
                 raise NotImplementedError(msg)

@@ -220,12 +220,13 @@ class GuiCommon(GuiAttributes):
 
         # the backface property could be null
         back_prop = vtk.vtkProperty()
-        back_prop.SetColor(BLUE)
+        back_prop.SetColor(WHITE)
         self.geom_actor.SetBackfaceProperty(back_prop)
         self.geom_actor.Modified()
 
         self.hide_legend()
         self.scalar_bar.is_shown = False
+        self._set_legend_fringe(False)
         self.vtk_interactor.Render()
 
         self.res_widget.result_case_window.treeView.fringe.setChecked(False)
@@ -529,6 +530,8 @@ class GuiCommon(GuiAttributes):
 
         #is_legend_shown = True
         #if is_legend_shown is None:
+        self.show_legend()
+        self.scalar_bar.is_shown = True
         is_legend_shown = self.scalar_bar.is_shown
 
         # TODO: normal -> fringe screws up legend
@@ -768,8 +771,8 @@ class GuiCommon(GuiAttributes):
 
         try:
             key = self.case_keys[icase]
-        except KeyError:
-            print('icase=%s case_keys=%s' % (icase, str(self.case_keys)))
+        except (KeyError, TypeError):
+            print('icase=%r case_keys=%s' % (icase, str(self.case_keys)))
             raise
         self.icase = icase
         case = self.result_cases[key]
@@ -814,11 +817,11 @@ class GuiCommon(GuiAttributes):
         if case is None:
             return self.set_normal_result(icase, name, subcase_id)
 
-        elif self._is_normals and self.legend_shown:
-            # we hacked the scalar bar to turn off for Normals
-            # so we turn it back on if we need to
-            self._is_normals = False
+        elif not self._is_fringe:
+            # we maybe hacked the scalar bar to turn off for Normals/Clear Results
+            # so we turn it back on
             self.show_legend()
+            self._set_legend_fringe(True)
 
         if len(case.shape) == 1:
             normi = case
@@ -934,7 +937,8 @@ class GuiCommon(GuiAttributes):
                            #nlabels, labelsize, ncolors, colormap,
                            #is_low_to_high, self.is_horizontal_scalar_bar)
         self.hide_legend()
-        self._is_normals = True
+        self.scalar_bar.is_shown = False
+        self._set_legend_fringe(False)
         #min_value = 'Front Face'
         #max_value = 'Back Face'
         #self.update_text_actors(subcase_id, subtitle,

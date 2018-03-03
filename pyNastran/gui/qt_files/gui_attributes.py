@@ -137,7 +137,7 @@ class GuiAttributes(object):
 
         self._is_displaced = False
         self._is_forces = False
-        self._is_normals = False
+        self._is_fringe = False
 
         self._xyz_nominal = None
 

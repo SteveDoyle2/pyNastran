@@ -679,8 +679,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             colormap='jet',
                             data_format=None,
                             uname='GuiResult')
-        cases[icase] = (eid_res, (0, 'ElementID'))
-        form0.append(('ElementID', icase, []))
+        cases[icase] = (eid_res, (0, 'iElement'))
+        form0.append(('iElement', icase, []))
         icase += 1
 
         #is_element_dim = True
@@ -715,7 +715,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         pids_array = results['pid']
         pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
-                            location='centroid', scalar=pids_array)
+                            location='centroid', scalar=pids_array, mask_value=0)
         cases[icase] = (pid_res, (0, 'PropertyID'))
         form0.append(('PropertyID', icase, []))
         icase += 1
@@ -1635,7 +1635,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.gui.create_alternate_vtk_grid(
                 'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
                 follower_function=update_conm2s_function,
-
                 representation='point')
 
         # Allocate grids
@@ -1659,7 +1658,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nid_to_pid_map, icase, cases, form = self.map_elements(
             xyz_cid0, nid_cp_cd, self.nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
-
 
         # fill grids
         zfighting_offset0 = 0.001
@@ -1773,7 +1771,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         if plot:
-            #self.log.info(cases.keys())
             self._finish_results_io2([form], cases, reset_labels=reset_labels)
         else:
             self._set_results([form], cases)
@@ -1843,6 +1840,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if model.splines:
             # 0 - caero / caero_subpanel
             # 1 - control surface
+            # 3/5/7/... - spline points
+            # 2/4/6/... - spline panels
             iaero = 2
             for spline_id, spline in sorted(iteritems(model.splines)):
                 # the control surfaces all lie perfectly on top of each other
@@ -2206,7 +2205,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.gui.log_error(msg)
 
         #points_list = np.array(points_list)
-
         areas = []
         centroids = []
         vtk_type = vtkQuad().GetCellType()
@@ -3048,7 +3046,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     cell_type = cell_type_hexa20
                     nnodes = 20
-
                 inids = np.searchsorted(all_nids, nids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _chexa_faces, nids, nid_map, xyz_cid0)
@@ -3081,7 +3078,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 else:
                     cell_type = cell_type_penta15
                     nnodes = 15
-
                 inids = np.searchsorted(all_nids, nids)
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpyram_faces, nids, nid_map, xyz_cid0)
@@ -3710,7 +3706,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eids[eid2] = eid
 
             eid_res = GuiResult(0, header='ElementID', title='ElementID',
-                                location='centroid', scalar=eids)
+                                location='centroid', scalar=eids, mask_value=0)
             cases[icase] = (eid_res, (0, 'ElementID'))
             form0.append(('ElementID', icase, []))
             icase += 1
@@ -5088,7 +5084,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         upids = None
         pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
-                            location='centroid', scalar=pids)
+                            location='centroid', scalar=pids, mask_value=0)
         cases[icase] = (pid_res, (0, 'PropertyID'))
         form0.append(('PropertyID', icase, []))
         icase += 1
@@ -5312,7 +5308,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             optimization_cases = []
             for key, dvprel_data in iteritems(out_dict):
-                dvprel_init, dvprel_min, dvprel_max, design_region = dvprel_data
+                design_region, dvprel_init, dvprel_min, dvprel_max = dvprel_data
                 if np.nanmax(design_region) == 0:
                     continue
 
@@ -5339,7 +5335,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 opt_cases.append(('DVPREL Max - %s' % key, icase + 3, []))
                 optimization_cases.append((key, '', opt_cases))
                 icase += 4
-            form0.append(('Optimization', '', optimization_cases))
+            if optimization_cases:
+                form0.append(('Optimization', '', optimization_cases))
         return icase
 
     def _plot_pressures(self, model, cases, form0, icase, subcase_id):

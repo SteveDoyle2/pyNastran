@@ -200,11 +200,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """hides the legend"""
         self.scalar_bar.VisibilityOff()
         #self.scalar_bar.is_shown = False
+        if self._legend_window_shown:
+            self._legend_window.hide_legend()
 
     def show_legend(self):
         """shows the legend"""
         self.scalar_bar.VisibilityOn()
+        if self._legend_window_shown:
+            self._legend_window.show_legend()
         #self.scalar_bar.is_shown = True
+
+    def _set_legend_fringe(self, is_fringe):
+        self._is_fringe = is_fringe
+        if self._legend_window_shown:
+            self._legend_window._set_legend_fringe(is_fringe)
 
     @property
     def color_function(self):
@@ -5302,6 +5311,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
         default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
         is_normals = obj.is_normal_result(i, name)
+        is_fringe = not is_normals
 
         assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
@@ -5313,7 +5323,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_low_to_high, is_horizontal_scalar_bar, is_normals, font_size=self.font_size)
+            is_low_to_high, is_horizontal_scalar_bar, is_fringe, font_size=self.font_size)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 

@@ -1025,27 +1025,38 @@ def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
     assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
     analysis = subcase.get_parameter('ANALYSIS')[0]
-    if analysis != 'STATICS':
-        # BUCKLING
-        if 'DESOBJ' in subcase:
-            value = subcase.get_parameter('DESOBJ')[0]
-            assert value in fem2.dresps, 'value=%s not in dresps' % value
-        else:
-            fem2.log.warning('no DESOBJ in this subcase; is this a buckling preload case?')
-            fem2.log.warning('\n%s' % subcase)
+    # BUCKLING
+    if 'DESOBJ' in subcase:
+        value = subcase.get_parameter('DESOBJ')[0]
+        assert value in fem2.dresps, 'value=%s not in dresps' % value
+    else:
+        fem2.log.warning('no DESOBJ (DRESPi) in this subcase; is this a buckling preload case?')
+        fem2.log.warning('\n%s' % subcase)
 
-        if 'DESSUB' not in subcase and 'DESGLB' not in subcase:
-            fem2.log.warning('no DESSUB/DESGLB in this subcase;'
-                             ' is this a buckling preload case?')
-            log.warning('\n%s' % subcase)
+    nopt = len(fem2.dvprels) + len(fem2.dvmrels) + len(fem2.dvcrels)
+    if nopt == 0:
+        fem2.log.error('no DVPRELs/DVMRELs/DVCRELs found')
 
-        #assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
+    #--------------------------------------------------------------------------
+    # DCONSTR
+    if 'DESSUB' not in subcase and 'DESGLB' not in subcase:
+        fem2.log.warning('no DESSUB/DESGLB (DCONSTR) in this subcase;'
+                         ' is this a buckling preload case?')
+        log.warning('\n%s' % subcase)
+
     if 'DESSUB' in subcase:
         value = subcase.get_parameter('DESSUB')[0]
         if value not in fem2.dconstrs:
             msg = 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (
                 value, np.unique(list(fem2.dconstrs.keys())))
             raise RuntimeError(msg)
+    if 'DESGLB' in subcase:
+        value = subcase.get_parameter('DESGLB')[0]
+        if value not in fem2.dconstrs:
+            msg = 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (
+                value, np.unique(list(fem2.dconstrs.keys())))
+            raise RuntimeError(msg)
+    #--------------------------------------------------------------------------
 
     if analysis in ['STATIC', 'STATICS']:
         solution = 101

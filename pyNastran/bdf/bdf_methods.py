@@ -75,7 +75,9 @@ class BDFMethods(BDFAttributes):
             lengths = []
             if prop.type in skip_props:
                 continue
-            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']: #['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
+            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+                #['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
+                # TODO: Do I need to consider the offset on length effects for a CBEAM?
                 for eid in eids:
                     elem = self.elements[eid]
                     try:
@@ -115,8 +117,9 @@ class BDFMethods(BDFAttributes):
 
         sum_bar_area : bool; default=True
             True : sum the areas for CBAR/CBEAM/CROD/CONROD/CTUBE elements
-            False : only get the cross sectional propeerties
-            TODO: why is True even an option?
+            False : only get the cross sectional properties
+            TODO: why is True even an option; it seems nonsensical to sum the areas
+                  of CBARs with the same cross-section?
         """
         skip_props = [
             'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
@@ -142,17 +145,12 @@ class BDFMethods(BDFAttributes):
                         print(elem)
                         raise
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
-                for eid in eids:
-                    elem = self.elements[eid]
-                    try:
-                        if sum_bar_area:
-                            areas.append(elem.Area())
-                        else:
-                            areas = [elem.Area()]
-                    except AttributeError:
-                        print(prop)
-                        print(elem)
-                        raise
+                area = elem.Area()
+                if sum_bar_area:
+                    neids = len(eids)
+                    areas = [area * neids]
+                else:
+                    areas = [area]
             elif prop.type in skip_props:
                 pass
             else:
@@ -212,7 +210,7 @@ class BDFMethods(BDFAttributes):
                 volumesi = [area * thickness for area in areas]
                 volumes.extend(volumesi)
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
-                # what should I do here?
+                # TODO: Do I need to consider the offset on length effects for a CBEAM?
                 lengths = []
                 for eid in eids:
                     elem = self.elements[eid]
@@ -265,7 +263,20 @@ class BDFMethods(BDFAttributes):
             prevents crashing if there are no elements
             setting this to False really doesn't make sense for non-DMIG models
 
-        TODO: What about CONRODs, CONM2s?
+        Returns
+        -------
+        pids_to_mass : Dict[property_id] : mass
+            property_id : int
+                the property id
+            mass : float
+                the mass of the property region; NSM cards are not included
+            mass_type_to_mass : Dict[element_type] : mass
+            element_type : str
+                'CONM2', 'CMASS1', etc.
+            mass : float
+                the mass of the property region; NSM cards are not included
+
+        TODO: What about CONRODs?
         #'PBRSECT',
         #'PBCOMP',
         #'PBMSECT',
