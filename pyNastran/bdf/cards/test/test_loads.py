@@ -1044,7 +1044,7 @@ class TestLoads(unittest.TestCase):
         model.add_pload(sid, pressure, [1, 2, 3], comment='pload')
         model.add_pload2(sid, pressure, [3, 4], comment='pload2')  # ctria3, cquad4
 
-        eids = [eid]
+        eids = [8] # hexa
         g1 = 6
         g34 = 8
         pressures = [1., 1., 1., 1.]

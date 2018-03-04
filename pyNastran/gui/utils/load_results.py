@@ -156,7 +156,7 @@ def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
             xyz, dxyz, scalar, scales, data_formats=data_formats,
             nlabels=None, labelsize=None, ncolors=None,
             colormap='jet',
-            set_max_min=True, deflects=True)
+            set_max_min=True)
     else:
         raise RuntimeError('vector_size=%s' % (vector_size))
     return res_obj, title
