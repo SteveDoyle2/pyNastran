@@ -882,15 +882,15 @@ class TestLoads(unittest.TestCase):
         conrod = model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=1.0, comment='')
         model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=1.0, comment='')
 
-        eid = 2
-        pid = 2
+        eid_tube = 2
+        pid_tube = 2
         nids = [3, 12]
-        ctube = model.add_ctube(eid, pid, nids, comment='ctube')
-        ctube = model.add_ctube(eid, pid, nids, comment='ctube')
+        ctube = model.add_ctube(eid_tube, pid_tube, nids, comment='ctube')
+        ctube = model.add_ctube(eid_tube, pid_tube, nids, comment='ctube')
         OD1 = 0.1
-        ptube = model.add_ptube(pid, mid, OD1, t=None, nsm=0., OD2=None,
+        ptube = model.add_ptube(pid_tube, mid, OD1, t=None, nsm=0., OD2=None,
                                 comment='ptube')
-        model.add_ptube(pid, mid, OD1, t=None, nsm=0., OD2=None,
+        model.add_ptube(pid_tube, mid, OD1, t=None, nsm=0., OD2=None,
                         comment='ptube')
 
         E = 3.0e7

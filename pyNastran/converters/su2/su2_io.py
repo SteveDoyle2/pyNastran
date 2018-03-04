@@ -7,7 +7,7 @@ from six.moves import range
 import numpy as np
 
 import vtk
-from vtk import vtkTriangle, vtkQuad
+from vtk import vtkTriangle#, vtkQuad
 
 from pyNastran.converters.su2.su2_reader import SU2Reader as SU2
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -32,7 +32,7 @@ class SU2_IO(object):
 
         model = SU2(log=self.parent.log, debug=False)
         #self.model_type = model.model_type
-        ndim, nodes, elements, regions = model.read_su2(su2_filename)
+        ndim, nodes, elements, unused_regions = model.read_su2(su2_filename)
 
         nnodes = nodes.shape[0]
         nelements = 0

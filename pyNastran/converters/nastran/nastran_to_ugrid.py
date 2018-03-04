@@ -1,3 +1,8 @@
+"""
+defines:
+ - ugrid = nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
+                            check_shells=True, check_solids=True, log=None)
+"""
 from six import iteritems
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID

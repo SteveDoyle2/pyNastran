@@ -101,7 +101,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if deflects:
                 nastran_res = DisplacementResults(subcase_idi, titles, headers,
                                                   self.xyz_cid0, t123, tnorm,
-                                                  scales, #deflects=deflects,
+                                                  scales,
                                                   uname='NastranResult')
 
                 dmax = []

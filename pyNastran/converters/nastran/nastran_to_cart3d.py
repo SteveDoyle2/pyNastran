@@ -1,3 +1,9 @@
+"""
+defines:
+ - cart3d = nastran_to_cart3d(bdf, log=None, debug=False)
+ - nastran_to_cart3d_filename(bdf_filename, cart3d_filename,
+                              log=None, debug=False)
+"""
 from __future__ import print_function
 from codecs import open as codec_open
 from six import iteritems
@@ -50,7 +56,7 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
             i += 1
 
         i = 0
-        for element_id, element in sorted(iteritems(bdf.elements)):
+        for unused_element_id, element in sorted(iteritems(bdf.elements)):
             if element.type == 'CTRIA3':
                 nids = element.node_ids
                 elements[i, :] = nids
@@ -71,7 +77,7 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
             nid_map[node_id] = i
 
         i = 0
-        for element_id, element in sorted(iteritems(bdf.elements)):
+        for unused_element_id, element in sorted(iteritems(bdf.elements)):
             if element.type == 'CTRIA3':
                 nids = element.node_ids
                 elements[i, :] = [nid_map[nid] for nid in nids]
@@ -130,7 +136,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
             i += 1
         mids = ''
         j = 0
-        for element_id, element in sorted(iteritems(model.elements)):
+        for unused_element_id, element in sorted(iteritems(model.elements)):
             if element.type in ['CQUADR', 'CQUAD4', 'CONM2']:
                 print('element type=%s is not supported' % element.type)
                 continue

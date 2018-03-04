@@ -1,5 +1,5 @@
-from six import iteritems
 from collections import OrderedDict
+from six import iteritems
 
 
 def remove_c_comments(lines):
@@ -60,7 +60,7 @@ def convert_to_dict(self, lines, debug=True):
             #assert key in ['FoamFile', 'convertToMeters', 'vertices',
                            #'blocks', 'edges', 'boundary', 'mergeMatchPairs'], data.keys()
 
-        if '{' == line:
+        if line == '{':
             if debug:
                 self.log.debug('%s*A1a %r' % (step, line))
             #active_keys.append(active_key)
@@ -133,7 +133,8 @@ def convert_to_dict(self, lines, debug=True):
                 #active_data =
             else:
                 #if debug:
-                    #print('   %sdataline = %r  active_keys=%s active_key=%s' % (step, line, active_keys, active_key))
+                    #print('   %sdataline = %r  active_keys=%s active_key=%s' % (
+                        #step, line, active_keys, active_key))
                 if line.endswith(';'): # single-value
                     if debug:
                         self.log.debug('*C1 %s' % line)
@@ -148,7 +149,8 @@ def convert_to_dict(self, lines, debug=True):
                 else: # multi-value
 
                     #if debug:
-                        #print '%s*C2 %r; active_keys=%s; active_key=%s' %(step, line, active_keys, active_key, )
+                        #print '%s*C2 %r; active_keys=%s; active_key=%s' % (
+                            #step, line, active_keys, active_key, )
                     value = line
                     #if debug:
                         #print('active_data = %s' % active_data)
@@ -162,14 +164,14 @@ def convert_to_dict(self, lines, debug=True):
     return data
 
 
-def write_dict(d, nbase=0, baseword='name'):
+def write_dict(openfoam_dict, nbase=0, baseword='name'):
     msg = ''
     space1 = ' ' * nbase
     space2 = ' ' * (nbase + 4)
 
     msg += '%s{\n' % baseword
-    msg += '%s#keys (%s)=%s\n' % (space2, type(d), d.keys())
-    for key, value in sorted(iteritems(d)):
+    msg += '%s#keys (%s)=%s\n' % (space2, type(openfoam_dict), openfoam_dict.keys())
+    for key, value in sorted(iteritems(openfoam_dict)):
         if isinstance(value, basestring):
             value = value.strip()
 
@@ -195,6 +197,4 @@ class FoamFile(object):
         lines = remove_c_comments(lines)
         #for line in lines:
             #print line
-
         return lines
-

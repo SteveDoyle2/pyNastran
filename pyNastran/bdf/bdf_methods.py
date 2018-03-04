@@ -145,6 +145,7 @@ class BDFMethods(BDFAttributes):
                         print(elem)
                         raise
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+                elem = self.elements[eids[0]]
                 area = elem.Area()
                 if sum_bar_area:
                     neids = len(eids)

@@ -14,21 +14,19 @@ from pyNastran.gui.arg_handling import get_inputs
 #from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 #from pyNastran.converters.nastran.nastran_io import NastranIO
 from pyNastran.converters.stl.stl_io import STL_IO
-
-
 from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
 from pyNastran.converters.aflr.surf.surf_io import SurfIO
 from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 
 try:
-    pkg_path = sys._MEIPASS #@UndefinedVariable
-    script_path = os.path.join(pkg_path, 'scripts')
-    icon_path = os.path.join(pkg_path, 'icons')
+    PKG_PATH = sys._MEIPASS #@UndefinedVariable
+    SCRIPT_PATH = os.path.join(PKG_PATH, 'scripts')
+    ICON_PATH = os.path.join(PKG_PATH, 'icons')
 except:
-    pkg_path = pyNastran.__path__[0]
-    script_path = os.path.join(pkg_path, 'gui', 'scripts')
-    icon_path = os.path.join(pkg_path, 'gui', 'icons')
+    PKG_PATH = pyNastran.__path__[0]
+    SCRIPT_PATH = os.path.join(PKG_PATH, 'gui', 'scripts')
+    ICON_PATH = os.path.join(PKG_PATH, 'gui', 'icons')
 
 
 class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # NastranIO,
@@ -49,11 +47,11 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
     def startup(self, inputs):
         self.build_fmts(self.fmts, stop_on_failure=True)
 
-        logo = os.path.join(icon_path, 'logo.png')
+        logo = os.path.join(ICON_PATH, 'logo.png')
 
         self.logo = logo
-        self.set_script_path(script_path)
-        self.set_icon_path(icon_path)
+        self.set_script_path(SCRIPT_PATH)
+        self.set_icon_path(ICON_PATH)
         print('gui', self.supported_formats)
 
         self.setup_gui()
@@ -108,7 +106,7 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
         if 1:  # load the next file in the folder
             absdirname = os.path.abspath(os.path.dirname(self.infile_name))
             basename = os.path.basename(self.infile_name)
-            base, ext = os.path.splitext(self.infile_name)
+            ext = os.path.splitext(self.infile_name)[1]
             fnames = os.listdir(absdirname)
             #print(fnames)
             fnames = [os.path.join(absdirname, fname) for fname in fnames
@@ -138,11 +136,11 @@ class MainWindow(GuiCommon2, STL_IO, OpenFoamIO, SurfIO, UGRID_IO, BEdge_IO): # 
                 break
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    QtGui.QApplication.setOrganizationName("pyNastran")
-    QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
-    QtGui.QApplication.setApplicationName("pyNastran")
-    QtGui.QApplication.setApplicationVersion(pyNastran.__version__)
+    app = QApplication(sys.argv)
+    QApplication.setOrganizationName("pyNastran")
+    QApplication.setOrganizationDomain(pyNastran.__website__)
+    QApplication.setApplicationName("pyNastran")
+    QApplication.setApplicationVersion(pyNastran.__version__)
 
     inputs = get_inputs()
     window = MainWindow(inputs)

@@ -210,11 +210,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self._legend_window.show_legend()
         #self.scalar_bar.is_shown = True
 
-    def _set_legend_fringe(self, is_fringe):
-        self._is_fringe = is_fringe
-        if self._legend_window_shown:
-            self._legend_window._set_legend_fringe(is_fringe)
-
     @property
     def color_function(self):
         return self.scalar_bar.color_function

@@ -836,7 +836,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                 if eid not in eids:
                     continue
                 elem = model.elements[eid]
-                if elem.type in ['CTRIA3', 'CQUAD4', 'CSHEAR']:
+                if elem.type in ['CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR', 'CTRIA6', 'CQUAD8', 'CQUAD', 'CSHEAR']:
                     normal = elem.Normal()
                     area = elem.Area()
                     f = pressure * normal * area
@@ -845,7 +845,9 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     F += f
                     M += m
                 else:
-                    model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
+                    #model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
+                        #loadcase_id, elem.type, load.type))
+                    raise NotImplementedError('case=%s etype=%r loadtype=%r not supported' % (
                         loadcase_id, elem.type, load.type))
         elif load.type == 'PLOAD4':
             assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
@@ -916,9 +918,11 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                         nface = 4
                     face, area, centroid, normal = face_acn
                 else:
-                    model.log.warning('case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (
+                    #model.log.warning('case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (
+                        #loadcase_id, eid, etype, load.type, str(load), str(elem)))
+                    #continue
+                    raise NotImplementedError('case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (
                         loadcase_id, eid, etype, load.type, str(load), str(elem)))
-                    continue
                 r = centroid - p
 
                 pressures = load.pressures[:nface]

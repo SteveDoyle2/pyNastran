@@ -1,3 +1,10 @@
+"""
+defines:
+ - stl = nastran_to_stl_filename(bdf_filename, stl_filename, is_binary=False,
+                                 log=None)
+ - stl = nastran_to_stl(bdf_filename, stl_filename, is_binary=False,
+                        log=None, stop_on_failure=False)
+"""
 from __future__ import print_function
 from six import iteritems
 import numpy as np
@@ -51,7 +58,7 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
         nodeid_to_i_map[node_id] = i
         i += 1
     assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
-    for eid, element in sorted(iteritems(model.elements)):
+    for unused_eid, element in sorted(iteritems(model.elements)):
         if element.type in ['CQUADR']:
             continue
         elif element.type in ['CBAR', 'CBEAM', 'CONM2', 'RBE2', 'RBE3',

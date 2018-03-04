@@ -165,10 +165,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         creates the Nastran toolbar when loading a Nastran file
         """
-        tools = [
-            #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
-            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H', 'About Nastran GUI and help on shortcuts', self.about_dialog),
-        ]
+        #tools = [
+            #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H',
+             #'About Nastran GUI and help on shortcuts', self.about_dialog),
+            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H',
+             #'About Nastran GUI and help on shortcuts', self.about_dialog),
+        #]
         #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
         #self.gui.menu_help.menuAction().setVisible(False)
         if hasattr(self, 'nastran_toolbar'):
@@ -585,7 +587,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if nconm2 > 0:
             self.gui.create_alternate_vtk_grid(
                 'conm2', color=ORANGE, line_width=5, opacity=1., point_size=4,
-                representation='point', follower_function=update_conm2s_function)
+                representation='point', follower_function=None)
 
         # Allocate grids
         self.gui.grid.Allocate(self.nelements, 1000)
@@ -1601,6 +1603,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if nconm2 > 0:
             def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes):
                 j2 = 0
+                mass_grid = self.alt_grids['conm2']
                 for unused_eid, element in sorted(iteritems(model.masses)):
                     if isinstance(element, CONM2):
                         nid = element.nid
@@ -1625,7 +1628,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                         elem = vtk.vtkVertex()
                         elem.GetPointIds().SetId(0, j2)
-                        self.alt_grids['conm2'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                        mass_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                     else:
                         continue
                         #self.gui.log_info("skipping %s" % element.type)
@@ -2588,7 +2591,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         dependent = (lines[:, 0])
         independent = np.unique(lines[:, 1])
         self.dependents_nodes.update(dependent)
-        node_ids = np.unique(lines.ravel())
+        unused_node_ids = np.unique(lines.ravel())
 
         msg = ', which is required by %r' % depname
         self._add_nastran_nodes_to_grid(depname, dependent, model, msg)
@@ -2750,7 +2753,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _get_sphere_size(self, dim_max):
         return 0.01 * dim_max
 
-    def _map_elements3(self, nid_map, model, unused_j, dim_max,
+    def _map_elements3(self, nid_map, model, unused_j, unused_dim_max,
                        nid_cp_cd, xref_loads=True):
         """
         Much, much faster way to add elements that directly builds the VTK objects

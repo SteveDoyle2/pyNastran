@@ -19,9 +19,7 @@ from pyNastran.utils import print_bad_path
 
 def area_centroid(n1, n2, n3, n4):
     centroid = (n1 + n2 + n3 + n4) / 4.
-    a = n3 - n1
-    b = n4 - n2
-    n = cross(a, b)
+    n = cross(n3 - n1, n4 - n2)
     area = 0.5 * norm(n)
     return area, centroid
 
@@ -55,7 +53,7 @@ class FaceFile(object):
             i += 1
             try:
                 nfaces = int(line)
-            except:
+            except ValueError:
                 pass
         line = face_file.readline()
         i += 1
@@ -143,61 +141,60 @@ class PointFile(object):
         #p = FoamFile(face_filename)
         #lines = p.read_foam_file()
         #self.log.info('converting')
-        f = open(point_filename, 'r')
-
         i = 0
         npoints = 0
-        while npoints == 0:
-            line = f.readline()
-            i += 1
-            try:
-                npoints = int(line)
-            except:
-                pass
-        line = f.readline()
-        i += 1
-
-        self.log.info('npoints = %s' % npoints)
-        #print('lineA = %r' % line)
-
-        self.log.info('building points')
-        assert npoints > 0, npoints
-        if ipoints_to_read is not None:
-            ipoints_to_read.sort()
-            npoints2 = len(ipoints_to_read)
-            points = zeros((npoints2, 3), dtype='float32')
-
-            self.log.info('npoints2 = %s' % npoints2)
-            ni = 0
-            for j in range(npoints):
+        with open(point_filename, 'r') as points_file:
+            while npoints == 0:
+                line = points_file.readline()
+                i += 1
                 try:
-                    ni_point = ipoints_to_read[ni]
-                except:
-                    print('j=%s ni=%s' % (j, ni))
-                    raise
-                if j == ni_point:
-                    point = f.readline()
+                    npoints = int(line)
+                except ValueError:
+                    pass
+            line = points_file.readline()
+            i += 1
+
+            self.log.info('npoints = %s' % npoints)
+            #print('lineA = %r' % line)
+
+            self.log.info('building points')
+            assert npoints > 0, npoints
+            if ipoints_to_read is not None:
+                ipoints_to_read.sort()
+                npoints2 = len(ipoints_to_read)
+                points = zeros((npoints2, 3), dtype='float32')
+
+                self.log.info('npoints2 = %s' % npoints2)
+                ni = 0
+                for j in range(npoints):
+                    try:
+                        ni_point = ipoints_to_read[ni]
+                    except:
+                        print('j=%s ni=%s' % (j, ni))
+                        raise
+                    if j == ni_point:
+                        point = points_file.readline()
+                        i += 1
+                        sline = point.strip('( )\n\r').split()
+                        try:
+                            points[ni, :] = sline
+                        except:
+                            print('point = %r' % point)
+                            print(sline, i, j, ni)
+                            raise
+                        ni += 1
+            else:
+                points = zeros((npoints, 3), dtype='float32')
+                for j in range(npoints):
+                    point = points_file.readline()
                     i += 1
                     sline = point.strip('( )\n\r').split()
                     try:
-                        points[ni, :] = sline
+                        points[j, :] = sline
                     except:
                         print('point = %r' % point)
-                        print(sline, i, j, ni)
+                        print(sline, i)
                         raise
-                    ni += 1
-        else:
-            points = zeros((npoints, 3), dtype='float32')
-            for j in range(npoints):
-                point = f.readline()
-                i += 1
-                sline = point.strip('( )\n\r').split()
-                try:
-                    points[j, :] = sline
-                except:
-                    print('point = %r' % point)
-                    print(sline, i)
-                    raise
         self.log.info('points.shape = %s' % str(points.shape))
         return points
 
@@ -210,55 +207,55 @@ class BoundaryFile(object):
         #p = FoamFile(face_filename)
         #lines = p.read_foam_file()
         #self.log.info('converting')
-        f = open(boundary_filename, 'r')
-
         i = 0
         nboundaries = 0
-        while nboundaries == 0:
-            line = f.readline()
+
+        with open(boundary_filename, 'r') as boundary_file:
+            while nboundaries == 0:
+                line = boundary_file.readline()
+                i += 1
+                try:
+                    nboundaries = int(line)
+                except ValueError:
+                    pass
+            line = boundary_file.readline()
             i += 1
-            try:
-                nboundaries = int(line)
-            except:
-                pass
-        line = f.readline()
-        i += 1
 
-        self.log.info('nboundaries = %s' % nboundaries)
-        #self.log.info('lineA = %r' % line)
+            self.log.info('nboundaries = %s' % nboundaries)
+            #self.log.info('lineA = %r' % line)
 
-        self.log.info('building boundaries')
-        boundaries = OrderedDict()
-        boundaries = self._read_boundaries(f, i, nboundaries, boundaries)
+            self.log.info('building boundaries')
+            boundaries = OrderedDict()
+            boundaries = self._read_boundaries(boundary_file, i, nboundaries, boundaries)
         return boundaries
 
-    def _read_boundaries(self, f, i, nboundaries, boundaries, basename=''):
+    def _read_boundaries(self, boundary_file, i, nboundaries, boundaries, basename=''):
         assert nboundaries > 0, nboundaries
-        read_next = 0
-        for j in range(nboundaries):
+        #read_next = 0
+        for unused_j in range(nboundaries):
             # 3(a b c) to [a, b, c]
             # 4(a b c d) to [a, b, c, d]
-            nameline = f.readline()
+            nameline = boundary_file.readline()
             i += 1
             name = nameline.strip()
             self.log.info('name = %r' % (basename + name))
 
-            openline = f.readline()
+            unused_openline = boundary_file.readline()
             i += 1
-            typeline = f.readline()
+            typeline = boundary_file.readline()
             i += 1
             word, Type = typeline.strip('\n\r\t ;').split()
 
-            nfacesline = f.readline()
+            nfacesline = boundary_file.readline()
             i += 1
             sline = nfacesline.strip('\n\r\t ;').split()
             word = sline[0]
             if word == 'inGroups' and len(sline) == 1:
-                #nboundary_line = f.readline(); i+=1
+                #nboundary_line = boundary_file.readline(); i+=1
                 #nboundaries2 = int(nboundary_line)
-                #openline = f.readline(); i+=1
-                for ii in range(7):
-                    groupline = f.readline()
+                #openline = boundary_file.readline(); i+=1
+                for unused_ii in range(7):
+                    groupline = boundary_file.readline()
                     i += 1
                     #self.log.info(ii, groupline)
                 sline = groupline.strip('\n\r\t ;').split()
@@ -267,12 +264,12 @@ class BoundaryFile(object):
                 nfaces = int(nfaces)
                 self.log.info('nfaces = %r' % nfaces)
 
-                startfacesline = f.readline()
+                startfacesline = boundary_file.readline()
                 i += 1
                 self.log.info('startfacesline = %r' % startfacesline)
                 word, startfaces = startfacesline.strip('\n\r\t ;').split()
                 startfaces = int(startfaces)
-                closeline = f.readline()
+                unused_closeline = boundary_file.readline()
                 i += 1
 
                 boundary_name = basename + name
@@ -282,11 +279,11 @@ class BoundaryFile(object):
                     raise KeyError(msg)
                 boundaries[boundary_name] = [Type, nfaces, startfaces]
 
-                #self._read_boundaries(f, i, nboundaries2, boundaries, basename + name)
+                #self._read_boundaries(boundary_file, i, nboundaries2, boundaries, basename + name)
             else:
                 if word == 'inGroups' and len(sline) == 2:
-                    ingroups = nfaces
-                    nfacesline = f.readline()
+                    unused_ingroups = nfaces
+                    nfacesline = boundary_file.readline()
                     i += 1
                     word, nfaces = nfacesline.strip('\n\r\t ;').split()
                 else:
@@ -295,13 +292,13 @@ class BoundaryFile(object):
                 nfaces = int(nfaces)
                 self.log.info('nfaces = %r' % (nfaces))
 
-                startfacesline = f.readline()
+                startfacesline = boundary_file.readline()
                 i += 1
                 self.log.info('startfacesline = %r' % startfacesline)
                 word, startfaces = startfacesline.strip('\n\r\t ;').split()
                 startfaces = int(startfaces)
 
-                closeline = f.readline()
+                unused_closeline = boundary_file.readline()
                 i += 1
 
                 boundary_name = basename + name
@@ -309,7 +306,6 @@ class BoundaryFile(object):
                     raise KeyError('boundary_name=%r is already defined...'
                                    'boundaries must have unique names' % boundary_name)
                 boundaries[boundary_name] = [Type, nfaces, startfaces]
-        f.close()
 
         for name, boundary in iteritems(boundaries):
             print('name=%s boundary=%s' % (name, boundary))
@@ -414,7 +410,7 @@ class Boundary(object):
                 nid_to_ipoint[nid] = i
 
             self.log.info('%s %s' % (faces, faces.max()))
-            for i, face in enumerate(faces):
+            for i, unused_face in enumerate(faces):
                 #print('face      = %s' % face)
                 faces[i, 0] = nid_to_ipoint[faces[i, 0]]
                 faces[i, 1] = nid_to_ipoint[faces[i, 1]]
@@ -438,7 +434,7 @@ class Boundary(object):
             # nFaces          nFaces;
             # startFace       777700;
             try:
-                Type = boundary[0]
+                unused_Type = boundary[0]
                 nfacesi = int(boundary[1])
                 startface = int(boundary[2])
             except:
@@ -504,7 +500,7 @@ class BlockMesh(object):
         self.iname_to_name = None
         self.iname_to_type = None
 
-    def make_hex_bar(self, bias, ncells):
+    def make_hex_bar(self, unused_bias, ncells):
         """
         bias = Llast/Lfirst
         """
@@ -517,7 +513,7 @@ class BlockMesh(object):
         x = kn * L0
         return ipoints, x
 
-    def make_hex_bars(self, hex_id):
+    def make_hex_bars(self, unused_hex_id):
         #self.hexas = hexas
         #self.npoints = npoints
         #self.grading = grading
@@ -534,14 +530,14 @@ class BlockMesh(object):
         ]
 
         points = []
-        for grading, hexa in zip(self.grading, self.hexas):
+        for grading, unused_hexa in zip(self.grading, self.hexas):
             # x = 0-1 to 4-5
             #     3-2 to 7-6
             # y = 0-3 to 1-2
             #     4-7 to 5-6
             # z = 0-4 to 1-5
             #     3-7 to 2-6
-            nx, ny, nz, method = grading
+            nx, ny, nz, unused_method = grading
             bias = (nx, ny, nz)
             for line_pair in line_pairs:
                 i1, i2, i3, i4, idir, iface = line_pair
@@ -549,13 +545,13 @@ class BlockMesh(object):
                 n2 = self.nodes[i2, :]
                 n3 = self.nodes[i3, :]
                 n4 = self.nodes[i4, :]
-                ncells_x = grading[idir]
+                unused_ncells_x = grading[idir]
                 ncells_y = grading[iface]
                 bias_x = bias[idir]
                 bias_y = bias[iface]
 
-                npx, x = self.make_hex_bar(bias_x, ncells_y)
-                npy, y = self.make_hex_bar(bias_y, ncells_y)
+                unused_npx, x = self.make_hex_bar(bias_x, ncells_y)
+                unused_npy, y = self.make_hex_bar(bias_y, ncells_y)
 
                 da = n1 - n2
                 db = n3 - n4
@@ -569,9 +565,9 @@ class BlockMesh(object):
                     p2 = n4 + xb[i]
                     dp = p2 - p1
                     L = norm(dp)
-                    yout = L * y
+                    unused_yout = L * y
 
-                    new_points = p1 + dp * y
+                    unused_new_points = p1 + dp * y
                     points.append(1)
                     i / L
                     #p1 =
@@ -580,20 +576,20 @@ class BlockMesh(object):
 
     def read_openfoam(self, block_mesh_name='blockMeshDict'):
         self.log.info('block_mesh_name = %r' % block_mesh_name)
-        f = FoamFile(block_mesh_name)
-        lines = f.read_foam_file()
+        foam_file = FoamFile(block_mesh_name)
+        foam_lines = foam_file.read_foam_file()
 
-        d = convert_to_dict(self, lines, debug=True)
-        #print write_dict(d)
-        keys = d.keys()
+        foam_file_dict = convert_to_dict(self, foam_lines, debug=True)
+        #print(write_dict(foam_file_dict))
+        unused_keys = foam_file_dict.keys()
 
-        vertices = d['vertices']
-        blocks = d['blocks']
-        boundaries = d['boundary']
+        vertices = foam_file_dict['vertices']
+        blocks = foam_file_dict['blocks']
+        boundaries = foam_file_dict['boundary']
         #self.log.info(boundaries)
 
         nodes = []
-        for ivertex, vertex in iteritems(vertices):
+        for unused_ivertex, vertex in iteritems(vertices):
             x, y, z = vertex.strip('() ').split()
             nodes.append([x, y, z])
 
@@ -635,7 +631,7 @@ class BlockMesh(object):
             faces = boundary['faces']
             iname_to_name[iname] = key
             iname_to_type[iname] = Type
-            for iface, face in iteritems(faces):
+            for unused_iface, face in iteritems(faces):
                 quad = face.strip('() ').split()
                 quad = [int(i) for i in quad]
                 quads.append(quad)
@@ -689,7 +685,7 @@ class BlockMesh(object):
 
     def adjust_nodes_to_symmetry(self):
         # find where nodes have -y value
-        y_locations = self.nodes[:, 1]
+        unused_y_locations = self.nodes[:, 1]
 
         #i = where(y_locations < -0.0508)[0]
         #self.nodes[i, 1] = -0.0508
@@ -801,7 +797,8 @@ class BlockMesh(object):
         hexas2 = []
         npoints2 = []  # don't change
         grading2 = []  # don't change
-        for ihexa, hexa, npointsi, gradingi in zip(count(), self.hexas, self.npoints, self.grading):
+        for unused_ihexa, hexa, npointsi, gradingi in zip(count(), self.hexas,
+                                                          self.npoints, self.grading):
             hexa2 = []
             for j in hexa:
                 i = new_ids_map[j]
@@ -1017,21 +1014,15 @@ class BlockMesh(object):
 
 def main():
     import sys
-    if len(sys.argv) == 1:
-        block_mesh_name = 'blockMeshDict'
-        if make_symmetry:
-            block_mesh_name_out = 'blockMeshDict_half'
-        else:
-            block_mesh_name_out = 'blockMeshDict_full'
-    else:
-        block_mesh_name = sys.argv[1]
-        block_mesh_name_out = sys.argv[2]
+    block_mesh_name = sys.argv[1]
+    block_mesh_name_out = sys.argv[2]
     mirror_block_mesh(block_mesh_name, block_mesh_name_out)
 
 def mirror_block_mesh(block_mesh_name, block_mesh_name_out):
     make_symmetry = True
     block_mesh_model = BlockMesh()
-    nodes, hexas, quads, names, bcs = block_mesh_model.read_openfoam(block_mesh_name)
+    out = block_mesh_model.read_openfoam(block_mesh_name)
+    unused_nodes, unused_hexas, unused_quads, unused_names, unused_bcs = out
     if make_symmetry:
         block_mesh_model.adjust_nodes_to_symmetry()
     block_mesh_model.write_block_mesh(block_mesh_name_out, make_symmetry=make_symmetry)

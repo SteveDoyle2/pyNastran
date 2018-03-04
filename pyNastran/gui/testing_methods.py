@@ -8,8 +8,6 @@ from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
-#from pyNastran.gui.gui_objects.gui_result import GuiResult
-#from pyNastran.converters.nastran.displacements import DisplacementResults
 from pyNastran.bdf.cards.base_card import deprecated
 
 from pyNastran.gui.test.mock_vtk import (
@@ -303,22 +301,22 @@ class FakeGUIMethods(GuiCommon):
             self.geometry_actors[name] = MockGeometryActor()
 
     def log_debug(self, msg):
-        """turns logs into prints to aide testing debug"""
+        """turns logs into prints to aide debugging"""
         if self.debug:
             print('DEBUG:  ', msg)
 
     def log_info(self, msg):
-        """turns logs into prints to aide testing debug"""
+        """turns logs into prints to aide debugging"""
         if self.debug:
             print('INFO:  ', msg)
 
     def log_error(self, msg):
-        """turns logs into prints to aide testing debug"""
+        """turns logs into prints to aide debugging"""
         if self.debug:
             print('ERROR:  ', msg)
 
     def log_warning(self, msg):
-        """turns logs into prints to aide testing debug"""
+        """turns logs into prints to aide debugging"""
         if self.debug:
             print('WARNING:  ', msg)
 
@@ -329,3 +327,8 @@ class FakeGUIMethods(GuiCommon):
     #test.turn_text_on =  turn_text_on
     #test.turn_text_off = turn_text_off
     #test.cycle_results_explicit = passer
+
+    def _set_legend_fringe(self, is_fringe):
+        self._is_fringe = is_fringe
+        if self._legend_window_shown:
+            self._legend_window._set_legend_fringe(is_fringe)

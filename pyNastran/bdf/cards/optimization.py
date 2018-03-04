@@ -361,19 +361,32 @@ class OptConstraint(BaseCard):
     def __init__(self):
         pass
 
-class DVXREL(BaseCard):
+class DVXREL1(BaseCard):
     def __init__(self):
         pass
     def validate(self):
         msg = ''
         assert len(self.dvids) > 0 and len(self.coeffs) > 0, str(self)
         for i, desvar_id, coeff in zip(count(), self.dvids, self.coeffs):
-            if not isinstance(coeff, float):
+            if not isinstance(desvar_id, int):
                 msg += '  desvar_id[%i]=%s is not an integer; type=%s\n' % (i, desvar_id, type(desvar_id))
             if not isinstance(coeff, float):
                 msg += '  coeff[%i]=%s is not a float; type=%s\n' % (i, coeff, type(coeff))
         if msg:
             raise RuntimeError('Invalid %s\n' % self.type + msg + str(self))
+
+class DVXREL2(BaseCard):
+    def __init__(self):
+        pass
+    def validate(self):
+        msg = ''
+        assert len(self.dvids) > 0, str(self)
+        for i, desvar_id in enumerate(self.dvids):
+            if not isinstance(desvar_id, int):
+                msg += '  desvar_id[%i]=%s is not an integer; type=%s\n' % (i, desvar_id, type(desvar_id))
+        if msg:
+            raise RuntimeError('Invalid %s\n' % self.type + msg + str(self))
+        assert isinstance(self.labels, list), str(self)
 
 
 
@@ -2537,7 +2550,7 @@ class DSCREEN(OptConstraint):
         return self.comment + print_card_16(card)
 
 
-class DVCREL1(DVXREL):  # similar to DVMREL1
+class DVCREL1(DVXREL1):  # similar to DVMREL1
     type = 'DVCREL1'
 
     def __init__(self, oid, element_type, eid, cp_name, dvids, coeffs,
@@ -2557,7 +2570,7 @@ class DVCREL1(DVXREL):  # similar to DVMREL1
         |         | 200000 |   1.0  |        |       |     |      |
         +---------+--------+--------+--------+-------+-----+------+
         """
-        DVXREL.__init__(self)
+        DVXREL1.__init__(self)
         if comment:
             self.comment = comment
         if isinstance(dvids, integer_types):
@@ -2759,7 +2772,7 @@ class DVCREL1(DVXREL):  # similar to DVMREL1
             return self.comment + print_card_16(card)
 
 
-class DVCREL2(DVXREL):
+class DVCREL2(DVXREL2):
     type = 'DVCREL2'
 
     allowed_elements = [
@@ -2785,7 +2798,7 @@ class DVCREL2(DVXREL):
         |          |        | LABL8  | etc.  |            |       |       |       |       |
         +----------+--------+--------+-------+------------+-------+-------+-------+-------+
         """
-        DVXREL.__init__(self)
+        DVXREL2.__init__(self)
         if comment:
             self.comment = comment
         if dvids is None:
@@ -3011,7 +3024,7 @@ class DVCREL2(DVXREL):
         return self.comment + print_card_16(card)
 
 
-class DVMREL1(DVXREL):
+class DVMREL1(DVXREL1):
     """
     Design Variable to Material Relation
     Defines the relation between a material property and design variables.
@@ -3056,7 +3069,7 @@ class DVMREL1(DVXREL):
         comment : str; default=''
             a comment for the card
         """
-        DVXREL.__init__(self)
+        DVXREL1.__init__(self)
         if comment:
             self.comment = comment
         if isinstance(dvids, integer_types):
@@ -3229,7 +3242,7 @@ class DVMREL1(DVXREL):
         return self.comment + print_card_16(card)
 
 
-class DVMREL2(DVXREL):
+class DVMREL2(DVXREL2):
     """
     +---------+--------+--------+-------+---------+-------+-------+-------+-------+
     |    1    |    2   |   3    |   4   |     5   |   6   |   7   |   8   |   9   |
@@ -3280,7 +3293,7 @@ class DVMREL2(DVXREL):
 
         .. note:: either dvids or labels is required
         """
-        DVXREL.__init__(self)
+        DVXREL2.__init__(self)
         if comment:
             self.comment = comment
         if dvids is None:
@@ -3532,7 +3545,7 @@ def break_word_by_trailing_integer(pname_fid):
     return word, num
 
 
-class DVPREL1(DVXREL):
+class DVPREL1(DVXREL1):
     """
     +---------+--------+--------+--------+-----------+-------+--------+-----+
     |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  |
@@ -3598,7 +3611,7 @@ class DVPREL1(DVXREL):
         comment : str; default=''
             a comment for the card
         """
-        DVXREL.__init__(self)
+        DVXREL1.__init__(self)
         if comment:
             self.comment = comment
         if isinstance(dvids, integer_types):
@@ -3687,7 +3700,7 @@ class DVPREL1(DVXREL):
             setattr(prop, key, value)
 
     def validate(self):
-        DVXREL.validate(self)
+        DVXREL1.validate(self)
         self.pname_fid = validate_dvprel(self.prop_type, self.pname_fid, validate=True)
         key, msg = get_dvprel_key(self)
         assert len(msg) == 0, msg
@@ -3880,7 +3893,7 @@ class DVPREL1(DVXREL):
             return self.comment + print_card_16(card)
 
 
-class DVPREL2(DVXREL):
+class DVPREL2(DVXREL2):
     """
     +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
     |    1     |    2   |   3    |   4   |     5     |   6   |   7   |   8   |   9   |
@@ -3958,7 +3971,7 @@ class DVPREL2(DVXREL):
 
         .. note:: either dvids or labels is required
         """
-        DVXREL.__init__(self)
+        DVXREL2.__init__(self)
         if comment:
             self.comment = comment
         if dvids is None:
@@ -4007,8 +4020,7 @@ class DVPREL2(DVXREL):
         self.dequation_ref = None
 
     def validate(self):
-        DVXREL.validate(self)
-        assert len(self.labels) > 0
+        DVXREL2.validate(self)
         self.pname_fid = validate_dvprel(self.prop_type, self.pname_fid, validate=True)
 
     @classmethod
