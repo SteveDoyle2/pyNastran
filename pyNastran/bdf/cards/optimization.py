@@ -2665,10 +2665,17 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
         # max value
         self.cp_max = cp_max
 
-        assert len(coeffs) > 0, 'len(coeffs)=%s' % len(coeffs)
-        assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
         validate_dvcrel(validate, element_type, cp_name)
         self.eid_ref = None
+
+        if len(self.coeffs) == 0:
+            msg = 'len(coeffs)=%s len(dvids)=%s\n' % (len(self.coeffs), len(self.dvids))
+            msg += "We've added a coeff=1.0 and desvar_id=1 in order to look at the crashing card\n"
+            self.coeffs = [1.]
+            self.dvids = [1]
+            msg += str(self)
+            raise RuntimeError(msg)
+        assert len(self.coeffs) == len(self.dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(self.coeffs), len(self.dvids))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3116,6 +3123,15 @@ class DVMREL1(DVXREL1):
 
         validate_dvmrel(validate, mat_type, mp_name)
         self.mid_ref = None
+
+        if len(self.coeffs) == 0:
+            msg = 'len(coeffs)=%s len(dvids)=%s\n' % (len(self.coeffs), len(self.dvids))
+            msg += "We've added a coeff=1.0 and desvar_id=1 in order to look at the crashing card\n"
+            self.coeffs = [1.]
+            self.dvids = [1]
+            msg += str(self)
+            raise RuntimeError(msg)
+        assert len(self.coeffs) == len(self.dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(self.coeffs), len(self.dvids))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3635,14 +3651,14 @@ class DVPREL1(DVXREL1):
 
         self.pid_ref = None
 
-        if len(coeffs) == 0:
-            msg = 'len(coeffs)=%s len(dvids)=%s\n' % (len(coeffs), len(dvids))
+        if len(self.coeffs) == 0:
+            msg = 'len(coeffs)=%s len(dvids)=%s\n' % (len(self.coeffs), len(self.dvids))
             msg += "We've added a coeff=1.0 and desvar_id=1 in order to look at the crashing card\n"
             self.coeffs = [1.]
             self.dvids = [1]
             msg += str(self)
             raise RuntimeError(msg)
-        assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
+        assert len(self.coeffs) == len(self.dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(self.coeffs), len(self.dvids))
 
         pname_fid = validate_dvprel(prop_type, pname_fid, validate)
         self.pname_fid = pname_fid
