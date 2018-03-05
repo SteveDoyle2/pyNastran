@@ -3,8 +3,8 @@ from struct import Struct
 from six.moves import range
 from numpy import frombuffer
 from pyNastran.op2.op2_interface.op2_common import OP2Common
-from pyNastran.op2.tables.ogf_gridPointForces.ogs_surface_stresses import (
-    GridPointStressesArray, GridPointStressesVolume)
+from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
+    GridPointStressesArray, GridPointStressesVolumeArray)
 
 
 class OGS(OP2Common):
@@ -102,14 +102,14 @@ class OGS(OP2Common):
             # OGS1 - grid point stresses - surface
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table26(data, ndata)
-        #elif self.table_code == 27:
-            # OGS1 - grid point stresses - volume direct
-            #assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            #n = self._read_ogs1_table27(data, ndata)
-        #elif self.table_code == 28:
-            # OGS1- grid point stresses - principal
-            #assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            #n = self._read_ogs1_table28(data, ndata)
+        elif self.table_code == 27:
+            #OGS1 - grid point stresses - volume direct
+            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            n = self._read_ogs1_table27(data, ndata)
+        elif self.table_code == 28:
+            #OGS1- grid point stresses - principal
+                assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                n = self._read_ogs1_table28(data, ndata)
         #elif self.table_code == 35:
             # OGS - Grid point stress discontinuities (plane strain)
             #assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
@@ -204,28 +204,68 @@ class OGS(OP2Common):
         """OGS1 - grid point stresses - volume direct"""
         #is_sort1 = self.is_sort1
         if self.num_wide == 9:  # real/random
-            result_name = 'grid_point_volume_stresses'
-            #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolume)
+            #result_name = 'grid_point_volume_stresses'
             n = self._read_ogs1_table27_numwide9(data, ndata)
         else:
-            msg = 'only num_wide=9 is allowed  num_wide=%s' % self.num_wide
+            msg = self.code_information()
+            #msg = 'only num_wide=9 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
         return n
 
     def _read_ogs1_table27_numwide9(self, data, ndata):
-        """surface stresses"""
-        s = Struct(self._endian + b'2i7f')
+        """volume stresses"""
+        result_name = 'grid_point_volume_stresses'
+        obj_vector_real = GridPointStressesVolumeArray
+        if self._results.is_not_saved(result_name):
+            return ndata
+        self._results._found_result(result_name)
+        slot = getattr(self, result_name)
         n = 0
-        nelements = ndata // 36  # 9*4
-        for i in range(nelements):
-            edata = data[n:n+36]
-            out = s.unpack(edata)
-            (ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm) = out
-            nid = ekey // 10
-            assert nid > 0, nid
-            #check_nid
-            #self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
-            n += 36
+
+        #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
+        ntotal = 9 * 4
+        nelements = ndata // ntotal
+        assert ndata % (nelements * 36) == 0, ndata % (nelements * 36)
+        auto_return, is_vectorized = self._create_oes_object4(
+            nelements, result_name, slot, obj_vector_real)
+        if auto_return:
+            return nelements * self.num_wide * 4
+
+        obj = self.obj
+        dt = self.nonlinear_factor
+
+        if self.use_vector and is_vectorized:
+            n = nelements * 4 * self.num_wide
+            itotal = obj.ielement
+            ielement2 = obj.itotal + nelements
+            itotal2 = ielement2
+
+            floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)#.copy()
+            obj._times[obj.itime] = dt
+            if obj.itime == 0:
+                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
+                nids = ints[:, 0] // 10
+                assert nids.min() > 0, nids.min()
+                obj.node[itotal:itotal2] = nids
+
+            #[nid, nx, ny, nz, txy, tyz, txz, pressure, ovm]
+            #strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 11)[:, 2].copy()
+            #obj.location[itotal:itotal2] = strings
+            obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]#.copy()
+            obj.itotal = itotal2
+            obj.ielement = ielement2
+            n = ndata
+        else:
+            s = Struct(self._endian + b'i8f')
+            for i in range(nelements):
+                edata = data[n:n+36]
+                out = s.unpack(edata)
+                (ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm) = out
+                nid = ekey // 10
+                assert nid > 0, nid
+                #print(ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+                self.obj.add_sort1(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+                n += 36
         return n
 
     def _read_ogs1_table35(self, data, ndata):

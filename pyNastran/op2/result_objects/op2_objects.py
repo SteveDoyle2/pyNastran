@@ -59,6 +59,7 @@ class BaseScalarObject(Op2Codes):
 
     def __eq__(self, table):
         self._eq_header(table)
+        #raise NotImplementedError(str(self.get_stats()))
         return False
 
     def __ne__(self, table):

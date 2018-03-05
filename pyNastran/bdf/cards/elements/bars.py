@@ -1269,6 +1269,7 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
     - orientation -> wa/wb are defined in the xform_offset (yz) frame;
                      this is likely the easiest frame for a user
     """
+    msg = ' which is required by %s=%s' % (elem.type, elem.eid)
     cd1 = node1.Cd()
     cd2 = node2.Cd()
     cd1_ref = model.Coord(cd1)
@@ -1283,7 +1284,7 @@ def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid
     if elem.g0:
         #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
         g0_ref = model.Node(elem.g0, msg=msg)
-        #n0 = elem.g0_ref.get_position()
+        n0 = g0_ref.get_position()
         v = n0 - n1
     else:
         #ga = elem.ga_ref

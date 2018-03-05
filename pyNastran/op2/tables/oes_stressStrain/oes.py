@@ -235,10 +235,7 @@ class OES(OP2Common):
         self.data_code['is_stress_flag'] = True
         self.data_code['is_strain_flag'] = False
 
-        if self.isubcase not in self.case_control_deck.subcases:
-            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN', self.log)
-
+        self._setup_op2_subcase('STRESS/STRAIN')
         if self.is_sort1:
             n = self._read_oes1_4_sort1(data, ndata)
         else:
@@ -358,10 +355,7 @@ class OES(OP2Common):
         self.data_code['is_stress_flag'] = False
         self.data_code['is_strain_flag'] = True
 
-        if self.isubcase not in self.case_control_deck.subcases:
-            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN', self.log)
-
+        self._setup_op2_subcase('STRESS/STRAIN')
         if self.is_sort1:
             n = self._read_ostr1_4_sort1(data, ndata)
         else:

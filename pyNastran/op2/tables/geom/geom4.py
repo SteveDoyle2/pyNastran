@@ -10,7 +10,8 @@ import numpy as np
 
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2, RBE3, RROD
 from pyNastran.bdf.cards.bdf_sets import (
-    ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1, USET, USET1, SEQSET1 # SEQSET
+    ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1, USET, USET1, SEQSET1,
+    OMIT1, # SEQSET
 )
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
@@ -53,7 +54,7 @@ class GEOM4(GeomCommon):
             (4901, 49, 17) : ['MPC', self._read_mpc],             # record 17
             (4891, 60, 83) : ['MPCADD', self._read_mpcadd],       # record 18
             (5001, 50, 15) : ['OMIT', self._read_omit],           # record 19 - not done
-            (4951, 63, 92) : ['OMIT1', self._read_omit1],         # record 20 - not done
+            (4951, 63, 92) : ['OMIT1', self._read_omit1],         # record 20
             (510, 5, 315) : ['QSET', self._read_qset],            # record 21
             (610, 6, 316) : ['QSET1', self._read_qset1],          # record 22
 
@@ -351,8 +352,7 @@ class GEOM4(GeomCommon):
 
     def _read_omit1(self, data, n):
         """OMIT1(4951,63,92) - Record 19"""
-        self.log.info('skipping OMIT1 in GEOM4\n')
-        return len(data)
+        return self._read_xset1(data, n, 'OMIT1', OMIT1, self._add_omit_object)
 
     def _read_qset1(self, data, n):
         """QSET1(610,6,316) - Record 22"""

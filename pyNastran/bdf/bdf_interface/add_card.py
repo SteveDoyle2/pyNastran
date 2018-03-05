@@ -12,6 +12,7 @@ from typing import Any, Optional, List, Union
 from six import string_types
 import numpy as np
 
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
@@ -6304,6 +6305,14 @@ class AddCards(AddMethods):
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_rotor_object(rotor)
         return rotor
+
+    def add_rgyro(self, sid, async, refrot, unit, speed_low, speed_high, speed, comment=''):
+        fields = ['RGYRO', sid, async, refrot, unit, speed_low, speed_high, speed]
+        self.reject_card_lines('RGYRO', print_card_8(fields).split('\n'))
+
+    def add_rspint(self, rid, grida, gridb, gr, unit, table_id, comment=''):
+        fields = ['RSPINT', rid, grida, gridb, gr, unit, table_id]
+        self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'))
 
     def add_temp(self, sid, temperatures, comment=''):
         """

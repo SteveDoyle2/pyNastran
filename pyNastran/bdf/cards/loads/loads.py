@@ -334,7 +334,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             the BDF object
         """
         msg = ', which is required by LSEQ=%s' % (self.sid)
-        self.lid_ref = model.Load(self.lid, consider_load_combinations=False, msg=msg)
+        self.lid_ref = model.Load(self.lid, consider_load_combinations=True, msg=msg)
         #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
             # TODO: temperature set, not a table?
@@ -824,6 +824,7 @@ class DEFORM(Load):
         return
 
     def safe_cross_reference(self, model, debug=True):
+        msg = ' which is required by DEFORM=%s' % (self.sid)
         self.eid_ref = model.Element(self.eid, msg)
 
     def uncross_reference(self):

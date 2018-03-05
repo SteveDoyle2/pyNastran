@@ -694,7 +694,7 @@ class MinorTables(OP2Common):
             seid = out[13]
 
             if response_type == 1:
-                self.weight_response.add_from_op2(out)
+                self.weight_response.add_from_op2(out, self.log)
             elif response_type == 5:  # DISP
                 # out = (1, 101, 5, 'DISP1   ', 101, 1, 3, 0, 1, 0, 0, 0, 0, 0)
 

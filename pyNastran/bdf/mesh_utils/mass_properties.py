@@ -1095,18 +1095,17 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
         nsm_centroids_length[ptype] = nsm_centroidsi
 
     all_eids_pids = np.array(all_eids_pids, dtype='int32')
-    if len(area_eids_pids) == 0:
+    nelements = len(is_area)
+    if nelements == 0:
         return all_eids_pids, area_length, is_area, nsm_centroids
 
-    #print(all_eids_pids)
     isort = np.argsort(all_eids_pids[:, 0])
-    #print('isort =', isort)
     all_eids_pids = all_eids_pids[isort, :]
     area_length = np.hstack(area_length)[isort]
 
-    is_area = np.array(is_area, dtype='bool')[isort]
+    is_area_array = np.array(is_area, dtype='bool')[isort]
     nsm_centroids = np.vstack(nsm_centroids)[isort]
-    return all_eids_pids, area_length, is_area, nsm_centroids
+    return all_eids_pids, area_length, is_area_array, nsm_centroids
 
 def _combine_prop_weighted_area_length_simple(
         model, eids, area, centroids,
@@ -1299,16 +1298,21 @@ def _apply_nsm(model, nsm_id,
         area_eids_pids, areas, nsm_centroids_area,
         length_eids_pids, lengths, nsm_centroids_length)
 
-    if len(all_eids_pids) == 0:
+    nelements = len(is_area_array)
+    if nelements == 0:
         model.log.debug('  skipping NSM=%s calc because there are no elements\n' % nsm_id)
         return mass
 
     #print('all_eids_pids =', all_eids_pids)
     #print('area_length =', area_length)
-    #print('is_area =', is_area)
+    #print('is_area_array =', is_area_array)
+    neids = all_eids_pids.shape[0]
+    assert neids == len(area_length), 'len(eids)=%s len(area_length)=%s' % (neids, len(area_length))
+    assert neids == len(is_area_array), 'len(eids)=%s len(area_length)=%s' % (neids, len(is_area_array))
     #area_length = area_length[isort]
     #is_area = is_area[isort]
 
+    assert isinstance(is_area_array, np.ndarray), type(is_area_array)
     for nsm in nsms:
         nsm_value = nsm.value
         nsm_type = nsm_type_map[nsm.nsm_type]
@@ -1602,14 +1606,17 @@ def _nsm1_element(model, nsm, nsm_ids, all_eids_pids, area_length, nsm_centroids
         model.log.debug('  isort_2 =' % isort)
         model.log.debug('  eids[isort] =' % eids[isort])
 
+    assert len(eids) == len(area_length), 'len(eids)=%s len(area_length)=%s' % (len(eids), len(area_length))
+    assert len(eids) == len(is_area_array), 'len(eids)=%s len(area_length)=%s' % (len(eids), len(is_area_array))
     iwhere = eids[isort] == ids
+
     eids_actual = eids[isort][iwhere]
     area_length_actual = area_length[isort][iwhere]
     is_area_actual = is_area_array[isort][iwhere]
     if len(np.unique(is_area_actual)) != 1:
-        model.log.error('  eids = %s' % eids_actual)
-        model.log.error('  area_length_actual = %s' % area_length_actual)
-        model.log.error('  is_area_actual = %s' % is_area_actual)
+        #model.log.error('  eids = %s' % eids_actual)
+        #model.log.error('  area_length_actual = %s' % area_length_actual)
+        #model.log.error('  is_area_actual = %s' % is_area_actual)
         msg = 'Mixed Line/Area element types for:\n%s' % str(nsm)
         for eid in eids_actual:
             msg += str(model.elements[eid])

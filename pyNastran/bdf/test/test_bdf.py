@@ -1114,7 +1114,16 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol, stop_on_failure=Tru
             time_tstep_id = subcase.get_parameter('TSTEP')[0]
         else:
             raise NotImplementedError(subcase)
-        assert time_tstep_id in fem2.tsteps, 'time_tstep_id=%s\n tsteps=%s\n subcase:\n%s' % (time_tstep_id, str(fem2.tsteps), str(subcase))
+        if time_tstep_id not in fem2.tsteps:
+            msg = ('time_tstep_id=%s\n'
+                   'tsteps=%s\n'
+                   #'tstep1s=%s\n'
+                   'subcase:\n%s' % (
+                time_tstep_id,
+                str(fem2.tsteps),
+                #str(fem2.tstep1s),
+                str(subcase)))
+            raise RuntimeError(msg)
 
     if 'TSTEPNL' in subcase:
         tstepnl_id = subcase.get_parameter('TSTEPNL')[0]

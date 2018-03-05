@@ -63,11 +63,11 @@ class DYNAMICS(GeomCommon):
             (7207, 72, 139): ['TLOAD2', self._read_tload2],  # 38
             (8307, 83, 142): ['TSTEP', self._read_tstep],  # 39
 
-            (10701, 107, 117) : ['RGYRO', self._read_fake],
+            (10701, 107, 117) : ['RGYRO', self._read_rgyro],
             (10801, 108, 242) : ['ROTORG', self._read_fake],
             (3807, 38, 505) : ['NLRSFD', self._read_fake],
             (4807, 48, 306) : ['DYNRED', self._read_fake],
-            (11001, 110, 310) : ['RSPINT', self._read_fake],
+            (11001, 110, 310) : ['RSPINT', self._read_rspint],
             (10901, 109, 260) : ['RSPINR', self._read_fake],
             (11101, 111, 368) : ['UNBALNC', self._read_fake],
 
@@ -933,10 +933,62 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-#RGYRO
+    def _read_rgyro(self, data, n):
+        """
+        FREQ4(1507,15,40) - Record 17
+
+        1 SID          I RGYRO identification number
+        2 ATYPE(2) CHAR4 ASYNC/SYNC flag
+        4 REFROT       I Reference rotor identification number
+        5 UNIT(2)  CHAR4 RPM/FREQ flag for speed input
+        7 SPDLOW      RS Lower limit of speed range
+        8 SPDHGH      RS Upper limit of speed range
+        9 SPEED       RS Specific speed
+        """
+        ntotal = 36 # 4*9
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'i 8s i 8s 3f')
+        for i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            sid, async, refrot, unit, speed_low, speed_high, speed = out
+            async = async.decode('latin1')
+            unit = unit.decode('latin1')
+            if self.is_debug_file:
+                self.binary_debug.write('  RGYRO=%s\n' % str(out))
+            self.add_rgyro(sid, async, refrot, unit, speed_low, speed_high, speed)
+            n += ntotal
+        self.increase_card_count('RGYRO', nentries)
+        return n
+
 #ROTORG
 #RSPINR
-#RSPINT
+
+    def _read_rspint(self):
+        """
+        Record 31 -- RSPINT(11001,110,310)
+        1 RID         I Rotor identification number
+        2 GRIDA       I Grid A for rotation direction vector
+        3 GRIDB       I Grid B for rotation direction vector
+        4 GR         RS Rotor damping coefficient
+        5 UNIT(2) CHAR4 RPM/FREQ flag for speed input
+        7 TABLEID     I Table identification number for speed history
+        """
+        ntotal = 28 # 4*7
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'3if 4s i')
+        for i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            rid, grida, gridb, gr, unit, table_id = out
+            unit = unit.decode('latin1')
+            if self.is_debug_file:
+                self.binary_debug.write('  RSPINT=%s\n' % str(out))
+            self.add_rspint(rid, grida, gridb, gr, unit, table_id)
+            n += ntotal
+        self.increase_card_count('RSPINT', nentries)
+        return n
+
 #SEQEP(5707,57,135)
 
     def _read_tf(self, data, n):

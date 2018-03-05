@@ -78,7 +78,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
 #from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
-from pyNastran.op2.tables.ogs import OGS
+from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG

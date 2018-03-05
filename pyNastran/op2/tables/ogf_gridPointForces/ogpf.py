@@ -32,10 +32,7 @@ class OGPF(OP2Common):
         """
         table_code = 19
         """
-        if self.isubcase not in self.case_control_deck.subcases:
-            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'GPFORCE', self.log)
-
+        self._setup_op2_subcase('GPFORCE')
         dt = self.nonlinear_factor
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()

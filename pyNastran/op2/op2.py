@@ -715,7 +715,7 @@ class OP2(OP2_Scalar):
         .. code-block:: python
 
           stress = {
-              # isubcase, analysis_code, sort_method, count, subtitle
+              # isubcase, analysis_code, sort_method, count, superelement_adaptivity_index
               (1, 2, 1, 0, 'SUPERELEMENT 0') : result1,
               (1, 2, 1, 0, 'SUPERELEMENT 10') : result2,
               (1, 2, 1, 0, 'SUPERELEMENT 20') : result3,
@@ -733,6 +733,7 @@ class OP2(OP2_Scalar):
         self.combine = combine
         result_types = self.get_table_types()
 
+        # set subcase_key
         for result_type in result_types:
             result = getattr(self, result_type)
             case_keys = sorted(result.keys())
@@ -740,14 +741,16 @@ class OP2(OP2_Scalar):
             for case_key in case_keys:
                 #print('case_key =', case_key)
                 if isinstance(case_key, tuple):
-                    isubcasei, analysis_codei, sort_methodi, counti, isubtitle = case_key
-                    value = (analysis_codei, sort_methodi, counti, isubtitle)
+                    isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index = case_key
+                    #isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, table_name = case_key
+                    value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index)
                     if value not in self.subcase_key[isubcasei]:
                         #print('isubcase=%s value=%s' % (isubcasei, value))
                         self.subcase_key[isubcasei].append(value)
                 else:
                     #print('combine - case_key =', case_keys)
                     break
+
         if not combine:
             subcase_key2 = {}
             for key, value in iteritems(self.subcase_key):
@@ -757,6 +760,7 @@ class OP2(OP2_Scalar):
             #print('skipping combine results')
             return
         del result, case_keys
+
         isubcases = np.unique(list(self.subcase_key.keys()))
         unique_isubcases = np.unique(isubcases)
 
@@ -777,9 +781,13 @@ class OP2(OP2_Scalar):
                 #print('keys = %s' % keys)
                 key0 = tuple([isubcase] + list(keys[0]))
 
-                isubcase, analysis_code, sort_code, count, subtitle = key0
-                key1 = (isubcase, analysis_code, 1, count, subtitle)
-                key2 = (isubcase, analysis_code, 2, count, subtitle)
+                isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index = key0
+                key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index)
+                key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index)
+
+                #isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, table_name = key0
+                #key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, table_name)
+                #key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, table_name)
                 if len(keys) == 1:
                     if key0 not in result:
                         continue
@@ -792,7 +800,8 @@ class OP2(OP2_Scalar):
                     #print('key0 =', result_type, key0)
                     # res0 = result[key0]
 
-                    isubcase, analysis_code, sort_code, count, subtitle = key0
+                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index = key0
+                    #isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, table_name = key0
                     if not (key1 in result and key2 in result):
                         if key1 in result:
                             res1 = result[key1]
