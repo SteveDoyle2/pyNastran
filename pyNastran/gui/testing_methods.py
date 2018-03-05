@@ -327,8 +327,3 @@ class FakeGUIMethods(GuiCommon):
     #test.turn_text_on =  turn_text_on
     #test.turn_text_off = turn_text_off
     #test.cycle_results_explicit = passer
-
-    def _set_legend_fringe(self, is_fringe):
-        self._is_fringe = is_fringe
-        if self._legend_window_shown:
-            self._legend_window._set_legend_fringe(is_fringe)

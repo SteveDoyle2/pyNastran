@@ -4670,6 +4670,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))
 
+        for module_name, module in iteritems(self.modules):
+            module.post_load_geometry()
+
     def get_result_by_cell_id(self, cell_id, world_position, icase=None):
         """should handle multiple cell_ids"""
         if icase is None:

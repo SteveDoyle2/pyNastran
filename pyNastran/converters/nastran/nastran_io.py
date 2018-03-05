@@ -165,12 +165,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         creates the Nastran toolbar when loading a Nastran file
         """
-        #tools = [
+        tools = [
             #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H',
              #'About Nastran GUI and help on shortcuts', self.about_dialog),
             #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H',
              #'About Nastran GUI and help on shortcuts', self.about_dialog),
-        #]
+        ]
         #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
         #self.gui.menu_help.menuAction().setVisible(False)
         if hasattr(self, 'nastran_toolbar'):

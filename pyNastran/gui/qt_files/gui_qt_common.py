@@ -1328,3 +1328,8 @@ class GuiCommon(GuiAttributes):
         assert isinstance(key, integer_types), key
         (obj, (i, name)) = self.result_cases[key]
         return obj.get_location(i, name)
+
+    def _set_legend_fringe(self, is_fringe):
+        self._is_fringe = is_fringe
+        if self._legend_window_shown:
+            self._legend_window._set_legend_fringe(is_fringe)

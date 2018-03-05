@@ -104,6 +104,7 @@ class GuiAttributes(object):
         self.tools = []
         self.checkables = []
         self.actions = {}
+        self.modules = OrderedDict()
 
         # actor_slots
         self.text_actors = {}
