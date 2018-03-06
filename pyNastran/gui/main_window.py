@@ -9,6 +9,7 @@ from __future__ import division, unicode_literals, print_function
 import sys
 import os.path
 from collections import OrderedDict
+import imp
 #import traceback
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
@@ -26,6 +27,7 @@ from pyNastran.gui.utils.version import check_for_newer_version
 
 
 # pyNastran
+from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import (
     NastranIO, DegenGeomIO, ADB_IO, FastIO, # Plot3d_io,
     SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, OpenFoamIO, ObjIO,
@@ -131,29 +133,32 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         self.set_script_path(SCRIPT_PATH)
         self.set_icon_path(ICON_PATH)
 
+        self._load_plugins()
         self.setup_gui()
-        plugin_definition_file = os.path.join(PKG_PATH, 'gui', 'plugins', 'plugins.py')
-
-        if os.path.exists(plugin_definition_file):
-            import imp
-            plugin_module = imp.load_source('plugins', plugin_definition_file)
-            plugin_name_to_path = getattr(plugin_module, 'plugin_name_to_path')
-
-            for module_name, plugin_file, class_name in plugin_name_to_path:
-                assert module_name not in self.modules, 'module_name=%r is already defined' % module_name
-                if not os.path.exists(plugin_file):
-
-                    # auto_wireframe is a test module and is not intended to
-                    # actually load unless you're testing
-                    if module_name != 'auto_wireframe':
-                        self.log_warning('Failed to load plugin %r' % module_name)
-                    continue
-                module = imp.load_source(module_name, plugin_file)
-                my_class = getattr(module, class_name)
-                self.modules[module_name] = my_class(self)
-
         self.setup_post(inputs)
         self._check_for_latest_version(inputs['no_update'])
+
+    def _load_plugins(self):
+        """loads the plugins from pyNastran/gui/plugins.py"""
+        for module_name, plugin_file, class_name in plugin_name_to_path:  # list
+            assert module_name not in self.modules, 'module_name=%r is already defined' % module_name
+
+            if not os.path.exists(plugin_file):
+                # auto_wireframe is a test module and is not intended to
+                # actually load unless you're testing
+                if module_name != 'auto_wireframe':
+                    self.log_warning('Failed to load plugin %r' % module_name)
+                continue
+
+            module = imp.load_source(module_name, plugin_file)
+            my_class = getattr(module, class_name)
+            self.modules[module_name] = my_class(self)
+
+            # tools/checkables
+            tools, checkables = my_class.get_tools_checkables()
+            self.tools += tools
+            for key, is_active in iteritems(checkables):
+                self.checkables[key] = is_active
 
     def _check_for_latest_version(self, check=True):
         """

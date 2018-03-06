@@ -186,14 +186,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.gui.menu_help.
 
         #self.gui.actions['about'].Disable()
-
-        menu_items = [
+        menu_items = {}
+        menu_items['nastran_toolbar'] = (self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
+        #menu_items = [
             #(self.menu_help2, ('about_nastran',)),
-            (self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
+            #(self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
             #(self.menu_window, tuple(menu_window)),
             #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
-        ]
+
         return tools, menu_items
 
     def toggle_caero_panels(self):

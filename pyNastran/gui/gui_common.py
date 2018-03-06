@@ -644,19 +644,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
         hidden_tools = ('cycle_results', 'rcycle_results',
                         'font_size_increase', 'font_size_decrease')
 
-        menu_items = []
+        menu_items = OrderedDict()
         if create_menu_bar:
-            menu_items = [
-                (self.menu_file, menu_file),
-                (self.menu_view, menu_view),
-                (self.menu_window, menu_window),
-                (self.menu_help, ('about',)),
-                (self.menu_scripts, scripts),
-                (self.toolbar, toolbar_tools),
-                (self.menu_hidden, hidden_tools),
-                # (self.menu_scripts, ()),
-                #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
-            ]
+            menu_items['file'] = (self.menu_file, menu_file)
+            menu_items['view'] = (self.menu_view, menu_view)
+            menu_items['main'] = (self.menu_window, menu_window)
+            menu_items['help'] = (self.menu_help, ('about',))
+            menu_items['scripts'] = (self.menu_scripts, scripts)
+            menu_items['toolbar'] = (self.toolbar, toolbar_tools)
+            menu_items['hidden'] = (self.menu_hidden, hidden_tools)
         return menu_items
 
     def _hide_menubar(self):
@@ -680,7 +676,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
-        for menu, items in menu_items:
+        assert isinstance(menu_items, dict), menu_items
+        for menu_name, (menu, items) in iteritems(menu_items):
             if menu is None:
                 continue
             for i in items:
@@ -710,7 +707,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self._create_plane_from_points(None)
 
     def _update_menu(self, menu_items):
-        for menu, unused_items in menu_items:
+        assert isinstance(menu_items, dict), menu_items
+        for name, (menu, unused_items) in iteritems(menu_items):
             menu.clear()
         self._populate_menu(menu_items)
 
@@ -2776,11 +2774,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             if hasattr(self, method_new):
                 self._update_menu_bar_to_format(self.format, method_new)
-                    #self._update_menu_bar_to_format(self.format)
-                    #actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
-                    #menu_items = self._create_menu_items(actions)
-                    #menu_items = self._create_menu_items()
-                    #self._populate_menu(menu_items)
+                #self._update_menu_bar_to_format(self.format)
+                #actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
+                #menu_items = self._create_menu_items(actions)
+                #menu_items = self._create_menu_items()
+                #self._populate_menu(menu_items)
 
     def on_load_custom_results(self, out_filename=None, restype=None):
         """will be a more generalized results reader"""
