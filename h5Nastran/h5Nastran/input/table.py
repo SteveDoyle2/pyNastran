@@ -18,6 +18,7 @@ class Table(object):
         self.tabled1 = TABLED1(self._h5n, self)
         self.tabled2 = TABLED2(self._h5n, self)
         self.tablem1 = TABLEM1(self._h5n, self)
+        self.tablem3 = TABLEM3(self._h5n, self)
 
     def path(self):
         return self._input.path() + ['TABLE']
@@ -147,7 +148,7 @@ class TABLED2(CardTable):
 
         xy = {'IDENTITY': {'X': [], 'Y': []}}
 
-        result = {'IDENTITY': {'ID': [], 'X1': [], 'POS': [], 'LEN': [], 'DOMAIN_ID': []},
+        result = {'IDENTITY': {'ID': [], 'X1': [], 'X2': [], 'POS': [], 'LEN': [], 'DOMAIN_ID': []},
                   'XY': xy,
                   '_subtables': ['XY']}
 
@@ -181,3 +182,42 @@ class TABLED2(CardTable):
 class TABLEM1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM1/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
     from_bdf = TABLED1.from_bdf
+
+
+class TABLEM3(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM3/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        xy = {'IDENTITY': {'X': [], 'Y': []}}
+
+        result = {'IDENTITY': {'ID': [], 'X1': [], 'POS': [], 'LEN': [], 'DOMAIN_ID': []},
+                  'XY': xy,
+                  '_subtables': ['XY']}
+
+        x = xy['IDENTITY']['X']
+        y = xy['IDENTITY']['Y']
+        identity = result['IDENTITY']
+        id_ = identity['ID']
+        x1 = identity['X1']
+        x2 = identity['X2']
+        pos = identity['POS']
+        len_ = identity['LEN']
+
+        _pos = 0
+        for card_id in card_ids:
+            card = cards[card_id]
+
+            id_.append(card.tid)
+            x1.append(card.x1)
+            x2.append(card.x2)
+            pos.append(_pos)
+            _len = len(card.x)
+            len_.append(_len)
+            _pos += _len
+            x.extend(list(card.x))
+            y.extend(list(card.y))
+
+        return result

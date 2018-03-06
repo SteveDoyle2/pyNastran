@@ -1007,6 +1007,23 @@ class PCONVM(CardTable):
 class PDAMP(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PDAMP')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        b = data['B']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+            pid[i] = card.pid
+            b[i] = card.b
+
+        return {'IDENTITY': data}
+
 ########################################################################################################################
 
 
@@ -1056,6 +1073,32 @@ class PELAS(CardTable):
 
 class PELAST(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PELAST')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        tkid = data['TKID']
+        tgeid = data['TGEID']
+        tknid = data['TKNID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            pid[i] = card.pid
+            tkid[i] = card.tkid
+            tgeid[i] = card.tgeid
+            tknid[i] = card.tknid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 ########################################################################################################################
 

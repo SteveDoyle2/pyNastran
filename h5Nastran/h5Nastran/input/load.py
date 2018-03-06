@@ -14,6 +14,7 @@ class Load(object):
         self._h5n = h5n
         self._input = input
 
+        self.darea = DAREA(self._h5n, self)
         self.dload = DLOAD(self._h5n, self)
         self.force = FORCE(self._h5n, self)
         self.load = LOAD(self._h5n, self)
@@ -31,6 +32,49 @@ class Load(object):
                 item.read()
             except AttributeError:
                 pass
+
+########################################################################################################################
+
+
+class DAREA(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/LOAD/DAREA')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        result = {
+            'IDENTITY': {
+                'SID': [],
+                'P': [],
+                'C': [],
+                'A': []
+            }
+        }
+
+        identity = result['IDENTITY']
+
+        sid = identity['SID']
+        p = identity['P']
+        c = identity['C']
+        a = identity['A']
+
+        for card_id in card_ids:
+            card = cards[card_id]
+            _sid = card.sid
+
+            node_ids = card.node_ids
+            components = card.components
+            scales = card.scales
+
+            for j in range(len(node_ids)):
+                sid.append(_sid)
+                p.append(node_ids[j])
+                c.append(components[j])
+                a.append(scales[j])
+
+        return result
+
 
 ########################################################################################################################
 
