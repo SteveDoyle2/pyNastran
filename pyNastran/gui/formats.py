@@ -61,6 +61,12 @@ try:
 except ImportError:
     pass
 
+try:
+    from pyNastran.converters.fast.fast_io import FastIO
+    CLASS_MAP['fast'] = FastIO
+except ImportError:
+    pass
+
 
 from pyNastran.converters.nastran.nastran_io import NastranIO
 is_nastran = True
@@ -68,7 +74,6 @@ is_nastran = True
 
 #from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
 
-from pyNastran.converters.fast.fast_io import FastIO
 is_fast = True
 
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
@@ -125,6 +130,11 @@ except ImportError:
 
 try:
     from pyNastran.converters.dev.obj.obj_io import ObjIO
+    CLASS_MAP['obj'] = ObjIO
+except ImportError:
+    pass
+
+try:
     is_obj = True
 except ImportError:
     class ObjIO(object):

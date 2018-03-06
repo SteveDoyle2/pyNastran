@@ -23,6 +23,7 @@ FORMAT_TO_EXTENSION = {
     'su2' : ['.su2'],
     'tetgen' : ['.smesh', '.ele'],
     'obj' : ['.obj'],
+    'fast' : ['.fgrid'],
     #'abaqus' : []
 
     # no duplicates are allowed

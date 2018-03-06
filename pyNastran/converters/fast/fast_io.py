@@ -3,17 +3,17 @@ Defines the GUI IO file for Fast.
 """
 from __future__ import print_function
 import os
-from collections import defaultdict
-from six import iteritems
-
+import numpy as np
 from vtk import vtkTriangle, vtkTetra
-from pyNastran.converters.fast.fgrid_reader import FGridReader
+
+from pyNastran.converters.fast.fgrid_reader import read_fgrid
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class FastIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_fast_wildcard_geometry_results_functions(self):
         data = ('FAST',
@@ -22,54 +22,61 @@ class FastIO(object):
         return data
 
     def load_fast_geometry(self, fgrid_filename, name='main', plot=True):
-        skip_reading = self._remove_old_geometry(fgrid_filename)
+        skip_reading = self.parent._remove_old_geometry(fgrid_filename)
         if skip_reading:
             return
-
-        model = FGridReader(log=self.log, debug=False)
 
         ext = os.path.splitext(fgrid_filename)[1]
         ext = ext.lower()
         if ext == '.fgrid':
             dimension_flag = 3
         else:
-            raise RuntimeError('unsupported extension=%r.  Use "cogsg" or "front".' % ext)
+            msg = 'unsupported extension=%r.  Use "fgrid".' % ext
+            raise RuntimeError(msg)
 
-        read_loads = True
-        model.read_fgrid(fgrid_filename, dimension_flag)
+        #read_loads = True
+        model = read_fgrid(
+            fgrid_filename,
+            dimension_flag,
+            log=self.parent.log, debug=False,
+        )
 
-        dimension_flag = 3
         nodes = model.nodes
-        tris = model.tris - 1
-        tets = model.tets - 1
+
+        ntris = 0
+        ntets = 0
+        if model.tets is None:
+            dimension_flag = 2
+            if model.tris is not None:
+                tris = model.tris - 1
+                ntris = tris.shape[0]
+        else:
+            dimension_flag = 3
+            tets = model.tets - 1
+            ntets = tets.shape[0]
 
         nnodes = nodes.shape[0]
-        ntris = tris.shape[0]
-        ntets = tets.shape[0]
+        model.log.info('ntris=%s ntets=%s' % (ntris, ntets))
 
         #print('node0 = %s' % str(nodes[0, :]))
         #print('node%i = %s' % (1, str(nodes[1, :])))
         #print('node%i = %s' % (2, str(nodes[2, :])))
         #print('node%i = %s' % (nnodes, str(nodes[-1, :])))
-        #print('tris.max/min = ', tris.max(), tris.min())
-        #print('tets.max/min = ', tets.max(), tets.min())
-        #bcs = model.bcs
         #mapbc = model.mapbc
         #loads = model.loads
 
-        self.nnodes = nnodes
-        self.nelements = ntris + ntets
+        self.parent.nnodes = nnodes
+        nelements = ntris + ntets
+        self.parent.nelements = nelements
 
         #print("nnodes = %i" % self.nnodes)
         #print("nelements = %i" % self.nelements)
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.parent.grid
+        grid.Allocate(self.parent.nelements, 1000)
 
         points = numpy_to_vtk_points(nodes)
-        self.nid_map = {}
-        #if 0:
-            #fraction = 1. / self.nnodes  # so you can color the nodes by ID
+        self.parent.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -77,22 +84,20 @@ class FastIO(object):
         if dimension_flag == 2:
             for (n0, n1, n2) in tris:
                 elem = vtkTriangle()
-                #node_ids = elements[eid, :]
                 elem.GetPointIds().SetId(0, n0)
                 elem.GetPointIds().SetId(1, n1)
                 elem.GetPointIds().SetId(2, n2)
                 #elem.GetCellType() = 5  # vtkTriangle
                 grid.InsertNextCell(5, elem.GetPointIds())
         elif dimension_flag == 3:
-            if ntets:
-                for (n0, n1, n2, n3) in tets:
-                    elem = vtkTetra()
-                    elem.GetPointIds().SetId(0, n0)
-                    elem.GetPointIds().SetId(1, n1)
-                    elem.GetPointIds().SetId(2, n2)
-                    elem.GetPointIds().SetId(3, n3)
-                    #elem.GetCellType() = 5  # vtkTriangle
-                    grid.InsertNextCell(10, elem.GetPointIds())
+            for (n0, n1, n2, n3) in tets:
+                elem = vtkTetra()
+                elem.GetPointIds().SetId(0, n0)
+                elem.GetPointIds().SetId(1, n1)
+                elem.GetPointIds().SetId(2, n2)
+                elem.GetPointIds().SetId(3, n3)
+                #elem.GetCellType() = 10  # vtkTetra
+                grid.InsertNextCell(10, elem.GetPointIds())
         else:
             raise RuntimeError('dimension_flag=%r' % dimension_flag)
 
@@ -102,62 +107,94 @@ class FastIO(object):
             grid.Update()
 
         # regions/loads
-        self.scalarBar.Modified()
+        self.parent.scalarBar.Modified()
 
         cases = {}
         #cases = self.result_cases
-        self._fill_fast_results(cases, model, results=False)
-        self._finish_results_io(cases)
+        form = []
+        self._fill_fast_results(
+            form, cases, model,
+            nnodes, nelements, dimension_flag,
+            results=True)
+        self.parent._finish_results_io2(form, cases)
 
     def clear_fast(self):
         pass
 
-    def _fill_fast_results(self, cases, model, results=False):
+    def _fill_fast_results(self, form, cases, model,
+                           nnodes, nelements, dimension_flag,
+                           results=False):
         note = ''
-
-        self.isubcase_name_map = {
+        self.parent.isubcase_name_map = {
             1: ['Fast%s' % note, ''],
-            2: ['Fast%s' % note, ''],
+            #2: ['Fast%s' % note, ''],
         }
+        cases = self._fill_fast_case(
+            form, cases, model,
+            nnodes, nelements, dimension_flag,
+            results=results)
 
-        #ID = 1
-        cases = self._fill_fast_case(cases, model, results=results)
-
-    def _fill_fast_case(self, cases, model, results=False):
-        self.scalarBar.VisibilityOff()
+    def _fill_fast_case(self, form, cases, model,
+                        nnodes, nelements, dimension_flag,
+                        results=False):
+        self.parent.scalarBar.VisibilityOff()
 
         icase = 0
         geometry_form = [
-            ('ElementID', icase, [])
+            ('NodeID', icase + 0, []),
+            ('ElementID', icase + 1, []),
         ]
-        if results:
-            ID = 1
-            if bcs is not None:
-                cases[(ID, icase, 'Region', 1, 'centroid', '%i', '')] = bcs
-                icase += 1
+        res_id = 1
+        nids = np.arange(1, nnodes + 1)
+        eids = np.arange(1, nelements + 1)
 
-                mapbc_print = defaultdict(list)
-                for region, bcnum in sorted(iteritems(mapbc)):
-                    mapbc_print[bcnum].append(region)
-                    try:
-                        name = bcmap_to_bc_name[bcnum]
-                    except KeyError:
-                        name = '???'
-                    #self.log.info('Region=%i BC=%s name=%r' % (region, bcnum, name))
+        nid_res = GuiResult(res_id, header='NodeID', title='NodeID',
+                            location='node', scalar=nids)
+        cases[icase] = (nid_res, (0, 'NodeID'))
+        icase += 1
 
-                for bcnum, regions in sorted(iteritems(mapbc_print)):
-                    try:
-                        name = bcmap_to_bc_name[bcnum]
-                    except KeyError:
-                        name = '???'
-                    self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
-                self.scalarBar.VisibilityOn()
+        eid_res = GuiResult(res_id, header='ElementID', title='ElementID',
+                            location='centroid', scalar=eids)
+        cases[icase] = (eid_res, (0, 'ElementID'))
+        icase += 1
 
-            #==============================
-            ID = 2
-            if len(loads):
-                for key, load in iteritems(loads):
-                    cases[(ID, icase, key, 1, 'node', '%.3f')] = load
-                    icase += 1
-                self.scalarBar.VisibilityOn()
+        if dimension_flag == 2:
+            geometry_form.append(('BC', icase + 2, []))
+            bc_res = GuiResult(res_id, header='BoundaryCondition', title='BC',
+                               location='centroid', scalar=model.bcs)
+            cases[icase] = (bc_res, (0, 'BoundaryCondition'))
+            icase += 1
+
+        #if results:
+            #res_id = 1
+            #if bcs is not None:
+                #cases[(res_id, icase, 'Region', 1, 'centroid', '%i', '')] = bcs
+                #icase += 1
+
+                #mapbc_print = defaultdict(list)
+                #for region, bcnum in sorted(iteritems(mapbc)):
+                    #mapbc_print[bcnum].append(region)
+                    #try:
+                        #name = bcmap_to_bc_name[bcnum]
+                    #except KeyError:
+                        #name = '???'
+                    ##self.log.info('Region=%i BC=%s name=%r' % (region, bcnum, name))
+
+                #for bcnum, regions in sorted(iteritems(mapbc_print)):
+                    #try:
+                        #name = bcmap_to_bc_name[bcnum]
+                    #except KeyError:
+                        #name = '???'
+                    #self.log.info('BC=%s Regions=%s name=%r' % (bcnum, regions, name))
+                #self.scalarBar.VisibilityOn()
+
+            ##==============================
+            #res_id = 2
+            #if len(loads):
+                #for key, load in iteritems(loads):
+                    #cases[(res_id, icase, key, 1, 'node', '%.3f')] = load
+                    #icase += 1
+                #self.scalarBar.VisibilityOn()
+
+        form.append(('Geometry', None, geometry_form))
         return cases

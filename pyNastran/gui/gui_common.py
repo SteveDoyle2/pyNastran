@@ -2443,7 +2443,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def build_fmts(self, fmt_order, stop_on_failure=False):
         """populates the formats that will be supported"""
-        stop_on_failure=True
+        stop_on_failure = True
         fmts = []
         for fmt in fmt_order:
             geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
@@ -2454,9 +2454,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             elif hasattr(self, geom_results_funcs):
                 data = getattr(self, geom_results_funcs)()
             else:
+                msg = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
                 if stop_on_failure:
-                    func = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
-                    raise RuntimeError(func)
+                    raise RuntimeError(msg)
+                self.log_error(msg)
             self._add_fmt(fmts, fmt, geom_results_funcs, data)
 
         if len(fmts) == 0:
@@ -4878,7 +4879,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             t = (key[1], i, [])
             data.append(t)
             i += 1
-        self.res_widget.update_results(data)
+        self.res_widget.update_results(data, self.name)
+
+        #method = 'centroid' if location else 'nodal'
+        #data2 = [(method, None, [])]
 
         data2 = [('node/centroid', None, [])]
         self.res_widget.update_methods(data2)

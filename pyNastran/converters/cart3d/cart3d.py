@@ -493,9 +493,7 @@ class Cart3dIO(object):
 
 
 class Cart3D(Cart3dIO):
-    """
-    Cart3d interface class
-    """
+    """Cart3d interface class"""
     model_type = 'cart3d'
     is_structured = False
     is_outward_normals = True
