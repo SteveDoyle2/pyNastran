@@ -148,7 +148,7 @@ class TABLED2(CardTable):
 
         xy = {'IDENTITY': {'X': [], 'Y': []}}
 
-        result = {'IDENTITY': {'ID': [], 'X1': [], 'X2': [], 'POS': [], 'LEN': [], 'DOMAIN_ID': []},
+        result = {'IDENTITY': {'ID': [], 'X1': [], 'POS': [], 'LEN': [], 'DOMAIN_ID': []},
                   'XY': xy,
                   '_subtables': ['XY']}
 
@@ -193,7 +193,7 @@ class TABLEM3(CardTable):
 
         xy = {'IDENTITY': {'X': [], 'Y': []}}
 
-        result = {'IDENTITY': {'ID': [], 'X1': [], 'POS': [], 'LEN': [], 'DOMAIN_ID': []},
+        result = {'IDENTITY': {'ID': [], 'X1': [], 'X2': [], 'POS': [], 'LEN': [], 'DOMAIN_ID': []},
                   'XY': xy,
                   '_subtables': ['XY']}
 
