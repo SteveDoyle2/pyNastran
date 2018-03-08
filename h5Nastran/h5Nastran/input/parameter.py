@@ -77,7 +77,7 @@ class NLPARM(CardTable):
             card = cards[card_id]
 
             sid[i] = card.nlparm_id
-            ninc[i] = card.ninc
+            ninc[i] = card.ninc if card.ninc is not None else DataHelper.default_int
             dt[i] = card.dt
             kmethod[i] = _kmethod[card.kmethod]
             kstep[i] = card.kstep

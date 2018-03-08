@@ -17,8 +17,12 @@ class Table(object):
         self.tabdmp1 = TABDMP1(self._h5n, self)
         self.tabled1 = TABLED1(self._h5n, self)
         self.tabled2 = TABLED2(self._h5n, self)
+        self.tabled3 = TABLED3(self._h5n, self)
+        self.tabled4 = TABLED4(self._h5n, self)
         self.tablem1 = TABLEM1(self._h5n, self)
+        self.tablem2 = TABLEM2(self._h5n, self)
         self.tablem3 = TABLEM3(self._h5n, self)
+        self.tablem4 = TABLEM4(self._h5n, self)
 
     def path(self):
         return self._input.path() + ['TABLE']
@@ -174,18 +178,12 @@ class TABLED2(CardTable):
             y.extend(list(card.y))
 
         return result
-    
 
 ########################################################################################################################
 
 
-class TABLEM1(CardTable):
-    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM1/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
-    from_bdf = TABLED1.from_bdf
-
-
-class TABLEM3(CardTable):
-    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM3/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
+class TABLED3(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLED3/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
 
     @classmethod
     def from_bdf(cls, cards):
@@ -221,3 +219,77 @@ class TABLEM3(CardTable):
             y.extend(list(card.y))
 
         return result
+
+########################################################################################################################
+
+
+class TABLED4(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLED4/IDENTITY', rename={'COEF_POS': 'POS', 'COEF_LEN': 'LEN'})
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        coef = {'IDENTITY': {'A': []}}
+
+        result = {'IDENTITY': {'ID': [], 'X1': [], 'X2': [], 'X3': [], 'X4': [], 'POS': [], 'LEN': [], 'DOMAIN_ID': []},
+                  'COEF': coef,
+                  '_subtables': ['COEF']}
+
+        a = coef['IDENTITY']['A']
+        identity = result['IDENTITY']
+        id_ = identity['ID']
+        x1 = identity['X1']
+        x2 = identity['X2']
+        x3 = identity['X3']
+        x4 = identity['X4']
+        pos = identity['POS']
+        len_ = identity['LEN']
+
+        _pos = 0
+        for card_id in card_ids:
+            card = cards[card_id]
+
+            id_.append(card.tid)
+            x1.append(card.x1)
+            x2.append(card.x2)
+            x3.append(card.x3)
+            x4.append(card.x4)
+            pos.append(_pos)
+            _len = len(card.a)
+            len_.append(_len)
+            _pos += _len
+            a.extend(list(card.a))
+
+        return result
+
+########################################################################################################################
+
+
+class TABLEM1(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM1/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
+    from_bdf = TABLED1.from_bdf
+
+
+########################################################################################################################
+
+
+class TABLEM2(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM2/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
+    from_bdf = TABLED2.from_bdf
+
+########################################################################################################################
+
+
+class TABLEM3(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM3/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
+    from_bdf = TABLED3.from_bdf
+
+
+########################################################################################################################
+
+
+class TABLEM4(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM4/IDENTITY', rename={'COEF_POS': 'POS', 'COEF_LEN': 'LEN'})
+    from_bdf = TABLED4.from_bdf
+

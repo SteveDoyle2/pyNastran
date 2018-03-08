@@ -1130,7 +1130,7 @@ class CGAP(CardTable):
             f[i] = DataHelper.unknown_int  # TODO: CGAP flag
             x1[i], x2[i], x3[i] = _x
             go[i] = _g0
-            cid[i] = card.cid
+            cid[i] = card.cid if card.cid is not None else DataHelper.default_int
 
         result = {
             'IDENTITY': data
@@ -1525,6 +1525,52 @@ class CQUAD4FD(CardTable):
 class CQUAD8(CardTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD8')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            theta_mcid = card.theta_mcid
+            if not isinstance(theta_mcid, float):
+                _mcid = theta_mcid
+                _theta = DataHelper.default_double
+            else:
+                _mcid = DataHelper.default_int
+                _theta = theta_mcid
+
+            nids = [nid if nid is not None else 0 for nid in card.node_ids]
+            if len(nids) < 8:
+                nids += [0] * (8 - len(nids))
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = nids
+            theta[i] = _theta
+            zoffs[i] = card.zoffset
+            tflag[i] = card.tflag
+            t[i] = [card.T1, card.T2, card.T3, card.T4]
+            mcid[i] = _mcid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -1538,6 +1584,48 @@ class CQUAD9FD(CardTable):
 
 class CQUADR(CardTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUADR')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            theta_mcid = card.theta_mcid
+            if not isinstance(theta_mcid, float):
+                _mcid = theta_mcid
+                _theta = DataHelper.default_double
+            else:
+                _mcid = DataHelper.default_int
+                _theta = theta_mcid
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = card.node_ids
+            theta[i] = _theta
+            zoffs[i] = card.zoffset
+            tflag[i] = card.tflag
+            t[i] = [card.T1, card.T2, card.T3, card.T4]
+            mcid[i] = _mcid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################
@@ -1810,6 +1898,48 @@ class CTRIAH(CardTable):
 class CTRIAR(CardTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIAR')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            theta_mcid = card.theta_mcid
+            if not isinstance(theta_mcid, float):
+                _mcid = theta_mcid
+                _theta = DataHelper.default_double
+            else:
+                _mcid = DataHelper.default_int
+                _theta = theta_mcid
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = card.node_ids
+            theta[i] = _theta
+            zoffs[i] = card.zoffset
+            tflag[i] = card.tflag
+            t[i] = [card.T1, card.T2, card.T3]
+            mcid[i] = _mcid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
+
 
 ########################################################################################################################
 
@@ -1844,6 +1974,32 @@ class CTRIX6FD(CardTable):
 
 class CTUBE(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTUBE')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            nids = [nid if nid else 0 for nid in card.node_ids]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            g[i] = nids
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 
 ########################################################################################################################

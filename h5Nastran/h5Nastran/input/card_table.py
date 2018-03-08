@@ -226,6 +226,35 @@ class CardTable(object):
     def from_bdf(cls, cards):
         raise NotImplementedError
 
+    @classmethod
+    def _from_bdf(cls, cards, column_ids):
+        result = {
+            'IDENTITY': {_[0]: [] for _ in column_ids}
+        }
+
+        _id = result['IDENTITY']
+
+        card_ids = sorted(cards.keys())
+
+        for card_id in card_ids:
+            card = cards[card_id]
+
+            for col in column_ids:
+                attr = col[1]
+                try:
+                    data = getattr(card, col[1])
+                except AttributeError as e:
+                    if attr == '':
+                        data = attr
+                    elif isinstance(attr, (int, float)):
+                        data = attr
+                    else:
+                        raise e
+
+                _id[col[0]].append(data)
+
+        return result
+
     def __init__(self, h5n, parent):
         self._h5n = h5n
         self._parent = parent

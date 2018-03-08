@@ -124,13 +124,13 @@ class GRID(CardTable):
 
         ids = data['ID']
         x = data['X']
-        cd = data['CD']
+        cp = data['CP']
 
         position_to_basic = self._h5n.input.coordinate_system.h5n_transformation.position_to_basic
 
         for i in range(len(ids)):
             nid = ids[i]
-            arr = position_to_basic(x[i], cd[i])
+            arr = position_to_basic(x[i], cp[i])
             arr.setflags(write=False)
             result[nid] = arr
             
