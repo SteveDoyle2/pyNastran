@@ -674,6 +674,75 @@ class PBEMN1(CardTable):
 class PBEND(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBEND')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        mid = data['MID']
+        a = data['A']
+        i1 = data['I1']
+        i2 = data['I2']
+        j = data['J']
+        fsi = data['FSI']
+        rm = data['RM']
+        t = data['T']
+        p = data['P']
+        rb = data['RB']
+        thetab = data['THETAB']
+        c1 = data['C1']
+        c2 = data['C2']
+        d1 = data['D1']
+        d2 = data['D2']
+        e1 = data['E1']
+        e2 = data['E2']
+        f1 = data['F1']
+        f2 = data['F2']
+        k1 = data['K1']
+        k2 = data['K2']
+        nsm = data['NSM']
+        rc = data['RC']
+        zc = data['ZC']
+        deltan = data['DELTAN']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            pid[i] = card.pid
+            mid[i] = card.mid
+            a[i] = card.A
+            i1[i] = card.i1
+            i2[i] = card.i2
+            j[i] = card.j
+            fsi[i] = card.fsi
+            rm[i] = card.rm
+            t[i] = card.t
+            p[i] = card.p
+            rb[i] = card.rb
+            thetab[i] = card.theta_b
+            c1[i] = card.c1
+            c2[i] = card.c2
+            d1[i] = card.d1
+            d2[i] = card.d2
+            e1[i] = card.e1
+            e2[i] = card.e2
+            f1[i] = card.f1
+            f2[i] = card.f2
+            k1[i] = card.k1
+            k2[i] = card.k2
+            nsm[i] = card.nsm
+            rc[i] = card.rc
+            zc[i] = card.zc
+            deltan[i] = card.delta_n
+
+        result = {'IDENTITY': data}
+
+        return result
+
 ########################################################################################################################
 
 
@@ -750,8 +819,25 @@ class PBUSH(CardTable):
 ########################################################################################################################
 
 
+# TODO: PBUSH1D doesn't seem to match Nastran QRG
 class PBUSH1D(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBUSH1D')
+
+    # @classmethod
+    # def from_bdf(cls, cards):
+    #     return cls._from_bdf(
+    #         cards,
+    #         [
+    #             ('PID', 'pid'), ('K', 'k'), ('C', 'c'), ('M', 'm'), ('ALPHA', DataHelper.unknown_double), ('SA', 'sa'),
+    #             ('EA', 'se'),
+    #             ('TYPEA', 'shock_type'), ('CVT', 'shock_cvt'), ('CVC', 'shock_cvc'), ('EXPVT', 'shock_exp_vt'), ('EXPVC', 'shock_exp_vc'),
+    #             ('IDTSU', 'shock_idts'), ('IDTCU', 'shock_idets'), ('IDTSUD', 'shock_idecs'), ('IDCSUB', 'idcsud'), ('TYPES', 'types'),
+    #             ('IDTS', 'idts'), ('IDCS', 'idcs'), ('IDTDU1', 'idtdu1'), ('IDCDU1', 'idcdu1'), ('TYPED', 'typed'),
+    #             ('IDTD1', 'idtd1'), ('IDTD2', 'idtd2'), ('IDTDV1', 'idtdv1'), ('IDCDV1', 'idcdv1'), ('TYPEG', 'typeg'),
+    #             ('IDTG', 'idtg'), ('IDCG', 'idcg'), ('IDTDU2', 'idtdu2'), ('IDCDU2', 'idcdu2'), ('IDTDV2', 'idtdv2'),
+    #             ('IDCDV2', 'idcdv2'), ('TYPEF', 'typef'), ('IDTF', 'idtf'), ('IDCF', 'idcf'), ('UT', 'ut'), ('UC', 'uc')
+    #         ]
+    #     )
 
 ########################################################################################################################
 
@@ -1007,6 +1093,23 @@ class PCONVM(CardTable):
 class PDAMP(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PDAMP')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        b = data['B']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+            pid[i] = card.pid
+            b[i] = card.b
+
+        return {'IDENTITY': data}
+
 ########################################################################################################################
 
 
@@ -1056,6 +1159,32 @@ class PELAS(CardTable):
 
 class PELAST(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PELAST')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        tkid = data['TKID']
+        tgeid = data['TGEID']
+        tknid = data['TKNID']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            pid[i] = card.pid
+            tkid[i] = card.tkid
+            tgeid[i] = card.tgeid
+            tknid[i] = card.tknid
+
+        result = {
+            'IDENTITY': data
+        }
+
+        return result
 
 ########################################################################################################################
 
@@ -1308,8 +1437,48 @@ class PSOLID(CardTable):
 ########################################################################################################################
 
 
+# msc format missing OD2
+class PTUBE_SPEC(object):
+    name = 'PTUBE'
+    path = '/NASTRAN/INPUT/PROPERTY'
+    dtype = [('PID', '<i8', ()), ('MID', '<i8', ()), ('OD', '<f8', ()), ('T', '<f8', ()), ('NSM', '<f8', ()),
+             ('OD2', '<f8', ()), ('DOMAIN_ID', '<i8', ())]
+    is_subtable = False
+    same_as = 'None'
+    subtables = []
+
+
 class PTUBE(CardTable):
-    table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PTUBE')
+    table_def = TableDef.create(PTUBE_SPEC)
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        mid = data['MID']
+        od = data['OD']
+        t = data['T']
+        nsm = data['NSM']
+        od2 = data['OD2']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            pid[i] = card.pid
+            mid[i] = card.mid
+            od[i] = card.OD1
+            t[i] = card.t
+            nsm[i] = card.nsm
+            od2[i] = card.OD2
+
+        result = {'IDENTITY': data}
+
+        return result
 
 ########################################################################################################################
 

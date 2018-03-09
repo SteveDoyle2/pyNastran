@@ -1,5 +1,9 @@
 from __future__ import print_function
 
+import sys
+
+# sys.path.insert(0, r'P:\redmond\pyNastran')
+
 import numpy as np
 
 from h5Nastran import H5Nastran
