@@ -15,6 +15,7 @@ from .property import Property
 from .node import Node
 from .material import Material
 from .parameter import Parameter
+from .partition import Partition
 from .table import Table
 from .dynamic import Dynamic
 from .design import Design
@@ -38,7 +39,7 @@ class Input(object):
         # self.modules = None
         self.node = Node(self._h5n, self)
         self.parameter = Parameter(self._h5n, self)
-        # self.partition = None
+        self.partition = Partition(self._h5n, self)
         self.property = Property(self._h5n, self)
         self.table = Table(self._h5n, self)
         # self.uds = None

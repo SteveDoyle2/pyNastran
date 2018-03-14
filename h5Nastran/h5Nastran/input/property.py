@@ -226,6 +226,41 @@ class PACINF(CardTable):
 class PAERO1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAERO1')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        b1 = data['B1']
+        b2 = data['B2']
+        b3 = data['B3']
+        b4 = data['B4']
+        b5 = data['B5']
+        b6 = data['B6']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            pid[i] = card.pid
+
+            bi = list(card.Bi)
+
+            diff_len = 6 - len(bi)
+
+            if diff_len > 0:
+                bi += [None] * diff_len
+
+            bi = [_ if _ is not None else DataHelper.default_int for _ in bi]
+
+            b1[i], b2[i], b3[i], b4[i], b5[i], b6[i] = bi
+
+        return {'IDENTITY': data}
+
+
 ########################################################################################################################
 
 
@@ -819,25 +854,179 @@ class PBUSH(CardTable):
 ########################################################################################################################
 
 
-# TODO: PBUSH1D doesn't seem to match Nastran QRG
+# TODO: PBUSH1D verify correctness
 class PBUSH1D(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBUSH1D')
 
-    # @classmethod
-    # def from_bdf(cls, cards):
-    #     return cls._from_bdf(
-    #         cards,
-    #         [
-    #             ('PID', 'pid'), ('K', 'k'), ('C', 'c'), ('M', 'm'), ('ALPHA', DataHelper.unknown_double), ('SA', 'sa'),
-    #             ('EA', 'se'),
-    #             ('TYPEA', 'shock_type'), ('CVT', 'shock_cvt'), ('CVC', 'shock_cvc'), ('EXPVT', 'shock_exp_vt'), ('EXPVC', 'shock_exp_vc'),
-    #             ('IDTSU', 'shock_idts'), ('IDTCU', 'shock_idets'), ('IDTSUD', 'shock_idecs'), ('IDCSUB', 'idcsud'), ('TYPES', 'types'),
-    #             ('IDTS', 'idts'), ('IDCS', 'idcs'), ('IDTDU1', 'idtdu1'), ('IDCDU1', 'idcdu1'), ('TYPED', 'typed'),
-    #             ('IDTD1', 'idtd1'), ('IDTD2', 'idtd2'), ('IDTDV1', 'idtdv1'), ('IDCDV1', 'idcdv1'), ('TYPEG', 'typeg'),
-    #             ('IDTG', 'idtg'), ('IDCG', 'idcg'), ('IDTDU2', 'idtdu2'), ('IDCDU2', 'idcdu2'), ('IDTDV2', 'idtdv2'),
-    #             ('IDCDV2', 'idcdv2'), ('TYPEF', 'typef'), ('IDTF', 'idtf'), ('IDCF', 'idcf'), ('UT', 'ut'), ('UC', 'uc')
-    #         ]
-    #     )
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        k = data['K']
+        c = data['C']
+        m = data['M']
+        alpha = data['ALPHA']
+        sa = data['SA']
+        ea = data['EA']
+        typea = data['TYPEA']
+        cvt = data['CVT']
+        cvc = data['CVC']
+        expvt = data['EXPVT']
+        expvc = data['EXPVC']
+        idtsu = data['IDTSU']
+        idtcu = data['IDTCU']
+        idtsud = data['IDTSUD']
+        idcsud = data['IDCSUD']
+        types = data['TYPES']
+        idts = data['IDTS']
+        idcs = data['IDCS']
+        idtdu1 = data['IDTDU1']
+        idcdu1 = data['IDCDU1']
+        typed = data['TYPED']
+        idtd1 = data['IDTD1']
+        idtd2 = data['IDTD2']
+        idtdv1 = data['IDTDV1']
+        idcdv1 = data['IDCDV1']
+        typeg = data['TYPEG']
+        idtg = data['IDTG']
+        idcg = data['IDCG']
+        idtdu2 = data['IDTDU2']
+        idcdu2 = data['IDCDU2']
+        idtdv2 = data['IDTDV2']
+        idcdv2 = data['IDCDV2']
+        typef = data['TYPEF']
+        idtf = data['IDTF']
+        idcf = data['IDCF']
+        ut = data['UT']
+        uc = data['UC']
+
+        default_double = DataHelper.default_double
+        default_int = DataHelper.default_int
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            pid[i] = card.pid
+            k[i] = card.k
+            c[i] = card.c
+            m[i] = card.m
+            alpha[i] = default_double
+            sa[i] = card.sa
+            ea[i] = card.se
+
+            shock_type = card.__dict__.get('shock_type', None)
+
+            if shock_type is None:
+                typea[i] = 0
+                cvt[i] = default_double
+                cvc[i] = default_double
+                expvt[i] = default_double
+                expvc[i] = default_double
+                idtsu[i] = default_int
+                idtcu[i] = default_int
+                idtsud[i] = default_int
+                idcsud[i] = default_int
+            else:
+                if shock_type == 'TABLE':
+                    shock_type = 1
+                elif shock_type == 'EQUAT':
+                    shock_type = 2
+
+                assert shock_type in (1, 2)
+
+                typea[i] = shock_type
+                cvt[i] = card.shock_cvt
+                cvc[i] = card.shock_cvc
+                expvt[i] = card.shock_exp_vt
+                expvc[i] = card.shock_exp_vc
+
+                if shock_type == 1:
+                    idtsu[i] = card.shock_idts
+                    idtcu[i] = default_int
+                    idtsud[i] = default_int
+                    idcsud[i] = default_int
+                else:
+                    itdsu[i] = card.idets
+                    idtcu[i] = card.idecs
+                    idtsud[i] = card.idetsd
+                    idcsud[i] = card.idecsd
+
+            spring_type = card.__dict__.get('spring_type', None)
+
+            if spring_type is None:
+                types[i] = 0
+                idts[i] = default_int
+                idcs[i] = default_int
+                idtdu1[i] = default_int
+                idcdu1[i] = default_int
+            else:
+                if spring_type == 'TABLE':
+                    spring_type = 1
+                elif spring_type == 'EQUAT':
+                    spring_type = 2
+
+                assert spring_type in (1, 2)
+
+                types[i] = spring_type
+                idts[i] = card.spring_idt
+                idcs[i] = card.spring_idc
+                idtdu1[i] = card.spring_idtdu
+                idcdu1[i] = card.spring_idcdu
+
+            damper_type = card.__dict__.get('damper_type', None)
+
+            if damper_type is None:
+                typed[i] = default_int
+                idtd1[i] = default_int
+                idtd2[i] = default_int
+                idtdv1[i] = default_int
+                idcdv1[i] = default_int
+            else:
+                if damper_type == 'TABLE':
+                    damper_type = 1
+                elif damper_type == 'EQUAT':
+                    damper_type = 2
+
+                assert damper_type in (1, 2)
+
+                typed[i] = damper_type
+                idtd1[i] = card.damper_idt
+                idtd2[i] = card.damper_idc
+                idtdv1[i] = card.damper_idtdv
+                idcdv1[i] = card.damper_idcdv
+
+            gener_idt = card.__dict__.get('gener_idt', None)
+
+            if gener_idt is None:
+                typeg[i] = 0
+                idtg[i] = default_int
+                idcg[i] = default_int
+                idtdu2[i] = default_int
+                idcdu2[i] = default_int
+                idtdv2[i] = default_int
+                idcdv2[i] = default_int
+            else:
+                typeg[i] = 2
+                idtg[i] = card.gener_idt
+                idcg[i] = card.gener_idc
+                idtdu2[i] = card.gener_idtdu
+                idcdu2[i] = card.gener_idcdu
+                idtdv2[i] = card.gener_idtdv
+                idcdv2[i] = card.gener_idcdv
+
+            typef[i] = DataHelper.unknown_int
+            idtf[i] = DataHelper.unknown_int
+            idcf[i] = DataHelper.unknown_int
+            ut[i] = DataHelper.unknown_double
+            uc[i] = DataHelper.unknown_double
+
+        return {'IDENTITY': data}
+
 
 ########################################################################################################################
 
@@ -1485,6 +1674,28 @@ class PTUBE(CardTable):
 
 class PVISC(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PVISC')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        pid = data['PID']
+        ce = data['CE']
+        cr = data['CR']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            pid[i] = card.pid
+            ce[i] = card.ce
+            cr[i] = card.cr
+
+        return {'IDENTITY': data}
+
 
 ########################################################################################################################
 

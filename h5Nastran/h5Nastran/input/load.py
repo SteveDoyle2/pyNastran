@@ -17,9 +17,12 @@ class Load(object):
         self.darea = DAREA(self._h5n, self)
         self.dload = DLOAD(self._h5n, self)
         self.force = FORCE(self._h5n, self)
+        self.grav = GRAV(self._h5n, self)
         self.load = LOAD(self._h5n, self)
         self.moment = MOMENT(self._h5n, self)
         self.pload4 = PLOAD4(self._h5n, self)
+        self.rload1 = RLOAD1(self._h5n, self)
+        self.rload2 = RLOAD2(self._h5n, self)
 
     def path(self):
         return self._input.path() + ['LOAD']
@@ -162,6 +165,43 @@ class FORCE(CardTable):
 
 ########################################################################################################################
 
+
+class GRAV(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/LOAD/GRAV')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        result = {
+            'IDENTITY': {
+                'SID': [], 'CID': [], 'A': [], 'N': [], 'MB': [], 'DOMAIN_ID': []
+            }
+        }
+
+        identity = result['IDENTITY']
+        sid = identity['SID']
+        cid = identity['CID']
+        a = identity['A']
+        n = identity['N']
+        mb = identity['MB']
+
+        for card_id in card_ids:
+            card_list = cards[card_id]
+
+            for card in card_list:
+                sid.append(card.sid)
+                cid.append(card.cid)
+                a.append(card.scale)
+                n.append(card.N)
+                mb.append(card.mb)
+
+        identity['N'] = np.array(n)
+
+        return result
+
+
+########################################################################################################################
 
 class LOAD(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/LOAD/IDENTITY')
@@ -315,5 +355,179 @@ class PLOAD4(CardTable):
                 ldir.extend([card.line_load_dir] * eid_len)
 
         identity['P'] = np.array(p)
+
+        return data
+
+
+########################################################################################################################
+
+
+class RLOAD1(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/LOAD/RLOAD1')
+
+    @staticmethod
+    def from_bdf(cards):
+        data = {
+            'IDENTITY': {
+                'SID': [],
+                'DAREA': [],
+                'DELAY': [],
+                'DPHASE': [],
+                'TC': [],
+                'TD': [],
+                'TYPE': [],
+                'T': [],
+                'PH': [],
+                'RC': [],
+                'RD': [],
+                'DOMAIN_ID': []
+            }
+        }
+
+        identity = data['IDENTITY']
+        sid = identity['SID']
+        darea = identity['DAREA']
+        delay = identity['DELAY']
+        dphase = identity['DPHASE']
+        tc = identity['TC']
+        td = identity['TD']
+        type_ = identity['TYPE']
+        t = identity['T']
+        ph = identity['PH']
+        rc = identity['RC']
+        rd = identity['RD']
+
+        card_ids = sorted(cards.keys())
+
+        def _get_type(val):
+            if isinstance(val, int):
+                return val
+            if val in {None, '', 'L', 'LO', 'LOA', 'LOAD'}:
+                return 0
+            elif val in {'D', 'DI', 'DIS', 'DISP'}:
+                return 1
+            elif val in {'V', 'VE', 'VEL', 'VELO'}:
+                return 2
+            elif val in {'A', 'AC', 'ACC', 'ACCE'}:
+                return 3
+            else:
+                raise ValueError
+
+        def _get_vals(val):
+            if val is None:
+                return 0, 0.
+            elif isinstance(val, int):
+                return val, 0.
+            elif isinstance(val, float):
+                return 0, val
+            else:
+                raise ValueError
+
+        for card_id in card_ids:
+            card_list = cards[card_id]
+
+            for card in card_list:
+                sid.append(card.sid)
+                darea.append(card.excite_id)
+                _delay, _t = _get_vals(card.delay)
+                _dphase, _ph = _get_vals(card.dphase)
+                delay.append(_delay)
+                dphase.append(_dphase)
+                _tc, _rc = _get_vals(card.tc)
+                _td, _rd = _get_vals(card.td)
+                tc.append(_tc)
+                td.append(_td)
+                rc.append(_rc)
+                rd.append(_rd)
+                type_.append(_get_type(card.Type))
+                t.append(_t)
+                ph.append(_ph)
+
+        return data
+
+
+########################################################################################################################
+
+
+class RLOAD2(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/LOAD/RLOAD2')
+
+    @staticmethod
+    def from_bdf(cards):
+        data = {
+            'IDENTITY': {
+                'SID': [],
+                'DAREA': [],
+                'DELAY': [],
+                'DPHASE': [],
+                'TB': [],
+                'TP': [],
+                'TYPE': [],
+                'T': [],
+                'PH': [],
+                'RB': [],
+                'RP': [],
+                'DOMAIN_ID': []
+            }
+        }
+
+        identity = data['IDENTITY']
+        sid = identity['SID']
+        darea = identity['DAREA']
+        delay = identity['DELAY']
+        dphase = identity['DPHASE']
+        tb = identity['TB']
+        tp = identity['TP']
+        type_ = identity['TYPE']
+        t = identity['T']
+        ph = identity['PH']
+        rb = identity['RB']
+        rp = identity['RP']
+
+        card_ids = sorted(cards.keys())
+
+        def _get_type(val):
+            if isinstance(val, int):
+                return val
+            if val in {None, '', 'L', 'LO', 'LOA', 'LOAD'}:
+                return 0
+            elif val in {'D', 'DI', 'DIS', 'DISP'}:
+                return 1
+            elif val in {'V', 'VE', 'VEL', 'VELO'}:
+                return 2
+            elif val in {'A', 'AC', 'ACC', 'ACCE'}:
+                return 3
+            else:
+                raise ValueError
+
+        def _get_vals(val):
+            if val is None:
+                return 0, 0.
+            elif isinstance(val, int):
+                return val, 0.
+            elif isinstance(val, float):
+                return 0, val
+            else:
+                raise ValueError
+
+        for card_id in card_ids:
+            card_list = cards[card_id]
+
+            for card in card_list:
+                sid.append(card.sid)
+                darea.append(card.excite_id)
+                _delay, _t = _get_vals(card.delay)
+                _dphase, _ph = _get_vals(card.dphase)
+                delay.append(_delay)
+                dphase.append(_dphase)
+                _tb, _rb = _get_vals(card.tb)
+                _tp, _rp = _get_vals(card.tp)
+                tb.append(_tb)
+                tp.append(_tp)
+                rb.append(_rb)
+                rp.append(_rp)
+                type_.append(_get_type(card.Type))
+                t.append(_t)
+                ph.append(_ph)
 
         return data

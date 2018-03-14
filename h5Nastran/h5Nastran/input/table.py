@@ -14,6 +14,7 @@ class Table(object):
         self._h5n = h5n
         self._input = input
 
+        self.mkaero1 = MKAERO1(self._h5n, self)
         self.tabdmp1 = TABDMP1(self._h5n, self)
         self.tabled1 = TABLED1(self._h5n, self)
         self.tabled2 = TABLED2(self._h5n, self)
@@ -38,6 +39,82 @@ class Table(object):
 
 
 ########################################################################################################################
+
+
+class MKAERO1(CardTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/TABLE/MKAERO1')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        result = {
+            'IDENTITY': {
+                'M1': [], 'K1': [], 'U2': [], 'M2': [], 'K2': [], 'U3': [], 'M3': [], 'K3': [],
+                'U4': [], 'M4': [], 'K4': [], 'U5': [], 'M5': [], 'K5': [], 'U6': [], 'M6': [], 'K6': [],
+                'U7': [], 'M7': [], 'K7': [], 'U8': [], 'M8': [], 'K8': []
+            }
+        }
+
+        data = result['IDENTITY']
+
+        m1 = data['M1']
+        k1 = data['K1']
+        u2 = data['U2']
+        m2 = data['M2']
+        k2 = data['K2']
+        u3 = data['U3']
+        m3 = data['M3']
+        k3 = data['K3']
+        u4 = data['U4']
+        m4 = data['M4']
+        k4 = data['K4']
+        u5 = data['U5']
+        m5 = data['M5']
+        k5 = data['K5']
+        u6 = data['U6']
+        m6 = data['M6']
+        k6 = data['K6']
+        u7 = data['U7']
+        m7 = data['M7']
+        k7 = data['K7']
+        u8 = data['U8']
+        m8 = data['M8']
+        k8 = data['K8']
+
+        m = [m1, m2, m3, m4, m5, m6, m7, m8]
+        k = [k1, k2, k3, k4, k5, k6, k7, k8]
+        u = [None, u2, u3, u4, u5, u6, u7, u8]
+
+        for card in cards:
+            m_ = card.machs.tolist()
+            m_len = len(m_)
+            if m_len < 8:
+                m_ += [0.] * (8 - m_len)
+
+            k_ = card.reduced_freqs.tolist()
+            k_len = len(k_)
+            if k_len < 8:
+                k_ += [0.] * (8 - k_len)
+
+            min_i = min(m_len, k_len) - 1
+
+            for i in range(8):
+                m[i].append(m_[i])
+                k[i].append(k_[i])
+
+                # TODO: MKAERO1 - verify u's are correct, m and k are not always the same length
+                #       but the msc spec implies that they should be
+
+                if i > 0:
+                    if i <= min_i:
+                        u[i].append(1)
+                    else:
+                        u[i].append(0)
+
+        return result
+
+
+########################################################################################################################
+
 
 # TODO: TABDMP1 is missing Type in msc spec... why?
 

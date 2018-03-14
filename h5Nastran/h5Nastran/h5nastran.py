@@ -13,6 +13,7 @@ from .result import Result
 from .pynastran_interface import get_bdf_cards
 from .punch import PunchReader
 from .f06 import F06Reader
+from .exceptions import pyNastranReadBdfError, pyNastranWriteBdfError
 
 
 class H5Nastran(object):
@@ -77,7 +78,10 @@ class H5Nastran(object):
         self._bdf = filename
 
         self.bdf = BDF(debug=False)
-        self.bdf.read_bdf(filename)
+        try:
+            self.bdf.read_bdf(filename)  # allow xref, could catch bdf errors
+        except Exception:
+            raise pyNastranReadBdfError("h5Nastran: pyNastran is unable to load the bdf '%s' for some reason." % filename)
 
         bdf = self.bdf
 
@@ -318,7 +322,10 @@ class H5Nastran(object):
 
         out = StringIO()
 
-        self.bdf.write_bdf(out, close=False)
+        try:
+            self.bdf.write_bdf(out, close=False)
+        except Exception:
+            raise pyNastranWriteBdfError("h5Nastran: pyNastran is unable to write bdf '%s' for some reason." % self._bdf)
 
         from zlib import compress
 
