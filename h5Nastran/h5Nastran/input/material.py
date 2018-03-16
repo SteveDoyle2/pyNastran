@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef
+from .input_table import InputTable, TableDef
 
 
 class Material(object):
@@ -32,13 +32,12 @@ class Material(object):
 ########################################################################################################################
 
 
-class MAT1(CardTable):
+class MAT1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/MATERIAL/MAT1')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         mid = data['MID']
         e = data['E']
@@ -79,13 +78,12 @@ class MAT1(CardTable):
 ########################################################################################################################
 
 
-class MAT4(CardTable):
+class MAT4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/MATERIAL/MAT4')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         mid = data['MID']
         k = data['K']
@@ -122,13 +120,12 @@ class MAT4(CardTable):
 
 ########################################################################################################################
 
-class MAT8(CardTable):
+class MAT8(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/MATERIAL/MAT8')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         mid = data['MID']
         e1 = data['E1']

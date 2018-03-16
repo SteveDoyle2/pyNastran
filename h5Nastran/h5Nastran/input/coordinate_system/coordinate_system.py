@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from ...input.card_table import CardTable, TableDef
+from ...input.input_table import InputTable, TableDef
 from .transformation import Transformation
 
 
@@ -44,29 +44,28 @@ class CoordinateSystem(object):
 ########################################################################################################################
 
 
-class CORD1C(CardTable):
+class CORD1C(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/COORDINATE_SYSTEM/CORD1C')
 
 ########################################################################################################################
 
 
-class CORD1R(CardTable):
+class CORD1R(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/COORDINATE_SYSTEM/CORD1R')
 
 ########################################################################################################################
 
-class CORD1S(CardTable):
+class CORD1S(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/COORDINATE_SYSTEM/CORD1S')
 
 ########################################################################################################################
 
 
-class _CORD2(CardTable):
-    @classmethod
-    def from_bdf(cls, cards):
+class _CORD2(InputTable):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         cid = data['CID']
         rid = data['RID']
@@ -117,13 +116,13 @@ class CORD2S(_CORD2):
 ########################################################################################################################
 
 
-class CORD3G(CardTable):
+class CORD3G(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/COORDINATE_SYSTEM/CORD3G')
 
 ########################################################################################################################
 
 
-class CORD3R(CardTable):
+class CORD3R(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/COORDINATE_SYSTEM/CORD3R')
 
 ########################################################################################################################

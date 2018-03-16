@@ -44,7 +44,7 @@ class OrthotropicLaminate(object):
             for i in range(len(plies)):
                 mid, t, theta, sout = plies[i]
                 ply = stackup[i]
-            
+
                 ply.material.from_bdf(bdf, mid)
                 ply.thickness = t
                 ply.orientation = theta

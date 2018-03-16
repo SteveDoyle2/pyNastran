@@ -567,7 +567,7 @@ class TableDef(object):
 
     @property
     def _private_index_path(self):
-        return '/PRIVATE/INDEX' + self.path()
+        return self.h5n.table_paths.private_index_path
 
     def _record_data_indices(self, data):
         if self.is_subtable:

@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef
+from .input_table import InputTable, TableDef
 from ..data_helper import DataHelper
 
 
@@ -39,11 +39,10 @@ class Load(object):
 ########################################################################################################################
 
 
-class DAREA(CardTable):
+class DAREA(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/DAREA')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         result = {
@@ -82,11 +81,10 @@ class DAREA(CardTable):
 ########################################################################################################################
 
 
-class DLOAD(CardTable):
+class DLOAD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/DLOAD/IDENTITY')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         sl = {'IDENTITY': {'SI': [], 'LI': []}}
@@ -128,11 +126,10 @@ class DLOAD(CardTable):
 ########################################################################################################################
 
 
-class FORCE(CardTable):
+class FORCE(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/FORCE')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         result = {
@@ -166,11 +163,10 @@ class FORCE(CardTable):
 ########################################################################################################################
 
 
-class GRAV(CardTable):
+class GRAV(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/GRAV')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         result = {
@@ -203,11 +199,10 @@ class GRAV(CardTable):
 
 ########################################################################################################################
 
-class LOAD(CardTable):
+class LOAD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/LOAD/IDENTITY')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         sfactors = {
@@ -251,11 +246,10 @@ class LOAD(CardTable):
 ########################################################################################################################
 
 
-class MOMENT(CardTable):
+class MOMENT(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/MOMENT')
     
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         result = {
@@ -289,11 +283,11 @@ class MOMENT(CardTable):
 ########################################################################################################################
 
 
-class PLOAD4(CardTable):
+class PLOAD4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/PLOAD4')
 
     @staticmethod
-    def from_bdf(cards):
+    def from_bdf(self):
         data = {
             'IDENTITY': {
                 'SID': [],
@@ -320,10 +314,10 @@ class PLOAD4(CardTable):
         sorl = identity['SORL']
         ldir = identity['LDIR']
 
-        card_ids = sorted(cards.keys())
+        card_ids = sorted(self.keys())
 
         for card_id in card_ids:
-            card_list = cards[card_id]
+            card_list = self[card_id]
 
             for card in card_list:
                 eids = card.eids
@@ -362,11 +356,11 @@ class PLOAD4(CardTable):
 ########################################################################################################################
 
 
-class RLOAD1(CardTable):
+class RLOAD1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/RLOAD1')
 
     @staticmethod
-    def from_bdf(cards):
+    def from_bdf(self):
         data = {
             'IDENTITY': {
                 'SID': [],
@@ -397,7 +391,7 @@ class RLOAD1(CardTable):
         rc = identity['RC']
         rd = identity['RD']
 
-        card_ids = sorted(cards.keys())
+        card_ids = sorted(self.keys())
 
         def _get_type(val):
             if isinstance(val, int):
@@ -424,7 +418,7 @@ class RLOAD1(CardTable):
                 raise ValueError
 
         for card_id in card_ids:
-            card_list = cards[card_id]
+            card_list = self[card_id]
 
             for card in card_list:
                 sid.append(card.sid)
@@ -449,11 +443,11 @@ class RLOAD1(CardTable):
 ########################################################################################################################
 
 
-class RLOAD2(CardTable):
+class RLOAD2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/LOAD/RLOAD2')
 
     @staticmethod
-    def from_bdf(cards):
+    def from_bdf(self):
         data = {
             'IDENTITY': {
                 'SID': [],
@@ -484,7 +478,7 @@ class RLOAD2(CardTable):
         rb = identity['RB']
         rp = identity['RP']
 
-        card_ids = sorted(cards.keys())
+        card_ids = sorted(self.keys())
 
         def _get_type(val):
             if isinstance(val, int):
@@ -511,7 +505,7 @@ class RLOAD2(CardTable):
                 raise ValueError
 
         for card_id in card_ids:
-            card_list = cards[card_id]
+            card_list = self[card_id]
 
             for card in card_list:
                 sid.append(card.sid)

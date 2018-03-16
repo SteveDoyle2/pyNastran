@@ -169,8 +169,8 @@ class TableDef(object):
         for name in names:
             try:
                 _data[name] = identity[name]
-            except ValueError as e:
-                print(name)
+            except (ValueError, TypeError) as e:
+                print(name, identity[name], self.dtype, data_len, names[0], identity[names[0]])
                 raise e
 
         # FIXME: bdf input domains need to be corrected, for now, just assuming there are no super elements
@@ -214,46 +214,15 @@ def _get_value(value, default):
     return value
 
 
-class CardTable(object):
+class InputTable(object):
     card_id = ''
     table_def = None  # type: TableDef
 
-    @staticmethod
-    def to_bdf(data):
+    def to_bdf(bdf):
         raise NotImplementedError
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         raise NotImplementedError
-
-    @classmethod
-    def _from_bdf(cls, cards, column_ids):
-        result = {
-            'IDENTITY': {_[0]: [] for _ in column_ids}
-        }
-
-        _id = result['IDENTITY']
-
-        card_ids = sorted(cards.keys())
-
-        for card_id in card_ids:
-            card = cards[card_id]
-
-            for col in column_ids:
-                attr = col[1]
-                try:
-                    data = getattr(card, col[1])
-                except AttributeError as e:
-                    if attr == '':
-                        data = attr
-                    elif isinstance(attr, (int, float)):
-                        data = attr
-                    else:
-                        raise e
-
-                _id[col[0]].append(data)
-
-        return result
 
     def __init__(self, h5n, parent):
         self._h5n = h5n
@@ -269,7 +238,7 @@ class CardTable(object):
             self._h5n.register_card_table(self)
 
     def write_data(self, cards):
-        if self.from_bdf is not CardTable.from_bdf:
+        if self.__class__.from_bdf is not InputTable.from_bdf:
             self._table_def.write_data(self.from_bdf(cards))
         else:
             raise NotImplementedError
@@ -278,7 +247,7 @@ class CardTable(object):
         pass
 
     def read(self):
-        if self.from_bdf is CardTable.from_bdf:
+        if self.__class__.from_bdf is InputTable.from_bdf:
             # if not implemented, then bail now so the table isn't created in the h5 file
             return np.empty(0, dtype=self.table_def.dtype)
 

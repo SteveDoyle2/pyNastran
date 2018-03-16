@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef
+from .input_table import InputTable, TableDef
 from ..data_helper import DataHelper
 
 
@@ -33,13 +33,12 @@ class Design(object):
 ########################################################################################################################
 
 
-class DESVAR(CardTable):
+class DESVAR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/DESIGN/DESVAR')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         id_ = data['ID']
         label = data['LABEL']
@@ -77,12 +76,11 @@ class DESVAR(CardTable):
 ########################################################################################################################
 
 
-class DVPREL1(CardTable):
+class DVPREL1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/DESIGN/DVPREL1/IDENTITY',
                                 rename={'RELATION_POS': 'START', 'RELATION_LEN': 'LEN'})
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         
         relation = {'IDENTITY': {'DVID': [], 'COEF': []}}
