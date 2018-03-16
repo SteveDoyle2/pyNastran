@@ -290,6 +290,49 @@ class CACINF4(CardTable):
 class CAERO1(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CAERO1')
 
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        pid = data['PID']
+        cp = data['CP']
+        nspan = data['NSPAN']
+        nchord = data['NCHORD']
+        lspan = data['LSPAN']
+        lchord = data['LCHORD']
+        igid = data['IGID']
+        x1 = data['X1']
+        y1 = data['Y1']
+        z1 = data['Z1']
+        x12 = data['X12']
+        x4 = data['X4']
+        y4 = data['Y4']
+        z4 = data['Z4']
+        x43 = data['X43']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            pid[i] = card.pid
+            cp[i] = card.cp
+            nspan[i] = card.nspan
+            nchord[i] = card.nchord
+            lspan[i] = card.lspan
+            lchord[i] = card.lchord
+            igid[i] = card.igid
+            x1[i], y1[i], z1[i] = card.p1
+            x12[i] = card.x12
+            x4[i], y4[i], z4[i] = card.p4
+            x43[i] = card.x43
+
+        return {'IDENTITY': data}
+
 
 ########################################################################################################################
 
@@ -2164,6 +2207,37 @@ class RADCOL(CardTable):
 
 class RBAR(CardTable):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/RBAR')
+
+    @classmethod
+    def from_bdf(cls, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+
+        eid = data['EID']
+        ga = data['GA']
+        gb = data['GB']
+        cna = data['CNA']
+        cnb = data['CNB']
+        cma = data['CMA']
+        cmb = data['CMB']
+        alpha = data['ALPHA']
+
+        i = -1
+        for card_id in card_ids:
+            i += 1
+            card = cards[card_id]
+
+            eid[i] = card.eid
+            ga[i] = card.ga
+            gb[i] = card.gb
+            cna[i] = card.cna if card.cna != '' else 0
+            cnb[i] = card.cnb if card.cnb != '' else 0
+            cma[i] = card.cma if card.cma != '' else 0
+            cmb[i] = card.cmb if card.cmb != '' else 0
+            alpha[i] = card.alpha
+
+        return {'IDENTITY': data}
 
 
 ########################################################################################################################
