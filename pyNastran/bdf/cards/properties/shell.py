@@ -172,10 +172,19 @@ class CompositeShellProperty(ShellProperty):
         if iply == 'all':
             return iply
 
+        # iply = 5
+        # nplies = 3 (sym=6)
+        # iply2 = 'iply' or 'iply - nplies'
+        # iply2 = 0 = 9
+        # iply2 = 1 = 1
+        # iply2 = 2 = 2
+        # iply2 = 3 - 3 = 2
+        # iply2 = 4 - 3 = 1
+        # iply2 = 5 - 3 = 0
         nplies = len(self.thicknesses)
         if iply >= nplies:
             if iply < self.nplies:
-                iply = iply - nplies
+                iply = nplies - iply - 1
             else:
                 raise IndexError('invalid value for iply=%r' % iply)
         elif iply < 0:
@@ -328,6 +337,20 @@ class CompositeShellProperty(ShellProperty):
         sout = self.souts[iply]
         return sout
 
+    def get_thicknesses(self):
+        thickness = []
+        for i in range(self.nplies):
+            thick = self.get_thickness(i)
+            thickness.append(thick)
+        return array(thickness)
+
+    def get_thetas(self):
+        thetas = []
+        for i in range(self.nplies):
+            theta = self.get_theta(i)
+            thetas.append(theta)
+        return array(thetas)
+
     def get_z_locations(self):
         """
         Gets the z locations for the various plies.
@@ -344,8 +367,7 @@ class CompositeShellProperty(ShellProperty):
         """
         zi = self.z0
         z = [zi]
-        for i in range(self.nplies):
-            thick = self.get_thickness(i)
+        for thick in self.get_thicknesses():
             zi += thick
             z.append(zi)
         return array(z)

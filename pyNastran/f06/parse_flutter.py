@@ -16,6 +16,7 @@ from pyNastran.utils.atmosphere2 import (
 from pyNastran.utils.log import get_logger2
 from pyNastran.utils import object_attributes, object_methods
 
+
 class FlutterResponse(object):
     """storage object for single subcase SOL 145 results"""
 

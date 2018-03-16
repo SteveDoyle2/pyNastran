@@ -12,7 +12,15 @@ if not found_gui:
         import PyQt4
         qt_version = 4
         found_gui = True
-    except:
+    except ImportError:
+        pass
+
+if not found_gui:
+    try:
+        import PySide
+        qt_version = 4
+        found_gui = True
+    except ImportError:
         pass
 
 

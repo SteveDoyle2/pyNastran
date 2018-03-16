@@ -26,7 +26,7 @@ class OGS(OP2Common):
         #isubcase = self.get_values(data, b'i', 4)
 
         ## surface/volumeID
-        self.ID = self.add_data_parameter(data, 'ID', b'i', 3, False)
+        self.ogs = self.add_data_parameter(data, 'ogs_id', b'i', 3, False)
 
         #: Reference coordinate system ID
         self.refid = self.add_data_parameter(data, 'refid', b'i', 8, False)
@@ -117,6 +117,7 @@ class OGS(OP2Common):
         else:
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
+        del self.ogs
         return n
 
     def _read_ogs1_table28(self, data, ndata):
@@ -180,7 +181,6 @@ class OGS(OP2Common):
             n = ndata
         else:
             s = Struct(self._endian + b'2i4s8f')
-
             nelements = ndata // 44  # 11*4
             for i in range(nelements):
                 edata = data[n:n+44]
@@ -263,7 +263,7 @@ class OGS(OP2Common):
                 (ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm) = out
                 nid = ekey // 10
                 assert nid > 0, nid
-                #print(ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+                #print(self.ogs, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
                 self.obj.add_sort1(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
                 n += 36
         return n
@@ -289,7 +289,6 @@ class OGS(OP2Common):
             (ekey, nx, ny, nz, txy, pressure) = out
             nid = ekey // 10
             assert nid > 0, nid
-            #check_nid
-            #self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+            self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
             n += 24
         return n

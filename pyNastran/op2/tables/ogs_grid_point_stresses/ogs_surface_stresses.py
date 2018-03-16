@@ -116,13 +116,12 @@ class GridPointStressesArray(ScalarObject):
         if header is None:
             header = []
 
-        i = self.ID
         cid = self.refid
         axis_int = self.oCoord
         axis_map = {0 : 'X', 1 : 'Y', 2 : 'Z'}
         axis = axis_map[axis_int]
         msg = [
-            '                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    %s\n' % i,
+            '                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    %s\n' % self.ogs_id,
             '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  %s         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        %s\n' % (axis, cid),
             '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
             '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
@@ -225,6 +224,8 @@ class GridPointStressesVolumeArray(ScalarObject):
     def build(self):
         """sizes the vectorized attributes of the GridPointStressesArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        #print('self.IDs', self.data)
+        #print('building...')
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -287,33 +288,19 @@ class GridPointStressesVolumeArray(ScalarObject):
         if header is None:
             header = []
 
-        i = self.ID
+
         cid = self.refid
         #axis_int = self.oCoord
         #axis_map = {0 : 'X', 1 : 'Y', 2 : 'Z'}
         #axis = axis_map[axis_int]
-        ivolume = i
         msg = [
             '                    D I R E C T   S T R E S S E S   A T   G R I D   P O I N T S   - -       V O L U M E      %3i\n'
             '                              OUTPUT COORDINATE SYSTEM = %7i  ELEMENT \n'
             '     GRID            NORMAL-X    NORMAL-Y    NORMAL-Z      SHEAR-XY    SHEAR-YZ    SHEAR-ZX        MEAN      VON MISES\n'
             '     ID                                                                                           PRESSURE\n' % (
             #'     8086           6.136E-02   2.131E-01   8.353E-02    -2.268E+00  -2.274E-13   1.525E-13     -1.193E-01   3.930E+00'
-            ivolume, cid)
+            self.ogs_id, cid)
         ]
-
-        #msg = [
-            #' P R I N C I P A L   G R I D   P O I N T   S T R E S S   D I S C O N T I N U I T I E S  - -       V O L U M E       %s\n'
-            #'                              OUTPUT COORDINATE SYSTEM = %7i  ELEMENT \n'
-            #'                              GRID       PRINCIPAL STRESS DISCONTINUITY     MEAN      VON MISES      ERROR\n'
-            #'                              ID           A          B          C          PRESSURE                 EST.\n' % (
-                #ivolume, cid)
-            #'                              8086         5.448E-09  9.886E-08  2.026E-15  2.484E-09  1.086E-07   5.716E-08'
-        #]
-        # not sure what result this is for
-        #zero = '                              '
-        #f06_file.write('%s%8s  %-10s %-10s %-10s   %-10s %-10s %-10s %-10s  %-s\n' % (
-            #zero, nid, nxi, nyi, nzi, txyi, tyzi, txzi, pressurei, ovmi.rstrip()))
 
         ntimes = self.data.shape[0]
 
@@ -375,3 +362,17 @@ class GridPointStressesVolumeArray(ScalarObject):
                 print(msg)
                 raise ValueError(msg)
         return True
+
+#msg = [
+    #' P R I N C I P A L   G R I D   P O I N T   S T R E S S   D I S C O N T I N U I T I E S  - -       V O L U M E       %s\n'
+    #'                              OUTPUT COORDINATE SYSTEM = %7i  ELEMENT \n'
+    #'                              GRID       PRINCIPAL STRESS DISCONTINUITY     MEAN      VON MISES      ERROR\n'
+    #'                              ID           A          B          C          PRESSURE                 EST.\n' % (
+        #ivolume, cid)
+    #'                              8086         5.448E-09  9.886E-08  2.026E-15  2.484E-09  1.086E-07   5.716E-08'
+#]
+# not sure what result this is for
+#zero = '                              '
+#f06_file.write('%s%8s  %-10s %-10s %-10s   %-10s %-10s %-10s %-10s  %-s\n' % (
+    #zero, nid, nxi, nyi, nzi, txyi, tyzi, txzi, pressurei, ovmi.rstrip()))
+

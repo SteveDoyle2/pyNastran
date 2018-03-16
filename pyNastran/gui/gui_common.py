@@ -72,6 +72,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
 from pyNastran.gui.formats import CLASS_MAP
 
+
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
         #vtk.vtkGenericRenderWindowInteractor()
@@ -81,19 +82,40 @@ class Interactor(vtk.vtkGenericRenderWindowInteractor):
         print('highlight')
 
 
-class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
-    def __init__(self, parent=None):
+#class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
+    #def __init__(self, parent=None):
 
-        render_window = vtk.vtkRenderWindow()
-        iren = Interactor()
-        iren.SetRenderWindow(render_window)
-        kwargs = {
-            'iren' : iren,
-            'rw' : render_window,
-        }
-        QVTKRenderWindowInteractor.__init__(self, parent=parent,
-                                            iren=iren, rw=render_window)
+        #render_window = vtk.vtkRenderWindow()
+        #iren = Interactor()
+        #iren.SetRenderWindow(render_window)
+        #kwargs = {
+            #'iren' : iren,
+            #'rw' : render_window,
+        #}
+        #QVTKRenderWindowInteractor.__init__(self, parent=parent,
+                                            #iren=iren, rw=render_window)
         #self.Highlight
+
+class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
+    #https://stackoverflow.com/questions/33108670/arrow-key-events-in-vtk-on-windows
+    def __init__(self, iren, parent):
+        self.parent = parent
+        vtk.vtkInteractorStyleTrackballCamera.__init__(self, iren)
+        #self.AddObserver("CharEvent", self.onKeyPressEvent)
+
+        self.AddObserver("KeyPressEvent",self.keyPressEvent)
+
+    def keyPressEvent(self,obj,event):
+        key = self.parent.iren.GetKeySym()
+        if key == 'Left':
+            self.parent.on_pan_left(event)
+        elif key == 'Right':
+            self.parent.on_pan_right(event)
+        elif key == 'Up':
+            self.parent.on_pan_up(event)
+        elif key == 'Down':
+            self.parent.on_pan_down(event)
+
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon2(QMainWindow, GuiCommon):
@@ -470,20 +492,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('show_gui', 'Show GUI', 'show_gui.png', None, 'Show "GUI" messages', self.on_show_gui),
                 ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
 
-                ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
-                ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
+                ('magnify', 'Magnify', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
+                ('shrink', 'Shrink', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification),
 
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
-                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
                 ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
                 ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
                 ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
-                ('reload', 'Reload Model...', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
+                ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
 
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
@@ -492,9 +514,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
                 ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
 
-                ('front_view', 'Front View', 'front.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-                ('left_view', 'Left View', 'left.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-                ('bottom_view', 'Bottom View', 'bottom.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+                ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+                ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
@@ -526,6 +548,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ]
         self.tools = tools
         self.checkables = checkables
+
+    def keyPressEvent(self, qkey_event):
+        #print('qkey_event =', qkey_event.key())
+        super(GuiCommon2, self).keyPressEvent(qkey_event)
 
     def on_increase_font_size(self):
         """used by the hidden_tools for Ctrl +"""
@@ -1743,7 +1769,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def set_style_as_trackball(self):
         """sets the default rotation style"""
         #self._simulate_key_press('t') # change mouse style to trackball
-        self.style = vtk.vtkInteractorStyleTrackballCamera()
+        self.style = TrackballStyleCamera(self.iren, self)
         self.vtk_interactor.SetInteractorStyle(self.style)
 
     def on_run_script(self, python_file=False):
@@ -1852,6 +1878,120 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera.Modified()
         self.vtk_interactor.Render()
         self.log_command('rotate(%s)' % rotate_deg)
+
+    def on_pan_left(self, event):
+        """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
+        camera, cam, focal = self._setup_pan()
+
+        # Create a vector that points upward, i.e. (0, 1, 0)
+        up = [0, 1, 0] #We don't want roll
+        vec = [0, 0, 0]
+        new_cam = [0, 0, 0]
+        new_focal = [0, 0, 0]
+
+        # Calculate the forward pointing unit-vector 'vec' again in the same way,
+        # i.e. the normalized vector of focal point – camera position
+        vtk.vtkMath.Subtract(focal, cam, vec)
+
+        vec[1] = 0 #We don't want roll
+        vtk.vtkMath.Normalize(vec)
+
+        # Calculate the cross product of the forward vector by the up vector,
+        # which will give us an orthogonal vector pointing right relative to
+        #the camera
+        vtk.vtkMath.Cross(vec, up, vec)
+
+        # Add this to the camera position and focal point to move it right
+        # new_cam = cam + vec
+        vtk.vtkMath.Add(cam, vec, new_cam)
+
+        # new_focal = focal + vec
+        vtk.vtkMath.Add(focal, vec, new_focal)
+        self._set_camera_position_focal_point(camera, new_cam, new_focal)
+
+    def on_pan_right(self, event):
+        """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
+        camera, cam, focal = self._setup_pan()
+
+        # Create a vector that points upward, i.e. (0, 1, 0)
+        up = [0, 1, 0] #We don't want roll
+        vec = [0, 0, 0]
+        new_cam = [0, 0, 0]
+        new_focal = [0, 0, 0]
+
+        # Calculate the forward pointing unit-vector 'vec' again in the same way,
+        # i.e. the normalized vector of focal point – camera position
+        vtk.vtkMath.Subtract(focal, cam, vec)
+
+        vec[1] = 0 #We don't want roll
+        vtk.vtkMath.Normalize(vec)
+
+        # Calculate the cross product of the forward vector by the up vector,
+        # which will give us an orthogonal vector pointing right relative to
+        #the camera
+        #vec = up x vec
+        vtk.vtkMath.Cross(vec, up, vec)
+
+        # Subtract vec from the camera position and focal point to move it right
+        # new_cam = cam - vec
+        vtk.vtkMath.Subtract(cam, vec, new_cam)
+
+        # new_focal = focal - vec
+        vtk.vtkMath.Subtract(focal, vec, new_focal)
+        self._set_camera_position_focal_point(camera, new_cam, new_focal)
+
+    def on_pan_up(self, event):
+        """not 100% on this"""
+        camera, cam, focal = self._setup_pan()
+
+        # Create a 'vec' vector that will be the direction of movement
+        # (numpad 8 and 5 generate movement along the z-axis; numpad 4
+        # and 6 along the x-axis; numpad 7 and 9 along the y-axis)
+        vec = [0, 1, 0]
+        new_cam = [0, 0, 0]
+        new_focal = [0, 0, 0]
+
+        # Add the movement to the current camera position and focal point,
+        # and save these in 'new_cam' and 'new_focal' respectively
+        vtk.vtkMath.Subtract(cam, vec, new_cam)
+
+        # new_focal = focal - vec
+        vtk.vtkMath.Subtract(focal, vec, new_focal)
+        self._set_camera_position_focal_point(camera, new_cam, new_focal)
+
+    def on_pan_down(self, event):
+        """not 100% on this"""
+        camera, cam, focal = self._setup_pan()
+
+        # Create a 'vec' vector that will be the direction of movement
+        # (numpad 8 and 5 generate movement along the z-axis; numpad 4
+        # and 6 along the x-axis; numpad 7 and 9 along the y-axis)
+        vec = [0, 1, 0]
+        new_cam = [0, 0, 0]
+        new_focal = [0, 0, 0]
+
+        # Add the movement to the current camera position and focal point,
+        # and save these in 'new_cam' and 'new_focal' respectively
+        vtk.vtkMath.Add(cam, vec, new_cam)
+
+        # new_focal = focal + vec
+        vtk.vtkMath.Add(focal, vec, new_focal)
+        self._set_camera_position_focal_point(camera, new_cam, new_focal)
+
+    def _setup_pan(self):
+        camera = self.rend.GetActiveCamera()
+        cam = camera.GetPosition()
+        focal = camera.GetFocalPoint()
+        return camera, cam, focal
+
+    def _set_camera_position_focal_point(self, camera, new_cam, new_focal):
+        """Set the camera position and focal point to the new vectors"""
+        camera.SetPosition(new_cam)
+        camera.SetFocalPoint(new_focal)
+
+        # Update the clipping range of the camera
+        self.rend.ResetCameraClippingRange()
+        self.Render()
 
     def on_rotate_clockwise(self):
         """rotate clockwise"""
