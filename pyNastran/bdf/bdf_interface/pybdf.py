@@ -15,6 +15,14 @@ from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.errors import MissingDeckSections
 
+FILE_MANAGEMENT = (
+    'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
+    'DBFIX ', 'DBLOAD ', 'DBLOCATE ', 'DBSETDEL ', 'DBUNLOAD ',
+    'DBUPDATE ', 'ENDJOB ', 'EXPAND ', 'INCLUDE ', 'INIT ', 'NASTRAN ',
+    'PROJ ',
+)
+EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE '])
+
 
 class BDFInputPy(object):
     def __init__(self, read_includes, dumplines, encoding, log=None, debug=False):
@@ -501,12 +509,6 @@ def _break_system_lines(executive_control_lines):
 
     F:\\Program Files\\Siemens\\NXNastran\\nxn10p1\\nxn10p1\\nast\\tpl\\mdb01.dat
     """
-    file_management = (
-        'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
-        'DBFIX ', 'DBLOAD ', 'DBLOCATE ', 'DBSETDEL ', 'DBUNLOAD ',
-        'DBUPDATE ', 'ENDJOB ', 'EXPAND ', 'INCLUDE ', 'INIT ', 'NASTRAN ',
-        'PROJ ',
-    )
     j = None
     sol_line = None
     isol_line = None
@@ -522,7 +524,7 @@ def _break_system_lines(executive_control_lines):
         if line_upper.startswith('SOL '):
             isol_line = i+1
             sol_line = line
-        if line_upper.startswith(file_management):
+        if line_upper.startswith(FILE_MANAGEMENT):
             system_lines += executive_control_lines[j:i+1]
             j = i+1
 

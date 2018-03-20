@@ -8,6 +8,7 @@ from __future__ import print_function
 from codecs import open as codec_open
 from six import iteritems
 from numpy import zeros, arange, array, array_equal
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D
@@ -44,37 +45,21 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     elements = zeros((nelements, 3), 'int32')
     regions = zeros(nelements, 'int32')
 
-    i = 0
     nids = array(list(bdf.nodes.keys()), dtype='int32')
     nids_expected = arange(1, len(nids) + 1)
 
     if array_equal(nids, nids_expected):
-        # we don't need to renumber the nodes
-        # so we don't need to make an nid_map
-        for node_id, node in sorted(iteritems(bdf.nodes)):
-            nodes[i, :] = node.get_position()
-            i += 1
-
-        i = 0
-        for unused_element_id, element in sorted(iteritems(bdf.elements)):
-            if element.type == 'CTRIA3':
-                nids = element.node_ids
-                elements[i, :] = nids
-                regions[i] = element.Mid()
-            #elif element.type == 'CQUAD4':
-                #nids = element.node_ids
-                #elements[i, :] = nids
-                #regions[i] = element.Mid()
-            else:
-                raise NotImplementedError(element.type)
-            i += 1
-
+        _store_sequential_nodes(bdf, nodes, elements, regions)
     else:
+        #print('not equal...')
+        #i = 0
         nid_map = {}
+
         for node_id, node in sorted(iteritems(bdf.nodes)):
+            i = np.where(nids == node_id)[0][0]
             nodes[i, :] = node.get_position()
-            i += 1
-            nid_map[node_id] = i
+            nid_map[node_id] = i + 1
+        #print('nid_map =', nid_map)
 
         i = 0
         for unused_element_id, element in sorted(iteritems(bdf.elements)):
@@ -94,6 +79,8 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
                 i += 1
                 elements[i, :] = [quad[0], quad[2], quad[3]]
                 regions[i] = mid
+            elif element.type in ['CBAR', 'CBEAM', 'CROD', 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']:
+                continue
             else:
                 raise NotImplementedError(element.type)
             i += 1
@@ -104,6 +91,27 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     cart3d.regions = regions
     return cart3d
 
+def _store_sequential_nodes(bdf, nodes, elements, regions):
+    # we don't need to renumber the nodes
+    # so we don't need to make an nid_map
+    i = 0
+    for node_id, node in sorted(iteritems(bdf.nodes)):
+        nodes[i, :] = node.get_position()
+        i += 1
+
+    j = 0
+    for unused_element_id, element in sorted(iteritems(bdf.elements)):
+        if element.type == 'CTRIA3':
+            nids = element.node_ids
+            elements[j, :] = nids
+            regions[j] = element.Mid()
+        #elif element.type == 'CQUAD4':
+            #nids = element.node_ids
+            #elements[i, :] = nids
+            #regions[i] = element.Mid()
+        else:
+            raise NotImplementedError(element.type)
+        j += 1
 
 def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=False):
     """

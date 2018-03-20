@@ -16,7 +16,7 @@ def free_edges(model):
     for eid, elem in iteritems(model.elements):
         if elem.type not in shell_elements:
             continue
-        edges = elem.get_edges()
+        edges = elem.get_edge_ids()
         for edge in edges:
             edge_to_eids[edge].add(eid)
 

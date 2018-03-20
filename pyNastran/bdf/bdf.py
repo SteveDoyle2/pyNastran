@@ -143,7 +143,7 @@ from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError)
 from pyNastran.bdf.bdf_interface.pybdf import (
-    BDFInputPy, _clean_comment, _clean_comment_bulk)
+    BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
              skip_cards=None, read_cards=None,
@@ -2301,16 +2301,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             msg = 'card_name=%r was misparsed...\ncard_lines=%s' % (
                 card_name, card_lines)
             raise RuntimeError(msg)
+
         if card_name not in self.card_count:
-            if ' ' in card_name:
-                msg = (
-                    'No spaces allowed in card name %r.  '
-                    'Should this be a comment?\n%s%s' % (
-                        card_name, comment, card_lines))
-                raise RuntimeError(msg)
-            if card_name in ['SUBCASE ', 'CEND']:
-                raise RuntimeError('No executive/case control deck was defined.')
+            _check_for_spaces(card_name, card_lines, comment)
             self.log.info('    rejecting card_name = %s' % card_name)
+
         self.increase_card_count(card_name)
         self.rejects.append([_format_comment(comment)] + card_lines)
 
@@ -2318,13 +2313,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         """common method to not write duplicate reject card names"""
         if card_name not in self.card_count:
             if ' ' in card_name:
-                msg = (
-                    'No spaces allowed in card name %r.  '
-                    'Should this be a comment?\n%s%s' % (
-                        card_name, comment, card_obj))
-                raise RuntimeError(msg)
-            if card_name in ['SUBCASE ', 'CEND']:
-                raise RuntimeError('No executive/case control deck was defined.')
+                _check_for_spaces(card_name, card_lines, comment)
             self.log.info('    rejecting card_name = %s' % card_name)
 
 
@@ -4198,7 +4187,24 @@ def _prep_comment(comment):
              #for comment in comment.rstrip().split('\n')]
     #print('sline = ', sline)
 
+def _check_for_spaces(card_name, card_lines, comment):
+    if ' ' in card_name:
+        if card_name.startswith(EXECUTIVE_CASE_SPACES):  # TODO verify upper
+            msg = (
+                'No spaces allowed in card name %r.\n'
+                'Did you mean to call read_bdf(punch=False) instead of '
+                'read_bdf(punch=True)?\n%s' % (
+                    card_name, card_lines))
+            raise RuntimeError(msg)
+        else:
+            msg = (
+                'No spaces allowed in card name %r.\n'
+                'Should this be a comment?\n%s%s' % (
+                    card_name, comment, card_lines))
+        raise RuntimeError(msg)
 
+    if card_name in ['SUBCASE ', 'CEND']:
+        raise RuntimeError('No executive/case control deck was defined.')
 
 def main():  # pragma: no cover
     """
