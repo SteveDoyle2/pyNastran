@@ -6,7 +6,7 @@ import tables
 import numpy as np
 from typing import Dict
 
-from .card_table import CardTable, TableDef, DataHelper
+from .input_table import InputTable, TableDef, DataHelper
 from h5Nastran.utilities import ImmutableDict
 
 
@@ -32,7 +32,7 @@ class Node(object):
 ########################################################################################################################
 
 
-class GRID(CardTable):
+class GRID(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/NODE/GRID')
 
     def __init__(self, *args, **kwargs):
@@ -47,11 +47,10 @@ class GRID(CardTable):
         self._grid_in_basic_dict = None
         self._grid_index.clear()
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         id_ = data['ID']
         cp = data['CP']

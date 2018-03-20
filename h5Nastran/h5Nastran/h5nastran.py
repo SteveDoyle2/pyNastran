@@ -14,6 +14,7 @@ from .pynastran_interface import get_bdf_cards
 from .punch import PunchReader
 from .f06 import F06Reader
 from .exceptions import pyNastranReadBdfError, pyNastranWriteBdfError
+from .table_paths import TablePaths
 
 
 class H5Nastran(object):
@@ -49,6 +50,8 @@ class H5Nastran(object):
         self._op2 = None
 
         self._element_results_tables = {}
+
+        self.table_paths = TablePaths()
 
         if mode == 'w':
             self._write_info()
@@ -221,10 +224,24 @@ class H5Nastran(object):
 
             self._result_tables[_result_type] = result_table
 
+    def supported_cards(self):
+        cards = []
+
+        from .input.input_table import InputTable
+
+        keys = sorted(self._card_tables.keys())
+
+        for key in keys:
+            table = self._card_tables[key]
+            if table.from_bdf is not InputTable.from_bdf:
+                cards.append(key)
+
+        return cards
+
     def _load_bdf(self):
         from zlib import decompress
 
-        bdf_lines = decompress(self.h5f.get_node('/PRIVATE/NASTRAN/INPUT/BDF_LINES').read()).decode()
+        bdf_lines = decompress(self.h5f.get_node(self.table_paths.bdf_lines).read()).decode()
 
         from six import StringIO
 
@@ -329,14 +346,13 @@ class H5Nastran(object):
 
         from zlib import compress
 
-        self.h5f.create_array('/PRIVATE/NASTRAN/INPUT', 'BDF_LINES', obj=compress(out.getvalue().encode()),
-                              title='BDF LINES',
-                              createparents=True)
+        self.h5f.create_array(self.table_paths.bdf_lines_path, self.table_paths.bdf_lines_table,
+                              obj=compress(out.getvalue().encode()), title='BDF LINES', createparents=True)
 
     def _unsupported_cards(self, cards):
         cards = np.array(cards, dtype='S8')
-        self.h5f.create_array('/PRIVATE/NASTRAN/INPUT', 'UNSUPPORTED_CARDS', obj=cards, title='UNSUPPORTED BDF CARDS',
-                              createparents=True)
+        self.h5f.create_array(self.table_paths.unsupported_cards_path, self.table_paths.unsupported_cards_table,
+                              obj=cards, title='UNSUPPORTED BDF CARDS', createparents=True)
         
         self._unsupported_bdf_cards.clear()
         self._unsupported_bdf_cards.update(set(cards))
@@ -350,13 +366,13 @@ class H5Nastran(object):
 
         info = 'h5Nastran version %s\nPowered by pyNastran version %s' % (self.version, pyNastran.__version__)
 
-        self.h5f.create_array('/PRIVATE/h5Nastran', 'h5Nastran', obj=info.encode(), title='h5Nastran Info',
-                              createparents=True)
+        self.h5f.create_array(self.table_paths.info_path, self.table_paths.info_table, obj=info.encode(),
+                              title='h5Nastran Info', createparents=True)
 
     def _write_unsupported_tables(self):
         headers = list(sorted(self._unsupported_tables))
         data = np.array(headers, dtype='S256')
 
-        self.h5f.create_array('/PRIVATE/NASTRAN/RESULT', 'UNSUPPORTED_RESULT_TABLES', obj=data,
-                              title='UNSUPPORTED RESULT TABLES',
-                              createparents=True)
+        self.h5f.create_array(self.table_paths.unsupported_result_tables_path,
+                              self.table_paths.unsupported_result_tables_table, obj=data,
+                              title='UNSUPPORTED RESULT TABLES', createparents=True)

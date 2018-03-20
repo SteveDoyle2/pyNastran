@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef
+from .input_table import InputTable, TableDef
 from ..data_helper import DataHelper
 
 
@@ -14,6 +14,8 @@ class Parameter(object):
         self._h5n = h5n
         self._input = input
 
+        self.flfact = FLFACT(self._h5n, self)
+        self.flutter = FLUTTER(self._h5n, self)
         self.nlparm = NLPARM(self._h5n, self)
 
     def path(self):
@@ -32,14 +34,106 @@ class Parameter(object):
 ########################################################################################################################
 
 
-class NLPARM(CardTable):
-    table_def = TableDef.create('/NASTRAN/INPUT/PARAMETER/NLPARM')
+class FLFACT(InputTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/PARAMETER/FLFACT/IDENTITY')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        fis = {'IDENTITY': {'FI': []}}
+
+        result = {
+            'IDENTITY': {'SID': [], 'FIS_POS': [], 'FIS_LEN': [], 'DOMAIN_ID': []},
+            'FIS': fis,
+            '_subtables': ['FIS']
+        }
+
+        fi = fis['IDENTITY']['FI']
+        identity = result['IDENTITY']
+        sid = identity['SID']
+        fis_pos = identity['FIS_POS']
+        fis_len = identity['FIS_LEN']
+
+        pos = 0
+        for card_id in card_ids:
+            card = cards[card_id]
+
+            sid.append(card.sid)
+            fis_pos.append(pos)
+            _len = len(card.factors)
+            fis_len.append(_len)
+            pos += _len
+            fi.extend(list(card.factors))
+
+        return result
+
+
+########################################################################################################################
+
+
+class FLUTTER(InputTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/PARAMETER/FLUTTER')
+
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
+
+        # flutter has no domain_id in msc spec
+        result = {
+            'IDENTITY': {'SID': [], 'METHOD': [], 'DENS': [], 'MACH': [], 'RFREQ': [], 'IMETH': [], 'SFLG': [],
+            'NVALUE': [], 'OMAX': [], 'EPS': []}
+        }
+
+        identity = result['IDENTITY']
+        sid = identity['SID']
+        method = identity['METHOD']
+        dens = identity['DENS']
+        mach = identity['MACH']
+        rfreq = identity['RFREQ']
+        imeth = identity['IMETH']
+        sflg = identity['SFLG']
+        nvalue = identity['NVALUE']
+        omax = identity['OMAX']
+        eps = identity['EPS']
+
+        for card_id in card_ids:
+            card = cards[card_id]
+
+            sid.append(card.sid)
+            method.append(card.method)
+            dens.append(card.density)
+            mach.append(card.mach)
+            rfreq.append(card.reduced_freq_velocity)
+            imeth.append(card.imethod)
+
+            nvalue_, omax_ = card.nvalue, card.omax
+
+            if nvalue_ is None:
+                sflg_ = 1
+                nvalue_ = 0
+            elif omax_ is None:
+                sflg_ = 0
+                omax_ = 0.
+            else:
+                raise ValueError
+
+            sflg.append(sflg_)
+            nvalue.append(nvalue_)
+            omax.append(omax_)
+            eps.append(card.epsilon)
+
+        return result
+
+
+########################################################################################################################
+
+
+class NLPARM(InputTable):
+    table_def = TableDef.create('/NASTRAN/INPUT/PARAMETER/NLPARM')
+
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
+
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         sid = data['SID']
         ninc = data['NINC']

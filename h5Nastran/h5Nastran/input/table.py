@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef
+from .input_table import InputTable, TableDef
 from ..data_helper import DataHelper
 
 
@@ -41,11 +41,10 @@ class Table(object):
 ########################################################################################################################
 
 
-class MKAERO1(CardTable):
+class MKAERO1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/MKAERO1')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         result = {
             'IDENTITY': {
                 'M1': [], 'K1': [], 'U2': [], 'M2': [], 'K2': [], 'U3': [], 'M3': [], 'K3': [],
@@ -136,11 +135,10 @@ class TABDMP1_SPEC(object):
     subtables = [TABDMP1_DAMP]
 
 
-class TABDMP1(CardTable):
+class TABDMP1(InputTable):
     table_def = TableDef.create(TABDMP1_SPEC, rename={'DAMP_POS': 'POS', 'DAMP_LEN': 'LEN'})
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         damp = {'IDENTITY': {'F': [], 'G': []}}
@@ -175,11 +173,10 @@ class TABDMP1(CardTable):
 ########################################################################################################################
 
 
-class TABLED1(CardTable):
+class TABLED1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLED1/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         xy = {'IDENTITY': {'X': [], 'Y': []}}
@@ -220,11 +217,10 @@ class TABLED1(CardTable):
 ########################################################################################################################
 
 
-class TABLED2(CardTable):
+class TABLED2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLED2/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         xy = {'IDENTITY': {'X': [], 'Y': []}}
@@ -259,11 +255,10 @@ class TABLED2(CardTable):
 ########################################################################################################################
 
 
-class TABLED3(CardTable):
+class TABLED3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLED3/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         xy = {'IDENTITY': {'X': [], 'Y': []}}
@@ -300,11 +295,10 @@ class TABLED3(CardTable):
 ########################################################################################################################
 
 
-class TABLED4(CardTable):
+class TABLED4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLED4/IDENTITY', rename={'COEF_POS': 'POS', 'COEF_LEN': 'LEN'})
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         coef = {'IDENTITY': {'A': []}}
@@ -343,30 +337,30 @@ class TABLED4(CardTable):
 ########################################################################################################################
 
 
-class TABLEM1(CardTable):
+class TABLEM1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM1/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
-    from_bdf = TABLED1.from_bdf
+    from_bdf = TABLED1.__dict__['from_bdf']
 
 
 ########################################################################################################################
 
 
-class TABLEM2(CardTable):
+class TABLEM2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM2/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
-    from_bdf = TABLED2.from_bdf
+    from_bdf = TABLED2.__dict__['from_bdf']
 
 ########################################################################################################################
 
 
-class TABLEM3(CardTable):
+class TABLEM3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM3/IDENTITY', rename={'XY_POS': 'POS', 'XY_LEN': 'LEN'})
-    from_bdf = TABLED3.from_bdf
+    from_bdf = TABLED3.__dict__['from_bdf']
 
 
 ########################################################################################################################
 
 
-class TABLEM4(CardTable):
+class TABLEM4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/TABLE/TABLEM4/IDENTITY', rename={'COEF_POS': 'POS', 'COEF_LEN': 'LEN'})
-    from_bdf = TABLED4.from_bdf
+    from_bdf = TABLED4.__dict__['from_bdf']
 

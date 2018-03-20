@@ -5,7 +5,7 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef
+from .input_table import InputTable, TableDef
 from ..data_helper import DataHelper
 
 
@@ -99,19 +99,19 @@ class Property(object):
 ########################################################################################################################
 
 
-class MFLUID(CardTable):
+class MFLUID(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/MFLUID')
 
 ########################################################################################################################
 
 
-class NSM(CardTable):
+class NSM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/NSM/IDENTITY')
 
 ########################################################################################################################
 
 
-class NSM1(CardTable):
+class NSM1(InputTable):
     """
     <group name="NSM1">
         <dataset name="IDENTITY">
@@ -149,19 +149,19 @@ class NSM1(CardTable):
 ########################################################################################################################
 
 
-class NSMADD(CardTable):
+class NSMADD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/NSMADD/IDENTITY')
 
 ########################################################################################################################
 
 
-class NSML(CardTable):
+class NSML(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/NSML/IDENTITY')
 
 ########################################################################################################################
 
 
-class NSML1(CardTable):
+class NSML1(InputTable):
     """
     <group name="NSML1">
         <dataset name="IDENTITY">
@@ -199,38 +199,37 @@ class NSML1(CardTable):
 ########################################################################################################################
 
 
-class PAABSF(CardTable):
+class PAABSF(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAABSF')
 
 ########################################################################################################################
 
 
-class PACABS(CardTable):
+class PACABS(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PACABS')
 
 ########################################################################################################################
 
 
-class PACBAR(CardTable):
+class PACBAR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PACBAR')
 
 ########################################################################################################################
 
 
-class PACINF(CardTable):
+class PACINF(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PACINF')
 
 ########################################################################################################################
 
 
-class PAERO1(CardTable):
+class PAERO1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAERO1')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         b1 = data['B1']
@@ -264,50 +263,49 @@ class PAERO1(CardTable):
 ########################################################################################################################
 
 
-class PAERO2(CardTable):
+class PAERO2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAERO2')
 
 ########################################################################################################################
 
 
-class PAERO3(CardTable):
+class PAERO3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAERO3')
 
 ########################################################################################################################
 
 
-class PAERO4(CardTable):
+class PAERO4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAERO4/IDENTITY')
 
 ########################################################################################################################
 
 
-class PAERO5(CardTable):
+class PAERO5(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAERO5/IDENTITY')
 
 ########################################################################################################################
 
 
-class PAXISYM(CardTable):
+class PAXISYM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAXISYM')
 
 ########################################################################################################################
 
 
-class PAXSYMH(CardTable):
+class PAXSYMH(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PAXSYMH')
 
 ########################################################################################################################
 
 
-class PBAR(CardTable):
+class PBAR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBAR')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         mid = data['MID']
@@ -381,11 +379,10 @@ class PBARL_SPEC(object):
     subtables = [PBARL_INFO_SPEC]
 
 
-class PBARL(CardTable):
+class PBARL(InputTable):
     table_def = TableDef.create(PBARL_SPEC)
     
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         
         info = {'IDENTITY': {'VALUE': []}}
@@ -426,13 +423,13 @@ class PBARL(CardTable):
 ########################################################################################################################
 
 
-class PBARN1(CardTable):
+class PBARN1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBARN1')
 
 ########################################################################################################################
 
 
-class PBCOMP(CardTable):
+class PBCOMP(InputTable):
     """
     <group name="PBCOMP">
         <dataset name="IDENTITY">
@@ -497,14 +494,13 @@ def _resize(arr, size):
     return [first] + mid_arr + [last]
 
 
-class PBEAM(CardTable):
+class PBEAM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBEAM')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         mid = data['MID']
@@ -615,13 +611,13 @@ class PBEAM(CardTable):
 ########################################################################################################################
 
 
-class PBEAM3(CardTable):
+class PBEAM3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBEAM3')
 
 ########################################################################################################################
 
 
-class PBEAML(CardTable):
+class PBEAML(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBEAML/IDENTITY',
                                 subtables=[
                                     TableDef.create('/NASTRAN/INPUT/PROPERTY/PBEAML/SECTION',
@@ -632,8 +628,7 @@ class PBEAML(CardTable):
                                 ]
                                 )
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
         dims = {'IDENTITY': {'DIM': []}}
@@ -700,20 +695,19 @@ class PBEAML(CardTable):
 ########################################################################################################################
 
 
-class PBEMN1(CardTable):
+class PBEMN1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBEMN1')
 
 ########################################################################################################################
 
 
-class PBEND(CardTable):
+class PBEND(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBEND')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         mid = data['MID']
@@ -800,14 +794,13 @@ class PBEND(CardTable):
 ########################################################################################################################
 
 
-class PBUSH(CardTable):
+class PBUSH(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBUSH')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         k = data['K']
@@ -855,14 +848,13 @@ class PBUSH(CardTable):
 
 
 # TODO: PBUSH1D verify correctness
-class PBUSH1D(CardTable):
+class PBUSH1D(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBUSH1D')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         k = data['K']
@@ -1037,23 +1029,22 @@ class PBUSH1D(CardTable):
 ########################################################################################################################
 
 
-class PBUSHT(CardTable):
+class PBUSHT(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PBUSHT')
 
 ########################################################################################################################
 
 
-class PCOHE(CardTable):
+class PCOHE(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCOHE')
 
 ########################################################################################################################
 
 
-class PCOMP(CardTable):
+class PCOMP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCOMP/IDENTITY')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         _ft = {
             None: DataHelper.default_int,
             '': DataHelper.default_int,
@@ -1134,18 +1125,17 @@ class PCOMP(CardTable):
 ########################################################################################################################
 
 
-class PCOMPF(CardTable):
+class PCOMPF(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCOMPF/IDENTITY',
                                 rename={'IDLIST_POS': 'LIST_POS', 'IDLIST_LEN': 'LIST_LEN'})
 
 ########################################################################################################################
 
 
-class PCOMPG(CardTable):
+class PCOMPG(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCOMPG/IDENTITY')
     
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         _ft = {
             None: DataHelper.default_int,
             '': DataHelper.default_int,
@@ -1249,43 +1239,42 @@ class PCOMPG(CardTable):
 ########################################################################################################################
 
 
-class PCOMPLS(CardTable):
+class PCOMPLS(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCOMPLS/IDENTITY')
 
 ########################################################################################################################
 
 
-class PCONEAX(CardTable):
+class PCONEAX(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCONEAX')
 
 ########################################################################################################################
 
 
-class PCONV(CardTable):
+class PCONV(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCONV')
 
 ########################################################################################################################
 
 
-class PCONV1(CardTable):
+class PCONV1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCONV1')
 
 ########################################################################################################################
 
 
-class PCONVM(CardTable):
+class PCONVM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PCONVM')
 
 ########################################################################################################################
 
 
-class PDAMP(CardTable):
+class PDAMP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PDAMP')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         b = data['B']
@@ -1302,25 +1291,24 @@ class PDAMP(CardTable):
 ########################################################################################################################
 
 
-class PDAMP5(CardTable):
+class PDAMP5(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PDAMP5')
 
 ########################################################################################################################
 
 
-class PDAMPT(CardTable):
+class PDAMPT(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PDAMPT')
 
 ########################################################################################################################
 
 
-class PELAS(CardTable):
+class PELAS(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PELAS')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
     
         pid = data['PID']
         k = data['K']
@@ -1346,13 +1334,12 @@ class PELAS(CardTable):
 ########################################################################################################################
 
 
-class PELAST(CardTable):
+class PELAST(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PELAST')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         tkid = data['TKID']
@@ -1378,56 +1365,55 @@ class PELAST(CardTable):
 ########################################################################################################################
 
 
-class PFAST(CardTable):
+class PFAST(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PFAST')
 
 ########################################################################################################################
 
 
-class PGAP(CardTable):
+class PGAP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PGAP')
 
 ########################################################################################################################
 
 
-class PHBDY(CardTable):
+class PHBDY(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PHBDY')
 
 ########################################################################################################################
 
 
-class PLCOMP(CardTable):
+class PLCOMP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PLCOMP/IDENTITY')
 
 ########################################################################################################################
 
 
-class PLPLANE(CardTable):
+class PLPLANE(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PLPLANE')
 
 ########################################################################################################################
 
 
-class PLSOLID(CardTable):
+class PLSOLID(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PLSOLID')
 
 ########################################################################################################################
 
 
-class PMASS(CardTable):
+class PMASS(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PMASS')
 
 ########################################################################################################################
 
 
-class PROD(CardTable):
+class PROD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PROD')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         mid = data['MID']
@@ -1456,26 +1442,25 @@ class PROD(CardTable):
 ########################################################################################################################
 
 
-class PRODN1(CardTable):
+class PRODN1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PRODN1')
 
 ########################################################################################################################
 
 
-class PSEAM(CardTable):
+class PSEAM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSEAM')
 
 ########################################################################################################################
 
 
-class PSHEAR(CardTable):
+class PSHEAR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSHEAR')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         mid = data['MID']
@@ -1503,20 +1488,19 @@ class PSHEAR(CardTable):
 ########################################################################################################################
 
 
-class PSHEARN(CardTable):
+class PSHEARN(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSHEARN')
 
 ########################################################################################################################
 
 
-class PSHELL(CardTable):
+class PSHELL(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSHELL')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         mid1 = data['MID1']
@@ -1559,32 +1543,31 @@ class PSHELL(CardTable):
 ########################################################################################################################
 
 
-class PSHLN1(CardTable):
+class PSHLN1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSHLN1')
 
 ########################################################################################################################
 
 
-class PSHLN2(CardTable):
+class PSHLN2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSHLN2')
 
 ########################################################################################################################
 
 
-class PSLDN1(CardTable):
+class PSLDN1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSLDN1')
 
 ########################################################################################################################
 
 
-class PSOLID(CardTable):
+class PSOLID(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PSOLID')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         mid = data['MID']
@@ -1637,14 +1620,13 @@ class PTUBE_SPEC(object):
     subtables = []
 
 
-class PTUBE(CardTable):
+class PTUBE(InputTable):
     table_def = TableDef.create(PTUBE_SPEC)
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         mid = data['MID']
@@ -1672,14 +1654,13 @@ class PTUBE(CardTable):
 ########################################################################################################################
 
 
-class PVISC(CardTable):
+class PVISC(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PVISC')
 
-    @classmethod
-    def from_bdf(cls, cards):
+    def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
-        data = np.empty(len(card_ids), dtype=cls.table_def.dtype)
+        data = np.empty(len(card_ids), dtype=self.table_def.dtype)
 
         pid = data['PID']
         ce = data['CE']
@@ -1700,13 +1681,13 @@ class PVISC(CardTable):
 ########################################################################################################################
 
 
-class PWELD(CardTable):
+class PWELD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/PWELD')
 
 ########################################################################################################################
 
 
-class SNORM(CardTable):
+class SNORM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/PROPERTY/SNORM')
 
 ########################################################################################################################
