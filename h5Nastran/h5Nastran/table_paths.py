@@ -8,8 +8,11 @@ class TablePaths(object):
     unsupported_cards_path = r'/H5NASTRAN/NASTRAN/INPUT'
     unsupported_cards_table = 'UNSUPPORTED_CARDS'
 
-    info_path = r'/H5NASTRAN'
-    info_table = 'INFO'
+    about_path = r'/H5NASTRAN/INFO'
+    about_table = 'ABOUT'
+
+    defaults_path = r'/H5NASTRAN/INFO'
+    defaults_table = 'DEFAULTS'
 
     unsupported_result_tables_path = r'/H5NASTRAN/NASTRAN/RESULT'
     unsupported_result_tables_table = 'UNSUPPORTED_RESULT_TABLES'
@@ -20,5 +23,5 @@ class TablePaths(object):
     private_index_path = r'/H5NASTRAN/INDEX'
 
     def __getattr__(self, attr):
-        dict = self.__dict__
+        dict = self.__class__.__dict__
         return dict[attr + '_path'] + '/' + dict[attr + '_table']

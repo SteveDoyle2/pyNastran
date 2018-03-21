@@ -19,9 +19,10 @@ from .partition import Partition
 from .table import Table
 from .dynamic import Dynamic
 from .design import Design
+from ..h5nastrannode import H5NastranNode
 
 
-class Input(object):
+class Input(H5NastranNode):
     def __init__(self, h5n):
         self._h5n = h5n  # type: H5Nastran
 
@@ -46,15 +47,14 @@ class Input(object):
 
     def path(self):
         return self._h5n.path() + ['INPUT']
-
-    def read(self):
-        for key, item in iteritems(self.__dict__):
-            if key.startswith('_'):
-                continue
-            try:
-                item.read()
-            except AttributeError:
-                pass
             
     def update(self):
         self.coordinate_system.update()
+
+    def to_bdf(self, bdf):
+        for key, item in iteritems(self.__dict__):
+            if key.startswith('_'):
+                continue
+            if hasattr(item, 'to_bdf'):
+                item.to_bdf(bdf)
+

@@ -1,3 +1,7 @@
+from __future__ import print_function, absolute_import
+from six import get_method_function, add_metaclass
+
+
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
 
@@ -214,15 +218,57 @@ def _get_value(value, default):
     return value
 
 
+########################################################################################################################
+
+_registered_input_tables = {}
+
+
+class InputTableMetaClass(type):
+    def __new__(cls, clsname, bases, attrs):
+        newclass = super(InputTableMetaClass, cls).__new__(cls, clsname, bases, attrs)
+        
+        if newclass.__name__ not in _registered_input_tables:
+            assert newclass.version == (0, 0, 0), '%s version %r must be defined first!' % (newclass.__name__, (0, 0, 0))
+            tmp = _registered_input_tables[newclass.__name__] = {}
+        else:
+            tmp = _registered_input_tables[newclass.__name__]
+            
+        assert newclass.version not in tmp
+        tmp[newclass.version] = newclass
+
+        # return last version defined, this allows newer versions to sublass last defined version as long as versions
+        # are defined in order, although better to explicitly use KLS.get_version((i, j, k))
+        return newclass
+
+
+@add_metaclass(InputTableMetaClass)
 class InputTable(object):
     card_id = ''
     table_def = None  # type: TableDef
+    version = (0, 0, 0)
 
-    def to_bdf(bdf):
-        raise NotImplementedError
+    def __new__(cls, h5n, parent):
+        version = h5n.version
+        tmp = _registered_input_tables[cls.__name__]
+        keys = sorted(tmp.keys())
 
-    def from_bdf(self, cards):
-        raise NotImplementedError
+        last_key = None
+
+        for key in keys:
+            if key <= version:
+                last_key = key
+            else:
+                break
+
+        if last_key is None:
+            raise Exception('Cannot find %s version %r' % (cls.__name__, version))
+
+        cls = tmp[last_key]
+        return object.__new__(cls)
+
+    @classmethod
+    def get_version(cls, version):
+        return _registered_input_tables[cls.__name__][version]
 
     def __init__(self, h5n, parent):
         self._h5n = h5n
@@ -237,8 +283,28 @@ class InputTable(object):
 
             self._h5n.register_card_table(self)
 
+    def to_bdf(self, bdf):
+        raise NotImplementedError
+
+    def from_bdf(self, cards):
+        raise NotImplementedError
+
+    def to_bdf_implemented(self):
+        try:
+            to_bdf = InputTable.to_bdf.im_func
+        except AttributeError:
+            to_bdf = InputTable.to_bdf
+        return self.to_bdf is not to_bdf
+
+    def from_bdf_implemented(self):
+        try:
+            from_bdf = InputTable.from_bdf.im_func
+        except AttributeError:
+            from_bdf = InputTable.from_bdf
+        return self.from_bdf is not from_bdf
+
     def write_data(self, cards):
-        if self.__class__.from_bdf is not InputTable.from_bdf:
+        if self.from_bdf_implemented():
             self._table_def.write_data(self.from_bdf(cards))
         else:
             raise NotImplementedError
@@ -247,7 +313,7 @@ class InputTable(object):
         pass
 
     def read(self):
-        if self.__class__.from_bdf is InputTable.from_bdf:
+        if not self.from_bdf_implemented():
             # if not implemented, then bail now so the table isn't created in the h5 file
             return np.empty(0, dtype=self.table_def.dtype)
 
@@ -274,4 +340,4 @@ class InputTable(object):
         try:
             return self.data[item]
         except KeyError:
-            raise AttributeError('Attribute %s not found on CardTable.' % (item))
+            raise AttributeError('Attribute %s not found on InputTable.' % (item))

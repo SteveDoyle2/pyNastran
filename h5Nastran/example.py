@@ -11,6 +11,9 @@ from h5Nastran import H5Nastran
 db = H5Nastran('./models/model_001.h5', 'w')  # , in_memory=True)
 db.load_bdf('./models/model_001.bdf')
 db.load_punch('./models/model_001.pch')
+db.close()
+db = H5Nastran('./models/model_001.h5', 'r')
+db.load_bdf()
 
 print(db.input.node.grid.identity)  # or db.input.node.grid.grid
 

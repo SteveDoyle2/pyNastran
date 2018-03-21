@@ -7,9 +7,10 @@ import numpy as np
 
 from ..result_table import ResultTable, TableDef, DataGetter
 from ._shell_results import ShellElementForceStressResultTable, ShellElementForceStressResultTableComplex
+from ...h5nastrannode import H5NastranNode
 
 
-class Stress(object):
+class Stress(H5NastranNode):
     def __init__(self, h5n, elemental):
         self._h5n = h5n
         self._elemental = elemental

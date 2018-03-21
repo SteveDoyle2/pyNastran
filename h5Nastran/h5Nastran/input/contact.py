@@ -6,9 +6,10 @@ import tables
 import numpy as np
 
 from .input_table import InputTable, TableDef
+from ..h5nastrannode import H5NastranNode
 
 
-class Contact(object):
+class Contact(H5NastranNode):
     def __init__(self, h5n, input):
         self._h5n = h5n
         self._input = input

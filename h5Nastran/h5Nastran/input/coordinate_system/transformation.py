@@ -2,9 +2,10 @@ from __future__ import print_function, absolute_import
 
 import numpy as np
 from math import sin, cos, radians
+from ...h5nastrannode import H5NastranNode
 
 
-class Transformation(object):
+class Transformation(H5NastranNode):
     def __init__(self, h5n, coordinate_system):
         self._h5n = h5n
         self._coordinate_system = coordinate_system
