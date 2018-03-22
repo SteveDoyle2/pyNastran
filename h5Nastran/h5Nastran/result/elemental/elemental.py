@@ -9,9 +9,10 @@ from .element_force import ElementForce
 from .energy import Energy
 from .strain import Strain
 from .stress import Stress
+from ...h5nastrannode import H5NastranNode
 
 
-class Elemental(object):
+class Elemental(H5NastranNode):
     def __init__(self, h5n, result):
         self._h5n = h5n
         self._result = result

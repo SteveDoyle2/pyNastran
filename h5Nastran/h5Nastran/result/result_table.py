@@ -1,5 +1,5 @@
 from __future__ import print_function, absolute_import
-from six import iteritems
+from six import iteritems, add_metaclass
 
 from collections import defaultdict
 from copy import deepcopy
@@ -567,7 +567,7 @@ class TableDef(object):
 
     @property
     def _private_index_path(self):
-        return self.h5n.table_paths.private_index_path
+        return self.h5n.table_paths.private_index_path + self.path()
 
     def _record_data_indices(self, data):
         if self.is_subtable:
@@ -742,11 +742,49 @@ class TableData(object):
             subdata.validate()
 
 
+########################################################################################################################
+
+_registered_result_tables = {}
+
+
+class ResultTableMetaClass(type):
+    def __new__(cls, clsname, bases, attrs):
+        newclass = super(ResultTableMetaClass, cls).__new__(cls, clsname, bases, attrs)
+
+        result_type = newclass.result_type
+
+        if isinstance(result_type, str):
+            result_type = [result_type]
+
+        for res_type in result_type:
+            if res_type not in _registered_result_tables:
+                assert newclass.version == (0, 0, 0), '%s version %r must be defined first!' % (
+                newclass.__name__, (0, 0, 0))
+                tmp = _registered_result_tables[res_type] = {}
+            else:
+                tmp = _registered_result_tables[res_type]
+
+            assert newclass.version not in tmp
+            tmp[newclass.version] = newclass
+
+        # return last version defined, this allows newer versions to sublass last defined version as long as versions
+        # are defined in order, although better to explicitly use KLS.get_version((i, j, k))
+        return newclass
+
+
+@add_metaclass(ResultTableMetaClass)
 class ResultTable(object):
     result_type = ''
     table_def = None  # type: TableDef
     result_data_cols = []  # type: List[int]
     result_data_group_by = []  # type: List[str]
+    version = (0, 0, 0)
+    
+    @classmethod
+    def get_version(cls, version):
+        # TODO: make result_type only a string
+        # this will only work if cls.result_type is a string
+        return _registered_node[cls.result_type][version]
 
     def __init__(self, h5n, parent):
         self._h5n = h5n

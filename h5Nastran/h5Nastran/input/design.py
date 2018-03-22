@@ -7,9 +7,10 @@ import numpy as np
 
 from .input_table import InputTable, TableDef
 from ..data_helper import DataHelper
+from ..h5nastrannode import H5NastranNode
 
 
-class Design(object):
+class Design(H5NastranNode):
     def __init__(self, h5n, input):
         self._h5n = h5n
         self._input = input
@@ -19,15 +20,6 @@ class Design(object):
 
     def path(self):
         return self._input.path() + ['DESIGN']
-
-    def read(self):
-        for key, item in iteritems(self.__dict__):
-            if key.startswith('_'):
-                continue
-            try:
-                item.read()
-            except AttributeError:
-                pass
 
 
 ########################################################################################################################

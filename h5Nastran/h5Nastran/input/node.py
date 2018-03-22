@@ -8,9 +8,10 @@ from typing import Dict
 
 from .input_table import InputTable, TableDef, DataHelper
 from h5Nastran.utilities import ImmutableDict
+from ..h5nastrannode import H5NastranNode
 
 
-class Node(object):
+class Node(H5NastranNode):
     def __init__(self, h5n, input):
         self._h5n = h5n
         self._input = input
@@ -20,14 +21,9 @@ class Node(object):
     def path(self):
         return self._input.path() + ['NODE']
 
-    def read(self):
-        for key, item in iteritems(self.__dict__):
-            if key.startswith('_'):
-                continue
-            try:
-                item.read()
-            except AttributeError:
-                pass
+    def to_bdf(self, bdf):
+        self.grid.to_bdf(bdf)
+
 
 ########################################################################################################################
 
@@ -46,6 +42,33 @@ class GRID(InputTable):
         self._grid_dict = None
         self._grid_in_basic_dict = None
         self._grid_index.clear()
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_grid
+
+        data = self.identity
+
+        id_ = data['ID']
+        cp = data['CP']
+        x = data['X']
+        cd = data['CD']
+        ps = data['PS']
+        seid = data['SEID']
+
+        def _get_ps(val, default):
+            if val == default:
+                return ''
+            return str(val)
+
+        for i in range(len(id_)):
+            _id = id_[i]
+            _cp = cp[i]
+            _xyz = x[i]
+            _cd = cd[i]
+            _ps = _get_ps(ps[i], DataHelper.default_int)
+            _seid = seid[i]
+
+            add_card(_id, _xyz, _cp, _cd, _ps, _seid)
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
@@ -70,11 +93,11 @@ class GRID(InputTable):
             card = cards[card_id]
 
             id_[i] = card.nid
-            cp[i] = card.cp
+            cp[i] = _get_val(card.cp, 0)
             x[i] = card.xyz
-            cd[i] = card.cd
+            cd[i] = _get_val(card.cd, 0)
             ps[i] = _get_val(card.ps, DataHelper.default_int)
-            seid[i] = card.seid
+            seid[i] = _get_val(card.seid, 0)
 
         result = {'IDENTITY': data}
 

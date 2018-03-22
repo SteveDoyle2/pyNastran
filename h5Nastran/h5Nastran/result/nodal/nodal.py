@@ -7,9 +7,10 @@ import numpy as np
 
 
 from ..result_table import ResultTable, TableDef, DataGetter
+from ...h5nastrannode import H5NastranNode
 
 
-class Nodal(object):
+class Nodal(H5NastranNode):
     def __init__(self, h5n, result):
         self._h5n = h5n
         self._result = result

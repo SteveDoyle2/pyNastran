@@ -7,9 +7,10 @@ import numpy as np
 
 from ...input.input_table import InputTable, TableDef
 from .transformation import Transformation
+from ...h5nastrannode import H5NastranNode
 
 
-class CoordinateSystem(object):
+class CoordinateSystem(H5NastranNode):
     def __init__(self, h5n, input):
         self._h5n = h5n
         self._input = input
@@ -28,17 +29,17 @@ class CoordinateSystem(object):
     def path(self):
         return self._input.path() + ['COORDINATE_SYSTEM']
 
-    def read(self):
-        for key, item in iteritems(self.__dict__):
-            if key.startswith('_'):
-                continue
-            try:
-                item.read()
-            except AttributeError:
-                pass
-
     def update(self):
         self.h5n_transformation.update()
+        
+    def to_bdf(self, bdf):
+        for key, item in iteritems(self.__dict__):
+            if key.startswith('_') or key == 'h5n_transformation':
+                continue
+            try:
+                item.to_bdf(bdf)
+            except NotImplementedError:
+                pass
 
 
 ########################################################################################################################
@@ -62,6 +63,34 @@ class CORD1S(InputTable):
 
 
 class _CORD2(InputTable):
+
+    add_card = None
+
+    def to_bdf(self, bdf):
+        add_card = getattr(bdf, self.add_card)
+
+        data = self.identity
+
+        cid = data['CID']
+        rid = data['RID']
+        a1 = data['A1']
+        a2 = data['A2']
+        a3 = data['A3']
+        b1 = data['B1']
+        b2 = data['B2']
+        b3 = data['B3']
+        c1 = data['C1']
+        c2 = data['C2']
+        c3 = data['C3']
+
+        for i in range(len(cid)):
+            _cid = cid[i]
+            _rid = rid[i]
+            origin = [a1[i], a2[i], a3[i]]
+            zaxis = [b1[i], b2[i], b3[i]]
+            xzplane = [c1[i], c2[i], c3[i]]
+            add_card(_cid, _rid, origin, zaxis, xzplane)
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
 
@@ -100,18 +129,21 @@ class _CORD2(InputTable):
 
 class CORD2C(_CORD2):
     table_def = TableDef.create('/NASTRAN/INPUT/COORDINATE_SYSTEM/CORD2C')
+    add_card = 'add_cord2c'
 
 ########################################################################################################################
 
 
 class CORD2R(_CORD2):
     table_def = TableDef.create('/NASTRAN/INPUT/COORDINATE_SYSTEM/CORD2R')
+    add_card = 'add_cord2r'
 
 ########################################################################################################################
 
 
 class CORD2S(_CORD2):
     table_def = TableDef.create('/NASTRAN/INPUT/COORDINATE_SYSTEM/CORD2S')
+    add_card = 'add_cord2s'
 
 ########################################################################################################################
 

@@ -10,9 +10,10 @@ from pandas import DataFrame
 
 from ..result_table import ResultTable, TableDef, ResultTableData
 from ._shell_results import ShellElementForceStressResultTable, ShellElementForceStressResultTableComplex
+from ...h5nastrannode import H5NastranNode
 
 
-class ElementForce(object):
+class ElementForce(H5NastranNode):
     def __init__(self, h5n, elemental):
         self._h5n = h5n
         self._elemental = elemental

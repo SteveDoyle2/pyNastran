@@ -7,9 +7,10 @@ import numpy as np
 from .input_table import InputTable, TableDef
 from ..data_helper import DataHelper
 from ._shell_element_info import QuadShell, TriaShell, shell_element_info_format
+from ..h5nastrannode import H5NastranNode
 
 
-class Element(object):
+class Element(H5NastranNode):
     def __init__(self, h5n, input):
         self._h5n = h5n
         self._input = input
@@ -141,15 +142,6 @@ class Element(object):
     def path(self):
         return self._input.path() + ['ElEMENT']
 
-    def read(self):
-        for key, item in iteritems(self.__dict__):
-            if key.startswith('_'):
-                continue
-            try:
-                item.read()
-            except AttributeError:
-                pass
-
     def write_shell_element_info(self, bdf, cards):
         if self._shell_element_info is not None:
             return self._shell_element_info
@@ -215,6 +207,15 @@ class Element(object):
         self._shell_element_info_dict = result
 
         return self._shell_element_info_dict
+
+    def to_bdf(self, bdf):
+        for key, item in iteritems(self.__dict__):
+            if key.startswith('_'):
+                continue
+            try:
+                item.to_bdf(bdf)
+            except NotImplementedError:
+                pass
 
 
 ########################################################################################################################
@@ -1491,6 +1492,45 @@ class CQUAD(InputTable):
 class CQUAD4(InputTable, QuadShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CQUAD4')
 
+    def to_bdf(self, bdf):
+        add_card = bdf.add_cquad4
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        def _get_val(val, default):
+            if val == default:
+                return None
+            return val
+
+        default_int = self._h5n.defaults.default_int
+        default_double = self._h5n.defaults.default_double
+
+        for i in range(len(eid)):
+            _eid = eid[i]
+            _pid = pid[i]
+            _g = g[i].tolist()
+            _theta = _get_val(theta[i], default_double)
+            _zoffs = zoffs[i]
+            _tflag = tflag[i]
+            _t = t[i]
+            _mcid = _get_val(mcid[i], default_int)
+
+            if _theta is None:
+                theta_mcid = _mcid
+            else:
+                theta_mcid = _theta
+
+            add_card(_eid, _pid, _g, theta_mcid, _zoffs, _tflag, _t[0], _t[1], _t[2], _t[3])
+
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
         data = np.empty(len(card_ids), dtype=self.table_def.dtype)
@@ -1504,6 +1544,9 @@ class CQUAD4(InputTable, QuadShell):
         t = data['T']
         mcid = data['MCID']
 
+        default_int = self._h5n.defaults.default_int
+        default_double = self._h5n.defaults.default_double
+
         i = -1
         for card_id in card_ids:
             i += 1
@@ -1512,9 +1555,9 @@ class CQUAD4(InputTable, QuadShell):
             theta_mcid = card.theta_mcid
             if not isinstance(theta_mcid, float):
                 _mcid = theta_mcid
-                _theta = DataHelper.default_double
+                _theta = default_double
             else:
-                _mcid = DataHelper.default_int
+                _mcid = default_int
                 _theta = theta_mcid
 
             eid[i] = card.eid
@@ -1792,6 +1835,42 @@ class CTETRA(InputTable):
 
 class CTRIA3(InputTable, TriaShell):
     table_def = TableDef.create('/NASTRAN/INPUT/ELEMENT/CTRIA3')
+
+    def to_bdf(self, bdf):
+        add_card = bdf.add_ctria3
+
+        data = self.identity
+
+        eid = data['EID']
+        pid = data['PID']
+        g = data['G']
+        theta = data['THETA']
+        zoffs = data['ZOFFS']
+        tflag = data['TFLAG']
+        t = data['T']
+        mcid = data['MCID']
+
+        def _get_val(val, default):
+            if val == default:
+                return None
+            return val
+
+        for i in range(len(eid)):
+            _eid = eid[i]
+            _pid = pid[i]
+            _g = g[i].tolist()
+            _theta = _get_val(theta[i], DataHelper.default_double)
+            _zoffs = zoffs[i]
+            _tflag = tflag[i]
+            _t = t[i]
+            _mcid = _get_val(mcid[i], DataHelper.default_int)
+
+            if _theta is None:
+                theta_mcid = _mcid
+            else:
+                theta_mcid = _theta
+
+            add_card(_eid, _pid, _g, theta_mcid, _zoffs, _tflag, _t[0], _t[1], _t[2])
 
     def from_bdf(self, cards):
         card_ids = sorted(cards.keys())
