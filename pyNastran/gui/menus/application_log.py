@@ -43,6 +43,9 @@ class HtmlLog(QTextEdit):
         """clears out the text"""
         self.setText('')
 
+    def __repr__(self):
+        return 'HtmlLog()'
+
 class ApplicationLogWidget(QDockWidget):
     def __init__(self, parent=None):
         QDockWidget.__init__(self, 'Application log', parent=parent)
