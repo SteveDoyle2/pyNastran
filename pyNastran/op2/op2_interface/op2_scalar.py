@@ -58,7 +58,7 @@ import os
 from struct import unpack, Struct
 from collections import Counter
 from typing import List
-from six import string_types, iteritems, PY2, PY3, b
+from six import binary_type, string_types, iteritems, PY2, PY3, b
 from six.moves import range
 
 from numpy import array
@@ -1853,7 +1853,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             self.additional_matrices = {}
             for matrix_name, matrix in iteritems(matrices):
-                self.additional_matrices[b(matrix_name)] = matrix
+                if isinstance(matrix_name, binary_type):
+                    self.additional_matrices[matrix_name] = matrix
+                else:
+                    self.additional_matrices[b(matrix_name)] = matrix
 
     def _skip_table_helper(self):
         """

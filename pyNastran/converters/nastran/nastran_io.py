@@ -5334,28 +5334,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     if nlayers == 1:
                         form0 += form_layer
                     else:
-                        word = self._get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp)
+                        word = _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp)
                         form0.append((word, None, form_layer))
         return icase
-
-    def _get_nastran_gui_layer_word(self, i, ilayer, is_pshell_pcomp):
-        """gets the PSHELL/PCOMP layer word"""
-        is_pshell, is_pcomp = is_pshell_pcomp
-        word = ''
-        if i == 0:
-            if ilayer == 0:
-                if is_pshell:
-                    word += 'PSHELL: ilayer=1 & others'
-                else:
-                    word += 'Other Properties'
-            else:
-                word += 'PSHELL: ilayer=%i' % (ilayer + 1)
-        else:
-            if ilayer == 0:
-                word += 'PCOMP: Total'
-            else:
-                word += 'PCOMP: ilayer=%i' % (ilayer)
-        return word
 
     def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
         """
@@ -5991,3 +5972,23 @@ def _get_shell_material_coord_int(element):
      - CTRIA3, CTRIAR, CTRIA6
     """
     return 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
+
+def _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp):
+    """gets the PSHELL/PCOMP layer word"""
+    is_pshell, is_pcomp = is_pshell_pcomp
+    word = ''
+    if i == 0:
+        if ilayer == 0:
+            if is_pshell:
+                word += 'PSHELL: ilayer=1 & others'
+            else:
+                word += 'Other Properties'
+        else:
+            word += 'PSHELL: ilayer=%i' % (ilayer + 1)
+    else:
+        if ilayer == 0:
+            word += 'PCOMP: Total'
+        else:
+            word += 'PCOMP: ilayer=%i' % (ilayer)
+    return word
+
