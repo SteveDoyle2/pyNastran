@@ -15,7 +15,8 @@ from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.utils import is_binary_file
 from pyNastran.gui.gui_objects.gui_result import GuiResult
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 
 
 class UGRID_IO(object):
@@ -46,8 +47,9 @@ class UGRID_IO(object):
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
+        read_solids = False
         if is_binary_file(ugrid_filename):
-            model = UGRID(log=self.log, debug=True)
+            model = UGRID(log=self.log, debug=True, read_solids=read_solids)
             ext = os.path.basename(ugrid_filename).split('.')[2] # base, fmt, ext
             is_2d = False
         else:
@@ -62,13 +64,30 @@ class UGRID_IO(object):
 
         assert ext == 'ugrid', ugrid_filename
         model.read_ugrid(ugrid_filename)
+        self.model = model
 
+        nnodes = model.nodes.shape[0]
+        ntris = model.tris.shape[0]
+        nquads = model.quads.shape[0]
+        ntets = model.tets.shape[0]
+        npenta5s = model.penta5s.shape[0]
+        npenta6s = model.penta6s.shape[0]
+        nhexas = model.hexas.shape[0]
         if is_2d:
             tris = model.tris
             quads = model.quads
+            nelements = ntris + nquads
         else:
-            tris = model.tris - 1
-            quads = model.quads - 1
+            if read_solids:
+                tets = model.tets - 1
+                penta5s = model.penta5s - 1
+                penta6s = model.penta6s - 1
+                hexas = model.hexas - 1
+                nelements = ntets + npenta5s + npenta6s + nhexas
+            else:
+                tris = model.tris - 1
+                quads = model.quads - 1
+                nelements = ntris + nquads
 
         #self.nodes = nodes
         #self.tris  = tris
@@ -80,10 +99,6 @@ class UGRID_IO(object):
         #self.penta6s = penta6s
         #self.hexas = hexas
 
-        nnodes = model.nodes.shape[0]
-        ntris = model.tris.shape[0]
-        nquads = model.quads.shape[0]
-        nelements = ntris + nquads
 
         nodes = model.nodes
         self.nelements = nelements
@@ -92,7 +107,8 @@ class UGRID_IO(object):
         self.log.info("nnodes=%s nelements=%s" % (self.nnodes, self.nelements))
         assert nelements > 0, nelements
 
-        self.grid.Allocate(self.nelements, 1000)
+        grid = self.grid
+        grid.Allocate(self.nelements, 1000)
 
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
@@ -101,7 +117,7 @@ class UGRID_IO(object):
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
-        if is_3d:
+        if is_3d and read_solids:
             diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
             if len(diff_node_ids):
                 red = (1., 0., 0.)
@@ -112,30 +128,38 @@ class UGRID_IO(object):
 
         points = numpy_to_vtk_points(nodes)
 
-        if ntris:
-            for eid, element in enumerate(tris):
-                elem = vtkTriangle()
-                elem.GetPointIds().SetId(0, element[0])
-                elem.GetPointIds().SetId(1, element[1])
-                elem.GetPointIds().SetId(2, element[2])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
-        if nquads:
-            for eid, element in enumerate(quads):
-                elem = vtkQuad()
-                elem.GetPointIds().SetId(0, element[0])
-                elem.GetPointIds().SetId(1, element[1])
-                elem.GetPointIds().SetId(2, element[2])
-                elem.GetPointIds().SetId(3, element[3])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+        elements = []
+        etypes = []
+        if is_2d or not read_solids:
+            if ntris:
+                elements.append(tris)
+                etypes.append(5) # vtkTriangle().GetCellType()
+            if nquads:
+                elements.append(quads)
+                etypes.append(9) # vtkQuad().GetCellType()
+        elif is_3d:
+            if ntets:
+                elements.append(tets)
+                etypes.append(10) # VTK_TETRA().GetCellType()
+            if npenta5s:
+                elements.append(penta5s)
+                etypes.append(14) # vtk.vtkPyramid().GetCellType()
+            if npenta6s:
+                elements.append(penta6s)
+                etypes.append(13) # VTK_WEDGE().GetCellType()
+            if nhexas:
+                elements.append(tetras)
+                etypes.append(12) # VTK_HEXAHEDRON().GetCellType()
+
+        self.model.elements = elements
+        self.model.etypes = etypes
+        create_vtk_cells_of_constant_element_types(grid, elements, etypes)
 
         self.nelements = nelements
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        self.log.info('update...')
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):
+            grid.Update()
         #self.log.info("updated grid")
 
         # loadCart3dResults - regions/loads
