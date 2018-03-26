@@ -24,6 +24,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
+from copy import deepcopy
 from six import iterkeys, iteritems, string_types, itervalues, b
 from six.moves.cPickle import load, dump
 
@@ -741,9 +742,13 @@ class OP2(OP2_Scalar):
             for case_key in case_keys:
                 #print('case_key =', case_key)
                 if isinstance(case_key, tuple):
-                    isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index = case_key
+                    isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, ogs = case_key
                     #isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, table_name = case_key
-                    value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index)
+                    if ogs == 0:
+                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index)
+                    else:
+                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, ogs)
+
                     if value not in self.subcase_key[isubcasei]:
                         #print('isubcase=%s value=%s' % (isubcasei, value))
                         self.subcase_key[isubcasei].append(value)
@@ -781,9 +786,15 @@ class OP2(OP2_Scalar):
                 #print('keys = %s' % keys)
                 key0 = tuple([isubcase] + list(keys[0]))
 
-                isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index = key0
-                key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index)
-                key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index)
+                if len(key0) == 5:
+                    # ogs is optional
+                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index = key0
+                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index)
+                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index)
+                else:
+                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, ogs = key0
+                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, ogs)
+                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, ogs)
 
                 #isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, table_name = key0
                 #key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, table_name)
@@ -872,6 +883,90 @@ class OP2(OP2_Scalar):
                             subcase_key2[isubcase].append(case_key)
         self.subcase_key = subcase_key2
         #print('subcase_key = %s' % self.subcase_key)
+
+    def get_key_order(self):
+        keys = []
+        table_types = self.get_table_types()
+        for table_type in sorted(table_types):
+            result_type_dict = getattr(self, table_type)
+            if len(result_type_dict) == 0:
+                continue
+            for key in result_type_dict:
+                if isinstance(key, string_types):
+                    if table_type not in ['eigenvalues']:
+                        print(table_type)
+                    continue
+                if key not in keys:
+                    keys.append(key)
+
+        #print(self.get_op2_stats())
+        keys_order = []
+
+        # subcase_ids = self.subcase_key.keys()
+
+        #self.isubcase_name_map[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
+        #subcase_ids = list(self.isubcase_name_map.keys())
+        #subcase_ids.sort()
+        #print('subcase_ids =', subcase_ids)
+
+
+        # isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index
+        #(1, 2, 1, 0, 0, 'SUPERELEMENT 0')  : result1
+
+        isubcases = set([])
+        analysis_codes = set([])
+        sort_methods = set([])
+        counts = set([])
+        ogss = set([])
+        superelement_adaptivity_indexs = set([])
+
+        for key in keys:
+            if len(key) == 5:
+                isubcase, analysis_code, sort_method, count, superelement_adaptivity_index = key
+                ogs = 0
+            elif len(key) == 6:
+                isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index = key
+            else:
+                print('  %s' % str(key))
+                raise RuntimeError(key)
+                #isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index = key
+            isubcases.add(isubcase)
+            analysis_codes.add(analysis_code)
+            sort_methods.add(sort_method)
+            counts.add(count)
+            ogss.add(ogs)
+            superelement_adaptivity_indexs.add(superelement_adaptivity_index)
+
+        isubcases = list(isubcases)
+        analysis_codes = list(analysis_codes)
+        sort_methods = list(sort_methods)
+        counts = list(counts)
+        ogss = list(ogss)
+        superelement_adaptivity_indexs = list(superelement_adaptivity_indexs)
+
+        isubcases.sort()
+        analysis_codes.sort()
+        sort_methods.sort()
+        counts.sort()
+        ogss.sort()
+        superelement_adaptivity_indexs.sort()
+
+        keys3 = []
+        for isubcase in isubcases:
+            for count in counts:
+                for analysis_code in analysis_codes:
+                    for superelement_adaptivity_index in superelement_adaptivity_indexs:
+                        for sort_method in sort_methods:
+                            for ogs in ogss:
+                                key = (isubcase, analysis_code, sort_method,
+                                       count, ogs, superelement_adaptivity_index)
+                                if key not in keys3:
+                                    #print('adding ', key)
+                                    keys3.append(key)
+        if len(keys3) == 0:
+            self.log.warning('No results...\n' + self.get_op2_stats(short=True))
+        #assert len(keys3) > 0, keys3
+        return keys3
 
     def print_subcase_key(self):
         self.log.info('---self.subcase_key---')

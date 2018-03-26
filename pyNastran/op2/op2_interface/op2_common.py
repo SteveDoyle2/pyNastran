@@ -373,7 +373,10 @@ class OP2Common(Op2Codes, F06Writer):
             raise  RuntimeError('isubcase is not defined')
 
         if hasattr(self, 'subtitle') and hasattr(self, 'label'):
-            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index)
+            ogs = 0
+            if hasattr(self, 'ogs'):
+                ogs = self.ogs
+            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, ogs)
             #code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, self.table_name_str)
             #print("code =", code)
             #if code not in self.labels:
@@ -1395,7 +1398,10 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _get_code(self):
         code = self.isubcase
-        code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+        ogs = 0
+        if hasattr(self, 'ogs'):
+            ogs = self.ogs
+        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
                 self.superelement_adaptivity_index)
         #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
                 #self.superelement_adaptivity_index, self.table_name_str)

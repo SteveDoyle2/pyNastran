@@ -2892,6 +2892,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
+
+        TODO
+        ----
+         - RBE3s from OP2s can show up as ???s
         """
         card_dict_groups = [
             'params', 'nodes', 'points', 'elements', 'normals', 'rigid_elements',

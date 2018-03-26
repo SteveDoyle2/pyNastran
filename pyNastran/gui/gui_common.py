@@ -1060,7 +1060,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.create_cell_picker()
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
-                                  bar_scale=0.0, representation=None, is_visible=True,
+                                  bar_scale=0.0, representation=None, display=None, is_visible=True,
                                   follower_nodes=None, follower_function=None,
                                   is_pickable=False, ugrid=None):
         """
@@ -1104,7 +1104,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self, name, color=color,
             line_width=line_width, opacity=opacity,
             point_size=point_size, bar_scale=bar_scale,
-            representation=representation, is_visible=is_visible, is_pickable=is_pickable)
+            representation=representation, display=display,
+            is_visible=is_visible, is_pickable=is_pickable)
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
         if follower_function is not None:

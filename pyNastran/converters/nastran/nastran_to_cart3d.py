@@ -13,6 +13,7 @@ import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D
 
+LINE_ELEMENTS = ['CBAR', 'CBEAM', 'CROD', 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']
 
 def nastran_to_cart3d(bdf, log=None, debug=False):
     """
@@ -79,7 +80,7 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
                 i += 1
                 elements[i, :] = [quad[0], quad[2], quad[3]]
                 regions[i] = mid
-            elif element.type in ['CBAR', 'CBEAM', 'CROD', 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']:
+            elif element.type in LINE_ELEMENTS:
                 continue
             else:
                 raise NotImplementedError(element.type)
@@ -105,6 +106,8 @@ def _store_sequential_nodes(bdf, nodes, elements, regions):
             nids = element.node_ids
             elements[j, :] = nids
             regions[j] = element.Mid()
+        elif element.type in LINE_ELEMENTS:
+            pass
         #elif element.type == 'CQUAD4':
             #nids = element.node_ids
             #elements[i, :] = nids

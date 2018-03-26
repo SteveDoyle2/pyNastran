@@ -72,7 +72,7 @@ EXTENSION_TO_OUPUT_FORMATS = {
 class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
               #ADB_IO, DegenGeomIO, #Plot3d_io,
               # AbaqusIO,
-              FastIO, SurfIO, UGRID_IO, BEdge_IO,
+              SurfIO, UGRID_IO, BEdge_IO,
               DegenGeomIO, ADB_IO):
     """spoofs the gui for testing"""
 
@@ -92,7 +92,6 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
         BEdge_IO.__init__(self)
         NastranIO.__init__(self)
         #DegenGeomIO.__init__(self)
-        FastIO.__init__(self)
         #Plot3d_io.__init__(self)
         SurfIO.__init__(self)
         UGRID_IO.__init__(self)
