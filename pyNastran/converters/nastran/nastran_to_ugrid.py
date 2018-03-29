@@ -3,7 +3,7 @@ defines:
  - ugrid = nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
                             check_shells=True, check_solids=True, log=None)
 """
-from six import iteritems
+from six import iteritems, string_types
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 
@@ -21,7 +21,7 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
         BDF() : a BDF object
     ugrid_filename_out : str (default=None -> ???)
         the path to the ugrid_filename
-    properties : dict???
+    properties : Dict[pid_old]=pid_new???
         ???
     check_shells : bool (default=True)
         verify that there is at least one shell element
@@ -30,7 +30,7 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
     log : Logger()
         a Python logging object
     """
-    if isinstance(bdf_filename, str):
+    if isinstance(bdf_filename, string_types):
         bdf_model = read_bdf(bdf_filename, log=log)
     else:
         bdf_model = bdf_filename
@@ -64,12 +64,17 @@ def nastran_to_ugrid(bdf_filename, ugrid_filename_out=None, properties=None,
     npenta = len(cpenta)
     nhexa = len(chexa)
     nsolids = ntetra + npyram + npenta + nhexa
+    msg = ''
     if nnodes == 0:
-        raise RuntimeError('nnodes=%i nshells=%i nsolids=%i' % (nnodes, nshells, nsolids))
+        msg += 'nnodes=0, '
     if nshells == 0 and check_shells:
-        raise RuntimeError('nnodes=%i nshells=%i nsolids=%i' % (nnodes, nshells, nsolids))
+        msg += 'nshells=0, '
     if nsolids == 0 and check_solids:
-        raise RuntimeError('nnodes=%i nshells=%i nsolids=%i' % (nnodes, nshells, nsolids))
+        msg += 'nsolids=0'
+    if msg:
+        msg2 = 'ERROR: ' + msg.strip(' ,') + '\nnnodes=%i nshells=%i nsolids=%i' % (
+            nnodes, nshells, nsolids)
+        raise RuntimeError(msg2)
 
     nodes = bdf_model.nodes
     elements = bdf_model.elements

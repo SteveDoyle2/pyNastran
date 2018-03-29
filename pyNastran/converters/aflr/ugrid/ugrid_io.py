@@ -14,7 +14,7 @@ from pyNastran.converters.aflr.surf.surf_reader import TagReader
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.aflr.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.utils import is_binary_file
-from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
 
@@ -172,7 +172,7 @@ class UGRID_IO(object):
 
         if hasattr(model, 'pids'):
             form, cases = self._fill_ugrid3d_case(
-                ugrid_filename, cases, ID, nnodes, nelements, model)
+                ugrid_filename, cases, ID, nnodes, nelements, model, read_solids)
         else:
             form, cases = self._fill_ugrid2d_case(
                 cases, ID, nnodes, nelements)
@@ -250,7 +250,7 @@ class UGRID_IO(object):
             #form.append(('Results', None, results_form))
         return form, cases
 
-    def _fill_ugrid3d_case(self, base, cases, ID, nnodes, nelements, model):
+    def _fill_ugrid3d_case(self, base, cases, ID, nnodes, nelements, model, read_solids):
         tag_filename = base + '.tags'
         mapbc_filename = base.split('.')[0] + '.mapbc'
         self.log.info('mapbc_filename = %r' % mapbc_filename)
@@ -265,12 +265,15 @@ class UGRID_IO(object):
             #('Region', 0, []),
             ('ElementID', 0, []),
             ('NodeID', 1, []),
-            ('SurfaceID', 2, []),
+            ('Normals', 2, []),
             #('normSpacing', 3, []),
             #('BL_thick', 4, []),
             #('ReconFlag', 5, []),
             #('GridBC', 6, []),
         ]
+        if read_solids:
+            geometry_form.append(('SurfaceID', 3, []))
+
 
         #ntris = model.tris.shape[0]
         #nquads = model.quads.shape[0]
@@ -286,16 +289,23 @@ class UGRID_IO(object):
                             location='centroid', scalar=eids)
         nid_res = GuiResult(0, header='NodeID', title='NodeID',
                             location='node', scalar=nids)
-        surface_res = GuiResult(0, header='SurfaceID', title='SurfaceID',
-                                location='centroid', scalar=pids)
+        nxyz_res = NormalResult(0, 'Normals', 'Normals',
+                                nlabels=2, labelsize=5, ncolors=2,
+                                colormap='jet', data_format='%.1f',
+                                uname='NormalResult')
 
         icase = 0
         cases[icase] = (eid_res, (0, 'ElementID'))
         cases[icase + 1] = (nid_res, (0, 'NodeID'))
-        cases[icase + 2] = (surface_res, (0, 'SurfaceID'))
+        cases[icase + 2] = (nxyz_res, (0, 'Normals'))
+        icase += 3
+        if not read_solids:
+            surface_res = GuiResult(0, header='SurfaceID', title='SurfaceID',
+                                    location='centroid', scalar=pids)
+            cases[icase] = (surface_res, (0, 'SurfaceID'))
+            icase += 1
 
-        icase = 3
-        if os.path.exists(tag_filename):
+        if os.path.exists(tag_filename) and not read_solids:
             #surf_ids = element_props[:, 0]
             #recon_flags = element_props[:, 1]
             #cases[(ID, 2, 'ReconFlag', 1, 'centroid', '%i')] = recon_flags
@@ -367,7 +377,7 @@ class UGRID_IO(object):
         else:
             self.log.warning('tag_filename=%r could not be found' % tag_filename)
 
-        if os.path.exists(mapbc_filename):
+        if os.path.exists(mapbc_filename) and not read_solids:
             has_mapbc_data = True
             mapbc = open(mapbc_filename, 'r')
             lines = mapbc.readlines()
