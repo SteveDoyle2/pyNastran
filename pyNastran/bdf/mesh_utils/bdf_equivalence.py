@@ -304,15 +304,40 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         #skip_nodes.append(nid2)
     return
 
-def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max=4, msg=''):
+def _eq_nodes_build_tree(nodes_xyz, nids, tol,
+                         inew=None, node_set=None, neq_max=4, msg=''):
     """
     helper function for `bdf_equivalence_nodes`
 
     Parameters
     ----------
+    nodes_xyz : (nnodes, 3) float ndarray
+        the xyzs to equivalence
+    nids : (nnodes,) int ndarray
+        the node ids
+    tol : float
+        the spherical equivalence tolerance
+    inew : int ndarray; default=None -> slice(None)
+        a slice on nodes_xyz to exclude some nodes from the equivalencing
+    node_set : ???; default=None
+        ???
+    neq_max : int; default=4
+        the number of nodes to consider for equivalencing
     msg : str; default=''
         custom message used for errors
+
+    Returns
+    -------
+    kdt : cKDTree()
+        the kdtree object
+    ieq : (nnodes, neq) int ndarray
+        ???
+    slots : (nnodes, neq) int ndarray
+        ???
     """
+    if inew is None:
+        inew = slice(None)
+
     assert isinstance(tol, float), 'tol=%r' % tol
     kdt = _get_tree(nodes_xyz, msg=msg)
 

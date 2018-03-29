@@ -9,50 +9,54 @@ import matplotlib.pyplot as plt
 from pyNastran.utils.log import get_logger2
 from pyNastran.f06.flutter_response import FlutterResponse
 
-def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
-                     modes=None,
-                     plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
-                     plot_kfreq_damping=False, show=True,
-                     xlim=None, ylim_damping=None, ylim_freq=None):
+def make_flutter_response(f06_filename, f06_units=None, out_units=None):
     """
-    Plots a flutter (SOL 145) deck
+    Creates the FlutterResponse object
 
+    Parameters
+    ----------
+    f06_filename : str
+        the filename to plot
+    f06_units : Dict[name]=unit; default=None
+        f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
+    out_units : Dict[name]=unit; default=None
+        out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
+                     'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
     Returns
     -------
     flutters : dict
         key : int
            subcase_id
         value : FlutterResponse()
-
-    Supports:
-    ---------
-     o single subcase
-     o single subcase, no subcase marker
-     o multiple subcases
-     o PK
-     o PKNL
-       o calculation of:
-         - equivalent airspeed
-         - dynamic pressure
-         - altitude
-
-    Doesn't support:
-    ----------------
-     o long tables (use LINE=500000)
-     o SOL 200
-     o fixing mode switching problem
-     o fixing unconverged points
     """
     if f06_units is None:
-        f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
+        f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
+                     'altitude' : 'NA', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
     if out_units is None:
         out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
+                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+    elif isinstance(out_units, str):
+        out_units = out_units.lower()
+        if out_units == 'si':
+            out_units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
+                         'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}
+        elif out_units == 'english_in':
+            out_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
+        elif out_units == 'english_ft':
+            out_units = {'velocity' : 'ft/s', 'density' : 'slug/ft^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+        elif out_units == 'english_kt':
+            out_units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
+        else:
+            raise NotImplementedError('out_units=%r' % out_units)
+    else:
+        assert isinstance(out_units, dict), 'out_units=%r' % (out_units)
 
     log = get_logger2(log=None, debug=True, encoding='utf-8')
     flutters = {}
     iline = 0
-    modes_to_plot = modes
 
     # 1 is the default subcase number
     subcase = 1
@@ -193,10 +197,13 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
             while len(sline) == nvalues:
                 sline = f06_file.readline().split()
                 iline += 1
-                if (sline
-                    and 'PAGE' not in sline
-                    and 'INFORMATION' not in sline
-                    and 'EIGENVALUE' not in sline):
+
+                is_line = (
+                    sline and
+                    'PAGE' not in sline and
+                    'INFORMATION' not in sline and
+                    'EIGENVALUE' not in sline)
+                if is_line:
                     #print('sline = %s' % sline)
                     lines.append(sline)
 
@@ -213,23 +220,94 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                                   modes, results,
                                   f06_units=f06_units, out_units=out_units)
         flutters[subcase] = flutter
+    return flutters
 
-    make_flutter_plots(modes_to_plot, flutters, xlim, ylim_damping, ylim_freq,
+def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
+                     plot_type='tas', modes=None,
+                     plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
+                     plot_kfreq_damping=False, show=True,
+                     xlim=None, ylim_damping=None, ylim_freq=None):
+    """
+    Plots a flutter (SOL 145) deck
+
+    Parameters
+    ----------
+    f06_filename : str
+        the filename to plot
+    f06_units : Dict[name]=unit; default=None
+        f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
+    out_units : Dict[name]=unit; default=None
+        out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
+                     'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
+    modes : bool; default=None
+        specifies the modes to plot
+    plot_type : str; default='tas'
+        'tas' : true airspeed
+        'eas' : equivalent airspeed
+    plot_vg : bool; default=False
+        make a V-damping plot
+    plot_vg_vf : bool; default=False
+        make a V-damping/V-freq plot
+    plot_root_locus : bool; default=False
+        make a Re/Imag plot
+    plot_kfreq_damping : bool; default=False
+        make a kfreq-damping plot
+    show : bool; default=True
+        call plt.show()
+    xlim : bool; default=None
+        xlimits for the V-g and V-g/V-f plots
+    ylim_damping : bool; default=None
+        ylimits for the V-g plots
+    ylim_freq : bool; default=None
+        ylimits for the V-f plots
+
+    Returns
+    -------
+    flutters : dict
+        key : int
+           subcase_id
+        value : FlutterResponse()
+
+    Supports:
+    ---------
+     o single subcase
+     o single subcase, no subcase marker
+     o multiple subcases
+     o PK
+     o PKNL
+       o calculation of:
+         - equivalent airspeed
+         - dynamic pressure
+         - altitude
+
+    Doesn't support:
+    ----------------
+     o SOL 200
+     o fixing mode switching problem
+     o fixing unconverged points
+    """
+    flutters = make_flutter_response(
+        f06_filename, f06_units=f06_units, out_units=out_units)
+
+    make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
+                       plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        show=show)
     return flutters
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
+                       plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        show=True):
     """actually makes the flutter plots"""
-    for subcase, flutter in sorted(iteritems(flutters)):
+    for unused_subcase, flutter in sorted(iteritems(flutters)):
         if plot_vg:
             flutter.plot_vg(modes=modes,
                             show=False,
                             xlim=xlim, ylim=ylim_damping)
         if plot_vg_vf:
             flutter.plot_vg_vf(modes=modes,
+                               plot_type=plot_type,
                                show=False,
                                xlim=xlim,
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq)
