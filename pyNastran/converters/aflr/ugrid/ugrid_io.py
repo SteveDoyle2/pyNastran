@@ -69,16 +69,20 @@ class UGRID_IO(object):
         nnodes = model.nodes.shape[0]
         ntris = model.tris.shape[0]
         nquads = model.quads.shape[0]
-        ntets = model.tets.shape[0]
-        npenta5s = model.penta5s.shape[0]
-        npenta6s = model.penta6s.shape[0]
-        nhexas = model.hexas.shape[0]
+        ntets = 0
+        npenta5s = 0
+        npenta6s = 0
+        nhexas = 0
         if is_2d:
             tris = model.tris
             quads = model.quads
             nelements = ntris + nquads
         else:
             if read_solids:
+                ntets = model.tets.shape[0]
+                npenta5s = model.penta5s.shape[0]
+                npenta6s = model.penta6s.shape[0]
+                nhexas = model.hexas.shape[0]
                 tets = model.tets - 1
                 penta5s = model.penta5s - 1
                 penta6s = model.penta6s - 1
