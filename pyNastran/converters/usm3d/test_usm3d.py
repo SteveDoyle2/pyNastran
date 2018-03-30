@@ -5,8 +5,6 @@ import os
 import unittest
 
 import pyNastran
-from pyNastran.gui.testing_methods import FakeGUIMethods
-#from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.usm3d.usm3d_reader import read_usm3d
 from pyNastran.utils.log import get_logger
 
@@ -16,12 +14,13 @@ MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'usm3d', 'box')
 
 
 class TestUsm3d(unittest.TestCase):
+    """tests file read/write"""
 
     def test_usm3d_01(self):
         """tests the box.cogwg/box.flo turbulent model"""
         log = get_logger(level='error', encoding='utf-8')
         base_filename = os.path.join(MODEL_PATH, 'box')
-        flo_filename = os.path.join(MODEL_PATH, 'box.flo')
+        #flo_filename = os.path.join(MODEL_PATH, 'box.flo')
 
         model = read_usm3d(base_filename, log=log)
         basename = 'cat'
@@ -29,4 +28,3 @@ class TestUsm3d(unittest.TestCase):
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
-

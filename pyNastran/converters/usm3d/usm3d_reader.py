@@ -855,7 +855,6 @@ def main():  # pragma: no cover
     """test problem"""
     model = Usm3d()
     if 1:
-        #basename = 'HSCT_inviscid'
         #basename = 'box'
         basename = 'new2'
         model.read_usm3d(basename, 3)
