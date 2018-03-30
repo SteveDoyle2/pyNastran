@@ -250,7 +250,7 @@ class UGRID(object):
             self.check_hanging_nodes()
 
     def write_bdf(self, bdf_filename, include_shells=True, include_solids=True,
-                  convert_pyram_to_penta=True, encoding=None,
+                  convert_pyram_to_penta=True, write_grids=True, encoding=None,
                   size=16, is_double=False, check=True):
         """
         writes a Nastran BDF
@@ -278,7 +278,7 @@ class UGRID(object):
 
 
             self.log.debug('writing GRIDs')
-            write_grids = False
+            write_grids = True
             if write_grids:
                 if not self.read_solids:
                     nids_to_write = np.unique(np.hstack([self.quads.ravel(), self.tris.ravel()]))
