@@ -60,25 +60,34 @@ This should be hidden...
 
 v1.1-progress
 
-Sort of the same goals as v1.0.  Just trying to make it not buggy.  There are some new features though.
+This will be a major release.  The focus has again been on robustness and testing.
+There are a few changes (mainly in the BDF) though.  The GUI now also supports
+PyQt4, PyQt5, and Pyside with the same API, which helps reduces the restriction on
+licensing.
+
+Even more exciting is the pyNastran documentation is going to be hosted on xxx.
+Documentation will be up to date and have better uptime.
+
 
 Programmatics
  - dropping VTK 5/6 suppoprt for the GUI
 
-OP2:
- - HDF5 export support
- - pandas support for matrices
- - couple more results vectorized (e.g., complex strain energy, DMIG strain energy, some forces)
-
 BDF:
- - currently 330 cards supported
+ - currently 340 cards supported
  - cross-referencing is now simpler
    - ``*_ref`` attributes are cross-referenced
       - ``element.nodes`` is not cross-referenced
       - ``element.nodes_ref`` is cross-referenced
  - pickling to load your deck ~5x faster
  - decreased time required for Case Control Deck with large SETs and many load cases
-- improved optimization checks
+ - improved optimization checks
+
+OP2:
+ - HDF5 export support
+ - pandas support for matrices
+ - couple more results vectorized (e.g., complex strain energy, DMIG strain energy, some forces)
+ - grid_point_stressses supported (disabled since v0.7)
+ - fixed sparse matrices being stored as dense matrices
 
 GUI:
  - animation menu is more intuitive
@@ -91,6 +100,7 @@ GUI:
  - single click menus
  - improved optimization support
  - improved picking display
+ - better PSHELL/PCOMP distinction
 
   --->
   
@@ -103,8 +113,8 @@ is a more permissive license and is the same one that numpy, scipy, and
 matplotlib use.
 
 Unfortunately, the GUI is more complicated.
- - For open source projects : LGPL 2/3
- - For companies that pay a license to Riverbank : LGPL 2/3
+ - For open source projects : GPL 2/3
+ - For companies that pay a license to Riverbank : proprietary
  - For companies that don't pay a license fee : GPL 2/3
 
 However, you may distribute an unmodified binary.
@@ -205,7 +215,7 @@ The following are some new features from the v0.8 release.
    - transform displacement/eigenvectors/spc/mpc/applied loads to global coordinate system
    - transform stresses/forces to material coordinate system
    - geometry can be read directly from op2 (not perfect, but when it works, it's much faster)
-   - [Pandas](http://pandas.pydata.org/) DataFrame support for use in the [Jupyter/iPython](http://jupyter.org/index.html) Notebook
+   - [Pandas](http://pandas.pydata.org/) DataFrame support for use in the [Jupyter](http://jupyter.org/index.html) Notebook
  - GUI
    - additional results
       - multiple OP2s
