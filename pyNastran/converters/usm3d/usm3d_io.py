@@ -243,15 +243,17 @@ class Usm3dIO(object):
                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                 data_format='%i', uname='GuiResult')
 
-            region_res = GuiResult(
-                subcasemap_id, 'Patch', 'Patch', 'centroid', bcs,  # patch_id
-                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                data_format='%i', uname='GuiResult')
             cases[icase] = (eid_res, (itime, 'ElementID'))
-            cases[icase + 1] = (region_res, (itime, 'Patch'))
             form.append(('ElementID', icase, []))
-            form.append(('Patch', icase + 1, []))
-            icase += 2
+            icase += 1
+            if bcs is not None:
+                region_res = GuiResult(
+                    subcasemap_id, 'Patch', 'Patch', 'centroid', bcs,  # patch_id
+                    nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                    data_format='%i', uname='GuiResult')
+                cases[icase] = (region_res, (itime, 'Patch'))
+                form.append(('Patch', icase, []))
+                icase += 1
 
         if bcs is not None:
             patch_id = bcs

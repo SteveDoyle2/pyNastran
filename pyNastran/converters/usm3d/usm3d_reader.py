@@ -15,8 +15,17 @@ from collections import OrderedDict
 
 from six.moves import range
 import numpy as np
+from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger2
 
+
+def read_usm3d(basename, log=None, debug=None):
+    """reads a usm3d file"""
+    model = Usm3d(log=log, debug=debug)
+    #model.read_cogsg(cogsg_filename, stop_after_header=False)
+    unused_dimension_flag = None
+    model.read_usm3d(basename, unused_dimension_flag, read_loads=True)
+    return model
 
 class Usm3d(object):
     """
@@ -201,12 +210,14 @@ class Usm3d(object):
             flo_filename = basename + '.flo'
 
         nodes, elements = self.read_cogsg(cogsg_filename)
+
         try:
             unused_header, tris, bcs = self.read_bc(bc_filename)
         except IOError:
             tris = None
             bcs = None
             self.log.error('Cannot find %r...skipping; required for geometry' % bc_filename)
+
         try:
             mapbc = self.read_mapbc(mapbc_filename)
         except IOError:
@@ -231,7 +242,6 @@ class Usm3d(object):
         return nodes, elements, tris, bcs, mapbc, loads, flo_filename
         #self.read_front(front_file)
         #self.read_face(face_file)
-
 
     def write_usm3d(self, basename):
         """
@@ -289,6 +299,7 @@ class Usm3d(object):
         tet_elements : ???
            ???
         """
+        assert os.path.exists(cogsg_filename), print_bad_path(cogsg_filename)
         with open(cogsg_filename, 'rb') as cogsg_file:
             # nelements * 4 * 4 + 32 ???
             dummy = cogsg_file.read(4)  # 1022848
@@ -413,25 +424,16 @@ class Usm3d(object):
         self.log.debug('tell volume = %s' % cogsg_file.tell())
         # surface + volume cells ???
         nelements = self.header['nElements']
-        str_format = '>%si' % nelements
+        #str_format = '>%si' % nelements
 
 
         self.log.debug("fv.tell = %s" % cogsg_file.tell())
-        use_frombuffer = True
+        ndata = 4 * (4 * nelements)
+        data = cogsg_file.read(ndata)
 
-        if use_frombuffer:
-            ndata = 4 * (4 * nelements)
-            data = cogsg_file.read(ndata)
-
-            # the 4 means that we make a (nelements, 4) array?
-            elements = np.frombuffer(data, dtype='>4f').copy() - 1
-        else:
-            elements = np.zeros((nelements, 4), 'int32')
-            for i in range(4): #  tets
-                data = cogsg_file.read(4 * nelements)
-                elements[:, i] = unpack(str_format, data)
-            elements -= 1
-
+        # the 4 means that we make a (nelements, 4) array?
+        elements = np.frombuffer(data, dtype='>i').copy() - 1
+        elements = elements.reshape((4, nelements)).T
         assert elements.shape == (nelements, 4), elements.shape
 
         dummy2 = cogsg_file.read(4)
@@ -451,22 +453,14 @@ class Usm3d(object):
         #assert dummy3_int == 298560
         self.log.debug("dummy3 = %i" % unpack('>i', dummy3)) #, unpack('>f', dummy3)
 
-        if use_frombuffer:
-            data_length = 8 * nnodes
-            data = cogsg_file.read(3 * data_length)
-            assert self.precision == 'double', self.precision
-            nodes = np.frombuffer(data, '>d').reshape(3, nnodes).T
+        data_length = 8 * nnodes
+        data = cogsg_file.read(3 * data_length)
+        assert self.precision == 'double', self.precision
+        nodes = np.frombuffer(data, '>d').reshape(3, nnodes).T
 
-            # the ravel creates a copy that we can then use to put in
-            # a contigous order
-            nodes = np.asarray(nodes.ravel(), dtype='<d').reshape(nnodes, 3)
-        else:
-            nodes = np.zeros((nnodes, 3), 'float64')
-            for i in range(3): #  x, y, z
-                data = cogsg_file.read(8 * nnodes)
-                assert len(data) == (8 * nnodes)
-                nodes[:, i] = unpack(str_format, data)
-
+        # the ravel creates a copy that we can then use to put in
+        # a contigous order
+        nodes = np.asarray(nodes.ravel(), dtype='<d').reshape(nnodes, 3)
 
         dummy4 = cogsg_file.read(4) # nnodes * 3 * 8
         dummy4_int, = unpack('>i', dummy4)
