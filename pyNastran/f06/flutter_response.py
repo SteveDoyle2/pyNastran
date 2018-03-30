@@ -96,8 +96,6 @@ class FlutterResponse(object):
         self.method = method
         self.modes = np.asarray(modes, dtype='int32')
 
-        density_units1 = self.f06_units['density']
-
         self.ikfreq = 0
         self.ikfreq_inv = 1
 
@@ -124,10 +122,10 @@ class FlutterResponse(object):
 
             #KFREQ  1./KFREQ  DENSITY  MACH  VELOCITY  DAMPING  FREQUENCY  COMPLEX EIGENVALUE
             self.idensity = 2
-            self.imach = 3 # good
-            self.ivelocity = 4  # good
+            self.imach = 3
+            self.ivelocity = 4
             self.idamping = 5
-            self.ifreq = 6 # good
+            self.ifreq = 6
             self.ieigr = 7
             self.ieigi = 8
             self.ieas = 9
@@ -138,62 +136,14 @@ class FlutterResponse(object):
             print('damping', results[5, :, self.idamping].min())
             print('freq', results[:, 5, self.ifreq].max())
             print('damping6', results[5, :, self.idamping].min())
-
-            # in/s
-            vel = results[:, :, self.ivelocity]#.ravel()
-
-            # slinch/in^3 - in_units
-            rho = results[:, :, self.idensity]#.ravel()
-
-            # good
-            rho_ref = atm_density(0., R=1716., alt_units='ft',
-                                  density_units=density_units1)
-
-            q = 0.5 * rho * vel**2
-            #eas  = (2 * q / rho_ref)**0.5
-            #print('rho_ref = %r' % rho_ref)
-
-
-            # eas = V * sqrt(rho / rhoSL)
-            keas = self._get_unit_factor('eas')[0]
-            eas = vel * np.sqrt(rho / rho_ref) * keas
-
-            #density_units2 = self.out_units['density']
-
-            altitude_units = self.out_units['altitude']
-            #density_units1 = self.out_units['density']
-
-            #print('density_units1=%r density_units2=%r' % (density_units1, density_units2))
-            kdensityi = convert_density(1., density_units1, 'slug/ft^3')
-            #kdensity = self._get_altitude_unit_factor(density_units2, 'slug/ft^3')
-            ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
-            kvel = self._get_unit_factor('velocity')[0]
-            kdensity = self._get_unit_factor('density')[0]
-            #kpressure = self._get_unit_factor('dynamic_pressure')[0]
-            kpressure = kdensityi * kvel ** 2
-
-            vel *= kvel
-            make_alt = False
-            if make_alt:
-                rho_in_slug_ft3 = rho * kdensityi
-                alt_ft = [get_alt_for_density(densityi, nmax=20)
-                          for densityi in rho_in_slug_ft3.ravel()]
-                alt = np.array(alt_ft, dtype='float64').reshape(vel.shape) * ft_to_alt_unit
-                #print('alt = ', alt, alt.shape)
-                density *= kdensity
-                self.results = np.dstack([results, eas, q * kpressure, alt])
-            else:
-                #kpressure = 1.
-                density *= kdensity
-                self.results = np.dstack([results, eas, q * kpressure])
+            self.set_pknl_results(results)
         else:
             raise NotImplementedError(method)
         #print(self.results.shape)
         #print('rho mode7 = %r' % rho[6, :, :])
         #print('damp mode7 = %r' % results[6, :, self.idamping])
         #print('rho mode7 = %r' % results[6, :, self.irho])
-        print('vel mode7 = %r' % results[6, :, self.ivelocity])
-
+        #print('vel mode7 = %r' % self.results[6, :, self.ivelocity])
 
         # c - cyan
         # b - black
@@ -220,6 +170,63 @@ class FlutterResponse(object):
         self._symbols = []
         self.generate_symbols()
 
+    def set_pknl_results(self, results):
+        density_units_in = self.f06_units['density']
+
+        # in/s
+        vel = results[:, :, self.ivelocity]#.ravel()
+
+        # slinch/in^3 - in_units
+        rho = results[:, :, self.idensity]#.ravel()
+
+        # good
+        rho_ref = atm_density(0., R=1716., alt_units='ft',
+                              density_units=density_units_in)
+
+        q = 0.5 * rho * vel**2
+        #eas  = (2 * q / rho_ref)**0.5
+        #print('rho_ref = %r' % rho_ref)
+
+
+        # eas = V * sqrt(rho / rhoSL)
+        keas = self._get_unit_factor('eas')[0]
+        eas = vel * np.sqrt(rho / rho_ref) * keas
+        #print('eas_max = ', eas.max())
+        #print('vel = ', vel.max())
+        #print('rho = ', rho.max())
+        #print('keas = ', keas)
+        #print('rho_ref = ', rho_ref)
+        #density_units2 = self.out_units['density']
+
+        altitude_units = self.out_units['altitude']
+
+        #print('density_units_in=%r density_units2=%r' % (density_units_in, density_units2))
+        kdensityi = convert_density(1., density_units_in, 'slug/ft^3')
+        kvel = self._get_unit_factor('velocity')[0]
+        kdensity = self._get_unit_factor('density')[0]
+        kpressure = kdensityi * kvel ** 2
+
+        vel *= kvel
+        make_alt = False
+        if make_alt:
+            rho_in_slug_ft3 = rho * kdensityi
+            alt_ft = [get_alt_for_density(densityi, nmax=20)
+                      for densityi in rho_in_slug_ft3.ravel()]
+
+            ft_to_alt_unit = convert_altitude(1., 'ft', altitude_units)
+            alt = np.array(alt_ft, dtype='float64').reshape(vel.shape) * ft_to_alt_unit
+
+            rho *= kdensity
+            results2 = np.dstack([results, eas, q * kpressure, alt])
+        else:
+            #kpressure = 1.
+            rho *= kdensity
+            results2 = np.dstack([results, eas, q * kpressure])
+
+        results2[:, :, self.idensity] = rho
+        results2[:, :, self.ivelocity] = vel
+        self.results = results2
+
     def generate_symbols(self, colors=None, symbols=None):
         """
         This symbol list is taken from a series of "good" colors (e.g. not yellow)
@@ -241,7 +248,8 @@ class FlutterResponse(object):
 
     def _get_unit_factor(self, name):
         if not self.f06_units or not self.out_units:
-            return 1.
+            msg = 'name=%r f06_units=%s out_units=%s' % (name, self.f06_units, self.out_units)
+            raise RuntimeError(msg)
         unit_f06 = self.f06_units[name]
         unit_out = self.out_units[name]
 
@@ -495,7 +503,7 @@ class FlutterResponse(object):
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None, show=None,
                    plot_type='tas',
                    png_filename=None, clear=False, legend=None,
-                   xlim=None, ylim_damping=None, ylim_freq=None):
+                   xlim=None, ylim_damping=None, ylim_freq=None, nopoints=False):
         """
         Make a V-g and V-f plot
 
@@ -515,14 +523,16 @@ class FlutterResponse(object):
         modes, imodes = self._get_modes_imodes(modes)
         symbols = self.symbols
 
-        _kvelocity, velocity_units = self._get_unit_factor('velocity')
+        #velocity_units = self._get_unit_factor('velocity')[1]
 
         legend_items = ['Mode %i' % mode for mode in modes]
         for i, imode, mode in zip(count(), imodes, modes):
             if plot_type == 'tas':
                 vel = self.results[imode, :, self.ivelocity].ravel()
+                velocity_units = self.out_units['velocity']
             elif plot_type == 'eas':
                 vel = self.results[imode, :, self.ieas].ravel()
+                velocity_units = self.out_units['eas']
             else:
                 raise NotImplementedError("plot_type=%r not in ['tas', 'eas']")
             damping = self.results[imode, :, self.idamping].ravel()
@@ -535,7 +545,7 @@ class FlutterResponse(object):
             #iplot = np.where(freq != np.nan)
             #damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
-            if symbols:
+            if symbols and not nopoints:
                 symbol = symbols[i]
                 damp_axes.plot(vel, damping, symbol, label='Mode %i' % mode)
                 freq_axes.plot(vel, freq, symbol)

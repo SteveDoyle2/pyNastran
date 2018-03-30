@@ -226,7 +226,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      plot_type='tas', modes=None,
                      plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
                      plot_kfreq_damping=False, show=True,
-                     xlim=None, ylim_damping=None, ylim_freq=None):
+                     xlim=None, ylim_damping=None, ylim_freq=None, nopoints=False):
     """
     Plots a flutter (SOL 145) deck
 
@@ -260,6 +260,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
         ylimits for the V-g plots
     ylim_freq : bool; default=None
         ylimits for the V-f plots
+    nopoints : bool; default=False
+        suppress the points
 
     Returns
     -------
@@ -292,12 +294,14 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
     make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
+                       nopoints,
                        show=show)
     return flutters
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
+                       nopoints,
                        show=True):
     """actually makes the flutter plots"""
     for unused_subcase, flutter in sorted(iteritems(flutters)):
@@ -310,7 +314,8 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                                plot_type=plot_type,
                                show=False,
                                xlim=xlim,
-                               ylim_damping=ylim_damping, ylim_freq=ylim_freq)
+                               ylim_damping=ylim_damping, ylim_freq=ylim_freq,
+                               nopoints=nopoints)
         if plot_root_locus:
             flutter.plot_root_locus(modes=modes, show=False)
         if plot_kfreq_damping:

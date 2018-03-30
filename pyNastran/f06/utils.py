@@ -11,7 +11,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
-        '[--eas|--tas] [--in_units IN][--out_units OUT]\n'
+        '[--eas|--tas] [--in_units IN][--out_units OUT] [--nopoints]\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_145 -v | --version\n'
         '\n'
@@ -20,7 +20,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
         '  F06_FILENAME    path to input F06 files\n'
 
         'Plot Types for V-g/V-f:\n'
-        '  --tas            plot true airspeed (default)'
+        '  --tas            plot true airspeed (default)\n'
         '  --eas            plot eqivalent airspeed\n'
         '\n'
         'Units:\n'
@@ -40,6 +40,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
         '  --subcases SUB   the subcases to plot (e.g. 1,3); unused\n'
         '  --xlim FREQ      the frequency limits (unused)\n'
         '  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
+        "  --nopoints       don't plot the points"
         '\n'
 
         'Info:\n'
@@ -73,12 +74,13 @@ def cmd_line_plot_flutter():  # pragma: no cover
     if data['--eas']:
         plot_type = 'eas'
 
+    nopoints = data['--nopoints']
     print('modes = %s' % modes)
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      out_units=out_units,
                      plot_root_locus=True, plot_vg_vf=True, plot_vg=False,
-                     ylim_damping=ylim_damping)
+                     ylim_damping=ylim_damping, nopoints=nopoints)
     #plot_flutter_f06(f06_filename, plot_root_locus=False, plot_vg_vf=True)
 
 def split_float_colons(string_values):
