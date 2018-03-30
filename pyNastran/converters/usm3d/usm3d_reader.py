@@ -562,16 +562,14 @@ def read_flo(flo_filename, n=None, node_ids=None):
             rhovi = parse_float(sline1[3])
             rhowi = parse_float(sline1[4])
             ei = parse_float(sline1[5])
-            #rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:])
         else:
             nvars = 5
             rhoi = parse_float(sline1[1])
             rhoui = parse_float(sline1[2])
             rhovi = parse_float(sline1[3])
             rhowi = parse_float(sline1[4])
-            #rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:])
+
             sline2 = flo_file.readline().strip().split()
-            #ei = parse_floats(sline2, 1)[0]
             ei = parse_float(sline2)
 
         # set the i=0 values
@@ -610,7 +608,7 @@ def read_flo(flo_filename, n=None, node_ids=None):
                     rhovi = parse_float(sline1[3])
                     rhowi = parse_float(sline1[4])
                     ei = parse_float(sline1[5])
-                    #rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:])
+
                     node_id[i] = sline1[0]
                     rho[i] = rhoi
                     rhoU[i] = rhoui
@@ -625,12 +623,10 @@ def read_flo(flo_filename, n=None, node_ids=None):
                     rhoui = parse_float(sline1[2])
                     rhovi = parse_float(sline1[3])
                     rhowi = parse_float(sline1[4])
-                    #rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
                     assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
                     sline2 = flo_file.readline().strip().split()
                     ei = parse_float(sline2)
-                    #ei = parse_floats(sline2, 1)[0]
 
                     node_id[i] = sline1[0]
                     rho[i] = rhoi
@@ -650,7 +646,6 @@ def read_flo(flo_filename, n=None, node_ids=None):
                         rhovi = parse_float(sline1[3])
                         rhowi = parse_float(sline1[4])
                         ei = parse_float(sline1[5])
-                        #rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
 
                         node_id[ni] = sline1[0]
                         rho[ni] = rhoi
@@ -666,7 +661,6 @@ def read_flo(flo_filename, n=None, node_ids=None):
                 for i in range(1, nmax):
                     if i in node_ids_minus_1:
                         sline1 = flo_file.readline().strip().split()
-                        #rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
                         rhoi = parse_float(sline1[1])
                         rhoui = parse_float(sline1[2])
                         rhovi = parse_float(sline1[3])
@@ -730,7 +724,6 @@ def read_flo(flo_filename, n=None, node_ids=None):
             inwhere = ipwhere[np.where(inner >= 0.0)[0]]
             if len(inwhere):
                 Mach[inwhere] = np.sqrt(rhoVV[inwhere] / (gamma * pabs[inwhere]))
-        #Mach[np.where(pND <= 0.0)] = np.nan
         loads['Mach'] = Mach
     if 'Cp' in result_names:
         Cp = two_over_mach2 * (pND - one_over_gamma)
@@ -766,16 +759,6 @@ def parse_float(svalue):
     except:
         val = 0.0
     return val
-
-#def parse_floats(sline):
-    #"""floats a series of values"""
-    #vals = []
-    #for val in sline:
-        #try:
-            #vals.append(float(val))
-        #except:
-            #vals.append(0.0)
-    #return vals
 
 def write_usm3d_volume(model, basename):
     """
