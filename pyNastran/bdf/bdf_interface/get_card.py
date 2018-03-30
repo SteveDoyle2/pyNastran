@@ -2,10 +2,10 @@
 defines various methods to access high level BDF data:
  - GetCard()
    - get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
-                                   stop_on_missing_card=False, combine=False)
+                                stop_on_missing_card=False, combine=False)
    - get_rslot_map(self, reset_type_to_slot_map=False)
    - get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
-                                stop_on_missing_card=False)
+                             stop_on_missing_card=False)
    - get_SPCx_node_ids(self, spc_id, stop_on_failure=True)
    - get_SPCx_node_ids_c1( spc_id, stop_on_failure=True)
    - get_MPCx_node_ids( mpc_id, stop_on_failure=True)
@@ -18,7 +18,7 @@ defines various methods to access high level BDF data:
    - get_dependent_nid_to_components(self, mpc_id=None)
    - get_node_ids_with_elements(self, eids, msg='')
    - get_elements_nodes_by_property_type(self, dtype='int32',
-                                            save_element_types=False)
+                                         save_element_types=False)
    - get_element_nodes_by_element_type(self, dtype='int32', solids=None)
    - get_element_ids_list_with_pids(self, pids=None)
    - get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None, idtype='int32')
@@ -38,12 +38,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Dict, Set, Optional, Any
-from six import string_types, iteritems, iterkeys, itervalues
+from six import string_types, iteritems, iterkeys
 
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.get_methods import GetMethods
-from pyNastran.bdf.cards.optimization import get_dvprel_key
 #from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils import integer_types
 
@@ -1539,7 +1538,7 @@ class GetCard(GetMethods):
                 else:
                     raise NotImplementedError(mpc)
 
-        for eid, rigid_element in iteritems(self.rigid_elements):
+        for unused_eid, rigid_element in iteritems(self.rigid_elements):
             if rigid_element.type == 'RBE2':
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 components = rigid_element.cm
@@ -2227,7 +2226,7 @@ class GetCard(GetMethods):
         for nid in self.epoints:
             nid_to_elements_map[nid] = []
 
-        for (eid, element) in iteritems(self.elements):  # load the mapper
+        for (unused_eid, element) in iteritems(self.elements):  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids
@@ -2280,12 +2279,15 @@ class GetCard(GetMethods):
           >>> pids
           [1, 2, 3]
 
-        .. note:: all properties require an mid to be counted (except for
+          .. note:: all properties require an mid to be counted (except for
                   PCOMP, which has multiple mids)
         """
         mid_to_pids_map = {}
         for mid in self.get_material_ids():
             mid_to_pids_map[mid] = []
+
+        properties_without_materials = [
+            'PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST', 'PBUSH1D']
 
         for pid in self.property_ids:
             prop = self.Property(pid)
@@ -2300,7 +2302,7 @@ class GetCard(GetMethods):
                         if hasattr(prop, 'mid') and prop.Mid() in mids:
                             if pid not in mid_to_pids_map[mid]:
                                 mid_to_pids_map[mid].append(pid)
-            elif prop_type in ['PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST', 'PBUSH1D']:
+            elif prop_type in properties_without_materials:
                 pass
             elif prop_type in ['PSHELL']:
                 mids = prop.material_ids
@@ -2530,7 +2532,7 @@ class GetCard(GetMethods):
                 nids += nodes
                 comps += [str(spc.constraints)] * nnodes
             elif spc.type == 'SPC':
-                for nid, comp, enforced in zip(spc.gids, spc.constraints, spc.enforced):
+                for nid, comp, unused_enforced in zip(spc.gids, spc.constraints, spc.enforced):
                     nids.append(nid)
                     comps.append(comp)
             else:
@@ -2573,7 +2575,7 @@ class GetCard(GetMethods):
         comps = []
         for mpc in mpcs:
             if mpc.type == 'MPC':
-                for nid, comp, enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
+                for nid, comp, unused_enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
                     nids.append(nid)
                     comps.append(comp)
             else:

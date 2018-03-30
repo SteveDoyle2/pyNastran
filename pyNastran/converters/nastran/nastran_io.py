@@ -171,9 +171,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         tools = [
             #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H',
-             #'About Nastran GUI and help on shortcuts', self.about_dialog),
+            #'About Nastran GUI and help on shortcuts', self.about_dialog),
             #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H',
-             #'About Nastran GUI and help on shortcuts', self.about_dialog),
+            #'About Nastran GUI and help on shortcuts', self.about_dialog),
         ]
         #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
         #self.gui.menu_help.menuAction().setVisible(False)
@@ -5995,4 +5995,3 @@ def _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp):
         else:
             word += 'PCOMP: ilayer=%i' % (ilayer)
     return word
-
