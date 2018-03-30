@@ -11,9 +11,9 @@ Defines:
 from __future__ import print_function
 import os
 from struct import pack, unpack
+from collections import OrderedDict
 
 from six.moves import range
-from numpy import array, zeros, where
 import numpy as np
 from pyNastran.utils.log import get_logger2
 
@@ -259,7 +259,7 @@ class Usm3d(object):
             return header, None, None
 
         if get_lbouf:
-            lbouf = zeros((ntris, 4), dtype='int32')
+            lbouf = np.zeros((ntris, 4), dtype='int32')
             for i in range(ntris):
                 line = lines[i+2].strip()
                 #print('%r' % line)
@@ -267,8 +267,8 @@ class Usm3d(object):
                 lbouf[i, :] = [isurf, n1, n2, n3]
             return header, lbouf
         else:
-            tris = zeros((ntris, 3), dtype='int32')
-            bcs = zeros(ntris, dtype='int32')
+            tris = np.zeros((ntris, 3), dtype='int32')
+            bcs = np.zeros(ntris, dtype='int32')
 
             for i in range(ntris):
                 (unused_n, isurf, n1, n2, n3) = lines[i+2].split()
@@ -342,7 +342,7 @@ class Usm3d(object):
                 data = cogsg_file.read(4 * data_length)
 
                 faces = unpack(str_format, data)
-                faces = array(faces)
+                faces = np.array(faces)
                 faces = faces.reshape((nfaces, 3))
             else:
                 faces = None
@@ -461,7 +461,7 @@ class Usm3d(object):
             # a contigous order
             nodes = np.asarray(nodes.ravel(), dtype='<d').reshape(nnodes, 3)
         else:
-            nodes = zeros((nnodes, 3), 'float64')
+            nodes = np.zeros((nnodes, 3), 'float64')
             for i in range(3): #  x, y, z
                 data = cogsg_file.read(8 * nnodes)
                 assert len(data) == (8 * nnodes)
@@ -497,13 +497,13 @@ class Usm3d(object):
             the specific points to read (n must be set to None).
 
         nvars = 5
-          - (nodeID,rho,rhoU,rhoV,rhoW) = sline
+          - (nodeID, rho, rhoU, rhoV, rhoW) = sline
             (e) = line
 
         nvars = 6
-          - (nodeID,rho,rhoU,rhoV,rhoW,e) = line
+          - (nodeID, rho, rhoU, rhoV, rhoW, e) = line
 
-        Also, stupid Nastran-esque float formatting is sometimes used,
+        Also, Nastran-esque float formatting is sometimes used,
         so 5.0-100 exists, which is 5.0E-100.  We just assume it's 0.
 
         Returns
@@ -516,52 +516,79 @@ class Usm3d(object):
             data : (nnodes, ) float ndarray
                 the data corresponding to the result_name
         """
-        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rho', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
+        node_id, loads = read_flo(flo_filename, n=n, node_ids=node_ids)
+        return node_id, loads
 
-        is_sparse = None
-        if n is None:
-            assert node_ids is not None, node_ids
-            assert len(node_ids) > 0, node_ids
-            n = len(node_ids)
-            is_sparse = True
+def read_flo(flo_filename, n=None, node_ids=None):
+    """reads a *.flo file"""
+    result_names = ['Mach', 'U', 'V', 'W', 'T', 'rho', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
+
+    is_sparse = None
+    if n is None:
+        assert node_ids is not None, node_ids
+        assert len(node_ids) > 0, node_ids
+        n = len(node_ids)
+        is_sparse = True
+    else:
+        assert node_ids is None, node_ids
+        is_sparse = False
+
+    #formatCode = 2
+    node_id = np.zeros(n, 'int32')
+    rho = np.zeros(n, 'float32')
+    rhoU = np.zeros(n, 'float32')
+    rhoV = np.zeros(n, 'float32')
+    rhoW = np.zeros(n, 'float32')
+    e = np.zeros(n, 'float32')
+
+    with open(flo_filename, 'r') as flo_file:
+        line = flo_file.readline().strip()
+        try:
+            #file is messsed up
+            mach = float(line)
+        except:
+            raise
+            #loads['Cp'] = e  # it's 0 anyways...
+            #return node_id, loads
+
+
+        # determine the number of variables on each line
+        sline1 = flo_file.readline().strip().split()
+        nvars = None
+        if len(sline1) == 6:
+            nvars = 6
+            rhoi = parse_float(sline1[1])
+            rhoui = parse_float(sline1[2])
+            rhovi = parse_float(sline1[3])
+            rhowi = parse_float(sline1[4])
+            ei = parse_float(sline1[5])
+            #rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:])
         else:
-            assert node_ids is None, node_ids
-            is_sparse = False
+            nvars = 5
+            rhoi = parse_float(sline1[1])
+            rhoui = parse_float(sline1[2])
+            rhovi = parse_float(sline1[3])
+            rhowi = parse_float(sline1[4])
+            #rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:])
+            sline2 = flo_file.readline().strip().split()
+            #ei = parse_floats(sline2, 1)[0]
+            ei = parse_float(sline2)
 
-        #formatCode = 2
-        node_id = np.zeros(n, 'int32')
-        rho = np.zeros(n, 'float32')
-        rhoU = np.zeros(n, 'float32')
-        rhoV = np.zeros(n, 'float32')
-        rhoW = np.zeros(n, 'float32')
-        e = np.zeros(n, 'float32')
-
-        with open(flo_filename, 'r') as flo_file:
-            line = flo_file.readline().strip()
-            try:
-                #file is messsed up
-                mach = float(line)
-            except:
-                raise
-                #loads['Cp'] = e  # it's 0 anyways...
-                #return node_id, loads
-
-
-            # determine the number of variables on each line
-            sline1 = flo_file.readline().strip().split()
-            nvars = None
-            if len(sline1) == 6:
-                nvars = 6
-                rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
-            else:
-                nvars = 5
-                rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
-                sline2 = flo_file.readline().strip().split()
-                ei = parse_floats(sline2, 1)[0]
-
-            # set the i=0 values
-            if not is_sparse:
-                nmax = n
+        # set the i=0 values
+        if not is_sparse:
+            nmax = n
+            i = 0
+            node_id[i] = sline1[0]
+            rho[i] = rhoi
+            rhoU[i] = rhoui
+            rhoV[i] = rhovi
+            rhoW[i] = rhowi
+            e[i] = ei
+        else:
+            ni = 0
+            node_ids_minus_1 = np.array(node_ids) - 1
+            nmax = node_ids_minus_1.max() + 1
+            if 0 in node_ids_minus_1:
                 i = 0
                 node_id[i] = sline1[0]
                 rho[i] = rhoi
@@ -569,152 +596,168 @@ class Usm3d(object):
                 rhoV[i] = rhovi
                 rhoW[i] = rhowi
                 e[i] = ei
-            else:
-                ni = 0
-                node_ids_minus_1 = array(node_ids) - 1
-                nmax = node_ids_minus_1.max() + 1
-                if 0 in node_ids_minus_1:
-                    i = 0
+                ni += 1
+
+        # loop over the rest of the data in the flo file
+        if node_ids is None:
+            ni = n
+            # extract nodes 1, 2, ... 10, but not 11+
+            if nvars == 6:  # sequential nvars=6
+                for i in range(1, n):
+                    sline1 = flo_file.readline().strip().split()
+                    rhoi = parse_float(sline1[1])
+                    rhoui = parse_float(sline1[2])
+                    rhovi = parse_float(sline1[3])
+                    rhowi = parse_float(sline1[4])
+                    ei = parse_float(sline1[5])
+                    #rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:])
                     node_id[i] = sline1[0]
                     rho[i] = rhoi
                     rhoU[i] = rhoui
                     rhoV[i] = rhovi
                     rhoW[i] = rhowi
                     e[i] = ei
-                    ni += 1
+                    assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
+            else:  # sequential nvars=5
+                for i in range(1, n):
+                    sline1 = flo_file.readline().strip().split()
+                    rhoi = parse_float(sline1[1])
+                    rhoui = parse_float(sline1[2])
+                    rhovi = parse_float(sline1[3])
+                    rhowi = parse_float(sline1[4])
+                    #rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
+                    assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
-            # loop over the rest of the data in the flo file
-            if node_ids is None:
-                ni = n
-                # extract nodes 1, 2, ... 10, but not 11+
-                if nvars == 6:  # sequential nvars=6
-                    for i in range(1, n):
+                    sline2 = flo_file.readline().strip().split()
+                    ei = parse_float(sline2)
+                    #ei = parse_floats(sline2, 1)[0]
+
+                    node_id[i] = sline1[0]
+                    rho[i] = rhoi
+                    rhoU[i] = rhoui
+                    rhoV[i] = rhovi
+                    rhoW[i] = rhowi
+                    e[i] = ei
+                    assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
+        else:
+            # extract node 1, 2, and 10
+            if nvars == 6:  # dynamic nvars=6
+                for i in range(1, nmax):
+                    if i in node_ids_minus_1:
                         sline1 = flo_file.readline().strip().split()
-                        rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
-                        node_id[i] = sline1[0]
-                        rho[i] = rhoi
-                        rhoU[i] = rhoui
-                        rhoV[i] = rhovi
-                        rhoW[i] = rhowi
-                        e[i] = ei
+                        rhoi = parse_float(sline1[1])
+                        rhoui = parse_float(sline1[2])
+                        rhovi = parse_float(sline1[3])
+                        rhowi = parse_float(sline1[4])
+                        ei = parse_float(sline1[5])
+                        #rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
+
+                        node_id[ni] = sline1[0]
+                        rho[ni] = rhoi
+                        rhoU[ni] = rhoui
+                        rhoV[ni] = rhovi
+                        rhoW[ni] = rhowi
+                        e[ni] = ei
                         assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
-                else:  # sequential nvars=5
-                    for i in range(1, n):
+                        ni += 1
+                    else:
+                        unused_line1 = flo_file.readline()
+            else:  # dynamic nvars=5
+                for i in range(1, nmax):
+                    if i in node_ids_minus_1:
                         sline1 = flo_file.readline().strip().split()
-                        rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
+                        #rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
+                        rhoi = parse_float(sline1[1])
+                        rhoui = parse_float(sline1[2])
+                        rhovi = parse_float(sline1[3])
+                        rhowi = parse_float(sline1[4])
                         assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
 
                         sline2 = flo_file.readline().strip().split()
-                        ei = parse_floats(sline2, 1)[0]
+                        ei = parse_float(sline2[1])
 
-                        node_id[i] = sline1[0]
-                        rho[i] = rhoi
-                        rhoU[i] = rhoui
-                        rhoV[i] = rhovi
-                        rhoW[i] = rhowi
-                        e[i] = ei
+                        node_id[ni] = sline1[0]
+                        rho[ni] = rhoi
+                        rhoU[ni] = rhoui
+                        rhoV[ni] = rhovi
+                        rhoW[ni] = rhowi
+                        e[ni] = ei
                         assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
-            else:
-                # extract node 1, 2, and 10
-                if nvars == 6:  # dynamic nvars=6
-                    for i in range(1, nmax):
-                        if i in node_ids_minus_1:
-                            sline1 = flo_file.readline().strip().split()
-                            rhoi, rhoui, rhovi, rhowi, ei = parse_floats(sline1[1:], 5)
+                        ni += 1
+                    else:
+                        unused_line1 = flo_file.readline()
+                        unused_line2 = flo_file.readline()
 
-                            node_id[ni] = sline1[0]
-                            rho[ni] = rhoi
-                            rhoU[ni] = rhoui
-                            rhoV[ni] = rhovi
-                            rhoW[ni] = rhowi
-                            e[ni] = ei
-                            assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
-                            ni += 1
-                        else:
-                            unused_line1 = flo_file.readline()
-                else:  # dynamic nvars=5
-                    for i in range(1, nmax):
-                        if i in node_ids_minus_1:
-                            sline1 = flo_file.readline().strip().split()
-                            rhoi, rhoui, rhovi, rhowi = parse_floats(sline1[1:], 4)
-                            assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
+    assert len(rho) == ni
 
-                            sline2 = flo_file.readline().strip().split()
-                            ei = parse_float(sline2[1])
+    # limit the minimum density (to prevent division errors)
+    rho_min = 0.001
+    irho_zero = np.where(rho < rho_min)[0]
+    rho[irho_zero] = rho_min
 
-                            node_id[ni] = sline1[0]
-                            rho[ni] = rhoi
-                            rhoU[ni] = rhoui
-                            rhoV[ni] = rhovi
-                            rhoW[ni] = rhowi
-                            e[ni] = ei
-                            assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
-                            ni += 1
-                        else:
-                            unused_line1 = flo_file.readline()
-                            unused_line2 = flo_file.readline()
+    loads = OrderedDict()
 
-        assert len(rho) == ni
-
-        # llimit the minimum density (to prevent division errors)
-        rho_min = 0.001
-        irho_zero = where(rho < rho_min)[0]
-        rho[irho_zero] = rho_min
-
-        loads = {}
-
-        if '.aux.' in flo_filename:
-            # the names (rho, e, rhoU, etc.) aren't correct, but that's OK
-            # the load names are correct
-            loads['inst vor'] = rho
-            loads['timeavg vor'] = rhoU
-            loads['inst visc'] = rhoV
-            loads['timeavg visc'] = rhoW
-            loads['local CFL'] = e
-            return node_id, loads
-
-        # standard outputs
-        gamma = 1.4
-        two_over_Mach2 = 2.0 / mach ** 2
-        one_over_gamma = 1.0 / gamma
-
-        gm1 = gamma - 1
-
-        # node_id, rhoi, rhoui, rhovi, rhowi, ei
-        rhoVV = (rhoU**2 + rhoV**2 + rhoW**2) / rho
-        if 'p' in result_names or 'Mach' in result_names or 'Cp' in result_names:
-            pND = gm1*(e - rhoVV/2.)
-            if 'p' in result_names:
-                loads['p'] = pND
-        if 'Mach' in result_names:
-            Mach = (rhoVV / (gamma * pND))**0.5
-            loads['Mach'] = Mach
-        if 'Cp' in result_names:
-            Cp = two_over_Mach2 * (pND - one_over_gamma)
-            loads['Cp'] = Cp
-
-        T = gamma * pND / rho # =a^2 as well
-        #a = T.sqrt()
-        if 'T' in result_names:
-            loads['T'] = T
-
-        if 'rho' in result_names:
-            loads['rho'] = rho
-
-        if 'rhoU' in result_names:
-            loads['rhoU'] = rhoU
-        if 'rhoV' in result_names:
-            loads['rhoV'] = rhoV
-        if 'rhoW' in result_names:
-            loads['rhoW'] = rhoW
-
-        if 'U' in result_names:
-            loads['U'] = rhoU / rho
-        if 'V' in result_names:
-            loads['V'] = rhoV / rho
-        if 'W' in result_names:
-            loads['W'] = rhoW / rho
+    if '.aux.' in flo_filename:
+        # the names (rho, e, rhoU, etc.) aren't correct, but that's OK
+        # the load names are correct
+        loads['inst vor'] = rho
+        loads['timeavg vor'] = rhoU
+        loads['inst visc'] = rhoV
+        loads['timeavg visc'] = rhoW
+        loads['local CFL'] = e
         return node_id, loads
+
+    # standard outputs
+    gamma = 1.4
+    two_over_mach2 = 2.0 / mach ** 2
+    one_over_gamma = 1.0 / gamma
+
+    gm1 = gamma - 1
+
+    # node_id, rhoi, rhoui, rhovi, rhowi, ei
+    rhoVV = (rhoU ** 2 + rhoV ** 2 + rhoW ** 2) / rho
+    if 'p' in result_names or 'Mach' in result_names or 'Cp' in result_names:
+        pND = gm1 * (e - rhoVV / 2.)
+        if 'p' in result_names:
+            loads['p'] = pND
+    if 'Mach' in result_names:
+        pabs = np.abs(pND)
+        Mach = np.full(n, np.nan, dtype='float32')
+
+        ipwhere = np.where(pabs > 0.0)[0]
+        if len(ipwhere):
+            inner = rhoVV[ipwhere] / (gamma * pabs[ipwhere])
+            inwhere = ipwhere[np.where(inner >= 0.0)[0]]
+            if len(inwhere):
+                Mach[inwhere] = np.sqrt(rhoVV[inwhere] / (gamma * pabs[inwhere]))
+        #Mach[np.where(pND <= 0.0)] = np.nan
+        loads['Mach'] = Mach
+    if 'Cp' in result_names:
+        Cp = two_over_mach2 * (pND - one_over_gamma)
+        loads['Cp'] = Cp
+
+    T = gamma * pND / rho # =a^2 as well
+    #a = T.sqrt()
+    if 'T' in result_names:
+        loads['T'] = T
+
+    if 'rho' in result_names:
+        loads['rho'] = rho
+
+    if 'rhoU' in result_names:
+        loads['rhoU'] = rhoU
+    if 'rhoV' in result_names:
+        loads['rhoV'] = rhoV
+    if 'rhoW' in result_names:
+        loads['rhoW'] = rhoW
+
+    if 'U' in result_names:
+        loads['U'] = rhoU / rho
+    if 'V' in result_names:
+        loads['V'] = rhoV / rho
+    if 'W' in result_names:
+        loads['W'] = rhoW / rho
+    return node_id, loads
 
 def parse_float(svalue):
     """floats a value"""
@@ -724,15 +767,15 @@ def parse_float(svalue):
         val = 0.0
     return val
 
-def parse_floats(sline, unused_n):
-    """floats a series of values"""
-    vals = []
-    for val in sline:
-        try:
-            vals.append(float(val))
-        except:
-            vals.append(0.0)
-    return vals
+#def parse_floats(sline):
+    #"""floats a series of values"""
+    #vals = []
+    #for val in sline:
+        #try:
+            #vals.append(float(val))
+        #except:
+            #vals.append(0.0)
+    #return vals
 
 def write_usm3d_volume(model, basename):
     """
@@ -853,7 +896,6 @@ def main():  # pragma: no cover
         flo_filename = basename + '.flo'
 
         #model.read_usm3d(basename, 3)
-
         unused_node_ids, unused_loads = model.read_flo(flo_filename, node_ids=[10])
 
 

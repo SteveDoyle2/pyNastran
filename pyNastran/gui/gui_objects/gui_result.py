@@ -324,7 +324,12 @@ class GuiResult(GuiResultCommon):
             ifinite = np.isfinite(self.scalar)
             if not np.all(ifinite):
                 self.scalar[~ifinite] = np.nan
-                self.min_default = self.scalar[ifinite].min()
+                try:
+                    self.min_default = self.scalar[ifinite].min()
+                except ValueError:
+                    print(self.title)
+                    print(self.scalar)
+                    raise
                 self.max_default = self.scalar[ifinite].max()
         self.min_value = self.min_default
         self.max_value = self.max_default

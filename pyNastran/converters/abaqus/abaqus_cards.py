@@ -75,7 +75,7 @@ class Part(object):
         if node_shape == 3:
             self.nodes = np.array(nodes, dtype='float32')
         elif node_shape == 2:
-            # abaqus is stupid and can have only x/y coordinates
+            # abaqus can have only x/y coordinates, so we fake the z coordinate
             self.nodes = np.zeros((nnodes, 3), dtype='float32')
             nodes2 = np.array(nodes, dtype='float32')
             #print(nodes2.shape, self.nodes.shape)
