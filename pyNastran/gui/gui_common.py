@@ -125,10 +125,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         # this will reset the background color/label color if things break
         #super(QMainWindow, self).__init__(self)
-        if qt_version == 4:
+        if qt_version == 'pyqt4':
             QMainWindow.__init__(self)
             GuiCommon.__init__(self, **kwds)
-        elif qt_version == 5:
+        elif qt_version == 'pyqt5':
             super(GuiCommon2, self).__init__(**kwds)
         elif qt_version == 'pyside':
             #super(GuiCommon2, self).__init__(**kwds) # fails

@@ -1,4 +1,4 @@
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int as qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)

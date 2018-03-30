@@ -7,7 +7,7 @@ http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-wo
 """
 from __future__ import print_function
 from pyNastran.gui.limits import MAX_POINT_SIZE, MAX_LINE_WIDTH
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int as qt_version
 
 from qtpy.QtCore import Qt#, QVariant
 from qtpy import QtCore, QtGui

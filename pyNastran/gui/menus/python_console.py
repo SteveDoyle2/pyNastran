@@ -11,21 +11,21 @@ from qtpy.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QWidget, qApp, QMenu)
 #import qtpy.Qsci as Qsci
 
-if qt_version == 4:
+if qt_version == 'pyqt4':
     try:
         import PyQt4.Qsci as Qsci
         IS_SCINTILLA = True
     except ImportError:
         IS_SCINTILLA = False
 
-elif qt_version == 5:
+elif qt_version == 'pyqt5':
     try:
         import PyQt5.Qsci as Qsci
         IS_SCINTILLA = True
     except ImportError:
         IS_SCINTILLA = False
     #import PyQt5.qsci
-elif qt_version == 'pyside':
+elif qt_version in ['pyside', 'pyside2']:
     IS_SCINTILLA = False
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)

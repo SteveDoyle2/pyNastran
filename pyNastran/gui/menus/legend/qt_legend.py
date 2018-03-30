@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
 from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_format
 from pyNastran.gui.menus.legend.animation import AnimationWindow
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int as qt_version
 
 
 class LegendPropertiesWindow(PyDialog):

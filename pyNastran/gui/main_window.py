@@ -113,7 +113,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         #fmt_order=fmt_order, inputs=inputs,
         #html_logging=html_logging,
 
-        if qt_version in [4, 5]:
+        if qt_version in ['pyqt4', 'pyqt5', 'pyside']:
             ADB_IO.__init__(self)
             BEdge_IO.__init__(self)
             NastranIO.__init__(self)
@@ -123,6 +123,8 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
             UGRID_IO.__init__(self)
             AbaqusIO.__init__(self)
             OpenFoamIO.__init__(self)
+        else:
+            raise NotImplementedError('qt_version=%r is not supported' % qt_version)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 
@@ -199,7 +201,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
     def about_dialog(self):
         """ Display about dialog """
         copyright = pyNastran.__copyright__
-        if qt_version == 'pyside':
+        if qt_version in ['pyside', 'pyside2']:
             word = 'PySide'
             copyright_qt = pyNastran.__pyside_copyright__
         else:
@@ -291,4 +293,6 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         settings.clear()
         self.settings.save(settings)
 
+        if qApp is None:
+            sys.exit()
         qApp.quit()

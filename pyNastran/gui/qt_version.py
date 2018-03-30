@@ -1,41 +1,15 @@
-found_gui = False
+from __future__ import print_function
+from qtpy import API as qt_version
 
-try:
-    import PyQt5
-    qt_version = 5
-    found_gui = True
-except ImportError:
-    pass
+if qt_version in ['pyqt4', 'pyside']:
+    qt_int = 4
+elif qt_version in ['pyqt5', 'pyside2']:
+    qt_int = 5
+else:
+    raise ImportError('PyQt4, PyQt5, or PySide is required; API=%r' % qt_version)
 
-if not found_gui:
-    try:
-        import PyQt4
-        qt_version = 4
-        found_gui = True
-    except ImportError:
-        pass
-
-if not found_gui:
-    try:
-        import PySide
-        qt_version = 4
-        found_gui = True
-    except ImportError:
-        pass
-
-
-#if not found_gui:
-    #try:
-        #import PySide
-        #qt_version = 'pyside'
-        #found_gui = True
-    #except:
-        #pass
-
-#if not found_gui:
-    #raise ImportError('PyQt4, PySide, or PyQt5 is required')
-if not found_gui:
-    raise ImportError('PyQt4 or PyQt5 is required')
+if qt_version not in ['pyqt4', 'pyqt5', 'pyside',]: # 'pyside2'
+    raise ImportError('PyQt4, PyQt5, or PySide is required; API=%r' % qt_version)
 
 # required to make a pretty console
 try:
