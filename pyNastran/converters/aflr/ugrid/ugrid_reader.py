@@ -489,7 +489,10 @@ class UGRID(object):
         quads = self.quads
         pids = self.pids
 
-        self.log.info('nupids=%s min=%s max=%s' % (np.unique(pids), pids.min(), pids.max()))
+        if len(pids):
+            self.log.info('nupids=%s min=%s max=%s' % (np.unique(pids), pids.min(), pids.max()))
+        else:
+            self.log.warning('no surface_ids were found')
         tets = self.tets
         pyrams = self.penta5s
         pentas = self.penta6s
