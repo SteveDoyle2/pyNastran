@@ -23,7 +23,9 @@ np.seterr(all='raise')
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
-    CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
+    CardParseSyntaxError, DuplicateIDsError, MissingDeckSections,
+    UnsupportedCard,
+)
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.cards.dmig import NastranMatrix
@@ -388,6 +390,10 @@ def run_and_compare_fems(
         if not dev:
             raise
         print('failed test because CardParseSyntaxError...ignoring')
+    except UnsupportedCard:
+        if not dev:
+            raise
+        print('failed test because UnsupportedCard...ignoring')
     except MissingDeckSections:
         if not dev:
             raise

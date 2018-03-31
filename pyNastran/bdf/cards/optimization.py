@@ -58,7 +58,7 @@ def validate_dvcrel(validate, element_type, cp_name):
         options = ['M', 'X1', 'X2', 'X3']
         _check_dvcrel_options(cp_name, element_type, options)
     elif element_type == 'CBAR':
-        options = ['X1', 'X2', 'X3']
+        options = ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B']
         _check_dvcrel_options(cp_name, element_type, options)
     elif element_type == 'CBEAM':
         options = ['X1', 'X2', 'X3']
@@ -149,6 +149,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pname_fid = 'J'
         #elif pname_fid in ['C', 6]:
             #pname_fid = 'C'
+        elif pname_fid in ['NSM', 7]:
+            pname_fid = 'NSM'
         else:
             raise NotImplementedError('PROD pname_fid=%r is invalid' % pname_fid)
         assert pname_fid in [4, 'A', 5, 'J', 'NSM'], msg
@@ -3834,6 +3836,8 @@ class DVPREL1(DVXREL1):
             pid_ref = model.pbusht[pid]
         elif self.prop_type == 'PELAST':
             pid_ref = model.pelast[pid]
+        elif self.prop_type == 'PFAST':
+            pid_ref = model.properties[pid]
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
         assert pid_ref.type not in ['PBEND'], pid_ref
@@ -3859,7 +3863,7 @@ class DVPREL1(DVXREL1):
             #pid = self.pid_ref.eid
         elif self.prop_type in self.allowed_properties_mass:
             pid = self.pid_ref.pid
-        elif self.prop_type in ['PBUSHT', 'PELAST']:
+        elif self.prop_type in ['PBUSHT', 'PELAST', 'PFAST']:
             pid = self.pid_ref.pid
         else:
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
@@ -4614,7 +4618,12 @@ def get_deqatn_value(dvxrel2, model, desvar_values):
         msg = 'func is None...DEQATN=%s\n%s\n%s' % (dvxrel2.dequation, dvxrel2, deqatn)
         raise RuntimeError(msg)
     #print(func)
-    value = func(*values)
+    try:
+        value = func(*values)
+    except NameError:
+        print(deqatn)
+        print(deqatn.func_str)
+        raise
     return value
 
 def get_dvprel_key(dvprel, prop=None):
@@ -4684,7 +4693,7 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBEAM':
-        if var_to_change in ['A', 'I1', 'I2', 'I1(B)', 'J']:
+        if var_to_change in ['A', 'I1', 'I2', 'I1(B)', 'J', 'I2(B)']:
             pass
         elif isinstance(var_to_change, int):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)

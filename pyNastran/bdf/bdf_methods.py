@@ -65,7 +65,7 @@ class BDFMethods(BDFAttributes):
             'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
             'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
             'PCOMPS', 'PVISC',
-            'PSHELL', 'PCOMP', 'PCOMPG',
+            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
         ]
         pid_eids = self.get_element_ids_dict_with_pids(
             property_ids, msg=' which is required by get_length_breakdown')
@@ -75,7 +75,7 @@ class BDFMethods(BDFAttributes):
             lengths = []
             if prop.type in skip_props:
                 continue
-            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBMSECT', 'PBCOMP']:
                 #['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
                 # TODO: Do I need to consider the offset on length effects for a CBEAM?
                 for eid in eids:
@@ -147,13 +147,14 @@ class BDFMethods(BDFAttributes):
                         print(elem)
                         raise
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
-                elem = self.elements[eids[0]]
-                area = elem.Area()
-                if sum_bar_area:
-                    neids = len(eids)
-                    areas = [area * neids]
-                else:
-                    areas = [area]
+                for eid in eids:
+                    elem = self.elements[eids[0]]
+                    area = elem.Area()
+                    if sum_bar_area:
+                        neids = len(eids)
+                        areas = [area * neids]
+                    else:
+                        areas = [area]
             elif prop.type in skip_props:
                 pass
             else:

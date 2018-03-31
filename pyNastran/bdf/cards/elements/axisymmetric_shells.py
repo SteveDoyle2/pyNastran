@@ -1031,7 +1031,6 @@ class CQUADX8(AxisymmetricQuad):
         self.theta = theta
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
-        print('nodes =', self.nodes)
 
     @classmethod
     def add_card(cls, card, comment=''):

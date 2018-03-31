@@ -27,6 +27,9 @@ class PFAST(Property):
         8:'kr1', 9:'kr2', 10:'kr3',
         11:'mass', 12:'ge'
     }
+    pname_fid_map = {
+        'KR3' : 'kr3',
+    }
 
     def __init__(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):

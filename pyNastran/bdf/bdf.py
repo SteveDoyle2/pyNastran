@@ -141,7 +141,7 @@ from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
 from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
-                                  CardParseSyntaxError)
+                                  CardParseSyntaxError, UnsupportedCard)
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 
@@ -1820,7 +1820,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             def add_card(cls, card, comment=''):
                 """the method that forces the crash"""
                 #raise CardParseSyntaxError(card)
-                raise NotImplementedError(card)
+                raise UnsupportedCard(card)
 
         #: a storage of card_name to (card_class, add_method)
         self._card_parser = {

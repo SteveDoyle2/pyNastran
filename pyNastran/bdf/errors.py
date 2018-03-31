@@ -14,3 +14,6 @@ class DuplicateIDsError(RuntimeError):
 
 class MissingDeckSections(RuntimeError):
     pass
+
+class UnsupportedCard(NotImplementedError):
+    pass

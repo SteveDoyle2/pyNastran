@@ -334,7 +334,23 @@ class CBAR(LineElement):
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
         8:'offt', 9:'pa', 10:'pb',
+        #, 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'
     }
+    def update_by_cp_name(self, cp_name, value):
+        if cp_name == 'W1A':
+            self.wa[0] = value
+        elif cp_name == 'W2A':
+            self.wa[1] = value
+        elif cp_name == 'W3A':
+            self.wa[2] = value
+        elif cp_name == 'W1B':
+            self.wb[0] = value
+        elif cp_name == 'W2B':
+            self.wb[1] = value
+        elif cp_name == 'W3B':
+            self.wb[2] = value
+        else:
+            raise NotImplementedError('CBAR: cp_name=%r must be added to update_by_cp_name' % cp_name)
 
     def _update_field_helper(self, n, value):
         if n == 11:
