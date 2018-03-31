@@ -87,10 +87,6 @@ class GuiAttributes(object):
 
         #-------------
         # internal params
-        self.show_info = True
-        self.show_debug = True
-        self.show_gui = True
-        self.show_command = True
         self.coord_id = 0
 
         self.ncases = 0
@@ -466,7 +462,6 @@ class GuiAttributes(object):
         self._form = formi
         data = []
         for key in self.case_keys:
-            #print(key)
             assert isinstance(key, int), key
             unused_obj, (i, unused_name) = self.result_cases[key]
             t = (i, [])

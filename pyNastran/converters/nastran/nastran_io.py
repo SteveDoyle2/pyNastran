@@ -2227,6 +2227,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         vtk_type = vtkQuad().GetCellType()
 
         all_points = []
+        grid = self.alt_grids[name]
         for box_id in cs_box_ids:
             try:
                 elementi = box_id_to_caero_element_map[box_id]
@@ -2245,12 +2246,25 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elem.GetPointIds().SetId(1, j + 1)
             elem.GetPointIds().SetId(2, j + 2)
             elem.GetPointIds().SetId(3, j + 3)
-            self.alt_grids[name].InsertNextCell(vtk_type, elem.GetPointIds())
+            grid.InsertNextCell(vtk_type, elem.GetPointIds())
             all_points.append(pointsi)
             centroids.append(centroid)
             areas.append(area)
             j += 4
 
+        if len(all_points) == 0:
+            self.log.error('deleting %r' % name)
+            del self.alt_grids[name]
+
+            # name = spline_1000_boxes
+            sname = name.split('_')
+            sname[-1] = 'structure_points'
+
+            # points_name = spline_1000_structure_points
+            points_name = '_'.join(sname)
+            self.log.error('deleting %r' % points_name)
+            del self.alt_grids[points_name]
+            return
         # combine all the points
         all_points_array = np.vstack(all_points)
 

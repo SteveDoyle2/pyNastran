@@ -71,7 +71,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
 from pyNastran.gui.formats import CLASS_MAP
-
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_idtype
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -186,7 +186,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
         self.display_units = ['', '', '']
-        self.recent_files = []
+        #self.recent_files = []
 
     #def dragEnterEvent(self, e):
         #print(e)
@@ -555,11 +555,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_increase_font_size(self):
         """used by the hidden_tools for Ctrl +"""
-        self.on_set_font_size(self.font_size + 1)
+        self.on_set_font_size(self.settings.font_size + 1)
 
     def on_decrease_font_size(self):
         """used by the hidden_tools for Ctrl -"""
-        self.on_set_font_size(self.font_size - 1)
+        self.on_set_font_size(self.settings.font_size - 1)
 
     def on_set_font_size(self, font_size, show_command=True):
         """changes the font size"""
@@ -572,9 +572,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             font_size = 6
         if self.font_size == font_size:
             return False
-        self.font_size = font_size
+        self.settings.font_size = font_size
         font = QtGui.QFont()
-        font.setPointSize(self.font_size)
+        font.setPointSize(self.settings.font_size)
         self.setFont(font)
 
         #self.toolbar.setFont(font)
@@ -846,13 +846,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
             print(typ, msg)
             return
 
-        if typ == 'DEBUG' and not self.show_debug:
+        if typ == 'DEBUG' and not self.settings.show_debug:
             return
-        elif typ == 'INFO' and not self.show_info:
+        elif typ == 'INFO' and not self.settings.show_info:
             return
-        elif typ == 'GUI' and not self.show_gui:
+        elif typ == 'GUI' and not self.settings.show_gui:
             return
-        elif typ == 'COMMAND' and not self.show_command:
+        elif typ == 'COMMAND' and not self.settings.show_command:
             return
 
         _fr = sys._getframe(4)  # jump to get out of the logger code
@@ -1747,16 +1747,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
-        self.rend.SetBackground(*self.background_color)
+        self.rend.SetBackground(*self.settings.background_color)
+        #self.rend.SetBackground2(*self.background_color2)
 
         self.rend.ResetCamera()
         self.set_style_as_trackball()
         self.build_lookup_table()
 
         text_size = 14
-        self.create_text([5, 50], 'Max  ', text_size)  # text actor 0
-        self.create_text([5, 35], 'Min  ', text_size)  # text actor 1
-        self.create_text([5, 20], 'Word1', text_size)  # text actor 2
+        dtext_size = text_size + 1
+        self.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
+        self.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
+        self.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
         self.create_text([5, 5], 'Word2', text_size)  # text actor 3
 
         self.get_edges()
@@ -1808,19 +1810,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_show_info(self):
         """sets a flag for showing/hiding INFO messages"""
-        self.show_info = not self.show_info
+        self.settings.show_info = not self.settings.show_info
 
     def on_show_debug(self):
         """sets a flag for showing/hiding DEBUG messages"""
-        self.show_debug = not self.show_debug
+        self.settings.show_debug = not self.settings.show_debug
 
     def on_show_gui(self):
         """sets a flag for showing/hiding GUI messages"""
-        self.show_gui = not self.show_gui
+        self.settings.show_gui = not self.settings.show_gui
 
     def on_show_command(self):
         """sets a flag for showing/hiding COMMAND messages"""
-        self.show_command = not self.show_command
+        self.settings.show_command = not self.settings.show_command
 
     def on_reset_camera(self):
         self.log_command('on_reset_camera()')
@@ -2267,7 +2269,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         .. todo:: doesn't work
         """
         #print('_hide_ids_mask = ', ids_to_hide)
-        ids = self.numpy_to_vtk_idtype(ids_to_hide)
+        ids = numpy_to_vtk_idtype(ids_to_hide)
 
         #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
 
@@ -2296,17 +2298,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.selection_node.SetSelectionList(ids)
             self.update_all(render=True)
 
-
-    def numpy_to_vtk_idtype(self, ids):
-        #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-        from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtkIdTypeArray
-        dtype = get_numpy_idtype_for_vtk()
-        ids = np.asarray(ids, dtype=dtype)
-        vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
-        return vtk_ids
-
     def _update_ids_mask_show_false(self, ids_to_show, flip_flag=True, render=True):
-        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         if flip_flag:
@@ -2327,7 +2320,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _update_ids_mask_show(self, ids_to_show):
         """helper method for ``show_ids_mask``"""
-        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         self.selection.RemoveAllNodes()
@@ -2354,7 +2347,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _update_ids_mask_show_true(self, ids_to_show,
                                    flip_flag=True, render=True):  # pragma: no cover
-        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         if flip_flag:
@@ -2375,7 +2368,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _update_ids_mask(self, ids_to_show, flip_flag=True, show_flag=True, render=True):
         print('flip_flag=%s show_flag=%s' % (flip_flag, show_flag))
 
-        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         if flip_flag:
@@ -2519,7 +2512,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         text_prop = text_actor.GetTextProperty()
         #text_prop.SetFontFamilyToArial()
         text_prop.SetFontSize(int(text_size))
-        text_prop.SetColor(self.text_color)
+        text_prop.SetColor(self.settings.text_color)
         text_actor.SetDisplayPosition(*position)
 
         text_actor.VisibilityOff()
@@ -3685,12 +3678,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #text_actor.SetPosition(actor.GetPosition())
         text_prop = text_actor.GetTextProperty()
-        text_prop.SetFontSize(self.annotation_size)
+        text_prop.SetFontSize(self.settings.annotation_size)
         text_prop.SetFontFamilyToArial()
         text_prop.BoldOn()
         text_prop.ShadowOn()
 
-        text_prop.SetColor(self.annotation_color)
+        text_prop.SetColor(self.settings.annotation_color)
         text_prop.SetJustificationToCentered()
 
         # finish adding the actor
@@ -3810,7 +3803,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ..todo :: support cids
         ..todo :: fix the coords
         """
-        for axis in self.axes.itervalues():
+        for axis in itervalues(self.axes):
             axis.VisibilityOff()
         self.corner_axis.EnabledOff()
 
@@ -3819,7 +3812,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ..todo :: support cids
         ..todo :: fix the coords
         """
-        for axis in self.axes.itervalues():
+        for axis in itervalues(self.axes):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
@@ -5654,7 +5647,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #case = self.result_cases[key]
 
         data = deepcopy(self.geometry_properties)
-        data['font_size'] = self.font_size
+        data['font_size'] = self.settings.font_size
         if not self._edit_geometry_properties_window_shown:
             self._edit_geometry_properties = EditGeometryProperties(data, win_parent=self)
             self._edit_geometry_properties.show()

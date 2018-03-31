@@ -48,6 +48,11 @@ class Settings(object):
         self.annotation_color = BLACK
         self.text_color = BLACK
 
+        self.show_info = True
+        self.show_debug = True
+        self.show_gui = True
+        self.show_command = True
+
         # int
         self.annotation_size = 18
         self.font_size = 8
@@ -62,6 +67,11 @@ class Settings(object):
         self.background_color = GREY
         self.annotation_color = BLACK
         self.text_color = BLACK
+
+        self.show_info = True
+        self.show_debug = True
+        self.show_gui = True
+        self.show_command = True
 
         # int
         self.annotation_size = 18
@@ -88,6 +98,12 @@ class Settings(object):
 
         # this is the gui font
         self._set_setting(settings, setting_keys, ['font_size'], self.font_size)
+
+        # the info/debug/gui/command preferences
+        self._set_setting(settings, setting_keys, ['show_info'], self.show_info, True)
+        self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug, True)
+        self._set_setting(settings, setting_keys, ['show_gui'], self.show_gui, True)
+        self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True)
 
         # the vtk panel background color
         self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'], GREY, auto_type=True)
@@ -191,7 +207,7 @@ class Settings(object):
         value = self._get_setting(settings, setting_keys, setting_names, default,
                                   auto_type=auto_type)
         if save:
-            setattr(self.parent, set_name, value)
+            setattr(self, set_name, value)
         return value
 
     def save(self, settings):
@@ -203,6 +219,11 @@ class Settings(object):
         settings.setValue('background_color', self.background_color)
         settings.setValue('annotation_color', self.annotation_color)
         settings.setValue('text_color', self.text_color)
+
+        settings.setValue('show_info', self.show_info)
+        settings.setValue('show_debug', self.show_debug)
+        settings.setValue('show_gui', self.show_gui)
+        settings.setValue('show_command', self.show_command)
 
         # int
         settings.setValue('font_size', self.font_size)
