@@ -333,7 +333,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             pressure = load.pressure * scale
             for eid in load.element_ids:
                 elem = model.elements[eid]
-                if elem.type in ['CTRIA3', 'CQUAD4', 'CSHEAR']:
+                if elem.type in ['CTRIA3', 'CQUAD4', 'CSHEAR', 'CQUADR', 'CTRIAR']:
                     n = elem.Normal()
                     area = elem.Area()
                     f = pressure * n * area
@@ -352,7 +352,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             for elem in load.eids_ref:
                 eid = elem.eid
                 etype = elem.type
-                if etype in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                if etype in ['CTRIA3', 'CTRIA6', 'CTRIAR',]: # 'CTRIA',
                     # triangles
                     nodes = elem.node_ids
                     n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
