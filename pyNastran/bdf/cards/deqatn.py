@@ -477,7 +477,7 @@ def fortran_to_python(lines, default_values, comment=''):
 
         #print('f=%r eq=%r' % (f, eq))
         for builtin in BUILTINS:
-            if builtin in eq:
+            if builtin == eq:
                 eq = eq.replace(builtin, builtin + '_')
 
         if i == 0:
@@ -608,7 +608,7 @@ def _write_variables(variables):
     """type checks the inputs"""
     msg = '    try:\n'
     for var in variables:
-        if var in BUILTINS:
+        if var == BUILTINS:
             var += '_'
         #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
         #msg += '        %s = float(%s)\n' % (var, var)

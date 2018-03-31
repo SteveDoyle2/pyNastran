@@ -762,10 +762,10 @@ def run_fem2(bdf_model, out_model, xref, punch,
             value = fem2.params['POST'].values[0]
             if value >= 0:
                 msg = 'PARAM,POST,%i is not supported by the OP2 reader' % value
-                fem2.log.error(msg)
+                fem2.log.warning(msg)
         else:
             msg = 'PARAM,POST,0 is not supported by the OP2 reader'
-            fem2.log.error(msg)
+            fem2.log.warning(msg)
 
         p0 = np.array([0., 0., 0.])
 

@@ -5253,7 +5253,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if 'nplies' in pshell_pcompi:
                 nplies = pshell_pcompi['nplies']
                 if nplies is not None and nplies.max() > 0:
-                    print('nplies = ', nplies)
                     nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
                                            location='centroid', scalar=nplies, mask_value=0)
                     cases[icase] = (nplies_res, (0, 'Number of Plies'))

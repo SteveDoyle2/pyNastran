@@ -494,6 +494,12 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
     lengths = defaultdict(list)
 
     no_mass = [
+        'GRID', 'PARAM', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT1', 'MOMENT2', 'LOAD',
+        'DVPREL1', 'DVPREL2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DCONSTR', 'DESVAR',
+        'DEQATN', 'DRESP1', 'DRESP2', 'DRESP3',
+        'SPC', 'SPC1', 'SPCADD', 'MPC', 'MPCADD',
+        'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT10', 'MAT11',
+
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
         'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC', 'CGAP', # is this right?
@@ -512,7 +518,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
         'QSET', 'QSET1', 'USET', 'USET1',
     ]
     for etype, eids in iteritems(model._type_to_id_map):
-        if etype in no_mass:
+        if len(eids) == 0 or etype in no_mass:
             continue
         mass, cg, I = _get_mass_new(
             model, all_eids, all_mass_ids, etypes_skipped,
@@ -550,9 +556,7 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
                   length_eids_pids, nsm_centroids_length, lengths,
                   area_eids_pids, nsm_centroids_area, areas,
                   mass, cg, I, reference_point):
-    if len(eids) == 0:
-        pass
-    elif etype in ['CROD', 'CONROD']:
+    if etype in ['CROD', 'CONROD']:
         eids2 = get_sub_eids(all_eids, eids)
         for eid in eids2:
             elem = model.elements[eid]
@@ -659,9 +663,11 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
 
                 # m1a, m1b, m2a, m2b=0.
                 nsm_centroid = (p1 + p2) / 2.
-                nsm_per_lengths = prop.nsm
+
+                # includes nsm
                 mass_per_length = integrate_positive_unit_line(prop.xxb, mass_per_lengths)
-                nsm_per_length = integrate_positive_unit_line(prop.xxb, nsm_per_lengths)
+                nsm_per_length = 0.
+
                 #print('mass_per_lengths=%s nsm_per_lengths=%s' % (
                     #mass_per_lengths, nsm_per_lengths))
                 #print('mass_per_length=%s nsm_per_length=%s' % (
@@ -714,8 +720,14 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
             I[3] += m * x * y + nsm * xm * ym
             I[4] += m * x * z + nsm * xm * zm
             I[5] += m * y * z + nsm * ym * zm
-            mass += m + nsm
+            massi = m + nsm
+            mass += massi
             cg += m * centroid + nsm * nsm_centroid
+            if massi != elem.Mass():
+                msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
+                msg += 'centroid_new=%s centroid_old=%s\n%s' % (
+                    str(centroid), str(elem.Centroid()), str(elem))
+                raise RuntimeError(msg)
 
     elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR']:
         eids2 = get_sub_eids(all_eids, eids)
@@ -888,7 +900,7 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
             #m = area * (mpa + nsm)
             m = area * mpa
             if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):
-                msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass)
+                msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
                 raise RuntimeError(msg)
@@ -989,15 +1001,21 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
             mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CBEND':
-        model.log.info('elem.type=%s doesnt have mass' % etype)
+        model.log.info('elem.type=%s mass is innaccurate' % etype)
         #nsm = property_nsms[nsm_id]['PBEND'][pid] + element_nsms[nsm_id][eid]
+        eids2 = get_sub_eids(all_eids, eids)
+        for eid in eids2:
+            elem = model.elements[eid]
+            m = elem.Mass()
+            centroid = elem.Centroid()
+            mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+
     elif etype in ['CQUADX']:
         pass
     elif etype.startswith('C'):
         eids2 = get_sub_eids(all_eids, eids)
         for eid in eids2:
             elem = model.elements[eid]
-
             #if elem.pid_ref.type in ['PPLANE']:
             try:
                 m = elem.Mass()

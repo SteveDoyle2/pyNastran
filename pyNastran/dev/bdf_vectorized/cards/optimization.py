@@ -2391,8 +2391,8 @@ class DVCREL2(OptConstraint):
         see the PBEAM for an example of get/set_opt_value
         """
         try:
-            get = pid_ref.get_optimization_value(self.pNameFid)
-            out = pid_ref.set_optimization_value(self.pNameFid, get)
+            get = pid_ref.get_optimization_value(self.pname_fid)
+            out = pid_ref.set_optimization_value(self.pname_fid, get)
         except:
             print('DVCREL2 calculate : %s[%r] = ???' % (self.Type, self.cp_name))
             raise
@@ -2551,8 +2551,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             #self.mp_min = double_or_blank(card, 5, 'mpMin', 1e-15)
         #else: # negative
             #self.mp_min = double_or_blank(card, 5, 'mpMin', -1e-35)
-        mp_min = double_or_blank(card, 5, 'mpMin')  #: .. todo:: bad default
-        mp_max = double_or_blank(card, 6, 'mpMax', 1e20)
+        mp_min = double_or_blank(card, 5, 'mp_min')  #: .. todo:: bad default
+        mp_max = double_or_blank(card, 6, 'mp_max', 1e20)
         c0 = double_or_blank(card, 7, 'c0', 0.0)
 
         dvids = []
@@ -2828,7 +2828,7 @@ class DVMREL2(OptConstraint):
         dequation_ref = model.DEQATN(self.dequation)
 
     #def OptValue(self):  #: .. todo:: not implemented
-        #self.pid_ref.OptValue(self.pNameFid)
+        #self.pid_ref.OptValue(self.pname_fid)
 
     def raw_fields(self):
         list_fields = ['DVMREL2', self.oid, self.mat_ype, self.mid,
@@ -3002,8 +3002,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
         #: Minimum value allowed for this property.
         #: .. todo:: bad default (see DVMREL1)
-        p_min = double_or_blank(card, 5, 'pMin', None)
-        p_max = double_or_blank(card, 6, 'pMax', 1e20)
+        p_min = double_or_blank(card, 5, 'p_min', None)
+        p_max = double_or_blank(card, 6, 'p_max', 1e20)
         c0 = double_or_blank(card, 7, 'c0', 0.0)
 
         dvids = []
@@ -3255,8 +3255,8 @@ class DVPREL2(OptConstraint):
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')
         pname_fid = integer_or_string(card, 4, 'pName_FID')
-        p_min = double_or_blank(card, 5, 'pMin', None)
-        p_max = double_or_blank(card, 6, 'pMax', 1e20)
+        p_min = double_or_blank(card, 5, 'p_min', None)
+        p_max = double_or_blank(card, 6, 'p_max', 1e20)
         dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
 
         fields = [interpret_value(field) for field in card[9:]]
@@ -3403,7 +3403,7 @@ class DVPREL2(OptConstraint):
         pass
 
     #def OptValue(self):  #: .. todo:: not implemented
-        #self.pid_ref.OptValue(self.pNameFid)
+        #self.pid_ref.OptValue(self.pname_fid)
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.pid,

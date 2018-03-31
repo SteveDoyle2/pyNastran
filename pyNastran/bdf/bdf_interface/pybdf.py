@@ -434,6 +434,7 @@ def _lines_to_decks(lines, punch):
         bulk_data_lines = lines
     else:
         flag = 1
+        i = 0
         for i, line in enumerate(lines):
             #print(flag, line.rstrip())
             if flag == 1:
@@ -459,7 +460,6 @@ def _lines_to_decks(lines, punch):
                 case_control_lines.append(line.rstrip())
             else:
                 break
-        i = len(lines)
         for line in lines[i:]:
             bulk_data_lines.append(line.rstrip())
 

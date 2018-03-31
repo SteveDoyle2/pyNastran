@@ -1314,7 +1314,10 @@ class PBEAML(IntegratedLineProperty):
         self.beam_type = beam_type
 
     def get_mass_per_lengths(self):
-        """helper method for MassPerLength"""
+        """
+        helper method for MassPerLength
+        a*rho + nsm
+        """
         rho = self.Rho()
         mass_per_lengths = []
         for (dim, nsm) in zip(self.dim, self.nsm):
