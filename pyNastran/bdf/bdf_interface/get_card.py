@@ -2256,6 +2256,8 @@ class GetCard(GetMethods):
                 continue
             if hasattr(element, 'pid'):
                 pid = element.Pid()
+                if pid < 0: # CTRIAX6
+                    continue
                 try:
                     pid_to_eids_map[pid].append(eid)
                 except KeyError:

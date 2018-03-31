@@ -52,7 +52,7 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
 
 #from pyNastran import is_release
 from pyNastran.utils import integer_types
-from pyNastran.utils.numpy_utils import isfinite_and_nonzero
+from pyNastran.utils.numpy_utils import isfinite_and_nonzero, isfinite_and_greater_than, isfinite
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
@@ -562,6 +562,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nplotels = len(model.plotels)
         ncaero_cards = len(model.caeros)
         nrigid = len(model.rigid_elements)
+
+        #if 'CTRIAX6' in model.card_count and nelements == 0: # skipping...
+            #return
+
         #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
         if nelements + nmasses + ncaero_cards + nplotels + nrigid == 0:
             msg = 'nelements + nmasses + ncaero_cards + nplotels + nrigid = 0\n'
@@ -3245,7 +3249,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 raise RuntimeError('there are no elements...')
             eids_array = eids_array[icells]
             pids_array = pids_array[icells]
-            dim_array = pids_array[dim_array]
+            #dim_array = pids_array[dim_array]
             cell_types_array = cell_types_array[icells]
             cell_offsets_array = cell_offsets_array[icells]
             nnodes_array = nnodes_array[icells]
@@ -3498,7 +3502,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if is_element_dim:
                 form_checks.append(('ElementDim', icase, []))
 
-            if self.make_nnodes_result and 0:
+            if self.make_nnodes_result and 0:  # pragma: no cover
                 nnodes_res = GuiResult(
                     0, header='NNodes/Elem', title='NNodes/Elem',
                     location='centroid', scalar=nnodes_array)
@@ -4176,6 +4180,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.eid_to_nid_map[eid] = node_ids[:4]
 
                 n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
+                print('node_ids = ', node_ids)
+                print(xyz_cid0)
                 p1 = xyz_cid0[n1, :]
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
@@ -4191,10 +4197,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
                 else:
                     elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
-                    elem.GetPointIds().SetId(3, n4)
+                elem.GetPointIds().SetId(0, n1)
+                elem.GetPointIds().SetId(1, n2)
+                elem.GetPointIds().SetId(2, n3)
+                elem.GetPointIds().SetId(3, n4)
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
@@ -4215,19 +4221,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 out = quad_quality(p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
-                if None in node_ids:
-                    elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, n1)
-                    elem.GetPointIds().SetId(1, n2)
-                    elem.GetPointIds().SetId(2, n3)
-                    elem.GetPointIds().SetId(3, n4)
-                else:
+                if None not in node_ids:
                     elem = vtk.vtkBiQuadraticQuad()
                     elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                     elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                     elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                     elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
                     elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
+                else:
+                    elem = vtkQuad()
+                elem.GetPointIds().SetId(0, n1)
+                elem.GetPointIds().SetId(1, n2)
+                elem.GetPointIds().SetId(2, n3)
+                elem.GetPointIds().SetId(3, n4)
+
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTETRA4):
                 elem = vtkTetra()
@@ -4878,7 +4885,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #if min(nxs) == max(nxs) and min(nxs) != 0.0:
         is_element_dim = np.max(element_dim) != np.min(element_dim)
         is_element_dim = True
-        if is_element_dim:
+        if is_element_dim and isfinite_and_greater_than(element_dim, -1):
             eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
                                     location='centroid', scalar=element_dim, mask_value=-1)
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
@@ -4998,29 +5005,30 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #if (np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or
                 #np.abs(zoffset).max() > 0.0):
             # offsets
-            offset_res = GuiResult(
-                0, header='Offset', title='Offset',
-                location='centroid', scalar=offset, data_format='%g')
-            offset_x_res = GuiResult(
-                0, header='OffsetX', title='OffsetX',
-                location='centroid', scalar=xoffset, data_format='%g')
-            offset_y_res = GuiResult(
-                0, header='OffsetY', title='OffsetY',
-                location='centroid', scalar=yoffset, data_format='%g')
-            offset_z_res = GuiResult(
-                0, header='OffsetZ', title='OffsetZ',
-                location='centroid', scalar=zoffset, data_format='%g')
+            if isfinite(max_warp_angle):
+                offset_res = GuiResult(
+                    0, header='Offset', title='Offset',
+                    location='centroid', scalar=offset, data_format='%g')
+                offset_x_res = GuiResult(
+                    0, header='OffsetX', title='OffsetX',
+                    location='centroid', scalar=xoffset, data_format='%g')
+                offset_y_res = GuiResult(
+                    0, header='OffsetY', title='OffsetY',
+                    location='centroid', scalar=yoffset, data_format='%g')
+                offset_z_res = GuiResult(
+                    0, header='OffsetZ', title='OffsetZ',
+                    location='centroid', scalar=zoffset, data_format='%g')
 
-            cases[icase] = (offset_res, (0, 'Offset'))
-            cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
-            cases[icase + 2] = (offset_y_res, (0, 'OffsetY'))
-            cases[icase + 3] = (offset_z_res, (0, 'OffsetZ'))
+                cases[icase] = (offset_res, (0, 'Offset'))
+                cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
+                cases[icase + 2] = (offset_y_res, (0, 'OffsetY'))
+                cases[icase + 3] = (offset_z_res, (0, 'OffsetZ'))
 
-            form_checks.append(('Offset', icase, []))
-            form_checks.append(('OffsetX', icase + 1, []))
-            form_checks.append(('OffsetY', icase + 2, []))
-            form_checks.append(('OffsetZ', icase + 3, []))
-            icase += 4
+                form_checks.append(('Offset', icase, []))
+                form_checks.append(('OffsetX', icase + 1, []))
+                form_checks.append(('OffsetY', icase + 2, []))
+                form_checks.append(('OffsetZ', icase + 3, []))
+                icase += 4
 
             if 0:  # pragma: no cover
                 xyz_offset = np.vstack([xoffset, yoffset, zoffset]).T

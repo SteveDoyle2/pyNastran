@@ -7,7 +7,7 @@ import io
 import sys
 from codecs import open
 
-from six import string_types, iteritems, StringIO, PY2
+from six import string_types, iteritems, StringIO, PY2, iterkeys
 from numpy import array, unique, concatenate, intersect1d, where
 
 from pyNastran.bdf.utils import print_filename
@@ -523,7 +523,7 @@ class WriteMesh(BDFAttributes):
         else:
             ids = []
             for constraint_dict in constraint_dicts:
-                ids += constraint_dict.iterkeys()
+                ids += iterkeys(constraint_dict)
             #self.log.debug(ids)
             ids = unique(ids)
             ids.sort()

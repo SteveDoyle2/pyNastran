@@ -410,6 +410,12 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(nod_filename)
 
+    def test_gui_axi(self):
+        """tests axisymmetric elements"""
+        bdf_filename = os.path.join(MODEL_PATH, 'axisymmetric', 'model.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
 #def test_bottle():  # pragma: no cover
     #"""
     #Tests Nastran GUI loading

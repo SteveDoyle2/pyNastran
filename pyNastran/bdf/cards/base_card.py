@@ -375,6 +375,7 @@ class Material(BaseCard):
         if not hasattr(self, 'tref'):
             raise AttributeError('%r object has no attribute tref' % self.type)
         return self.tref
+
     @TRef.setter
     def TRef(self, tref):
         # type: (float) -> None
@@ -632,6 +633,7 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
                     nodes2.append(node)
                 else:
                     nodes2.append(node.nid)
+            assert nodes2 is not None, str(card)
             return nodes2
         else:
             try:
@@ -651,11 +653,13 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
                     card.type, nodes, allow_empty_nodes, msg))
                 raise
             assert 0 not in node_ids, 'node_ids = %s' % node_ids
+            assert node_ids is not None, str(card)
             return node_ids
     except:
         print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
             card.type, nodes, allow_empty_nodes, msg))
         raise
+    raise RuntimeError('huh...')
 
 def expand_thru(fields, set_fields=True, sort_fields=False):
     # type: (List[str], bool, bool) -> List[int]

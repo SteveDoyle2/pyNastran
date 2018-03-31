@@ -135,7 +135,7 @@ class BaseScalarObject(Op2Codes):
         if '_add_new_node' in state:
             del state['_add_new_node']
 
-        #for key, value in state.iteritems():
+        #for key, value in iteritems(state):
             #if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
                 #continue
             #print(' %s = %s' % (key, value))

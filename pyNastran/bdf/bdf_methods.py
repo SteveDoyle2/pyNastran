@@ -138,6 +138,8 @@ class BDFMethods(BDFAttributes):
             if prop.type in ['PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG', ]:
                 for eid in eids:
                     elem = self.elements[eid]
+                    if elem.type in ['CQUADX']:
+                        continue
                     try:
                         areas.append(elem.Area())
                     except AttributeError:
@@ -199,6 +201,8 @@ class BDFMethods(BDFAttributes):
                 areas = []
                 for eid in eids:
                     elem = self.elements[eid]
+                    if elem.type in ['CQUADX']:
+                        continue
                     areas.append(elem.Area())
                 volumesi = [area * thickness for area in areas]
                 volumes.extend(volumesi)
@@ -314,6 +318,8 @@ class BDFMethods(BDFAttributes):
                 rho = prop.Rho()
                 for eid in eids:
                     elem = self.elements[eid]
+                    if elem.type in ['CQUADX']:
+                        continue
                     area = elem.Area()
                     masses.append(area * (rho * thickness + nsm))
             elif prop.type in ['PCOMP', 'PCOMPG']:

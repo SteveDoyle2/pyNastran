@@ -23,7 +23,7 @@ n_list = get_n_list(dirname, model_name)#[:20]
 #n_list = [65495, 65475]
 # take pictures every N steps
 N = 440
-nlist = [i for i in xrange(max(n_list)) if i%N==0 ]
+nlist = [i for i in range(max(n_list)) if i%N==0 ]
 flo_filenames = get_flo_files_from_n(dirname, model_name, n_list, include_dirname_in_path=True)
 
 

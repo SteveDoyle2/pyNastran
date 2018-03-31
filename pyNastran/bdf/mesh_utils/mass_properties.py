@@ -991,6 +991,8 @@ def _get_mass_new(model, all_eids, all_mass_ids, etypes_skipped,
     elif etype == 'CBEND':
         model.log.info('elem.type=%s doesnt have mass' % etype)
         #nsm = property_nsms[nsm_id]['PBEND'][pid] + element_nsms[nsm_id][eid]
+    elif etype in ['CQUADX']:
+        pass
     elif etype.startswith('C'):
         eids2 = get_sub_eids(all_eids, eids)
         for eid in eids2:

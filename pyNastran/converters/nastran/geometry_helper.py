@@ -5,6 +5,7 @@ GUI specific geometry functions that don't involve PyQt/VTK
 this is no longer true...but should be
 """
 from __future__ import print_function
+import sys
 from collections import defaultdict
 import numpy as np
 from numpy.linalg import norm
@@ -291,10 +292,12 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 return
 
             if points_list:
+                if not sys.argv[0].startswith('test_'):
+                    update_grid_function = None
                 self.gui.create_alternate_vtk_grid(
                     '3d_bars', color=BLUE, opacity=0.2,
                     representation='surface', is_visible=True,
-                    #follower_function=update_grid_function,
+                    follower_function=update_grid_function,
                     ugrid=ugrid,
                 )
                 points_array = _make_points_array(points_list)

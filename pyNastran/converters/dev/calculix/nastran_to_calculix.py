@@ -4,7 +4,7 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from six import iteritems
+from six import iteritems, iterkeys
 from six.moves import zip
 
 from numpy import array, zeros, cross
@@ -60,7 +60,7 @@ class CalculixConverter(BDF):
         is a list of element IDs
         """
         if element_ids is None:
-            element_ids = self.elements.iterkeys()
+            element_ids = iterkeys(self.elements)
 
         props = defaultdict(list)
         for eid in element_ids:
@@ -92,7 +92,7 @@ class CalculixConverter(BDF):
         is a list of element IDs
         """
         if element_ids is None:
-            element_ids = self.elements.iterkeys()
+            element_ids = iterkeys(self.elements)
 
         elems = defaultdict(list)
         for eid in element_ids:
