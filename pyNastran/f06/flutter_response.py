@@ -523,8 +523,6 @@ class FlutterResponse(object):
         modes, imodes = self._get_modes_imodes(modes)
         symbols = self.symbols
 
-        #velocity_units = self._get_unit_factor('velocity')[1]
-
         legend_items = ['Mode %i' % mode for mode in modes]
         for i, imode, mode in zip(count(), imodes, modes):
             if plot_type == 'tas':

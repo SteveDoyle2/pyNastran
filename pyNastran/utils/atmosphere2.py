@@ -908,7 +908,7 @@ def _limit_eas(rho, machs, velocity, eas_limit=1000.,
     if eas_limit:
         rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
         eas = velocity * np.sqrt(rho / rho0) * _velocity_factor(velocity_units, eas_units)
-        i = np.where(eas > eas_limit)
+        i = np.where(eas < eas_limit)
         rho = rho[i]
         machs = machs[i]
         velocity = velocity[i]
