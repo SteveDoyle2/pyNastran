@@ -131,19 +131,9 @@ class FlutterResponse(object):
             self.ieas = 9
             self.iq = 10
             self.ialt = 11
-            print('vel', results[5, :, self.ivelocity].max())
-            print('mach', results[5, :, self.imach].max())
-            print('damping', results[5, :, self.idamping].min())
-            print('freq', results[:, 5, self.ifreq].max())
-            print('damping6', results[5, :, self.idamping].min())
             self.set_pknl_results(results)
         else:
             raise NotImplementedError(method)
-        #print(self.results.shape)
-        #print('rho mode7 = %r' % rho[6, :, :])
-        #print('damp mode7 = %r' % results[6, :, self.idamping])
-        #print('rho mode7 = %r' % results[6, :, self.irho])
-        #print('vel mode7 = %r' % self.results[6, :, self.ivelocity])
 
         # c - cyan
         # b - black
@@ -185,17 +175,10 @@ class FlutterResponse(object):
 
         q = 0.5 * rho * vel**2
         #eas  = (2 * q / rho_ref)**0.5
-        #print('rho_ref = %r' % rho_ref)
-
 
         # eas = V * sqrt(rho / rhoSL)
         keas = self._get_unit_factor('eas')[0]
         eas = vel * np.sqrt(rho / rho_ref) * keas
-        #print('eas_max = ', eas.max())
-        #print('vel = ', vel.max())
-        #print('rho = ', rho.max())
-        #print('keas = ', keas)
-        #print('rho_ref = ', rho_ref)
         #density_units2 = self.out_units['density']
 
         altitude_units = self.out_units['altitude']

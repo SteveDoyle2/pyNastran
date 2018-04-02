@@ -59,7 +59,7 @@ def determine_format(input_filename, allowed_formats=None):
     return formati
 
 def run_docopt():
-    msg  = "Usage:\n"
+    msg = "Usage:\n"
 
     # INPUT format may be explicitly or implicitly defined with or
     # without an output file
