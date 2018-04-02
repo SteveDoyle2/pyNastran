@@ -32,6 +32,7 @@ from pyNastran.bdf.cards.test.test_tables import TestTables
 from pyNastran.bdf.cards.test.test_thermal import TestThermal
 from pyNastran.bdf.cards.test.test_axisymmetric import TestAxi
 from pyNastran.bdf.cards.test.test_msgmesh import TestMsgMesh
+from pyNastran.bdf.cards.test.test_base_card import TestBaseCard
 
 if __name__ == "__main__":  # pragma: no cover
     import unittest

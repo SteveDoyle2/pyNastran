@@ -964,7 +964,7 @@ class DYNAMICS(GeomCommon):
 #ROTORG
 #RSPINR
 
-    def _read_rspint(self):
+    def _read_rspint(self, data, n):
         """
         Record 31 -- RSPINT(11001,110,310)
         1 RID         I Rotor identification number

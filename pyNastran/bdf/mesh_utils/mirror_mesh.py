@@ -1,9 +1,11 @@
 # coding: utf-8
 """
 This file defines:
-  - write_bdf_symmetric(model, out_filename=None, encoding=None,
-                        size=8, is_double=False,
-                        enddata=None, close=True, plane='xz')
+  - nid_offset, eid_offset = bdf_mirror(model, plane='xz')
+  - nid_offset, eid_offset = write_bdf_symmetric(
+        model, out_filename=None, encoding=None,
+        size=8, is_double=False,
+        enddata=None, close=True, plane='xz')
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -12,6 +14,8 @@ from six import iteritems
 
 def bdf_mirror(model, plane='xz'):
     """
+    Mirrors the model
+
     Parameters
     ----------
     model : BDF()
@@ -44,6 +48,8 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
 
     Doesn't equivalence nodes on the centerline.
     Doesn't handle solid elements.
+    Doesn't consider mass elements.
+    Doesn't consider rigid elements.
     Doesn't handle loads.
     Doesn't handle bar/beam offsets.
 

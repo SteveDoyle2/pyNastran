@@ -117,7 +117,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
-
+from pyNastran.utils import integer_string_types
 
 
 class AddCards(AddMethods):
@@ -4679,7 +4679,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        if isinstance(components, string_types):
+        if isinstance(components, integer_string_types):
             uset = USET1(name, ids, components, comment=comment)
         else:
             uset = USET(name, ids, components, comment=comment)
@@ -4694,7 +4694,7 @@ class AddCards(AddMethods):
         """
         Creates an SEBSET/SEBSET1 card
         """
-        if isinstance(components, string_types):
+        if isinstance(components, integer_string_types):
             sebset = SEBSET1(seid, ids, components, comment=comment)
         else:
             sebset = SEBSET(seid, ids, components, comment=comment)
@@ -4709,7 +4709,7 @@ class AddCards(AddMethods):
         """
         Creates an SECSET/SECSET1 card
         """
-        if isinstance(components, string_types):
+        if isinstance(components, integer_string_types):
             secset = SECSET1(seid, ids, components, comment=comment)
         else:
             secset = SECSET(seid, ids, components, comment=comment)
@@ -4724,7 +4724,7 @@ class AddCards(AddMethods):
         """
         Creates an SEQSET card
         """
-        if isinstance(components, string_types):
+        if isinstance(components, integer_string_types):
             seqset = SEQSET1(seid, ids, components, comment=comment)
         else:
             seqset = SEQSET(seid, ids, components, comment=comment)

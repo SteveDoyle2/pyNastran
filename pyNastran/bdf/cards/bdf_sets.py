@@ -39,7 +39,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 from six.moves import zip, range
 
-from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru
 )
@@ -535,6 +535,12 @@ class SuperABQSet1(Set):
         #print('ids =', self.ids)
         assert None not in self.ids
         self.ids_ref = None
+        self.validate()
+
+    def validate(self):
+        if not isinstance(self.components, integer_string_types):
+            msg = 'type(components)=%s must be an int/string' % type(self.components)
+            raise TypeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -559,7 +565,7 @@ class SuperABQSet1(Set):
         assert None not in nids, 'Type=%s nids=%s' % (cls.type, nids)
         assert -1 not in nids, 'nids=%s' % (nids.tolist())
         assert 0 not in nids, 'nids=%s' % (nids.tolist())
-        return cls(seid, components, nids, comment=comment)
+        return cls(seid, nids, components, comment=comment)
 
     def cross_reference(self, model):
         """

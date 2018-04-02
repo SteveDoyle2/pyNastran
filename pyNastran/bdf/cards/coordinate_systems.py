@@ -1866,9 +1866,9 @@ class Cord1x(Coord):
         rid : int; default=0
             The relative coordinate system
         """
-        rid1 = self.g1.Cid()
-        rid2 = self.g2.Cid()
-        rid3 = self.g2.Cid()
+        rid1 = self.g1_ref.Cp()
+        rid2 = self.g2_ref.Cp()
+        rid3 = self.g2_ref.Cp()
 
         # assume the points are in rid
         p1 = self.g1_ref.xyz
@@ -1884,17 +1884,19 @@ class Cord1x(Coord):
             p3 = self.g3_ref.get_position_wrt(model, rid)
 
         type1 = self.type.replace('1', '2')
-        data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
+        #data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
 
         if self.type == 'CORD1R':
-            coord = CORD2R.add_op2_data(data, comment=self.comment)
+            cls = CORD2R
         elif self.type == 'CORD1C':
-            coord = CORD2C.add_op2_data(data, comment=self.comment)
+            cls = CORD2C
         elif self.type == 'CORD1S':
-            coord = CORD2S.add_op2_data(data, comment=self.comment)
+            cls = CORD2S
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
+        coord = cls(self.cid, rid=rid1, origin=p1, zaxis=p2, xzplane=p3, comment=self.comment)
         model.coords[self.cid] = coord
+        return coord
 
     def _verify(self, xref):
         """
@@ -2062,7 +2064,28 @@ class CORD3G(Coord):  # not done
 
     def __init__(self, cid, method_es, method_int, form, thetas, rid, comment=''):
         """
-        Intilizes the CORD3G
+        Defines the CORD3G card
+
+        Parameters
+        ----------
+        cid : int
+            coordinate system id
+        method_es : str
+            flag for coordinate system type
+            E : Eularian?
+            S : Space?
+        method_int : int
+            0-1000
+            E1000 = 'E' + 1000
+        form : str
+            EQN
+        thetas : List[int]
+            ???
+        rid : int
+            the referenced coordinate system that defines the system the
+            vectors???
+        comment : str; default=''
+            the card comment
         """
         Coord.__init__(self)
         if comment:
@@ -2082,9 +2105,9 @@ class CORD3G(Coord):  # not done
         assert self.form in ['EQN', 'TABLE']
         assert self.method_es in ['E', 'S'] # Euler / Space-Fixed
 
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        raise NotImplementedError(data)
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #raise NotImplementedError(data)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2164,7 +2187,7 @@ class CORD3G(Coord):  # not done
                 else:
                     raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
         elif self.method_es == 'S':
-            raise RuntimeError('Space-Fixed rotation hasnt been implemented')
+            raise NotImplementedError("Space-Fixed rotation hasn't been implemented")
         else:
             msg = 'Invalid method; Use Euler or Space-Fixed.  method_es=%r' % self.method_es
             raise RuntimeError(msg)

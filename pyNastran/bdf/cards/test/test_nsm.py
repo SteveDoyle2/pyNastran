@@ -283,7 +283,6 @@ class TestNsm(unittest.TestCase):
         #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'nsm.bdf')
         #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'TEST_NSM_SOL101.bdf')
         #model = read_bdf(bdf_filename)
-        #from itertools import chain
         #print('    %6s %-9s %s' % ('nsm_id', 'mass', 'nsm'))
         #mass0 = model._mass_properties_new(debug=False)[0]
         #for nsm_id in sorted(chain(model.nsms, model.nsmadds)):

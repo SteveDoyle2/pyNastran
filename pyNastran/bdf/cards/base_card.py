@@ -678,13 +678,16 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
         Should the fields be sorted at the end?
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
+    if isinstance(fields, integer_types):
+        return [fields]
+    #elif isinstance(fields[0], integer_types):  # don't use this [1, 'THRU', 10]
+        #return fields
+    elif len(fields) == 1:
+        return [int(fields[0])]
+
     fields = [field.upper()
               if isinstance(field, string_types) else field for field in fields]
 
-    if isinstance(fields, integer_types):
-        return [fields]
-    if len(fields) == 1:
-        return [int(fields[0])]
     out = []
     nfields = len(fields)
     i = 0
@@ -813,6 +816,7 @@ def expand_thru_exclude(fields):
     fields_out = []  # type: List[int]
     nfields = len(fields)
     for i in range(nfields):
+        #print('fields[%i] = %r' % (i, fields[i]))
         if fields[i] == 'THRU':
             sorted_list = []
             for j in range(fields[i - 1], fields[i + 1]):

@@ -2586,7 +2586,7 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             # [fx, sfy, sfz, u, v, w, sv, sw]
             fx = self.data[itime, :, 0]
