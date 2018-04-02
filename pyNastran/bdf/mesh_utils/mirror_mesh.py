@@ -9,7 +9,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 from codecs import open
-from six import PY2, iteritems
+from six import iteritems
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -21,7 +21,12 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
                         enddata=None, close=True, plane='xz'):
     """
     Writes the BDF as a symmetric model.
+    Considers shell and line elements.
+
     Does not equivalence nodes on the centerline.
+    Does not handle coordinate systems.
+    Does not handle solid elements.
+    Does not handle loads.
 
     Parameters
     ----------
@@ -47,11 +52,14 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
         should the output file be closed
     plane : str; {'xy', 'yz', 'xz'}; default='xz'
         the plane to mirror about
+        xz : +y/-y
+        yz : +x/-x
+        xy : +z/-z
     """
     interspersed = False
     #model.write_caero_model()
-    out_filename = model._output_helper(out_filename,
-                                        interspersed, size, is_double)
+    out_filename = model._output_helper(
+        out_filename, interspersed, size, is_double)
     if encoding is not None:
         pass
     else:
@@ -63,20 +71,17 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
     if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
         bdf_file = out_filename
     else:
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
-        bdf_file = open(out_filename, wb, encoding=encoding)
+        bdf_file = open(out_filename, 'w', encoding=encoding)
     model._write_header(bdf_file, encoding)
     model._write_params(bdf_file, size, is_double)
-    _write_nodes_symmetric(model, bdf_file, size, is_double, plane=plane)
+    nid_offset = _write_nodes_symmetric(model, bdf_file, size, is_double, plane=plane)
 
     if interspersed:
         raise RuntimeError(interspersed)
         #model._write_elements_properties(bdf_file, size, is_double)
     else:
-        _write_elements_symmetric(model, bdf_file, size, is_double)
+        _write_elements_symmetric(model, bdf_file, nid_offset,
+                                  size=size, is_double=is_double)
         model._write_properties(bdf_file, size, is_double)
     model._write_materials(bdf_file, size, is_double)
 
@@ -95,33 +100,32 @@ def _write_nodes_symmetric(model, bdf_file, size=8, is_double=False, plane='xz')
                   it could, but you'd need 20 new coordinate systems
     .. warning:: doesn't mirror SPOINTs, EPOINTs
     """
+    nid_offset = 0
     if model.spoints:
         msg = []
         msg.append('$SPOINTS\n')
-        msg.append(write_xpoints('SPOINT', model.spoints.keys()))
+        spoints = model.spoints.keys()
+        msg.append(write_xpoints('SPOINT', spoints))
         bdf_file.write(''.join(msg))
+        nid_offset = max(spoints)
+
     if model.epoints:
         msg = []
         msg.append('$EPOINTS\n')
-        msg.append(write_xpoints('EPOINT', model.epoints.keys()))
+        epoints = model.epoints.keys()
+        msg.append(write_xpoints('EPOINT', epoints))
         bdf_file.write(''.join(msg))
+        nid_offset = max(nid_offset, max(epoints))
 
-    plane = plane.strip().lower()
-    if plane == 'xz':
-        iy = 4
-    elif plane == 'xy':
-        iy = 5
-    elif plane == 'yz':
-        iy = 3
-    else:
-        raise NotImplementedError(plane)
+    iy = _plane_to_iy(plane) + 3
     if model.nodes:
         msg = []
         msg.append('$NODES\n')
         if model.grdset:
             msg.append(model.grdset.print_card(size))
 
-        nid_offset = max(model.nodes.keys())
+        nids = model.nodes.keys()
+        nid_offset = max(nid_offset, max(nids))
         if model.is_long_ids:
             print_card_long = print_card_double if is_double else print_card_16
             for (unused_nid, node) in sorted(iteritems(model.nodes)):
@@ -144,44 +148,64 @@ def _write_nodes_symmetric(model, bdf_file, size=8, is_double=False, plane='xz')
         bdf_file.write(''.join(msg))
     #if 0:  # not finished
         #model._write_nodes_associated(bdf_file, size, is_double)
+    return nid_offset
 
-def _write_elements_symmetric(model, bdf_file, size=8, is_double=False):
+def _plane_to_iy(plane):
+    """gets the index fo the mirror plane"""
+    plane = plane.strip().lower()
+    if plane == 'yz':
+        iy = 0
+    if plane == 'xz':
+        iy = 1
+    elif plane == 'xy':
+        iy = 2
+    else:
+        raise NotImplementedError(plane)
+    return iy
+
+def _write_elements_symmetric(model, bdf_file, nid_offset, size=8, is_double=False):
     """
     Writes the elements in a sorted order
     """
-    nid_offset = max(model.nodes.keys())
     eid_offset = max(model.elements.keys())
     if model.elements:
         bdf_file.write('$ELEMENTS\n')
         if model.is_long_ids:
-            for (eid, element) in sorted(iteritems(model.elements)):
-                nodes = element.node_ids
+            for unused_eid, element in sorted(iteritems(model.elements)):
                 bdf_file.write(element.write_card_16(is_double))
-                element.eid += eid_offset
-                nodes = [node_id + nid_offset for node_id in nodes]
-                element.nodes = nodes
-                bdf_file.write(element.write_card_16(is_double))
+                is_passed = _update_element(element, nid_offset, eid_offset, model.log)
+                if is_passed:
+                    bdf_file.write(element.write_card_16(is_double))
         else:
-            for (eid, element) in sorted(iteritems(model.elements)):
-                nodes = element.node_ids
+            for unused_eid, element in sorted(iteritems(model.elements)):
                 bdf_file.write(element.write_card(size, is_double))
-                try:
-                    nodes = [node_id + nid_offset for node_id in nodes]
-                except TypeError:
-                    msg = 'cannot mirror %r because None exists in nodes=%s' % (
-                        element.type, nodes)
-                    model.log.warning(msg)
-                    continue
+                is_passed = _update_element(element, nid_offset, eid_offset, model.log)
+                if is_passed:
+                    bdf_file.write(element.write_card(size, is_double))
 
-                if element.type in ['CTRIA3', 'CQUAD4']:
-                    nodes = nodes[::-1]
-                try:
-                    element.nodes = nodes
-                except AttributeError:
-                    msg = 'cannot mirror %r because it doesnt have nodes...' % element.type
-                    model.log.warning(msg)
-                    continue
-                element.eid += eid_offset
-                bdf_file.write(element.write_card(size, is_double))
+def _update_element(element, nid_offset, eid_offset, log):
+    """mirrors the element"""
+    is_passed = False
+    nodes = element.node_ids
+    try:
+        nodes = [node_id + nid_offset for node_id in nodes]
+    except TypeError:
+        msg = 'cannot mirror %r because None exists in nodes=%s' % (
+            element.type, nodes)
+        log.warning(msg)
+        return is_passed
 
-
+    element.uncross_reference()
+    if element.type in ['CTRIA3', 'CQUAD4']:
+        element.flip_normal() # nodes = nodes[::-1]
+    #elif element.type in ['CTRIA3', 'CQUAD4']:
+        #nodes = nodes[::-1]
+    try:
+        element.nodes = nodes
+    except AttributeError:
+        msg = 'cannot mirror %r because it doesnt have nodes...' % element.type
+        log.warning(msg)
+        return is_passed
+    element.eid += eid_offset
+    is_passed = True
+    return is_passed

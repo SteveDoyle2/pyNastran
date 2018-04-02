@@ -183,7 +183,7 @@ def main():
 
     msg = "Usage:\n"
     #is_release = False
-    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-d] [-b] [--skip_dataframe]\n"
+    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-h] [-d] [-b] [--skip_dataframe]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
