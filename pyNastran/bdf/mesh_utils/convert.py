@@ -33,10 +33,10 @@ def convert(model, units_to, units=None):
     model.log.debug('time_scale = %s' % time_scale)
     model.log.debug('weight_scale = %s' % weight_scale)
     model.log.debug('gravity_scale = %s' % gravity_scale)
-    _set_wtmass(model, gravity_scale)
+    #_set_wtmass(model, gravity_scale)
 
     _convert_nodes(model, xyz_scale)
-    #_convert_coordinates(model, xyz_scale)
+    _convert_coordinates(model, xyz_scale)
 
     _convert_elements(model, xyz_scale, mass_scale, weight_scale)
     _convert_properties(model, xyz_scale, mass_scale, weight_scale)
@@ -462,7 +462,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.G22 *= stress_scale
             mat.G23 *= stress_scale
             mat.G33 *= stress_scale
-            mat.rho = density_scale
+            mat.rho *= density_scale
             # 1/dTemp
             if mat.a1 is not None:
                 mat.a1 *= a_scale

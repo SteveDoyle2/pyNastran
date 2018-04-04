@@ -9,7 +9,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 from codecs import open
+from copy import copy
 from six import PY2, iteritems
+
+import numpy as np
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -69,7 +72,7 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
         bdf_file = open(out_filename, wb, encoding=encoding)
     model._write_header(bdf_file, encoding)
     model._write_params(bdf_file, size, is_double)
-    _write_nodes_symmetric(model, bdf_file, size, is_double, plane=plane)
+    nid_offset = _write_nodes_symmetric(model, bdf_file, size, is_double, plane=plane)
 
     if interspersed:
         raise RuntimeError(interspersed)
@@ -80,11 +83,27 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
     model._write_materials(bdf_file, size, is_double)
 
     model._write_masses(bdf_file, size, is_double)
+    caero_id_map = _write_aero_symmetric(model, bdf_file, size=size, is_double=is_double,
+                                         plane=plane)
     model._write_common(bdf_file, size, is_double)
     if (enddata is None and 'ENDDATA' in model.card_count) or enddata:
         bdf_file.write('ENDDATA\n')
     if close:
         bdf_file.close()
+
+    return nid_offset, caero_id_map
+
+def _get_iy(plane):
+    plane = plane.strip().lower()
+    if plane == 'yz':
+        iy = 0
+    elif plane == 'xz':
+        iy = 1
+    elif plane == 'xy':
+        iy = 2
+    else:
+        raise NotImplementedError(plane)
+    return iy
 
 def _write_nodes_symmetric(model, bdf_file, size=8, is_double=False, plane='xz'):
     """
@@ -105,15 +124,8 @@ def _write_nodes_symmetric(model, bdf_file, size=8, is_double=False, plane='xz')
         msg.append(write_xpoints('EPOINT', model.epoints.keys()))
         bdf_file.write(''.join(msg))
 
-    plane = plane.strip().lower()
-    if plane == 'xz':
-        iy = 4
-    elif plane == 'xy':
-        iy = 5
-    elif plane == 'yz':
-        iy = 3
-    else:
-        raise NotImplementedError(plane)
+    iy = _get_iy(plane) + 3
+
     if model.nodes:
         msg = []
         msg.append('$NODES\n')
@@ -143,13 +155,14 @@ def _write_nodes_symmetric(model, bdf_file, size=8, is_double=False, plane='xz')
         bdf_file.write(''.join(msg))
     #if 0:  # not finished
         #model._write_nodes_associated(bdf_file, size, is_double)
+        return nid_offset
 
 def _write_elements_symmetric(model, bdf_file, size=8, is_double=False):
     """
     Writes the elements in a sorted order
     """
     nid_offset = max(model.nodes.keys())
-    eid_offset = max(model.elements.keys())
+    eid_offset = max(max(model.elements.keys()), max(model.rigid_elements.keys()))
     if model.elements:
         bdf_file.write('$ELEMENTS\n')
         if model.is_long_ids:
@@ -174,6 +187,8 @@ def _write_elements_symmetric(model, bdf_file, size=8, is_double=False):
 
                 if element.type in ['CTRIA3', 'CQUAD4']:
                     nodes = nodes[::-1]
+
+                element.uncross_reference()
                 try:
                     element.nodes = nodes
                 except AttributeError:
@@ -182,5 +197,113 @@ def _write_elements_symmetric(model, bdf_file, size=8, is_double=False):
                     continue
                 element.eid += eid_offset
                 bdf_file.write(element.write_card(size, is_double))
+    if model.rigid_elements:
+        for (eid, rigid_element) in sorted(iteritems(model.rigid_elements)):
+            if rigid_element.type == 'RBE2':
+                Gmi_node_ids = rigid_element.Gmi_node_ids
+                Gn = rigid_element.Gn()
+                Gijs = None
+                ref_grid_id = None
+            elif rigid_element.type == 'RBE3':
+                Gmi_node_ids = rigid_element.Gmi_node_ids
+                Gijs = rigid_element.Gijs
+                ref_grid_id = rigid_element.ref_grid_id
+                Gn = None
+            else:
+                msg = '_write_elements_symmetric: %s not implimented' % rigid_element.type
+                raise NotImplementedError(msg)
 
+            bdf_file.write(rigid_element.write_card(size, is_double))
 
+            Gmi_node_ids = [node_id + nid_offset for node_id in Gmi_node_ids]
+            if Gn:
+                Gn += nid_offset
+            if Gijs:
+                Gijs = [[node_id + nid_offset for node_id in nodes] for nodes in Gijs]
+            if ref_grid_id:
+                ref_grid_id += nid_offset
+
+            rigid_element.uncross_reference()
+            if rigid_element.type == 'RBE2':
+                rigid_element.Gmi = Gmi_node_ids
+                rigid_element.gn = Gn
+            elif rigid_element.type == 'RBE3':
+                rigid_element.Gmi = Gmi_node_ids
+                rigid_element.Gijs = Gijs
+                rigid_element.refgrid = ref_grid_id
+
+            rigid_element.eid += eid_offset
+            bdf_file.write(rigid_element.write_card(size, is_double))
+
+def _write_aero_symmetric(model, bdf_file, size=8, is_double=False, plane='xz'):
+    """
+    Writes the aero in a sorted order
+    """
+    caero_id_max = max(model.caero_ids)
+    caero_id_offset = np.max(model.caeros[caero_id_max].box_ids.flat)
+
+    nid_offset = max(model.nodes.keys())
+    set_id_offset = max(model.sets.keys())
+    spline_id_offset = max(model.splines.keys())
+    eid_offset = max(max(model.elements.keys()), max(model.rigid_elements.keys()))
+
+    iy = _get_iy(plane)
+
+    caero_id_map = {}
+    if model.caeros:
+        bdf_file.write('$AERO\n')
+        for (caero_id, caero) in sorted(iteritems(model.caeros)):
+            bdf_file.write(caero.write_card(size, is_double))
+
+            # reverse points to maintain normal
+            p1_mirror = caero.p4
+            x12_mirror = caero.x43
+            p4_mirror = caero.p1
+            x43_mirror = caero.x12
+
+            p1_mirror[iy] *= -1.
+            p4_mirror[iy] *= -1.
+
+            caero_mirror = copy(caero)
+            caero_mirror.p1 = p1_mirror
+            caero_mirror.p4 = p4_mirror
+            caero_mirror.x12 = x12_mirror
+            caero_mirror.x43 = x43_mirror
+            caero_mirror.eid += caero_id_offset
+            caero_id_map[caero_id] = caero_mirror.eid
+
+            bdf_file.write(caero_mirror.write_card(size, is_double))
+
+    # paero not mirrored
+    for (unused_id, paero) in sorted(iteritems(model.paeros)):
+        bdf_file.write(paero.write_card(size, is_double))
+
+    if model.splines:
+        bdf_file.write('$SPLINES\n')
+        for (spline_id, spline) in sorted(iteritems(model.splines)):
+            bdf_file.write(spline.write_card(size, is_double))
+            #bdf_file.write(spline.setg_ref.write_card(size, is_double))
+
+            set_copy = copy(spline.setg_ref)
+            if set_copy is None:
+                set_copy = copy(model.sets[spline.setg])
+            set_copy.ids = [nid + nid_offset for nid in set_copy.ids]
+            set_copy.ids_ref = None
+            set_copy.sid += set_id_offset
+
+            spline.box1 += caero_id_offset
+            spline.box2 += caero_id_offset
+            spline.caero = spline.CAero() + caero_id_offset
+            spline.caero_ref = None
+            spline.eid += spline_id_offset
+            spline.setg = set_copy.sid
+            spline.setg_ref = None
+
+            bdf_file.write(spline.write_card(size, is_double))
+            bdf_file.write(set_copy.write_card(size, is_double)) # non mirrored sets writen elsewhere
+
+    # paero not mirrored
+    for monitor_point in model.monitor_points:
+        bdf_file.write(monitor_point.write_card(size, is_double))
+
+    return caero_id_map

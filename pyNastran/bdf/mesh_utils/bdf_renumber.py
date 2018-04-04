@@ -761,6 +761,38 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                         interspersed=False, close=close)
     return model, mapper
 
+def get_renumber_starting_ids_from_model(model):
+    """
+    Get the starting ids dictionary used for renumbering with ids greater than those in model.
+
+    Parameters
+    -----------
+    model : BDF
+        BDF object to get maximum ids from.
+
+    Returns
+    --------
+    starting_id_dict : dict {str : int, ...}
+        Dictionary from id type to starting id.
+
+    """
+    starting_id_dict = {
+        'cid' : max(model.coords.keys()) + 1,
+        'nid' : max(model.point_ids) + 1,
+        'eid' : max([max(model.elements.keys()),
+                     max(model.masses.keys()) if model.masses else 0,
+                     max(model.rigid_elements.keys()) if model.rigid_elements else 0,
+                    ]) + 1,
+        'pid' : max([max(model.properties.keys()),
+                     0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
+                     ]) + 1,
+        'mid' : max(model.material_ids) + 1,
+        'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
+        'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
+        'caero_id' : max(caero.box_ids[-1, -1] for caero in itervalues(model.caeros)) + 1 if model.caeros else 1,
+    }
+    return starting_id_dict
+
 def _update_case_control(model, mapper):
     """
     Updates the case control deck; helper method for ``bdf_renumber``.

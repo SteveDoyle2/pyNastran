@@ -1330,6 +1330,7 @@ class CAERO1(BaseCard):
         self.lspan_ref = None
         self.ascid_ref = None
         self.box_ids = None
+        self._init_ids()
 
     def validate(self):
         msg = ''

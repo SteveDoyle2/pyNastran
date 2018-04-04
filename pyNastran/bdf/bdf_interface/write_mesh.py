@@ -203,6 +203,9 @@ class WriteMesh(BDFAttributes):
         self._write_materials(bdf_file, size, is_double)
 
         self._write_masses(bdf_file, size, is_double)
+        self._write_rigid_elements(bdf_file, size, is_double) # split out for write_bdf_symmetric
+        self._write_aero(bdf_file, size, is_double)  # split out for write_bdf_symmetric
+
         self._write_common(bdf_file, size, is_double)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             bdf_file.write('ENDDATA\n')
@@ -488,11 +491,10 @@ class WriteMesh(BDFAttributes):
         msg : str
             part of the bdf
         """
-        self._write_rigid_elements(bdf_file, size, is_double)
         self._write_dmigs(bdf_file, size, is_double)
         self._write_loads(bdf_file, size, is_double)
         self._write_dynamic(bdf_file, size, is_double)
-        self._write_aero(bdf_file, size, is_double)
+
         self._write_aero_control(bdf_file, size, is_double)
         self._write_static_aero(bdf_file, size, is_double)
 

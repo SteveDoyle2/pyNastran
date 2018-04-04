@@ -181,7 +181,7 @@ class BDFMethods(BDFAttributes):
                 pids_to_volume[pid] = sum(volumes)
         return pids_to_volume
 
-    def get_mass_breakdown(self, property_ids=None, stop_if_no_eids=True):
+    def get_mass_breakdown(self, property_ids=None, stop_if_no_eids=True, detailed=False):
         """
         gets a breakdown of the mass by property region
 
@@ -192,6 +192,17 @@ class BDFMethods(BDFAttributes):
         stop_if_no_eids : bool; default=True
             prevents crashing if there are no elements
             setting this to False really doesn't make sense for non-DMIG models
+        detailed : bool, optional, default : False
+            Separates structural and nonstructural mass outputs.
+
+        Returns
+        --------
+        pids_to_mass : dict {int : float, ...}
+            Map from property id to mass (structural mass only if detailed is True).
+        pids_to_mass_nonstructural : dict {int : float, ...}, optional
+            Map from property id to nonstructural mass (only if detailed is True).
+        mass_type_to_mass : dict {str : float, ...}
+            Map from mass id to mass for mass elements.
 
         TODO: What about CONRODs, CONM2s?
         #'PBRSECT',
@@ -207,6 +218,7 @@ class BDFMethods(BDFAttributes):
 
         mass_type_to_mass = {}
         pids_to_mass = {}
+        pids_to_mass_nonstructural = {}
         skipped_eid_pid = set([])
         for eid, elem in iteritems(self.masses):
             if elem.type not in mass_type_to_mass:
@@ -223,6 +235,7 @@ class BDFMethods(BDFAttributes):
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
             masses = []
+            masses_nonstructural = []
             if prop.type == 'PSHELL':
                 # TODO: doesn't support PSHELL differential thicknesses
                 thickness = prop.t
@@ -231,11 +244,21 @@ class BDFMethods(BDFAttributes):
                 for eid in eids:
                     elem = self.elements[eid]
                     area = elem.Area()
-                    masses.append(area * (rho * thickness + nsm))
+                    if detailed:
+                        masses.append(area * (rho * thickness))
+                        masses_nonstructural.append(area * nsm)
+                    else:
+                        masses.append(area * (rho * thickness + nsm))
             elif prop.type in ['PCOMP', 'PCOMPG']:
                 for eid in eids:
                     elem = self.elements[eid]
-                    masses.append(elem.Mass())
+                    if detailed:
+                        mass, mass_nonstructural = elem.Mass_breakdown()
+                        masses.append(mass)
+                        masses_nonstructural.append(mass_nonstructural)
+                    else:
+                        masses.append(elem.Mass())
+
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 # what should I do here?
                 nsm = prop.nsm
@@ -274,10 +297,15 @@ class BDFMethods(BDFAttributes):
                 raise NotImplementedError(prop)
             if masses:
                 pids_to_mass[pid] = sum(masses)
+            if masses_nonstructural:
+                pids_to_mass_nonstructural[pid] = sum(masses_nonstructural)
 
         if stop_if_no_eids and len(mass_type_to_mass) == 0 and len(pids_to_mass) == 0:
             raise RuntimeError('No elements with mass were found')
-        return pids_to_mass, mass_type_to_mass
+        if detailed:
+            return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
+        else:
+            return pids_to_mass, mass_type_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
                         sym_axis=None, scale=None):

@@ -201,6 +201,20 @@ class ShellElement(Element):
             msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
             raise TypeError(msg)
 
+    def Mass_breakdown(self):
+        # () -> float
+        r"""
+        .. math:: m = \frac{m}{A} A  \f]
+        """
+        A = self.Area()
+        mpa = self.pid_ref.MassPerArea_structure()
+        nsm = self.pid_ref.nsm
+        try:
+            return mpa * A, nsm * A
+        except TypeError:
+            msg = 'mass/area=%s area=%s prop_type=%s' % (mpa, A, self.pid_ref.type)
+            raise TypeError(msg)
+
     def Mass_no_xref(self, model):
         r"""
         .. math:: m = \frac{m}{A} A  \f]

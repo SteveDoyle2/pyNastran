@@ -37,6 +37,16 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
+#TODO: replace this with formula
+valid_pcomp_codes = [3, #3-z0
+                     #'Z0',
+                     # 13-t1, 14-theta1, 17-t2, 18-theta2
+                     13, 14, 17, 18,
+                     23, 24, 27, 28,
+                     33, 34, 37, 38,
+                     43, 44, 47, 48,
+                     53, 54, 57, 58,
+                     63, 64, 67, 68]
 
 def validate_dvcrel(validate, element_type, cp_name):
     """
@@ -239,13 +249,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
                     raise RuntimeError('word=%r\n%s' % (word, msg))
                 int(num)
         else:
-            assert pname_fid in [3, #3-z0
-                                 #'Z0',
-                                 # 13-t1, 14-theta1, 17-t2, 18-theta2
-                                 13, 14, 17, 18,
-                                 23, 24, 27, 28,
-                                 33, 34, 37, 38,
-                                 43, 44, 47, 48], msg
+            assert pname_fid in valid_pcomp_codes, msg
     elif prop_type == 'PCOMPG':
         #if pname_fid in ['T', 4]:
             #pname_fid = 'T'
@@ -1122,7 +1126,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             attb = 1
         if property_type == 'PCOMP':
             # 11 - max shear stress/strain
-            assert atta in [3, 11], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+            assert atta in [3, 4, 5, 6, 7, 9, 10, 11], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
             assert len(atti) > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
@@ -1341,7 +1345,9 @@ class DRESP1(OptConstraint):
         # PSHELL, PCOMP, PBAR, etc.
         self.property_type = property_type
         self.region = region
-        if isinstance(atti, integer_types):
+        if atti is None:
+            atti = []
+        elif isinstance(atti, integer_types):
             atti = [atti]
         assert isinstance(atti, list), 'atti=%s type=%s' % (atti, type(atti))
 
@@ -4605,25 +4611,14 @@ def get_dvprel_key(dvprel, prop=None):
 
     elif prop_type == 'PCOMP':
         if isinstance(var_to_change, int):
-            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
+            if var_to_change in valid_pcomp_codes:
+                pass
+            else:
+                msg = 'prop_type=%r pname/fid=%s int is not supported' % (prop_type, var_to_change)
         elif var_to_change.startswith('THETA') or var_to_change.startswith('T'):
             pass
         elif var_to_change in ['Z0', 'SB', 'TREF', 'GE']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
-            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
-        else:  # pragma: no cover
-            msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
-
-    elif prop_type == 'PCOMP':
-        if isinstance(var_to_change, int):
-            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
-        elif var_to_change.startswith('THETA') or var_to_change.startswith('T'):
-            pass
-        elif var_to_change in ['Z0', 'SB', 'TREF', 'GE']:
-            pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
-            msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
