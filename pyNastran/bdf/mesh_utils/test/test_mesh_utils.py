@@ -21,6 +21,7 @@ from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model, quad_intersection, triangle_intersection
+from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
 from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
@@ -697,6 +698,54 @@ class TestMeshUtils(unittest.TestCase):
             #for line in lines:
                 #print(line.rstrip())
 
+    def test_mirror(self):
+        """tests bdf mirroring"""
+        pid_pshell = 10
+        pid_psolid = 11
+        mid1 = 100
+        model = BDF(log=log) # (log=log)
+        model.add_grid(1, [10., 10., 10.])
+        model.add_grid(2, [11., 10., 10.])
+        model.add_grid(3, [11., 11., 10.])
+        model.add_grid(4, [10., 11., 10.])
+
+        model.add_grid(5, [10., 10., 11.])
+        model.add_grid(6, [11., 10., 11.])
+        model.add_grid(7, [11., 11., 11.])
+        model.add_grid(8, [10., 11., 11.])
+
+
+        model.add_cquad4(1, pid_pshell, [1, 2, 3, 4]) # mass=1
+        model.add_ctria3(2, pid_pshell, [1, 2, 3]) # mass=0.5
+        model.add_conrod(3, mid1, [1, 3], A=1.0, j=0.0, c=0.0, nsm=0.0)
+
+        #model.add_ctetra(4, pid_psolid, [1, 2, 3, 5])
+        # penta
+        # pyram
+        #model.add_chexa(7, pid_psolid, [1, 2, 3, 4, 5, 6, 7, 8])
+
+        model.add_pshell(pid_pshell, mid1=mid1, t=1.)
+        model.add_psolid(pid_psolid, mid1)
+        E = 1.0
+        G = None
+        nu = 0.3
+        model.add_mat1(mid1, E, G, nu, rho=1.0)
+        model.validate()
+        model.cross_reference()
+        mass1, cg1, inertia1 = model.mass_properties()
+
+        out_filename = 'sym.bdf'
+        write_bdf_symmetric(model, out_filename=out_filename, encoding=None, size=8,
+                           is_double=False,
+                           enddata=None,
+                           close=True, plane='xz') # +y/-y
+        model2 = read_bdf(out_filename, log=log)
+        assert len(model2.nodes) == 16, model2.nodes
+        mass2, cg2, inertia2 = model2.mass_properties()
+        #print('cg1=%s cg2=%s' % (cg1, cg2))
+        assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
+        assert np.allclose(cg2[1], 0.), 'cg2=%s' % (cg2)
+        os.remove('sym.bdf')
 
     def test_pierce_model(self):
         """tests pierce_shell_model"""

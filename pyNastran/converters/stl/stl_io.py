@@ -2,12 +2,9 @@
 Defines the GUI IO file for STL.
 """
 from __future__ import print_function
-from six import iteritems
-from six.moves import range
 from numpy import arange
 
 import vtk
-from vtk import vtkTriangle
 
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -51,7 +48,7 @@ class STL_IO(object):
         #elem.SetNumberOfPoints(nnodes)
 
         assert nodes is not None
-        nnodes = nodes.shape[0]
+        unused_nnodes = nodes.shape[0]
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
         self.parent.log.info('xmax=%s xmin=%s' % (xmax, xmin))

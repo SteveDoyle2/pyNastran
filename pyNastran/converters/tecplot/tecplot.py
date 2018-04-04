@@ -188,7 +188,7 @@ class Tecplot(FortranFormat):
             line = tecplot_file.readline().strip()
             iblock = 0
             while 1:
-                header_lines, i, line = self.read_header_lines(tecplot_file, line)
+                header_lines, unused_i, line = self.read_header_lines(tecplot_file, line)
                 #print(header_lines)
                 headers_dict = _header_lines_to_header_dict(header_lines)
                 if headers_dict is None:
@@ -251,7 +251,7 @@ class Tecplot(FortranFormat):
         self.xyz = xyz
         self.results = results
 
-    def read_table(self, tecplot_file, iblock, headers_dict, line):
+    def read_table(self, tecplot_file, unused_iblock, headers_dict, line):
         """
         reads a space-separated tabular data block
         """
@@ -272,7 +272,7 @@ class Tecplot(FortranFormat):
                        nnodes, nelements,
                        xyz_list, hexas_list, tets_list, quads_list, tris_list,
                        results_list,
-                       data_packing=None, fe=None):
+                       data_packing=None, unused_fe=None):
         """
         reads:
           - ZONE E
@@ -1285,4 +1285,3 @@ def _header_lines_to_header_dict(header_lines):
 
 if __name__ == '__main__':
     main()
-

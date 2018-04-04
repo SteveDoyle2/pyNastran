@@ -171,7 +171,8 @@ class ComplexBarArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
@@ -216,13 +217,13 @@ class ComplexBarArray(OES_Object):
             line2,
         ]
         if self.is_sort1:
-            self._write_sort1_as_sort1(f, name, header, page_stamp, msg_temp, page_num,
+            self._write_sort1_as_sort1(f06_file, name, header, page_stamp, msg_temp, page_num,
                                        is_mag_phase=is_mag_phase)
         else:
             raise NotImplementedError()
         return page_num - 1
 
-    def _write_sort1_as_sort1(self, f, name, header, page_stamp, msg_temp, page_num,
+    def _write_sort1_as_sort1(self, f06_file, name, header, page_stamp, msg_temp, page_num,
                               is_mag_phase=False):
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
@@ -231,7 +232,7 @@ class ComplexBarArray(OES_Object):
             dt_line = ' %14s = %12.5E\n' % (name, dt)
             header[1] = dt_line
             msg = header + msg_temp
-            f.write('\n'.join(msg))
+            f06_file.write('\n'.join(msg))
 
             sa1 = self.data[itime, :, 0]
             sa2 = self.data[itime, :, 1]
@@ -254,16 +255,18 @@ class ComplexBarArray(OES_Object):
                  s1ai, s2ai, s3ai, s4ai, axiali,
                  s1bi, s2bi, s3bi, s4bi) = vals2
 
-                msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %s\n'
-                           ' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                               eid, s1ar, s2ar, s3ar, s4ar, axialr,
-                               '', s1ai, s2ai, s3ai, s4ai, axiali))
+                f06_file.write(
+                    '0%8i   %-13s  %-13s  %-13s  %-13s  %s\n'
+                    ' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        eid, s1ar, s2ar, s3ar, s4ar, axialr,
+                        '', s1ai, s2ai, s3ai, s4ai, axiali))
 
-                msg.append(' %8s   %-13s  %-13s  %-13s  %s\n'
-                           ' %8s   %-13s  %-13s  %-13s  %s\n' % (
-                               '', s1br, s2br, s3br, s4br,
-                               '', s1bi, s2bi, s3bi, s4bi))
-            f.write(page_stamp % page_num)
+                f06_file.write(
+                    ' %8s   %-13s  %-13s  %-13s  %s\n'
+                    ' %8s   %-13s  %-13s  %-13s  %s\n' % (
+                        '', s1br, s2br, s3br, s4br,
+                        '', s1bi, s2bi, s3bi, s4bi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 

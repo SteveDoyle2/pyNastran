@@ -108,6 +108,8 @@ def _get_ta(f):
     ta2 = k1 * f**4 / ((f**2 + p1**2)**2 * (f**2 + p4**2)**2)
     return ta1, ta2
 
+BUILTINS = ['del', 'eval', 'yield']
+
 class DEQATN(BaseCard):  # needs work...
     """
     Design Equation Defintion
@@ -455,6 +457,7 @@ def fortran_to_python(lines, default_values, comment=''):
         #print('--------------------')
         line = line.lower()
         #func_msg += '#i=%s\n' % i
+
         try:
             # f(x, y) = 10.
             # f(x, y) = abs(x) + y
@@ -471,7 +474,11 @@ def fortran_to_python(lines, default_values, comment=''):
                 raise SyntaxError(msg)
         f = f.strip()
         eq = eq.strip().rstrip(';')
+
         #print('f=%r eq=%r' % (f, eq))
+        for builtin in BUILTINS:
+            if builtin == eq:
+                eq = eq.replace(builtin, builtin + '_')
 
         if i == 0:
             func_name, func_msg, variables = write_function_header(
@@ -541,6 +548,9 @@ def write_function_header(func_header, eq, default_values, comment=''):
     func_name = func_name.strip(' ')
     variables = arguments.split(',')
 
+    if func_name in BUILTINS:
+        func_name += '_'
+
     if is_float:
         # f(a,b,c) = 1.
         #
@@ -570,6 +580,9 @@ def _write_function_line(func_name, variables, default_values):
     is_default = False
     #print('default_values = %s' % default_values)
     for var in variables:
+        if var in BUILTINS:
+            var += '_'
+
         if var in default_values:
             vals.append('%s=%s' % (var, default_values[var]))
             is_default = True
@@ -595,6 +608,8 @@ def _write_variables(variables):
     """type checks the inputs"""
     msg = '    try:\n'
     for var in variables:
+        if var == BUILTINS:
+            var += '_'
         #msg += "    assert isinstance(%s, float), '%s is not a float; type(%s)=%s' % (%s)")
         #msg += '        %s = float(%s)\n' % (var, var)
         msg += '        if isinstance(%s, (int, str)):\n' % var

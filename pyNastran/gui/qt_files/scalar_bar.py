@@ -38,7 +38,7 @@ class ScalarBar(object):
         self.is_shown = True
         self.is_horizontal = False
 
-        self.color_function.SetNanColor(0., 0., 0.)
+        #self.color_function.SetNanColor(0., 0., 0.)
         #self.color_function.SetColorSpaceToLab()
         #self.color_function.SetColorSpaceToRGB()
         #self.scalar_bar.SetDragable(True)

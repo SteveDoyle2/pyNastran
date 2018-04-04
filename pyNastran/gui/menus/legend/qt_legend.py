@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
 from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_format
 from pyNastran.gui.menus.legend.animation import AnimationWindow
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int as qt_version
 
 
 class LegendPropertiesWindow(PyDialog):
@@ -98,7 +98,7 @@ class LegendPropertiesWindow(PyDialog):
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
         self._default_is_shown = data['is_shown']
-        self._is_normals = data['is_normals']
+        self._is_fringe = data['is_fringe']
 
         self._update_defaults_to_blank()
 
@@ -138,7 +138,7 @@ class LegendPropertiesWindow(PyDialog):
                       default_data_format, default_scale, default_phase,
                       default_nlabels, default_labelsize,
                       default_ncolors, default_colormap,
-                      is_low_to_high, is_horizontal_scalar_bar, is_normals,
+                      is_low_to_high, is_horizontal_scalar_bar, is_fringe,
                       font_size=8):
         """
         We need to update the legend if there's been a result change request
@@ -172,7 +172,7 @@ class LegendPropertiesWindow(PyDialog):
             self._default_labelsize = default_labelsize
             self._default_ncolors = default_ncolors
             self._default_colormap = default_colormap
-            self._is_normals = is_normals
+            self._is_fringe = is_fringe
 
             if colormap is None:
                 colormap = 'jet'
@@ -254,45 +254,49 @@ class LegendPropertiesWindow(PyDialog):
 
             self.colormap_edit.setCurrentIndex(colormap_keys.index(str(colormap)))
 
-            # lots of hacking for the Normal vectors
-            enable = True
-            if self._is_normals:
-                enable = False
-
-            self.max.setVisible(enable)
-            self.min.setVisible(enable)
-            self.max_edit.setVisible(enable)
-            self.min_edit.setVisible(enable)
-            self.max_button.setVisible(enable)
-            self.min_button.setVisible(enable)
-
-            self.show_radio.setVisible(enable)
-            self.hide_radio.setVisible(enable)
-            self.low_to_high_radio.setVisible(enable)
-            self.high_to_low_radio.setVisible(enable)
-
-            self.format.setVisible(enable)
-            self.format_edit.setVisible(enable)
-            self.format_edit.setVisible(enable)
-            self.format_button.setVisible(enable)
-
-            self.nlabels.setVisible(enable)
-            self.nlabels_edit.setVisible(enable)
-            self.nlabels_button.setVisible(enable)
-
-            self.ncolors.setVisible(enable)
-            self.ncolors_edit.setVisible(enable)
-            self.ncolors_button.setVisible(enable)
-
-            self.grid2_title.setVisible(enable)
-            self.vertical_radio.setVisible(enable)
-            self.horizontal_radio.setVisible(enable)
-
-            self.colormap.setVisible(enable)
-            self.colormap_edit.setVisible(enable)
-            self.colormap_button.setVisible(enable)
-
+            self._set_legend_fringe(self._is_fringe)
             self.on_apply()
+
+    def _set_legend_fringe(self, is_fringe):
+        """show/hide buttons if we dont have a result"""
+        # lots of hacking for the Normal vectors
+        self._is_fringe = is_fringe
+        enable = True
+        if not is_fringe:
+            enable = False
+
+        self.max.setVisible(enable)
+        self.min.setVisible(enable)
+        self.max_edit.setVisible(enable)
+        self.min_edit.setVisible(enable)
+        self.max_button.setVisible(enable)
+        self.min_button.setVisible(enable)
+
+        self.show_radio.setVisible(enable)
+        self.hide_radio.setVisible(enable)
+        self.low_to_high_radio.setVisible(enable)
+        self.high_to_low_radio.setVisible(enable)
+
+        self.format.setVisible(enable)
+        self.format_edit.setVisible(enable)
+        self.format_edit.setVisible(enable)
+        self.format_button.setVisible(enable)
+
+        self.nlabels.setVisible(enable)
+        self.nlabels_edit.setVisible(enable)
+        self.nlabels_button.setVisible(enable)
+
+        self.ncolors.setVisible(enable)
+        self.ncolors_edit.setVisible(enable)
+        self.ncolors_button.setVisible(enable)
+
+        self.grid2_title.setVisible(enable)
+        self.vertical_radio.setVisible(enable)
+        self.horizontal_radio.setVisible(enable)
+
+        self.colormap.setVisible(enable)
+        self.colormap_edit.setVisible(enable)
+        self.colormap_button.setVisible(enable)
 
     def create_widgets(self):
         """creates the menu objects"""
@@ -405,7 +409,7 @@ class LegendPropertiesWindow(PyDialog):
 
         # --------------------------------------------------------------
 
-        if self._is_normals:
+        if not self._is_fringe:
             self.max.hide()
             self.min.hide()
             self.max_edit.hide()
@@ -720,6 +724,16 @@ class LegendPropertiesWindow(PyDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
+    def show_legend(self):
+        self._set_legend(True)
+
+    def hide_legend(self):
+        self._set_legend(False)
+
+    def _set_legend(self, is_shown):
+        self.show_radio.setChecked(is_shown)
+        self.hide_radio.setChecked(not is_shown)
+
     def on_validate(self):
         name_value, flag0 = self.check_name(self.name_edit)
         min_value, flag1 = self.check_float(self.min_edit)
@@ -827,7 +841,7 @@ def main(): # pragma: no cover
         'default_format' : '%s',
         'format' : '%g',
 
-        'is_normals': False,
+        'is_fringe': False,
         'is_low_to_high': True,
         'is_discrete' : False,
         'is_horizontal' : False,

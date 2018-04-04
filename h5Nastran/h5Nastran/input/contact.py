@@ -5,10 +5,11 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef
+from .input_table import InputTable, TableDef
+from ..h5nastrannode import H5NastranNode
 
 
-class Contact(object):
+class Contact(H5NastranNode):
     def __init__(self, h5n, input):
         self._h5n = h5n
         self._input = input
@@ -50,13 +51,13 @@ class Contact(object):
 ########################################################################################################################
 
 
-class BCBDPRP(CardTable):
+class BCBDPRP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONTACT/BCBDPRP')
 
 ########################################################################################################################
 
 
-class BCBMRAD(CardTable):
+class BCBMRAD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONTACT/BCBMRAD/IDENTITY')
 
 ########################################################################################################################
@@ -68,37 +69,37 @@ class BCBMRAD(CardTable):
 ########################################################################################################################
 
 
-class BCBODY1(CardTable):
+class BCBODY1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONTACT/BCBODY1')
 
 ########################################################################################################################
 
 
-class BCBZIER(CardTable):
+class BCBZIER(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONTACT/BCBZIER/IDENTITY')
 
 ########################################################################################################################
 
 
-class BCHANGE(CardTable):
+class BCHANGE(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONTACT/BCHANGE/IDENTITY')
 
 ########################################################################################################################
 
 
-class BCMOVE(CardTable):
+class BCMOVE(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONTACT/BCMOVE')
 
 ########################################################################################################################
 
 
-class BCNURB2(CardTable):
+class BCNURB2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONTACT/BCNURB2/IDENTITY')
 
 ########################################################################################################################
 
 
-class BCNURBS(CardTable):
+class BCNURBS(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONTACT/BCNURBS/IDENTITY')
 
 ########################################################################################################################

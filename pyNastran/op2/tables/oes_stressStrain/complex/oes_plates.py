@@ -320,7 +320,8 @@ class ComplexPlateArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f06, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
@@ -332,30 +333,30 @@ class ComplexPlateArray(OES_Object):
             dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
             header[1] = dt_line
             msg = header + msg_temp
-            f06.write('\n'.join(msg))
+            f06_file.write('\n'.join(msg))
 
             if self.element_type == 144: # CQUAD4 bilinear
-                self._write_f06_quad4_bilinear_transient(f06, itime, 4, is_mag_phase, 'CEN/4')
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 4, is_mag_phase, 'CEN/4')
             elif self.element_type == 33:  # CQUAD4 linear
-                self._write_f06_tri3_transient(f06, itime, 4, is_mag_phase, 'CEN/4')
+                self._write_f06_tri3_transient(f06_file, itime, 4, is_mag_phase, 'CEN/4')
             elif self.element_type == 74: # CTRIA3
-                self._write_f06_tri3_transient(f06, itime, 3, is_mag_phase, 'CEN/3')
+                self._write_f06_tri3_transient(f06_file, itime, 3, is_mag_phase, 'CEN/3')
             elif self.element_type == 64:  #CQUAD8
-                self._write_f06_quad4_bilinear_transient(f06, itime, 5, is_mag_phase, 'CEN/8')
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 5, is_mag_phase, 'CEN/8')
             elif self.element_type == 82:  # CQUADR
-                self._write_f06_quad4_bilinear_transient(f06, itime, 5, is_mag_phase, 'CEN/8')
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 5, is_mag_phase, 'CEN/8')
             elif self.element_type == 70:  # CTRIAR
-                self._write_f06_quad4_bilinear_transient(f06, itime, 3, is_mag_phase, 'CEN/3')
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 3, is_mag_phase, 'CEN/3')
             elif self.element_type == 75:  # CTRIA6
-                self._write_f06_quad4_bilinear_transient(f06, itime, 3, is_mag_phase, 'CEN/6')
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 3, is_mag_phase, 'CEN/6')
             else:
                 raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
-            f06.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
-    def _write_f06_tri3_transient(self, f06, itime, n, is_magnitude_phase, cen):
+    def _write_f06_tri3_transient(self, f06_file, itime, n, is_magnitude_phase, cen):
         """
         CQUAD4 linear
         CTRIA3
@@ -375,12 +376,14 @@ class ComplexPlateArray(OES_Object):
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
 
             if ilayer0:    # TODO: assuming 2 layers?
-                f06.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06_file.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
+                    eid, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             else:
-                f06.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % ('', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06_file.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
+                    '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             ilayer0 = not ilayer0
 
-    def _write_f06_quad4_bilinear_transient(self, f06, itime, n, is_magnitude_phase, cen):
+    def _write_f06_quad4_bilinear_transient(self, f06_file, itime, n, is_magnitude_phase, cen):
         """
         CQUAD4 bilinear
         CQUAD8
@@ -402,11 +405,14 @@ class ComplexPlateArray(OES_Object):
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
 
             if node == 0 and ilayer0:
-                f06.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06_file.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
+                    eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             elif ilayer0:    # TODO: assuming 2 layers?
-                f06.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % ('', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06_file.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
+                    '', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             else:
-                f06.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % ('', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                f06_file.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % (
+                    '', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             ilayer0 = not ilayer0
 
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):

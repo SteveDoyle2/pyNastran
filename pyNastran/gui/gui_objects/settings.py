@@ -48,6 +48,11 @@ class Settings(object):
         self.annotation_color = BLACK
         self.text_color = BLACK
 
+        self.show_info = True
+        self.show_debug = True
+        self.show_gui = True
+        self.show_command = True
+
         # int
         self.annotation_size = 18
         self.font_size = 8
@@ -62,6 +67,11 @@ class Settings(object):
         self.background_color = GREY
         self.annotation_color = BLACK
         self.text_color = BLACK
+
+        self.show_info = True
+        self.show_debug = True
+        self.show_gui = True
+        self.show_command = True
 
         # int
         self.annotation_size = 18
@@ -89,20 +99,26 @@ class Settings(object):
         # this is the gui font
         self._set_setting(settings, setting_keys, ['font_size'], self.font_size)
 
+        # the info/debug/gui/command preferences
+        self._set_setting(settings, setting_keys, ['show_info'], self.show_info, True)
+        self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug, True)
+        self._set_setting(settings, setting_keys, ['show_gui'], self.show_gui, True)
+        self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True)
+
         # the vtk panel background color
-        self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'], GREY)
+        self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'], GREY, auto_type=True)
 
         # this is for the 3d annotation
-        self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'], BLACK)
-        self._set_setting(settings, setting_keys, ['annotation_size', 'annotation_size'], 18) # int
+        self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'], BLACK, auto_type=True)
+        self._set_setting(settings, setting_keys, ['annotation_size'], 18) # int
         if isinstance(self.annotation_size, float):
             # throw the float in the trash as it's from an old version of vtk
             self.annotation_size = 18
 
         # this is the text in the lower left corner
-        self._set_setting(settings, setting_keys, ['text_color', 'textColor'], BLACK)
+        self._set_setting(settings, setting_keys, ['text_color', 'textColor'], BLACK, auto_type=True)
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],
-                                         screen_shape_default, save=False)
+                                         screen_shape_default, save=False, auto_type=True)
 
         #try:
             #screen_shape = settings.value("screen_shape", screen_shape_default)
@@ -118,8 +134,9 @@ class Settings(object):
         #w = screen_shape.width()
         #h = screen_shape.height()
         #try:
-        self.parent.resize(screen_shape[0], screen_shape[1])
-        width, height = screen_shape
+        if screen_shape:
+            self.parent.resize(screen_shape[0], screen_shape[1])
+            #width, height = screen_shape
 
         font = QtGui.QFont()
         font.setPointSize(self.font_size)
@@ -137,7 +154,7 @@ class Settings(object):
         #except TypeError:
             #self.resize(1100, 700)
 
-    def _get_setting(self, settings, setting_keys, setting_names, default):
+    def _get_setting(self, settings, setting_keys, setting_names, default, auto_type=False):
         """
         helper method for ``reapply_settings``
 
@@ -155,17 +172,42 @@ class Settings(object):
         if pull_name is None:
             value = default
         else:
-            value = settings.value(pull_name, default)
+            try:
+                value = settings.value(pull_name, default)
+            except TypeError:
+                print('couldnt load %s; using default' % pull_name)
+                value = default
+
+        if value is None:
+            print('couldnt load %s; using default' % pull_name)
+            assert default is not None, pull_name
+            value = default
+        assert value is not None, pull_name
+
+        def isfloat(value):
+            try:
+                float(value)
+                return True
+            except ValueError:
+                return False
+
+        if auto_type and isinstance(value, list):
+            if value[0].isdigit():
+                value = [int(valuei) for valuei in value]
+            elif isfloat(value[0]):
+                value = [float(valuei) for valuei in value]
         return value
 
-    def _set_setting(self, settings, setting_keys, setting_names, default, save=True):
+    def _set_setting(self, settings, setting_keys, setting_names, default,
+                     save=True, auto_type=False):
         """
         helper method for ``reapply_settings``
         """
         set_name = setting_names[0]
-        value = self._get_setting(settings, setting_keys, setting_names, default)
+        value = self._get_setting(settings, setting_keys, setting_names, default,
+                                  auto_type=auto_type)
         if save:
-            setattr(self.parent, set_name, value)
+            setattr(self, set_name, value)
         return value
 
     def save(self, settings):
@@ -177,6 +219,11 @@ class Settings(object):
         settings.setValue('background_color', self.background_color)
         settings.setValue('annotation_color', self.annotation_color)
         settings.setValue('text_color', self.text_color)
+
+        settings.setValue('show_info', self.show_info)
+        settings.setValue('show_debug', self.show_debug)
+        settings.setValue('show_gui', self.show_gui)
+        settings.setValue('show_command', self.show_command)
 
         # int
         settings.setValue('font_size', self.font_size)

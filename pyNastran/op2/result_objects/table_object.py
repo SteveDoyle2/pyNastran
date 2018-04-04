@@ -26,11 +26,10 @@ import copy
 from struct import Struct, pack
 import warnings
 
-from six import iteritems
 from six.moves import zip, range
 
 import numpy as np
-from numpy import array, zeros, abs, angle, float32, searchsorted, unique, where
+from numpy import zeros, abs, angle, float32, searchsorted, unique, where
 from numpy import allclose, asarray, vstack, swapaxes, hstack
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -50,8 +49,8 @@ def append_sort1_sort2(data1, data2, to_sort1=True):
     assert len(data2.shape) == 3, data2.shape
     ntimes1, nnids1 = data1.shape[:2]
     nnids2, ntimes2 = data2.shape[:2]
-    ntimes = ntimes1 + ntimes2
-    nnids = nnids1 + nnids2
+    unused_ntimes = ntimes1 + ntimes2
+    unused_nnids = nnids1 + nnids2
     assert ntimes1 == ntimes2
     if to_sort1:
         out = hstack([
@@ -176,7 +175,7 @@ class TableArray(ScalarObject):  # displacement style table
             return self._get_stats_short()
         msg = []
 
-        ntimesi, ntotal = self.data.shape[:2]
+        unused_ntimesi, ntotal = self.data.shape[:2]
         ntimes = len(self._times)
         nnodes = self.node_gridtype.shape[0]
 
@@ -308,8 +307,8 @@ class TableArray(ScalarObject):  # displacement style table
                 import xarray
                 #a = xarray.DataArray(self.data, items=column_values,
                                      #major_axis=node_gridtype, minor_axis=headers)
-                a = xarray.DataArray(self.data, coords=coords)
-                #print(a)
+                unused_a = xarray.DataArray(self.data, coords=coords)
+                #print(unused_a)
             else:
                 self.data_frame.columns.names = column_names
                 self.data_frame.index.names = ['NodeID', 'Type', 'Item']
@@ -419,13 +418,13 @@ class RealTableArray(TableArray):
     def data_type(self):
         return 'float32'
 
-    def _write_table_3(self, f, fascii, itable=-3, itime=0):
+    def _write_table_3(self, op2_file, fascii, itable=-3, itime=0):
         import inspect
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         fascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        f.write(pack('12i', *[4, itable, 4,
+        op2_file.write(pack('12i', *[4, itable, 4,
                               4, 1, 4,
                               4, 0, 4,
                               4, 146, 4,
@@ -469,11 +468,11 @@ class RealTableArray(TableArray):
         data = [584] + table3 + [584]
         fmt = 'i' + ftable3 + 'i'
         #print(fmt)
-        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
+        #op2_file.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         fascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        f.write(pack(fmt, *data))
+        op2_file.write(pack(fmt, *data))
 
-    def write_op2(self, f, fascii, itable, date, is_mag_phase=False, endian='>'):
+    def write_op2(self, op2_file, fascii, itable, date, is_mag_phase=False, endian='>'):
         import inspect
         assert self.table_name in ['OUGV1', 'OQMG1', 'OQG1'], self.table_name
 
@@ -493,7 +492,7 @@ class RealTableArray(TableArray):
             op2_format = endian + b'2i6f' * self.ntimes
         s = Struct(op2_format)
 
-        node = self.node_gridtype[:, 0]
+        unused_node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
         #format_table4_1 = Struct(self._endian + b'15i')
         #format_table4_2 = Struct(self._endian + b'3i')
@@ -510,13 +509,13 @@ class RealTableArray(TableArray):
         assert nnodes > 1, nnodes
         assert ntotal > 1, ntotal
 
-        device_code = self.device_code
+        unused_device_code = self.device_code
         fascii.write('  ntimes = %s\n' % self.ntimes)
 
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
         for itime in range(self.ntimes):
-            self._write_table_3(f, fascii, itable, itime)
+            self._write_table_3(op2_file, fascii, itable, itime)
 
             # record 4
             header = [4, -4, 4,
@@ -524,7 +523,7 @@ class RealTableArray(TableArray):
                       4, 0, 4,
                       4, ntotal, 4,
                       4*ntotal]
-            f.write(pack(b'%ii' % len(header), *header))
+            op2_file.write(pack(b'%ii' % len(header), *header))
             fascii.write('r4 [4, 0, 4]\n')
             fascii.write('r4 [4, %s, 4]\n' % (itable-1))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
@@ -539,18 +538,18 @@ class RealTableArray(TableArray):
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
                 data = [node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i]
                 fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
-                f.write(s.pack(*data))
+                op2_file.write(s.pack(*data))
 
             itable -= 2
             header = [4 * ntotal,]
-            f.write(pack(b'i', *header))
+            op2_file.write(pack(b'i', *header))
             fascii.write('footer = %s' % header)
         header = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4,
         ]
-        f.write(pack(b'%ii' % len(header), *header))
+        op2_file.write(pack(b'%ii' % len(header), *header))
         return itable
 
 
@@ -562,7 +561,7 @@ class RealTableArray(TableArray):
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
         itime = 0
-        times = self._times
+        unused_times = self._times
 
         # sort1 as sort1
         for itime in range(self.ntimes):
@@ -574,17 +573,17 @@ class RealTableArray(TableArray):
             r2 = self.data[itime, :, 4]
             r3 = self.data[itime, :, 5]
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
-                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                unused_sgridtype = self.recast_gridtype_as_string(gridtypei)
                 csv_file.write('%s,' * 9 % (itime, node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i))
                 csv_file.write('\n')
         return
 
-    def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words,
+    def _write_f06_block(self, words, header, page_stamp, page_num, f06_file, write_words,
                          is_mag_phase=False, is_sort1=True):
         if write_words:
             words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.getTableMarker()
-        f.write(''.join(header + words))
+        f06_file.write(''.join(header + words))
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
@@ -599,11 +598,12 @@ class RealTableArray(TableArray):
             vals = [t1i, t2i, t3i, r1i, r2i, r3i]
             vals2 = write_floats_13e(vals)
             (dx, dy, dz, rx, ry, rz) = vals2
-            f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
-        f.write(page_stamp % page_num)
+            f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+        f06_file.write(page_stamp % page_num)
         return page_num
 
-    def _write_sort1_as_sort2(self, f, page_num, page_stamp, header, words):
+    def _write_sort1_as_sort2(self, f06_file, page_num, page_stamp, header, words):
         nodes = self.node_gridtype[:, 0]
         gridtypes = self.node_gridtype[:, 1]
         times = self._times
@@ -617,27 +617,27 @@ class RealTableArray(TableArray):
             r3 = self.data[:, inode, 5].ravel()
 
             header[1] = ' POINT-ID = %10i\n' % node_id
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype in ['G', 'H', 'L']:
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    f06_file.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
-                    f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
+                    f06_file.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
                 else:
                     raise NotImplementedError(sgridtype)
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, words):
+    def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, words):
         nodes = self.node_gridtype[:, 0]
         gridtypes = self.node_gridtype[:, 1]
-        times = self._times
+        unused_times = self._times
 
         for itime in range(self.ntimes):
             dt = self._times[itime]
@@ -652,23 +652,24 @@ class RealTableArray(TableArray):
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nodes, gridtypes, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype in ['G', 'H', 'L']:
-                    f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                    f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        node_id, sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
-                    f.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
+                    f06_file.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
                 else:
                     raise NotImplementedError(sgridtype)
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def _write_sort2_as_sort2(self, f, page_num, page_stamp, header, words):
+    def _write_sort2_as_sort2(self, f06_file, page_num, page_stamp, header, words):
         nodes = self.node_gridtype[:, 0]
         gridtypes = self.node_gridtype[:, 1]
         times = self._times
@@ -681,24 +682,24 @@ class RealTableArray(TableArray):
             r3 = self.data[inode, :, 5]
 
             header[1] = ' POINT-ID = %10i\n' % node_id
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype in ['G', 'H', 'L']:
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    f06_file.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
-                    f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
+                    f06_file.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
                 else:
                     raise NotImplementedError(sgridtype)
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f, write_words,
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06_file, write_words,
                                    is_mag_phase=False, is_sort1=True):
         if write_words:
             words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -710,11 +711,11 @@ class RealTableArray(TableArray):
         is_sort2 = not is_sort1
         if self.is_sort1 or self.nonlinear_factor is None:
             if is_sort2 and self.nonlinear_factor is not None:
-                page_num = self._write_sort1_as_sort2(f, page_num, page_stamp, header, words)
+                page_num = self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, words)
             else:
-                page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, words)
+                page_num = self._write_sort1_as_sort1(f06_file, page_num, page_stamp, header, words)
         else:
-            page_num = self._write_sort2_as_sort2(f, page_num, page_stamp, header, words)
+            page_num = self._write_sort2_as_sort2(f06_file, page_num, page_stamp, header, words)
         return page_num - 1
 
     def extract_xyplot(self, node_ids, index):
@@ -780,10 +781,10 @@ class ComplexTableArray(TableArray):
     def data_type(self):
         return 'complex64'
 
-    #def _write_f06_block(self, words, header, page_stamp, page_num, f, is_mag_phase):
-        #self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+    #def _write_f06_block(self, words, header, page_stamp, page_num, f06_file, is_mag_phase):
+        #self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file, is_mag_phase, is_sort1)
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f,
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f06_file,
                                    is_mag_phase, is_sort1):
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
@@ -798,16 +799,16 @@ class ComplexTableArray(TableArray):
         if is_sort1_table:
             if is_sort1:
                 words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-                page_num = self.write_sort1_as_sort1(f, page_num, page_stamp, header, words, is_mag_phase)
+                page_num = self.write_sort1_as_sort1(f06_file, page_num, page_stamp, header, words, is_mag_phase)
             else:
                 words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
-                page_num = self.write_sort1_as_sort2(f, page_num, page_stamp, header, words, is_mag_phase)
+                page_num = self.write_sort1_as_sort2(f06_file, page_num, page_stamp, header, words, is_mag_phase)
         else:
             words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
-            page_num = self.write_sort2_as_sort2(f, page_num, page_stamp, header, words, is_mag_phase)
+            page_num = self.write_sort2_as_sort2(f06_file, page_num, page_stamp, header, words, is_mag_phase)
         return page_num - 1
 
-    def write_sort1_as_sort1(self, f, page_num, page_stamp, header, words, is_mag_phase):
+    def write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
         assert self.ntimes == len(self._times), 'ntimes=%s len(self._times)=%s' % (self.ntimes, self._times)
         words_orig = copy.deepcopy(words)
 
@@ -842,7 +843,7 @@ class ComplexTableArray(TableArray):
             r3 = self.data[itime, :, 5]
 
             header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
@@ -850,20 +851,20 @@ class ComplexTableArray(TableArray):
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 if sgridtype == 'G':
-                    f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                            '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                    f06_file.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                                   '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                       node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                       '', '', dxi, dyi, dzi, rxi, ryi, rzi))
                 elif sgridtype == 'S':
-                    f.write('0 %12i %6s     %-13s\n'
-                            '  %12s %6s     %-13s\n' % (node_id, sgridtype, dxr, '', '', dxi))
+                    f06_file.write('0 %12i %6s     %-13s\n'
+                                   '  %12s %6s     %-13s\n' % (node_id, sgridtype, dxr, '', '', dxi))
                 else:
                     raise NotImplementedError(sgridtype)
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def write_sort1_as_sort2(self, f, page_num, page_stamp, header, words, is_mag_phase):
+    def write_sort1_as_sort2(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
 
@@ -882,7 +883,7 @@ class ComplexTableArray(TableArray):
                 raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
 
             header[2] = ' POINT-ID = %10i\n' % node_id
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
@@ -892,22 +893,22 @@ class ComplexTableArray(TableArray):
                 sdt = write_float_12e(dt)
                 #if not is_all_zeros:
                 if sgridtype == 'G':
-                    f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                            '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                    f06_file.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                                   '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                       sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                       '', '', dxi, dyi, dzi, rxi, ryi, rzi))
                 elif sgridtype == 'S':
-                    f.write('0 %12s %6s     %-13s\n'
-                            '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
+                    f06_file.write('0 %12s %6s     %-13s\n'
+                                   '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
                 else:
                     msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
                         node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
                     raise NotImplementedError(msg)
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 
-    def write_sort2_as_sort2(self, f, page_num, page_stamp, header, words, is_mag_phase):
+    def write_sort2_as_sort2(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
 
@@ -925,7 +926,7 @@ class ComplexTableArray(TableArray):
                 raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
 
             header[2] = ' POINT-ID = %10i\n' % node_id
-            f.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
@@ -935,18 +936,18 @@ class ComplexTableArray(TableArray):
                 sdt = write_float_12e(dt)
                 #if not is_all_zeros:
                 if sgridtype == 'G':
-                    f.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                            '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                    f06_file.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                                   '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                       sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                       '', '', dxi, dyi, dzi, rxi, ryi, rzi))
                 elif sgridtype == 'S':
-                    f.write('0 %12s %6s     %-13s\n'
-                            '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
+                    f06_file.write('0 %12s %6s     %-13s\n'
+                                   '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
                 else:
                     msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
                         node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
                     raise NotImplementedError(msg)
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 

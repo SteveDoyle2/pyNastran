@@ -84,9 +84,9 @@ class TetgenIO(object):
         self.parent.scalarBar.Modified()
 
         cases = {}
-        ID = 1
+        #unused_ID = 1
 
         self.parent._finish_results_io(cases)
 
-    def _fill_tetgen_case(self, cases, ID, elements):
+    def _fill_tetgen_case(self, cases, ID, unused_elements):
         return cases

@@ -5,16 +5,7 @@ from qtpy.QtWidgets import (
     QApplication, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
     QHBoxLayout, QVBoxLayout, QGridLayout)
 
-from pyNastran.gui.qt_version import qt_version
-#if qt_version == 4:
-    #QString = QtCore.QString
-#elif qt_version == 5:
-    #from six import text_type as QString
-#elif qt_version == 'pyside':
-    #from six import text_type as QString
-#else:
-    #raise NotImplementedError('qt_version = %r' % qt_version)
-
+from pyNastran.gui.qt_version import qt_int as qt_version
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 
 

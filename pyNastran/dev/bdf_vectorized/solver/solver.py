@@ -1899,7 +1899,7 @@ class Solver(OP2):
 
         #dofs_0 = [nid=2, 1] -> searchsorted(nids, nid)[0]
 
-        #for nid in sorted(self.nodes.iterkeys()):
+        #for nid in sorted(iterkeys(self.nodes)):
             #nid_dof_mapper[]
 
         self.log.info('start calculating xyz_cid0')

@@ -889,11 +889,12 @@ class TRIM(BaseCard):
                     '(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
                     'nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
                     'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s '
-                    'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+                    'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s\n' % (
                         ndelta,
                         naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
                         naelink, nsuport_dofs, nsuport1_dofs)
                 )
+                msg += str(self)
                 raise RuntimeError(msg)
 
     def cross_reference(self, model):

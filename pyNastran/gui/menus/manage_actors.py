@@ -7,14 +7,14 @@ http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-wo
 """
 from __future__ import print_function
 from pyNastran.gui.limits import MAX_POINT_SIZE, MAX_LINE_WIDTH
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int as qt_version
 
-from qtpy.QtCore import Qt, QVariant
+from qtpy.QtCore import Qt#, QVariant
 from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QTableView, QApplication,
     QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
-    QButtonGroup, QColorDialog, QAbstractItemView, QHeaderView,
+    QButtonGroup, QColorDialog, QAbstractItemView,
 )
 
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
@@ -186,10 +186,13 @@ class EditGeometryProperties(PyDialog):
         self.keys = sorted(data.keys())
         self.keys = data.keys()
         keys = self.keys
-        #nrows = len(keys)
-        self.active_key = 'main'
-
         items = list(keys)
+
+        #nrows = len(keys)
+        active_key = 'main'
+        if 'main' not in items:
+            active_key = items[0]
+        self.active_key = active_key
 
         header_labels = ['Groups']
         table_model = Model(items, header_labels, self)
@@ -240,6 +243,12 @@ class EditGeometryProperties(PyDialog):
                                       "background-color: rgb(%s, %s, %s);" % tuple(color) +
                                       #"border:1px solid rgb(255, 170, 255); "
                                       "}")
+
+        self.representation_label = QLabel('Representation:')
+        self.checkbox_wire = QCheckBox('Wireframe')
+        self.checkbox_surf = QCheckBox('Surface/Solid')
+        print("representation = %s" % self.representation)
+        #self.check_point = QCheckBox()
 
         self.use_slider = True
         self.is_opacity_edit_active = False
@@ -521,7 +530,7 @@ class EditGeometryProperties(PyDialog):
                         show_points = True
 
                     show_line_width = False
-                    if self.representation in ['wire', 'wire+point', 'bar', 'toggle']:
+                    if self.representation in ['wire', 'wire+point', 'wire+surf', 'bar', 'toggle']:
                         show_line_width = True
 
                     if representation == 'bar':
@@ -610,6 +619,10 @@ class EditGeometryProperties(PyDialog):
             grid.addWidget(self.bar_scale_edit, irow, 1)
         irow += 1
 
+        wire_surf_checkboxes = QButtonGroup(self)
+        wire_surf_checkboxes.addButton(self.checkbox_wire)
+        wire_surf_checkboxes.addButton(self.checkbox_surf)
+
         checkboxs = QButtonGroup(self)
         checkboxs.addButton(self.checkbox_show)
         checkboxs.addButton(self.checkbox_hide)
@@ -619,9 +632,15 @@ class EditGeometryProperties(PyDialog):
         vbox.addLayout(grid)
 
         vbox1 = QVBoxLayout()
-        vbox1.addWidget(self.checkbox_show)
-        vbox1.addWidget(self.checkbox_hide)
-        vbox.addLayout(vbox1)
+        vbox1.addWidget(self.checkbox_wire)
+        vbox1.addWidget(self.checkbox_surf)
+
+        vbox2 = QVBoxLayout()
+        vbox2.addWidget(self.checkbox_show)
+        vbox2.addWidget(self.checkbox_hide)
+
+        #vbox.addLayout(vbox1)
+        vbox.addLayout(vbox2)
 
         vbox.addStretch()
         #vbox.addWidget(self.check_apply)
@@ -865,6 +884,7 @@ def main():  # pragma: no cover
         'toggle' : AltGeometry(parent, 'toggle', color=green, line_width=3, opacity=0.2, representation='toggle'),
         'wire' : AltGeometry(parent, 'wire', color=purple, line_width=4, opacity=0.3, representation='wire'),
         'wire+point' : AltGeometry(parent, 'wire+point', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+point'),
+        'wire+surf' : AltGeometry(parent, 'wire+surf', display='surface', color=blue, line_width=2, opacity=0.1, bar_scale=1.0, representation='wire+surf'),
         'main' : AltGeometry(parent, 'main', color=red, line_width=1, opacity=0.0, representation='main'),
         'point' : AltGeometry(parent, 'point', color=blue, opacity=0.1, representation='point'),
         'surface' : AltGeometry(parent, 'surface', color=blue, opacity=0.1, representation='surface'),

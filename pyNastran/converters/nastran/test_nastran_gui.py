@@ -1,6 +1,7 @@
 """tests the NastranIO class"""
 import os
 import unittest
+import numpy as np
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_io import NastranIO
 import pyNastran
@@ -366,6 +367,8 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbeaml_l.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        total_length = test.model.get_length_breakdown()[100]
+        assert np.allclose(total_length, 100.)
 
     def test_gui_thermal_01(self):
         """tests thermal"""
@@ -406,6 +409,12 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(nod_filename)
+
+    def test_gui_axi(self):
+        """tests axisymmetric elements"""
+        bdf_filename = os.path.join(MODEL_PATH, 'axisymmetric', 'model.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
 
 #def test_bottle():  # pragma: no cover
     #"""

@@ -16,7 +16,7 @@ class OrthotropicLaminate(object):
     
     @classmethod
     def from_bdf(cls, bdf):
-        # type: (BDF) -> List[OrthotropicLaminate]
+        # type: (BDF) -> Dict[int, OrthotropicLaminate]
     
         properties = bdf.properties
         
@@ -28,7 +28,7 @@ class OrthotropicLaminate(object):
                 
         pids = sorted(pcomps.keys())
         
-        results = []  # type: List[OrthotropicLaminate]
+        results = {}  # type: Dict[int, OrthotropicLaminate]
         
         for pid in pids:
             pcomp = pcomps[pid]
@@ -44,14 +44,14 @@ class OrthotropicLaminate(object):
             for i in range(len(plies)):
                 mid, t, theta, sout = plies[i]
                 ply = stackup[i]
-            
+
                 ply.material.from_bdf(bdf, mid)
                 ply.thickness = t
                 ply.orientation = theta
                 
             laminate.update()
             
-            results.append(laminate)
+            results[pid] = laminate
             
         return results
     

@@ -978,7 +978,7 @@ class TestOP2(Tester):
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
-        isubcases = [(1, 1, 1, 0, ''), (1, 8, 1, 0, '')]
+        isubcases = [(1, 1, 1, 0, 0, ''), (1, 8, 1, 0, 0, '')]
         isubcase = isubcases[1]
 
         try:
@@ -1596,6 +1596,11 @@ class TestOP2(Tester):
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         op2 = read_op2_geom(op2_filename, debug=False)
 
+    def test_ogs(self):
+        """test grid_point_stresses"""
+        op2_filename = os.path.join(MODEL_PATH, 'ogs', 'ogs.op2')
+        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        op2 = read_op2_geom(op2_filename, xref=False, debug=False)
 
 if __name__ == '__main__':  # pragma: no cover
     ON_RTD = os.environ.get('READTHEDOCS', None) == 'True'

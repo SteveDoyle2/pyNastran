@@ -5,10 +5,11 @@ from six.moves import range
 import tables
 import numpy as np
 
-from .card_table import CardTable, TableDef, TableData
+from .input_table import InputTable, TableDef
+from ..h5nastrannode import H5NastranNode
 
 
-class Constraint(object):
+class Constraint(H5NastranNode):
     def __init__(self, h5n, input):
         self._h5n = h5n
         self._input = input
@@ -64,193 +65,317 @@ class Constraint(object):
 
     def path(self):
         return self._input.path() + ['CONSTRAINT']
-
-    def read(self):
-        for key, item in iteritems(self.__dict__):
-            if key.startswith('_'):
-                continue
-            try:
-                item.read()
-            except AttributeError:
-                pass
+    
 
 ########################################################################################################################
 
 
-class AELINK(CardTable):
+class AELINK(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/AELINK/IDENTITY')
 
 ########################################################################################################################
 
 
-class CSSCHD(CardTable):
+class CSSCHD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/CSSCHD')
 
 ########################################################################################################################
 
 
-class CYSUP(CardTable):
+class CYSUP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/CYSUP')
 
 ########################################################################################################################
 
 
-class DEFORM(CardTable):
+class DEFORM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/DEFORM')
 
 ########################################################################################################################
 
 
-class GRDSET(CardTable):
+class GRDSET(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/GRDSET')
 
 ########################################################################################################################
 
 
-class MPC(CardTable):
+class MPC(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/MPC/IDENTITY')
+
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
+
+        gca = {'IDENTITY': {'G': [], 'C': [], 'A': []}}
+
+        result = {
+            'IDENTITY': {'SID': [], 'G': [], 'C': [], 'A': [], 'GCA_POS': [], 'GCA_LEN': [], 'DOMAIN_ID': []},
+            'GCA': gca,
+            '_subtables': ['GCA']
+        }
+
+        gca = gca['IDENTITY']
+
+        _g = gca['G']
+        _c = gca['C']
+        _a = gca['A']
+        identity = result['IDENTITY']
+        sid = identity['SID']
+        g = identity['G']
+        c = identity['C']
+        a = identity['A']
+        gca_pos = identity['GCA_POS']
+        gca_len = identity['GCA_LEN']
+
+        pos = 0
+
+        for card_id in card_ids:
+            card_list = sorted(cards[card_id], key=lambda i: i.nodes[0])
+
+            for card in card_list:
+                sid.append(card.conid)
+                nodes = list(card.nodes)
+                g1 = nodes[0]
+                nodes = nodes[1:]
+                comps = list(card.components)
+                c1 = comps[0]
+                comps = comps[1:]
+                coefs = list(card.coefficients)
+                a1 = coefs[0]
+                coefs = coefs[1:]
+                g.append(g1)
+                c.append(c1)
+                a.append(a1)
+                gca_pos.append(pos)
+                _len = len(nodes)
+                gca_len.append(_len)
+                pos += _len
+                _g.extend(nodes)
+                _c.extend(comps)
+                _a.extend(coefs)
+
+        return result
+
 
 ########################################################################################################################
 
 
-class MPCADD(CardTable):
+class MPCADD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/MPCADD/IDENTITY')
 
 ########################################################################################################################
 
 
-class MPCAX(CardTable):
+class MPCAX(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/MPCAX/IDENTITY')
 
 ########################################################################################################################
 
 
-class MPCD(CardTable):
+class MPCD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/MPCD')
 
 ########################################################################################################################
 
 
-class MPCY(CardTable):
+class MPCY(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/MPCY/IDENTITY')
 
 ########################################################################################################################
 
 
-class RSPLINE(CardTable):
+class RSPLINE(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/RSPLINE/IDENTITY')
 
 ########################################################################################################################
 
 
-class SESUP(CardTable):
+class SESUP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SESUP')
 
 ########################################################################################################################
 
 
-class SPBLND1(CardTable):
+class SPBLND1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPBLND1')
 
 ########################################################################################################################
 
 
-class SPBLND2(CardTable):
+class SPBLND2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPBLND2')
 
 ########################################################################################################################
 
 
-class SPC(CardTable):
+class SPC(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPC')
 
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
+
+        result = {
+            'IDENTITY': {'SID': [], 'G': [], 'C': [], 'D': [], 'DOMAIN_ID': []},
+        }
+
+        identity = result['IDENTITY']
+
+        sid = identity['SID']
+        g = identity['G']
+        c = identity['C']
+        d = identity['D']
+
+        for card_id in card_ids:
+            card_list = sorted(cards[card_id], key=lambda x: x.conid)
+            for card in card_list:
+                sid += [card.conid] * len(card.gids)
+                g += card.gids
+                c += card.components
+                d += card.enforced
+
+        return result
+
 ########################################################################################################################
 
 
-class SPC1_G(CardTable):
+class SPC1_G(InputTable):
     card_id = 'SPC1'
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPC1/SPC1_G/IDENTITY')
+    
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
 
-    """
-    <group name="SPC1_G" description="SPC1 defined in point list format">
-        <dataset name="G" description="The grid or scalar points list">
-            <field name="ID" type="integer"/>
-        </dataset>
-        <dataset name="IDENTITY">
-            <field name="SID" type="integer"/>
-            <field name="C" type="integer"/>
-            <field name="G_POS" type="integer" description="Start position of points in G dataset"/>
-            <field name="G_LEN" type="integer" description="Length of points in G dataset"/>
-            <field name="DOMAIN_ID" type="integer"/>
-        </dataset>
-    </group>
-    """
+        g = {
+            'IDENTITY': {'ID': []}
+        }
 
-    @staticmethod
-    def from_bdf(card):
-        card_list = card
+        result = {
+            'IDENTITY': {'SID': [], 'C': [], 'G_POS': [], 'G_LEN': [], 'DOMAIN_ID': []},
+            'G': g,
+            '_subtables': ['G']
+        }
 
-        all_data = TableData()
-        _data = all_data.data
+        identity = result['IDENTITY']
 
-        subdata_len = []
-        subdata = []
+        sid = identity['SID']
+        c = identity['C']
+        g_pos = identity['G_POS']
+        g_len = identity['G_LEN']
+        id = g['IDENTITY']['ID']
 
-        for card in card_list:
-            _data.append([card.conid, card.components])
+        _pos = 0
+        for card_id in card_ids:
+            card_list = sorted(cards[card_id], key=lambda x: x.conid)
+            for card in card_list:
+                nids = []
+                for nid in card.node_ids:
+                    if nid is None:
+                        continue
+                    nids.append(nid)
 
-            nids = []
+                sid.append(card.conid)
+                c.append(card.components)
+                g_pos.append(_pos)
+                _g_len = len(nids)
+                _pos += _g_len
+                g_len.append(_g_len)
+                id += nids
 
-            for nid in card.node_ids:
-                if nid is None:
-                    continue
-                nids.append(nid)
+        return result
 
-            subdata_len.append([len(nids)])
-
-            subdata.extend([[nids[i]] for i in range(len(nids))])
-
-        all_data.subdata_len = np.array(subdata_len)
-        all_data.subdata.append(TableData(subdata))
-
-        return all_data
 
 ########################################################################################################################
 
 
-class SPC1_THRU(CardTable):
+class SPC1_THRU(InputTable):
     card_id = None  # don't register this
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPC1/SPC1_THRU')
 
 ########################################################################################################################
 
 
-class SPCADD(CardTable):
+class SPCADD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPCADD/IDENTITY')
+
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
+    
+        s = {
+            'IDENTITY': {'S': []}
+        }
+    
+        result = {
+            'IDENTITY': {'SID': [], 'S_POS': [], 'S_LEN': [], 'DOMAIN_ID': []},
+            'S': s,
+            '_subtables': ['S']
+        }
+    
+        identity = result['IDENTITY']
+    
+        sid = identity['SID']
+        s_pos = identity['S_POS']
+        s_len = identity['S_LEN']
+        s = s['IDENTITY']['S']
+    
+        _pos = 0
+        for card_id in card_ids:
+            card_list = sorted(cards[card_id], key=lambda x: x.conid)
+            for card in card_list:
+                sid.append(card.conid)
+                s_pos.append(_pos)
+                _s_len = len(card.sets)
+                s_len.append(_s_len)
+                s += card.sets
+    
+        return result
 
 ########################################################################################################################
 
 
-class SPCAX(CardTable):
+class SPCAX(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPCAX')
 
 ########################################################################################################################
 
 
-class SPCD(CardTable):
+class SPCD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPCD')
+
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
+
+        result = {
+            'IDENTITY': {'SID': [], 'G': [], 'C': [], 'D': [], 'DOMAIN_ID': []}
+        }
+
+        i = result['IDENTITY']
+        sid = i['SID']
+        g = i['G']
+        c = i['C']
+        d = i['D']
+
+        for card_id in card_ids:
+            card_list = cards[card_id]
+
+            for card in card_list:
+                sid.extend([card.sid] * len(card.nodes))
+                g.extend(card.nodes)
+                c.extend([int(_) if _ is not None else DataHelper.default_int for _ in card.constraints])
+                d.extend(card.enforced)
+
+        return result
 
 ########################################################################################################################
 
 
-class SPCOFF(CardTable):
+class SPCOFF(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPCOFF')
 
 
 ########################################################################################################################
 
 
-class SPCOFF1(CardTable):
+class SPCOFF1(InputTable):
     table_def = TableDef.create(
         '/NASTRAN/INPUT/CONSTRAINT/SPCOFF1/IDENTITY',
         rename={'GIS_POS': 'G_POS', 'GIS_LEN': 'G_LEN'}
@@ -259,158 +384,212 @@ class SPCOFF1(CardTable):
 ########################################################################################################################
 
 
-class SPCR(CardTable):
+class SPCR(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPCR')
 
 ########################################################################################################################
 
 
-class SPLINE1(CardTable):
+class SPLINE1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINE1')
 
 ########################################################################################################################
 
 
-class SPLINE2(CardTable):
+class SPLINE2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINE2')
+
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
+
+        result = {'IDENTITY': {'EID': [], 'CAERO': [], 'ID1': [], 'ID2': [], 'SETG': [], 'DZ': [], 'DTOR': [],
+                               'CID': [], 'DTHX': [], 'DTHY': [], 'USAGE': [], 'DOMAIN_ID': []}}
+
+        identity = result['IDENTITY']
+        eid = identity['EID']
+        caero = identity['CAERO']
+        id1 = identity['ID1']
+        id2 = identity['ID2']
+        setg = identity['SETG']
+        dz = identity['DZ']
+        dtor = identity['DTOR']
+        cid = identity['CID']
+        dthx = identity['DTHX']
+        dthy = identity['DTHY']
+        usage = identity['USAGE']
+
+        for card_id in card_ids:
+            card = cards[card_id]
+
+            eid.append(card.eid)
+            caero.append(card.caero)
+            id1.append(card.id1)
+            id2.append(card.id2)
+            setg.append(card.setg)
+            dz.append(card.dz)
+            dtor.append(card.dtor)
+            cid.append(card.cid)
+            dthx.append(card.dthx)
+            dthy.append(card.dthy)
+            usage.append(card.usage)
+
+        return result
+
 
 ########################################################################################################################
 
 
-class SPLINE3(CardTable):
+class SPLINE3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINE3/IDENTITY')
 
 ########################################################################################################################
 
 
-class SPLINE4(CardTable):
+class SPLINE4(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINE4')
 
 ########################################################################################################################
 
 
-class SPLINE5(CardTable):
+class SPLINE5(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINE5')
 
 ########################################################################################################################
 
 
-class SPLINE6(CardTable):
+class SPLINE6(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINE6')
 
 ########################################################################################################################
 
 
-class SPLINE7(CardTable):
+class SPLINE7(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINE7')
 
 ########################################################################################################################
 
 
-class SPLINEX(CardTable):
+class SPLINEX(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINEX')
 
 ########################################################################################################################
 
 
-class SPLINRB(CardTable):
+class SPLINRB(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SPLINRB/IDENTITY')
 
 ########################################################################################################################
 
 
-class SUPAX(CardTable):
+class SUPAX(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SUPAX')
 
 ########################################################################################################################
 
 
-class SUPORT(CardTable):
+class SUPORT(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SUPORT')
 
 ########################################################################################################################
 
 
-class SUPORT1(CardTable):
+class SUPORT1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/SUPORT1/IDENTITY')
 
 ########################################################################################################################
 
 
-class TEMP(CardTable):
+class TEMP(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMP')
 
 ########################################################################################################################
 
 
-class TEMPAX(CardTable):
+class TEMPAX(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPAX')
 
 ########################################################################################################################
 
 
-class TEMPB3(CardTable):
+class TEMPB3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPB3')
 
 ########################################################################################################################
 
 
-class TEMPBC(CardTable):
+class TEMPBC(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPBC')
 
 ########################################################################################################################
 
 
-class TEMPD(CardTable):
+class TEMPD(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPD')
+
+    def from_bdf(self, cards):
+        card_ids = sorted(cards.keys())
+
+        result = {'IDENTITY': {'SID': [], 'T': [], 'DOMAIN_ID': []}}
+        i = result['IDENTITY']
+        sid = i['SID']
+        t = i['T']
+
+        for card_id in card_ids:
+            card = cards[card_id]
+
+            sid.append(card.sid)
+            t.append(card.temperature)
+
+        return result
+
 
 ########################################################################################################################
 
 
-class TEMPN1(CardTable):
+class TEMPN1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPN1')
 
 ########################################################################################################################
 
 
-class TEMPP1(CardTable):
+class TEMPP1(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPP1')
 
 ########################################################################################################################
 
 
-class TEMPP2(CardTable):
+class TEMPP2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPP2')
 
 ########################################################################################################################
 
 
-class TEMPP3(CardTable):
+class TEMPP3(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPP3')
 
 
 ########################################################################################################################
 
 
-class TEMPRB(CardTable):
+class TEMPRB(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TEMPRB')
 
 ########################################################################################################################
 
 
-class TRIM(CardTable):
+class TRIM(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TRIM/IDENTITY')
 
 ########################################################################################################################
 
 
-class TRIM2(CardTable):
+class TRIM2(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/TRIM2/IDENTITY')
 
 ########################################################################################################################
 
 
-class UXVEC(CardTable):
+class UXVEC(InputTable):
     table_def = TableDef.create('/NASTRAN/INPUT/CONSTRAINT/UXVEC/IDENTITY')
 
 ########################################################################################################################

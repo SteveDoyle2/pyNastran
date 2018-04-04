@@ -8,6 +8,8 @@ from __future__ import division, unicode_literals, print_function
 # standard library
 import sys
 import os.path
+from collections import OrderedDict
+import imp
 #import traceback
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
@@ -25,9 +27,10 @@ from pyNastran.gui.utils.version import check_for_newer_version
 
 
 # pyNastran
+from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import (
-    NastranIO, DegenGeomIO, ADB_IO, FastIO, # Plot3d_io,
-    SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, OpenFoamIO, ObjIO,
+    NastranIO, DegenGeomIO, ADB_IO, # Plot3d_io,
+    SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, OpenFoamIO,
 )
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -51,8 +54,8 @@ except:
 
 class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
                  ADB_IO,
-                 FastIO, SurfIO, UGRID_IO, AbaqusIO, BEdge_IO,
-                 OpenFoamIO, ObjIO, ):
+                 SurfIO, UGRID_IO, AbaqusIO, BEdge_IO,
+                 OpenFoamIO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -110,18 +113,18 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         #fmt_order=fmt_order, inputs=inputs,
         #html_logging=html_logging,
 
-        if qt_version in [4, 5]:
+        if qt_version in ['pyqt4', 'pyqt5', 'pyside']:
             ADB_IO.__init__(self)
             BEdge_IO.__init__(self)
             NastranIO.__init__(self)
             DegenGeomIO.__init__(self)
-            FastIO.__init__(self)
             #Plot3d_io.__init__(self)
             SurfIO.__init__(self)
             UGRID_IO.__init__(self)
             AbaqusIO.__init__(self)
             OpenFoamIO.__init__(self)
-            ObjIO.__init__(self)
+        else:
+            raise NotImplementedError('qt_version=%r is not supported' % qt_version)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 
@@ -130,10 +133,32 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         self.set_script_path(SCRIPT_PATH)
         self.set_icon_path(ICON_PATH)
 
+        self._load_plugins()
         self.setup_gui()
         self.setup_post(inputs)
-
         self._check_for_latest_version(inputs['no_update'])
+
+    def _load_plugins(self):
+        """loads the plugins from pyNastran/gui/plugins.py"""
+        for module_name, plugin_file, class_name in plugin_name_to_path:  # list
+            assert module_name not in self.modules, 'module_name=%r is already defined' % module_name
+
+            if not os.path.exists(plugin_file):
+                # auto_wireframe is a test module and is not intended to
+                # actually load unless you're testing
+                if module_name != 'auto_wireframe':
+                    self.log_warning('Failed to load plugin %r' % module_name)
+                continue
+
+            module = imp.load_source(module_name, plugin_file)
+            my_class = getattr(module, class_name)
+            self.modules[module_name] = my_class(self)
+
+            # tools/checkables
+            tools, checkables = my_class.get_tools_checkables()
+            self.tools += tools
+            for key, is_active in iteritems(checkables):
+                self.checkables[key] = is_active
 
     def _check_for_latest_version(self, check=True):
         """
@@ -176,7 +201,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
     def about_dialog(self):
         """ Display about dialog """
         copyright = pyNastran.__copyright__
-        if qt_version == 'pyside':
+        if qt_version in ['pyside', 'pyside2']:
             word = 'PySide'
             copyright_qt = pyNastran.__pyside_copyright__
         else:
@@ -268,4 +293,6 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         settings.clear()
         self.settings.save(settings)
 
+        if qApp is None:
+            sys.exit()
         qApp.quit()

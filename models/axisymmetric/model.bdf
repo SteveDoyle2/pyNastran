@@ -1,0 +1,48 @@
+CEND
+BEGIN BULK
+GRID,1,,0.,0.,0.
+GRID,2,,0.,1.,0.
+GRID,3,,1.,1.,0.
+GRID,4,,1.,0.,0.
+GRID,5,,2.,1.,0.
+
+GRID,11,,0.,0.,1.
+GRID,12,,0.,1.,1.
+GRID,13,,1.,1.,1.
+GRID,14,,1.,0.,1.
+GRID,15,,2.,1.,1.
+
+GRID,16,,0.0,0.5,1.
+GRID,17,,0.5,1.0,1.
+GRID,18,,1.0,0.5,1.
+GRID,19,,0.5,0.0,1.
+
+GRID,20,,0.5,0.5,1.
+GRID,21,,1.5,0.5,1.
+GRID,22,,1.5,1.,1.
+$GRID,15,,2.,1.,0.
+PLPLANE,10,1000
+MATHP,1000,
+MAT1,100,3.0e7,,0.3
+
+$ removing the quads crashes the vectorized gui because axisymmetric elements
+$ are not supported
+CQUAD4,100000,11, 1,2,3,4
+CQUAD4,100001,11, 1,2,3,4
+PSHELL,11,100,0.1
+
+CQUADX,1,10, 1,2,3,4
+CTRIAX,2,10, 3,4,5
+CQUADX8,3,10, 11,12,13,14,16,17,
+,18,19
+$CTRIAX6,4,100,13,14,15
+CTRIAX6,4,100, 13,18,14,21,22
+CONM2,1000,19,,1.
+$
+$      15
+$  22   |  21
+$13----14
+$   18 
+
+CQUADX,5,10, 11,12,13,14,16,17,
+,18,19,20

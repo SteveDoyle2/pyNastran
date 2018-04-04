@@ -186,15 +186,15 @@ class RealRodArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
         if self.is_sort1:
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp)
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06, msg_temp):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp):
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -207,7 +207,7 @@ class RealRodArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f06.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
@@ -221,12 +221,12 @@ class RealRodArray(OES_Object):
                 out.append([eid, axiali, SMai, torsioni, SMti])
 
             for i in range(0, nwrite, 2):
-                out_line = '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (tuple(out[i] + out[i + 1]))
-                f06.write(out_line)
+                f06_file.write(
+                    '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (
+                    tuple(out[i] + out[i + 1])))
             if is_odd:
-                out_line = '      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1]))
-                f06.write(out_line)
-            f06.write(page_stamp % page_num)
+                f06_file.write('      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1])))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

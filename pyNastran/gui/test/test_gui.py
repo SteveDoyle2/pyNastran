@@ -34,7 +34,7 @@ from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
 from pyNastran.gui.arg_handling import determine_format
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.dev import get_files_of_type
-from pyNastran.op2.test.test_op2 import get_failed_files
+from pyNastran.op2.test.op2_test import get_failed_files
 
 FORMAT_TO_EXTENSION = {
     #'abaqus' : ['.inp'],
@@ -72,7 +72,7 @@ EXTENSION_TO_OUPUT_FORMATS = {
 class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
               #ADB_IO, DegenGeomIO, #Plot3d_io,
               # AbaqusIO,
-              FastIO, SurfIO, UGRID_IO, BEdge_IO,
+              SurfIO, UGRID_IO, BEdge_IO,
               DegenGeomIO, ADB_IO):
     """spoofs the gui for testing"""
 
@@ -92,7 +92,6 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
         BEdge_IO.__init__(self)
         NastranIO.__init__(self)
         #DegenGeomIO.__init__(self)
-        FastIO.__init__(self)
         #Plot3d_io.__init__(self)
         SurfIO.__init__(self)
         UGRID_IO.__init__(self)

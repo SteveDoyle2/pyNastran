@@ -9,7 +9,7 @@ class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
 
@@ -31,7 +31,7 @@ class ComplexEigenvectorArray(ComplexTableArray):
 
         #msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
         #words += self.get_table_marker()
-        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file, is_mag_phase, is_sort1)
 
 
 class RealEigenvectorArray(RealTableArray):
@@ -101,16 +101,17 @@ class RealEigenvectorArray(RealTableArray):
             datai.append([t1, t2, t3, r1, r2, r3])
         assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #if self.nonlinear_factor is not None:
-            #return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+            #return self._write_f06_transient(header, page_stamp, page_num, f06_file,
+                                             #is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         # modes get added
         words = '                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' \
                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n'
 
-        msg = []
         #if not len(header) >= 3:
             #header.append('')
         for itime in range(self.ntimes):
@@ -128,16 +129,16 @@ class RealEigenvectorArray(RealTableArray):
                 #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             #else:
                 #header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            msg += header + [words % dt]
+            f06_file.write(''.join(header + [words % dt]))
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
+                f06_file.write(
+                    '%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        node_id, sgridtype, dx, dy, dz, rx, ry, rz))
 
-            msg.append(page_stamp % page_num)
-            f.write(''.join(msg))
-            msg = ['']
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

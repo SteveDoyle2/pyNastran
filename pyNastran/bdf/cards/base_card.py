@@ -316,6 +316,9 @@ class BaseCard(object):
         """
         raise NotImplementedError('%s has not overwritten write_card' % self.__class__.__name__)
 
+    def write_card_16(self, is_double=False):
+        fields = self.repr_fields()
+        return print_card(fields, size=16, is_double=False)
 
 class Property(BaseCard):
     """Base Property Class"""
@@ -372,6 +375,7 @@ class Material(BaseCard):
         if not hasattr(self, 'tref'):
             raise AttributeError('%r object has no attribute tref' % self.type)
         return self.tref
+
     @TRef.setter
     def TRef(self, tref):
         # type: (float) -> None
@@ -629,6 +633,7 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
                     nodes2.append(node)
                 else:
                     nodes2.append(node.nid)
+            assert nodes2 is not None, str(card)
             return nodes2
         else:
             try:
@@ -648,11 +653,13 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
                     card.type, nodes, allow_empty_nodes, msg))
                 raise
             assert 0 not in node_ids, 'node_ids = %s' % node_ids
+            assert node_ids is not None, str(card)
             return node_ids
     except:
         print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
             card.type, nodes, allow_empty_nodes, msg))
         raise
+    raise RuntimeError('huh...')
 
 def expand_thru(fields, set_fields=True, sort_fields=False):
     # type: (List[str], bool, bool) -> List[int]
@@ -671,13 +678,16 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
         Should the fields be sorted at the end?
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
+    if isinstance(fields, integer_types):
+        return [fields]
+    #elif isinstance(fields[0], integer_types):  # don't use this [1, 'THRU', 10]
+        #return fields
+    elif len(fields) == 1:
+        return [int(fields[0])]
+
     fields = [field.upper()
               if isinstance(field, string_types) else field for field in fields]
 
-    if isinstance(fields, integer_types):
-        return [fields]
-    if len(fields) == 1:
-        return [int(fields[0])]
     out = []
     nfields = len(fields)
     i = 0
@@ -806,6 +816,7 @@ def expand_thru_exclude(fields):
     fields_out = []  # type: List[int]
     nfields = len(fields)
     for i in range(nfields):
+        #print('fields[%i] = %r' % (i, fields[i]))
         if fields[i] == 'THRU':
             sorted_list = []
             for j in range(fields[i - 1], fields[i + 1]):

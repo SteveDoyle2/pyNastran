@@ -128,22 +128,9 @@ def parse_table_names_from_f06(f06_filename):
     return names
 
 
-def get_failed_files(filename):
-    """Gets the list of failed files"""
-    with open(filename, 'r') as infile:
-        lines = infile.readlines()
-
-    files = []
-    for line in lines:
-        line = line.strip()
-        if line not in files:
-            files.append(line)
-    return files
-
-
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, skip_dataframe=False, write_op2=False,
-                      debug=True, skip_files=None,
+                      export_hdf5=True, debug=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000,
                       short_stats=False, binary_debug=False,
                       compare=True, quiet=False, dev=True):
@@ -181,6 +168,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                      is_mag_phase=False,
                                      delete_f06=delete_f06,
                                      skip_dataframe=skip_dataframe,
+                                     export_hdf5=export_hdf5,
                                      short_stats=short_stats,
                                      subcases=subcases, debug=debug,
                                      stop_on_failure=stop_on_failure,
@@ -201,6 +189,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             write_f06=True, write_op2=False,
+            export_hdf5=True,
             is_mag_phase=False, is_sort2=False, is_nx=None,
             delete_f06=False, skip_dataframe=False,
             subcases=None, exclude=None, short_stats=False,
@@ -361,7 +350,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             mb = kb / 1024.
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
-        if IS_HDF5:
+        if IS_HDF5 and export_hdf5:
             op2.export_to_hdf5(model + '.test_op2.h5')
         if write_f06:
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,

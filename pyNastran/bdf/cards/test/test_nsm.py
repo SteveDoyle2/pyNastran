@@ -1,16 +1,22 @@
 """defines various shell element tests"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import os
 import unittest
 from six import iteritems
 from six.moves import StringIO
 import numpy as np
 from numpy import array
 
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import _mass_properties_new
+import pyNastran
+
+PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+
 
 class TestNsm(unittest.TestCase):
     def test_nsm_cquad4(self):
@@ -62,13 +68,13 @@ class TestNsm(unittest.TestCase):
         model.add_mat1(mid, E, G, nu, rho=0.0)
 
         # TODO: these are correct barring incorrect formulas
-        model.add_nsm1(1000, 'PSHELL', 1.0, pid_pshell, comment='nsm1') # correct; 1.0
+        model.add_nsm1(1000, 'PSHELL', 1.0, pid_pshell, comment='nsm1') # correct; 1.5
         model.add_nsm1(1001, 'ELEMENT', 1.0, eid_quad) # correct; 1.0
         model.add_nsm1(1002, 'ELEMENT', 1.0, [eid_quad, eid_tri]) # correct; 1.5
         model.add_nsm1(1003, 'ELEMENT', 1.0, [eid_pbeaml]) # correct; 1.0
         model.add_nsm1(1004, 'ELEMENT', 1.0, eid_pbarl) # correct; 1.0
         model.add_nsm1(1005, 'ELEMENT', 1.0, 'ALL') # crash according to QRG b/c mixed type; 2.5
-        model.add_nsm1(1006, 'PSHELL', 1.0, 'ALL') # correct; 1.0
+        model.add_nsm1(1006, 'PSHELL', 1.0, 'ALL') # correct; 1.5
         model.add_nsm1(1007, 'PSHELL', 1.0, [10, 'THRU', 12]) # correct; 1.5
         model.add_nsm1(1008, 'PSHELL', 1.0, [10, 'THRU', 12, 'BY', 2]) # correct; 1.5
         model.add_nsm1(1009, 'PBARL', 1.0, pid_pbarl) # correct; 1.0
@@ -97,7 +103,7 @@ class TestNsm(unittest.TestCase):
         #'76', 'THRU', '85',])
         #print(model.nsms[2011])
 
-        model.add_nsm(3000, 'PSHELL', pid_pshell, 1.0, comment='nsm') # correct; 1.0
+        model.add_nsm(3000, 'PSHELL', pid_pshell, 1.0, comment='nsm') # correct; 1.5
         model.add_nsm(3001, 'ELEMENT', eid_quad, 1.0) # correct; 1.0
         model.add_nsm(3003, 'ELEMENT', [eid_pbeaml], 1.0) # correct; 1.0
         model.add_nsm(3004, 'ELEMENT', eid_pbarl, 1.0) # correct; 1.0
@@ -119,16 +125,68 @@ class TestNsm(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        not_handled = [
-            1005, 1006,
-            2005, 2006,
-        ]
+        expected_dict = {
+            # NSM1
+            1000 : 1.5,
+            1001 : 1.0,
+            1002 : 1.5,
+            1003 : 1.0,
+            1004 : 1.0,
+            1005 : -1.0,  # crash
+            1006 : 1.5,
+            1007 : 1.5,
+            1008 : 1.5,
+            1009 : 1.0,
+            1010 : 1.0,
+            1011 : 1.0,
+            1012 : 1.0,
+
+            #model.add_nsml1(sid, nsm_type, value, ids)
+            # NSML1
+            2000 : 1.0,
+            2001 : 1.0,
+            2002 : 1.0,
+            2003 : 1.0,
+            2004 : 1.0,
+            2005 : -1.0, # crash
+            2006 : 1.0,
+            2007 : 1.0,
+            2008 : 1.0,
+            2009 : 1.0,
+            2010 : 1.0,
+            2011 : 1.0,
+            2012 : 1.0,
+
+            # NSM
+            3000 : 1.5,
+            3001 : 1.0,
+            3003 : 1.0,
+            3004 : 1.0,
+            3009 : 1.0,
+            3010 : 1.0,
+            3011 : 1.0,
+            3012 : 1.0,
+
+            # NSM1
+            4000 : 1.0,
+            4001 : 1.0,
+            4003 : 1.0,
+            4004 : 1.0,
+            4009 : 1.0,
+            4010 : 1.0,
+            4011 : 1.0,
+            4012 : 1.0,
+        }
         for nsm_id in sorted(model.nsms):
-            mass, cg, I = _mass_properties_new(model, nsm_id=nsm_id, dev=True)
-            if nsm_id in not_handled:
-                self.assertEqual(mass, 0.0)
+            mass1_expected = expected_dict[nsm_id]
+            if mass1_expected == -1.0:
+                with self.assertRaises(RuntimeError):
+                    mass1, cg, I = _mass_properties_new(model, nsm_id=nsm_id, debug=False)
             else:
-                self.assertTrue(mass > 0)
+                mass1, cg, I = _mass_properties_new(model, nsm_id=nsm_id, debug=False)
+                if mass1 != mass1_expected:
+                    mass2 = _mass_properties_new(model, nsm_id=nsm_id, debug=True)[0]
+                    raise RuntimeError('nsm_id=%s mass != %s; mass1=%s' % (nsm_id, mass1_expected, mass1))
             #print('mass[%s] = %s' % (nsm_id, mass))
             #print('----------------------------------------------')
 
@@ -152,7 +210,7 @@ class TestNsm(unittest.TestCase):
 
         # don't crash on the null case
         for nsm_id in sorted(model2.nsms):
-            mass, cg, I = _mass_properties_new(model2, nsm_id=nsm_id, dev=True)
+            mass, cg, I = _mass_properties_new(model2, nsm_id=nsm_id, debug=False)
             self.assertEqual(mass, 0.0)
             #print('mass[%s] = %s' % (nsm_id, mass))
         #print('done with null')
@@ -219,6 +277,21 @@ class TestNsm(unittest.TestCase):
         self.assertAlmostEqual(mass, 8.0)
         model2 = save_load_deck(model)
         mass, cg, I = model2._mass_properties_new(nsm_id=5000)
+
+    #def test_nsm(self):
+        #"""tests a complete nsm example"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'nsm.bdf')
+        #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'TEST_NSM_SOL101.bdf')
+        #model = read_bdf(bdf_filename)
+        #print('    %6s %-9s %s' % ('nsm_id', 'mass', 'nsm'))
+        #mass0 = model._mass_properties_new(debug=False)[0]
+        #for nsm_id in sorted(chain(model.nsms, model.nsmadds)):
+            #mass, cg, I = model._mass_properties_new(nsm_id=nsm_id, debug=False)
+            #print('    %-6s %-9.4g %.4g' % (nsm_id, mass, mass-mass0))
+
+        #area_breakdown = model.get_area_breakdown()
+        #for pid in [20000, 20010]:
+            #print('pid=%s area=%.3f' % (pid, area_breakdown[pid]))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

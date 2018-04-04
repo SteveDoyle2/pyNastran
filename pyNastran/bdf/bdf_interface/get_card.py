@@ -2,10 +2,10 @@
 defines various methods to access high level BDF data:
  - GetCard()
    - get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
-                                   stop_on_missing_card=False, combine=False)
+                                stop_on_missing_card=False, combine=False)
    - get_rslot_map(self, reset_type_to_slot_map=False)
    - get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
-                                stop_on_missing_card=False)
+                             stop_on_missing_card=False)
    - get_SPCx_node_ids(self, spc_id, stop_on_failure=True)
    - get_SPCx_node_ids_c1( spc_id, stop_on_failure=True)
    - get_MPCx_node_ids( mpc_id, stop_on_failure=True)
@@ -18,7 +18,7 @@ defines various methods to access high level BDF data:
    - get_dependent_nid_to_components(self, mpc_id=None)
    - get_node_ids_with_elements(self, eids, msg='')
    - get_elements_nodes_by_property_type(self, dtype='int32',
-                                            save_element_types=False)
+                                         save_element_types=False)
    - get_element_nodes_by_element_type(self, dtype='int32', solids=None)
    - get_element_ids_list_with_pids(self, pids=None)
    - get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None, idtype='int32')
@@ -38,13 +38,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Dict, Set, Optional, Any
-from six import string_types, iteritems, iterkeys, itervalues
+from six import string_types, iteritems, iterkeys
 
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.get_methods import GetMethods
-from pyNastran.bdf.cards.optimization import get_dvprel_key
 #from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
+from pyNastran.bdf.cards.optimization import get_dvprel_key
 from pyNastran.utils import integer_types
 
 
@@ -624,8 +624,8 @@ class GetCard(GetMethods):
         ----------
         nelements : int
             the number of elements
-        pids : int ndarray; length=nelements
-            the
+        pids : (nelements,) int ndarray
+            properties array to map the results to
         fdtype : str; default='float32'
             the type of the init/min/max arrays
         idtype : str; default='int32'
@@ -636,12 +636,12 @@ class GetCard(GetMethods):
         dvprel_dict[key] : (design_region, dvprel_init, dvprel_min, dvprel_max)
             key : str
                 the optimization string
-            design_region : int ndarray; length=nelements
-            dvprel_init : float ndarray; length=nelements
+            design_region : (nelements,) int ndarray
+            dvprel_init : (nelements,) float ndarray
                 the initial values of the variable
-            dvprel_min : float ndarray; length=nelements
+            dvprel_min : (nelements,)float ndarray
                 the min values of the variable
-            dvprel_max : float ndarray; length=nelements
+            dvprel_max : (nelements,)float ndarray
                 the max values of the variable
         """
         dvprel_dict = {}
@@ -657,22 +657,22 @@ class GetCard(GetMethods):
             return design_region, dvprel_t_init, dvprel_t_min, dvprel_t_max
 
         for dvprel_key, dvprel in iteritems(self.dvprels):
+            prop_type = dvprel.prop_type
+            desvars = dvprel.dvids
+            if dvprel.pid_ref is not None:
+                pid = dvprel.pid_ref.pid
+            else:
+                pid = dvprel.pid
+            var_to_change = dvprel.pname_fid
+
+            prop = self.properties[pid]
+            if not prop.type == prop_type:
+                raise RuntimeError('Property type mismatch\n%s%s' % (str(dvprel), str(prop)))
+
+            key, msg = get_dvprel_key(dvprel, prop)
             if dvprel.type == 'DVPREL1':
-                prop_type = dvprel.prop_type
-                desvars = dvprel.dvids
-                coeffs = dvprel.coeffs
-                if dvprel.pid_ref is not None:
-                    pid = dvprel.pid_ref.pid
-                else:
-                    pid = dvprel.pid
-                var_to_change = dvprel.pname_fid
                 assert len(desvars) == 1, len(desvars)
-
-                prop = self.properties[pid]
-                if not prop.type == prop_type:
-                    raise RuntimeError('Property type mismatch\n%s%s' % (str(dvprel), str(prop)))
-
-                key, msg = get_dvprel_key(dvprel, prop)
+                coeffs = dvprel.coeffs
                 if msg:
                     self.log.warning(msg)
                     continue
@@ -683,7 +683,9 @@ class GetCard(GetMethods):
                 assert len(i) > 0, i
                 design_region, dvprel_init, dvprel_min, dvprel_max = get_dvprel_data(key)
 
-                design_region[i] = dvprel.oid
+                optimization_region = dvprel.oid
+                assert optimization_region > 0, str(self)
+                design_region[i] = optimization_region
                 #value = 0.
                 lower_bound = 0.
                 upper_bound = 0.
@@ -712,6 +714,8 @@ class GetCard(GetMethods):
                 dvprel_init[i] = xinit
                 dvprel_min[i] = lower_bound
                 dvprel_max[i] = upper_bound
+            #elif dvprel.type == 'DVPREL2':
+                #print(dvprel.get_stats())
             else:
                 msg = 'dvprel.type=%r; dvprel=\n%s' % (dvprel.type, str(dvprel))
                 raise NotImplementedError(msg)
@@ -1490,8 +1494,8 @@ class GetCard(GetMethods):
                 rbe_nids = independent_nodes | dependent_nodes
                 if nids.intersection(rbe_nids):
                     rbes.append(eid)
-            elif elem.type == 'RSSCON':
-                msg = 'skipping card in get_rigid_elements_with_node_ids\n%s' % str(elem)
+            elif rigid_element.type == 'RSSCON':
+                msg = 'skipping card in get_rigid_elements_with_node_ids\n%s' % str(rigid_element)
                 self.log.warning(msg)
             else:
                 raise RuntimeError(rigid_element.type)
@@ -1535,7 +1539,7 @@ class GetCard(GetMethods):
                 else:
                     raise NotImplementedError(mpc)
 
-        for eid, rigid_element in iteritems(self.rigid_elements):
+        for unused_eid, rigid_element in iteritems(self.rigid_elements):
             if rigid_element.type == 'RBE2':
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 components = rigid_element.cm
@@ -2149,6 +2153,14 @@ class GetCard(GetMethods):
             pid_to_eids_map[pid] = []
 
         elem_count = 0
+        #element_type_to_dmap_id = {
+            #'CONROD' : -10,
+            #'CELAS2' : -12,
+            #'CELAS4' : -14,
+            #'CDAMP2' : -21,
+            #'CDAMP4' : -23,
+            #'CHBDYG' : -108,
+        #}
         elements_without_properties = ['CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'CHBDYG']
         for eid, element in iteritems(self.elements):
             try:
@@ -2215,7 +2227,7 @@ class GetCard(GetMethods):
         for nid in self.epoints:
             nid_to_elements_map[nid] = []
 
-        for (eid, element) in iteritems(self.elements):  # load the mapper
+        for (unused_eid, element) in iteritems(self.elements):  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids
@@ -2244,6 +2256,8 @@ class GetCard(GetMethods):
                 continue
             if hasattr(element, 'pid'):
                 pid = element.Pid()
+                if pid < 0: # CTRIAX6
+                    continue
                 try:
                     pid_to_eids_map[pid].append(eid)
                 except KeyError:
@@ -2268,12 +2282,15 @@ class GetCard(GetMethods):
           >>> pids
           [1, 2, 3]
 
-        .. note:: all properties require an mid to be counted (except for
+          .. note:: all properties require an mid to be counted (except for
                   PCOMP, which has multiple mids)
         """
         mid_to_pids_map = {}
         for mid in self.get_material_ids():
             mid_to_pids_map[mid] = []
+
+        properties_without_materials = [
+            'PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST', 'PBUSH1D']
 
         for pid in self.property_ids:
             prop = self.Property(pid)
@@ -2288,7 +2305,7 @@ class GetCard(GetMethods):
                         if hasattr(prop, 'mid') and prop.Mid() in mids:
                             if pid not in mid_to_pids_map[mid]:
                                 mid_to_pids_map[mid].append(pid)
-            elif prop_type in ['PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST', 'PBUSH1D']:
+            elif prop_type in properties_without_materials:
                 pass
             elif prop_type in ['PSHELL']:
                 mids = prop.material_ids
@@ -2518,7 +2535,7 @@ class GetCard(GetMethods):
                 nids += nodes
                 comps += [str(spc.constraints)] * nnodes
             elif spc.type == 'SPC':
-                for nid, comp, enforced in zip(spc.gids, spc.constraints, spc.enforced):
+                for nid, comp, unused_enforced in zip(spc.gids, spc.constraints, spc.enforced):
                     nids.append(nid)
                     comps.append(comp)
             else:
@@ -2561,7 +2578,7 @@ class GetCard(GetMethods):
         comps = []
         for mpc in mpcs:
             if mpc.type == 'MPC':
-                for nid, comp, enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
+                for nid, comp, unused_enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
                     nids.append(nid)
                     comps.append(comp)
             else:

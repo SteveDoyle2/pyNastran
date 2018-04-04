@@ -882,15 +882,15 @@ class TestLoads(unittest.TestCase):
         conrod = model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=1.0, comment='')
         model.add_conrod(eid, mid, nids, A, j=0.0, c=0.0, nsm=1.0, comment='')
 
-        eid = 2
-        pid = 2
+        eid_tube = 2
+        pid_tube = 2
         nids = [3, 12]
-        ctube = model.add_ctube(eid, pid, nids, comment='ctube')
-        ctube = model.add_ctube(eid, pid, nids, comment='ctube')
+        ctube = model.add_ctube(eid_tube, pid_tube, nids, comment='ctube')
+        ctube = model.add_ctube(eid_tube, pid_tube, nids, comment='ctube')
         OD1 = 0.1
-        ptube = model.add_ptube(pid, mid, OD1, t=None, nsm=0., OD2=None,
+        ptube = model.add_ptube(pid_tube, mid, OD1, t=None, nsm=0., OD2=None,
                                 comment='ptube')
-        model.add_ptube(pid, mid, OD1, t=None, nsm=0., OD2=None,
+        model.add_ptube(pid_tube, mid, OD1, t=None, nsm=0., OD2=None,
                         comment='ptube')
 
         E = 3.0e7
@@ -1044,7 +1044,7 @@ class TestLoads(unittest.TestCase):
         model.add_pload(sid, pressure, [1, 2, 3], comment='pload')
         model.add_pload2(sid, pressure, [3, 4], comment='pload2')  # ctria3, cquad4
 
-        eids = [eid]
+        eids = [8] # hexa
         g1 = 6
         g34 = 8
         pressures = [1., 1., 1., 1.]
@@ -1135,7 +1135,7 @@ class TestLoads(unittest.TestCase):
 
     def test_load(self):
         """makes sure LOAD cards don't get sorted"""
-        model = BDF(debug=False)
+        model = BDF(debug=False, log=log)
 
         load = model.add_load(sid=13, scale=1., scale_factors=[0.5, 0.1], load_ids=[11, 10])
         msg8 = load.write_card(size=8, is_double=False)
@@ -1149,9 +1149,12 @@ class TestLoads(unittest.TestCase):
         assert msg8.rstrip() == load2_expected, '%r' % msg8
         model.validate()
 
+    def test_load_sort(self):
+        """makes sure LOAD cards don't get sorted"""
+        model = BDF(debug=False, log=log)
         load2 = model.add_load(sid=14, scale=1.,
                                scale_factors=[0.5, 0.1, 0.4], load_ids=[11, 10])
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(IndexError):
             model.validate()
 
     def test_sload(self):

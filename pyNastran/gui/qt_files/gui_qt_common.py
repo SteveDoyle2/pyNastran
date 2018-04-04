@@ -24,6 +24,7 @@ WHITE = (1., 1., 1.)
 BLUE = (0., 0., 1.)
 RED = (1., 0., 0.)
 
+
 class GuiCommon(GuiAttributes):
     def __init__(self, **kwds):
         inputs = kwds['inputs']
@@ -219,12 +220,13 @@ class GuiCommon(GuiAttributes):
 
         # the backface property could be null
         back_prop = vtk.vtkProperty()
-        back_prop.SetColor(BLUE)
+        back_prop.SetColor(WHITE)
         self.geom_actor.SetBackfaceProperty(back_prop)
         self.geom_actor.Modified()
 
         self.hide_legend()
         self.scalar_bar.is_shown = False
+        self._set_legend_fringe(False)
         self.vtk_interactor.Render()
 
         self.res_widget.result_case_window.treeView.fringe.setChecked(False)
@@ -275,13 +277,7 @@ class GuiCommon(GuiAttributes):
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
 
-        # setup
-        #-----
-        # make results
-        if len(case.shape) == 1:
-            normi = case
-        else:
-            normi = norm(case, axis=1)
+        normi = self._get_normalized_data(icase)
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -312,6 +308,60 @@ class GuiCommon(GuiAttributes):
         )
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
+
+    def export_case_data(self, icases=None):
+        """exports CSVs of the requested cases"""
+        if icases is None:
+            icases = self.result_cases.keys()
+        for icase in icases:
+            (obj, (i, name)) = self.result_cases[icase]
+            subcase_id = obj.subcase_id
+            location = obj.get_location(i, name)
+
+            case = obj.get_result(i, name)
+            if case is None:
+                continue # normals
+            subtitle, label = self.get_subtitle_label(subcase_id)
+            label2 = obj.get_header(i, name)
+            data_format = obj.get_data_format(i, name)
+            vector_size = obj.get_vector_size(i, name)
+            print(subtitle, label, label2, location, name)
+
+            word, eids_nids = self.get_mapping_for_location(location)
+
+            # fixing cast int data
+            header = '%s(%%i),%s(%s)' % (word, label2, data_format)
+            if 'i' in data_format and isinstance(case.dtype, np.floating):
+                header = '%s(%%i),%s' % (word, label2)
+
+            fname = '%s_%s.csv' % (icase, name)
+            out_data = np.column_stack([eids_nids, case])
+            np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
+
+    def get_mapping_for_location(self, location):
+        """helper method for ``export_case_data``"""
+        if location == 'centroid':
+            word = 'ElementID'
+            eids_nids = self.element_ids
+        elif location == 'node':
+            word = 'NodeID'
+            eids_nids = self.node_ids
+        else:
+            raise NotImplementedError(location)
+        return word, eids_nids
+
+    def _get_normalized_data(self, icase):
+        """helper method for ``export_case_data``"""
+        (obj, (i, name)) = self.result_cases[icase]
+        case = obj.get_result(i, name)
+        if case is None:
+            return None
+
+        if len(case.shape) == 1:
+            normi = case
+        else:
+            normi = norm(case, axis=1)
+        return normi
 
     def _get_disp_data(self, icase, is_disp):
         """helper for ``on_disp``"""
@@ -368,14 +418,14 @@ class GuiCommon(GuiAttributes):
         # setup
         #-----
         # make results
-        if len(case.shape) == 1:
-            unused_normi = case
-        else:
-            unused_normi = norm(case, axis=1)
+        #if len(case.shape) == 1:
+            #normi = case
+        #else:
+            #normi = norm(case, axis=1)
 
         #if min_value is None and max_value is None:
-            #max_value = unused_normi.max()
-            #min_value = unused_normi.min()
+            #max_value = normi.max()
+            #min_value = normi.min()
 
         #if min_value is None and max_value is None:
         min_value, max_value = obj.get_min_max(i, name)
@@ -480,6 +530,8 @@ class GuiCommon(GuiAttributes):
 
         #is_legend_shown = True
         #if is_legend_shown is None:
+        self.show_legend()
+        self.scalar_bar.is_shown = True
         is_legend_shown = self.scalar_bar.is_shown
 
         # TODO: normal -> fringe screws up legend
@@ -507,17 +559,17 @@ class GuiCommon(GuiAttributes):
         self.vtk_interactor.Render()
         self.res_widget.result_case_window.treeView.fringe.setChecked(True)
 
-    def on_disp(self, icase, show_msg=True):
+    def on_disp(self, icase, apply_fringe=False, show_msg=True):
         is_disp = True
-        self._on_disp_vector(icase, is_disp, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.disp.setChecked(True)
 
-    def on_vector(self, icase, show_msg=True):
+    def on_vector(self, icase, apply_fringe=False, show_msg=True):
         is_disp = False
-        self._on_disp_vector(icase, is_disp, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
 
-    def _on_disp_vector(self, icase, is_disp, show_msg=True):
+    def _on_disp_vector(self, icase, is_disp, apply_fringe=False, show_msg=True):
         """
         Sets the icase data to the active displacement
 
@@ -594,12 +646,12 @@ class GuiCommon(GuiAttributes):
                 #self._is_displaced = False
                 self._is_forces = True
                 #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
-                self._update_forces(vector_data, set_scalars=False, scale=scale)
+                self._update_forces(vector_data, set_scalars=apply_fringe, scale=scale)
             else:
                 #self._is_displaced = False
                 self._is_forces = True
                 #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
-                self._update_elemental_vectors(vector_data, set_scalars=False, scale=scale)
+                self._update_elemental_vectors(vector_data, set_scalars=apply_fringe, scale=scale)
 
         #is_low_to_high = True
         #self.log_info('min_value=%s, max_value=%s' % (min_value, max_value))
@@ -719,8 +771,8 @@ class GuiCommon(GuiAttributes):
 
         try:
             key = self.case_keys[icase]
-        except KeyError:
-            print('icase=%s case_keys=%s' % (icase, str(self.case_keys)))
+        except (KeyError, TypeError):
+            print('icase=%r case_keys=%s' % (icase, str(self.case_keys)))
             raise
         self.icase = icase
         case = self.result_cases[key]
@@ -740,19 +792,12 @@ class GuiCommon(GuiAttributes):
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
         #default_max, default_min = obj.get_default_min_max(i, name)
-        if min_value is None and max_value is None:
-            min_value, max_value = obj.get_min_max(i, name)
-
-        #if 0:
-            # my poor attempts at supporting NaN colors
-            #if min_value is None and max_value is None:
-                #max_value = case.max()
-                #min_value = case.min()
-            #if np.isnan(max_value):
-                #inotnan = not np.isnan(case)
-                #max_value = case[inotnan].max()
-                #min_value = case[inotnan].min()
-                #print('max_value = ', max_value)
+        if min_value is None or max_value is None:
+            min_valuei, max_valuei = obj.get_min_max(i, name)
+            if min_value is None:
+                min_value = min_valuei
+            if max_value is None:
+                max_value = max_valuei
 
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
@@ -765,11 +810,11 @@ class GuiCommon(GuiAttributes):
         if case is None:
             return self.set_normal_result(icase, name, subcase_id)
 
-        elif self._is_normals and self.legend_shown:
-            # we hacked the scalar bar to turn off for Normals
-            # so we turn it back on if we need to
-            self._is_normals = False
+        elif not self._is_fringe:
+            # we maybe hacked the scalar bar to turn off for Normals/Clear Results
+            # so we turn it back on
             self.show_legend()
+            self._set_legend_fringe(True)
 
         if len(case.shape) == 1:
             normi = case
@@ -885,7 +930,8 @@ class GuiCommon(GuiAttributes):
                            #nlabels, labelsize, ncolors, colormap,
                            #is_low_to_high, self.is_horizontal_scalar_bar)
         self.hide_legend()
-        self._is_normals = True
+        self.scalar_bar.is_shown = False
+        self._set_legend_fringe(False)
         #min_value = 'Front Face'
         #max_value = 'Back Face'
         #self.update_text_actors(subcase_id, subtitle,
@@ -1147,11 +1193,12 @@ class GuiCommon(GuiAttributes):
         #print('mag =', mag[inonzero])
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-        vtk_mag = numpy_to_vtk(mag, deep=1)
 
         grid.GetPointData().SetVectors(vtk_vectors)
         if set_scalars:
+            vtk_mag = numpy_to_vtk(mag, deep=1)
             grid.GetPointData().SetScalars(vtk_mag)
+            grid.GetCellData().SetScalars(None)
         self.arrow_actor.SetVisibility(True)
         grid.Modified()
         self.grid_selected.Modified()
@@ -1175,12 +1222,13 @@ class GuiCommon(GuiAttributes):
         #print('mag =', mag[inonzero])
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-        vtk_mag = numpy_to_vtk(mag, deep=1)
 
         grid.GetPointData().SetVectors(None)
         #print('_update_elemental_vectors; shape=%s' % (str(new_forces.shape)))
         grid.GetCellData().SetVectors(vtk_vectors)
         if set_scalars:
+            vtk_mag = numpy_to_vtk(mag, deep=1)
+            grid.GetPointData().SetScalars(None)
             grid.GetCellData().SetScalars(vtk_mag)
         self.arrow_actor_centroid.SetVisibility(True)
         grid.Modified()
@@ -1197,6 +1245,7 @@ class GuiCommon(GuiAttributes):
         grid.Modified()
         self.grid_selected.Modified()
         self._update_follower_grids(nodes)
+        self._update_follower_grids_complex(nodes)
 
     def _update_follower_grids(self, nodes):
         """updates grids that use the same ids as the parent model"""
@@ -1206,6 +1255,14 @@ class GuiCommon(GuiAttributes):
             for j, nid in enumerate(nids):
                 i = self.nid_map[nid]
                 points.SetPoint(j, *nodes[i, :])
+            grid.Modified()
+
+    def _update_follower_grids_complex(self, nodes):
+        """updates grids that use a complicated update method"""
+        for name, follower_function in iteritems(self.follower_functions):
+            grid = self.alt_grids[name]
+            points = grid.GetPoints()
+            follower_function(self.nid_map, grid, points, nodes)
             grid.Modified()
 
     def _get_icase(self, result_name):
@@ -1271,3 +1328,8 @@ class GuiCommon(GuiAttributes):
         assert isinstance(key, integer_types), key
         (obj, (i, name)) = self.result_cases[key]
         return obj.get_location(i, name)
+
+    def _set_legend_fringe(self, is_fringe):
+        self._is_fringe = is_fringe
+        if self._legend_window_shown:
+            self._legend_window._set_legend_fringe(is_fringe)

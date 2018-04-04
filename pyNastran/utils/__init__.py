@@ -14,9 +14,11 @@ import numpy as np
 
 if PY2:
     integer_types = (int, long, np.int32, np.int64)
+    integer_string_types = (int, long, np.int32, np.int64, str, unicode)
     integer_float_types = (int, long, np.int32, np.int64, float)
 else:
     integer_types = (int, np.int32, np.int64)
+    integer_string_types = (int, np.int32, np.int64, bytes, str)
     integer_float_types = (int, np.int32, np.int64, float)
 float_types = (float, np.float32)
 
@@ -34,12 +36,15 @@ else:
 def ipython_info():
     # type: () -> Optional[str]
     """determines if iPython/Jupyter notebook is running"""
-    ip = None
-    if 'ipykernel' in sys.modules:
-        ip = 'notebook'
-    elif 'Ipython' in sys.modules:
-        ip = 'terminal'
-    return ip
+    try:
+        return get_ipython()
+    except NameError:
+        return None
+    #if 'ipykernel' in sys.modules:
+        #ip = 'notebook'
+    #elif 'Ipython' in sys.modules:
+        #ip = 'terminal'
+    #return ip
 
 def is_file_obj(filename):
     """does this object behave like a file object?"""

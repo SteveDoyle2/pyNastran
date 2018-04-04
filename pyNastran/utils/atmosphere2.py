@@ -882,7 +882,8 @@ def make_flfacts_alt_sweep(mach, alts, eas_limit=1000.,
     rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
                                       alt_units=alt_units,
                                       density_units=density_units,
-                                      eas_units=eas_units)
+                                      velocity_units=velocity_units,
+                                      eas_units=eas_units,)
     return rho, machs, velocity
 
 def make_flfacts_mach_sweep(alt, machs, eas_limit=1000.,
@@ -898,7 +899,8 @@ def make_flfacts_mach_sweep(alt, machs, eas_limit=1000.,
     rho, machs, velocity = _limit_eas(rho, machs, velocity, eas_limit,
                                       alt_units=alt_units,
                                       density_units=density_units,
-                                      eas_units=eas_units)
+                                      velocity_units=velocity_units,
+                                      eas_units=eas_units,)
     return rho, machs, velocity
 
 def _limit_eas(rho, machs, velocity, eas_limit=1000.,
@@ -907,8 +909,13 @@ def _limit_eas(rho, machs, velocity, eas_limit=1000.,
     """limits the equivalent airspeed"""
     if eas_limit:
         rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
-        eas = velocity * np.sqrt(rho / rho0) * _velocity_factor(velocity_units, eas_units)
-        i = np.where(eas > eas_limit)
+
+        # eas in velocity units
+        eas = velocity * np.sqrt(rho / rho0)
+        kvel = _velocity_factor(eas_units, velocity_units)
+        eas_limit_in_velocity_units = eas_limit * kvel
+
+        i = np.where(eas < eas_limit_in_velocity_units)
         rho = rho[i]
         machs = machs[i]
         velocity = velocity[i]

@@ -84,7 +84,7 @@ class RealEigenvalues(BaseScalarObject):
         for i, line in enumerate(data):
             self.add_f06_line(line, i)
 
-    def write_f06(self, f, header, page_stamp, page_num=1):
+    def write_f06(self, f06_file, header, page_stamp, page_num=1):
         title = ''
         if self.title is not None:
             title = '%s' % str(self.title).center(124).rstrip() + '\n'
@@ -105,7 +105,7 @@ class RealEigenvalues(BaseScalarObject):
             msg.append(' %8s  %8s       %-13s       %-13s       %-13s       %-13s       %s\n' % (
                 mode_num, order, eigen, omega, freq, mass, stiff))
         msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
+        f06_file.write(''.join(msg))
         return page_num
 
     def __repr__(self):
@@ -202,7 +202,7 @@ class ComplexEigenvalues(BaseScalarObject):
         self.data_frame = df1.join([df2, df3])
         #print(self.data_frame)
 
-    def write_f06(self, f, header, page_stamp, page_num=1):  # not proper msg start
+    def write_f06(self, f06_file, header, page_stamp, page_num=1):  # not proper msg start
         title = ''
         if self.title is not None:
             title = '%s' % str(self.title).center(124).rstrip() + '\n'
@@ -223,7 +223,7 @@ class ComplexEigenvalues(BaseScalarObject):
                 mode, extract_order, eigr, eigi, freq, damping))
 
         msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
+        f06_file.write(''.join(msg))
         return page_num
 
     def __repr__(self):
@@ -319,13 +319,14 @@ class BucklingEigenvalues(BaseScalarObject):
         headers = ['eigenvalue', 'radians', 'cycles', 'generalized_mass', 'generalized_stiffness']
         return headers
 
-    def write_f06(self, f, header, page_stamp, page_num=1):  # not proper msg start
+    def write_f06(self, f06_file, header, page_stamp, page_num=1):  # not proper msg start
         title = ''
         if self.title is not None:
             title = '%s' % str(self.title).center(124).rstrip() + '\n'
         msg = header + ['                                              R E A L   E I G E N V A L U E S\n', title,
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
+        f06_file.write(''.join(msg))
 
         for (imode, order) in sorted(iteritems(self.extraction_order)):
             eigr = self.eigenvalues[imode]
@@ -335,10 +336,9 @@ class BucklingEigenvalues(BaseScalarObject):
             stiff = self.generalized_stiffness[imode]
             [eigr, freq, omega, mass, stiff] = write_floats_13e([eigr, freq, omega, mass, stiff])
             #            i  ord eig ome f   m          k
-            msg.append(' %8s%10s%20s%20s%20s%20s       %s\n' % (
+            f06_file.write(' %8s%10s%20s%20s%20s%20s       %s\n' % (
                 imode, order, eigr, omega, freq, mass, stiff))
-        msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
+        f06_file.write(page_stamp % page_num)
         return page_num
 
     #def __repr__(self):

@@ -40,7 +40,8 @@ class UGRID2D_Reader(object):
             data = ugrid_str.split()
 
         try:
-            nnodes, ntrias, nquads, ntets, npyram5, npenta6, nhexas8s = (int(val) for val in data[:7])
+            nnodes, ntrias, nquads, ntets, npyram5, npenta6, nhexas8s = (
+                int(val) for val in data[:7])
         except ValueError:
             self.log.error('data[:7] = %s' % data[:7])
             raise

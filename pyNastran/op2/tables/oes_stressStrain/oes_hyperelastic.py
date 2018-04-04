@@ -249,7 +249,8 @@ class HyperelasticQuadArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #msg, nnodes, cen = _get_plate_msg(self)
@@ -269,7 +270,7 @@ class HyperelasticQuadArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06_file.write(''.join(header + msg))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -288,13 +289,15 @@ class HyperelasticQuadArray(OES_Object):
 
                 if i == 1:
                     gauss = 'GAUS'  # TODO: update
-                    f.write('0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (
-                        eid, gauss, 1, oxxi, oyyi, txyi, angle, major, minor))
+                    f06_file.write(
+                        '0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (
+                            eid, gauss, 1, oxxi, oyyi, txyi, angle, major, minor))
                 else:
-                    f.write(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (
-                        '', '', i, oxxi, oyyi, txyi, angle, major, minor))
+                    f06_file.write(
+                        ' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (
+                            '', '', i, oxxi, oyyi, txyi, angle, major, minor))
 
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

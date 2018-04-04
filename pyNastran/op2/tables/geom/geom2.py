@@ -407,9 +407,11 @@ class GEOM2(GeomCommon):
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 #self.log.info('CBEAM: eid=%s fe=%s f=%s; basic cid' % (eid, fe, f))
+
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 1:  # global cid
+                # CBEAM    89616   5       384720  384521  0.      0.     -1.
                 out = s2.unpack(edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
@@ -418,13 +420,31 @@ class GEOM2(GeomCommon):
                            [f, x1, x2, x3]]
             elif f == 2:  # grid option
                 out = s3.unpack(edata)
-                (eid, pid, ga, gb, sa, sb, g0, xx, xx, fe, pa,
+                (eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                #self.log.info('CBEAM: eid=%s fe=%s f=%s; grid option' % (eid, fe, f))
-                data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
-                           [f, g0]]
+                #self.log.info('CBEAM: eid=%s fe=%s f=%s; grid option (g0=%s xxa=%s xxb=%s)' % (eid, fe, f, g0, xxa, xxb))
+                if g0 <= 0 or g0 >= 100000000 or xxa != 0 or xxb != 0:
+                    # Nastran set this wrong...MasterModelTaxi
+                    #CBEAM    621614  2672    900380  900379 .197266 -.978394.0600586
+                    #    6
+
+
+                    f = 1
+                    out = s2.unpack(edata)
+                    (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
+                     pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                    #self.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
+                    data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                               [f, x1, x2, x3]]
+                    #self.log.info('   (x1=%s x2=%s x3=%s)' % (x1, x2, x3))
+                else:
+                    data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                               [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%r' % f)
+            if self.is_debug_file:
+                self.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (eid, f, fe, str(data_in)))
+
             elem = CBEAM.add_op2_data(data_in, f)
             self.add_op2_element(elem)
             n += 72

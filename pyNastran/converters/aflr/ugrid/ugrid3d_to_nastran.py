@@ -55,5 +55,5 @@ def ugrid3d_to_nastran(ugrid_filename, bdf_filename, include_shells=True, includ
                        #size=size, is_double=is_double)
 
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+    #main()

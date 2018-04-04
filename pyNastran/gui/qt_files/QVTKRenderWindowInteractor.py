@@ -40,7 +40,7 @@ Changes by Fabian Wenzel, Jan. 2016
  Support for Python3
 """
 import vtk
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int as qt_version
 
 # Check whether a specific PyQt implementation was chosen
 #try:

@@ -194,6 +194,7 @@ class CDAMP2(LineDamper):
     _field_map = {
         1: 'eid', 2:'b', 'c1':4, 'c2':6,
     }
+    cp_name_map = {'B' : 'b'}
     def _update_field_helper(self, n, value):
         if n == 3:
             self.nodes[0] = value

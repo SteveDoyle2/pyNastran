@@ -13,10 +13,14 @@ from .result import Result
 from .pynastran_interface import get_bdf_cards
 from .punch import PunchReader
 from .f06 import F06Reader
+from .exceptions import pyNastranReadBdfError, pyNastranWriteBdfError
+from .table_paths import TablePaths
+from .data_helper import DataHelper
 
 
 class H5Nastran(object):
-    version = '0.1.0'
+    version_str = '0.1.0a0'
+    version = (0, 1, 0)
 
     default_driver = None
 
@@ -40,20 +44,23 @@ class H5Nastran(object):
 
         self._tables = set()
         self._unsupported_tables = set()
+        self._unsupported_bdf_cards = set()
 
         self._bdf = None
         self._punch = None
         self._f06 = None
         self._op2 = None
 
-        self._bdf_domain = 1
-
         self._element_results_tables = {}
+
+        self.table_paths = TablePaths()
+
+        self.defaults = DataHelper()
 
         if mode == 'w':
             self._write_info()
         else:
-            self.input.update()
+            self._update()
 
     def close(self):
         self.h5f.close()
@@ -78,7 +85,10 @@ class H5Nastran(object):
         self._bdf = filename
 
         self.bdf = BDF(debug=False)
-        self.bdf.read_bdf(filename)
+        try:
+            self.bdf.read_bdf(filename)  # allow xref, could catch bdf errors
+        except Exception:
+            raise pyNastranReadBdfError("h5Nastran: pyNastran is unable to load the bdf '%s' for some reason." % filename)
 
         bdf = self.bdf
 
@@ -107,7 +117,7 @@ class H5Nastran(object):
                 continue
 
             try:
-                table.write_data(cards[card_name], self._bdf_domain)
+                table.write_data(cards[card_name])
             except NotImplementedError:
                 print(card_name, 'not supported')
                 unsupported.append(card_name)
@@ -118,8 +128,6 @@ class H5Nastran(object):
             table.finalize()
 
         self._unsupported_cards(unsupported)
-
-        self._bdf_domain += 1
 
         self._save_bdf()
         
@@ -220,10 +228,38 @@ class H5Nastran(object):
 
             self._result_tables[_result_type] = result_table
 
+    def supported_from_bdf_cards(self):
+        cards = []
+
+        from .input.input_table import InputTable
+
+        keys = sorted(self._card_tables.keys())
+
+        for key in keys:
+            table = self._card_tables[key]
+            if table.from_bdf_implemented():
+                cards.append(key)
+
+        return cards
+
+    def supported_to_bdf_cards(self):
+        cards = []
+
+        from .input.input_table import InputTable
+
+        keys = sorted(self._card_tables.keys())
+
+        for key in keys:
+            table = self._card_tables[key]
+            if table.to_bdf_implemented():
+                cards.append(key)
+
+        return cards
+
     def _load_bdf(self):
         from zlib import decompress
 
-        bdf_lines = decompress(self.h5f.get_node('/PRIVATE/NASTRAN/INPUT/BDF_LINES').read()).decode()
+        bdf_lines = decompress(self.h5f.get_node(self.table_paths.bdf_lines).read()).decode()
 
         from six import StringIO
 
@@ -237,9 +273,16 @@ class H5Nastran(object):
         data.write(bdf_lines)
 
         bdf = BDF(debug=False)
-        bdf.read_bdf(data)
 
+        for card in self.supported_to_bdf_cards():
+            bdf.cards_to_read.remove(card)
+
+        bdf.read_bdf(data, xref=False)
         data.close()
+
+        self.input.to_bdf(bdf)
+
+        bdf.cross_reference()
 
         self.bdf = bdf
 
@@ -321,18 +364,31 @@ class H5Nastran(object):
 
         out = StringIO()
 
-        self.bdf.write_bdf(out, close=False)
+        try:
+            self.bdf.write_bdf(out, close=False)
+        except Exception:
+            raise pyNastranWriteBdfError("h5Nastran: pyNastran is unable to write bdf '%s' for some reason." % self._bdf)
 
         from zlib import compress
 
-        self.h5f.create_array('/PRIVATE/NASTRAN/INPUT', 'BDF_LINES', obj=compress(out.getvalue().encode()),
-                              title='BDF LINES',
-                              createparents=True)
+        self.h5f.create_array(self.table_paths.bdf_lines_path, self.table_paths.bdf_lines_table,
+                              obj=compress(out.getvalue().encode()), title='BDF LINES', createparents=True)
+
+        self.h5f.create_table(self.table_paths.defaults_path, self.table_paths.defaults_table, self.defaults.Format,
+                              'DATA DEFAULTS', expectedrows=1, createparents=True)
+
+        table = self.h5f.get_node(self.table_paths.defaults)
+        table.append(self.defaults.save())
+
+        self.h5f.flush()
 
     def _unsupported_cards(self, cards):
         cards = np.array(cards, dtype='S8')
-        self.h5f.create_array('/PRIVATE/NASTRAN/INPUT', 'UNSUPPORTED_CARDS', obj=cards, title='UNSUPPORTED BDF CARDS',
-                              createparents=True)
+        self.h5f.create_array(self.table_paths.unsupported_cards_path, self.table_paths.unsupported_cards_table,
+                              obj=cards, title='UNSUPPORTED BDF CARDS', createparents=True)
+        
+        self._unsupported_bdf_cards.clear()
+        self._unsupported_bdf_cards.update(set(cards))
 
     def _unsupported_table(self, table_data):
         print('Unsupported table %s' % table_data.header.results_type)
@@ -343,13 +399,18 @@ class H5Nastran(object):
 
         info = 'h5Nastran version %s\nPowered by pyNastran version %s' % (self.version, pyNastran.__version__)
 
-        self.h5f.create_array('/PRIVATE/h5Nastran', 'h5Nastran', obj=info.encode(), title='h5Nastran Info',
-                              createparents=True)
+        self.h5f.create_array(self.table_paths.about_path, self.table_paths.about_table, obj=info.encode(),
+                              title='h5Nastran Info', createparents=True)
 
     def _write_unsupported_tables(self):
         headers = list(sorted(self._unsupported_tables))
         data = np.array(headers, dtype='S256')
 
-        self.h5f.create_array('/PRIVATE/NASTRAN/RESULT', 'UNSUPPORTED_RESULT_TABLES', obj=data,
-                              title='UNSUPPORTED RESULT TABLES',
-                              createparents=True)
+        self.h5f.create_array(self.table_paths.unsupported_result_tables_path,
+                              self.table_paths.unsupported_result_tables_table, obj=data,
+                              title='UNSUPPORTED RESULT TABLES', createparents=True)
+
+    def _update(self):
+        self.input.update()
+        defaults = self.h5f.get_node(self.table_paths.defaults).read()
+        self.defaults.load(defaults)

@@ -8,8 +8,6 @@ from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
-#from pyNastran.gui.gui_objects.gui_result import GuiResult
-#from pyNastran.converters.nastran.displacements import DisplacementResults
 from pyNastran.bdf.cards.base_card import deprecated
 
 from pyNastran.gui.test.mock_vtk import (
@@ -263,7 +261,8 @@ class FakeGUIMethods(GuiCommon):
     def create_alternate_vtk_grid(self, name, color=None, line_width=None,
                                   opacity=None, point_size=None, bar_scale=None,
                                   representation=None, is_visible=True,
-                                  follower_nodes=None, is_pickable=False, ugrid=None):
+                                  follower_nodes=None, follower_function=None,
+                                  is_pickable=False, ugrid=None):
         """Fake creates an AltGeometry object"""
         self.alt_grids[name] = MockGrid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
@@ -273,6 +272,8 @@ class FakeGUIMethods(GuiCommon):
         self.geometry_properties[name] = geom
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
+        if follower_function is not None:
+            self.follower_functions[name] = follower_function
 
     def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
                                      opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
@@ -300,22 +301,22 @@ class FakeGUIMethods(GuiCommon):
             self.geometry_actors[name] = MockGeometryActor()
 
     def log_debug(self, msg):
-        """turns logs into prints to aide testing debug"""
+        """turns logs into prints to aide debugging"""
         if self.debug:
             print('DEBUG:  ', msg)
 
     def log_info(self, msg):
-        """turns logs into prints to aide testing debug"""
+        """turns logs into prints to aide debugging"""
         if self.debug:
             print('INFO:  ', msg)
 
     def log_error(self, msg):
-        """turns logs into prints to aide testing debug"""
+        """turns logs into prints to aide debugging"""
         if self.debug:
             print('ERROR:  ', msg)
 
     def log_warning(self, msg):
-        """turns logs into prints to aide testing debug"""
+        """turns logs into prints to aide debugging"""
         if self.debug:
             print('WARNING:  ', msg)
 

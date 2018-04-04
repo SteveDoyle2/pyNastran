@@ -87,10 +87,6 @@ class GuiAttributes(object):
 
         #-------------
         # internal params
-        self.show_info = True
-        self.show_debug = True
-        self.show_gui = True
-        self.show_command = True
         self.coord_id = 0
 
         self.ncases = 0
@@ -104,6 +100,7 @@ class GuiAttributes(object):
         self.tools = []
         self.checkables = []
         self.actions = {}
+        self.modules = OrderedDict()
 
         # actor_slots
         self.text_actors = {}
@@ -120,6 +117,7 @@ class GuiAttributes(object):
         #}
         self.geometry_properties = OrderedDict()
         self.follower_nodes = {}
+        self.follower_functions = {}
 
         self.itext = 0
 
@@ -136,7 +134,7 @@ class GuiAttributes(object):
 
         self._is_displaced = False
         self._is_forces = False
-        self._is_normals = False
+        self._is_fringe = False
 
         self._xyz_nominal = None
 
@@ -464,7 +462,6 @@ class GuiAttributes(object):
         self._form = formi
         data = []
         for key in self.case_keys:
-            #print(key)
             assert isinstance(key, int), key
             unused_obj, (i, unused_name) = self.result_cases[key]
             t = (i, [])

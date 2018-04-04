@@ -16,7 +16,7 @@ model_path = os.path.join(pkg_path, 'converters', 'dev', 'obj') #, 'models')
 class ObjGUI(ObjIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        ObjIO.__init__(self)
+        ObjIO.__init__(self, self)
 
 
 class TestObjGUI(unittest.TestCase):

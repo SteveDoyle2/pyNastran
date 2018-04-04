@@ -15,6 +15,14 @@ from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 from pyNastran.bdf.errors import MissingDeckSections
 
+FILE_MANAGEMENT = (
+    'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
+    'DBFIX ', 'DBLOAD ', 'DBLOCATE ', 'DBSETDEL ', 'DBUNLOAD ',
+    'DBUPDATE ', 'ENDJOB ', 'EXPAND ', 'INCLUDE ', 'INIT ', 'NASTRAN ',
+    'PROJ ',
+)
+EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE '])
+
 
 class BDFInputPy(object):
     def __init__(self, read_includes, dumplines, encoding, log=None, debug=False):
@@ -426,15 +434,25 @@ def _lines_to_decks(lines, punch):
         bulk_data_lines = lines
     else:
         flag = 1
+        i = 0
         for i, line in enumerate(lines):
             #print(flag, line.rstrip())
             if flag == 1:
-                #line = line.upper()
+                # I don't think we need to handle the comment because
+                # this uses a startswith
                 if line.upper().startswith('CEND'):
                     assert flag == 1
                     flag = 2
                 executive_control_lines.append(line.rstrip())
+
             elif flag == 2:
+                # we have to handle the comment because we could incorrectly
+                # flag the model as flipping to the BULK data section if we
+                # have BEGIN BULK in a comment
+                if '$' in line:
+                    line, comment = line.split('$', 1)
+                    case_control_lines.append('$' + comment.rstrip())
+
                 uline = line.upper()
                 if 'BEGIN' in uline and ('BULK' in uline or 'SUPER' in uline):
                     assert flag == 2
@@ -492,12 +510,6 @@ def _break_system_lines(executive_control_lines):
 
     F:\\Program Files\\Siemens\\NXNastran\\nxn10p1\\nxn10p1\\nast\\tpl\\mdb01.dat
     """
-    file_management = (
-        'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
-        'DBFIX ', 'DBLOAD ', 'DBLOCATE ', 'DBSETDEL ', 'DBUNLOAD ',
-        'DBUPDATE ', 'ENDJOB ', 'EXPAND ', 'INCLUDE ', 'INIT ', 'NASTRAN ',
-        'PROJ ',
-    )
     j = None
     sol_line = None
     isol_line = None
@@ -513,7 +525,7 @@ def _break_system_lines(executive_control_lines):
         if line_upper.startswith('SOL '):
             isol_line = i+1
             sol_line = line
-        if line_upper.startswith(file_management):
+        if line_upper.startswith(FILE_MANAGEMENT):
             system_lines += executive_control_lines[j:i+1]
             j = i+1
 
@@ -598,7 +610,7 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
                 line = bdf_file.readline().rstrip()
             except UnicodeDecodeError:
                 iline0 = max([iline - nlines_previous, 0])
-                self.log.error('filename=%s' % self.bdf_filename)
+                self.log.error('filename=%s' % bdf_filename)
                 for iline1, line in enumerate(lines[iline0:iline]):
                     self.log.error('lines[%i]=%r' % (iline0 + iline1, line))
                 msg = "\n%s encoding error on line=%s of %s; not '%s'" % (

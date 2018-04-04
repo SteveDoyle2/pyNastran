@@ -58,7 +58,7 @@ import os
 from struct import unpack, Struct
 from collections import Counter
 from typing import List
-from six import string_types, iteritems, PY2, PY3, b
+from six import binary_type, string_types, iteritems, PY2, PY3, b
 from six.moves import range
 
 from numpy import array
@@ -78,7 +78,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
 #from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
-from pyNastran.op2.tables.ogs import OGS
+from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
@@ -1853,7 +1853,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             self.additional_matrices = {}
             for matrix_name, matrix in iteritems(matrices):
-                self.additional_matrices[b(matrix_name)] = matrix
+                if isinstance(matrix_name, binary_type):
+                    self.additional_matrices[matrix_name] = matrix
+                else:
+                    self.additional_matrices[b(matrix_name)] = matrix
 
     def _skip_table_helper(self):
         """

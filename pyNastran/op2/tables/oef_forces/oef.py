@@ -317,9 +317,7 @@ class OEF(OP2Common):
     def _read_oef1_4(self, data, ndata):
         """Table 4 parser for OEF1 table"""
         if self.thermal == 0:
-            if self.isubcase not in self.case_control_deck.subcases:
-                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-            self.subcase.add_op2_data(self.data_code, 'FORCE', self.log)
+            self._setup_op2_subcase('FORCE')
             n = self._read_oef1_loads(data, ndata)
         elif self.thermal == 1:
             n = self._read_oef1_thermal(data, ndata)
@@ -3181,7 +3179,7 @@ class OEF(OP2Common):
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealConeAxForceArray)
             if auto_return:
-                return nelements * self.num_wide * 4
+                return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized:

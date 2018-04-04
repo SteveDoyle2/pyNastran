@@ -175,7 +175,8 @@ class ComplexSpringDamperArray(OES_Object):
             msg += ['            FREQUENCY                    STRESS                       FREQUENCY                    STRESS\n']
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
@@ -193,7 +194,7 @@ class ComplexSpringDamperArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             spring_force = self.data[itime, :, 0]
@@ -205,8 +206,8 @@ class ComplexSpringDamperArray(OES_Object):
                     #14                  0.0          /  0.0                           0.0          /  0.0
 
 
-                f.write('      %8i   %-13s / %-13s\n' % (eid, rspring, ispring))
-            f.write(page_stamp % page_num)
+                f06_file.write('      %8i   %-13s / %-13s\n' % (eid, rspring, ispring))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

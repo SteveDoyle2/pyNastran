@@ -71,6 +71,7 @@ from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
 from pyNastran.gui.formats import CLASS_MAP
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_idtype
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -81,19 +82,40 @@ class Interactor(vtk.vtkGenericRenderWindowInteractor):
         print('highlight')
 
 
-class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
-    def __init__(self, parent=None):
+#class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
+    #def __init__(self, parent=None):
 
-        render_window = vtk.vtkRenderWindow()
-        iren = Interactor()
-        iren.SetRenderWindow(render_window)
-        kwargs = {
-            'iren' : iren,
-            'rw' : render_window,
-        }
-        QVTKRenderWindowInteractor.__init__(self, parent=parent,
-                                            iren=iren, rw=render_window)
+        #render_window = vtk.vtkRenderWindow()
+        #iren = Interactor()
+        #iren.SetRenderWindow(render_window)
+        #kwargs = {
+            #'iren' : iren,
+            #'rw' : render_window,
+        #}
+        #QVTKRenderWindowInteractor.__init__(self, parent=parent,
+                                            #iren=iren, rw=render_window)
         #self.Highlight
+
+class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
+    #https://stackoverflow.com/questions/33108670/arrow-key-events-in-vtk-on-windows
+    def __init__(self, iren, parent):
+        self.parent = parent
+        vtk.vtkInteractorStyleTrackballCamera.__init__(self, iren)
+        #self.AddObserver("CharEvent", self.onKeyPressEvent)
+
+        self.AddObserver("KeyPressEvent",self.keyPressEvent)
+
+    def keyPressEvent(self,obj,event):
+        key = self.parent.iren.GetKeySym()
+        if key == 'Left':
+            self.parent.on_pan_left(event)
+        elif key == 'Right':
+            self.parent.on_pan_right(event)
+        elif key == 'Up':
+            self.parent.on_pan_up(event)
+        elif key == 'Down':
+            self.parent.on_pan_down(event)
+
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon2(QMainWindow, GuiCommon):
@@ -103,10 +125,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         # this will reset the background color/label color if things break
         #super(QMainWindow, self).__init__(self)
-        if qt_version == 4:
+        if qt_version == 'pyqt4':
             QMainWindow.__init__(self)
             GuiCommon.__init__(self, **kwds)
-        elif qt_version == 5:
+        elif qt_version == 'pyqt5':
             super(GuiCommon2, self).__init__(**kwds)
         elif qt_version == 'pyside':
             #super(GuiCommon2, self).__init__(**kwds) # fails
@@ -164,7 +186,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
         self.display_units = ['', '', '']
-        self.recent_files = []
+        #self.recent_files = []
 
     #def dragEnterEvent(self, e):
         #print(e)
@@ -200,10 +222,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """hides the legend"""
         self.scalar_bar.VisibilityOff()
         #self.scalar_bar.is_shown = False
+        if self._legend_window_shown:
+            self._legend_window.hide_legend()
 
     def show_legend(self):
         """shows the legend"""
         self.scalar_bar.VisibilityOn()
+        if self._legend_window_shown:
+            self._legend_window.show_legend()
         #self.scalar_bar.is_shown = True
 
     @property
@@ -466,20 +492,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('show_gui', 'Show GUI', 'show_gui.png', None, 'Show "GUI" messages', self.on_show_gui),
                 ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
 
-                ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
-                ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
+                ('magnify', 'Magnify', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
+                ('shrink', 'Shrink', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification),
 
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
-                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
                 ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
                 ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
                 ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
-                ('reload', 'Reload Model...', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
+                ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
 
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
@@ -488,9 +514,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
                 ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
 
-                ('front_view', 'Front View', 'front.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-                ('left_view', 'Left View', 'left.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-                ('bottom_view', 'Bottom View', 'bottom.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+                ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+                ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
@@ -523,13 +549,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.tools = tools
         self.checkables = checkables
 
+    def keyPressEvent(self, qkey_event):
+        #print('qkey_event =', qkey_event.key())
+        super(GuiCommon2, self).keyPressEvent(qkey_event)
+
     def on_increase_font_size(self):
         """used by the hidden_tools for Ctrl +"""
-        self.on_set_font_size(self.font_size + 1)
+        self.on_set_font_size(self.settings.font_size + 1)
 
     def on_decrease_font_size(self):
         """used by the hidden_tools for Ctrl -"""
-        self.on_set_font_size(self.font_size - 1)
+        self.on_set_font_size(self.settings.font_size - 1)
 
     def on_set_font_size(self, font_size, show_command=True):
         """changes the font size"""
@@ -542,9 +572,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             font_size = 6
         if self.font_size == font_size:
             return False
-        self.font_size = font_size
+        self.settings.font_size = font_size
         font = QtGui.QFont()
-        font.setPointSize(self.font_size)
+        font.setPointSize(self.settings.font_size)
         self.setFont(font)
 
         #self.toolbar.setFont(font)
@@ -640,19 +670,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
         hidden_tools = ('cycle_results', 'rcycle_results',
                         'font_size_increase', 'font_size_decrease')
 
-        menu_items = []
+        menu_items = OrderedDict()
         if create_menu_bar:
-            menu_items = [
-                (self.menu_file, menu_file),
-                (self.menu_view, menu_view),
-                (self.menu_window, menu_window),
-                (self.menu_help, ('about',)),
-                (self.menu_scripts, scripts),
-                (self.toolbar, toolbar_tools),
-                (self.menu_hidden, hidden_tools),
-                # (self.menu_scripts, ()),
-                #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
-            ]
+            menu_items['file'] = (self.menu_file, menu_file)
+            menu_items['view'] = (self.menu_view, menu_view)
+            menu_items['main'] = (self.menu_window, menu_window)
+            menu_items['help'] = (self.menu_help, ('about',))
+            menu_items['scripts'] = (self.menu_scripts, scripts)
+            menu_items['toolbar'] = (self.toolbar, toolbar_tools)
+            menu_items['hidden'] = (self.menu_hidden, hidden_tools)
         return menu_items
 
     def _hide_menubar(self):
@@ -676,7 +702,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
-        for menu, items in menu_items:
+        assert isinstance(menu_items, dict), menu_items
+        for menu_name, (menu, items) in iteritems(menu_items):
             if menu is None:
                 continue
             for i in items:
@@ -706,7 +733,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self._create_plane_from_points(None)
 
     def _update_menu(self, menu_items):
-        for menu, unused_items in menu_items:
+        assert isinstance(menu_items, dict), menu_items
+        for name, (menu, unused_items) in iteritems(menu_items):
             menu.clear()
         self._populate_menu(menu_items)
 
@@ -818,13 +846,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
             print(typ, msg)
             return
 
-        if typ == 'DEBUG' and not self.show_debug:
+        if typ == 'DEBUG' and not self.settings.show_debug:
             return
-        elif typ == 'INFO' and not self.show_info:
+        elif typ == 'INFO' and not self.settings.show_info:
             return
-        elif typ == 'GUI' and not self.show_gui:
+        elif typ == 'GUI' and not self.settings.show_gui:
             return
-        elif typ == 'COMMAND' and not self.show_command:
+        elif typ == 'COMMAND' and not self.settings.show_command:
             return
 
         _fr = sys._getframe(4)  # jump to get out of the logger code
@@ -1032,8 +1060,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.create_cell_picker()
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
-                                  bar_scale=0.0, representation=None, is_visible=True,
-                                  follower_nodes=None, is_pickable=False, ugrid=None):
+                                  bar_scale=0.0, representation=None, display=None, is_visible=True,
+                                  follower_nodes=None, follower_function=None,
+                                  is_pickable=False, ugrid=None):
         """
         Creates an AltGeometry object
 
@@ -1062,6 +1091,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             can you pick a node/cell on this actor
         follower_nodes : List[int]
             the nodes that are brought along with a deflection
+        follower_function : function
+            a custom follower_node update function
         ugrid : vtk.vtkUnstructuredGrid(); default=None
             the grid object; one will be created that you can fill
             if None is passed in
@@ -1073,9 +1104,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self, name, color=color,
             line_width=line_width, opacity=opacity,
             point_size=point_size, bar_scale=bar_scale,
-            representation=representation, is_visible=is_visible, is_pickable=is_pickable)
+            representation=representation, display=display,
+            is_visible=is_visible, is_pickable=is_pickable)
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
+        if follower_function is not None:
+            self.follower_functions[name] = follower_function
 
     def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
                                      opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
@@ -1713,16 +1747,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
-        self.rend.SetBackground(*self.background_color)
+        self.rend.SetBackground(*self.settings.background_color)
+        #self.rend.SetBackground2(*self.background_color2)
 
         self.rend.ResetCamera()
         self.set_style_as_trackball()
         self.build_lookup_table()
 
         text_size = 14
-        self.create_text([5, 50], 'Max  ', text_size)  # text actor 0
-        self.create_text([5, 35], 'Min  ', text_size)  # text actor 1
-        self.create_text([5, 20], 'Word1', text_size)  # text actor 2
+        dtext_size = text_size + 1
+        self.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
+        self.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
+        self.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
         self.create_text([5, 5], 'Word2', text_size)  # text actor 3
 
         self.get_edges()
@@ -1736,7 +1772,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def set_style_as_trackball(self):
         """sets the default rotation style"""
         #self._simulate_key_press('t') # change mouse style to trackball
-        self.style = vtk.vtkInteractorStyleTrackballCamera()
+        self.style = TrackballStyleCamera(self.iren, self)
         self.vtk_interactor.SetInteractorStyle(self.style)
 
     def on_run_script(self, python_file=False):
@@ -1774,19 +1810,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_show_info(self):
         """sets a flag for showing/hiding INFO messages"""
-        self.show_info = not self.show_info
+        self.settings.show_info = not self.settings.show_info
 
     def on_show_debug(self):
         """sets a flag for showing/hiding DEBUG messages"""
-        self.show_debug = not self.show_debug
+        self.settings.show_debug = not self.settings.show_debug
 
     def on_show_gui(self):
         """sets a flag for showing/hiding GUI messages"""
-        self.show_gui = not self.show_gui
+        self.settings.show_gui = not self.settings.show_gui
 
     def on_show_command(self):
         """sets a flag for showing/hiding COMMAND messages"""
-        self.show_command = not self.show_command
+        self.settings.show_command = not self.settings.show_command
 
     def on_reset_camera(self):
         self.log_command('on_reset_camera()')
@@ -1845,6 +1881,120 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera.Modified()
         self.vtk_interactor.Render()
         self.log_command('rotate(%s)' % rotate_deg)
+
+    def on_pan_left(self, event):
+        """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
+        camera, cam, focal = self._setup_pan()
+
+        # Create a vector that points upward, i.e. (0, 1, 0)
+        up = [0, 1, 0] #We don't want roll
+        vec = [0, 0, 0]
+        new_cam = [0, 0, 0]
+        new_focal = [0, 0, 0]
+
+        # Calculate the forward pointing unit-vector 'vec' again in the same way,
+        # i.e. the normalized vector of focal point – camera position
+        vtk.vtkMath.Subtract(focal, cam, vec)
+
+        vec[1] = 0 #We don't want roll
+        vtk.vtkMath.Normalize(vec)
+
+        # Calculate the cross product of the forward vector by the up vector,
+        # which will give us an orthogonal vector pointing right relative to
+        #the camera
+        vtk.vtkMath.Cross(vec, up, vec)
+
+        # Add this to the camera position and focal point to move it right
+        # new_cam = cam + vec
+        vtk.vtkMath.Add(cam, vec, new_cam)
+
+        # new_focal = focal + vec
+        vtk.vtkMath.Add(focal, vec, new_focal)
+        self._set_camera_position_focal_point(camera, new_cam, new_focal)
+
+    def on_pan_right(self, event):
+        """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
+        camera, cam, focal = self._setup_pan()
+
+        # Create a vector that points upward, i.e. (0, 1, 0)
+        up = [0, 1, 0] #We don't want roll
+        vec = [0, 0, 0]
+        new_cam = [0, 0, 0]
+        new_focal = [0, 0, 0]
+
+        # Calculate the forward pointing unit-vector 'vec' again in the same way,
+        # i.e. the normalized vector of focal point – camera position
+        vtk.vtkMath.Subtract(focal, cam, vec)
+
+        vec[1] = 0 #We don't want roll
+        vtk.vtkMath.Normalize(vec)
+
+        # Calculate the cross product of the forward vector by the up vector,
+        # which will give us an orthogonal vector pointing right relative to
+        #the camera
+        #vec = up x vec
+        vtk.vtkMath.Cross(vec, up, vec)
+
+        # Subtract vec from the camera position and focal point to move it right
+        # new_cam = cam - vec
+        vtk.vtkMath.Subtract(cam, vec, new_cam)
+
+        # new_focal = focal - vec
+        vtk.vtkMath.Subtract(focal, vec, new_focal)
+        self._set_camera_position_focal_point(camera, new_cam, new_focal)
+
+    def on_pan_up(self, event):
+        """not 100% on this"""
+        camera, cam, focal = self._setup_pan()
+
+        # Create a 'vec' vector that will be the direction of movement
+        # (numpad 8 and 5 generate movement along the z-axis; numpad 4
+        # and 6 along the x-axis; numpad 7 and 9 along the y-axis)
+        vec = [0, 1, 0]
+        new_cam = [0, 0, 0]
+        new_focal = [0, 0, 0]
+
+        # Add the movement to the current camera position and focal point,
+        # and save these in 'new_cam' and 'new_focal' respectively
+        vtk.vtkMath.Subtract(cam, vec, new_cam)
+
+        # new_focal = focal - vec
+        vtk.vtkMath.Subtract(focal, vec, new_focal)
+        self._set_camera_position_focal_point(camera, new_cam, new_focal)
+
+    def on_pan_down(self, event):
+        """not 100% on this"""
+        camera, cam, focal = self._setup_pan()
+
+        # Create a 'vec' vector that will be the direction of movement
+        # (numpad 8 and 5 generate movement along the z-axis; numpad 4
+        # and 6 along the x-axis; numpad 7 and 9 along the y-axis)
+        vec = [0, 1, 0]
+        new_cam = [0, 0, 0]
+        new_focal = [0, 0, 0]
+
+        # Add the movement to the current camera position and focal point,
+        # and save these in 'new_cam' and 'new_focal' respectively
+        vtk.vtkMath.Add(cam, vec, new_cam)
+
+        # new_focal = focal + vec
+        vtk.vtkMath.Add(focal, vec, new_focal)
+        self._set_camera_position_focal_point(camera, new_cam, new_focal)
+
+    def _setup_pan(self):
+        camera = self.rend.GetActiveCamera()
+        cam = camera.GetPosition()
+        focal = camera.GetFocalPoint()
+        return camera, cam, focal
+
+    def _set_camera_position_focal_point(self, camera, new_cam, new_focal):
+        """Set the camera position and focal point to the new vectors"""
+        camera.SetPosition(new_cam)
+        camera.SetFocalPoint(new_focal)
+
+        # Update the clipping range of the camera
+        self.rend.ResetCameraClippingRange()
+        self.Render()
 
     def on_rotate_clockwise(self):
         """rotate clockwise"""
@@ -2119,7 +2269,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         .. todo:: doesn't work
         """
         #print('_hide_ids_mask = ', ids_to_hide)
-        ids = self.numpy_to_vtk_idtype(ids_to_hide)
+        ids = numpy_to_vtk_idtype(ids_to_hide)
 
         #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
 
@@ -2148,17 +2298,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.selection_node.SetSelectionList(ids)
             self.update_all(render=True)
 
-
-    def numpy_to_vtk_idtype(self, ids):
-        #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-        from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtkIdTypeArray
-        dtype = get_numpy_idtype_for_vtk()
-        ids = np.asarray(ids, dtype=dtype)
-        vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
-        return vtk_ids
-
     def _update_ids_mask_show_false(self, ids_to_show, flip_flag=True, render=True):
-        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         if flip_flag:
@@ -2179,7 +2320,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _update_ids_mask_show(self, ids_to_show):
         """helper method for ``show_ids_mask``"""
-        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         self.selection.RemoveAllNodes()
@@ -2206,7 +2347,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _update_ids_mask_show_true(self, ids_to_show,
                                    flip_flag=True, render=True):  # pragma: no cover
-        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         if flip_flag:
@@ -2227,7 +2368,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _update_ids_mask(self, ids_to_show, flip_flag=True, show_flag=True, render=True):
         print('flip_flag=%s show_flag=%s' % (flip_flag, show_flag))
 
-        ids = self.numpy_to_vtk_idtype(ids_to_show)
+        ids = numpy_to_vtk_idtype(ids_to_show)
         ids.Modified()
 
         if flip_flag:
@@ -2371,7 +2512,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         text_prop = text_actor.GetTextProperty()
         #text_prop.SetFontFamilyToArial()
         text_prop.SetFontSize(int(text_size))
-        text_prop.SetColor(self.text_color)
+        text_prop.SetColor(self.settings.text_color)
         text_actor.SetDisplayPosition(*position)
 
         text_actor.VisibilityOff()
@@ -2436,7 +2577,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def build_fmts(self, fmt_order, stop_on_failure=False):
         """populates the formats that will be supported"""
-        stop_on_failure=True
+        stop_on_failure = True
         fmts = []
         for fmt in fmt_order:
             geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
@@ -2447,9 +2588,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             elif hasattr(self, geom_results_funcs):
                 data = getattr(self, geom_results_funcs)()
             else:
+                msg = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
                 if stop_on_failure:
-                    func = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
-                    raise RuntimeError(func)
+                    raise RuntimeError(msg)
+                self.log_error(msg)
             self._add_fmt(fmts, fmt, geom_results_funcs, data)
 
         if len(fmts) == 0:
@@ -2767,11 +2909,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             if hasattr(self, method_new):
                 self._update_menu_bar_to_format(self.format, method_new)
-                    #self._update_menu_bar_to_format(self.format)
-                    #actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
-                    #menu_items = self._create_menu_items(actions)
-                    #menu_items = self._create_menu_items()
-                    #self._populate_menu(menu_items)
+                #self._update_menu_bar_to_format(self.format)
+                #actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
+                #menu_items = self._create_menu_items(actions)
+                #menu_items = self._create_menu_items()
+                #self._populate_menu(menu_items)
 
     def on_load_custom_results(self, out_filename=None, restype=None):
         """will be a more generalized results reader"""
@@ -3536,12 +3678,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #text_actor.SetPosition(actor.GetPosition())
         text_prop = text_actor.GetTextProperty()
-        text_prop.SetFontSize(self.annotation_size)
+        text_prop.SetFontSize(self.settings.annotation_size)
         text_prop.SetFontFamilyToArial()
         text_prop.BoldOn()
         text_prop.ShadowOn()
 
-        text_prop.SetColor(self.annotation_color)
+        text_prop.SetColor(self.settings.annotation_color)
         text_prop.SetJustificationToCentered()
 
         # finish adding the actor
@@ -3661,7 +3803,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ..todo :: support cids
         ..todo :: fix the coords
         """
-        for axis in self.axes.itervalues():
+        for axis in itervalues(self.axes):
             axis.VisibilityOff()
         self.corner_axis.EnabledOff()
 
@@ -3670,7 +3812,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ..todo :: support cids
         ..todo :: fix the coords
         """
-        for axis in self.axes.itervalues():
+        for axis in itervalues(self.axes):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
@@ -3970,7 +4112,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     phase = phases[i]
                     if icase != self.icase0:
                         #self.cycle_results(case=icase)
-                        parent.cycle_results_explicit(icase, explicit=True)
+                        parent.cycle_results_explicit(icase, explicit=True,
+                                                      min_value=min_value, max_value=max_value)
                     try:
                         parent.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
                     except AttributeError:
@@ -4660,6 +4803,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))
 
+        for module_name, module in iteritems(self.modules):
+            module.post_load_geometry()
+
     def get_result_by_cell_id(self, cell_id, world_position, icase=None):
         """should handle multiple cell_ids"""
         if icase is None:
@@ -4867,7 +5013,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             t = (key[1], i, [])
             data.append(t)
             i += 1
-        self.res_widget.update_results(data)
+        self.res_widget.update_results(data, self.name)
+
+        #method = 'centroid' if location else 'nodal'
+        #data2 = [(method, None, [])]
 
         data2 = [('node/centroid', None, [])]
         self.res_widget.update_methods(data2)
@@ -5297,6 +5446,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
         default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
         is_normals = obj.is_normal_result(i, name)
+        is_fringe = not is_normals
 
         assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
@@ -5308,7 +5458,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_low_to_high, is_horizontal_scalar_bar, is_normals, font_size=self.font_size)
+            is_low_to_high, is_horizontal_scalar_bar, is_fringe, font_size=self.font_size)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
@@ -5497,7 +5647,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #case = self.result_cases[key]
 
         data = deepcopy(self.geometry_properties)
-        data['font_size'] = self.font_size
+        data['font_size'] = self.settings.font_size
         if not self._edit_geometry_properties_window_shown:
             self._edit_geometry_properties = EditGeometryProperties(data, win_parent=self)
             self._edit_geometry_properties.show()

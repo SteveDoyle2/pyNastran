@@ -169,7 +169,8 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         if is_sort1:
@@ -188,12 +189,12 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
             ]
 
         if self.is_sort1:
-            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg)
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg)
         else:
             raise NotImplementedError('RealNonlinearRodArray')
         return page_num
 
-    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f, msg_temp):
+    def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp):
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -203,7 +204,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
@@ -222,8 +223,9 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
             for eid, axiali, eqsi, totali, epcsi, ecsi, ltsi in zip(eids, axial, eqs, total, epcs, ecs, lts):
                 ([saxial, seqs, stotal, sepcs, secs, slts]) = write_floats_13e(
                     [axiali, eqsi, totali, epcsi, ecsi, ltsi])
-                f.write('  %8i       %-13s       %-13s       %-13s       %-13s       %-13s       %s\n' % (
-                    eid, saxial, seqs, stotal, sepcs, secs, slts))
-            f.write(page_stamp % page_num)
+                f06_file.write(
+                    '  %8i       %-13s       %-13s       %-13s       %-13s       %-13s       %s\n' % (
+                        eid, saxial, seqs, stotal, sepcs, secs, slts))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

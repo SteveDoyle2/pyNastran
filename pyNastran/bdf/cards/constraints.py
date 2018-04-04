@@ -940,6 +940,8 @@ class SPC1(Constraint):
             self.comment = comment
         if isinstance(nodes, integer_types):
             nodes = [nodes]
+        if isinstance(components, int):
+            components = str(components)
         self.conid = conid
         self.components = components
         self.nodes = expand_thru(nodes)

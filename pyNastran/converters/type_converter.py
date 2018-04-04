@@ -146,7 +146,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2, data=None):
     assert len(tecplot_filenames) > 0, tecplot_filename
     from pyNastran.converters.tecplot.utils import merge_tecplot_files
     from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
-    from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
+    #from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
 
     model = merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None)
     #if fmt2 == 'cart3d':

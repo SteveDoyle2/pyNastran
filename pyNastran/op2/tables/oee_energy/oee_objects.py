@@ -311,7 +311,8 @@ class RealStrainEnergyArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         # '      EIGENVALUE =  2.005177E+05'
@@ -358,7 +359,7 @@ class RealStrainEnergyArray(ScalarObject):
 
 
             msg_temp2 = [msg_temp % (self.element_name, total_energy, itime + 1, total_set_energy)]
-            f.write(''.join(header + msg_temp2))
+            f06_file.write(''.join(header + msg_temp2))
 
 
             fmt1 = ' ' * 36 + '%10i         %-13s                 %.4f             %s\n'
@@ -370,11 +371,11 @@ class RealStrainEnergyArray(ScalarObject):
                 # ELEMENT-ID    STRAIN-ENERGY   PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
                 #          1   -8.307121E-12         0.0052           -2.886861E-12
                 if eid == 100000000:
-                    f.write(fmt2 % (self.element_name, senergyi, percenti))
+                    f06_file.write(fmt2 % (self.element_name, senergyi, percenti))
                     break
-                f.write(fmt1 % (
+                f06_file.write(fmt1 % (
                     eid, senergyi, percenti, sdensityi))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
             break
         return page_num - 1
@@ -648,7 +649,7 @@ class ComplexStrainEnergyArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = (
@@ -683,7 +684,7 @@ class ComplexStrainEnergyArray(ScalarObject):
 
 
             msg_temp2 = [msg_temp % (self.element_name, total_energy, total_set_energy)]
-            f.write(''.join(header + msg_temp2))
+            f06_file.write(''.join(header + msg_temp2))
 
 
             fmt1 = ' ' * 23 + '%10i      %-13s /  %-13s               %7.4f             %s\n'
@@ -696,11 +697,11 @@ class ComplexStrainEnergyArray(ScalarObject):
                 # ELEMENT-ID    STRAIN-ENERGY   PERCENT OF TOTAL  STRAIN-ENERGY-DENSITY
                 #          1   -8.307121E-12         0.0052           -2.886861E-12
                 #if eid == 100000000:
-                    #f.write(fmt2 % (self.element_name, senergyi, percenti))
+                    #f06_file.write(fmt2 % (self.element_name, senergyi, percenti))
                     #break
-                f.write(fmt1 % (
+                f06_file.write(fmt1 % (
                     eid, senergyr, senergyi, percenti, sdensityi))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
             #break
         return page_num - 1

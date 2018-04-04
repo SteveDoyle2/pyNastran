@@ -1890,7 +1890,7 @@ class DMI(NastranMatrix):
 
     def __repr__(self):
         """
-        .. todo:: support shortened output format.  There's a stupidly low 1000
+        .. todo:: support shortened output format.  There's a very low 1000
                   DMI cap, I assume this is entries and not matrices.
         """
         return self.write_card(size=8, is_double=False)

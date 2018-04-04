@@ -48,9 +48,9 @@ class Plot3d_io(object):  # pragma: no cover
         self.nelements = nelements
 
 
-        #nodes, elements, regions = model.getPointsElementsRegions()
+        #nodes, elements, regions = model.get_points_elements_regions()
         #for nid,node in enumerate(nodes):
-            #print "node[%s] = %s" %(nid,str(node))
+            #print "node[%s] = %s" % (nid, str(node))
 
         self.grid.Allocate(self.nelements, 1000)
 

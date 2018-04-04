@@ -242,7 +242,7 @@ class RealBeamArray(OES_Object):
         #ind.sort()
         #return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1,
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
                   is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -256,7 +256,7 @@ class RealBeamArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06_file.write(''.join(header + msg))
 
             sxcs = self.data[itime, :, 0]
             sxds = self.data[itime, :, 1]
@@ -272,7 +272,7 @@ class RealBeamArray(OES_Object):
             for (eid, nid, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc) in zip(
                 eids, nids, xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
                 if eid != eid_old:
-                    f.write('0  %8i\n' % eid)
+                    f06_file.write('0  %8i\n' % eid)
                 if xxb == xxb_old:
                     continue
                 # #if eid != eid_old and xxb != xxb_old:
@@ -280,13 +280,13 @@ class RealBeamArray(OES_Object):
                 vals = [sxc, sxd, sxe, sxf, smax, smin, smt, smc]
                 vals2 = write_floats_13e(vals)
                 [sxc, sxd, sxe, sxf, smax, smin, smt, smc] = vals2
-                f.write('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (
+                f06_file.write('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (
                     nid, xxb, sxc, sxd, sxe, sxf,
                     smax, smin, smt, smc.strip()))
                 eid_old = eid
                 xxb_old = xxb
 
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
 
         if self.nonlinear_factor is None:
@@ -492,7 +492,7 @@ class RealNonlinearBeamArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1,
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
                   is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -509,7 +509,7 @@ class RealNonlinearBeamArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg))
+            f06_file.write(''.join(header + msg))
 
             longs = self.data[itime, :, 0]
             eqss = self.data[itime, :, 1]
@@ -531,16 +531,16 @@ class RealNonlinearBeamArray(OES_Object):
                 vals2 = write_floats_13e(vals)
                 [longi, eqs, te, eps, ecs] = vals2
                 if loc == 0:
-                    f.write('0  %14i  %8i  %4s       %13s     %13s     %13s %13s %s\n' % (
+                    f06_file.write('0  %14i  %8i  %4s       %13s     %13s     %13s %13s %s\n' % (
                         eid, nid, 'C', longi, eqs, te, eps, ecs.rstrip()))
                 elif loc == 4:
-                    f.write('   %14s  %8i  %4s       %13s     %13s     %13s %13s %s\n' % (
+                    f06_file.write('   %14s  %8i  %4s       %13s     %13s     %13s %13s %s\n' % (
                         '', nid, 'C', longi, eqs, te, eps, ecs.rstrip()))
                 else:
                     loci = loc_map[loc]
-                    f.write('   %14s  %8s  %4s       %13s     %13s     %13s %13s %s\n' % (
+                    f06_file.write('   %14s  %8s  %4s       %13s     %13s     %13s %13s %s\n' % (
                         '', '', loci, longi, eqs, te, eps, ecs.rstrip()))
-            f.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
 
         if self.nonlinear_factor is None:

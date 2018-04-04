@@ -74,7 +74,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, f06, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -90,7 +90,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:
                     header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            f06.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
 
             f1 = self.data[itime, :, 0]
             f2 = self.data[itime, :, 1]
@@ -103,10 +103,10 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f06.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                     # TODO: fix this...
                     eid, source, dx, dy, dz, rx, ry, rz))
-            f06.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num-1
 
@@ -118,7 +118,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, f06, header=None, page_stamp='PAGE %s',
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
@@ -134,7 +134,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                     header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                 else:
                     header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            f06.write(''.join(header + words))
+            f06_file.write(''.join(header + words))
 
             f1 = self.data[itime, :, 0]
             f2 = self.data[itime, :, 1]
@@ -149,10 +149,10 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
                 vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 (dxr, dxi, dyr, dyi, dzr, dzi,
                  rxr, rxi, ryr, ryi, rzr, rzi) = vals2  # TODO :verify
-                f06.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                          '%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                              eid, source, dxr, dyr, dzr, rxr, ryr, rzr,
-                              '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-            f06.write(page_stamp % page_num)
+                f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                               '%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                                   eid, source, dxr, dyr, dzr, rxr, ryr, rzr,
+                                   '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num-1

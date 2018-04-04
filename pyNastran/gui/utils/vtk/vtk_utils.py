@@ -25,6 +25,12 @@ else:
     msg = 'VTK version=%r is not supported (use vtk 7 or 8)' % vtk.VTK_VERSION
     raise NotImplementedError(msg)
 
+def numpy_to_vtk_idtype(ids):
+    #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+    dtype = get_numpy_idtype_for_vtk()
+    ids = np.asarray(ids, dtype=dtype)
+    vtk_ids = numpy_to_vtkIdTypeArray(ids, deep=0)
+    return vtk_ids
 
 def get_numpy_idtype_for_vtk():
     """This gets the numpy dtype that we need to use to make vtk not crash"""

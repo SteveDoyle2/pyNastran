@@ -263,7 +263,7 @@ class PCOMPS(SolidProperty):
         pass
 
     def Mid(self):
-        return self.pid_ref.mid
+        return self.mids[0]
 
     def Rho(self):
         """

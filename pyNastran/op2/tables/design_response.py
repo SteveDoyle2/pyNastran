@@ -9,7 +9,7 @@ class WeightResponse(object):
         self.is_built = False
         self.internal_id = []
 
-    def add_from_op2(self, out):
+    def add_from_op2(self, out, log):
         """
         Weight Response
         ---------------
@@ -82,7 +82,9 @@ class WeightResponse(object):
         column_id = out[7]
         seid_weight = out[8]
 
-        assert np.abs(out[8:-1]).sum() == 0.0, 'out=%s 8=%s' % (out, out[8:-1])
+        if np.abs(out[8:-1]).sum() != 0.0:
+            msg = 'WEIGHT response sum error; out=%s 8=%s' % (out, out[8:-1])
+            log.warning(msg)
         assert seid == out[-1]
         #assert out[-1] in [0, 1, 2, 3, 4, 5, 10, 20, 100, 200, 300], out
         #dunno_8 = out[8]

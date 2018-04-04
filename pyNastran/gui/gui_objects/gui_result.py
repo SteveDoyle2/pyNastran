@@ -275,6 +275,8 @@ class GuiResult(GuiResultCommon):
         self.subcase_id = subcase_id
         self.uname = uname
 
+        if scalar is None:
+            raise RuntimeError('title=%r scalar is None...' % self.title)
         assert scalar.shape[0] == scalar.size, 'shape=%s size=%s' % (str(scalar.shape), scalar.size)
         self.scalar = scalar
         #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
@@ -324,7 +326,12 @@ class GuiResult(GuiResultCommon):
             ifinite = np.isfinite(self.scalar)
             if not np.all(ifinite):
                 self.scalar[~ifinite] = np.nan
-                self.min_default = self.scalar[ifinite].min()
+                try:
+                    self.min_default = self.scalar[ifinite].min()
+                except ValueError:
+                    print(self.title)
+                    print(self.scalar)
+                    raise
                 self.max_default = self.scalar[ifinite].max()
         self.min_value = self.min_default
         self.max_value = self.max_default

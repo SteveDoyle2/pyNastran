@@ -3,17 +3,20 @@ from copy import deepcopy
 from six import string_types
 
 class AltGeometry(object):
-    representations = ['main', 'toggle', 'wire', 'point', 'surface', 'wire+point', 'bar']
+    representations = ['main', 'toggle', 'wire', 'point', 'surface',
+                       'bar', 'wire+point', 'wire+surf']
+    displays = ['Wireframe', 'Surface', 'point', None]
     def __repr__(self):
         msg = ('AltGeometry(self, %s, color=%s, line_width=%s, opacity=%s,\n'
-              ' point_size=%s, bar_scale=%s, representation=%r, is_visible=%s,\n'
+              ' point_size=%s, bar_scale=%s, representation=%r, display=%r, is_visible=%s,\n'
               'is_pickable=%s, label_actors=%s)' % (
                   self.name, str(self.color), self.line_width, self.opacity, self.point_size,
-                  self.bar_scale, self.representation, self.is_visible, self.is_pickable, self.label_actors))
+                  self.bar_scale, self.representation, self.display, self.is_visible,
+                  self.is_pickable, self.label_actors))
         return msg
 
     def __init__(self, parent, name, color=None, line_width=1, opacity=0.0,
-                 point_size=1, bar_scale=1.0, representation='main', is_visible=True,
+                 point_size=1, bar_scale=1.0, representation='main', display=None, is_visible=True,
                  is_pickable=False, label_actors=None):
         """
         Creates an AltGeometry object
@@ -23,7 +26,7 @@ class AltGeometry(object):
         line_width : int
             the width of the line for 'surface' and 'main'
         color : [int, int, int]
-            the RGB colors
+            the RGB colors (0-255)
         opacity : float
             0.0 -> solid
             1.0 -> transparent
@@ -37,6 +40,12 @@ class AltGeometry(object):
             point - always points
             surface - always surface
             bar - can use bar scale
+            toggle - follow the main mesh
+            wire+point - is this used???
+            wire+surf - two options
+        display : str
+            only relevant to wire+surf
+            the active state of the mesh
         is_visible : bool; default=True
             is this actor currently visable
         is_pickable : bool; default=False
@@ -44,6 +53,19 @@ class AltGeometry(object):
         label_actors : List[annotation]; None -> []
             stores annotations (e.g., for a control surface)
         """
+        representation_map = {
+            'main' : None,
+            'wire' : 'Wireframe',
+            'point' : 'point',
+            'surface' : 'Surface',
+            'wire+surf' : 'Surface',
+            'wire+point' : 'Wireframe',
+            'bar' : None,
+            'toggle' : None,
+        }
+        if display is None:
+            display = representation_map[representation]
+
         if line_width is None:
             line_width = 1
         if opacity is None:
@@ -53,6 +75,9 @@ class AltGeometry(object):
 
         self.parent = parent
         self.name = name
+        self.display = display
+        assert display in self.displays, 'dislay=%r displays=%s' % (display, self.displays)
+
         assert isinstance(name, string_types), 'name=%r' % name
         assert isinstance(label_actors, list), 'name=%r label_actors=%s' % (name, str(label_actors))
         self._color = None
@@ -75,7 +100,7 @@ class AltGeometry(object):
         self.representation = representation
 
     def __deepcopy__(self, memo):
-        keys = ['name', '_color', 'line_width', 'point_size', '_opacity',
+        keys = ['name', '_color', 'display', 'line_width', 'point_size', '_opacity',
                 '_representation', 'is_visible', 'bar_scale', 'is_pickable']
         cls = self.__class__
         result = cls.__new__(cls)
@@ -152,9 +177,10 @@ class AltGeometry(object):
         * toggle - change with main mesh
         * wire - always wireframe
         * point - always points
-        * wire+point - point (vertex) and wireframe allowed
         * surface - always surface
         * bar - this can use bar scale
+        * wire+point - point (vertex) and wireframe allowed
+        * wire+surf - the user can switch between surface and wireframe as a selection
         """
         return self._representation
 

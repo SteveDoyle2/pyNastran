@@ -7,9 +7,10 @@ import numpy as np
 
 
 from ..result_table import ResultTable, TableDef, DataGetter
+from ...h5nastrannode import H5NastranNode
 
 
-class Nodal(object):
+class Nodal(H5NastranNode):
     def __init__(self, h5n, result):
         self._h5n = h5n
         self._result = result
@@ -86,14 +87,14 @@ class GridForce(ResultTable):
         vector_to_basic = self._h5n.input.coordinate_system.h5n_transformation.vector_to_basic
 
         for i in range(_nid.shape[0]):
-            cid = get_grid(_nid[i])[3]
+            cd = get_grid(_nid[i])[3]
 
             f = [_f1[i], _f2[i], _f3[i]]
             m =[_m1[i], _m2[i], _m3[i]]
 
-            if cid != 0:
-                f = vector_to_basic(f, cid)
-                m = vector_to_basic(m, cid)
+            if cd != 0:
+                f = vector_to_basic(f, cd)
+                m = vector_to_basic(m, cd)
 
             f1[i] = f[0]
             f2[i] = f[1]

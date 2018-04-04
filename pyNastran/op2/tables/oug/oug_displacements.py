@@ -28,7 +28,7 @@ def make_pack_form(data):
             raise NotImplementedError(type(d))
         if old and f != fold:
             form = str(N) + fold
-            Form += form
+            #Form += form
             N = n
         else:
             N += n
@@ -36,7 +36,7 @@ def make_pack_form(data):
         fold = f
     if N:
         form = str(N) + f
-        Form += form
+        #Form += form
     return form
 
 
@@ -44,7 +44,8 @@ class RealDisplacementArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n', ]
@@ -69,9 +70,9 @@ class RealDisplacementArray(RealTableArray):
         #words += self.get_table_marker()
         write_words = True
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, page_stamp, page_num, f, write_words,
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file, write_words,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        return self._write_f06_block(words, header, page_stamp, page_num, f, write_words,
+        return self._write_f06_block(words, header, page_stamp, page_num, f06_file, write_words,
                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
 
@@ -79,11 +80,11 @@ class ComplexDisplacementArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
-        return self._write_f06_transient_block(words, header, page_stamp, page_num, f,
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file,
                                                is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
 
@@ -91,7 +92,8 @@ class ComplexDisplacementArray(ComplexTableArray):
     #def __init__(self, data_code, is_sort1, isubcase, dt):
         #RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    #def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  #page_num=1, is_mag_phase=False, is_sort1=True):
         #if header is None:
             #header = []
         #words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
@@ -100,9 +102,9 @@ class ComplexDisplacementArray(ComplexTableArray):
         #words += self.get_table_marker()
 
         #if self.nonlinear_factor is not None:
-            #return self._write_f06_transient_block(words, header, page_stamp, page_num, f,
+            #return self._write_f06_transient_block(words, header, page_stamp, page_num, f06_file,
                                                    #is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        #return self._write_f06_block(words, header, page_stamp, page_num, f,
+        #return self._write_f06_block(words, header, page_stamp, page_num, f06_file,
                                      #is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
     #def _write_table_3(self, f, fascii, itable):
@@ -131,26 +133,26 @@ class ComplexDisplacementArray(ComplexTableArray):
             #0, thermal, thermal, 0, Title,
             #subtitle, label, ]
 
-        #write_markers(f, fascii, '%s header3a' % self.table_name, [-3, 1, 0])
-        #write_markers(f, fascii, '%s header3b' % self.table_name, [146])
+        #write_markers(op2_file, fascii, '%s header3a' % self.table_name, [-3, 1, 0])
+        #write_markers(op2_file, fascii, '%s header3b' % self.table_name, [146])
 
         #data = [584] + table3 + [584]
         #fmt = 'i' + ftable3 + 'i'
-        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
+        #op2_file.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
 
-    #def write_op2(self, f, fascii, is_mag_phase=False):
+    #def write_op2(self, op2_file, fascii, is_mag_phase=False):
         #fascii.write('%s.write_op2\n' % self.__class__.__name__)
-        #self._write_table_header(f, fascii)
+        #self._write_table_header(op2_file, fascii)
         ##recordi = ['OUG1    ', 2, 26, 14, 0, 1]
         ##[subtable_name, month=2, day=26, year=2014, zero=0, one=1]
         #subtable_name = 'OUG1    '
         #self._write_table3(f, fascii, -3)
 
         #if self.nonlinear_factor is not None:
-            #return self._write_op2_transient_block(f, fascii)
-        #return self._write_op2_block(f, fascii)
+            #return self._write_op2_transient_block(op2_file, fascii)
+        #return self._write_op2_block(op2_file, fascii)
 
-    #def _write_op2_block(self, f, fascii):
+    #def _write_op2_block(self, op2_file, fascii):
         #nnodes = len(self.translations)
         #nwords = nnodes * self.num_wide
         #nbytes = nwords * 4
@@ -163,7 +165,7 @@ class ComplexDisplacementArray(ComplexTableArray):
             #4, nwords, 4,
             #nbytes #recordi, nbytes*4,
         #]
-        #f.write(pack(fascii, 'header4', '7i', header))
+        #op2_file.write(pack(fascii, 'header4', '7i', header))
 
         #data = []
         #fmt = '2i 6f'
@@ -180,5 +182,5 @@ class ComplexDisplacementArray(ComplexTableArray):
             #(rx, ry, rz) = rotation
             #vals = [dx, dy, dz, rx, ry, rz]
             #data = [device_code + 10*nodeID, grid_type, dx, dy, dz, rx, ry, rz]
-            #f.write(pack(fascii, 'nid, gridType, dx, dy, dz, rx, ry, rz', fmt, data))
-        #f.write(pack(fascii, 'closer', b'i', nbytes))
+            #op2_file.write(pack(fascii, 'nid, gridType, dx, dy, dz, rx, ry, rz', fmt, data))
+        #op2_file.write(pack(fascii, 'closer', b'i', nbytes))

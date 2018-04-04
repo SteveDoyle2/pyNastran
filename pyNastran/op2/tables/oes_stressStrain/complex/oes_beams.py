@@ -230,7 +230,7 @@ class ComplexBeamArray(OES_Object):
             raise NotImplementedError()
         return page_num - 1
 
-    def _write_sort1_as_sort1(self, f, name, header, page_stamp, msg_temp, page_num,
+    def _write_sort1_as_sort1(self, f06_file, name, header, page_stamp, msg_temp, page_num,
                               is_mag_phase=False):
         ntimes = self.data.shape[0]
 
@@ -240,7 +240,7 @@ class ComplexBeamArray(OES_Object):
             dt_line = ' %14s = %12.5E\n' % (name, dt)
             header[1] = dt_line
             msg = header + msg_temp
-            f.write('\n'.join(msg))
+            f06_file.write('\n'.join(msg))
 
             sxc = self.data[itime, :, 0]
             sxd = self.data[itime, :, 1]
@@ -272,28 +272,31 @@ class ComplexBeamArray(OES_Object):
 
                 if nid_typei or 1:
                     if i_sd_zeroi:
-                        f.write('0  %8s\n' % eid)
-                        f.write('0%8s  %8i   %.3f     %-13s    %-13s    %-13s    %s\n'
-                                ' %8s   %8s  %5s     %-13s    %-13s    %-13s    %s\n' % (
-                                    '', nid, sd,
-                                    sxcr, sxdr, sxer, sxfr,
-                                    '', '', '',
-                                    sxci, sxdi, sxei, sxfi))
-                    else:
-                        f.write('0%8s  %8i   %.3f     %-13s    %-13s    %-13s    %s\n'
-                                ' %8s   %8s  %5s     %-13s    %-13s    %-13s    %s\n' % (
-                                    '', nid, sd,
-                                    sxcr, sxdr, sxer, sxfr,
-                                    '', '', '',
-                                    sxci, sxdi, sxei, sxfi))
-                else:
-                    f.write(' %8s  %8s   %.3f     %-13s    %-13s    %-13s    %s\n'
+                        f06_file.write('0  %8s\n' % eid)
+                        f06_file.write(
+                            '0%8s  %8i   %.3f     %-13s    %-13s    %-13s    %s\n'
                             ' %8s   %8s  %5s     %-13s    %-13s    %-13s    %s\n' % (
-                                '', '', sd,
+                                '', nid, sd,
                                 sxcr, sxdr, sxer, sxfr,
                                 '', '', '',
                                 sxci, sxdi, sxei, sxfi))
-            f.write(page_stamp % page_num)
+                    else:
+                        f06_file.write(
+                            '0%8s  %8i   %.3f     %-13s    %-13s    %-13s    %s\n'
+                            ' %8s   %8s  %5s     %-13s    %-13s    %-13s    %s\n' % (
+                                '', nid, sd,
+                                sxcr, sxdr, sxer, sxfr,
+                                '', '', '',
+                                sxci, sxdi, sxei, sxfi))
+                else:
+                    f06_file.write(
+                        ' %8s  %8s   %.3f     %-13s    %-13s    %-13s    %s\n'
+                        ' %8s   %8s  %5s     %-13s    %-13s    %-13s    %s\n' % (
+                            '', '', sd,
+                            sxcr, sxdr, sxer, sxfr,
+                            '', '', '',
+                            sxci, sxdi, sxei, sxfi))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
 

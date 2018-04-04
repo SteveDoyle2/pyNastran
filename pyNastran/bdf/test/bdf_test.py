@@ -8,8 +8,7 @@ from six import PY2
 
 import pyNastran
 from pyNastran.bdf.test.test_bdf import run_lots_of_files
-from pyNastran.op2.test.test_op2 import get_failed_files
-from pyNastran.op2.test.op2_test import get_all_files
+from pyNastran.op2.test.op2_test import get_failed_files, get_all_files
 from pyNastran.utils.dev import get_files_of_type
 
 def remove_marc_files(filenames):
@@ -91,6 +90,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
              if not os.path.basename(fname).startswith('out_')
              and '.test_op2.' not in fname # removing test output files
              and '.test_bdf.' not in fname
+             and '.test_bdfv.' not in fname
              and 'tecplot' not in fname
              and os.path.basename(fname) not in skip_files]
 

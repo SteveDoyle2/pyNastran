@@ -29,8 +29,8 @@ class Panel(object):
     """
     def __init__(self, key, header, lines, log):
         #print("key=%s \nheader=|%s|" % (key, header))   # ,iSymG
-        (ID, nline, npnt, isyml, rx, ry, rz, tx, ty, tz, xscale,
-         yscale, zscale, isymg) = header.strip().split()
+        (ID, nline, npnt, unused_isyml, rx, ry, rz, tx, ty, tz, xscale,
+         yscale, zscale, unused_isymg) = header.strip().split()
         self.log = log
         log.debug("ID=%s name=%s imax=%s jmax=%s" % (ID, key, nline, npnt))
         log.debug("Rotate    = <%s,%s,%s>" % (rx, ry, rz))
@@ -58,8 +58,8 @@ class Panel(object):
         i = 0
         iline = 0
         points = np.zeros((self.nrows * self.ncols, 3), dtype='float64')
-        for irow in range(self.nrows):
-            for row in range(ngroup_lines):
+        for unused_irow in range(self.nrows):
+            for unused_row in range(ngroup_lines):
                 line = lines[iline]
                 (x1, y1, z1, x2, y2, z2) = line.strip().split()
                 points[i, :] = [x1, y1, z1]
@@ -187,6 +187,20 @@ class LaWGS(object):
     model_type = 'LaWGS'
 
     def __init__(self, log=None, debug=False):
+        """
+        Initializes the LaWGS object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         self.log = get_logger2(log=log, debug=debug)
         self.panels = {}
 
@@ -231,7 +245,7 @@ class LaWGS(object):
             self.panels[key] = panel
 
     def get_points_elements(self):
-        points, elements, regions = self.get_points_elements_regions()
+        points, elements, unused_regions = self.get_points_elements_regions()
         return points, elements
 
     def get_points_elements_regions(self):
@@ -240,7 +254,7 @@ class LaWGS(object):
         regions = []
         pointI = 0
         iregion = 0
-        for (name, panel) in sorted(iteritems(self.panels)):
+        for (unused_name, panel) in sorted(iteritems(self.panels)):
             (pointsI, pointi) = panel.get_points()
             (elementsI, n) = panel.get_elements(pointI)
             points += pointsI
@@ -248,7 +262,7 @@ class LaWGS(object):
             pointI += pointi
             regions += [iregion] * n
             iregion += 1
-            #print("name=%s len(AllElements)=%s len(allPoints)=%s" % (
+            #print("name=%s len(All_elements)=%s len(all_points)=%s" % (
                 #name, len(elements), len(points)))
 
         #for point in points:
@@ -258,8 +272,8 @@ class LaWGS(object):
     def write_as_plot3d(self, p3dname):
         with open(p3dname, 'wb') as p3d_file:
             p3d_file.write('%s\n' % (len(self.panels)))
-            for (name, panel) in sorted(iteritems(self.panels)):
+            for (unused_name, panel) in sorted(iteritems(self.panels)):
                 p3d_file.write('%s %s 1\n' % (panel.nrows, panel.ncols))
 
-            for (name, panel) in sorted(iteritems(self.panels)):
+            for (unused_name, panel) in sorted(iteritems(self.panels)):
                 panel.write_as_plot3d(p3d_file)

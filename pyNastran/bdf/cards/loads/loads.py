@@ -36,6 +36,7 @@ class Load(BaseCard):
 
     @property
     def node_ids(self):
+        """get the node ids"""
         try:
             return self._node_ids()
         except:
@@ -43,7 +44,7 @@ class Load(BaseCard):
             raise RuntimeError('error processing nodes for \n%s' % str(self))
 
     def _node_ids(self, nodes=None):
-        """returns nodeIDs for repr functions"""
+        """returns node ids for repr functions"""
         if not nodes:
             nodes = self.nodes
         if isinstance(nodes[0], integer_types):
@@ -52,7 +53,7 @@ class Load(BaseCard):
             return [node.nid for node in nodes]
 
 
-class LoadCombination(Load):
+class LoadCombination(BaseCard):
     """Common method for LOAD, DLOAD"""
     def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         """
@@ -71,7 +72,7 @@ class LoadCombination(Load):
         comment : str; default=''
             a comment for the card
         """
-        Load.__init__(self)
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
 
@@ -102,7 +103,7 @@ class LoadCombination(Load):
         if len(self.scale_factors) != len(self.load_ids):
             msg += 'scale_factors=%s load_ids=%s\n' % (self.scale_factors, self.load_ids)
         if msg:
-            raise RuntimeError(msg)
+            raise IndexError(msg)
         for scalei, load_id in zip(self.scale_factors, self.get_load_ids()):
             assert isinstance(scalei, float_types), scalei
             assert isinstance(load_id, integer_types), load_id
@@ -333,7 +334,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             the BDF object
         """
         msg = ', which is required by LSEQ=%s' % (self.sid)
-        self.lid_ref = model.Load(self.lid, consider_load_combinations=False, msg=msg)
+        self.lid_ref = model.Load(self.lid, consider_load_combinations=True, msg=msg)
         #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
             # TODO: temperature set, not a table?
@@ -733,6 +734,112 @@ class SPCD(Load):
         for (nid, constraint, enforced) in zip(self.node_ids, self.constraints,
                                                self.enforced):
             fields += [nid, constraint, enforced]
+        return fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+
+class DEFORM(Load):
+    """
+    Defines an enforced displacement value for static analysis.
+
+     +--------+-----+-----+------+----+----+----+----+
+     |    1   |  2  |  3  |   5  |  6 |  8 |  6 |  8 |
+     +========+=====+=====+======+====+====+====+====+
+     | DEFORM | SID |  E1 |  D1  | E2 | D2 | E3 | D3 |
+     +--------+-----+-----+------+----+----+----+----+
+     | DEFORM | 100 | 32  | -2.6 | 5  | .9 | 6  | .9 |
+     +--------+-----+-----+------+----+----+----+----+
+    """
+    type = 'DEFORM'
+
+    def __init__(self, sid, eid, deformation, comment=''):
+        """
+        Creates an DEFORM card, which defines applied deformation on
+        a 1D elemment.  Links to the DEFORM card in the case control
+        deck.
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        eid : int
+            CTUBE/CROD/CONROD/CBAR/CBEAM element id
+        deformation : float
+            the applied deformation
+        """
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.eid = eid
+        self.deformation = deformation
+        self.eid_ref = None
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        """
+        Adds a DEFORM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        offset = 2 * icard
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2 + offset, 'eid')
+        deformation = double(card, 3 + offset, 'D1')
+        return DEFORM(sid, eid, deformation, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds an DEFORM card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        sid = data[0]
+        eid = data[1]
+        defomation = data[2]
+        return DEFORM(sid, eid, deformation, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        return
+
+    def safe_cross_reference(self, model, debug=True):
+        msg = ' which is required by DEFORM=%s' % (self.sid)
+        self.eid_ref = model.Element(self.eid, msg)
+
+    def uncross_reference(self):
+        self.eid = self.Eid()
+        self.eid_ref = None
+
+    def get_loads(self):
+        return [self]
+
+    def Eid(self):
+        if self.eid_ref is None:
+            return self.eid
+        return self.eid_ref.eid
+    def raw_fields(self):
+        fields = ['DEFORM', self.sid, self.Eid(), self.deformation]
         return fields
 
     def write_card(self, size=8, is_double=False):

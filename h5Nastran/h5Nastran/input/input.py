@@ -14,18 +14,24 @@ from .load import Load
 from .property import Property
 from .node import Node
 from .material import Material
+from .parameter import Parameter
+from .partition import Partition
+from .table import Table
+from .dynamic import Dynamic
+from .design import Design
+from ..h5nastrannode import H5NastranNode
 
 
-class Input(object):
+class Input(H5NastranNode):
     def __init__(self, h5n):
         self._h5n = h5n  # type: H5Nastran
 
         self.constraint = Constraint(self._h5n, self)
         # self.contact = Contact(self.h5n, self)
         self.coordinate_system = CoordinateSystem(self._h5n, self)
-        # self.design = None
+        self.design = Design(self._h5n, self)
         # self.domains = None
-        # self.dynamic = None
+        self.dynamic = Dynamic(self._h5n, self)
         self.element = Element(self._h5n, self)
         # self.fatigue = None
         self.load = Load(self._h5n, self)
@@ -33,23 +39,22 @@ class Input(object):
         # self.matrix = None
         # self.modules = None
         self.node = Node(self._h5n, self)
-        # self.parameter = None
-        # self.partition = None
+        self.parameter = Parameter(self._h5n, self)
+        self.partition = Partition(self._h5n, self)
         self.property = Property(self._h5n, self)
-        # self.table = None
+        self.table = Table(self._h5n, self)
         # self.uds = None
 
     def path(self):
         return self._h5n.path() + ['INPUT']
-
-    def read(self):
-        for key, item in iteritems(self.__dict__):
-            if key.startswith('_'):
-                continue
-            try:
-                item.read()
-            except AttributeError:
-                pass
             
     def update(self):
         self.coordinate_system.update()
+
+    def to_bdf(self, bdf):
+        for key, item in iteritems(self.__dict__):
+            if key.startswith('_'):
+                continue
+            if hasattr(item, 'to_bdf'):
+                item.to_bdf(bdf)
+

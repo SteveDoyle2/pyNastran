@@ -13,7 +13,7 @@ TEST_PATH = os.path.join(PKG_PATH, 'converters', 'fast')
 class FastGUI(FastIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        FastIO.__init__(self)
+        FastIO.__init__(self, self)
 
 
 class TestFastGUI(unittest.TestCase):

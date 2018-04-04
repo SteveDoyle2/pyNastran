@@ -373,7 +373,11 @@ class OP2Common(Op2Codes, F06Writer):
             raise  RuntimeError('isubcase is not defined')
 
         if hasattr(self, 'subtitle') and hasattr(self, 'label'):
-            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index)
+            ogs = 0
+            if hasattr(self, 'ogs'):
+                ogs = self.ogs
+            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, ogs)
+            #code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, self.table_name_str)
             #print("code =", code)
             #if code not in self.labels:
                 #self.subtitles[self.isubcase].append(self.subtitle)
@@ -1394,9 +1398,13 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _get_code(self):
         code = self.isubcase
-        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count, self.subtitle)
-        code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+        ogs = 0
+        if hasattr(self, 'ogs'):
+            ogs = self.ogs
+        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
                 self.superelement_adaptivity_index)
+        #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
+                #self.superelement_adaptivity_index, self.table_name_str)
         #print('%r' % self.subtitle)
         self.code = code
         #self.log.debug('code = %s' % str(self.code))
@@ -1409,6 +1417,8 @@ class OP2Common(Op2Codes, F06Writer):
         """
         #msg = 'table_name=%s table_code=%s %s\n%s' % (
             #self.table_name, self.table_code, msg, self.code_information())
+        #if any([card_name in msg for card_name in ['VUHEXA', 'VUPENTA', 'VUTETRA', 'VUQUAD']]):
+            #return ndata
         #raise NotImplementedError(msg)
         if is_release:
             if msg != self._last_comment:

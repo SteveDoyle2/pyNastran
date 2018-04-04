@@ -282,22 +282,20 @@ class CGAP(Element):
         ga = integer_or_blank(card, 3, 'ga')
         gb = integer_or_blank(card, 4, 'gb')
         x1_g0 = integer_double_or_blank(card, 5, 'x1_g0')
+        cid = integer_or_blank(card, 8, 'cid')
         if isinstance(x1_g0, integer_types):
             g0 = x1_g0
             x = None
-            cid = None
         elif isinstance(x1_g0, float):
             g0 = None
             x1 = x1_g0
             x2 = double_or_blank(card, 6, 'x2', 0.0)
             x3 = double_or_blank(card, 7, 'x3', 0.0)
             x = [x1, x2, x3]
-            cid = integer_or_blank(card, 8, 'cid', 0)
         else:
             #raise RuntimeError('invalid CGAP...x1/g0 = %r' %(x1_g0))
             g0 = None
             x = [None, None, None]
-            cid = None
         assert len(card) <= 9, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
         return CGAP(eid, pid, [ga, gb], x, g0, cid=cid, comment=comment)
 

@@ -235,10 +235,7 @@ class OES(OP2Common):
         self.data_code['is_stress_flag'] = True
         self.data_code['is_strain_flag'] = False
 
-        if self.isubcase not in self.case_control_deck.subcases:
-            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN', self.log)
-
+        self._setup_op2_subcase('STRESS/STRAIN')
         if self.is_sort1:
             n = self._read_oes1_4_sort1(data, ndata)
         else:
@@ -358,10 +355,7 @@ class OES(OP2Common):
         self.data_code['is_stress_flag'] = False
         self.data_code['is_strain_flag'] = True
 
-        if self.isubcase not in self.case_control_deck.subcases:
-            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN', self.log)
-
+        self._setup_op2_subcase('STRESS/STRAIN')
         if self.is_sort1:
             n = self._read_ostr1_4_sort1(data, ndata)
         else:
@@ -3569,7 +3563,6 @@ class OES(OP2Common):
         #print(self.code_information())
 
         if self.format_code == 1 and self.num_wide == 13 and self.element_type in [88, 90]:  # real
-            # TODO: vectorize
             # single layered hyperelastic (???) ctria3, cquad4
             ntotal = 52  # 4*13
             nelements = ndata // ntotal
@@ -3591,7 +3584,7 @@ class OES(OP2Common):
                 if obj.itime == 0:
                     ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 13).copy()
                     eids = ints[:, 0] // 10
-                    obj.element_node[ielement:ielement2, 0] = eids
+                    obj.element[ielement:ielement2] = eids
 
                 floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 13).copy()
 
@@ -3613,11 +3606,11 @@ class OES(OP2Common):
                      sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                      ex1, ey1, ez1, exy1) = out
                     eid = eid_device // 10
-                    obj.add_new_eid(
+                    obj.add_new_eid_sort1(
                         dt, eid, self.element_type, fd1,
                         sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                         ex1, ey1, ez1, exy1)
-                n += ntotal
+                    n += ntotal
         elif self.format_code == 1 and self.num_wide == 25 and self.element_type in [88, 90]:
             # TODO: vectorize
             #     ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP

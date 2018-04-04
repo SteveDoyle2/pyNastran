@@ -1,7 +1,6 @@
+"""tests the Nastran converters"""
 import os
 import unittest
-from six.moves import range
-from numpy import allclose
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
@@ -43,7 +42,7 @@ class TestNastran(unittest.TestCase):
         ugrid.write_bdf(skin_bdf_filename2, include_shells=True, include_solids=True,
                         convert_pyram_to_penta=True, encoding=None,
                         size=size, is_double=False)
-        model2 = read_bdf(skin_bdf_filename2, log=log, debug=debug)
+        read_bdf(skin_bdf_filename2, log=log, debug=debug)
 
         os.remove(ugrid_filename_out)
         os.remove(skin_bdf_filename)

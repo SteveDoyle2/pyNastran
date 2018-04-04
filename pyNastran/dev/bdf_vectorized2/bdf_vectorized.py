@@ -427,8 +427,8 @@ class BDF(BDF_):
         self._card_parser_prepare['CROD'] = self._prepare_crod
         self._card_parser_prepare['CTUBE'] = self._prepare_ctube
 
-        del self._card_parser['CBAR']
-        del self._card_parser['CBEAM']
+        #del self._card_parser_prepare['CBAR']
+        #del self._card_parser_prepare['CBEAM']
         self._card_parser_prepare['CBAR'] = self._prepare_cbar
         self._card_parser_prepare['CBEAM'] = self._prepare_cbeam
 

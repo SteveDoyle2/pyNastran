@@ -12,6 +12,7 @@ from typing import Any, Optional, List, Union
 from six import string_types
 import numpy as np
 
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
@@ -39,6 +40,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
     CPLSTS3, #CPLSTS4,
+    SNORM,
 )
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
@@ -109,13 +111,13 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, 
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, CONVM, RADM, RADBC)
+                                                 PHBDY, CONV, CONVM, RADM, RADBC, VIEW, VIEW3D)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
-
+from pyNastran.utils import integer_string_types
 
 
 class AddCards(AddMethods):
@@ -4677,7 +4679,7 @@ class AddCards(AddMethods):
         comment : str; default=''
             a comment for the card
         """
-        if isinstance(components, string_types):
+        if isinstance(components, integer_string_types):
             uset = USET1(name, ids, components, comment=comment)
         else:
             uset = USET(name, ids, components, comment=comment)
@@ -4692,7 +4694,7 @@ class AddCards(AddMethods):
         """
         Creates an SEBSET/SEBSET1 card
         """
-        if isinstance(components, string_types):
+        if isinstance(components, integer_string_types):
             sebset = SEBSET1(seid, ids, components, comment=comment)
         else:
             sebset = SEBSET(seid, ids, components, comment=comment)
@@ -4707,7 +4709,7 @@ class AddCards(AddMethods):
         """
         Creates an SECSET/SECSET1 card
         """
-        if isinstance(components, string_types):
+        if isinstance(components, integer_string_types):
             secset = SECSET1(seid, ids, components, comment=comment)
         else:
             secset = SECSET(seid, ids, components, comment=comment)
@@ -4722,7 +4724,7 @@ class AddCards(AddMethods):
         """
         Creates an SEQSET card
         """
-        if isinstance(components, string_types):
+        if isinstance(components, integer_string_types):
             seqset = SEQSET1(seid, ids, components, comment=comment)
         else:
             seqset = SEQSET(seid, ids, components, comment=comment)
@@ -5992,11 +5994,13 @@ class AddCards(AddMethods):
         self._add_ddval_object(ddval)
         return ddval
 
-    def add_dlink(self, oid, ddvid, IDv, Ci, c0=0., cmult=1., comment=''):
+    def add_dlink(self, oid, dependent_desvar,
+                  independent_desvars, coeffs, c0=0., cmult=1., comment=''):
         """
         Creates a DLINK card
         """
-        dlink = DLINK(oid, ddvid, IDv, Ci, c0=c0, cmult=cmult, comment=comment)
+        dlink = DLINK(oid, dependent_desvar,
+                      independent_desvars, coeffs, c0=c0, cmult=cmult, comment=comment)
         self._add_dlink_object(dlink)
         return dlink
 
@@ -6004,6 +6008,17 @@ class AddCards(AddMethods):
                     highfq=1.e20, comment=''):
         """
         Creates a DCONSTR card
+
+        Parameters
+        ----------
+        oid : int
+            unique optimization id
+        dresp_id : int
+            DRESP1/2 id
+        lid / uid=-1.e20 / 1.e20
+            lower/upper bound
+        lowfq / highfq : float; default=0. / 1.e20
+            lower/upper end of the frequency range
         """
         dconstr = DCONSTR(oid, dresp_id, lid=lid, uid=uid, lowfq=lowfq,
                           highfq=highfq, comment=comment)
@@ -6193,7 +6208,7 @@ class AddCards(AddMethods):
         self._add_tstepnl_object(tstepnl)
         return tstepnl
 
-    def add_nlparm(self, nlparm_id, ninc=10, dt=0.0, kmethod='AUTO', kstep=5,
+    def add_nlparm(self, nlparm_id, ninc=None, dt=0.0, kmethod='AUTO', kstep=5,
                    max_iter=25, conv='PW', int_out='NO', eps_u=0.01,
                    eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None, max_ls=4,
                    fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment=''):
@@ -6290,6 +6305,14 @@ class AddCards(AddMethods):
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_rotor_object(rotor)
         return rotor
+
+    def add_rgyro(self, sid, async, refrot, unit, speed_low, speed_high, speed, comment=''):
+        fields = ['RGYRO', sid, async, refrot, unit, speed_low, speed_high, speed]
+        self.reject_card_lines('RGYRO', print_card_8(fields).split('\n'))
+
+    def add_rspint(self, rid, grida, gridb, gr, unit, table_id, comment=''):
+        fields = ['RSPINT', rid, grida, gridb, gr, unit, table_id]
+        self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'))
 
     def add_temp(self, sid, temperatures, comment=''):
         """

@@ -59,6 +59,7 @@ class BaseScalarObject(Op2Codes):
 
     def __eq__(self, table):
         self._eq_header(table)
+        #raise NotImplementedError(str(self.get_stats()))
         return False
 
     def __ne__(self, table):
@@ -134,7 +135,7 @@ class BaseScalarObject(Op2Codes):
         if '_add_new_node' in state:
             del state['_add_new_node']
 
-        #for key, value in state.iteritems():
+        #for key, value in iteritems(state):
             #if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
                 #continue
             #print(' %s = %s' % (key, value))
@@ -270,20 +271,23 @@ class BaseScalarObject(Op2Codes):
         """exports the object to HDF5 format"""
         export_to_hdf5(self, group, log)
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num=page_num, f=f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+            return self._write_f06_transient(header, page_stamp, page_num=page_num, f06_file=f06_file,
+                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         msg = 'write_f06 is not implemented in %s\n' % self.__class__.__name__
-        f.write(msg)
+        f06_file.write(msg)
         print(msg[:-1])
         #raise NotImplementedError(msg)
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f06_file=None,
+                             is_mag_phase=False, is_sort1=True):
         msg = '_write_f06_transient is not implemented in %s\n' % self.__class__.__name__
-        f.write(msg)
+        f06_file.write(msg)
         print(msg[:-1])
         #raise NotImplementedError(msg)
         return page_num
@@ -512,13 +516,13 @@ class ScalarObject(BaseScalarObject):
             #self.dt = dt
             #self.add_new_transient()
 
-    def _write_table_header(self, f, fascii, date):
+    def _write_table_header(self, op2_file, fascii, date):
         table_name = '%-8s' % self.table_name # 'BOUGV1  '
         fascii.write('%s._write_table_header\n' % table_name)
         #get_nmarkers- [4, 0, 4]
         #marker = [4, 2, 4]
         #table_header = [8, 'BOUGV1  ', 8]
-        write_table_header(f, fascii, table_name)
+        write_table_header(op2_file, fascii, table_name)
 
 
         #read_markers -> [4, -1, 4]
@@ -526,7 +530,7 @@ class ScalarObject(BaseScalarObject):
         #read_record - marker = [4, 7, 4]
         #read_record - record = [28, recordi, 28]
 
-        #write_markers(f, fascii, '  %s header1a' % self.table_name, [-1, 0, 7])
+        #write_markers(op2_file, fascii, '  %s header1a' % self.table_name, [-1, 0, 7])
         data_a = [4, -1, 4,]
         #data_a = []
         #data_b = [4, -1, 4,]
@@ -536,7 +540,7 @@ class ScalarObject(BaseScalarObject):
         fascii.write('%s header1a_i = %s\n' % (self.table_name, data_a))
         #fascii.write('%s            = %s\n' % (blank, data_b))
         fascii.write('%s            = %s\n' % (blank, data_c))
-        f.write(pack('<6i', *data))
+        op2_file.write(pack('<6i', *data))
 
         table1_fmt = b'<9i'
         table1 = [
@@ -545,7 +549,7 @@ class ScalarObject(BaseScalarObject):
             28,
         ]
         fascii.write('%s header1b = %s\n' % (self.table_name, table1))
-        f.write(pack(table1_fmt, *table1))
+        op2_file.write(pack(table1_fmt, *table1))
 
         #recordi = [subtable_name, month, day, year, 0, 1]
 
@@ -557,7 +561,7 @@ class ScalarObject(BaseScalarObject):
         ]
         fascii.write('%s header2a = %s\n' % (self.table_name, data))
         print('data =', data, len(data))
-        f.write(pack(b'<12i', *data))
+        op2_file.write(pack(b'<12i', *data))
 
         month, day, year = date
         try:
@@ -574,4 +578,4 @@ class ScalarObject(BaseScalarObject):
             ]
         table2_format = 'i8s6i'
         fascii.write('%s header2b = %s\n' % (self.table_name, table2))
-        f.write(pack(table2_format, *table2))
+        op2_file.write(pack(table2_format, *table2))

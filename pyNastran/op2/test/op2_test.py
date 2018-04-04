@@ -4,9 +4,21 @@ import sys
 from six import iteritems, PY2
 
 import pyNastran
-from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
 from pyNastran.utils.dev import get_files_of_type
 PKG_PATH = pyNastran.__path__[0]
+
+def get_failed_files(filename):
+    """Gets the list of failed files"""
+    with open(filename, 'r') as infile:
+        lines = infile.readlines()
+
+    files = []
+    for line in lines:
+        line = line.strip()
+        if line not in files:
+            files.append(line)
+    return files
+
 
 def parse_skipped_cards(fname):
     with open(fname, 'r') as skip_file:
@@ -73,16 +85,19 @@ def get_all_files(folders_file, file_type):
         #move_dir = line.strip()
         if move_dir:
             if not os.path.exists(move_dir):
-                print("***move_dir doesn't exist = %r" % move_dir)
+                #print("***move_dir doesn't exist = %r" % move_dir)
                 continue
             print("move_dir = %s" % move_dir)
             #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
             files_in_dir = get_files_of_type(move_dir, file_type, max_size=4.2)
             files2 += files_in_dir
+            #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
+    #print('nfiles = %s' % len(files2))
     return files2
 
 def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
-        save_cases=True, debug=False, write_f06=True, compare=True, short_stats=False):
+        save_cases=True, debug=False, write_f06=True, compare=True, short_stats=False,
+        export_hdf5=True):
     # works
     files = get_files_of_type('tests', '.op2')
 
@@ -104,10 +119,13 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     elif regenerate:
         files2 = get_all_files(folders_file, '.op2')
         files2 += files
+        assert len(files2) > 0, files2
     else:
         print('failed_cases_filename = %r' % failed_cases_filename)
         files2 = get_failed_files(failed_cases_filename)
-    files = list(set(files2)).sort()
+    assert len(files2) > 0, files2
+    files = list(set(files2))
+    files.sort()
 
     skip_files = []
     #skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant
@@ -122,10 +140,13 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     print("nfiles = %s" % len(files))
     import time
     time0 = time.time()
+
+    from pyNastran.op2.test.test_op2 import run_lots_of_files
     failed_files = run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                                      write_f06=write_f06, delete_f06=delete_f06,
                                      skip_dataframe=skip_dataframe,
-                                     write_op2=write_op2, debug=debug,
+                                     write_op2=write_op2, export_hdf5=export_hdf5,
+                                     debug=debug,
                                      skip_files=skip_files, stop_on_failure=stop_on_failure,
                                      nstart=nstart, nstop=nstop, binary_debug=binary_debug,
                                      compare=compare, short_stats=short_stats,
@@ -162,7 +183,7 @@ def main():
 
     msg = "Usage:\n"
     #is_release = False
-    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-d] [-b] [--skip_dataframe]\n"
+    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-h] [-d] [-b] [--skip_dataframe]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
@@ -180,6 +201,7 @@ def main():
     # n is for NAS
     msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
+    msg += "  -h, --write_hdf5       Writes the f06 to fem.test_op2.h5\n"
     msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
     msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
@@ -196,12 +218,14 @@ def main():
     make_geom = data['--geometry']
     write_bdf = data['--write_bdf']
     write_f06 = data['--write_f06']
+    export_hdf5 = data['--write_hdf5']
     save_cases = not data['--save_cases']
     short_stats = data['--short_stats']
     compare = not data['--disablecompare']
     skip_dataframe = data['--skip_dataframe']
     run(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf,
-        save_cases=save_cases, write_f06=write_f06, short_stats=short_stats,
+        save_cases=save_cases, write_f06=write_f06, export_hdf5=export_hdf5,
+        short_stats=short_stats,
         skip_dataframe=skip_dataframe, compare=compare, debug=debug)
 
 if __name__ == '__main__':

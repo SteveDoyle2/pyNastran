@@ -14,7 +14,7 @@ from pyNastran.converters.tecplot.tecplot import read_tecplot
 
 def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, log=None, debug=True):
     """Converts a Tecplot file to Nastran."""
-    return tecplot_to_nastran_filename(tecplot_filename, bdf_filename, log=log, debug=debug)
+    return tecplot_to_nastran(tecplot_filename, bdf_filename, log=log, debug=debug)
 
 
 def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):

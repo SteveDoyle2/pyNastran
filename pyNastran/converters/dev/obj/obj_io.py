@@ -15,8 +15,8 @@ class ObjIO(object):
     """
     Defines the GUI class for OBJ.
     """
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_obj_wildcard_geometry_results_functions(self):
         """
@@ -30,21 +30,21 @@ class ObjIO(object):
     def _remove_old_obj_geometry(self, filename):
         #return self._remove_old_geometry(filename)
 
-        self.eid_map = {}
-        self.nid_map = {}
+        self.parent.eid_map = {}
+        self.parent.nid_map = {}
         if filename is None:
-            self.scalarBar.VisibilityOff()
+            self.parent.scalarBar.VisibilityOff()
             skip_reading = True
         else:
-            self.turn_text_off()
-            self.grid.Reset()
+            self.parent.turn_text_off()
+            self.parent.grid.Reset()
 
-            self.result_cases = {}
-            self.ncases = 0
+            self.parent.result_cases = {}
+            self.parent.ncases = 0
             try:
-                del self.case_keys
-                del self.icase
-                del self.isubcase_name_map
+                del self.parent.case_keys
+                del self.parent.icase
+                del self.parent.isubcase_name_map
             except:
                 # print("cant delete geo")
                 pass
@@ -52,7 +52,7 @@ class ObjIO(object):
             #print(dir(self))
             skip_reading = False
         #self.scalarBar.VisibilityOff()
-        self.scalarBar.Modified()
+        self.parent.scalarBar.Modified()
         return skip_reading
 
     def load_obj_geometry(self, obj_filename, name='main', plot=True):
@@ -73,15 +73,15 @@ class ObjIO(object):
         if skip_reading:
             return
 
-        self.eid_maps[name] = {}
-        self.nid_maps[name] = {}
+        self.parent.eid_maps[name] = {}
+        self.parent.nid_maps[name] = {}
         model = read_obj(obj_filename, log=self.log, debug=False)
         self.model_type = 'obj'
         nodes = model.nodes
         nelements = model.nelements
 
-        self.nnodes = model.nnodes
-        self.nelements = nelements
+        self.parent.nnodes = model.nnodes
+        self.parent.nelements = nelements
 
         grid = self.grid
         grid.Allocate(self.nelements, 1000)
@@ -97,7 +97,7 @@ class ObjIO(object):
         self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
-        self.create_global_axes(dim_max)
+        self.parent.create_global_axes(dim_max)
         points = numpy_to_vtk_points(nodes)
 
         #assert elements.min() == 0, elements.min()
@@ -114,7 +114,7 @@ class ObjIO(object):
                 elem.GetPointIds().SetId(0, element[0])
                 elem.GetPointIds().SetId(1, element[1])
                 elem.GetPointIds().SetId(2, element[2])
-                self.grid.InsertNextCell(tri_etype, elem.GetPointIds())
+                grid.InsertNextCell(tri_etype, elem.GetPointIds())
         if len(quads):
             for eid, element in enumerate(quads):
                 elem = vtk.vtkQuad()
@@ -122,7 +122,7 @@ class ObjIO(object):
                 elem.GetPointIds().SetId(1, element[1])
                 elem.GetPointIds().SetId(2, element[2])
                 elem.GetPointIds().SetId(3, element[3])
-                self.grid.InsertNextCell(quad_etype, elem.GetPointIds())
+                grid.InsertNextCell(quad_etype, elem.GetPointIds())
 
         grid.SetPoints(points)
         grid.Modified()
@@ -130,15 +130,15 @@ class ObjIO(object):
             grid.Update()
 
 
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.parent.scalarBar.VisibilityOn()
+        self.parent.scalarBar.Modified()
 
-        self.isubcase_name_map = {1: ['OBJ', '']}
+        self.parent.isubcase_name_map = {1: ['OBJ', '']}
         cases = {}
         ID = 1
         form, cases, icase = self._fill_obj_geometry_objects(
             cases, ID, nodes, nelements, model)
-        self._finish_results_io2(form, cases)
+        self.parent._finish_results_io2(form, cases)
 
     def clear_obj(self):
         pass

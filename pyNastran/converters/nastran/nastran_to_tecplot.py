@@ -1,3 +1,9 @@
+"""
+defines:
+ - tecplot = nastran_to_tecplot(model)
+ - tecplot = nastran_to_tecplot_filename(bdf_filename, tecplot_filename, z
+                                         log=None, debug=False)
+"""
 from __future__ import print_function
 from six import iteritems
 from numpy import zeros, array
@@ -14,11 +20,13 @@ def nastran_to_tecplot(model):
     if nnodes == inode_max:
         xyz = zeros((nnodes, 3), dtype='float64')
         i = 0
-        for nid, node in sorted(iteritems(model.nodes)):
+        for unused_nid, node in sorted(iteritems(model.nodes)):
             xyz[i, :] = node.get_position()
             i += 1
         else:
-            raise RuntimeError('sequential node IDs required; nnodes=%s inode_max=%s' % (nnodes, inode_max))
+            msg = 'sequential node IDs required; nnodes=%s inode_max=%s' % (
+                nnodes, inode_max)
+            raise RuntimeError(msg)
     tecplot.xyz = xyz
 
     nquads = model.card_count['CQUAD4'] if 'CQUAD4' in model.card_count else 0
@@ -35,7 +43,7 @@ def nastran_to_tecplot(model):
     #pids = zeros(nelements, dtype='int32')
     #mids = zeros(nelements, dtype='int32')
     unhandled_types = set([])
-    for eid, element in iteritems(model.elements):
+    for unused_eid, element in iteritems(model.elements):
         if element.type in ['CTRIA3']:
             tris.append(element.node_ids)
         elif element.type in ['CQUAD4']:
@@ -120,6 +128,7 @@ def nastran_to_tecplot(model):
     return tecplot
 
 def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=False):
+    """converts a BDF file to Tecplot format; supports solid elements"""
     model = BDF(log=log, debug=debug)
     model.read_bdf(bdf_filename)
     # tecplot = nastran_to_tecplot(model)
@@ -138,10 +147,11 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
         i += 1
     assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
 
-    for eid, element in sorted(iteritems(model.elements)):
+    for unused_eid, element in sorted(iteritems(model.elements)):
         if element.type in ['CTETRA']:
             n1, n2, n3, n4 = element.node_ids
-            i1, i2, i3, i4 = nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4]
+            i1, i2, i3, i4 = (nodeid_to_i_map[n1], nodeid_to_i_map[n2],
+                              nodeid_to_i_map[n3], nodeid_to_i_map[n4])
             elements.append([i1, i2, i3, i4,
                              i4, i4, i4, i4])
         elif element.type in ['CPENTA']:
@@ -166,8 +176,8 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
             elements.append([i1, i2, i3, i4,
                              i5, i6, i7, i8])
         else:
-            self.log.info('skip etype=%r' % element.type)
-            self.log.info(element)
+            model.log.info('skip etype=%r' % element.type)
+            model.log.info(element)
     elements = array(elements, dtype='int32')
 
     tecplot = Tecplot(log=model.log)
@@ -176,12 +186,3 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
     tecplot.write_tecplot(tecplot_filename)
     tecplot.results = array([], dtype='float32')
     return tecplot
-
-def main():  # pragma: no cover
-    bdf_filename = 'threePlugs.bdf'
-    tecplot_filename = 'threePlugs.plt'
-    nastran_to_tecplot_filename(bdf_filename, tecplot_filename)
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

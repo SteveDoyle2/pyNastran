@@ -45,7 +45,64 @@ class BDFMethods(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
-    def get_area_breakdown(self, property_ids=None, sum_bar_area=True):
+    def get_length_breakdown(self, property_ids=None, stop_if_no_length=True):
+        """
+        gets a breakdown of the length by property region
+
+        TODO: What about CONRODs?
+        """
+        #skip_elements = [
+            #'CTRIA3', 'CTRIA6', 'CTRIAR',
+            #'CQUAD4', 'CQUAD8',
+            #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+            #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+            #'CBUSH', 'CBUSH1D', 'CBUSH2D',
+            #'CRAC2D', 'CRAC3D',
+        #]
+        skip_props = [
+            'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
+            'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
+            'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
+            'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
+            'PCOMPS', 'PVISC',
+            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+        ]
+        pid_eids = self.get_element_ids_dict_with_pids(
+            property_ids, msg=' which is required by get_length_breakdown')
+        pids_to_length = {}
+        for pid, eids in iteritems(pid_eids):
+            prop = self.properties[pid]
+            lengths = []
+            if prop.type in skip_props:
+                continue
+            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBMSECT', 'PBCOMP']:
+                #['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
+                # TODO: Do I need to consider the offset on length effects for a CBEAM?
+                for eid in eids:
+                    elem = self.elements[eid]
+                    try:
+                        lengths.append(elem.Length())
+                    except AttributeError:
+                        print(prop)
+                        print(elem)
+                        raise
+            else:
+                eid0 = eids[0]
+                elem = self.elements[eid0]
+                msg = str(prop) + str(elem)
+                raise NotImplementedError(msg)
+
+            if lengths:
+                pids_to_length[pid] = sum(lengths)
+
+        has_length = len(pids_to_length)
+        if stop_if_no_length and not has_length:
+            raise RuntimeError('No elements with length were found')
+        else:
+            self.log.warning('No elements with length were found')
+        return pids_to_length
+
+    def get_area_breakdown(self, property_ids=None, stop_if_no_area=True, sum_bar_area=True):
         """
         gets a breakdown of the area by property region
 
@@ -57,6 +114,12 @@ class BDFMethods(BDFAttributes):
         #'PBEND',
         #'PIHEX',
         #'PCOMPS',
+
+        sum_bar_area : bool; default=True
+            True : sum the areas for CBAR/CBEAM/CROD/CONROD/CTUBE elements
+            False : only get the cross sectional properties
+            TODO: why is True even an option; it seems nonsensical to sum the areas
+                  of CBARs with the same cross-section?
         """
         skip_props = [
             'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
@@ -75,6 +138,8 @@ class BDFMethods(BDFAttributes):
             if prop.type in ['PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG', ]:
                 for eid in eids:
                     elem = self.elements[eid]
+                    if elem.type in ['CQUADX']:
+                        continue
                     try:
                         areas.append(elem.Area())
                     except AttributeError:
@@ -83,25 +148,28 @@ class BDFMethods(BDFAttributes):
                         raise
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
                 for eid in eids:
-                    elem = self.elements[eid]
-                    try:
-                        if sum_bar_area:
-                            areas.append(elem.Area())
-                        else:
-                            areas = [elem.Area()]
-                    except AttributeError:
-                        print(prop)
-                        print(elem)
-                        raise
+                    elem = self.elements[eids[0]]
+                    area = elem.Area()
+                    if sum_bar_area:
+                        neids = len(eids)
+                        areas = [area * neids]
+                    else:
+                        areas = [area]
             elif prop.type in skip_props:
                 pass
             else:
                 raise NotImplementedError(prop)
             if areas:
                 pids_to_area[pid] = sum(areas)
+
+        has_area = len(pids_to_area)
+        if stop_if_no_area and not has_area:
+            raise RuntimeError('No elements with area were found')
+        else:
+            self.log.warning('No elements with area were found')
         return pids_to_area
 
-    def get_volume_breakdown(self, property_ids=None):
+    def get_volume_breakdown(self, property_ids=None, stop_if_no_volume=True):
         """
         gets a breakdown of the volume by property region
 
@@ -134,6 +202,8 @@ class BDFMethods(BDFAttributes):
                 areas = []
                 for eid in eids:
                     elem = self.elements[eid]
+                    if elem.type in ['CQUADX']:
+                        continue
                     areas.append(elem.Area())
                 volumesi = [area * thickness for area in areas]
                 volumes.extend(volumesi)
@@ -146,7 +216,7 @@ class BDFMethods(BDFAttributes):
                 volumesi = [area * thickness for area in areas]
                 volumes.extend(volumesi)
             elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
-                # what should I do here?
+                # TODO: Do I need to consider the offset on length effects for a CBEAM?
                 lengths = []
                 for eid in eids:
                     elem = self.elements[eid]
@@ -179,9 +249,15 @@ class BDFMethods(BDFAttributes):
                 raise NotImplementedError(prop)
             if volumes:
                 pids_to_volume[pid] = sum(volumes)
+
+        has_volume = len(pids_to_volume)
+        if stop_if_no_volume and not has_volume:
+            raise RuntimeError('No elements with volume were found')
+        else:
+            self.log.warning('No elements with volume were found')
         return pids_to_volume
 
-    def get_mass_breakdown(self, property_ids=None, stop_if_no_eids=True, detailed=False):
+    def get_mass_breakdown(self, property_ids=None, stop_if_no_mass=True, detailed=False):
         """
         gets a breakdown of the mass by property region
 
@@ -189,7 +265,7 @@ class BDFMethods(BDFAttributes):
         ----------
         property_ids : List[int] / int
             list of property ID
-        stop_if_no_eids : bool; default=True
+        stop_if_no_mass : bool; default=True
             prevents crashing if there are no elements
             setting this to False really doesn't make sense for non-DMIG models
         detailed : bool, optional, default : False
@@ -231,7 +307,7 @@ class BDFMethods(BDFAttributes):
             'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
             'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
             'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
-            'PVISC', 'PBCOMP', 'PBEND']
+            'PVISC', 'PBCOMP', 'PBEND', ]
         for pid, eids in iteritems(pid_eids):
             prop = self.properties[pid]
             masses = []
@@ -243,6 +319,8 @@ class BDFMethods(BDFAttributes):
                 rho = prop.Rho()
                 for eid in eids:
                     elem = self.elements[eid]
+                    if elem.type in ['CQUADX']:
+                        continue
                     area = elem.Area()
                     if detailed:
                         masses.append(area * (rho * thickness))
@@ -300,8 +378,10 @@ class BDFMethods(BDFAttributes):
             if masses_nonstructural:
                 pids_to_mass_nonstructural[pid] = sum(masses_nonstructural)
 
-        if stop_if_no_eids and len(mass_type_to_mass) == 0 and len(pids_to_mass) == 0:
+        has_mass = len(mass_type_to_mass) > 0 or len(pids_to_mass) > 0
+        if stop_if_no_mass and not has_mass:
             raise RuntimeError('No elements with mass were found')
+
         if detailed:
             return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
         else:
@@ -479,12 +559,13 @@ class BDFMethods(BDFAttributes):
 
     def _mass_properties_new(self, element_ids=None, mass_ids=None, nsm_id=None,
                              reference_point=None,
-                             sym_axis=None, scale=None, xyz_cid0_dict=None):  # pragma: no cover
+                             sym_axis=None, scale=None,
+                             xyz_cid0_dict=None, debug=False):
         """not done"""
         mass, cg, I = _mass_properties_new(
             self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,
             reference_point=reference_point,
-            sym_axis=sym_axis, scale=scale, xyz_cid0_dict=xyz_cid0_dict)
+            sym_axis=sym_axis, scale=scale, xyz_cid0_dict=xyz_cid0_dict, debug=debug)
         return (mass, cg, I)
 
     #def __gravity_load(self, loadcase_id):
@@ -579,7 +660,8 @@ class BDFMethods(BDFAttributes):
                                                       include_grav=include_grav, xyz_cid0=xyz_cid0)
         return forces, moments
 
-    def sum_forces_moments(self, p0, loadcase_id, include_grav=False, xyz_cid0=None):
+    def sum_forces_moments(self, p0, loadcase_id, include_grav=False,
+                           xyz_cid0=None):
         # type: (int, int, bool, Union[None, Dict[int, np.ndarray]]) -> Tuple[np.ndarray, np.ndarray]
         """
         Sums applied forces & moments about a reference point p0 for all

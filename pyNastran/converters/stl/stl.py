@@ -40,6 +40,20 @@ class STL(object):
     #is_outward_normals = True
 
     def __init__(self, log=None, debug=False):
+        """
+        Initializes the STL object
+
+        Parameters
+        ----------
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/error messages
+                False: logs info/error messages
+                None:  logs error messages
+        log : logging module object / None
+            if log is set, debug is ignored and uses the
+            settings the logging object has
+        """
         self.log = get_logger2(log, debug=debug)
 
         self.nodes = None
@@ -134,7 +148,7 @@ class STL(object):
                 n /= np.linalg.norm(n, axis=1)[:, np.newaxis]
 
             s = Struct('12fH')
-            for eid, element in enumerate(elements):
+            for eid, unused_element in enumerate(elements):
                 data = s.pack(n[eid, 0], n[eid, 1], n[eid, 2],
                               p1[eid, 0], p1[eid, 1], p1[eid, 2],
                               p2[eid, 0], p2[eid, 1], p2[eid, 2],
@@ -168,8 +182,8 @@ class STL(object):
 
             s = Struct('12fH')
             for ielement in range(nelements):
-                (nx, ny, nz, ax, ay, az, bx, by, bz,
-                 cx, cy, cz, i) = s.unpack(data[j:j+50])
+                (unused_nx, unused_ny, unused_nz, ax, ay, az, bx, by, bz,
+                 cx, cy, cz, unused_i) = s.unpack(data[j:j+50])
 
                 t1 = (ax, ay, az)
                 t2 = (bx, by, bz)
@@ -239,7 +253,8 @@ class STL(object):
         return normals
 
     def get_area(self, elements, stop_on_failure=True):
-        v123, normals_norm, inan = self._get_normals_data(elements, nodes=self.nodes)
+        unused_v123, normals_norm, inan = self._get_normals_data(
+            elements, nodes=self.nodes)
 
         if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
@@ -391,7 +406,8 @@ class STL(object):
         nids_new.sort()
 
         # check the closest 10 nodes for equality
-        deq, ieq = kdt.query(self.nodes[nids_new, :], k=10, distance_upper_bound=tol)
+        unused_deq, ieq = kdt.query(self.nodes[nids_new, :], k=10,
+                                    distance_upper_bound=tol)
 
         # get the ids of the duplicate nodes
         slots = np.where(ieq[:, 1:] < nnodes)
@@ -481,7 +497,7 @@ class STL(object):
                 nodes2[ni*nnodes : (ni+1)*nnodes, :] = outer_points
 
                 nnbase = ni * nnodes
-                nnshift = (ni+1) * nnodes
+                unused_nnshift = (ni+1) * nnodes
 
                 nebase = (ni) * nelements
                 neshift = (ni + 1) * nelements
@@ -525,10 +541,8 @@ class STL(object):
         #print(deltaN)
 
         #----------- make far field---------------
-        nodes3 = nodes2[nnbase:, :]
-        nodes3 = nodes2[nnbase:, :]
+        unused_nodes3 = nodes2[nnbase:, :]
 
-        elements3 = elements2[nebase:, :]
         elements3 = elements2[nebase:, :]
         self.log.debug("done projecting...")
         return nodes2, elements2
@@ -559,7 +573,7 @@ class STL(object):
         with open(out_filename, 'w') as out:
             out.write(msg)
 
-            nelements = elements.shape[0]
+            unused_nelements = elements.shape[0]
             normals = self.get_normals(elements, stop_on_failure=stop_on_failure)
             for element, normal in zip(elements, normals):
                 try:
@@ -765,7 +779,7 @@ def _rotate_model(stl):  # pragma: no cover
         theta[iRz] = 0.0
 
         min_theta = min(theta)
-        dtheta = max(theta) - np.pi / 4
+        unused_dtheta = max(theta) - np.pi / 4
         theta2 = theta + min_theta
 
         x2 = R * np.cos(theta2)
@@ -777,7 +791,7 @@ def _rotate_model(stl):  # pragma: no cover
 
     if 0:
         # project the volume
-        (nodes2, elements2) = stl.project_mesh(nodes_rotated, elements)
+        (unused_nodes2, unused_elements2) = stl.project_mesh(nodes_rotated, elements)
 
     # write the model
     stl_geom_out = 'rotated.stl'

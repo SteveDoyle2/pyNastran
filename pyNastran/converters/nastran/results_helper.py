@@ -101,7 +101,7 @@ class NastranGuiResults(NastranGuiAttributes):
             if deflects:
                 nastran_res = DisplacementResults(subcase_idi, titles, headers,
                                                   self.xyz_cid0, t123, tnorm,
-                                                  scales, #deflects=deflects,
+                                                  scales,
                                                   uname='NastranResult')
 
                 dmax = []
@@ -961,131 +961,6 @@ class NastranGuiResults(NastranGuiAttributes):
         #, case, header, form0
         return icase
 
-
-    def _get_nastran_key_order(self, model):
-        unused_displacement_like = [
-            model.displacements,
-            model.velocities,
-            model.accelerations,
-            model.eigenvectors,
-            model.spc_forces,
-            model.mpc_forces,
-
-            # untested
-            model.load_vectors,
-            model.applied_loads,
-            model.force_vectors,
-            #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
-        ]
-        unused_temperature_like = [
-            model.temperatures,
-        ]
-        unused_stress = [
-            model.crod_stress, model.conrod_stress, model.ctube_stress,
-            model.cbar_stress,
-            model.cbeam_stress,
-
-            model.ctria3_stress, model.cquad4_stress,
-            model.ctria6_stress, model.cquad8_stress,
-            model.ctriar_stress, model.cquadr_stress,
-
-            model.ctria3_composite_stress, model.cquad4_composite_stress,
-            model.ctria6_composite_stress, model.cquad8_composite_stress,
-
-            model.ctetra_stress, model.cpenta_stress, model.chexa_stress,
-        ]
-        unused_strain = [
-            model.crod_strain, model.conrod_strain, model.ctube_strain,
-            model.cbar_strain,
-            model.cbeam_strain,
-
-            model.ctria3_strain, model.cquad4_strain,
-            model.ctria6_strain, model.cquad8_strain,
-            model.ctriar_strain, model.cquadr_strain,
-
-            model.ctria3_composite_strain, model.cquad4_composite_strain,
-            model.ctria6_composite_strain, model.cquad8_composite_strain,
-
-            model.ctetra_strain, model.cpenta_strain, model.chexa_strain,
-        ]
-        unused_strain_energy = [
-            #model.strain_energy,
-            model.cquad4_strain_energy, model.cquad8_strain_energy,
-            model.cquadr_strain_energy, model.cquadx_strain_energy,
-            model.ctria3_strain_energy, model.ctria6_strain_energy,
-            model.ctriar_strain_energy, model.ctriax_strain_energy,
-            model.ctriax6_strain_energy,
-            model.ctetra_strain_energy, model.cpenta_strain_energy,
-            model.chexa_strain_energy,
-            model.crod_strain_energy, model.ctube_strain_energy,
-            model.conrod_strain_energy,
-            model.cbar_strain_energy, model.cbeam_strain_energy,
-            model.cgap_strain_energy, model.cbush_strain_energy,
-            model.celas1_strain_energy, model.celas2_strain_energy,
-            model.celas3_strain_energy, model.celas4_strain_energy,
-            model.cdum8_strain_energy, model.dmig_strain_energy,
-            model.cbend_strain_energy,
-            model.genel_strain_energy, model.cshear_strain_energy,
-        ]
-
-        #result_groups = [
-            #displacement_like, temperature_like, stress, strain, strain_energy,
-        #]
-
-        unused_nids = self.node_ids
-        unused_eids = self.element_ids
-        keys_order = []
-        # model = OP2()
-
-        # subcase_ids = model.subcase_key.keys()
-
-        #self.isubcase_name_map[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
-        subcase_ids = list(model.isubcase_name_map.keys())
-        subcase_ids.sort()
-        #print('subcase_ids =', subcase_ids)
-
-
-        # isubcase, analysis_code, sort_method, count, subtitle
-        #(1, 2, 1, 0, 'SUPERELEMENT 0') : result1
-
-        #subcase_ids = subcase_ids
-        #print('subcase_idsB =' % subcase_ids)
-        for isubcase in sorted(subcase_ids):
-            if isubcase == 0:
-                # beam_modes
-                self.log.error('*****isubcase=0')
-                continue
-            # value = (analysis_codei, sort_methodi, counti, isubtitle)
-            #print('subcase_key =', model.subcase_key)
-            keys = model.subcase_key[isubcase]
-            #print('keys[%s] =%s' % (isubcase, keys))
-            unused_key0 = keys[0]
-
-            # this while loop lets us make sure we pull the analysis codes in the expected order
-            # TODO: doesn't pull count in the right order
-            # TODO: doesn't pull subtitle in right order
-            keys2 = deepcopy(keys)
-            while keys2:
-                key = keys2[-1]
-                #print('while keys ->', key)
-                (analysis_code, sort_method, count, subtitle) = key
-                #assert isubcase == isubcasei, 'isubcase=%s isubcasei=%s' % (isubcase, isubcasei)
-
-                # analysis_code is defined from 1-12 (e.g., 1=static, 2=modes, 5=freq)
-                # we loop over the analysis code to define static results before model/time/freq
-                #
-                assert analysis_code < 12, analysis_code
-                for ianalysis_code in range(12):
-                    keyi = (ianalysis_code, sort_method, count, subtitle)
-                    if keyi in keys2:
-                        #print(keyi)
-                        keyi2 = (isubcase, ianalysis_code, sort_method, count, subtitle)
-                        #print(keyi2)
-                        keys_order.append(keyi2)
-                        keys2.remove(keyi)
-                #keys_order += keys
-        return keys_order
-
 def print_empty_elements(model, element_ids, is_element_on, log_error):
     """prints the first 20 elements that aren't supportedas part of the stress results"""
     ioff = np.where(is_element_on == 0)[0]
@@ -1165,7 +1040,7 @@ def _get_t123_tnorm(case, nids, nnodes):
     return t123, tnorm, ntimes
 
 
-def _get_times(model, isubcase):
+def _get_times(model, key):
     """
     Get the times/frequencies/eigenvalues/loadsteps used on a given
     subcase
@@ -1175,9 +1050,6 @@ def _get_times(model, isubcase):
     is_data = False
     is_static = False
     times = None
-    #print('isubcase =', isubcase)
-    #print('table_types =', table_types)
-    #print('model.eigenvectors.keys() =', model.eigenvectors.keys())
     for table_type in table_types:
         if not hasattr(model, table_type):
             print('no table_type=%s' % table_type)
@@ -1185,10 +1057,11 @@ def _get_times(model, isubcase):
         table = getattr(model, table_type)
         if len(table) == 0:
             continue
-        #print(table)
-        if isubcase in table:
+        #print(key, table, type(table))
+
+        if key in table:
             is_data = True
-            case = table[isubcase]
+            case = table[key]
             #print(case)
             is_real = case.is_real
             if case.nonlinear_factor is not None:
@@ -1200,5 +1073,4 @@ def _get_times(model, isubcase):
             #print('times = ', times)
             break
             #return is_data, is_static, is_real, times
-    #print('isubcase =', isubcase)
     return is_data, is_static, is_real, times

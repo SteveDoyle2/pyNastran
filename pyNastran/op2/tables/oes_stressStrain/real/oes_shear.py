@@ -160,7 +160,8 @@ class RealShearArray(OES_Object):
     def get_f06_header(self):
         raise NotImplementedError('CSHEAR...')
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header()
@@ -178,7 +179,7 @@ class RealShearArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             max_shear = self.data[itime, :, 0]
@@ -191,12 +192,11 @@ class RealShearArray(OES_Object):
                 out.append([eid, max_sheari, avg_sheari, margini])
 
             for i in range(0, nwrite, 2):
-                out_line = '      %8i   %13s  %10.4E %13s  %8i   %13s  %10.4E %s\n' % (tuple(out[i] + out[i + 1]))
-                f.write(out_line)
+                f06_file.write('      %8i   %13s  %10.4E %13s  %8i   %13s  %10.4E %s\n' % (
+                    tuple(out[i] + out[i + 1])))
             if is_odd:
-                out_line = '      %8i   %13s  %10.4E %s\n' % tuple(out[-1])
-                f.write(out_line)
-            f.write(page_stamp % page_num)
+                f06_file.write('      %8i   %13s  %10.4E %s\n' % tuple(out[-1]))
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

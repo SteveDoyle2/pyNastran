@@ -33,11 +33,10 @@ from pyNastran.utils.log import get_logger2
 if PY2:
     string_type = unicode
     bytes_type = str
-    write_ascii = 'wb'
 else:
     string_type = str
     bytes_type = bytes
-    write_ascii = 'wb'
+WRITE_ASCII = 'wb'
 
 
 def read_cart3d(cart3d_filename, log=None, debug=False, result_names=None):
@@ -232,6 +231,12 @@ class Cart3dIO(object):
                 outfile.write(fmt % (cpi, rhoi, rhou, rhov, rhoe, e))
 
     def _read_header_ascii(self):
+        """
+        Reads the header::
+
+          npoints nelements          # geometry
+          npoints nelements nresults # results
+        """
         line = self.infile.readline()
         sline = line.strip().split()
         if len(sline) == 2:
@@ -340,6 +345,12 @@ class Cart3dIO(object):
         return regions
 
     def _read_header_binary(self):
+        """
+        Reads the header::
+
+          npoints nelements          # geometry
+          npoints nelements nresults # results
+        """
         data = self.infile.read(4)
         size_little, = unpack(b'<i', data)
         size_big, = unpack(b'>i', data)
@@ -482,9 +493,7 @@ class Cart3dIO(object):
 
 
 class Cart3D(Cart3dIO):
-    """
-    Cart3d interface class
-    """
+    """Cart3d interface class"""
     model_type = 'cart3d'
     is_structured = False
     is_outward_normals = True
@@ -645,8 +654,10 @@ class Cart3D(Cart3dIO):
         inodes_save.sort()
 
         #inodes_map = np.arange(len(inodes_save))
-        if not(0 < len(inodes_save) < nnodes):
-            msg = 'len(inodes_save)=%s nnodes=%s'  % (len(inodes_save), nnodes)
+        is_nodes = 0 < len(inodes_save) < nnodes
+        if not is_nodes:
+            msg = 'There are no nodes in the model; len(inodes_save)=%s nnodes=%s'  % (
+                len(inodes_save), nnodes)
             raise RuntimeError(msg)
 
         nodes2 = nodes[inodes_save, :]
@@ -767,7 +778,7 @@ class Cart3D(Cart3dIO):
         assert len(self.points) > 0, 'len(self.points)=%s' % len(self.points)
 
         if self.loads is None or self.loads == {}:
-            loads = {}
+            #loads = {}
             is_loads = False
         else:
             is_loads = True
@@ -776,7 +787,7 @@ class Cart3D(Cart3dIO):
         if is_binary:
             form = 'wb'
         else:
-            form = write_ascii
+            form = WRITE_ASCII
 
         with codec_open(outfilename, form) as outfile:
             int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
@@ -822,7 +833,7 @@ class Cart3D(Cart3dIO):
         """
         if nresults == 0:
             return
-        loads = {}
+        #loads = {}
         if result_names is None:
             result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
                             'Mach', 'U', 'V', 'W', 'E', 'a', 'T', 'Pressure', 'q']
@@ -835,7 +846,7 @@ class Cart3D(Cart3dIO):
             # rho rhoU,rhoV,rhoW,pressure/rhoE/E
             sline = infile.readline().strip().split()
             i += 1
-            for n in range(nresult_lines):
+            for unused_n in range(nresult_lines):
                 sline += infile.readline().strip().split()  # Cp
                 i += 1
                 #gamma = 1.4
@@ -1066,7 +1077,7 @@ class Cart3D(Cart3dIO):
             normalized nodal normal vectors
         """
         elements = self.elements
-        nodes = self.nodes
+        #nodes = self.nodes
         nnodes = self.nnodes
         nid_to_eids = defaultdict(list)
 
@@ -1082,7 +1093,7 @@ class Cart3D(Cart3dIO):
             eids = nid_to_eids[nid]
             if len(eids) == 0:
                 raise RuntimeError('nid=%s is not used' % nid)
-            ni_avg = cnormals[eids, :]
+            #ni_avg = cnormals[eids, :]
             nnormals[nid] = cnormals[eids, :].sum(axis=0)
         ni = np.linalg.norm(nnormals, axis=1)
         assert ni.min() > 0, ni

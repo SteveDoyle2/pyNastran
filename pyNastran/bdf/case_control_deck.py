@@ -693,13 +693,14 @@ class CaseControlDeck(object):
             else:
                 msg = 'expected item of form "name = value"   line=%r' % line.strip()
                 raise RuntimeError(msg)
+            #print('line_upper=%r' % line_upper)
             assert key == 'RIGID', 'key=%r value=%r line=%r'  % (key, value, line)
             param_type = 'STRESS-type'
             options = []
             #RIGID = LAGR, LGELIM, LAGRANGE, STIFF, LINEAR
             if value in ['LAGR', 'LAGRAN']:
                 value = 'LAGRANGE'
-            elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR']:
+            elif value in ['LGELIM', 'LAGRANGE', 'STIFF', 'LINEAR', 'AUTO']:
                 pass
             else:
                 raise NotImplementedError('key=%r value=%r line=%r'  % (key, value, line))

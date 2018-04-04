@@ -565,6 +565,48 @@ class AddMethods(BDFAttributes):
             self.phbdys[key] = prop
             self._type_to_id_map[prop.type].append(key)
 
+    def _add_view_object(self, view):
+        # type: (Any) -> None
+        """adds a VIEW object"""
+        key = view.iview
+        assert key > 0, 'key=%s; view=%s\n' % (key, view)
+        if key in self.views:
+            if not view == self.views[key]:
+                assert key not in self.views, 'VIEW.iview=%s\nold=\n%snew=\n%s' % (
+                    key, self.views[key], view)
+        else:
+            assert key > 0, 'iview=%s view=\n%s' % (key, view)
+            self.views[key] = view
+            self._type_to_id_map[view.type].append(key)
+
+    def _add_view3d_object(self, view3d):
+        # type: (Any) -> None
+        """adds a VIEW3D object"""
+        key = view3d.icavity
+        assert key > 0, 'key=%s; view3d=%s\n' % (key, view3d)
+        if key in self.view3ds:
+            if not view == self.view3cs[key]:
+                assert key not in self.view3ds, 'VIEW3D.icavity=%s\nold=\n%snew=\n%s' % (
+                    key, self.view3ds[key], view3d)
+        else:
+            assert key > 0, 'icavity=%s view3d=\n%s' % (key, view3d)
+            self.view3ds[key] = view3d
+            self._type_to_id_map[view3d.type].append(key)
+
+    def _add_normal_object(self, snorm):
+        # type: (Any) -> None
+        """adds an SNORM object"""
+        key = snorm.nid
+        assert key > 0, 'key=%s; snorm=%s\n' % (key, snorm)
+        if key in self.normals:
+            if not snorm == self.normals[key]:
+                assert key not in self.normals, 'VIEW.iview=%s\nold=\n%snew=\n%s' % (
+                    key, self.normals[key], view)
+        else:
+            assert key > 0, 'pid=%s SNORM=\n%s' % (key, snorm)
+            self.normals[key] = snorm
+            self._type_to_id_map[snorm.type].append(key)
+
     def _add_convection_property_object(self, prop):
         # type: (Any) -> None
         key = prop.pconid
@@ -712,6 +754,22 @@ class AddMethods(BDFAttributes):
         assert self.aeros is None, '\naeros=\n%s old=\n%s' % (aeros, self.aeros)
         self.aeros = aeros
         #self._type_to_id_map[aeros.type].append(key)
+
+    def _add_baror_object(self, baror):
+        # type: (Any) -> None
+        """adds an BAROR object"""
+        # only one BAROR card allowed
+        assert self.baror is None, '\nBAROR=\n%s old=\n%s' % (baror, self.baror)
+        if self.baror is None:
+            self.baror = baror
+
+    def _add_beamor_object(self, beamor):
+        # type: (Any) -> None
+        """adds an BEAMOR object"""
+        # only one BAROR card allowed
+        assert self.beamor is None, '\nBEAMOR=\n%s old=\n%s' % (beamor, self.beamor)
+        if self.beamor is None:
+            self.beamor = beamor
 
     def _add_axic_object(self, axic):
         # type: (Any) -> None

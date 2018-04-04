@@ -247,7 +247,7 @@ class RealSolidArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f06, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         nnodes, msg_temp = _get_f06_header_nnodes(self, is_mag_phase)
@@ -264,7 +264,7 @@ class RealSolidArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f06.write(''.join(header + msg_temp))
+            f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             oxx = self.data[itime, :, 0]
@@ -298,22 +298,24 @@ class RealSolidArray(OES_Object):
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm])
 
                 if i % cnnodes == 0:
-                    f06.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
-                    f06.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                              '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
-                              '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                              % ('CENTER', oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                                 '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                                 '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                    f06_file.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
+                    f06_file.write(
+                        '0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                        '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                        '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
+                        % ('CENTER', oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
+                           '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
+                           '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
                 else:
-                    f06.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                              '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
-                              '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                              % (node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                                 '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                                 '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                    f06_file.write(
+                        '0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                        '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                        '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
+                        % (node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
+                           '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
+                           '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
                 i += 1
-            f06.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

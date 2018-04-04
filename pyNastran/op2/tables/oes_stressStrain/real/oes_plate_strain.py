@@ -178,7 +178,8 @@ class RealCPLSTRNPlateArray(OES_Object):
         ##ind.sort()
         #return ind
 
-    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    #def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  #page_num=1, is_mag_phase=False, is_sort1=True):
         #if header is None:
             #header = []
         #msg, nnodes, cen = _get_plate_msg(self)
@@ -194,7 +195,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         #for itime in range(ntimes):
             #dt = self._times[itime]
             #header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            #f.write(''.join(header + msg))
+            #f06_file.write(''.join(header + msg))
 
             ##print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
@@ -216,22 +217,27 @@ class RealCPLSTRNPlateArray(OES_Object):
                 ## tria3
                 #if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
                     #if ilayer == 0:
-                        #f.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                        #f06_file.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
+                            #eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     #else:
-                        #f.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % ('', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                        #f06_file.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
+                            #'', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
 
                 #elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
                     ## bilinear
                     #if nid == 0 and ilayer == 0:  # CEN
-                        #f.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                        #f06_file.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
+                            #eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     #elif ilayer == 0:
-                        #f.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % ('', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                        #f06_file.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
+                            #'', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     #elif ilayer == 1:
-                        #f.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % ('', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                        #f06_file.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % (
+                            #'', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                 #else:
                     #raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
 
-            #f.write(page_stamp % page_num)
+            #f06_file.write(page_stamp % page_num)
             #page_num += 1
         #return page_num - 1
 

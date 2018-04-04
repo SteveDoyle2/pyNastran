@@ -84,6 +84,18 @@ class PBUSH(BushingProperty):
         elif name == 'K6':
             self.Ki[5] = value
 
+        elif name == 'GE1':
+            self.GEi[0] = value
+        elif name == 'GE2':
+            self.GEi[1] = value
+        elif name == 'GE3':
+            self.GEi[2] = value
+        elif name == 'GE4':
+            self.GEi[3] = value
+        elif name == 'GE5':
+            self.GEi[4] = value
+        elif name == 'GE6':
+            self.GEi[5] = value
         #elif name == 'M':
             #self.mass
         else:
@@ -723,6 +735,13 @@ class PBUSH2D(BushingProperty):
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
+    def update_by_pname_fid(self, name, value):
+        if name == 'TGEID1':
+            self.ge_tables[0] = value
+        elif name == 'TGEID2':
+            self.ge_tables[1] = value
+        else:
+            raise NotImplementedError('%r has not implemented update_by_pname_fid for %r' % (self.type, name))
 
     def __init__(self, pid, k_tables, b_tables,
                  ge_tables, kn_tables, comment=''):

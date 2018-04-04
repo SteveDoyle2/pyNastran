@@ -5,6 +5,7 @@ GUI specific geometry functions that don't involve PyQt/VTK
 this is no longer true...but should be
 """
 from __future__ import print_function
+import sys
 from collections import defaultdict
 import numpy as np
 from numpy.linalg import norm
@@ -16,8 +17,9 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
     h_faces, i1_faces, chan_faces, l_faces, z_faces,
     hexa_faces, hat_faces,
 )
+from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 
 
 PIOVER2 = np.pi / 2.
@@ -177,9 +179,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             node2 = model.nodes[nid2]
             n1 = node1.get_position()
             n2 = node2.get_position()
-            centroid = (n1 + n2) / 2.
 
-            ## TODO: should wa/wb be considered in ihat?
+            # wa/wb are not considered in i_offset
+            # they are considered in ihat
             i = n2 - n1
             Li = norm(i)
             ihat = i / Li
@@ -189,23 +191,18 @@ class NastranGeometryHelper(NastranGuiAttributes):
             if elem.pb != 0:
                 nid_release_map[nid2].append((eid, elem.pb))
 
-            v, wa, wb, xform = self._rotate_v_wa_wb(
+            unused_v, wa, wb, xform = rotate_v_wa_wb(
                 model, elem,
                 n1, n2, node1, node2,
-                ihat, i, eid, Li,
-                debug)
-            yhat = xform[1, :]
-            zhat = xform[2, :]
+                ihat, i, eid, Li)
             if wb is None:
                 # one or more of v, wa, wb are bad
                 continue
 
+            yhat = xform[1, :]
+            zhat = xform[2, :]
+
             ## concept has a GOO
-            #if not elem.offt in ['GGG', 'BGG']:
-                #msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (
-                    #elem.offt, eid)
-                #self.log.error(msg)
-                #continue
 
             #if debug:  # pragma: no cover
                 #print('  centroid = %s' % centroid)
@@ -213,15 +210,15 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 #print('  yhat = %s' % yhat)
                 #print('  zhat = %s' % zhat)
                 #print('  scale = %s' % scale)
-            #if eid == 5570:
+            #if eid == 616211:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
 
-            #print('adding bar %s' % bar_type)
-            #print('   centroid=%s' % centroid)
-            #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
-            #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
-            #print('   Li=%s scale=%s' % (Li, scale))
+                #print('adding bar %s' % bar_type)
+                #print('   centroid=%s' % centroid)
+                #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
+                #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
+                #print('   Li=%s scale=%s' % (Li, scale))
             if bar_type not in allowed_types:
                 msg = 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
                 raise RuntimeError(msg)
@@ -232,24 +229,80 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     n1+wa, n2+wb, xform,
                     ugrid, node0, points_list)
 
-            if node0: # and '3d_bars' not in self.alt_grids:
-                self.gui.create_alternate_vtk_grid(
-                    '3d_bars', color=BLUE, opacity=0.2,
-                    representation='surface', is_visible=True,
-                    ugrid=ugrid,
-                )
-
+            centroid = (n1 + n2) / 2.
             bar_types[bar_type][0].append(eid)
             bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
 
-        if points_list:
-            if len(points_list) == 1:
-                points_array = points_list[0]
-            else:
-                points_array = np.vstack(points_list)
-            points = numpy_to_vtk_points(points_array)
-            ugrid.SetPoints(points)
+        if node0: # and '3d_bars' not in self.alt_grids:
+            def update_grid_function(nid_map, ugrid, points, nodes):  # pragma: no cover
+                """custom function to update the 3d bars"""
+                points_list = []
+                node0b = 0
+                for eid in bar_beam_eids:
+                    elem = self.model.elements[eid]
+                    pid_ref = elem.pid_ref
+                    if pid_ref is None:
+                        pid_ref = self.model.Property(elem.pid)
+                    assert not isinstance(pid_ref, integer_types), elem
+
+                    ptype = pid_ref.type
+                    bar_type = _get_bar_type(ptype, pid_ref)
+
+                    #nids = elem.nodes
+                    (nid1, nid2) = elem.node_ids
+                    node1 = model.nodes[nid1]
+                    node2 = model.nodes[nid2]
+
+                    i1, i2 = np.searchsorted(self.node_ids, [nid1, nid2])
+                    n1 = nodes[i1, :]
+                    n2 = nodes[i2, :]
+                    #centroid = (n1 + n2) / 2.
+
+                    i = n2 - n1
+                    Li = norm(i)
+                    ihat = i / Li
+
+                    unused_v, wa, wb, xform = rotate_v_wa_wb(
+                        model, elem,
+                        n1, n2, node1, node2,
+                        ihat, i, eid, Li)
+                    if wb is None:
+                        # one or more of v, wa, wb are bad
+                        continue
+
+                    ugridi = None
+                    node0b = add_3d_bar_element(
+                        bar_type, ptype, pid_ref,
+                        n1+wa, n2+wb, xform,
+                        ugridi, node0b, points_list, add_to_ugrid=False)
+
+                points_array = _make_points_array(points_list)
+
+                points_array2 = numpy_to_vtk(
+                    num_array=points_array,
+                    deep=1,
+                    array_type=vtk.VTK_FLOAT,
+                )
+                points.SetData(points_array2)
+
+                ugrid.SetPoints(points)
+                points.Modified()
+                ugrid.Modified()
+                return
+
+            if points_list:
+                if not sys.argv[0].startswith('test_'):
+                    update_grid_function = None
+                self.gui.create_alternate_vtk_grid(
+                    '3d_bars', color=BLUE, opacity=0.2,
+                    representation='surface', is_visible=True,
+                    follower_function=update_grid_function,
+                    ugrid=ugrid,
+                )
+                points_array = _make_points_array(points_list)
+                points = numpy_to_vtk_points(points_array)
+                ugrid.SetPoints(points)
 
         #print('bar_types =', bar_types)
         for bar_type in list(bar_types):
@@ -279,130 +332,18 @@ class NastranGeometryHelper(NastranGuiAttributes):
                    #no_0_56, no_56_456, no_0_6, no_0_16)
         return bar_nids, bar_types, nid_release_map
 
-    def _rotate_v_wa_wb(self, model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid,
-                        Li_offset, debug):
-        """
-        Rotates v, wa, wb
+def _make_points_array(points_list):
+    if len(points_list) == 1:
+        points_array = points_list[0]
+    else:
+        points_array = np.vstack(points_list)
+    return points_array
 
-        OFFT flag
-        ---------
-        ABC or A-B-C (an example is G-G-G or B-G-G)
-        while the slots are:
-         - A -> orientation; values=[G, B]
-         - B -> End A; values=[G, O]
-         - C -> End B; values=[G, O]
-
-        and the values for A,B,C mean:
-         - B -> basic
-         - G -> global
-         - O -> orientation
-
-        so for example G-G-G, that's global for all terms.
-        BOG means basic orientation, orientation end A, global end B
-
-        so now we're left with what does basic/global/orientation mean?
-        - basic -> the glboal coordinate system defined by cid=0
-        - global -> the local coordinate system defined by the
-                    CD field on the GRID card, but referenced by
-                    the CBAR/CBEAM
-        - orientation -> ???
-        """
-        if elem.g0:
-            #debug = False
-            msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
-            g0_ref = model.Node(elem.g0, msg=msg)
-            if debug:  # pragma: no cover
-                print('  g0 = %s' % elem.g0)
-                print('  g0_ref = %s' % g0_ref)
-            n0 = g0_ref.get_position()
-            v = n0 - n1
-        else:
-            #debug = False
-            ga = model.nodes[elem.Ga()]
-            cda = ga.Cd()
-            cda_ref = model.Coord(cda)
-            v = cda_ref.transform_node_to_global(elem.x)
-            if debug:  # pragma: no cover
-                print('  ga = %s' % elem.ga)
-                if cda != 0:
-                    print('  cd = %s' % cda_ref)
-                else:
-                    print('  cd = 0')
-                print('  x = %s' % elem.x)
-                print('  v = %s' % v)
-
-        #--------------------------------------------------------------------------
-        offt_vector, offt_end_a, offt_end_b = elem.offt
-        if debug:  # pragma: no cover
-            print('  offt vector,A,B=%r' % (elem.offt))
-
-        cd1 = node1.Cd()
-        cd2 = node2.Cd()
-        cd1_ref = model.Coord(cd1)
-        cd2_ref = model.Coord(cd2)
-
-        # rotate v
-        if offt_vector == 'G':
-            # end A
-            # global - cid != 0
-            if cd1 != 0:
-                v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
-        elif offt_vector == 'B':
-            # basic - cid = 0
-            pass
-        else:
-            msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
-            self.log.error(msg)
-            return None, None, None, None
-        #print('v = %s' % v)
-        yhat_offset, zhat_offset = get_bar_yz_transform(v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
-                                          i_offset, Li_offset)
-        xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
-
-        #--------------------------------------------------------------------------
-        # rotate wa
-        wa = elem.wa
-        if offt_end_a == 'G':
-            if cd1 != 0:
-                # TODO: fixme
-                wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
-        elif offt_end_a == 'B':
-            pass
-        elif offt_end_a == 'O':
-            # rotate point p2 from the local frame to the global frame
-            wa = np.dot(wa, xform_offset)
-        else:
-            msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
-            self.log.error(msg)
-            return v, None, None, xform_offset
-
-        #print('wa = %s' % wa)
-        #--------------------------------------------------------------------------
-        # rotate wb
-        wb = elem.wb
-        if offt_end_b == 'G':
-            if cd2 != 0:
-                # TODO: fixme;  MasterModelTaxi
-                wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb-n2)
-
-        elif offt_end_b == 'B':
-            pass
-        elif offt_end_b == 'O':
-            # rotate point p2 from the local frame to the global frame
-            wb = np.dot(wb, xform_offset)
-        else:
-            msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
-            model.log.error(msg)
-            return v, wa, None
-
-        #--------------------------------------------------------------------------
-        i = (n2 + wb) - (n1 + wa)
-        Li = norm(i)
-        ihat = i/Li
-        yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, node1.nid, node2.nid, i, Li)
-        xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
-
-        return v, wa, wb, xform
+def _apply_points_list(points_list, ugrid):
+    if points_list:
+        points_array = _make_points_array(points_list)
+        points = numpy_to_vtk_points(points_array)
+        ugrid.SetPoints(points)
 
 def _get_bar_type(ptype, pid_ref):
     """helper method for _get_bar_yz_arrays"""
@@ -460,7 +401,8 @@ def get_suport_node_ids(model, suport_id):
         suport1 = model.suport1[suport_id]
         node_ids += suport1.nodes
     else:
-        for suport in model.suport:  # TODO: shouldn't this be included?
+        # TODO: shouldn't this block always be included?
+        for suport in model.suport:
             if suport_id in suport.nodes:
                 node_ids.append(suport_id)
     return np.unique(node_ids)
@@ -778,15 +720,17 @@ def faces_to_element_facelist(faces, node0):
     for face in faces: # Loop over all the faces
         #print(face)
         face_idlist.InsertNextId(len(face)) # Number of points in face
+
+        # Insert the pointIds for the face
         #for i in face:
             #face_idlist.InsertNextId(i + node0)
-        [face_idlist.InsertNextId(i + node0) for i in face] # Insert the pointIds for the face
+        [face_idlist.InsertNextId(i + node0) for i in face]
 
     return face_idlist
 
 def add_3d_bar_element(bar_type, ptype, pid_ref,
                        n1, n2, xform,
-                       ugrid, node0, points_list):
+                       ugrid, node0, points_list, add_to_ugrid=True):
     """adds a 3d bar element to the unstructured grid"""
     if ptype in ['PBARL']:
         dim1 = dim2 = pid_ref.dim
@@ -796,6 +740,7 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         dim2 = pid_ref.dim[-1, :]
     else:
         dim1 = dim2 = None
+        return node0
 
     if bar_type == 'BAR':
         pointsi = bar_faces(n1, n2, xform, dim1, dim2)
@@ -809,7 +754,8 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         point_ids.SetId(5, node0 + 5)
         point_ids.SetId(6, node0 + 6)
         point_ids.SetId(7, node0 + 7)
-        ugrid.InsertNextCell(12, point_ids)
+        if add_to_ugrid:
+            ugrid.InsertNextCell(12, point_ids)
         points_list.append(pointsi)
         node0 += 8
         return node0
@@ -877,8 +823,9 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += 24
     else:
-        print('skipping 3d bar_type = %r' % bar_type)
+        #print('skipping 3d bar_type = %r' % bar_type)
         return node0
-    ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
+    if add_to_ugrid:
+        ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
     points_list.append(pointsi)
     return node0

@@ -165,25 +165,22 @@ class BAROR(object):
     +-------+-----+---+---+---+-------+-----+-------+------+
     """
     type = 'BAROR'
-    def __init__(self, property_id, is_g0, g0, x, offt='GGG', comment=''):
+    def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
         if comment:
             self.comment = comment
         self.n = 0
-        self.property_id = property_id
+        self.pid = pid
         self.is_g0 = is_g0
         self.g0 = g0
         self.x = x
         self.offt = offt
 
-    def add_card(self, card, comment=''):
-        if self.n == 1:
-            raise RuntimeError('only one BAROR is allowed')
-        self.n = 1
-
-        property_id = integer_or_blank(card, 2, 'pid')
+    @classmethod
+    def add_card(cls, card, baror=None, comment=''):
+        pid = integer_or_blank(card, 2, 'pid')
 
         # x / g0
-        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.)
         if isinstance(field5, integer_types):
             is_g0 = True
             g0 = field5
@@ -192,12 +189,14 @@ class BAROR(object):
             is_g0 = False
             g0 = None
             x = np.array([field5,
-                          double_or_blank(card, 6, 'x2', 0.0),
-                          double_or_blank(card, 7, 'x3', 0.0)],
+                          double_or_blank(card, 6, 'x2', 0.),
+                          double_or_blank(card, 7, 'x3', 0.)],
                          dtype='float64')
-        offt = string_or_blank(card, 8, 'offt', 'GGG')
+        offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
+        if isinstance(offt, integer_types):
+            raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
         assert len(card) <= 8, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
-        return BAROR(property_id, is_g0, g0, x, offt=offt, comment=comment)
+        return BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
 class CBARAO(BaseCard):
     type = 'CBARAO'
@@ -335,7 +334,23 @@ class CBAR(LineElement):
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
         8:'offt', 9:'pa', 10:'pb',
+        #, 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'
     }
+    def update_by_cp_name(self, cp_name, value):
+        if cp_name == 'W1A':
+            self.wa[0] = value
+        elif cp_name == 'W2A':
+            self.wa[1] = value
+        elif cp_name == 'W3A':
+            self.wa[2] = value
+        elif cp_name == 'W1B':
+            self.wb[0] = value
+        elif cp_name == 'W2B':
+            self.wb[1] = value
+        elif cp_name == 'W3B':
+            self.wb[2] = value
+        else:
+            raise NotImplementedError('CBAR: cp_name=%r must be added to update_by_cp_name' % cp_name)
 
     def _update_field_helper(self, n, value):
         if n == 11:
@@ -456,7 +471,7 @@ class CBAR(LineElement):
         assert self.offt[2] in ['G', 'O', 'E'], msg
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, baror=None, comment=''):
         """
         Adds a CBAR card from ``BDF.add_card(...)``
 
@@ -464,17 +479,33 @@ class CBAR(LineElement):
         ----------
         card : BDFCard()
             a BDFCard object
+        beamor : BAROR() or None
+            defines the defaults
         comment : str; default=''
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid_default = eid
+        x1_default, x2_default, x3_default = 0., 0., 0.
+        offt_default = 'GGG'
+        if baror is not None:
+            if baror.pid is not None:
+                pid_default = baror.pid
+            if baror.x is None:
+                x1_default = baror.g0
+                x2_default = None
+                x3_default = None
+            else:
+                x1_default, x2_default, x3_default = baror.x
+            offt_default = baror.offt
+
+        pid = integer_or_blank(card, 2, 'pid', pid_default)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
-        x, g0 = init_x_g0(card, eid)
+        x, g0 = init_x_g0(card, eid, x1_default, x2_default, x3_default)
 
         # doesn't exist in NX nastran
-        offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
+        offt = integer_string_or_blank(card, 8, 'offt', offt_default)
         #print('cls.offt = %r' % (cls.offt))
 
         pa = integer_or_blank(card, 9, 'pa', 0)
@@ -1201,17 +1232,18 @@ class CBEND(LineElement):
         else:
             return self.comment + print_card_16(card)
 
-def init_x_g0(card, eid):
+def init_x_g0(card, eid, x1_default, x2_default, x3_default):
     """common method to read the x/g0 field for the CBAR, CBEAM, CBEAM3"""
-    field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+    field5 = integer_double_or_blank(card, 5, 'g0_x1', x1_default)
+
     if isinstance(field5, integer_types):
         g0 = field5
         x = None
     elif isinstance(field5, float):
         g0 = None
         x = np.array([field5,
-                      double_or_blank(card, 6, 'x2', 0.0),
-                      double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+                      double_or_blank(card, 6, 'x2', x2_default),
+                      double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
         if norm(x) == 0.0:
             msg = 'G0 vector defining plane 1 is not defined.\n'
             msg += 'G0 = %s\n' % g0
@@ -1222,3 +1254,171 @@ def init_x_g0(card, eid):
                'type=%s' % (card.field(0), eid, field5, type(field5)))
         raise RuntimeError(msg)
     return x, g0
+
+
+def rotate_v_wa_wb(model, elem, n1, n2, node1, node2, ihat_offset, i_offset, eid,
+                   Li_offset):
+    """
+    Rotates v, wa, wb
+
+    OFFT flag
+    ---------
+    ABC or A-B-C (an example is G-G-G or B-G-G)
+    while the slots are:
+     - A -> orientation; values=[G, B]
+     - B -> End A; values=[G, O]
+     - C -> End B; values=[G, O]
+
+    and the values for A,B,C mean:
+     - B -> basic
+     - G -> global
+     - O -> orientation
+
+    so for example G-G-G, that's global for all terms.
+    BOG means basic orientation, orientation end A, global end B
+
+    so now we're left with what does basic/global/orientation mean?
+    - basic -> the global coordinate system defined by cid=0
+    - global -> the local coordinate system defined by the
+                CD field on the GRID card, but referenced by
+                the CBAR/CBEAM
+    - orientation -> wa/wb are defined in the xform_offset (yz) frame;
+                     this is likely the easiest frame for a user
+    """
+    msg = ' which is required by %s=%s' % (elem.type, elem.eid)
+    cd1 = node1.Cd()
+    cd2 = node2.Cd()
+    cd1_ref = model.Coord(cd1)
+    cd2_ref = model.Coord(cd2)
+    #cd1_ref = elem.nodes_ref[0].cp_ref
+    #cd2_ref = elem.nodes_ref[1].cp_ref
+    #cd1 = cd1_ref.cid
+    #cd2 = cd2_ref.cid
+
+    # get the vector v, which defines the projection on to the elemental
+    # coordinate frame
+    if elem.g0:
+        #msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
+        g0_ref = model.Node(elem.g0, msg=msg)
+        n0 = g0_ref.get_position()
+        v = n0 - n1
+    else:
+        #ga = elem.ga_ref
+        #cda_ref = cd1_ref
+        ga = model.nodes[elem.Ga()]
+        cda = ga.Cd()
+        cda_ref = model.Coord(cda)
+        v = cda_ref.transform_node_to_global(elem.x)
+
+    #--------------------------------------------------------------------------
+    offt_vector, offt_end_a, offt_end_b = elem.offt
+
+    # rotate v
+    if offt_vector == 'G':
+        # end A
+        # global - cid != 0
+        if cd1 != 0:
+            v = cd1_ref.transform_node_to_global_assuming_rectangular(v)
+    elif offt_vector == 'B':
+        # basic - cid = 0
+        pass
+    else:
+        msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
+        return None, None, None, None, msg
+
+    yhat_offset, zhat_offset = get_bar_yz_transform(
+        v, ihat_offset, eid, n1, n2, node1.nid, node2.nid,
+        i_offset, Li_offset)
+    xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
+
+    #--------------------------------------------------------------------------
+    # rotate wa
+    # wa defines the offset at end A
+    wa = elem.wa
+    #ia = n1
+    if offt_end_a == 'G':
+        if cd1 != 0:
+            wa = cd1_ref.transform_node_to_global_assuming_rectangular(wa)
+    elif offt_end_a == 'B':
+        pass
+    elif offt_end_a == 'O':
+        # rotate point wa from the local frame to the global frame
+        wa = np.dot(wa, xform_offset)
+        #ia = n1 + wa
+    else:
+        msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
+        self.log.error(msg)
+        return v, None, None, xform_offset
+
+    #--------------------------------------------------------------------------
+    # rotate wb
+    # wb defines the offset at end B
+    wb = elem.wb
+    #ib = n2
+    if offt_end_b == 'G':
+        if cd2 != 0:
+            # MasterModelTaxi
+            wb = cd2_ref.transform_node_to_global_assuming_rectangular(wb)
+    elif offt_end_b == 'B':
+        pass
+    elif offt_end_b == 'O':
+        # rotate point wb from the local frame to the global frame
+        wb = np.dot(wb, xform_offset)
+        #ib = n2 + wb
+    else:
+        msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
+        model.log.error(msg)
+        return v, wa, None, xform_offset
+
+    #--------------------------------------------------------------------------
+    #i = ib - ia # (n2 + wb) - (n1 + wa)
+    i = (n2 + wb) - (n1 + wa)
+    i = i_offset
+    Li = norm(i)
+    ihat = i / Li
+    yhat, zhat = get_bar_yz_transform(v, ihat, eid, n1, n2, node1.nid, node2.nid, i, Li)
+
+    #print('  n1=%s n2=%s' % (n1, n2))
+    #print('  ib=%s ia=%s' % (ib, ia))
+    #print('  wa=%s wb=%s' % (wa, wb))
+    #print('  ioffset=%s i=%s' % (i_offset, i))
+    #print('  ihat=%s' % (ihat))
+    #print('  yhat=%s' % (yhat))
+    #print('  zhat=%s' % (zhat))
+    #print("")
+
+    xform = np.vstack([ihat, yhat, zhat]) # 3x3 unit matrix
+
+    return v, wa, wb, xform
+
+def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
+    """helper method for _get_bar_yz_arrays"""
+    vhat = v / norm(v) # j
+    try:
+        z = np.cross(ihat, vhat) # k
+    except ValueError:
+        msg = 'Invalid vector length\n'
+        msg += 'n1  =%s\n' % str(n1)
+        msg += 'n2  =%s\n' % str(n2)
+        msg += 'nid1=%s\n' % str(nid1)
+        msg += 'nid2=%s\n' % str(nid2)
+        msg += 'i   =%s\n' % str(i)
+        msg += 'Li  =%s\n' % str(Li)
+        msg += 'ihat=%s\n' % str(ihat)
+        msg += 'v   =%s\n' % str(v)
+        msg += 'vhat=%s\n' % str(vhat)
+        msg += 'z=cross(ihat, vhat)'
+        print(msg)
+        raise ValueError(msg)
+
+    zhat = z / norm(z)
+    yhat = np.cross(zhat, ihat) # j
+
+    if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
+        print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+            eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+    elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
+        print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
+              ' v=%s i=%s n%s=%s n%s=%s' % (
+                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+    return yhat, zhat

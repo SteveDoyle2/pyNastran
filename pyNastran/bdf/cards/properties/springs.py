@@ -163,6 +163,9 @@ class PELAST(SpringProperty):
     _field_map = {
         1: 'pid', 2:'tkid', 3:'tgeid', 4:'tknid',
     }
+    pname_fid_map = {
+    'TKID' : 'tknid',
+    }
 
     def __init__(self, pid, tkid=0, tgeid=0, tknid=0, comment=''):
         """

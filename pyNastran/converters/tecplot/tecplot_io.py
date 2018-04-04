@@ -79,7 +79,7 @@ class TecplotIO(object):
 
     def _make_tecplot_geometry(self, model, quads_only=False):
         nodes = model.xyz
-        nnodes = self.parent.nnodes
+        unused_nnodes = self.parent.nnodes
         grid = self.parent.grid
 
         mmax = amax(nodes, axis=0)
@@ -120,7 +120,7 @@ class TecplotIO(object):
                     free_faces = array(model.get_free_faces(), dtype='int32')# + 1
                     nfaces = len(free_faces)
                     self.nelements = nfaces
-                    elements = free_faces
+                    unused_elements = free_faces
                     grid.Allocate(nfaces, 1000)
 
                     for face in free_faces:

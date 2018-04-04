@@ -12,7 +12,7 @@ class MONPNT1(object):
         self.ry_matrix = matrices[comp_matrices[4]]
         self.rz_matrix = matrices[comp_matrices[5]]
 
-    def write(self, f06, page_stamp='', page_num=1):
+    def write(self, f06_file, page_stamp='', page_num=1):
         comps = ['CX', 'CY', 'CZ', 'CMX', 'CMY', 'CMZ']
         dok1 = self.cx_matrix.data.todok()
         dok2 = self.cy_matrix.data.todok()
@@ -36,7 +36,7 @@ class MONPNT1(object):
                 #'          0.000000E+00   0.000000E+00  -1.000000E+00   0.000000E+00   0.000000E+00   0.000000E+00  -1.000000E+00\n'
                 #'                         0.000000E+00   0.000000E+00   0.000000E+00   0.000000E+00   0.000000E+00   0.000000E+00\n'
             ]
-            f06.write(''.join(lines))
+            f06_file.write(''.join(lines))
             for ifreq, freq in enumerate(self.frequencies):
                 #if icomp == 4:
                 v1 = dok1[(icomp, ifreq)]
@@ -56,10 +56,12 @@ class MONPNT1(object):
                 #v2 = v6
                 #v4 = v3
 
-                f06.write('         %13E  %13E  %13E  %13E  %13E  %13E  %13E\n' % (freq,    v1.real, v2.real, v3.real, v4.real, v5.real, v6.real))
-                f06.write('                        %13E  %13E  %13E  %13E  %13E  %13E\n' % (v1.imag, v2.imag, v3.imag, v4.imag, v5.imag, v6.imag))
+                f06_file.write('         %13E  %13E  %13E  %13E  %13E  %13E  %13E\n' % (
+                    freq, v1.real, v2.real, v3.real, v4.real, v5.real, v6.real))
+                f06_file.write('                        %13E  %13E  %13E  %13E  %13E  %13E\n' % (
+                    v1.imag, v2.imag, v3.imag, v4.imag, v5.imag, v6.imag))
                 page_num += 1
-            f06.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
         page_num -= 1
         return page_num
 
@@ -71,7 +73,7 @@ class MONPNT3(object):
         self.frequencies = frequencies
         self.data = matrix.data
 
-    def write(self, f06, page_stamp='', page_num=1):
+    def write(self, f06_file, page_stamp='', page_num=1):
         comps = ['CX', 'CY', 'CZ', 'CMX', 'CMY', 'CMZ']
         matrix = self.data
         dok = matrix.todok()
@@ -90,14 +92,15 @@ class MONPNT3(object):
                 '                                     \n'
                 '          ------------   ------------\n'
             ]
-            f06.write(''.join(lines))
+            f06_file.write(''.join(lines))
 
             for ifreq, freq in enumerate(self.frequencies):
                 #print('icomp=%r ifreq=%r' % (icomp, ifreq))
                 val = dok[(icomp, ifreq)]
-                f06.write('          %13E %13E\n                        %13E\n' % (freq, val.real, val.imag))
+                f06_file.write('          %13E %13E\n                        %13E\n' % (
+                    freq, val.real, val.imag))
             page_num += 1
-            f06.write(page_stamp % page_num)
+            f06_file.write(page_stamp % page_num)
         page_num -= 1
         return page_num
 

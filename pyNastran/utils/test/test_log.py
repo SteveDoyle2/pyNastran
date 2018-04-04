@@ -25,7 +25,7 @@ class TestLog(unittest.TestCase):
 
     def test_make_log(self):
         """tests make_log"""
-        make_log(display=False)
+        make_log()
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

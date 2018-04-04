@@ -12,7 +12,7 @@ from numpy import array, allclose, array_equal, cross
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.utils import TransformLoadWRT
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.cards.coordinate_systems import define_coord_e123
+from pyNastran.bdf.cards.coordinate_systems import define_coord_e123, CORD3G
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
 
 class TestCoords(unittest.TestCase):
@@ -587,6 +587,12 @@ class TestCoords(unittest.TestCase):
         coord.comment = ''
         assert coord == card, 'card:\n%r\ncoord:\n%r' % (str(coord), str(card))
 
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 1.])
+        model.add_grid(4, [1., 0., 1.])
+        coord.cross_reference(model)
+        cord2s = coord.to_cord2x(model, rid=0)
+
     def test_cord2r_02(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
         coord = [
@@ -774,8 +780,9 @@ class TestCoords(unittest.TestCase):
         model = BDF(debug=False)
         #model.echo = True
         #cards, card_count = model.get_bdf_cards(bulk_data_lines)
-        cards, card_count = model.get_bdf_cards_dict(bulk_data_lines)
-        model._parse_cards(cards, card_count)
+        cards_list = []
+        cards_dict, card_count = model.get_bdf_cards_dict(bulk_data_lines)
+        model._parse_cards(cards_list, cards_dict, card_count)
 
         #print(model.card_count)
         assert model.card_count['CORD1R'] == 1, model.card_count
@@ -833,6 +840,20 @@ class TestCoords(unittest.TestCase):
         model.pop_xref_errors()
         self.assertEqual(len(model.coords), 7)
 
+    def test_cord3g(self):
+        cid = 1
+        #method_es = 'E313'
+        method_es = 'E'
+        method_int = 42
+        form = 'EQN'
+        thetas = [110, 111, 112]
+        rid = 0
+
+        cord3g = CORD3G(cid, method_es, method_int, form, thetas, rid,
+                        comment='cord3g')
+        fields = BDFCard(cord3g.raw_fields())
+        cord3g.repr_fields()
+        cord3g.add_card(fields)
 
 def get_nodes(grids, grids_expected, coords):
     """

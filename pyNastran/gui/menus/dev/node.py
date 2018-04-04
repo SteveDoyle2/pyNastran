@@ -9,7 +9,7 @@ from __future__ import print_function
 #from PyQt4 import QtCore, QtGui
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_int as qt_version
 
 from qtpy import QtCore#, QtGui
 from qtpy.QtGui import QColor, QPalette
@@ -79,7 +79,7 @@ class EditNodeProperties(QDialog):
         table_model = Model(items, header_labels, self)
         view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        if qt_version in [4, 'pyside']:
+        if qt_version == 4:
             view.horizontalHeader().setResizeMode(QHeaderView.Stretch)
         else:
             view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
