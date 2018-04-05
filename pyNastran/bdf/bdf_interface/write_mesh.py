@@ -777,10 +777,10 @@ class WriteMesh(BDFAttributes):
         """Writes the NODE-type cards"""
         if self.spoints:
             bdf_file.write('$SPOINTS\n')
-            bdf_file.write(write_xpoints('SPOINT', self.spoints.keys()))
+            bdf_file.write(write_xpoints('SPOINT', self.spoints))
         if self.epoints:
             bdf_file.write('$EPOINTS\n')
-            bdf_file.write(write_xpoints('EPOINT', self.epoints.keys()))
+            bdf_file.write(write_xpoints('EPOINT', self.epoints))
         if self.points:
             bdf_file.write('$POINTS\n')
             for unused_point_id, point in sorted(iteritems(self.points)):

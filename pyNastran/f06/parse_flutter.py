@@ -326,7 +326,10 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
         if plot_root_locus:
             flutter.plot_root_locus(modes=modes, show=False)
         if plot_kfreq_damping:
-            flutter.plot_kfreq_damping(modes=modes, show=False)
+            flutter.plot_kfreq_damping(modes=modes,
+                                       ylim_damping=ylim_damping,
+                                       ylim_kfreq=None,
+                                       show=False)
     if show:
         plt.show()
 

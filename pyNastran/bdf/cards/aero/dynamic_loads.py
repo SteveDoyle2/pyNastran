@@ -971,6 +971,13 @@ class MKAERO1(BaseCard):
         reduced_freqs = wipe_empty_fields(reduced_freqs)
         return MKAERO1(machs, reduced_freqs, comment=comment)
 
+    def mklist(self):
+        mklist = []
+        for mach in self.machs:
+            for kfreq in self.reduced_freqs:
+                mklist.append([mach, kfreq])
+        return mklist
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -1103,6 +1110,13 @@ class MKAERO2(BaseCard):
             machs.append(double(card, i, 'mach'))
             reduced_freqs.append(double(card, i + 1, 'rFreq'))
         return MKAERO2(machs, reduced_freqs, comment=comment)
+
+
+    def mklist(self):
+        mklist = []
+        for mach, kfreq in zip(self.machs, self.reduced_freqs):
+            mklist.append([mach, kfreq])
+        return mklist
 
     def raw_fields(self):
         """

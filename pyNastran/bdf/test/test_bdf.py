@@ -951,6 +951,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases, stop_on_failure=True)
             log.error('An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero))
         if len(fem2.mkaeros) == 0:
             log.error('An MKAERO1/2 card is required for FLUTTER - SOL %i' % (sol))
+        mklist = fem2.get_mklist()
 
         soltype = 'FLUTTER'
         # METHOD - EIGRL
@@ -980,6 +981,9 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases, stop_on_failure=True)
             log.error('A GUST/LOAD/DLOAD card is required for GUST - SOL %i\n%s' % (sol, subcase))
         if fem2.aero is None:
             log.error('An AERO card is required for GUST - SOL %i' % sol)
+        if len(fem2.mkaeros) == 0:
+            log.error('An MKAERO1/2 card is required for GUST - SOL %i' % (sol))
+        mklist = fem2.get_mklist()
 
     elif sol == 153: # heat?
         _assert_has_spc(subcase, fem2)

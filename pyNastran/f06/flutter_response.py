@@ -1,9 +1,9 @@
 from __future__ import print_function
+from itertools import count
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from itertools import count
 from pyNastran.utils.atmosphere import get_alt_for_density
 from pyNastran.utils.atmosphere2 import (
     convert_altitude, convert_density, convert_pressure, convert_velocity,
@@ -375,21 +375,21 @@ class FlutterResponse(object):
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[i]
             freq = self.results[imode, :, self.ifreq].ravel()
-            real = self.results[imode, :, ix].ravel()
-            imag = self.results[imode, :, iy].ravel()
+            xs = self.results[imode, :, ix].ravel()
+            ys = self.results[imode, :, iy].ravel()
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
-            axes.plot(real[iplot], imag[iplot], symbol, label='Mode %i' % mode, markersize=0)
+            axes.plot(xs[iplot], ys[iplot], symbol, label='Mode %i' % mode, markersize=0)
 
             if scatter:
-                s = np.linspace(.75, 50., len(real))
+                s = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
-                axes.scatter(real[iplot], imag[iplot], s=s, color=symbol[0], marker=symbol[1])
+                axes.scatter(xs[iplot], ys[iplot], s=s, color=symbol[0], marker=symbol[1])
 
         axes.grid(True)
-        axes.set_xlabel('Eigenvalue (Real)')
-        axes.set_ylabel('Eigenvalue (Imaginary)')
+        axes.set_xlabel(xlabel)
+        axes.set_ylabel(ylabel)
 
         title = 'Subcase %i' % self.subcase
         if png_filename:
@@ -405,12 +405,113 @@ class FlutterResponse(object):
         if clear:
             plt.clear()
 
+    def _plot_x_y2(self, ix, iy, iy2, xlabel, ylabel1, ylabel2, scatter, modes=None,
+                   fig=None,
+                   xlim=None, ylim1=None, ylim2=None,
+                   show=True, clear=False, legend=True,
+                   png_filename=None,
+                   **kwargs):
+        """builds the plot"""
+        self.fix()
+        if kwargs is None:
+            kwargs = {}
+
+        modes, imodes = self._get_modes_imodes(modes)
+
+        if fig is None:
+            fig = plt.figure()
+        gridspeci = gridspec.GridSpec(2, 4)
+
+        damp_axes = fig.add_subplot(gridspeci[0, :3])
+        freq_axes = fig.add_subplot(gridspeci[1, :3], sharex=damp_axes)
+
+        if xlim:
+            damp_axes.set_xlim(xlim)
+        if ylim1:
+            damp_axes.set_ylim(ylim1)
+        if ylim2:
+            damp_axes.set_ylim(ylim2)
+        symbols = self.symbols
+
+        for i, imode, mode in zip(count(), imodes, modes):
+            symbol = symbols[i]
+            freq = self.results[imode, :, self.ifreq].ravel()
+            xs = self.results[imode, :, ix].ravel()
+            y1s = self.results[imode, :, iy].ravel()
+            y2s = self.results[imode, :, iy2].ravel()
+
+            iplot = np.where(freq != np.nan)
+            #iplot = np.where(freq > 0.0)
+            damp_axes.plot(xs[iplot], y1s[iplot], symbol, label='Mode %i' % mode, markersize=0)
+            freq_axes.plot(xs[iplot], y2s[iplot], symbol, label='Mode %i' % mode, markersize=0)
+
+            if scatter:
+                s = np.linspace(.75, 50., len(xs))
+                #assert symbol[2] == '-', symbol
+                damp_axes.scatter(xs[iplot], y1s[iplot], s=s, color=symbol[0], marker=symbol[1])
+                freq_axes.scatter(xs[iplot], y2s[iplot], s=s, color=symbol[0], marker=symbol[1])
+
+        damp_axes.grid(True)
+        damp_axes.set_xlabel(xlabel)
+        damp_axes.set_ylabel(ylabel1)
+
+        freq_axes.grid(True)
+        freq_axes.set_xlabel(xlabel)
+        freq_axes.set_ylabel(ylabel2)
+
+        velocity_units = self.out_units['eas']
+        _set_eas_tas_xlabel('eas', damp_axes, freq_axes, velocity_units)
+
+        title = 'Subcase %i' % self.subcase
+        if png_filename:
+            title += '\n%s' % png_filename
+        fig.suptitle(title)
+        if legend:
+            damp_axes.legend(**kwargs)
+
+        if show:
+            plt.show()
+        if png_filename:
+            plt.savefig(png_filename)
+        if clear:
+            plt.clear()
+
+
     def plot_kfreq_damping(self, modes=None,
                            fig=None,
-                           xlim=None, ylim=None,
+                           xlim=None,
                            show=True, clear=False, legend=True,
                            png_filename=None,
+                           ylim_damping=None,
+                           ylim_kfreq=None,
                            **kwargs):
+        """
+        Plots a kfreq vs. damping curve
+
+        See ``plot_root_locus`` for arguments
+        """
+        xlabel = 'Equivalent Airspeed'
+        ylabel = 'Damping'
+        ylabel2 = 'KFreq'
+        ix = self.ieas
+        iy = self.idamping
+        iy2 = self.ikfreq
+        scatter = True
+        self._plot_x_y2(ix, iy, iy2, xlabel, ylabel, ylabel2, scatter,
+                        modes=modes, fig=fig,
+                        xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
+                        show=show,
+                        clear=clear,
+                        legend=legend,
+                        png_filename=png_filename,
+                        **kwargs)
+
+    def plot_kfreq_damping2(self, modes=None,
+                            fig=None,
+                            xlim=None, ylim=None,
+                            show=True, clear=False, legend=True,
+                            png_filename=None,
+                            **kwargs):
         """
         Plots a kfreq vs. damping curve
 
@@ -418,16 +519,18 @@ class FlutterResponse(object):
         """
         xlabel = 'KFreq'
         ylabel = 'Damping'
+        ylabel2 = 'Frequency'
         ix = self.ikfreq
         iy = self.idamping
+        iy2 = self.ifreq
         scatter = True
-        self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
-                       modes=modes, fig=fig, xlim=xlim, ylim=ylim,
-                       show=show,
-                       clear=clear,
-                       legend=legend,
-                       png_filename=png_filename,
-                       **kwargs)
+        self._plot_x_y2(ix, iy, iy2, xlabel, ylabel, ylabel2, scatter,
+                        modes=modes, fig=fig, xlim=xlim, ylim=ylim,
+                        show=show,
+                        clear=clear,
+                        legend=legend,
+                        png_filename=png_filename,
+                        **kwargs)
 
     def fix(self):
         """attempts to fix the mode switching"""
@@ -534,14 +637,7 @@ class FlutterResponse(object):
                 damp_axes.plot(vel, damping, label='Mode %i' % mode)
                 freq_axes.plot(vel, freq)
 
-        if plot_type == 'tas':
-            damp_axes.set_xlabel('Velocity [%s]' % velocity_units)
-            freq_axes.set_xlabel('Velocity [%s]' % velocity_units)
-        elif plot_type == 'eas':
-            damp_axes.set_xlabel('Equivalent Airspeed [%s]' % velocity_units)
-            freq_axes.set_xlabel('Equivalent Airspeed [%s]' % velocity_units)
-        else:
-            raise NotImplementedError("plot_type=%r not in ['tas', 'eas']")
+        _set_eas_tas_xlabel(plot_type, damp_axes, freq_axes, velocity_units)
 
         damp_axes.set_ylabel('Damping')
         damp_axes.grid(True)
@@ -633,3 +729,12 @@ class FlutterResponse(object):
         """
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip)
 
+def _set_eas_tas_xlabel(plot_type, damp_axes, freq_axes, velocity_units):
+    if plot_type == 'tas':
+        damp_axes.set_xlabel('Velocity [%s]' % velocity_units)
+        freq_axes.set_xlabel('Velocity [%s]' % velocity_units)
+    elif plot_type == 'eas':
+        damp_axes.set_xlabel('Equivalent Airspeed [%s]' % velocity_units)
+        freq_axes.set_xlabel('Equivalent Airspeed [%s]' % velocity_units)
+    else:
+        raise NotImplementedError("plot_type=%r not in ['tas', 'eas']")

@@ -25,7 +25,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types, PY2
+from six import string_types, PY2, iteritems
 from typing import List, Union, Optional, Any
 import numpy as np
 
@@ -265,8 +265,17 @@ class EPOINT(XPoint):
         XPoint.__init__(self, nid, comment)
 
 def write_xpoints(cardtype, points, comment=''):
+    """writes SPOINTs/EPOINTs"""
     msg = comment
-    lists_fields = compress_xpoints(cardtype, points)
+    if isinstance(points, dict):
+        point_ids = []
+        for point_id, point in sorted(iteritems(points)):
+            point_ids.append(point_id)
+            if point.comment:
+                msg += point.comment
+    else:
+        point_ids = points
+    lists_fields = compress_xpoints(cardtype, point_ids)
     for list_fields in lists_fields:
         if 'THRU' not in list_fields:
             msg += print_int_card(list_fields)
@@ -275,9 +284,9 @@ def write_xpoints(cardtype, points, comment=''):
     return msg
 
 
-def compress_xpoints(Type, xpoints):
+def compress_xpoints(point_type, xpoints):
     """
-    Gets the spoints in sorted, short form.
+    Gets the SPOINTs/EPOINTs in sorted, short form.
 
       uncompresed:  SPOINT,1,3,5
       compressed:   SPOINT,1,3,5
@@ -289,9 +298,9 @@ def compress_xpoints(Type, xpoints):
       compressed:   SPOINT,7
                     SPOINT,1,THRU,5
 
-    Type = 'SPOINT'
+    point_type = 'SPOINT'
     spoints = [1, 2, 3, 4, 5]
-    fields = compressed_xpoints(Type, spoints)
+    fields = compressed_xpoints(point_type, spoints)
     >>> fields
     ['SPOINT', 1, 'THRU', 5]
     """
@@ -302,11 +311,11 @@ def compress_xpoints(Type, xpoints):
 
     lists_fields = []
     if singles:
-        list_fields = [Type] + singles
+        list_fields = [point_type] + singles
         lists_fields.append(list_fields)
     if doubles:
         for spoint_double in doubles:
-            list_fields = [Type] + spoint_double
+            list_fields = [point_type] + spoint_double
             lists_fields.append(list_fields)
     return lists_fields
 
