@@ -27,34 +27,6 @@ import sys
 from math import log, exp
 import numpy as np
 
-def _update_alt(alt, alt_units):
-    # type : (float, str) -> float
-    """
-    Converts altitude alt_units to feet
-
-    Parameters
-    ----------
-    alt : float
-        altitude in feet or meters
-    alt_units : str; default='ft'
-        sets the units for altitude; ft, m, kft
-
-    Returns
-    -------
-    alt2 : float
-        altitude in feet
-    """
-    if alt_units == 'ft':
-        factor = 1.
-    elif alt_units == 'm':
-        factor = 1. / 0.3048
-    elif alt_units == 'kft':
-        factor = 1000.
-    else:
-        raise RuntimeError('alt_units=%r is not valid; use [ft, m, kft]' % alt_units)
-    alt2 = alt * factor
-    return alt2
-
 
 def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft'):
     # type : (float, str, str) -> float
@@ -420,7 +392,7 @@ def atm_temperature(alt, alt_units='ft', temperature_units='R'):
         These equations were used because they are valid to 300k ft.\n
         Extrapolation is performed above that.
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     if z < 36151.725:
         T = 518.0 - 0.003559996 * z
     elif z < 82344.678:
@@ -473,7 +445,7 @@ def atm_pressure(alt, alt_units='ft', pressure_units='psf'):
         These equations were used b/c they are valid to 300k ft.\n
         Extrapolation is performed above that.\n
     """
-    z = _update_alt(alt, alt_units)
+    z = convert_altitude(alt, alt_units, 'ft')
     if z < 36151.725:
         ln_pressure = 7.657389 + 5.2561258 * log(1 - 6.8634634E-6 * z)
     elif z < 82344.678:
@@ -524,7 +496,7 @@ def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf'):
     so...
     \f[  \large q = \frac{\gamma}{2} p M^2  \f]
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     p = atm_pressure(z)
     q = 0.7 * p * mach ** 2
 
@@ -554,7 +526,7 @@ def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
    \f[  \large a = \sqrt{\gamma R T}  \f]
     """
     # converts everything to English units first
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     T = atm_temperature(z)
     R = 1716. # 1716.59, dir air, R=287.04 J/kg*K
 
@@ -683,7 +655,8 @@ def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3'):
     Based on the formula P=pRT
     \f[ \large \rho=\frac{p}{R T} \f]
     """
-    z = _update_alt(alt, alt_units)
+    z = convert_altitude(alt, alt_units, 'ft')
+    #z = alt * _altitude_factor(alt_units, 'ft')
     P = atm_pressure(z)
     T = atm_temperature(z)
 
@@ -715,7 +688,7 @@ def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s'):
     .. seealso::  sutherland_viscoscity
     .. todo:: better debug
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     rho = atm_density(z)
     mu = atm_dynamic_viscosity_mu(z)
     nu = mu / rho
@@ -749,7 +722,7 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
 
     .. seealso::  sutherland_viscoscity
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     T = atm_temperature(z)
     mu = sutherland_viscoscity(T)  # (lbf*s)/ft^2
     if visc_units == '(lbf*s)/ft^2':
@@ -787,7 +760,7 @@ def atm_unit_reynolds_number2(alt, mach, alt_units='ft', reynolds_units='1/ft'):
         this version of Reynolds number directly caculates the base quantities, so multiple
         calls to atm_press and atm_temp are not made
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     gamma = 1.4
     R = 1716.
     p = atm_pressure(z)
@@ -824,7 +797,7 @@ def atm_unit_reynolds_number(alt, mach, alt_units='ft', reynolds_units='1/ft'):
     \f[ \large Re   = \frac{ \rho V L}{\mu} \f]
     \f[ \large Re_L = \frac{ \rho V  }{\mu} \f]
     """
-    z = _update_alt(alt, alt_units)
+    z = alt * _altitude_factor(alt_units, 'ft')
     rho = atm_density(z)
     V = atm_velocity(z, mach)
     mu = atm_dynamic_viscosity_mu(z)
@@ -919,4 +892,8 @@ def _limit_eas(rho, machs, velocity, eas_limit=1000.,
         rho = rho[i]
         machs = machs[i]
         velocity = velocity[i]
+    if len(rho) == 0:
+        raise RuntimeError('EAS limit is too struct and has removed all the conditions.\n'
+                           'Increase eas_limit or change the mach/altude range.')
+
     return rho, machs, velocity

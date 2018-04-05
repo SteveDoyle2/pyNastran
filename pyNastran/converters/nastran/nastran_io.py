@@ -2222,7 +2222,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 continue
             #points_list.append(caero_points[ipoints, :])
         if missing_boxes:
-            msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
+            msg = 'Missing CAERO AELIST/SPLINE boxes: ' + str(missing_boxes)
             self.gui.log_error(msg)
 
         #points_list = np.array(points_list)
@@ -2258,7 +2258,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         if len(all_points) == 0:
             self.log.error('deleting %r' % name)
-            del self.alt_grids[name]
 
             # name = spline_1000_boxes
             sname = name.split('_')
@@ -2267,7 +2266,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             # points_name = spline_1000_structure_points
             points_name = '_'.join(sname)
             self.log.error('deleting %r' % points_name)
+            del self.alt_grids[name]
             del self.alt_grids[points_name]
+            del self.geometry_properties[name]
+            del self.geometry_properties[points_name]
             return
         # combine all the points
         all_points_array = np.vstack(all_points)
@@ -5848,7 +5850,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #for key_itimei in key_itime:
             #print('  %s' % str(key_itimei))
 
-        form_out = []
+        unused_form_out = []
         is_results = False
 
         form_resultsi = []

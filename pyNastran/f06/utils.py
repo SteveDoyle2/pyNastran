@@ -32,7 +32,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
         '  --out_units OUT  Selects the ouptut unit system\n'
         '                   si (kg, m, s) -> m/s\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
-        '                   english_in (slinch/in^3, in, s) -> in/s\n'
+        '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
         '                   english_kt (slinch/in^3, nm, s) -> knots\n'
         '\n'
         'Options:\n'
@@ -65,9 +65,14 @@ def cmd_line_plot_flutter():  # pragma: no cover
     if data['--ylimdamp']:
         ylim_damping = split_float_colons(data['--ylimdamp'])
 
+    in_units = 'si'
+    if data['--in_units']:
+        in_units = data['--in_units'].lower()
+    assert in_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'in_units=%r' % in_units
+
     out_units = 'si'
     if data['--out_units']:
-        out_units = data['--out_units']
+        out_units = data['--out_units'].lower()
     assert out_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'out_units=%r' % out_units
 
     plot_type = 'tas'
@@ -78,6 +83,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
     print('modes = %s' % modes)
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
+                     f06_units=in_units,
                      out_units=out_units,
                      plot_root_locus=True, plot_vg_vf=True, plot_vg=False,
                      ylim_damping=ylim_damping, nopoints=nopoints)

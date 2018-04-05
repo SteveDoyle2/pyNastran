@@ -949,6 +949,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases, stop_on_failure=True)
     elif sol == 145:
         if fem2.aero is None:
             log.error('An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero))
+        if len(fem2.mkaeros) == 0:
+            log.error('An MKAERO1/2 card is required for FLUTTER - SOL %i' % (sol))
 
         soltype = 'FLUTTER'
         # METHOD - EIGRL

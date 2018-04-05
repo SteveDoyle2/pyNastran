@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from pyNastran.utils.log import get_logger2
 from pyNastran.f06.flutter_response import FlutterResponse
 
+
 def make_flutter_response(f06_filename, f06_units=None, out_units=None):
     """
     Creates the FlutterResponse object
@@ -29,30 +30,8 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None):
            subcase_id
         value : FlutterResponse()
     """
-    if f06_units is None:
-        f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
-                     'altitude' : 'NA', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
-    if out_units is None:
-        out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
-                     'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
-    elif isinstance(out_units, str):
-        out_units = out_units.lower()
-        if out_units == 'si':
-            out_units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
-                         'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}
-        elif out_units == 'english_in':
-            out_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
-                         'altitude' : 'ft', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
-        elif out_units == 'english_ft':
-            out_units = {'velocity' : 'ft/s', 'density' : 'slug/ft^3',
-                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
-        elif out_units == 'english_kt':
-            out_units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
-                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
-        else:
-            raise NotImplementedError('out_units=%r' % out_units)
-    else:
-        assert isinstance(out_units, dict), 'out_units=%r' % (out_units)
+    f06_units = _get_units(f06_units)
+    out_units = _get_units(out_units)
 
     log = get_logger2(log=None, debug=True, encoding='utf-8')
     flutters = {}
@@ -221,6 +200,34 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None):
                                   f06_units=f06_units, out_units=out_units)
         flutters[subcase] = flutter
     return flutters
+
+def _get_units(units):
+    """gets the units"""
+    if units is None:
+        units = 'english_in'
+        #units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
+                 #'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+
+    if isinstance(units, str):
+        units = units.lower()
+        if units == 'si':
+            units = {'velocity' : 'm/s', 'density' : 'kg/m^3',
+                         'altitude' : 'm', 'dynamic_pressure' : 'Pa', 'eas':'m/s'}
+        elif units == 'english_in':
+            units = {'velocity' : 'in/s', 'density' : 'slinch/in^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psi', 'eas':'in/s'}
+        elif units == 'english_ft':
+            units = {'velocity' : 'ft/s', 'density' : 'slug/ft^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'ft/s'}
+        elif units == 'english_kt':
+            units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
+                         'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
+        else:
+            raise NotImplementedError('units=%r' % units)
+    else:
+        assert isinstance(units, dict), 'units=%r' % (units)
+    return units
+
 
 def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
                      plot_type='tas', modes=None,
