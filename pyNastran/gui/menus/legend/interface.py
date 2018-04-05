@@ -46,7 +46,7 @@ def set_legend_menu(self):
 
     default_arrow_scale = None
     data = {
-        'font_size' : self.font_size,
+        'font_size' : self.settings.font_size,
         'icase' : self.icase,
         'icase_fringe' : self.icase,
         'icase_disp' : self.icase,

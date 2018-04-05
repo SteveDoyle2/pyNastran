@@ -570,7 +570,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return is_failed
         if font_size < 6:
             font_size = 6
-        if self.font_size == font_size:
+        if self.settings.font_size == font_size:
             return False
         self.settings.font_size = font_size
         font = QtGui.QFont()
@@ -5458,7 +5458,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             default_scale, default_phase,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_low_to_high, is_horizontal_scalar_bar, is_fringe, font_size=self.font_size)
+            is_low_to_high, is_horizontal_scalar_bar, is_fringe, font_size=self.settings.font_size)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
