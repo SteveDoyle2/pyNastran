@@ -18,7 +18,7 @@ defines:
  - repr_settings(settings)
 """
 from __future__ import print_function
-from six import itervalues, PY3
+from six import itervalues, PY3, string_types
 import numpy as np
 from qtpy import QtGui
 
@@ -58,6 +58,7 @@ class Settings(object):
         # int
         self.annotation_size = 18
         self.font_size = 8
+        self.magnify = 5
 
         # not stored
         self.coord_scale = 0.05
@@ -81,6 +82,7 @@ class Settings(object):
         # int
         self.annotation_size = 18
         self.font_size = 8
+        self.magnify = 5
 
         # float
         self.coord_scale = 0.05
@@ -123,10 +125,12 @@ class Settings(object):
 
         # this is for the 3d annotation
         self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'], BLACK, auto_type=True)
-        self._set_setting(settings, setting_keys, ['annotation_size'], 18) # int
+        self._set_setting(settings, setting_keys, ['annotation_size'], 18, auto_type=True) # int
         if isinstance(self.annotation_size, float):
             # throw the float in the trash as it's from an old version of vtk
             self.annotation_size = 18
+
+        self._set_setting(settings, setting_keys, ['magnify'], self.magnify)
 
         # this is the text in the lower left corner
         self._set_setting(settings, setting_keys, ['text_color', 'textColor'], BLACK, auto_type=True)
@@ -182,6 +186,7 @@ class Settings(object):
             if key in setting_keys:
                 pull_name = key
                 break
+
         if pull_name is None:
             value = default
         else:
@@ -197,18 +202,21 @@ class Settings(object):
             value = default
         assert value is not None, pull_name
 
-        def isfloat(value):
-            try:
-                float(value)
-                return True
-            except ValueError:
-                return False
-
         if auto_type and isinstance(value, list):
             if value[0].isdigit():
                 value = [int(valuei) for valuei in value]
             elif isfloat(value[0]):
                 value = [float(valuei) for valuei in value]
+        elif auto_type and isinstance(value, string_types):
+            if value == 'true':
+                value = True
+            elif value == 'false':
+                value = False
+            elif value.isdigit():
+                value = int(value)
+            elif isfloat(value):
+                value = float(value)
+
         return value
 
     def _set_setting(self, settings, setting_keys, setting_names, default,
@@ -243,6 +251,7 @@ class Settings(object):
         # int
         settings.setValue('font_size', self.font_size)
         settings.setValue('annotation_size', self.annotation_size)
+        settings.setValue('magnify', self.magnify)
 
         # float
         settings.setValue('coord_scale', self.coord_scale)
@@ -326,6 +335,17 @@ class Settings(object):
         self.coord_scale = coord_scale
         self.parent.update_coord_scale(coord_scale)
 
+    def update_coord_scale(self, coord_scale=None, render=True):
+        if coord_scale is None:
+            coord_scale = self.coord_scale
+        dim_max = self.dim_max
+        scale = coord_scale * dim_max
+
+        for unused_coord_id, axes in iteritems(self.parent.axes):
+            axes.SetTotalLength(scale, scale, scale)
+        if render:
+            self.parent.vtk_interactor.GetRenderWindow().Render()
+
     def set_annotation_color(self, color, render=True):
         """
         Set the annotation color
@@ -364,16 +384,16 @@ class Settings(object):
             self.parent.log_command('settings.set_annotation_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------
-    def set_background_color_to_white(self):
+    def set_background_color_to_white(self, render=True):
         """sets the background color to white; used by gif writing?"""
         self.set_gradient_background(use_gradient_background=False, render=False)
-        self.set_background_color(WHITE, render=True)
+        self.set_background_color(WHITE, render=render)
         #self.set_background_color(WHITE)
 
     def set_gradient_background(self, use_gradient_background=False, render=True):
         """enables/diables the gradient background"""
         self.use_gradient_background = use_gradient_background
-        self.rend.SetGradientBackground(self.use_gradient_background)
+        self.parent.rend.SetGradientBackground(self.use_gradient_background)
         if render:
             self.parent.vtk_interactor.Render()
 
@@ -429,6 +449,17 @@ class Settings(object):
         for text_actor in itervalues(self.parent.text_actors):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
+
+    def set_magnify(self, magnify):
+        self.magnify = magnify
+
+def isfloat(value):
+    """is the value floatable"""
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
 
 def repr_settings(settings):
     """works on a QSettings, not a Settings"""

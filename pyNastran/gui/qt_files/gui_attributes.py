@@ -68,7 +68,6 @@ class GuiAttributes(object):
         # inputs dict
         self.is_edges = False
         self.is_edges_black = self.is_edges
-        self.magnify = inputs['magnify']
 
         #self.format = ''
         debug = inputs['debug']

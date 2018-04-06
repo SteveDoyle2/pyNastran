@@ -31,6 +31,7 @@ def set_preferences_menu(self):
         'picker_size' : self.element_picker_size,
         'dim_max' : self.settings.dim_max,
         'coord_scale' : self.settings.coord_scale,
+        'magnify' : self.settings.magnify,
 
         'clipping_min' : min_clip,
         'clipping_max' : max_clip,

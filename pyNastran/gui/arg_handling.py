@@ -64,14 +64,12 @@ def run_docopt():
     # INPUT format may be explicitly or implicitly defined with or
     # without an output file
     msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
-    msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
 
     # You don't need to throw a -o flag
     msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
-    msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
@@ -79,7 +77,6 @@ def run_docopt():
     # no input/output files
     # can you ever have an OUTPUT, but no INPUT?
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
-    msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
@@ -97,16 +94,15 @@ def run_docopt():
     msg += "Secondary Options:\n"
     msg += "  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)\n"
     msg += "  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)\n"
-    msg += "  -s SHOT, --shots SHOT           path to screenshot (only 1 for now)\n"
-    msg += "  -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]\n"
     msg += "  --groups                        enables groups\n"
     msg += "  --noupdate                      disables the update check\n"
-    msg += "  --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)\n"
-    msg += "  -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)\n"
+    msg += "  --user_geom GEOM_FNAME          add user specified points (repeatable)\n"
+    msg += "  -u POINTS_FNAME, --user_points  add user specified geometry (repeatable)\n"
     msg += '\n'
 
     msg += "Debug:\n"
     msg += "  --test    temporary dev mode (default=False)\n"
+    msg += '\n'
 
     msg += "Info:\n"
     msg += "  -q, --quiet    prints debug messages (default=True)\n"
@@ -152,10 +148,6 @@ def run_docopt():
     ]
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
-    shots = []
-    if '--shots' in data:
-        shots = data['--shots']
-
     geom_script = data['--geomscript']
     if geom_script:
         assert os.path.exists(geom_script), print_bad_path(geom_script)
@@ -164,30 +156,18 @@ def run_docopt():
     if post_script:
         assert os.path.exists(post_script), print_bad_path(post_script)
 
-    magnify = 1
-    if '--magnify' in data and data['--magnify'] is not None:
-        magnify = int(data['--magnify'])
-
-    rotation = None
-    if '--rotation' in data:
-        rotation = data['--rotation']
-
     user_points = data['--user_points']
     user_geom = data['--user_geom']
 
     for key, value in sorted(iteritems(data)):
         print(key, value)
     #print("shots", shots)
-    if shots:
-        #shots = shots[1]
-        #print("shots2 = %r" % shots, type(shots))
-        shots = shots.split(';')[0]
 
     is_groups = data['--groups']
     no_update = data['--noupdate']
     #assert data['--console'] == False, data['--console']
-    return (input_format, input_filenames, output_filenames, shots,
-            magnify, rotation, geom_script, post_script, debug, user_points,
+    return (input_format, input_filenames, output_filenames,
+            geom_script, post_script, debug, user_points,
             user_geom, is_groups, no_update, data['--log'], data['--test'])
 
 
@@ -200,9 +180,6 @@ def get_inputs(argv=None):
     output_filename = None
     debug = True
 
-    magnify = 5
-    rotation = None
-    shots = None
     geom_script = None
     post_script = None
     user_points = None
@@ -216,17 +193,14 @@ def get_inputs(argv=None):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(argv) > 1:
-            (input_format, input_filename, output_filename, shots, magnify,
-             rotation, geom_script, post_script, debug, user_points, user_geom,
+            (input_format, input_filename, output_filename,
+             geom_script, post_script, debug, user_points, user_geom,
              is_groups, no_update, log, test) = run_docopt()
 
     inputs = {
         'format' : input_format,
         'input' : input_filename,
         'output' : output_filename,
-        'shots' : shots,
-        'magnify' : magnify,
-        'rotation' : rotation,
         'debug' : debug,
         'geomscript' : geom_script,
         'postscript' : post_script,

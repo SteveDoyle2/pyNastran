@@ -1024,16 +1024,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if create_actor:
             self.rend.AddActor(axes)
 
-    def update_coord_scale(self, coord_scale=None, render=True):
-        if coord_scale is None:
-            dim_max = self.settings.dim_max
-            coord_scale = self.settings.coord_scale * dim_max
-
-        for unused_coord_id, axes in iteritems(self.axes):
-            axes.SetTotalLength(coord_scale, coord_scale, coord_scale)
-        if render:
-            self.vtk_interactor.GetRenderWindow().Render()
-
     def create_global_axes(self, dim_max):
         """creates the global axis"""
         cid = 0
@@ -3192,14 +3182,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """interface for user defined post-scripts"""
         self.load_batch_inputs(inputs)
 
-        shots = inputs['shots']
-        if shots is None:
-            shots = []
-        if shots:
-        #for shot in shots:
-            self.on_take_screenshot(shots)
-            sys.exit('took screenshot %r' % shots)
-
         self.color_order = [
             (1.0, 0.145098039216, 1.0),
             (0.0823529411765, 0.0823529411765, 1.0),
@@ -3831,7 +3813,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             None : pop open a window
             str : bypass the popup window
         magnify : int; default=None
-            None : use self.magnify
+            None : use self.settings.magnify
             int : resolution increase factor
         show_msg : bool; default=True
             log the command
@@ -3876,51 +3858,52 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 flt = 'png'
 
-        if fname:
-            render_large = vtk.vtkRenderLargeImage()
-            if self.vtk_version[0] >= 6:
-                render_large.SetInput(self.rend)
-            else:
-                render_large.SetInput(self.rend)
+        if not fname:
+            return
+        render_large = vtk.vtkRenderLargeImage()
+        render_large.SetInput(self.rend)
 
-            line_widths0, point_sizes0, axes_actor = self._screenshot_setup(magnify, render_large)
+        line_widths0, point_sizes0, coord_scale0, axes_actor, magnify = self._screenshot_setup(
+            magnify, render_large)
 
-            nam, ext = os.path.splitext(fname)
-            ext = ext.lower()
-            for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
-                                   ("BMP", ['.bmp'], vtk.vtkBMPWriter),
-                                   ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
-                                   ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
-                if flt == nam:
-                    fname = fname if ext in exts else fname + exts[0]
-                    writer = obj()
-                    break
-            else:
-                fname = fname if ext == '.png' else fname + '.png'
-                writer = vtk.vtkPNGWriter()
+        nam, ext = os.path.splitext(fname)
+        ext = ext.lower()
+        for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
+                               ("BMP", ['.bmp'], vtk.vtkBMPWriter),
+                               ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
+                               ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
+            if flt == nam:
+                fname = fname if ext in exts else fname + exts[0]
+                writer = obj()
+                break
+        else:
+            fname = fname if ext == '.png' else fname + '.png'
+            writer = vtk.vtkPNGWriter()
 
-            if self.vtk_version[0] >= 6:
-                writer.SetInputConnection(render_large.GetOutputPort())
-            else:
-                writer.SetInputConnection(render_large.GetOutputPort())
-            writer.SetFileName(fname)
-            writer.Write()
+        writer.SetInputConnection(render_large.GetOutputPort())
+        writer.SetFileName(fname)
+        writer.Write()
 
-            #self.log_info("Saved screenshot: " + fname)
-            if show_msg:
-                self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
-            self._screenshot_teardown(line_widths0, point_sizes0, axes_actor)
+        #self.log_info("Saved screenshot: " + fname)
+        if show_msg:
+            self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
+        self._screenshot_teardown(line_widths0, point_sizes0, coord_scale0, axes_actor)
 
     def _screenshot_setup(self, magnify, render_large):
+        """helper method for ``on_take_screenshot``"""
         if magnify is None:
             magnify_min = 1
-            magnify = self.magnify if self.magnify > magnify_min else magnify_min
+            magnify = self.settings.magnify if self.settings.magnify > magnify_min else magnify_min
         else:
             magnify = magnify
+
         if not isinstance(magnify, integer_types):
             msg = 'magnify=%r type=%s' % (magnify, type(magnify))
             raise TypeError(msg)
         self.settings.update_text_size(magnify=magnify)
+
+        coord_scale0 = self.settings.coord_scale
+        self.settings.update_coord_scale(coord_scale=coord_scale0*magnify, render=False)
         render_large.SetMagnification(magnify)
 
         # multiply linewidth by magnify
@@ -3946,9 +3929,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # hide corner axis
         axes_actor = self.corner_axis.GetOrientationMarker()
         axes_actor.SetVisibility(False)
-        return line_widths0, point_sizes0, axes_actor
+        return line_widths0, point_sizes0, coord_scale0, axes_actor, magnify
 
-    def _screenshot_teardown(self, line_widths0, point_sizes0, axes_actor):
+    def _screenshot_teardown(self, line_widths0, point_sizes0, coord_scale0, axes_actor):
+        """helper method for ``on_take_screenshot``"""
         self.settings.update_text_size(magnify=1.0)
 
         # show corner axes
@@ -3965,6 +3949,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 pass
             else:
                 raise NotImplementedError(geom_actor)
+        self.settings.update_coord_scale(coord_scale=coord_scale0, render=True)
 
     def make_gif(self, gif_filename, scale, istep=None,
                  min_value=None, max_value=None,
@@ -4002,6 +3987,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         animate_time : bool; default=False
             does a deflection plot (multiple subcases)
 
+        Other
+        -----
         istep : int
             the png file number (let's you pick a subset of images)
             useful for when you press ``Step``
@@ -5250,11 +5237,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.on_set_camera(name)
 
     def on_set_camera(self, name, show_log=True):
+        """see ``set_camera_data`` for arguments"""
         camera_data = self.cameras[name]
-        #position, clip_range, focal_point, view_up, distance = camera_data
         self.on_set_camera_data(camera_data, show_log=show_log)
 
     def get_camera_data(self):
+        """see ``set_camera_data`` for arguments"""
         camera = self.rend.GetActiveCamera()
         position = camera.GetPosition()
         focal_point = camera.GetFocalPoint()
@@ -5263,15 +5251,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
         clip_range = camera.GetClippingRange()  # TODO: do I need this???
 
         parallel_scale = camera.GetParallelScale()  # TODO: do I need this???
-        #parallel_proj = GetParralelProjection()
-        parallel_proj = 32.
+        parallel_proj = GetParralelProjection()
         distance = camera.GetDistance()
 
         # clip_range, view_up, distance
-        camera_data = [
-            position, focal_point, view_angle, view_up, clip_range,
-            parallel_scale, parallel_proj, distance
-        ]
+        camera_data = {
+            'position' : position,
+            'focal_point' : focal_point,
+            'view_angle' : view_angle,
+            'view_up' : view_up,
+            'clip_range' : clip_range,
+            'parallel_scale' : parallel_scale,
+            'prallel_proj' : parallel_proj,
+            'distance' : distance,
+        }
         return camera_data
 
     def on_set_camera_data(self, camera_data, show_log=True):
@@ -5280,23 +5273,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         Parameters
         ----------
-        position : (float, float, float)
-            where am I is xyz space
-        focal_point : (float, float, float)
-            where am I looking
-        view_angle : float
-            field of view (angle); perspective only?
-        view_up : (float, float, float)
-            up on the screen vector
-        clip_range : (float, float)
-            start/end distance from camera where clipping starts
-        parallel_scale : float
-            ???
-        parallel_projection : bool (0/1)
-            flag?
-            TODO: not used
-        distance : float
-            distance to the camera
+        camera_data : Dict[key] : value
+            defines the camera
+            position : (float, float, float)
+                where am I is xyz space
+            focal_point : (float, float, float)
+                where am I looking
+            view_angle : float
+                field of view (angle); perspective only?
+            view_up : (float, float, float)
+                up on the screen vector
+            clip_range : (float, float)
+                start/end distance from camera where clipping starts
+            parallel_scale : float
+                ???
+            parallel_projection : bool (0/1)
+                flag?
+                TODO: not used
+            distance : float
+                distance to the camera
 
         i_vector = focal_point - position
         j'_vector = view_up
@@ -5306,9 +5301,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
            k x i -> j
            or it's like k'
         """
-        #position, clip_range, focal_point, view_up, distance = camera_data
-        (position, focal_point, view_angle, view_up, clip_range,
-         parallel_scale, parallel_proj, distance) = camera_data
+        position = camera_data['position']
+        focal_point = camera_data['focal_point']
+        view_angle = camera_data['view_angle']
+        view_up = camera_data['view_up']
+        clip_range = camera_data['clip_range']
+        parallel_scale = camera_data['parallel_scale']
+        parallel_proj = camera_data['prallel_proj']
+        distance = camera_data['distance']
 
         camera = self.rend.GetActiveCamera()
         camera.SetPosition(position)
@@ -5325,10 +5325,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera.Modified()
         self.vtk_interactor.Render()
         if show_log:
-            self.log_command(
-                'on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
-                % (position, focal_point, view_angle, view_up,
-                   clip_range, parallel_scale, parallel_proj, distance))
+            self.log_command('on_set_camera_data(%s)' % str(camera_data))
 
     #---------------------------------------------------------------------------------------
     # PICKER

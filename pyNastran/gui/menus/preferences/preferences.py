@@ -48,17 +48,20 @@ class PreferencesWindow(PyDialog):
 
         self._default_font_size = data['font_size']
         self._default_annotation_size = 18
-        self._default_coord_scale = 5.
+        self._default_coord_scale = 0.05 * 100.
         self._default_clipping_min = data['clipping_min']
         self._default_clipping_max = data['clipping_max']
+        #self.default_magnify = data['magnify']
 
         self.dim_max = data['dim_max']
         #self._default_annotation_size = data['annotation_size'] # int
         self._use_gradient_background = data['use_gradient_background'] # bool
+        self._annotation_size = data['annotation_size'] # int
 
         #self.out_data = data
         self._picker_size = data['picker_size'] * 100.
         self._coord_scale = data['coord_scale'] * 100.
+        self._magnify = data['magnify']
 
         self.annotation_color_float, self.annotation_color_int = _check_color(
             data['annotation_color'])
@@ -66,20 +69,21 @@ class PreferencesWindow(PyDialog):
             data['background_color'])
         self.background_color2_float, self.background_color2_int = _check_color(
             data['background_color2'])
-        self.text_color_float, self.text_color_int = _check_color(data['text_color'])
+        self.text_color_float, self.text_color_int = _check_color(
+            data['text_color'])
 
-        #self.setupUi(self)
         self.setWindowTitle('Preferences')
         self.create_widgets()
         self.create_layout()
         self.set_connections()
         self.on_font(self._default_font_size)
+        self.on_gradient_scale()
         #self.show()
 
     def create_widgets(self):
         """creates the display window"""
         # Text Size
-        self.font_size = QLabel("Text Size:")
+        self.font_size = QLabel("Font Size:")
         self.font_size_edit = QSpinBox(self)
         self.font_size_edit.setValue(self._default_font_size)
         self.font_size_edit.setRange(7, 20)
@@ -90,28 +94,29 @@ class PreferencesWindow(PyDialog):
         self.annotation_color = QLabel("Annotation Color:")
         self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
 
+        # Text Color
+        self.text_color = QLabel("Text Color:")
+        self.text_color_edit = QPushButtonColor(self.text_color_int)
+
+        #-----------------------------------------------------------------------
         # Background Color
         self.background_color = QLabel("Background Color:")
         self.background_color_edit = QPushButtonColor(self.background_color_int)
 
         # Background Color2
-        #self.gradient_scale = QLabel("Gradient Background:")
-        #self.gradient_scale_checkbox = QCheckBox()
-        #self.gradient_scale_checkbox.setChecked(self._use_gradient_background)
+        self.gradient_scale = QLabel("Gradient Background:")
+        self.gradient_scale_checkbox = QCheckBox()
+        self.gradient_scale_checkbox.setChecked(self._use_gradient_background)
 
-        #self.background_color2 = QLabel("Background Color:")
-        #self.background_color2_edit = QPushButtonColor(self.background_color2_int)
-
-        # Text Color
-        self.text_color = QLabel("Text Color:")
-        self.text_color_edit = QPushButtonColor(self.text_color_int)
+        self.background_color2 = QLabel("Top Background Color:")
+        self.background_color2_edit = QPushButtonColor(self.background_color2_int)
 
         #-----------------------------------------------------------------------
         # Annotation Size
         self.annotation_size = QLabel("Annotation Size:")
         self.annotation_size_edit = QSpinBox(self)
         self.annotation_size_edit.setRange(1, 500)
-        self.annotation_size_edit.setValue(self._default_annotation_size)
+        self.annotation_size_edit.setValue(self._annotation_size)
         self.annotation_size_button = QPushButton("Default")
 
         #-----------------------------------------------------------------------
@@ -140,14 +145,21 @@ class PreferencesWindow(PyDialog):
         self.clipping_max_button = QPushButton("Default")
 
         #-----------------------------------------------------------------------
-        #self.coord_scale = QLabel('Coordinate System Scale:')
-        #self.coord_scale_button = QPushButton("Default")
+        self.coord_scale = QLabel('Coordinate System Scale:')
+        self.coord_scale_button = QPushButton("Default")
 
-        #self.coord_scale_edit = QDoubleSpinBox(self)
-        #self.coord_scale_edit.setRange(0.1, 100.)
-        #self.coord_scale_edit.setDecimals(3)
-        #self.coord_scale_edit.setSingleStep(1.)
-        #self.coord_scale_edit.setValue(self._coord_scale)
+        self.coord_scale_edit = QDoubleSpinBox(self)
+        self.coord_scale_edit.setRange(0.1, 100.)
+        self.coord_scale_edit.setDecimals(3)
+        self.coord_scale_edit.setSingleStep(2.5)
+        self.coord_scale_edit.setValue(self._coord_scale)
+
+        #-----------------------------------------------------------------------
+        self.magnify = QLabel('Screenshot Magnify:')
+        self.magnify_edit = QSpinBox(self)
+        self.magnify_edit.setMinimum(1)
+        self.magnify_edit.setMaximum(10)
+        self.magnify_edit.setValue(self._magnify)
 
         #-----------------------------------------------------------------------
         # closing
@@ -155,60 +167,60 @@ class PreferencesWindow(PyDialog):
         self.ok_button = QPushButton("OK")
         self.cancel_button = QPushButton("Cancel")
 
-    def create_legend_widgets(self):
-        """
-        Creates the widgets for the legend control
+    #def create_legend_widgets(self):
+        #"""
+        #Creates the widgets for the legend control
 
-        Name    Itailic  Bold     Font
-        ====    =======  =====  ========
-        Title    check   check  pulldown
-        Label    check   check  pulldown
-        """
-        self.name_label = QLabel("Name:")
-        self.italic_label = QLabel("Italic:")
-        self.bold_label = QLabel("Bold:")
-        self.font_label = QLabel("Font:")
-        self.legend_label = QLabel("Legend:")
+        #Name    Itailic  Bold     Font
+        #====    =======  =====  ========
+        #Title    check   check  pulldown
+        #Label    check   check  pulldown
+        #"""
+        #self.name_label = QLabel("Name:")
+        #self.italic_label = QLabel("Italic:")
+        #self.bold_label = QLabel("Bold:")
+        #self.font_label = QLabel("Font:")
+        #self.legend_label = QLabel("Legend:")
 
-        self.legend_title_name = QLabel("Title")
-        self.legend_title_italic_check = QCheckBox()
-        self.legend_title_bold_check = QCheckBox()
-        self.legend_title_font_edit = QComboBox()
-        self.legend_title_font_edit.addItems(['cat', 'dog', 'frog'])
+        #self.legend_title_name = QLabel("Title")
+        #self.legend_title_italic_check = QCheckBox()
+        #self.legend_title_bold_check = QCheckBox()
+        #self.legend_title_font_edit = QComboBox()
+        #self.legend_title_font_edit.addItems(['cat', 'dog', 'frog'])
 
-        self.legend_label_italic_name = QLabel("Label")
-        self.legend_label_italic_check = QCheckBox()
-        self.legend_label_bold_check = QCheckBox()
-        self.legend_label_font_edit = QComboBox()
-        self.legend_label_font_edit.addItems(['cat2', 'dog2', 'frog2'])
+        #self.legend_label_italic_name = QLabel("Label")
+        #self.legend_label_italic_check = QCheckBox()
+        #self.legend_label_bold_check = QCheckBox()
+        #self.legend_label_font_edit = QComboBox()
+        #self.legend_label_font_edit.addItems(['cat2', 'dog2', 'frog2'])
 
-    def create_legend_layout(self):
-        """
-        Creates the layout for the legend control
+    #def create_legend_layout(self):
+        #"""
+        #Creates the layout for the legend control
 
-        Name    Itailic  Bold     Font
-        ====    =======  =====  ========
-        Title    check   check  pulldown
-        Label    check   check  pulldown
-        """
-        grid2 = QGridLayout()
-        grid2.addWidget(self.legend_label, 0, 0)
+        #Name    Itailic  Bold     Font
+        #====    =======  =====  ========
+        #Title    check   check  pulldown
+        #Label    check   check  pulldown
+        #"""
+        #grid2 = QGridLayout()
+        #grid2.addWidget(self.legend_label, 0, 0)
 
-        grid2.addWidget(self.name_label, 1, 0)
-        grid2.addWidget(self.italic_label, 1, 1)
-        grid2.addWidget(self.bold_label, 1, 2)
-        grid2.addWidget(self.font_label, 1, 3)
+        #grid2.addWidget(self.name_label, 1, 0)
+        #grid2.addWidget(self.italic_label, 1, 1)
+        #grid2.addWidget(self.bold_label, 1, 2)
+        #grid2.addWidget(self.font_label, 1, 3)
 
-        grid2.addWidget(self.legend_title_name, 2, 0)
-        grid2.addWidget(self.legend_title_italic_check, 2, 1)
-        grid2.addWidget(self.legend_title_bold_check, 2, 2)
-        grid2.addWidget(self.legend_title_font_edit, 2, 3)
+        #grid2.addWidget(self.legend_title_name, 2, 0)
+        #grid2.addWidget(self.legend_title_italic_check, 2, 1)
+        #grid2.addWidget(self.legend_title_bold_check, 2, 2)
+        #grid2.addWidget(self.legend_title_font_edit, 2, 3)
 
-        grid2.addWidget(self.legend_label_italic_name, 3, 0)
-        grid2.addWidget(self.legend_label_italic_check, 3, 1)
-        grid2.addWidget(self.legend_label_bold_check, 3, 2)
-        grid2.addWidget(self.legend_label_font_edit, 3, 3)
-        return grid2
+        #grid2.addWidget(self.legend_label_italic_name, 3, 0)
+        #grid2.addWidget(self.legend_label_italic_check, 3, 1)
+        #grid2.addWidget(self.legend_label_bold_check, 3, 2)
+        #grid2.addWidget(self.legend_label_font_edit, 3, 3)
+        #return grid2
 
     def create_layout(self):
         grid = QGridLayout()
@@ -219,17 +231,17 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.font_size_button, irow, 2)
         irow += 1
 
-        #grid.addWidget(self.gradient_scale, irow, 0)
-        #grid.addWidget(self.gradient_scale_checkbox, irow, 1)
-        #irow += 1
+        grid.addWidget(self.gradient_scale, irow, 0)
+        grid.addWidget(self.gradient_scale_checkbox, irow, 1)
+        irow += 1
 
         grid.addWidget(self.background_color, irow, 0)
         grid.addWidget(self.background_color_edit, irow, 1)
         irow += 1
 
-        #grid.addWidget(self.background_color2, irow, 0)
-        #grid.addWidget(self.background_color2_edit, irow, 1)
-        #irow += 1
+        grid.addWidget(self.background_color2, irow, 0)
+        grid.addWidget(self.background_color2_edit, irow, 1)
+        irow += 1
 
         grid.addWidget(self.text_color, irow, 0)
         grid.addWidget(self.text_color_edit, irow, 1)
@@ -244,10 +256,6 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.annotation_size_button, irow, 2)
         irow += 1
 
-        grid.addWidget(self.picker_size, irow, 0)
-        grid.addWidget(self.picker_size_edit, irow, 1)
-        irow += 1
-
         #grid.addWidget(self.clipping_min, irow, 0)
         #grid.addWidget(self.clipping_min_edit, irow, 1)
         #grid.addWidget(self.clipping_min_button, irow, 2)
@@ -258,10 +266,18 @@ class PreferencesWindow(PyDialog):
         #grid.addWidget(self.clipping_max_button, irow, 2)
         #irow += 1
 
-        #grid.addWidget(self.coord_scale, irow, 0)
-        #grid.addWidget(self.coord_scale_edit, irow, 1)
-        #grid.addWidget(self.coord_scale_button, irow, 2)
-        #irow += 1
+        grid.addWidget(self.coord_scale, irow, 0)
+        grid.addWidget(self.coord_scale_edit, irow, 1)
+        grid.addWidget(self.coord_scale_button, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.magnify, irow, 0)
+        grid.addWidget(self.magnify_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.picker_size, irow, 0)
+        grid.addWidget(self.picker_size_edit, irow, 1)
+        irow += 1
 
         #self.create_legend_widgets()
         #grid2 = self.create_legend_layout()
@@ -283,25 +299,26 @@ class PreferencesWindow(PyDialog):
         self.font_size_button.clicked.connect(self.on_default_font_size)
         self.font_size_edit.valueChanged.connect(self.on_font)
 
-        self.annotation_size_button.clicked.connect(self.on_annotation_size)
         self.annotation_size_edit.editingFinished.connect(self.on_annotation_size)
         self.annotation_size_edit.valueChanged.connect(self.on_annotation_size)
         self.annotation_color_edit.clicked.connect(self.on_annotation_color)
         self.annotation_size_button.clicked.connect(self.on_default_annotation_size)
 
-        #self.use_annotation_scale_checkbox.clicked.connect(self.on_annotation_scale)
         self.background_color_edit.clicked.connect(self.on_background_color)
-        #self.background_color2_edit.clicked.connect(self.on_background_color2)
+        self.background_color2_edit.clicked.connect(self.on_background_color2)
+        self.gradient_scale_checkbox.clicked.connect(self.on_gradient_scale)
+
         self.text_color_edit.clicked.connect(self.on_text_color)
 
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
         self.picker_size_edit.editingFinished.connect(self.on_picker_size)
-        self.picker_size_edit.valueChanged.connect(self.on_picker_size)
 
-        #self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
-        #self.coord_scale_edit.editingFinished.connect(self.on_coord_scale)
-        #self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
-        #self.coord_scale_button.clicked.connect(self.on_default_coord_scale)
+        self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
+        self.coord_scale_edit.editingFinished.connect(self.on_coord_scale)
+        self.coord_scale_button.clicked.connect(self.on_default_coord_scale)
+
+        self.magnify_edit.valueChanged.connect(self.on_magnify)
+        self.magnify_edit.editingFinished.connect(self.on_magnify)
 
         self.clipping_min_button.clicked.connect(self.on_default_clipping_min)
         self.clipping_max_button.clicked.connect(self.on_default_clipping_max)
@@ -335,6 +352,7 @@ class PreferencesWindow(PyDialog):
 
     def on_gradient_scale(self):
         is_checked = self.gradient_scale_checkbox.isChecked()
+        self.background_color2.setEnabled(is_checked)
         self.background_color2_edit.setEnabled(is_checked)
         if self.win_parent is not None:
             self.win_parent.settings.set_gradient_background(use_gradient_background=is_checked)
@@ -422,15 +440,23 @@ class PreferencesWindow(PyDialog):
             self.win_parent.element_picker_size = self._picker_size / 100.
         #self.on_apply(force=True)
 
+    def on_magnify(self, value=None):
+        if value is None:
+            value = self.magnify_edit.value()
+        self._magnify = value
+        if self.win_parent is not None:
+            self.win_parent.settings.set_magnify(value)
+
     def on_coord_scale(self, value=None):
         if value is None:
-            value = float(self.picker_size_edit.text())
+            value = self.coord_scale_edit.value()
+        self._coord_scale = value
         if self.win_parent is not None:
             self.win_parent.settings.set_coord_scale(value / 100.)
 
-    #def on_default_coord_scale(self):
-        #self.coord_scale_edit.setValue(self._default_coord_scale)
-        #self.on_coord_scale(self._default_coord_scale)
+    def on_default_coord_scale(self):
+        self.coord_scale_edit.setValue(self._default_coord_scale)
+        self.on_coord_scale(self._default_coord_scale)
 
     def on_default_font_size(self):
         self.font_size_edit.setValue(self._default_font_size)
@@ -530,6 +556,7 @@ def main():
         'background_color' : (0., 0., 0.), # black
         'background_color2' : (1., 0., 1.), # purple
         'coord_scale' : 0.05,
+        'magnify' : 5,
 
         'text_color' : (0., 1., 0.), # green
 
