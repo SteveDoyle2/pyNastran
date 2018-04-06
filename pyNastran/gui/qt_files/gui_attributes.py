@@ -402,7 +402,7 @@ class GuiAttributes(object):
         #if name in self.geometry_actors:
         self.geometry_actors[name].Modified()
 
-    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
+    def create_coordinate_system(self, coord_id, dim_max, label='', origin=None, matrix_3x3=None,
                                  coord_type='xyz'):
         """
         Creates a coordinate system
