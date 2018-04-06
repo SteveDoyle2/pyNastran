@@ -124,6 +124,7 @@ class Sidebar(QWidget):
         if data is None:
             data = []
 
+        self.result_case_windows = []
         self.result_case_window = ResultsWindow(self, 'Case/Results', data, choices)
 
         data = [
@@ -131,8 +132,8 @@ class Sidebar(QWidget):
             #('B', 2, []),
             #('C', 3, []),
         ]
-        self.result_data_window = ResultsWindow(self, 'Method', data, choices)
-        self.result_data_window.setVisible(False)
+        self.result_method_window = ResultsWindow(self, 'Method', data, choices)
+        self.result_method_window.setVisible(False)
 
         self.show_pulldown = False
         if self.show_pulldown:
@@ -158,9 +159,9 @@ class Sidebar(QWidget):
         self.name_pulldown.setDisabled(True)
         self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
 
-        self.setup_layout(clear_data=clear_data)
+        self.setup_layout(data, choices, clear_data=clear_data)
 
-    def setup_layout(self, clear_data=True):
+    def setup_layout(self, data, choices, clear_data=True):
         """creates the sidebar visual layout"""
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
@@ -169,7 +170,7 @@ class Sidebar(QWidget):
         hbox.addWidget(self.name_pulldown)
         vbox.addLayout(hbox)
         vbox.addWidget(self.result_case_window)
-        vbox.addWidget(self.result_data_window)
+        vbox.addWidget(self.result_method_window)
         if self.show_pulldown:
             vbox.addWidget(self.pulldown)
         vbox.addWidget(self.apply_button)
@@ -180,14 +181,14 @@ class Sidebar(QWidget):
 
     def update_method(self, method):
         if isinstance(method, string_types):
-            datai = self.result_data_window.data[0]
-            self.result_data_window.data[0] = (method, datai[1], datai[2])
+            datai = self.result_method_window.data[0]
+            self.result_method_window.data[0] = (method, datai[1], datai[2])
             #print('method=%s datai=%s' % (method, datai))
-            self.result_data_window.update_data(self.result_data_window.data)
+            self.result_method_window.update_data(self.result_method_window.data)
         else:
             return
              # pragma: no cover
-            #datai = self.result_data_window.data[0]
+            #datai = self.result_method_window.data[0]
 
     def get_form(self):
         """
@@ -233,12 +234,12 @@ class Sidebar(QWidget):
 
     def update_methods(self, data):
         """the methods is a hidden box"""
-        self.result_data_window.update_data(data)
+        self.result_method_window.update_data(data)
         self.apply_button.setEnabled(True)
 
     def clear_data(self):
         self.result_case_window.clear_data()
-        self.result_data_window.clear_data()
+        self.result_method_window.clear_data()
         self.apply_button.setEnabled(False)
 
     def on_pulldown(self, event):  # pragma: no cover
@@ -254,13 +255,13 @@ class Sidebar(QWidget):
         data = self.result_case_window.data
         valid_a, keys_a = self.result_case_window.treeView.get_row()
 
-        data = self.result_data_window.data
-        valid_b, keys_b = self.result_data_window.treeView.get_row()
+        data = self.result_method_window.data
+        valid_b, keys_b = self.result_method_window.treeView.get_row()
         if valid_a and valid_b:
             if self.debug:  # pragma: no cover
                 print('  rows1 = %s' % self.result_case_window.treeView.old_rows)
                 print('        = %s' % str(keys_a))
-                print('  rows2 = %s' % self.result_data_window.treeView.old_rows)
+                print('  rows2 = %s' % self.result_method_window.treeView.old_rows)
                 print('        = %s' % str(keys_b))
             else:
                 self.update_vtk_window(keys_a, keys_b)
@@ -295,7 +296,7 @@ class Sidebar(QWidget):
             self.parent.on_vector(icase)
 
     def get_clicked(self):
-        self.result_data_window.treeView.get_clicked()
+        self.result_method_window.treeView.get_clicked()
 
 def main():  # pragma: no cover
     app = QApplication(sys.argv)
