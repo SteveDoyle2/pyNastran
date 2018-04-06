@@ -124,9 +124,8 @@ class Sidebar(QWidget):
         if data is None:
             data = []
 
-        self.result_case_windows = []
-        self.result_case_window = ResultsWindow(self, 'Case/Results', data, choices)
-
+        #self.result_case_windows = []
+        self.result_case_windows = [ResultsWindow(self, 'Case/Results', data, choices)]
         data = [
             ('A', 1, []),
             #('B', 2, []),
@@ -157,9 +156,13 @@ class Sidebar(QWidget):
         self.name_pulldown = QComboBox()
         self.name_pulldown.addItem(name)
         self.name_pulldown.setDisabled(True)
-        self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
 
         self.setup_layout(data, choices, clear_data=clear_data)
+        self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
+
+    @property
+    def result_case_window(self):
+        return self.result_case_windows[0]
 
     def setup_layout(self, data, choices, clear_data=True):
         """creates the sidebar visual layout"""
@@ -169,7 +172,25 @@ class Sidebar(QWidget):
         hbox.addWidget(self.name_label)
         hbox.addWidget(self.name_pulldown)
         vbox.addLayout(hbox)
-        vbox.addWidget(self.result_case_window)
+
+        nwindows = len(self.result_case_windows)
+        print('nwindows=%s self.names=%s' % (nwindows, self.names))
+        for i in range(nwindows):
+            print('*using existing window')
+            result_case_window = self.result_case_windows[i]
+            vbox.addWidget(result_case_window)
+            result_case_window.setVisible(False)
+
+        for name in self.names[nwindows:]:
+            print('*creating a window')
+            result_case_window = ResultsWindow(self, 'Case/Results', data, choices)
+            result_case_window.setVisible(False)
+            vbox.addWidget(result_case_window)
+            self.result_case_windows.append(result_case_window)
+
+        iname = 0
+        self.result_case_windows[iname].setVisible(True)
+
         vbox.addWidget(self.result_method_window)
         if self.show_pulldown:
             vbox.addWidget(self.pulldown)
@@ -209,6 +230,7 @@ class Sidebar(QWidget):
         """
         name = str(name)
         update_name = False
+        setup_layout = False
         if self.name is None:
             self.names = [name]
             self.name_pulldown.clear()
@@ -216,6 +238,8 @@ class Sidebar(QWidget):
             #self.name_pulldown.setItemText(0, name)
             #self.name_pulldown.setCurrentIndex(1)
             update_name = True
+            setup_layout = True
+
         else:
             if name in self.names:
                 i = self.names.index(name)
@@ -223,6 +247,8 @@ class Sidebar(QWidget):
             else:
                 self.name_pulldown.addItem(name)
                 self.names.append(name)
+                setup_layout = True
+
             if len(self.names) >= 2:
                 self.name_pulldown.setEnabled(True)
         self.name = name
