@@ -87,8 +87,6 @@ class GuiAttributes(object):
 
         #-------------
         # internal params
-        self.coord_id = 0
-
         self.ncases = 0
         self.icase = 0
         self.nnodes = 0

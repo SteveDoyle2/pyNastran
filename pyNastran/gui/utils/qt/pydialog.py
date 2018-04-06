@@ -11,6 +11,7 @@ from qtpy.QtWidgets import QDialog
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
 
+
 class PyDialog(QDialog):
     """
     common class for QDialog so value checking & escape/close code
@@ -46,71 +47,65 @@ class PyDialog(QDialog):
         if event.key() == Qt.Key_Escape:
             self.on_cancel()
 
-    @staticmethod
-    def check_int(cell):
-        text = cell.text()
-        try:
-            value = int(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
+def check_positive_int_or_blank(cell):
+    text = str(cell.text()).strip()
+    if len(text) == 0:
+        return None, True
+    try:
+        value = int(text)
+    except ValueError:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        return None, False
 
-    @staticmethod
-    def check_positive_int_or_blank(cell):
-        text = str(cell.text()).strip()
-        if len(text) == 0:
-            return None, True
-        try:
-            value = int(text)
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
+    if value < 1:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        return None, False
 
-        if value < 1:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
+    cell.setStyleSheet("QLineEdit{background: white;}")
+    return value, True
 
+def check_patran_syntax(cell, pound=None):
+    text = str(cell.text())
+    try:
+        values = parse_patran_syntax(text, pound=pound)
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return values, True
+    except ValueError as e:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setToolTip(str(e))
+        return None, False
+
+def check_patran_syntax_dict(cell, pound=None):
+    text = str(cell.text())
+    try:
+        value = parse_patran_syntax_dict(text)
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        cell.setToolTip('')
+        return value, True
+    except (ValueError, SyntaxError, KeyError) as e:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setToolTip(str(e))
+        return None, False
+
+def check_int(cell):
+    text = cell.text()
+    try:
+        value = int(text)
         cell.setStyleSheet("QLineEdit{background: white;}")
         return value, True
+    except ValueError:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        return None, False
 
-    @staticmethod
-    def check_float(cell):
-        text = cell.text()
-        try:
-            value = float(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    @staticmethod
-    def check_patran_syntax(cell, pound=None):
-        text = str(cell.text())
-        try:
-            values = parse_patran_syntax(text, pound=pound)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return values, True
-        except ValueError as e:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            cell.setToolTip(str(e))
-            return None, False
-
-    @staticmethod
-    def check_patran_syntax_dict(cell, pound=None):
-        text = str(cell.text())
-        try:
-            value = parse_patran_syntax_dict(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            cell.setToolTip('')
-            return value, True
-        except (ValueError, SyntaxError, KeyError) as e:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            cell.setToolTip(str(e))
-            return None, False
-
+def check_float(cell):
+    text = cell.text()
+    try:
+        value = float(text)
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return value, True
+    except ValueError:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        return None, False
 
 def check_format(cell):
     text = str(cell.text())

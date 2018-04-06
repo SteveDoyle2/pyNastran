@@ -828,7 +828,7 @@ class EditGeometryProperties(PyDialog):
         old_obj.is_visible = self.checkbox_show.isChecked()
         return True
         #name_value, flag0 = self.check_name(self.name_edit)
-        #ox_value, flag1 = self.check_float(self.transparency_edit)
+        #ox_value, flag1 = check_float(self.transparency_edit)
         #if flag0 and flag1:
             #self.out_data['clicked_ok'] = True
             #return True

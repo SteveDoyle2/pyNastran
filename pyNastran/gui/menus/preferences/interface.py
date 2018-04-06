@@ -21,11 +21,16 @@ def set_preferences_menu(self):
         'font_size' : self.settings.font_size,
         'annotation_size' : self.settings.annotation_size, # int
         'annotation_color' : self.settings.annotation_color,
+
+        'use_gradient_background' : self.settings.use_gradient_background,
         'background_color' : self.settings.background_color,
+        'background_color2' : self.settings.background_color2,
+
         'text_color' : self.settings.text_color,
 
         'picker_size' : self.element_picker_size,
         'dim_max' : self.settings.dim_max,
+        'coord_scale' : self.settings.coord_scale,
 
         'clipping_min' : min_clip,
         'clipping_max' : max_clip,

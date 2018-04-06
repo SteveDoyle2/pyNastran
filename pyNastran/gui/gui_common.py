@@ -923,13 +923,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'WARNING')
 
-    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
+    def create_coordinate_system(self, coord_id, dim_max, label='', origin=None, matrix_3x3=None,
                                  coord_type='xyz'):
         """
         Creates a coordinate system
 
         Parameters
         ----------
+        coord_id : float
+            the coordinate system id
         dim_max : float
             the max model dimension; 10% of the max will be used for the coord length
         label : str
@@ -950,28 +952,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
             http://www3.cs.stonybrook.edu/~qin/courses/graphics/camera-coordinate-system.pdf
             http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
         """
-        coord_id = self.coord_id
         self.settings.dim_max = dim_max
-        scale = 0.05 * dim_max
+        scale = self.settings.coord_scale * dim_max
 
-        transform = vtk.vtkTransform()
-        if origin is None and matrix_3x3 is None:
-            pass
-        elif origin is not None and matrix_3x3 is None:
-            #print('origin%s = %s' % (label, str(origin)))
-            transform.Translate(*origin)
-        elif matrix_3x3 is not None:  # origin can be None
-            m = np.eye(4, dtype='float32')
-            m[:3, :3] = matrix_3x3
-            if origin is not None:
-                m[:3, 3] = origin
-            transform.SetMatrix(m.ravel())
+        transform = make_vtk_transform(origin, matrix_3x3)
+
+        create_actor = True
+        if coord_id in self.transform:
+            axes = self.axes[coord_id]
+            create_actor = False
         else:
-            raise RuntimeError('unexpected coordinate system')
+            axes = vtk.vtkAxesActor()
+            axes.DragableOff()
+            axes.PickableOff()
 
-        axes = vtk.vtkAxesActor()
-        axes.DragableOff()
-        axes.PickableOff()
         #axes.GetLength() # pi
         #axes.GetNormalizedShaftLength() # (0.8, 0.8, 0.8)
         #axes.GetNormalizedTipLength() # (0.2, 0.2, 0.2)
@@ -1027,13 +1021,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
             label = 'Coord %s' % label
         self.geometry_properties[label] = CoordProperties(label, coord_type, is_visible, scale)
         self.geometry_actors[label] = axes
-        self.coord_id += 1
-        self.rend.AddActor(axes)
-        return self.coord_id
+        if create_actor:
+            self.rend.AddActor(axes)
+
+    def update_coord_scale(self, coord_scale=None, render=True):
+        if coord_scale is None:
+            dim_max = self.settings.dim_max
+            coord_scale = self.settings.coord_scale * dim_max
+
+        for unused_coord_id, axes in iteritems(self.axes):
+            axes.SetTotalLength(coord_scale, coord_scale, coord_scale)
+        if render:
+            self.vtk_interactor.GetRenderWindow().Render()
 
     def create_global_axes(self, dim_max):
+        """creates the global axis"""
+        cid = 0
         self.create_coordinate_system(
-            dim_max, label='', origin=None, matrix_3x3=None, coord_type='xyz')
+            cid, dim_max, label='', origin=None, matrix_3x3=None, coord_type='xyz')
 
     def create_corner_axis(self):
         """creates the axes that sits in the corner"""
@@ -6057,3 +6062,23 @@ class GuiCommon2(QMainWindow, GuiCommon):
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
         prop.SetPointSize(point_size)
+
+
+def make_vtk_transform(origin, matrix_3x3):
+    """makes a vtkTransform"""
+    transform = vtk.vtkTransform()
+    if origin is None and matrix_3x3 is None:
+        pass
+    elif origin is not None and matrix_3x3 is None:
+        #print('origin%s = %s' % (label, str(origin)))
+        transform.Translate(*origin)
+    elif matrix_3x3 is not None:  # origin can be None
+        m = np.eye(4, dtype='float32')
+        m[:3, :3] = matrix_3x3
+        if origin is not None:
+            m[:3, 3] = origin
+        transform.SetMatrix(m.ravel())
+    else:
+        raise RuntimeError('unexpected coordinate system')
+    return transform
+

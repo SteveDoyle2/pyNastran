@@ -44,7 +44,9 @@ class Settings(object):
         self.parent = parent
 
         # rgb tuple
+        self.use_gradient_background = True
         self.background_color = GREY
+        self.background_color2 = GREY
         self.annotation_color = BLACK
         self.text_color = BLACK
 
@@ -58,13 +60,16 @@ class Settings(object):
         self.font_size = 8
 
         # not stored
+        self.coord_scale = 0.05
         self.dim_max = 1.0
-        self.annotation_scale = 1.0
+        #self.annotation_scale = 1.0
 
     def reset_settings(self):
         """helper method for ``setup_gui``"""
         # rgb tuple
+        self.use_gradient_background = True
         self.background_color = GREY
+        self.background_color2 = GREY
         self.annotation_color = BLACK
         self.text_color = BLACK
 
@@ -76,12 +81,15 @@ class Settings(object):
         # int
         self.annotation_size = 18
         self.font_size = 8
+
+        # float
+        self.coord_scale = 0.05
 
         self.parent.resize(1100, 700)
 
         # not stored
         self.dim_max = 1.0
-        self.annotation_scale = 1.0
+        #self.annotation_scale = 1.0
 
     def load(self, settings):
         """helper method for ``setup_gui``"""
@@ -106,7 +114,12 @@ class Settings(object):
         self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True)
 
         # the vtk panel background color
+        self._set_setting(settings, setting_keys, ['use_gradient_background'], True, auto_type=True)
         self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'], GREY, auto_type=True)
+        self._set_setting(settings, setting_keys, ['background_color2'], GREY, auto_type=True)
+
+        # scales the coordinate systems
+        self._set_setting(settings, setting_keys, ['coord_scale'], self.coord_scale, auto_type=True)
 
         # this is for the 3d annotation
         self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'], BLACK, auto_type=True)
@@ -216,7 +229,9 @@ class Settings(object):
         settings.setValue('mainWindowState', self.parent.saveState())
 
         # rgb tuple
+        settings.setValue('use_gradient_background', self.use_gradient_background)
         settings.setValue('background_color', self.background_color)
+        settings.setValue('background_color2', self.background_color2)
         settings.setValue('annotation_color', self.annotation_color)
         settings.setValue('text_color', self.text_color)
 
@@ -228,6 +243,9 @@ class Settings(object):
         # int
         settings.setValue('font_size', self.font_size)
         settings.setValue('annotation_size', self.annotation_size)
+
+        # float
+        settings.setValue('coord_scale', self.coord_scale)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.parent.window()
@@ -304,6 +322,10 @@ class Settings(object):
             self.parent.vtk_interactor.GetRenderWindow().Render()
             self.parent.log_command('settings.set_annotation_size(%s)' % size)
 
+    def set_coord_scale(self, coord_scale, render=True):
+        self.coord_scale = coord_scale
+        self.parent.update_coord_scale(coord_scale)
+
     def set_annotation_color(self, color, render=True):
         """
         Set the annotation color
@@ -344,9 +366,18 @@ class Settings(object):
     #---------------------------------------------------------------------------
     def set_background_color_to_white(self):
         """sets the background color to white; used by gif writing?"""
-        self.set_background_color(WHITE)
+        self.set_gradient_background(use_gradient_background=False, render=False)
+        self.set_background_color(WHITE, render=True)
+        #self.set_background_color(WHITE)
 
-    def set_background_color(self, color):
+    def set_gradient_background(self, use_gradient_background=False, render=True):
+        """enables/diables the gradient background"""
+        self.use_gradient_background = use_gradient_background
+        self.rend.SetGradientBackground(self.use_gradient_background)
+        if render:
+            self.parent.vtk_interactor.Render()
+
+    def set_background_color(self, color, render=True):
         """
         Set the background color
 
@@ -359,6 +390,20 @@ class Settings(object):
         self.parent.rend.SetBackground(*color)
         self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_background_color(%s, %s, %s)' % color)
+
+    def set_background_color2(self, color, render=True):
+        """
+        Set the background color
+
+        Parameters
+        ----------
+        color : (float, float, float)
+            RGB values as floats
+        """
+        self.background_color2 = color
+        self.parent.rend.SetBackground2(*color)
+        self.parent.vtk_interactor.Render()
+        self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes

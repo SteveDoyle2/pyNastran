@@ -48,18 +48,24 @@ class PreferencesWindow(PyDialog):
 
         self._default_font_size = data['font_size']
         self._default_annotation_size = 18
+        self._default_coord_scale = 5.
         self._default_clipping_min = data['clipping_min']
         self._default_clipping_max = data['clipping_max']
 
         self.dim_max = data['dim_max']
-        self._default_annotation_size = data['annotation_size'] # int
+        #self._default_annotation_size = data['annotation_size'] # int
+        self._use_gradient_background = data['use_gradient_background'] # bool
 
         #self.out_data = data
         self._picker_size = data['picker_size'] * 100.
+        self._coord_scale = data['coord_scale'] * 100.
 
-        self.annotation_color_float, self.annotation_color_int = _check_color(data['annotation_color'])
+        self.annotation_color_float, self.annotation_color_int = _check_color(
+            data['annotation_color'])
         self.background_color_float, self.background_color_int = _check_color(
             data['background_color'])
+        self.background_color2_float, self.background_color2_int = _check_color(
+            data['background_color2'])
         self.text_color_float, self.text_color_int = _check_color(data['text_color'])
 
         #self.setupUi(self)
@@ -67,7 +73,7 @@ class PreferencesWindow(PyDialog):
         self.create_widgets()
         self.create_layout()
         self.set_connections()
-        self.on_set_font(self._default_font_size)
+        self.on_font(self._default_font_size)
         #self.show()
 
     def create_widgets(self):
@@ -87,6 +93,14 @@ class PreferencesWindow(PyDialog):
         # Background Color
         self.background_color = QLabel("Background Color:")
         self.background_color_edit = QPushButtonColor(self.background_color_int)
+
+        # Background Color2
+        #self.gradient_scale = QLabel("Gradient Background:")
+        #self.gradient_scale_checkbox = QCheckBox()
+        #self.gradient_scale_checkbox.setChecked(self._use_gradient_background)
+
+        #self.background_color2 = QLabel("Background Color:")
+        #self.background_color2_edit = QPushButtonColor(self.background_color2_int)
 
         # Text Color
         self.text_color = QLabel("Text Color:")
@@ -124,6 +138,16 @@ class PreferencesWindow(PyDialog):
         self.clipping_max = QLabel("Clipping Max:")
         self.clipping_max_edit = QLineEdit(str(self._default_clipping_max))
         self.clipping_max_button = QPushButton("Default")
+
+        #-----------------------------------------------------------------------
+        #self.coord_scale = QLabel('Coordinate System Scale:')
+        #self.coord_scale_button = QPushButton("Default")
+
+        #self.coord_scale_edit = QDoubleSpinBox(self)
+        #self.coord_scale_edit.setRange(0.1, 100.)
+        #self.coord_scale_edit.setDecimals(3)
+        #self.coord_scale_edit.setSingleStep(1.)
+        #self.coord_scale_edit.setValue(self._coord_scale)
 
         #-----------------------------------------------------------------------
         # closing
@@ -189,33 +213,55 @@ class PreferencesWindow(PyDialog):
     def create_layout(self):
         grid = QGridLayout()
 
-        grid.addWidget(self.font_size, 0, 0)
-        grid.addWidget(self.font_size_edit, 0, 1)
-        grid.addWidget(self.font_size_button, 0, 2)
+        irow = 0
+        grid.addWidget(self.font_size, irow, 0)
+        grid.addWidget(self.font_size_edit, irow, 1)
+        grid.addWidget(self.font_size_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.background_color, 1, 0)
-        grid.addWidget(self.background_color_edit, 1, 1)
+        #grid.addWidget(self.gradient_scale, irow, 0)
+        #grid.addWidget(self.gradient_scale_checkbox, irow, 1)
+        #irow += 1
 
-        grid.addWidget(self.text_color, 2, 0)
-        grid.addWidget(self.text_color_edit, 2, 1)
+        grid.addWidget(self.background_color, irow, 0)
+        grid.addWidget(self.background_color_edit, irow, 1)
+        irow += 1
 
-        grid.addWidget(self.annotation_color, 3, 0)
-        grid.addWidget(self.annotation_color_edit, 3, 1)
+        #grid.addWidget(self.background_color2, irow, 0)
+        #grid.addWidget(self.background_color2_edit, irow, 1)
+        #irow += 1
 
-        grid.addWidget(self.annotation_size, 4, 0)
-        grid.addWidget(self.annotation_size_edit, 4, 1)
-        grid.addWidget(self.annotation_size_button, 4, 2)
+        grid.addWidget(self.text_color, irow, 0)
+        grid.addWidget(self.text_color_edit, irow, 1)
+        irow += 1
 
-        grid.addWidget(self.picker_size, 5, 0)
-        grid.addWidget(self.picker_size_edit, 5, 1)
+        grid.addWidget(self.annotation_color, irow, 0)
+        grid.addWidget(self.annotation_color_edit, irow, 1)
+        irow += 1
 
-        #grid.addWidget(self.clipping_min, 6, 0)
-        #grid.addWidget(self.clipping_min_edit, 6, 1)
-        #grid.addWidget(self.clipping_min_button, 6, 2)
+        grid.addWidget(self.annotation_size, irow, 0)
+        grid.addWidget(self.annotation_size_edit, irow, 1)
+        grid.addWidget(self.annotation_size_button, irow, 2)
+        irow += 1
 
-        #grid.addWidget(self.clipping_max, 7, 0)
-        #grid.addWidget(self.clipping_max_edit, 7, 1)
-        #grid.addWidget(self.clipping_max_button, 7, 2)
+        grid.addWidget(self.picker_size, irow, 0)
+        grid.addWidget(self.picker_size_edit, irow, 1)
+        irow += 1
+
+        #grid.addWidget(self.clipping_min, irow, 0)
+        #grid.addWidget(self.clipping_min_edit, irow, 1)
+        #grid.addWidget(self.clipping_min_button, irow, 2)
+        #irow += 1
+
+        #grid.addWidget(self.clipping_max, irow, 0)
+        #grid.addWidget(self.clipping_max_edit, irow, 1)
+        #grid.addWidget(self.clipping_max_button, irow, 2)
+        #irow += 1
+
+        #grid.addWidget(self.coord_scale, irow, 0)
+        #grid.addWidget(self.coord_scale_edit, irow, 1)
+        #grid.addWidget(self.coord_scale_button, irow, 2)
+        #irow += 1
 
         #self.create_legend_widgets()
         #grid2 = self.create_legend_layout()
@@ -235,19 +281,27 @@ class PreferencesWindow(PyDialog):
 
     def set_connections(self):
         self.font_size_button.clicked.connect(self.on_default_font_size)
-        self.font_size_edit.valueChanged.connect(self.on_set_font)
+        self.font_size_edit.valueChanged.connect(self.on_font)
 
-        self.annotation_size_button.clicked.connect(self.on_default_annotation_size)
-        self.annotation_size_edit.editingFinished.connect(self.on_set_annotation_size)
-        self.annotation_size_edit.valueChanged.connect(self.on_set_annotation_size)
+        self.annotation_size_button.clicked.connect(self.on_annotation_size)
+        self.annotation_size_edit.editingFinished.connect(self.on_annotation_size)
+        self.annotation_size_edit.valueChanged.connect(self.on_annotation_size)
         self.annotation_color_edit.clicked.connect(self.on_annotation_color)
+        self.annotation_size_button.clicked.connect(self.on_default_annotation_size)
 
+        #self.use_annotation_scale_checkbox.clicked.connect(self.on_annotation_scale)
         self.background_color_edit.clicked.connect(self.on_background_color)
+        #self.background_color2_edit.clicked.connect(self.on_background_color2)
         self.text_color_edit.clicked.connect(self.on_text_color)
 
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
         self.picker_size_edit.editingFinished.connect(self.on_picker_size)
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
+
+        #self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
+        #self.coord_scale_edit.editingFinished.connect(self.on_coord_scale)
+        #self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
+        #self.coord_scale_button.clicked.connect(self.on_default_coord_scale)
 
         self.clipping_min_button.clicked.connect(self.on_default_clipping_min)
         self.clipping_max_button.clicked.connect(self.on_default_clipping_max)
@@ -257,7 +311,7 @@ class PreferencesWindow(PyDialog):
         self.cancel_button.clicked.connect(self.on_cancel)
         # closeEvent
 
-    def on_set_font(self, value=None):
+    def on_font(self, value=None):
         """update the font for the current window"""
         if value is None:
             value = self.font_size_edit.value()
@@ -265,7 +319,7 @@ class PreferencesWindow(PyDialog):
         font.setPointSize(value)
         self.setFont(font)
 
-    def on_set_annotation_size(self, value=None):
+    def on_annotation_size(self, value=None):
         """update the annotation size"""
         if value is None:
             value = int(self.annotation_size_edit.text())
@@ -279,6 +333,12 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.win_parent.settings.set_annotation_size_color(size=self._annotation_size)
 
+    def on_gradient_scale(self):
+        is_checked = self.gradient_scale_checkbox.isChecked()
+        self.background_color2_edit.setEnabled(is_checked)
+        if self.win_parent is not None:
+            self.win_parent.settings.set_gradient_background(use_gradient_background=is_checked)
+
     def on_annotation_color(self):
         rgb_color_ints = self.annotation_color_int
         title = "Choose an annotation color"
@@ -290,16 +350,39 @@ class PreferencesWindow(PyDialog):
             self.update_annotation_size_color()
 
     def on_background_color(self):
-        """ Choose a background color """
+        """ Choose a background color"""
+        title = "Choose a primary background color"
         rgb_color_ints = self.background_color_int
-        title = "Choose a background color"
-        passed, rgb_color_ints, rgb_color_floats = self.on_color(
-            self.background_color_edit, rgb_color_ints, title)
+        color_edit = self.background_color_edit
+        func_name = 'set_background_color'
+        passed, rgb_color_ints, rgb_color_floats = self._background_color(
+            title, color_edit, rgb_color_ints, func_name)
         if passed:
             self.background_color_int = rgb_color_ints
             self.background_color_float = rgb_color_floats
+
+    def on_background_color2(self):
+        """ Choose a background color"""
+        title = "Choose a secondary background color"
+        rgb_color_ints = self.background_color2_int
+        color_edit = self.background_color2_edit
+        func_name = 'set_background_color2'
+        passed, rgb_color_ints, rgb_color_floats = self._background_color(
+            title, color_edit, rgb_color_ints, func_name)
+        if passed:
+            self.background_color2_int = rgb_color_ints
+            self.background_color2_float = rgb_color_floats
+
+    def _background_color(self, title, color_edit, rgb_color_ints, func_name):
+        """helper method for ``on_background_color`` and ``on_background_color2``"""
+        passed, rgb_color_ints, rgb_color_floats = self.on_color(
+            color_edit, rgb_color_ints, title)
+        if passed:
             if self.win_parent is not None:
-                self.win_parent.settings.set_background_color(rgb_color_floats)
+                settings = self.win_parent.settings
+                func_background_color = getattr(settings, func_name)
+                func_background_color(rgb_color_floats)
+        return passed, rgb_color_ints, rgb_color_floats
 
     def on_text_color(self):
         """ Choose a text color """
@@ -339,13 +422,23 @@ class PreferencesWindow(PyDialog):
             self.win_parent.element_picker_size = self._picker_size / 100.
         #self.on_apply(force=True)
 
+    def on_coord_scale(self, value=None):
+        if value is None:
+            value = float(self.picker_size_edit.text())
+        if self.win_parent is not None:
+            self.win_parent.settings.set_coord_scale(value / 100.)
+
+    #def on_default_coord_scale(self):
+        #self.coord_scale_edit.setValue(self._default_coord_scale)
+        #self.on_coord_scale(self._default_coord_scale)
+
     def on_default_font_size(self):
         self.font_size_edit.setValue(self._default_font_size)
-        self.on_set_font(self._default_font_size)
+        self.on_font(self._default_font_size)
 
     def on_default_annotation_size(self):
         self.annotation_size_edit.setValue(self._default_annotation_size)
-        self.on_set_annotation_size(self._default_annotation_size)
+        self.on_annotation_size(self._default_annotation_size)
 
     def on_default_clipping_min(self):
         self.clipping_min_edit.setText(str(self._default_clipping_min))
@@ -355,32 +448,15 @@ class PreferencesWindow(PyDialog):
         self.clipping_max_edit.setText(str(self._default_clipping_max))
         self.clipping_max_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    @staticmethod
-    def check_float(cell):
-        text = cell.text()
-        value = float(text)
-        return value, True
-
-    @staticmethod
-    def check_label_float(cell):
-        text = cell.text()
-        try:
-            value = eval_float_from_string(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
     def on_validate(self):
-        font_size_value, flag0 = self.check_float(self.font_size_edit)
-        annotation_size_value, flag1 = self.check_float(self.annotation_size_edit)
+        font_size_value, flag0 = check_float(self.font_size_edit)
+        annotation_size_value, flag1 = check_float(self.annotation_size_edit)
         assert isinstance(self.annotation_color_float[0], float), self.annotation_color_float
         assert isinstance(self.annotation_color_int[0], int), self.annotation_color_int
-        picker_size_value, flag2 = self.check_float(self.picker_size_edit)
+        picker_size_value, flag2 = check_float(self.picker_size_edit)
 
-        clipping_min_value, flag3 = self.check_label_float(self.clipping_min_edit)
-        clipping_max_value, flag4 = self.check_label_float(self.clipping_max_edit)
+        clipping_min_value, flag3 = check_label_float(self.clipping_min_edit)
+        clipping_max_value, flag4 = check_label_float(self.clipping_max_edit)
 
         if all([flag0, flag1, flag2, flag3, flag4]):
             self._annotation_size = annotation_size_value
@@ -415,6 +491,21 @@ class PreferencesWindow(PyDialog):
         self.close()
 
 
+def check_float(cell):
+    text = cell.text()
+    value = float(text)
+    return value, True
+
+def check_label_float(cell):
+    text = cell.text()
+    try:
+        value = eval_float_from_string(text)
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return value, True
+    except ValueError:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        return None, False
+
 def _check_color(color_float):
     assert len(color_float) == 3, color_float
     assert isinstance(color_float[0], float), color_float
@@ -435,7 +526,11 @@ def main():
     #The Main window
     data = {
         'font_size' : 8,
+        'use_gradient_background' : True,
         'background_color' : (0., 0., 0.), # black
+        'background_color2' : (1., 0., 1.), # purple
+        'coord_scale' : 0.05,
+
         'text_color' : (0., 1., 0.), # green
 
         'annotation_color' : (1., 0., 0.), # red

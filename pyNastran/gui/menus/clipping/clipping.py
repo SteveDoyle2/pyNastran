@@ -3,7 +3,7 @@ from qtpy import QtCore
 from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog, check_float
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 
 class ClippingPropertiesWindow(PyDialog):
@@ -105,8 +105,8 @@ class ClippingPropertiesWindow(PyDialog):
             return None, False
 
     def on_validate(self):
-        min_value, flag0 = self.check_float(self.min_edit)
-        max_value, flag1 = self.check_float(self.max_edit)
+        min_value, flag0 = check_float(self.min_edit)
+        max_value, flag1 = check_float(self.max_edit)
 
         if flag0 and flag1:
             self.out_data['clipping_min'] = min(min_value, max_value)

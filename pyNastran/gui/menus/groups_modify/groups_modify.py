@@ -16,7 +16,7 @@ from qtpy.QtWidgets import (
 
 from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model
-from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
 from pyNastran.gui.utils.qt.qelement_edit import QElementEdit
 from .groups import Group, _get_collapsed_text
 #from .groups_modify.color_display import ColorDisplay
@@ -298,8 +298,8 @@ class GroupsModify(PyDialog):
         event.accept()
 
     def on_add(self):
-        eids, is_valid = self.check_patran_syntax(self.add_edit, pound=self.elements_pound)
-        #adict, is_valid = self.check_patran_syntax_dict(self.add_edit)
+        eids, is_valid = check_patran_syntax(self.add_edit, pound=self.elements_pound)
+        #adict, is_valid = check_patran_syntax_dict(self.add_edit)
         if not is_valid:
             #self.add_edit.setStyleSheet("QLineEdit{background: red;}")
             return
@@ -322,8 +322,8 @@ class GroupsModify(PyDialog):
         self.out_data[self.active_key].element_ids = self.eids
 
     def on_remove(self):
-        eids, is_valid = self.check_patran_syntax(self.remove_edit)
-        #adict, is_valid = self.check_patran_syntax_dict(self.remove_edit)
+        eids, is_valid = check_patran_syntax(self.remove_edit)
+        #adict, is_valid = check_patran_syntax_dict(self.remove_edit)
         if not is_valid:
             #self.remove_edit.setStyleSheet("QLineEdit{background: red;}")
             return
@@ -374,10 +374,10 @@ class GroupsModify(PyDialog):
 
     def on_validate(self):
         name, flag0 = self.check_name(self.name_edit)
-        elements, flag1 = self.check_patran_syntax(self.elements_edit,
-                                                   pound=self.elements_pound)
-        #coords_value, flag2 = self.check_patran_syntax(self.coords_edit,
-                                                       #pound=self.coords_pound)
+        elements, flag1 = check_patran_syntax(self.elements_edit,
+                                              pound=self.elements_pound)
+        #coords_value, flag2 = check_patran_syntax(self.coords_edit,
+                                                   #pound=self.coords_pound)
 
         if all([flag0, flag1]):
             self._default_name = name

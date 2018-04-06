@@ -314,8 +314,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         origin = coord.origin
         beta = coord.beta().T
+        ## TODO: support FEMAP syntax
         self.gui.create_coordinate_system(
-            dim_max, label='%s' % cid, origin=origin,
+            cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type=coord_type)
 
     def _create_nastran_coords(self, model, dim_max):
@@ -389,6 +390,24 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
             xyz_cp, nid_cp_cd[:, 0], icp_transform, cid=cid,
             in_place=False)
+
+        #print('model.spoints =', model.spoints)
+        #import json
+        #for spoint_id, spoint in iteritems(model.spoints):
+            #if spoint.comment: # or spoint._comment?
+                #print('SPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
+                #comment_lower = spoint.comment.lower()
+                #print('comment_lower = %r' % comment_lower)
+                ## pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}
+                #if 'pynastran' in comment_lower and 'spoint' in comment_lower:
+                    #dict_str = comment_lower.split('=')[1].rstrip().replace("'", '"').replace('}', ',}').replace(',,}', ',}')
+                    #print('dict_str = %r' % dict_str)
+                    #dicti = json.loads(dict_str)
+                    #print(dicti)
+        #for epoint_id, epoint in iteritems(model.epoints):
+            #if epoints.comment:
+                #print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
+        #sys.stdout.flush()
 
         nid_map = self.gui.nid_map
         for i, nid in enumerate(nid_cp_cd[:, 0]):

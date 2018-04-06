@@ -616,7 +616,8 @@ def _format_comment(comment):
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
     else:
-        return ''.join([u'${}\n'.format(_) for _ in comment.rstrip().split('\n')])
+        return ''.join([u'${}\n'.format(comment_line)
+                        for comment_line in comment.rstrip().split('\n')])
 
 def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     try:

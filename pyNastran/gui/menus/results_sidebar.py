@@ -114,13 +114,11 @@ class Sidebar(QWidget):
     | - avg/derive |
     +--------------+
     """
-    def __init__(self, parent, debug=False, data=None, clear_data=True):
+    def __init__(self, parent, debug=False, data=None, clear_data=True, name='main'):
         """creates the buttons in the Sidebar, not the actual layout"""
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
-
-        name = 'main'
 
         choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
         if data is None:
@@ -146,8 +144,14 @@ class Sidebar(QWidget):
         self.apply_button = QPushButton('Apply', self)
         self.apply_button.clicked.connect(self.on_apply)
 
-        self.name = str(name)
-        self.names = [name]
+        if name is None:
+            self.name = None
+            self.names = ['N/A']
+            name = 'N/A'
+        else:
+            self.name = str(name)
+            self.names = [name]
+
         self.name_label = QLabel("Name:")
         self.name_pulldown = QComboBox()
         self.name_pulldown.addItem(name)
@@ -203,18 +207,29 @@ class Sidebar(QWidget):
             the name that goes at the side
         """
         name = str(name)
-        if name in self.names:
-            i = self.names.index(name)
-            self.name_pulldown.setCurrentIndex(i)
+        update_name = False
+        if self.name is None:
+            self.names = [name]
+            self.name_pulldown.clear()
+            self.name_pulldown.addItems(self.names)
+            #self.name_pulldown.setItemText(0, name)
+            #self.name_pulldown.setCurrentIndex(1)
+            update_name = True
         else:
-            self.name_pulldown.addItem(name)
-            self.names.append(name)
-        if len(self.names) >= 2:
-            self.name_pulldown.setEnabled(True)
+            if name in self.names:
+                i = self.names.index(name)
+                self.name_pulldown.setCurrentIndex(i)
+            else:
+                self.name_pulldown.addItem(name)
+                self.names.append(name)
+            if len(self.names) >= 2:
+                self.name_pulldown.setEnabled(True)
         self.name = name
 
         self.result_case_window.update_data(data)
         self.apply_button.setEnabled(True)
+        if update_name:
+            self.on_update_name(None)
 
     def update_methods(self, data):
         """the methods is a hidden box"""

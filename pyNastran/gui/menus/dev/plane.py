@@ -1,6 +1,6 @@
 from qtpy import QtCore, QtGui
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
-
+from pyNastran.gui.utils.qt.pydialog import check_float
 
 class BCMap(QtGui.QDialog):
     def __init__(self, data, win_parent=None):
@@ -305,13 +305,13 @@ class BCMap(QtGui.QDialog):
 
     def on_validate(self):
         name_value, flag0 = self.check_name(self.name_edit)
-        ox_value, flag1 = self.check_float(self.origin_x_edit)
-        oy_value, flag2 = self.check_float(self.origin_y_edit)
-        oz_value, flag3 = self.check_float(self.origin_z_edit)
+        ox_value, flag1 = check_float(self.origin_x_edit)
+        oy_value, flag2 = check_float(self.origin_y_edit)
+        oz_value, flag3 = check_float(self.origin_z_edit)
 
-        nx_value, flag4 = self.check_float(self.normal_x_edit)
-        ny_value, flag5 = self.check_float(self.normal_y_edit)
-        nz_value, flag6 = self.check_float(self.normal_z_edit)
+        nx_value, flag4 = check_float(self.normal_x_edit)
+        ny_value, flag5 = check_float(self.normal_y_edit)
+        nz_value, flag6 = check_float(self.normal_z_edit)
 
         if flag0 and flag1 and flag2 and flag3 and flag4 and flag5 and flag6:
             self.out_data['origin'] = [ox_value, oy_value, oz_value]

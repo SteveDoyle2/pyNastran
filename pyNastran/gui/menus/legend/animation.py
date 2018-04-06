@@ -12,7 +12,7 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory # getopenfilename
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.utils.write_gif import IS_IMAGEIO
 
@@ -874,20 +874,20 @@ class AnimationWindow(PyDialog):
     def on_validate(self, wipe=False):
         """checks to see if the input is valid"""
         # requires no special validation
-        icase_fringe, flag0 = self.check_int(self.icase_fringe_edit)
+        icase_fringe, flag0 = check_int(self.icase_fringe_edit)
         icase_disp = self._icase_disp
         icase_vector = self._icase_vector
 
-        scale, flag1 = self.check_float(self.scale_edit)
-        time, flag2 = self.check_float(self.time_edit)
-        fps, flag3 = self.check_float(self.fps_edit)
+        scale, flag1 = check_float(self.scale_edit)
+        time, flag2 = check_float(self.time_edit)
+        fps, flag3 = check_float(self.fps_edit)
 
         min_value = max_value = None
         flag4 = flag5 = True
         if self.min_value_edit.isEnabled():
-            min_value, flag4 = self.check_float(self.min_value_edit)
+            min_value, flag4 = check_float(self.min_value_edit)
         if self.max_value_edit.isEnabled():
-            max_value, flag5 = self.check_float(self.max_value_edit)
+            max_value, flag5 = check_float(self.max_value_edit)
 
         if wipe:
             animate_in_gui = False
@@ -900,7 +900,7 @@ class AnimationWindow(PyDialog):
             passed = all([flag0, flag1, flag2, flag3, flag4, flag5])
             magnify, output_dir, gifbase = None, None, None
         else:
-            magnify, flag6 = self.check_int(self.resolution_edit)
+            magnify, flag6 = check_int(self.resolution_edit)
             output_dir, flag7 = self.check_path(self.browse_folder_edit)
             gifbase, flag8 = self.check_name(self.gif_edit)
             passed = all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8])

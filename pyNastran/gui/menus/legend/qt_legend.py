@@ -12,7 +12,8 @@ from qtpy.QtWidgets import (
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 
 from pyNastran.gui.utils.colormaps import colormap_keys
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_format
+from pyNastran.gui.utils.qt.pydialog import (
+    PyDialog, check_float, check_format, check_positive_int_or_blank)
 from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.gui.qt_version import qt_int as qt_version
 
@@ -592,7 +593,7 @@ class LegendPropertiesWindow(PyDialog):
         if not flag0:
             return
 
-        scale, flag1 = self.check_float(self.scale_edit)
+        scale, flag1 = check_float(self.scale_edit)
         if not flag1:
             scale = self._scale
 
@@ -736,15 +737,15 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_validate(self):
         name_value, flag0 = self.check_name(self.name_edit)
-        min_value, flag1 = self.check_float(self.min_edit)
-        max_value, flag2 = self.check_float(self.max_edit)
+        min_value, flag1 = check_float(self.min_edit)
+        max_value, flag2 = check_float(self.max_edit)
         format_value, flag3 = check_format(self.format_edit)
-        scale, flag4 = self.check_float(self.scale_edit)
-        phase, flag5 = self.check_float(self.phase_edit)
+        scale, flag4 = check_float(self.scale_edit)
+        phase, flag5 = check_float(self.phase_edit)
 
-        nlabels, flag6 = self.check_positive_int_or_blank(self.nlabels_edit)
-        ncolors, flag7 = self.check_positive_int_or_blank(self.ncolors_edit)
-        labelsize, flag8 = self.check_positive_int_or_blank(self.labelsize_edit)
+        nlabels, flag6 = check_positive_int_or_blank(self.nlabels_edit)
+        ncolors, flag7 = check_positive_int_or_blank(self.ncolors_edit)
+        labelsize, flag8 = check_positive_int_or_blank(self.labelsize_edit)
         colormap = str(self.colormap_edit.currentText())
 
         if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8]):
