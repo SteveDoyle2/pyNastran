@@ -12,6 +12,7 @@ import pandas as pd
 from h5Nastran.msc import data_tables
 from ..punch import PunchTableData
 from .result_data import ResultData
+from ..versioning import VersioningMetaClass, VersioningData
 
 
 pd.options.mode.chained_assignment = None
@@ -744,32 +745,68 @@ class TableData(object):
 
 ########################################################################################################################
 
-_registered_result_tables = {}
 
+class ResultTableVersioningData(VersioningData):
+    def register(self, nastran_type, nastran_version, h5n_version, kls):
+        if isinstance(nastran_type, str):
+            nastran_type = nastran_type.lower()
 
-class ResultTableMetaClass(type):
-    def __new__(cls, clsname, bases, attrs):
-        newclass = super(ResultTableMetaClass, cls).__new__(cls, clsname, bases, attrs)
+        tmp = self._data[nastran_type]
 
-        result_type = newclass.result_type
+        if nastran_version not in tmp:
+            assert nastran_version == (0, 0, 0), '%s: nastran type %r, version %r must be defined first!' % (
+                kls.__name__, nastran_type, (0, 0, 0)
+            )
+
+        tmp = tmp[nastran_version]
+
+        if h5n_version not in tmp:
+            assert h5n_version == (0, 0, 0), '%s: nastran type %r, version %r, h5n version %r must be defined first!' % (
+                kls.__name__, nastran_type, nastran_version, (0, 0, 0)
+            )
+
+        tmp = tmp[h5n_version]
+
+        assert kls.__name__ not in tmp, '%s: nastran type %r, version %r, h5n version %r already defined!' % (
+            kls.__name__, nastran_type, nastran_version, h5n_version
+        )
+
+        result_type = kls.result_type
 
         if isinstance(result_type, str):
             result_type = [result_type]
 
         for res_type in result_type:
-            if res_type not in _registered_result_tables:
-                assert newclass.version == (0, 0, 0), '%s version %r must be defined first!' % (
-                newclass.__name__, (0, 0, 0))
-                tmp = _registered_result_tables[res_type] = {}
-            else:
-                tmp = _registered_result_tables[res_type]
+            tmp[res_type] = kls
 
-            assert newclass.version not in tmp
-            tmp[newclass.version] = newclass
 
-        # return last version defined, this allows newer versions to sublass last defined version as long as versions
-        # are defined in order, although better to explicitly use KLS.get_version((i, j, k))
-        return newclass
+class ResultTableMetaClass(VersioningMetaClass):
+    data = ResultTableVersioningData()
+
+
+# class ResultTableMetaClass(type):
+#     def __new__(cls, clsname, bases, attrs):
+#         newclass = super(ResultTableMetaClass, cls).__new__(cls, clsname, bases, attrs)
+#
+#         result_type = newclass.result_type
+#
+#         if isinstance(result_type, str):
+#             result_type = [result_type]
+#
+#         for res_type in result_type:
+#             if res_type not in _registered_result_tables:
+#                 assert newclass.version == (0, 0, 0), '%s version %r must be defined first!' % (
+#                 newclass.__name__, (0, 0, 0))
+#                 tmp = _registered_result_tables[res_type] = {}
+#             else:
+#                 tmp = _registered_result_tables[res_type]
+#
+#             assert newclass.version not in tmp
+#             tmp[newclass.version] = newclass
+#
+#         # return last version defined, this allows newer versions to sublass last defined version as long as versions
+#         # are defined in order, although better to explicitly use KLS.get_version((i, j, k))
+#         return newclass
 
 
 @add_metaclass(ResultTableMetaClass)
@@ -778,13 +815,15 @@ class ResultTable(object):
     table_def = None  # type: TableDef
     result_data_cols = []  # type: List[int]
     result_data_group_by = []  # type: List[str]
-    version = (0, 0, 0)
-    
+    nastran_type = None
+    nastran_version = (0, 0, 0)
+    h5n_version = (0, 0, 0)
+
     @classmethod
-    def get_version(cls, version):
+    def get_class(cls, nastran_type, nastran_version, h5n_version):
         # TODO: make result_type only a string
         # this will only work if cls.result_type is a string
-        return _registered_node[cls.result_type][version]
+        return InputTableMetaClass.get_class(nastran_type, nastran_version, h5n_version, cls.result_type)
 
     def __init__(self, h5n, parent):
         self._h5n = h5n
