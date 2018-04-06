@@ -19,19 +19,32 @@ from .data_helper import DataHelper
 
 
 class H5Nastran(object):
-    version_str = '0.1.0a0'
-    version = (0, 1, 0)
+    h5n_version_str = '0.1.0a0'
+    h5n_version = (0, 1, 0)
+    nastran_type = None
+    nastran_version = (0, 0, 0)
 
     default_driver = None
 
-    def __init__(self, h5filename, mode='r', in_memory=False):
-        filters = tables.Filters(complib='zlib', complevel=5)
+    def __init__(self, h5filename, mode='r', nastran_type=None, nastran_version=None, in_memory=False):
+        self.file_mode = mode
+
+        if mode == 'r':
+            assert nastran_type is None and nastran_version is None
+        else:
+            if nastran_type is not None:
+                self.nastran_type = nastran_type
+
+            if nastran_version is not None:
+                assert isinstance(nastran_version, tuple) and len(nastran_version) == 3
+                self.nastran_version = nastran_version
 
         if in_memory:
             driver = 'H5FD_CORE'
         else:
             driver = self.default_driver
 
+        filters = tables.Filters(complib='zlib', complevel=5)
         self.h5f = tables.open_file(h5filename, mode=mode, filters=filters, driver=driver)
 
         self._card_tables = {}
@@ -397,10 +410,41 @@ class H5Nastran(object):
     def _write_info(self):
         import pyNastran
 
-        info = 'h5Nastran version %s\nPowered by pyNastran version %s' % (self.version, pyNastran.__version__)
+        info = 'h5Nastran version %s\nPowered by pyNastran version %s' % (self.h5n_version_str, pyNastran.__version__)
 
         self.h5f.create_array(self.table_paths.about_path, self.table_paths.about_table, obj=info.encode(),
                               title='h5Nastran Info', createparents=True)
+
+        versioning_dtype = np.dtype([
+            ('H5NASTRAN_VERSION_STR', 'S8'),
+            ('H5NASTRAN_VERSION', '<i8', (3,)),
+            ('NASTRAN_TYPE', 'S8'),
+            ('NASTRAN_VERSION', '<i8', (3,))
+        ])
+
+        format = tables.descr_from_dtype(versioning_dtype)[0]
+
+        self.h5f.create_table(self.table_paths.versioning_path, self.table_paths.versioning_table, format,
+                              'VERSIONING', expectedrows=1, createparents=True)
+
+        table = self.h5f.get_node(self.table_paths.versioning)
+
+        data = np.zeros(1, dtype=versioning_dtype)
+
+        data['H5NASTRAN_VERSION_STR'][0] = self.h5n_version_str
+        data['H5NASTRAN_VERSION'][0] = self.h5n_version
+
+        nastran_type = self.nastran_type
+
+        if nastran_type is None:
+            nastran_type = ''
+
+        data['NASTRAN_TYPE'][0] = nastran_type
+        data['NASTRAN_VERSION'][0] = self.nastran_version
+
+        table.append(data)
+
+        self.h5f.flush()
 
     def _write_unsupported_tables(self):
         headers = list(sorted(self._unsupported_tables))

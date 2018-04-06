@@ -10,6 +10,7 @@ import tables
 
 from ..msc import data_tables
 from ..data_helper import DataHelper
+from ..versioning import VersioningData, VersioningMetaClass
 
 _defaults = {
     '<f8': DataHelper.default_double,
@@ -98,6 +99,7 @@ class TableDef(object):
 
         self.h5f = None
 
+        # TODO: the defaults should be from h5Nastran object
         if defaults is not None:
             self.defaults = defaults
         else:
@@ -220,55 +222,25 @@ def _get_value(value, default):
 
 ########################################################################################################################
 
-_registered_input_tables = {}
-
-
-class InputTableMetaClass(type):
-    def __new__(cls, clsname, bases, attrs):
-        newclass = super(InputTableMetaClass, cls).__new__(cls, clsname, bases, attrs)
-        
-        if newclass.__name__ not in _registered_input_tables:
-            assert newclass.version == (0, 0, 0), '%s version %r must be defined first!' % (newclass.__name__, (0, 0, 0))
-            tmp = _registered_input_tables[newclass.__name__] = {}
-        else:
-            tmp = _registered_input_tables[newclass.__name__]
-            
-        assert newclass.version not in tmp
-        tmp[newclass.version] = newclass
-
-        # return last version defined, this allows newer versions to sublass last defined version as long as versions
-        # are defined in order, although better to explicitly use KLS.get_version((i, j, k))
-        return newclass
+class InputTableMetaClass(VersioningMetaClass):
+    data = VersioningData()
 
 
 @add_metaclass(InputTableMetaClass)
 class InputTable(object):
     card_id = ''
     table_def = None  # type: TableDef
-    version = (0, 0, 0)
+    nastran_type = None
+    nastran_version = (0, 0, 0)
+    h5n_version = (0, 0, 0)
 
-    def __new__(cls, h5n, parent):
-        version = h5n.version
-        tmp = _registered_input_tables[cls.__name__]
-        keys = sorted(tmp.keys())
-
-        last_key = None
-
-        for key in keys:
-            if key <= version:
-                last_key = key
-            else:
-                break
-
-        if last_key is None:
-            raise Exception('Cannot find %s version %r' % (cls.__name__, version))
-
-        cls = tmp[last_key]
-        return object.__new__(cls)
+    def __new__(cls, h5n, *args):
+        kls = cls.get_class(h5n.nastran_type, h5n.nastran_version, h5n.h5n_version)
+        return object.__new__(kls)
 
     @classmethod
-    def get_version(cls, version):
-        return _registered_input_tables[cls.__name__][version]
+    def get_class(cls, nastran_type, nastran_version, h5n_version):
+        return InputTableMetaClass.get_class(nastran_type, nastran_version, h5n_version, cls.__name__)
 
     def __init__(self, h5n, parent):
         self._h5n = h5n
@@ -291,17 +263,29 @@ class InputTable(object):
 
     def to_bdf_implemented(self):
         try:
-            to_bdf = InputTable.to_bdf.im_func
+            default_to_bdf = InputTable.to_bdf.im_func
         except AttributeError:
-            to_bdf = InputTable.to_bdf
-        return self.to_bdf is not to_bdf
+            default_to_bdf = InputTable.to_bdf
+
+        try:
+            to_bdf = self.__class__.to_bdf.im_func
+        except AttributeError:
+            to_bdf = self.__class__.to_bdf
+
+        return to_bdf is not default_to_bdf
 
     def from_bdf_implemented(self):
         try:
-            from_bdf = InputTable.from_bdf.im_func
+            default_from_bdf = InputTable.from_bdf.im_func
         except AttributeError:
-            from_bdf = InputTable.from_bdf
-        return self.from_bdf is not from_bdf
+            default_from_bdf = InputTable.from_bdf
+
+        try:
+            from_bdf = self.__class__.from_bdf.im_func
+        except AttributeError:
+            from_bdf = self.__class__.from_bdf
+
+        return from_bdf is not default_from_bdf
 
     def write_data(self, cards):
         if self.from_bdf_implemented():
