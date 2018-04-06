@@ -71,6 +71,7 @@ class Settings(object):
         self.use_gradient_background = True
         self.background_color = GREY
         self.background_color2 = GREY
+
         self.annotation_color = BLACK
         self.text_color = BLACK
 
@@ -388,7 +389,6 @@ class Settings(object):
         """sets the background color to white; used by gif writing?"""
         self.set_gradient_background(use_gradient_background=False, render=False)
         self.set_background_color(WHITE, render=render)
-        #self.set_background_color(WHITE)
 
     def set_gradient_background(self, use_gradient_background=False, render=True):
         """enables/diables the gradient background"""
@@ -452,6 +452,7 @@ class Settings(object):
 
     def set_magnify(self, magnify):
         self.magnify = magnify
+
 
 def isfloat(value):
     """is the value floatable"""
