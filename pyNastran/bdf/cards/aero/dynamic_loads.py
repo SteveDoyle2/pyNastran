@@ -941,12 +941,16 @@ class MKAERO1(BaseCard):
         self.reduced_freqs = np.unique(reduced_freqs)
 
     def validate(self):
+        if None in self.machs:
+            msg = 'MKAERO1; None in machs=%s\n' % (self.machs)
+        if None in self.reduced_freqs:
+            msg = 'MKAERO1; None in rfreqs=%s\n' % (self.reduced_freqs)
         if len(self.machs) == 0:
-            msg = 'MKAERO1; nmachs=%s machs=%s' % (len(self.machs), self.machs)
-            raise ValueError(msg)
+            msg = 'MKAERO1; nmachs=%s machs=%s\n' % (len(self.machs), self.machs)
         if len(self.reduced_freqs) == 0:
             msg = 'MKAERO1; nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
-            raise ValueError(msg)
+        if msg:
+            raise ValueError(msg.rstrip())
 
     @classmethod
     def add_card(cls, card, comment=''):

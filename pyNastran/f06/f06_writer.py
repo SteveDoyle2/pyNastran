@@ -860,7 +860,7 @@ class F06Writer(OP2_F06_Common):
                             self.page_num = result.write_f06(
                                 f06, header, page_stamp, page_num=self.page_num,
                                 is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-                        except Exception as e:
+                        except Exception as error:
                             print_exc(file=sys.stdout)
                             raise
 

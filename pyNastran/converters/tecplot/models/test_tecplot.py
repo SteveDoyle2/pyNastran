@@ -13,9 +13,9 @@ def main():
             try:
                 read_tecplot(fname, log=log)
                 log.info('read %r' % fname)
-            except Exception as e:
+            except Exception as error:
                 log.warning('failed reading %r' % fname)
-                log.error(e)
+                log.error(error)
                 print('')
 
 if __name__ == '__main__':  # pragma: no cover

@@ -822,7 +822,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     #print(obj.rstrip())
                     try:
                         obj.validate()
-                    except(ValueError, AssertionError, RuntimeError, IndexError) as e:
+                    except(ValueError, AssertionError, RuntimeError, IndexError) as error:
                         #exc_type, exc_value, exc_traceback = sys.exc_info()
                         # format_tb(exc_traceback)  # works; ugly
                         # format_exc(e) # works; short
@@ -855,7 +855,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             for unused_id, obj in sorted(iteritems(objects)):
                 try:
                     obj.validate()
-                except(ValueError, AssertionError, RuntimeError, IndexError) as e:
+                except(ValueError, AssertionError, RuntimeError, IndexError) as error:
                     #exc_type, exc_value, exc_traceback = sys.exc_info()
                     # format_tb(exc_traceback)  # works; ugly
                     # format_exc(e) # works; short
@@ -885,7 +885,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             for obj in objects:
                 try:
                     obj.validate()
-                except(ValueError, AssertionError, RuntimeError) as e:
+                except(ValueError, AssertionError, RuntimeError) as error:
                     #exc_type, exc_value, exc_traceback = sys.exc_info()
                     # format_tb(exc_traceback)  # works; ugly
                     # format_exc(e) # works; short

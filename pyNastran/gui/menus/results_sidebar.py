@@ -162,7 +162,12 @@ class Sidebar(QWidget):
 
     @property
     def result_case_window(self):
-        return self.result_case_windows[0]
+        #if self.name is None:
+            #i = 0
+        #else:
+            #i = self.names.index(self.name)
+        i = 0
+        return self.result_case_windows[i]
 
     def setup_layout(self, data, choices, clear_data=True):
         """creates the sidebar visual layout"""
@@ -189,6 +194,13 @@ class Sidebar(QWidget):
             self.result_case_windows.append(result_case_window)
 
         iname = 0
+        #if self.name is None:
+            #iname = 0
+        #else:
+            #iname = self.names.index(self.name)
+        #for i in range(nwindows):
+            #if i != iname:
+                #self.result_case_windows[iname].setVisible(False)
         self.result_case_windows[iname].setVisible(True)
 
         vbox.addWidget(self.result_method_window)
@@ -257,6 +269,16 @@ class Sidebar(QWidget):
         self.apply_button.setEnabled(True)
         if update_name:
             self.on_update_name(None)
+
+        if setup_layout and 0:
+            ## TODO: screws up the width of the window
+            choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
+            data = [
+                ('A', 1, []),
+                #('B', 2, []),
+                #('C', 3, []),
+            ]
+            self.setup_layout(data, choices, clear_data=True)
 
     def update_methods(self, data):
         """the methods is a hidden box"""

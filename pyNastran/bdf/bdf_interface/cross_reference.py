@@ -329,9 +329,9 @@ class XrefMesh(BDFAttributes):
         for elem in itervalues(self.elements):
             try:
                 elem.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((elem, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -339,9 +339,9 @@ class XrefMesh(BDFAttributes):
         for elem in itervalues(self.rigid_elements):
             try:
                 elem.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((elem, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -349,9 +349,9 @@ class XrefMesh(BDFAttributes):
         for elem in itervalues(self.plotels):
             try:
                 elem.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((elem, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -387,9 +387,9 @@ class XrefMesh(BDFAttributes):
         for mass in itervalues(self.masses):
             try:
                 mass.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((mass, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -397,9 +397,9 @@ class XrefMesh(BDFAttributes):
         for prop in itervalues(self.properties_mass):
             try:
                 prop.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((prop, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -412,9 +412,9 @@ class XrefMesh(BDFAttributes):
         for prop in itervalues(self.properties):
             try:
                 prop.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((prop, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -428,9 +428,9 @@ class XrefMesh(BDFAttributes):
         for mat in itervalues(self.materials):  # MAT1
             try:
                 mat.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((mat, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -438,9 +438,9 @@ class XrefMesh(BDFAttributes):
         for mat in itervalues(self.creep_materials):  # CREEP
             try:
                 mat.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((mat, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -453,9 +453,9 @@ class XrefMesh(BDFAttributes):
             for mat in itervalues(material_deps):
                 try:
                     mat.cross_reference(self)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(e), e)
+                    var = traceback.format_exception_only(type(error), error)
                     self._stored_xref_errors.append((mat, var))
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
@@ -469,9 +469,9 @@ class XrefMesh(BDFAttributes):
             for load_combination in load_combinations:
                 try:
                     load_combination.cross_reference(self)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(e), e)
+                    var = traceback.format_exception_only(type(error), error)
                     self._stored_xref_errors.append((load_combination, var))
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
@@ -480,9 +480,9 @@ class XrefMesh(BDFAttributes):
             for load in loads:
                 try:
                     load.cross_reference(self)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(e), e)
+                    var = traceback.format_exception_only(type(error), error)
                     self._stored_xref_errors.append((load, var))
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
@@ -492,9 +492,9 @@ class XrefMesh(BDFAttributes):
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
                     load.cross_reference(self)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(e), e)
+                    var = traceback.format_exception_only(type(error), error)
                     self._stored_xref_errors.append((load, var))
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
@@ -504,10 +504,10 @@ class XrefMesh(BDFAttributes):
                 #self.log.debug("  dloadi load=%s" % (load))
                 try:
                     load.cross_reference(self)
-                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     #raise
                     self._ixref_errors += 1
-                    var = traceback.format_exception_only(type(e), e)
+                    var = traceback.format_exception_only(type(error), error)
                     self._stored_xref_errors.append((load, var))
                     if self._ixref_errors > self._nxref_errors:
                         self.pop_xref_errors()
@@ -515,10 +515,10 @@ class XrefMesh(BDFAttributes):
         for unused_key, darea in iteritems(self.dareas):
             try:
                 darea.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 #raise
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((load, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -526,10 +526,10 @@ class XrefMesh(BDFAttributes):
         for unused_key, tic in iteritems(self.tics):
             try:
                 tic.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 #raise
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((load, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()
@@ -537,10 +537,10 @@ class XrefMesh(BDFAttributes):
         for unused_key, dphase in iteritems(self.dphases):
             try:
                 dphase.cross_reference(self)
-            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 #raise
                 self._ixref_errors += 1
-                var = traceback.format_exception_only(type(e), e)
+                var = traceback.format_exception_only(type(error), error)
                 self._stored_xref_errors.append((dphase, var))
                 if self._ixref_errors > self._nxref_errors:
                     self.pop_xref_errors()

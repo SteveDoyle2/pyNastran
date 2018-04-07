@@ -112,8 +112,8 @@ class TestSprings(unittest.TestCase):
         model.add_card(fields, fields[0])
         model.pop_parse_errors()
         model.validate()
-        e = model.elements[615]
-        str(e)
+        elem = model.elements[615]
+        str(elem)
 
 
 if __name__ == '__main__':  # pragma: no cover
