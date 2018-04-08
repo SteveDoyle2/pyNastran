@@ -226,7 +226,8 @@ class GuiCommon(GuiAttributes):
 
         self.hide_legend()
         self.scalar_bar.is_shown = False
-        self._set_legend_fringe(False)
+
+        self.clear_legend()
         self.vtk_interactor.Render()
 
         self.res_widget.result_case_window.treeView.fringe.setChecked(False)
@@ -360,6 +361,7 @@ class GuiCommon(GuiAttributes):
         if len(case.shape) == 1:
             normi = case
         else:
+            assert isinstance(case, np.ndarray), case
             normi = norm(case, axis=1)
         return normi
 
@@ -459,7 +461,7 @@ class GuiCommon(GuiAttributes):
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
 
-    def on_fringe(self, icase, show_msg=True):
+    def on_fringe(self, icase, update_legend_window=True, show_msg=True):
         """
         Sets the icase data to the active fringe
 
@@ -480,12 +482,8 @@ class GuiCommon(GuiAttributes):
             nlabels, labelsize, ncolors, colormap,
         ) = data
 
-        #(obj, (obj_i, obj_name)) = self.result_cases[self.icase]
-        #obj_location = obj.get_location(obj_i, obj_name)
-        #obj_location = ''
         #-----------------------------------
         grid = self.grid
-        phase = 0.0
 
         grid_result.SetName(name_str)
         self._names_storage.add(name)
@@ -512,22 +510,6 @@ class GuiCommon(GuiAttributes):
         else:
             raise RuntimeError(location)
 
-        is_low_to_high = True
-        #self._legend_window_shown = False
-        #self.update_legend(
-            #icase,
-            #result_type, min_value, max_value, data_format, scale, phase,
-            #nlabels, labelsize, ncolors, colormap,
-            #is_low_to_high, self.is_horizontal_scalar_bar)
-        #self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
-                              #scale=scale, phase=phase, data_format=data_format,
-                              #is_low_to_high=is_low_to_high,
-                              ##is_discrete=is_discrete,
-                              ##is_horizontal=is_horizontal,
-                              #nlabels=nlabels, labelsize=labelsize,
-                              #ncolors=ncolors, colormap=colormap,
-                              #is_shown=True)
-
         #is_legend_shown = True
         #if is_legend_shown is None:
         self.show_legend()
@@ -544,32 +526,39 @@ class GuiCommon(GuiAttributes):
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=is_low_to_high,
-                               is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
 
-        self.update_legend(icase,
-                           result_type, min_value, max_value, data_format, scale, phase,
-                           nlabels, labelsize, ncolors, colormap,
-                           is_low_to_high, self.is_horizontal_scalar_bar)
+        icase_fringe = icase
+        icase_disp = self.icase_disp
+        icase_vector = self.icase_vector
+
+        phase = 0.0
+        arrow_scale = 0.0
+        if update_legend_window:
+            self.update_legend(icase_fringe, icase_disp, icase_vector,
+                               result_type, min_value, max_value, data_format, scale, phase,
+                               arrow_scale,
+                               nlabels, labelsize, ncolors, colormap,
+                               use_disp_internal=True, use_vector_internal=True)
         self.res_widget.update_method(methods)
 
+        self.icase_fringe = icase
         self.grid.Modified()
         self.grid_selected.Modified()
         self.vtk_interactor.Render()
         self.res_widget.result_case_window.treeView.fringe.setChecked(True)
 
-    def on_disp(self, icase, apply_fringe=False, show_msg=True):
+    def on_disp(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
         is_disp = True
-        self._on_disp_vector(icase, is_disp, apply_fringe, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.disp.setChecked(True)
 
-    def on_vector(self, icase, apply_fringe=False, show_msg=True):
+    def on_vector(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
         is_disp = False
-        self._on_disp_vector(icase, is_disp, apply_fringe, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
 
-    def _on_disp_vector(self, icase, is_disp, apply_fringe=False, show_msg=True):
+    def _on_disp_vector(self, icase, is_disp, apply_fringe=False, update_legend_window=True, show_msg=True):
         """
         Sets the icase data to the active displacement
 
@@ -598,37 +587,8 @@ class GuiCommon(GuiAttributes):
         #obj_location = ''
         #-----------------------------------
         grid = self.grid
-        #phase = 0.0
 
-        if 0:
-            grid_result.SetName(name_str)
-            self._names_storage.add(name)
-
-            self.log_debug('icase=%s location=%s' % (icase, location))
-            cell_data = grid.GetCellData()
-            point_data = grid.GetPointData()
-
-            if location == 'centroid':
-                #cell_data.RemoveArray(name_str)
-                self._names_storage.remove(name)
-                cell_data.AddArray(grid_result)
-
-                #if location != obj_location:
-                point_data.SetActiveVectors(None)
-                cell_data.SetActiveVectors(name_str)
-
-            elif location == 'node':
-                #point_data.RemoveArray(name_str)
-                self._names_storage.remove(name)
-                point_data.AddArray(grid_result)
-
-                #if location != obj_location:
-                cell_data.SetActiveVectors(None)
-                point_data.SetActiveVectors(name_str)
-            else:
-                raise RuntimeError(location)
-
-        print('disp=%s location=%r' % (is_disp, location))
+        #print('disp=%s location=%r' % (is_disp, location))
         if is_disp: # or obj.deflects(i, res_name):
             #grid_result1 = self.set_grid_values(name, case, 1,
                                                 #min_value, max_value, norm_value)
@@ -641,7 +601,9 @@ class GuiCommon(GuiAttributes):
 
             self.grid.Modified()
             self.grid_selected.Modified()
+            self.icase_disp = icase
         else:
+            self.icase_vector = icase
             if location == 'node':
                 #self._is_displaced = False
                 self._is_forces = True
@@ -652,20 +614,30 @@ class GuiCommon(GuiAttributes):
                 self._is_forces = True
                 #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
                 self._update_elemental_vectors(vector_data, set_scalars=apply_fringe, scale=scale)
+            self.icase_vector = icase
 
-        #is_low_to_high = True
-        #self.log_info('min_value=%s, max_value=%s' % (min_value, max_value))
+        icase_fringe = self.icase_fringe
+        icase_disp = self.icase_disp
+        icase_vector = self.icase_vector
 
-        #is_legend_shown = True
-        #if is_legend_shown is None:
-        #is_legend_shown = self.scalar_bar.is_shown
-        #self.log_debug('is_legend_shown = %s' % is_legend_shown)
+        result_type = None
+        max_value = None
+        min_value = None
+        data_format = None
+        nlabels = None
+        ncolors = None
+        colormap = None
+        labelsize = None
 
-        #self.update_legend(icase,
-                           #result_type, min_value, max_value, data_format, scale, phase,
-                           #nlabels, labelsize, ncolors, colormap,
-                           #is_low_to_high, self.is_horizontal_scalar_bar)
-        #self.res_widget.update_method(methods)
+        scale = None
+        phase = None
+        arrow_scale = None
+        if update_legend_window:
+            self.update_legend(icase_fringe, icase_disp, icase_vector,
+                               result_type, min_value, max_value, data_format, scale, phase,
+                               arrow_scale,
+                               nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
+                               use_disp_internal=True, use_vector_internal=True, external_call=False)
 
         self.vtk_interactor.Render()
 
@@ -735,6 +707,8 @@ class GuiCommon(GuiAttributes):
         """
         Internal method for doing results updating
 
+        Parameters
+        ----------
         unused_result_name : str
             the name of the case for debugging purposes
         icase : int
@@ -775,6 +749,12 @@ class GuiCommon(GuiAttributes):
             print('icase=%r case_keys=%s' % (icase, str(self.case_keys)))
             raise
         self.icase = icase
+
+        # these will be fixed later in this function
+        self.icase_fringe = None
+        self.icase_disp = None
+        self.icase_vector = None
+
         case = self.result_cases[key]
         label2 = ''
         assert isinstance(key, integer_types), key
@@ -806,11 +786,13 @@ class GuiCommon(GuiAttributes):
               #% (subcase_id, result_type, subtitle, label))
 
         #================================================
-        is_low_to_high = True
         if case is None:
-            return self.set_normal_result(icase, name, subcase_id)
+            self.icase_fringe = icase
+            self.set_normal_result(icase, name, subcase_id)
+            return icase
 
         elif not self._is_fringe:
+            self.icase_fringe = icase
             # we maybe hacked the scalar bar to turn off for Normals/Clear Results
             # so we turn it back on
             self.show_legend()
@@ -848,7 +830,7 @@ class GuiCommon(GuiAttributes):
         self.update_text_actors(subcase_id, subtitle,
                                 min_value, max_value, label)
 
-        self.final_grid_update(name, grid_result,
+        self.final_grid_update(icase, name, grid_result,
                                name_vector, grid_result_vector,
                                key, subtitle, label, show_msg)
 
@@ -858,14 +840,18 @@ class GuiCommon(GuiAttributes):
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=is_low_to_high,
-                               is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
 
-        self.update_legend(icase,
+        icase_fringe = icase
+        icase_disp = self.icase_disp
+        icase_vector = self.icase_vector
+
+        arrow_scale = 0.0
+        self.update_legend(icase_fringe, icase_disp, icase_vector,
                            result_type, min_value, max_value, data_format, scale, phase,
-                           nlabels, labelsize, ncolors, colormap,
-                           is_low_to_high, self.is_horizontal_scalar_bar)
+                           arrow_scale,
+                           nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
+                           external_call=False)
 
         # updates the type of the result that is displayed
         # method:
@@ -901,15 +887,18 @@ class GuiCommon(GuiAttributes):
         if self._is_displaced:
             self._is_displaced = False
             self._update_grid(self._xyz_nominal)
+            self.icase_disp = None
 
         if self._is_forces:
             self.arrow_actor.SetVisibility(False)
+            self.icase_vector = None
 
         cell_data = grid.GetCellData()
         cell_data.SetActiveScalars(None)
 
         point_data = grid.GetPointData()
         point_data.SetActiveScalars(None)
+        self.icase_fringe = icase
 
         #if is_legend_shown is None:
             #is_legend_shown = self.scalar_bar.is_shown
@@ -917,18 +906,16 @@ class GuiCommon(GuiAttributes):
                                #data_format,
                                #nlabels=nlabels, labelsize=labelsize,
                                #ncolors=ncolors, colormap=colormap,
-                               #is_low_to_high=is_low_to_high,
-                               #is_horizontal=self.is_horizontal_scalar_bar,
                                #is_shown=is_legend_shown)
         #scale = 0.0
         #phase = None
 
         #min_value = -1.
         #max_value = 1.
-        #self.update_legend(icase,
+        #icase_fringe = icase
+        #self.update_legend(icase_fringe, icase_disp, icase_vector,
                            #result_type, min_value, max_value, data_format, scale, phase,
-                           #nlabels, labelsize, ncolors, colormap,
-                           #is_low_to_high, self.is_horizontal_scalar_bar)
+                           #nlabels, labelsize, ncolors, colormap, external_call=False)
         self.hide_legend()
         self.scalar_bar.is_shown = False
         self._set_legend_fringe(False)
@@ -937,7 +924,6 @@ class GuiCommon(GuiAttributes):
         #self.update_text_actors(subcase_id, subtitle,
                                 #min_value, max_value, label)
         self.vtk_interactor.Render()
-
 
     def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
                         is_low_to_high=True):
@@ -1037,7 +1023,7 @@ class GuiCommon(GuiAttributes):
         self._xyz_nominal = xyz_nominal
         self._update_grid(vector_data)
 
-    def final_grid_update(self, name, grid_result,
+    def final_grid_update(self, icase, name, grid_result,
                           name_vector, grid_result_vector,
                           key, subtitle, label, show_msg):
         assert isinstance(key, integer_types), key
@@ -1049,17 +1035,17 @@ class GuiCommon(GuiAttributes):
 
         #if vector_size == 3:
             #print('name, grid_result, vector_size=3', name, grid_result)
-        self._final_grid_update(name, grid_result, None, None, None,
+        self._final_grid_update(icase, name, grid_result, None, None, None,
                                 1, subcase_id, result_type, location, subtitle, label,
                                 revert_displaced=True, show_msg=show_msg)
         if vector_size == 3:
-            self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
+            self._final_grid_update(icase, name_vector, grid_result_vector, obj, i, res_name,
                                     vector_size, subcase_id, result_type, location, subtitle, label,
                                     revert_displaced=False, show_msg=show_msg)
             #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
             #self._update_grid(vector_data)
 
-    def _final_grid_update(self, name, grid_result, obj, i, res_name,
+    def _final_grid_update(self, icase, name, grid_result, obj, i, res_name,
                            vector_size, subcase_id, result_type, location, subtitle, label,
                            revert_displaced=True, show_msg=True):
         if name is None:
@@ -1119,12 +1105,14 @@ class GuiCommon(GuiAttributes):
                         self._is_forces = False
                         self._xyz_nominal = xyz_nominal
                         self._update_grid(vector_data)
+                        self.icase_disp = icase
                     else:
                         self._is_displaced = False
                         self._is_forces = True
                         scale = obj.get_scale(i, res_name)
                         xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
                         self._update_forces(vector_data, scale)
+                        self.icase_vector = icase
 
                     if show_msg:
                         self.log_info('node plotting vector=%s - subcase_id=%s '
@@ -1138,6 +1126,7 @@ class GuiCommon(GuiAttributes):
                 raise RuntimeError(location)
 
         if location == 'centroid':
+            self.icase_fringe = icase
             cell_data = grid.GetCellData()
             cell_data.SetActiveScalars(name_str)
 
@@ -1154,6 +1143,7 @@ class GuiCommon(GuiAttributes):
 
             point_data = grid.GetPointData()
             if vector_size == 1:
+                self.icase_fringe = icase
                 point_data.SetActiveScalars(name_str)  # TODO: None???
             elif vector_size == 3:
                 pass
@@ -1184,7 +1174,10 @@ class GuiCommon(GuiAttributes):
         #assert len(forces_array) == len(mag)
 
         mag_max = mag.max()
-        new_forces = np.copy(forces_array / mag_max)
+        if mag_max > 0.:
+            new_forces = np.copy(forces_array / mag_max)
+        else:
+            new_forces = np.copy(forces_array)
         #mag /= mag_max
 
         #inonzero = np.where(mag > 0)[0]
@@ -1333,3 +1326,8 @@ class GuiCommon(GuiAttributes):
         self._is_fringe = is_fringe
         if self._legend_window_shown:
             self._legend_window._set_legend_fringe(is_fringe)
+
+    def clear_legend(self):
+        self._is_fringe = False
+        if self._legend_window_shown:
+            self._legend_window.clear()

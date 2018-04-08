@@ -88,6 +88,10 @@ class GuiAttributes(object):
         # internal params
         self.ncases = 0
         self.icase = 0
+        self.icase_disp = None
+        self.icase_vector = None
+        self.icase_fringe = None
+
         self.nnodes = 0
         self.nelements = 0
 
@@ -125,6 +129,7 @@ class GuiAttributes(object):
         self.label_scale = 1.0 # in percent
 
         self.is_horizontal_scalar_bar = False
+        self.is_low_to_high = True
 
         self.result_cases = {}
         self.num_user_points = 0

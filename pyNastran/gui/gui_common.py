@@ -32,7 +32,7 @@ import vtk
 
 import pyNastran
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, get_numpy_idtype_for_vtk
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 from pyNastran.bdf.utils import write_patran_syntax_dict
 from pyNastran.utils.log import SimpleLogger
@@ -49,7 +49,8 @@ from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 
 
-from pyNastran.gui.menus.legend.interface import set_legend_menu
+from pyNastran.gui.menus.legend.interface import (
+    set_legend_menu, get_legend_fringe, get_legend_disp, get_legend_vector)
 from pyNastran.gui.menus.clipping.interface import set_clipping_menu
 from pyNastran.gui.menus.camera.interface import set_camera_menu
 from pyNastran.gui.menus.preferences.interface import set_preferences_menu
@@ -103,9 +104,9 @@ class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
         vtk.vtkInteractorStyleTrackballCamera.__init__(self, iren)
         #self.AddObserver("CharEvent", self.onKeyPressEvent)
 
-        self.AddObserver("KeyPressEvent",self.keyPressEvent)
+        self.AddObserver("KeyPressEvent", self.keyPressEvent)
 
-    def keyPressEvent(self,obj,event):
+    def keyPressEvent(self, unused_obj, event):
         key = self.parent.iren.GetKeySym()
         if key == 'Left':
             self.parent.on_pan_left(event)
@@ -351,18 +352,18 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command(txt)
         try:
             exec(txt)
-        except TypeError as e:
+        except TypeError as error:
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
-            self.log_error(str(e))
+            self.log_error(str(error))
             self.log_error(str(txt))
             self.log_error(str(type(txt)))
             return
-        except Exception as e:
+        except Exception as error:
             #self.log_error(traceback.print_stack(f))
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
-            self.log_error(str(e))
+            self.log_error(str(error))
             self.log_error(str(txt))
             return
         if clear:
@@ -703,7 +704,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
         assert isinstance(menu_items, dict), menu_items
-        for menu_name, (menu, items) in iteritems(menu_items):
+        for unused_menu_name, (menu, items) in iteritems(menu_items):
             if menu is None:
                 continue
             for i in items:
@@ -734,7 +735,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _update_menu(self, menu_items):
         assert isinstance(menu_items, dict), menu_items
-        for name, (menu, unused_items) in iteritems(menu_items):
+        for unused_name, (menu, unused_items) in iteritems(menu_items):
             menu.clear()
         self._populate_menu(menu_items)
 
@@ -1792,11 +1793,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         lines = open(python_file, 'r').read()
         try:
             exec(lines)
-        except Exception as e:
+        except Exception as error:
             #self.log_error(traceback.print_stack(f))
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
-            self.log_error(str(e))
+            self.log_error(str(error))
             return is_failed
         is_failed = False
         self._default_python_file = python_file
@@ -2132,10 +2133,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
             self.log_command('create_groups_by_visible_result()'
                              ' # created %i groups for result_name=%r' % (ngroups, result_name))
-        except Exception as e:
+        except Exception as error:
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
-            self.log_error(str(e))
+            self.log_error(str(error))
 
     def create_groups_by_property_id(self):
         """
@@ -2155,8 +2156,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         try:
             eids = self.groups['main'].element_ids
             elements_pound = self.groups['main'].elements_pound
-        except Exception as e:
+        except Exception as error:
             self.log.error('Cannot create groups as there are no elements in the model')
+            self.log.error(str(error))
             return 0
 
         result = self.find_result_by_name(name)
@@ -2802,7 +2804,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                                    #"args[-1]=%r" % (name, args[-1]))
                     #has_results = load_function(infile_name) # , self.last_dir
                     #form, cases = load_function(infile_name) # , self.last_dir
-            except Exception as e:
+            except Exception as error:
                 #raise
                 msg = traceback.format_exc()
                 self.log_error(msg)
@@ -2963,7 +2965,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 restype = 'Patran_nod'
             else:
                 raise NotImplementedError('wildcard_level = %s' % wildcard_level)
-        except Exception as e:
+        except Exception as error:
             msg = traceback.format_exc()
             self.log_error(msg)
             return is_failed
@@ -2984,7 +2986,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         try:
             self._load_csv(result_type, out_filename)
-        except Exception as e:
+        except Exception as error:
             msg = traceback.format_exc()
             self.log_error(msg)
             #return
@@ -3172,7 +3174,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
-        main_window_state = settings.value("mainWindowState")
+        unused_main_window_state = settings.value("mainWindowState")
         self.create_corner_axis()
         #-------------
         # loading
@@ -3542,10 +3544,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 continue
 
             for node_id in i:
-                #xyz = self.xyz_cid0[i, :]
+                jnid = np.where(node_id == self.node_ids)[0]
+                world_position = self.xyz_cid0[jnid, :]
                 out = self.get_result_by_xyz_node_id(world_position, node_id)
                 _result_name, unused_result_value, node_id, node_xyz = out
                 xi, yi, zi = node_xyz
+                texti = 'test'
                 self._create_annotation(texti, self.label_actors[icase], xi, yi, zi)
         self.vtk_interactor.Render()
 
@@ -4138,8 +4142,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
                 onesided=onesided, nrepeat=nrepeat,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif)
-        except Exception as e:
-            self.log_error(str(e))
+        except Exception as error:
+            self.log_error(str(error))
             raise
             #self.log_error(traceback.print_stack(f))
             #self.log_error('\n' + ''.join(traceback.format_stack()))
@@ -4684,6 +4688,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             self.icase = -1
             self.ncases = 0
+        self.icase_disp = None
+        self.icase_vector = None
+        self.icase_fringe = None
         self.set_form(form)
 
     def _finish_results_io2(self, form, cases, reset_labels=True):
@@ -4795,7 +4802,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nelements))
 
-        for module_name, module in iteritems(self.modules):
+        for unused_module_name, module in iteritems(self.modules):
             module.post_load_geometry()
 
     def get_result_by_cell_id(self, cell_id, world_position, icase=None):
@@ -4965,6 +4972,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             self.ncases = len(self.result_cases) - 1  # number of keys in dictionary
             self.icase = -1
+
+        self.icase_disp = None
+        self.icase_vector = None
+        self.icase_fringe = None
         self.cycle_results()  # start at nCase=0
 
         if self.ncases:
@@ -5184,7 +5195,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                           data_format,
                           nlabels=None, labelsize=None,
                           ncolors=None, colormap='jet',
-                          is_low_to_high=True, is_horizontal=True,
                           is_shown=True):
         """
         Updates the Scalar Bar
@@ -5199,7 +5209,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             the red value
         data_format : str
             '%g','%f','%i', etc.
-
         nlabels : int (default=None -> auto)
             the number of labels
         labelsize : int (default=None -> auto)
@@ -5207,15 +5216,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ncolors : int (default=None -> auto)
             the number of colors
         colormap : varies
-            str :
-                the name
+            str : the name
             ndarray : (N, 3) float ndarry
                 red-green-blue array
-
-        is_low_to_high : bool; default=True
-            flips the order of the RGB points
-        is_horizontal : bool; default=True
-            makes the scalar bar horizontal
         is_shown : bool
             show the scalar bar
         """
@@ -5223,7 +5226,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=is_low_to_high, is_horizontal=is_horizontal,
+                               is_low_to_high=self.is_low_to_high,
+                               is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_shown)
 
     #---------------------------------------------------------------------------------------
@@ -5251,7 +5255,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         clip_range = camera.GetClippingRange()  # TODO: do I need this???
 
         parallel_scale = camera.GetParallelScale()  # TODO: do I need this???
-        parallel_proj = GetParralelProjection()
+        parallel_proj = camera.GetParralelProjection()
         distance = camera.GetDistance()
 
         # clip_range, view_up, distance
@@ -5307,7 +5311,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         view_up = camera_data['view_up']
         clip_range = camera_data['clip_range']
         parallel_scale = camera_data['parallel_scale']
-        parallel_proj = camera_data['prallel_proj']
+        unused_parallel_proj = camera_data['prallel_proj']
         distance = camera_data['distance']
 
         camera = self.rend.GetActiveCamera()
@@ -5422,45 +5426,102 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         set_legend_menu(self)
 
-    def update_legend(self, icase, name, min_value, max_value, data_format, scale, phase,
+    def update_legend(self, icase_fringe, icase_disp, icase_vector,
+                      name, min_value, max_value, data_format, scale, phase,
+                      arrow_scale,
                       nlabels, labelsize, ncolors, colormap,
-                      is_low_to_high, is_horizontal_scalar_bar):
+                      use_fringe_internal=False, use_disp_internal=False,
+                      use_vector_internal=False, external_call=True):
+        """
+        Internal method for updating the legend
+
+        Parameters
+        ----------
+        use_fringe_internal : bool; default=Falsee
+            True : use the internal fringe parameters
+            False : use the values that were passed in
+        use_disp_internal : bool; default=Falsee
+            True : use the internal of scale and phase
+            False : use the values that were passed in
+        use_vector_internal : bool; default=Falsee
+            True : use the internal of arrow_scale
+            False : use the values that were passed in
+        external_call : bool; default=True
+            True : allow the legend ``on_apply`` method to be called
+            False : the scalar bar/displacement updating will be handled
+                    manually to prevent recursion (and a crash)
+        """
         if not self._legend_window_shown:
             return
         self._legend_window._updated_legend = True
+        is_fringe = self._is_fringe
 
-        key = self.case_keys[icase]
-        assert isinstance(key, integer_types), key
-        (obj, (i, name)) = self.result_cases[key]
-        #subcase_id = obj.subcase_id
-        #case = obj.get_result(i, name)
-        #result_type = obj.get_title(i, name)
-        #vector_size = obj.get_vector_size(i, name)
-        #location = obj.get_location(i, name)
-        #data_format = obj.get_data_format(i, name)
-        #scale = obj.get_scale(i, name)
-        #label2 = obj.get_header(i, name)
-        default_data_format = obj.get_default_data_format(i, name)
-        default_min, default_max = obj.get_default_min_max(i, name)
-        default_scale = obj.get_default_scale(i, name)
-        default_title = obj.get_default_title(i, name)
-        default_phase = obj.get_default_phase(i, name)
-        out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
-        default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
-        is_normals = obj.is_normal_result(i, name)
-        is_fringe = not is_normals
+        (_result_type, scalar_bar, defaults_scalar_bar, data_format,
+         default_format, default_title, _min_value, _max_value,
+         default_min, default_max) = get_legend_fringe(
+            self, icase_fringe)
 
-        assert isinstance(scale, float), 'scale=%s' % scale
+        unused_nlabels, _labelsize, _ncolors, _colormap = scalar_bar
+        default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
+        if use_fringe_internal:
+            min_value = _min_value
+            max_value = _max_value
+            unused_result_type = _result_type
+            labelsize = _labelsize
+            ncolors = _ncolors
+            colormap = _colormap
+
+        #if icase_fringe is not None:
+            #key = self.case_keys[icase_fringe]
+            #assert isinstance(key, integer_types), key
+            #(obj, (i, name)) = self.result_cases[key]
+            ##subcase_id = obj.subcase_id
+            ##case = obj.get_result(i, name)
+            ##result_type = obj.get_title(i, name)
+            ##vector_size = obj.get_vector_size(i, name)
+            ##location = obj.get_location(i, name)
+            ##data_format = obj.get_data_format(i, name)
+            ##scale = obj.get_scale(i, name)
+            ##label2 = obj.get_header(i, name)
+            #default_data_format = obj.get_default_data_format(i, name)
+            #default_min, default_max = obj.get_default_min_max(i, name)
+            #default_title = obj.get_default_title(i, name)
+            #out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
+            #default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
+            #is_normals = obj.is_normal_result(i, name)
+            #is_fringe = not is_normals
+
+        _scale, _phase, default_scale, default_phase = get_legend_disp(
+            self, icase_disp)
+        #if icase_disp is not None:
+            #default_scale = obj.get_default_scale(i, name)
+            #default_phase = obj.get_default_phase(i, name)
+        if use_disp_internal:
+            scale = _scale
+            phase = _phase
+            #default_scale = _default_scale
+            #default_phase = _default_phase
+
+
+        _arrow_scale, default_arrow_scale = get_legend_vector(self, icase_vector)
+        if use_vector_internal:
+            arrow_scale = _arrow_scale
+            #default_arrow_scale = _default_arrow_scale
+
+        #assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
-            icase,
-            name, min_value, max_value, data_format, scale, phase,
-            nlabels, labelsize,
-            ncolors, colormap,
-            default_title, default_min, default_max, default_data_format,
-            default_scale, default_phase,
+            icase_fringe, icase_disp, icase_vector,
+            name, min_value, max_value, data_format,
+            nlabels, labelsize, ncolors, colormap, is_fringe,
+            scale, phase,
+            arrow_scale,
+
+            default_title, default_min, default_max, default_format,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_low_to_high, is_horizontal_scalar_bar, is_fringe, font_size=self.settings.font_size)
+            default_scale, default_phase,
+            default_arrow_scale,
+            font_size=self.settings.font_size)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
@@ -5470,6 +5531,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         max_value = data['max']
         scale = data['scale']
         phase = data['phase']
+        arrow_scale = data['arrow_scale']
         data_format = data['format']
         is_low_to_high = data['is_low_to_high']
         is_discrete = data['is_discrete']
@@ -5483,15 +5545,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #print('is_shown1 =', is_shown)
         self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
-                              scale=scale, phase=phase, data_format=data_format,
+                              scale=scale, phase=phase,
+                              arrow_scale=arrow_scale,
+                              data_format=data_format,
                               is_low_to_high=is_low_to_high,
                               is_discrete=is_discrete, is_horizontal=is_horizontal,
                               nlabels=nlabels, labelsize=labelsize,
                               ncolors=ncolors, colormap=colormap,
                               is_shown=is_shown)
 
-    def on_update_legend(self, title='Title', min_value=0., max_value=1., scale=0.0,
-                         phase=0.0,
+    def on_update_legend(self,
+                         title='Title', min_value=0., max_value=1.,
+                         scale=0.0, phase=0.0,
+                         arrow_scale=1.,
                          data_format='%.0f',
                          is_low_to_high=True, is_discrete=True, is_horizontal=True,
                          nlabels=None, labelsize=None, ncolors=None, colormap='jet',
@@ -5503,114 +5569,82 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         scale : float
             displacemnt scale factor; true scale
+
+        TODO: speed up by using existing values to skip update steps
         """
+        self.is_low_to_high = is_low_to_high
+        self.is_horizontal_scalar_bar = is_horizontal
+
         #print('is_shown2 =', is_shown)
         #assert is_shown == False, is_shown
-        key = self.case_keys[self.icase]
-        name_vector = None
-        unused_plot_value = self.result_cases[key] # scalar
-        vector_size1 = 1
-        update_3d = False
-        assert isinstance(key, integer_types), key
-        (obj, (i, res_name)) = self.result_cases[key]
-        subcase_id = obj.subcase_id
-        #print('plot_value =', plot_value)
+        if self.icase_fringe is not None:
+            key = self.case_keys[self.icase_fringe]
+            assert isinstance(key, integer_types), key
+            (obj, (i, res_name)) = self.result_cases[key]
+            subcase_id = obj.subcase_id
 
-        result_type = obj.get_title(i, res_name)
-        vector_size = obj.get_vector_size(i, res_name)
-        if vector_size == 3:
-            unused_plot_value = obj.get_plot_value(i, res_name) # vector
-            update_3d = True
-            #print('setting scale=%s' % scale)
+            unused_location = obj.get_location(i, res_name)
+            obj.set_min_max(i, res_name, min_value, max_value)
+            obj.set_data_format(i, res_name, data_format)
+            obj.set_nlabels_labelsize_ncolors_colormap(
+                i, res_name, nlabels, labelsize, ncolors, colormap)
+
+            #data_format = obj.get_data_format(i, res_name)
+            #obj.set_format(i, res_name, data_format)
+            #obj.set_data_format(i, res_name, data_format)
+            unused_subtitle, unused_label = self.get_subtitle_label(subcase_id)
+            is_normal = obj.is_normal_result(i, res_name)
+
+
+        if self.icase_disp is not None:
+            key = self.case_keys[self.icase_disp]
+            assert isinstance(key, integer_types), key
+            (objd, (i, res_name)) = self.result_cases[key]
+            objd.set_scale(i, res_name, scale)
+            objd.set_phase(i, res_name, phase)
             assert isinstance(scale, float), scale
-            obj.set_scale(i, res_name, scale)
-            obj.set_phase(i, res_name, phase)
-        else:
-            scalar_result = obj.get_scalar(i, res_name)
 
-        location = obj.get_location(i, res_name)
-        obj.set_min_max(i, res_name, min_value, max_value)
-        obj.set_data_format(i, res_name, data_format)
-        obj.set_nlabels_labelsize_ncolors_colormap(
-            i, res_name, nlabels, labelsize, ncolors, colormap)
+        print('arrow_scale = ', arrow_scale)
+        if self.icase_vector is not None:
+            key = self.case_keys[self.icase_vector]
+            assert isinstance(key, integer_types), key
+            (objv, (i, res_name)) = self.result_cases[key]
+            objv.set_scale(i, res_name, arrow_scale)
+            assert isinstance(arrow_scale, float), arrow_scale
 
-        #data_format = obj.get_data_format(i, res_name)
-        #obj.set_format(i, res_name, data_format)
-        #obj.set_data_format(i, res_name, data_format)
-        subtitle, label = self.get_subtitle_label(subcase_id)
-        name_vector = (vector_size1, subcase_id, result_type, label,
-                       min_value, max_value, scale)
-        assert vector_size1 == 1, vector_size1
-
-        #if isinstance(key, integer_types):  # vector 3
-            #norm_plot_value = norm(plot_value, axis=1)
-            #min_value = norm_plot_value.min()
-            #max_value = norm_plot_value.max()
-            #print('norm_plot_value =', norm_plot_value)
-
-        if update_3d:
-            self.is_horizontal_scalar_bar = is_horizontal
-            self._set_case(self.result_name, self.icase,
-                           explicit=False, cycle=False, skip_click_check=True,
-                           min_value=min_value, max_value=max_value,
-                           is_legend_shown=is_shown)
+        if self.icase_fringe is not None:
+            self.on_fringe(self.icase_fringe, show_msg=False, update_legend_window=False)
+        if is_normal:
             return
 
-        subtitle, label = self.get_subtitle_label(subcase_id)
-        scale1 = 0.0
-        # if vector_size == 3:
+        if self.icase_disp is not None:
+            self.on_disp(self.icase_disp, apply_fringe=False, update_legend_window=False, show_msg=False)
 
-        name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
-        if obj.is_normal_result(i, res_name):
+        if self.icase_vector is not None:
+            self.on_vector(self.icase_vector, apply_fringe=False, update_legend_window=False, show_msg=False)
+
+        #unused_name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
+        #if obj.is_normal_result(i, res_name):
+            #return
+
+        if self.icase_fringe is None:
             return
+
         norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
 
         #if isinstance(key, integer_types):  # vector 3
-            #norm_plot_value = norm(plot_value, axis=1)
+             #norm_plot_value = norm(plot_value, axis=1)
             #grid_result = self.set_grid_values(name, norm_plot_value, vector_size1,
                                                #min_value, max_value, norm_value,
                                                #is_low_to_high=is_low_to_high)
         #else:
-        grid_result = self.set_grid_values(name, scalar_result, vector_size1,
-                                           min_value, max_value, norm_value,
-                                           is_low_to_high=is_low_to_high)
-
-        grid_result_vector = None
-        #if name_vector and 0:
-            #vector_size = 3
-            #grid_result_vector = self.set_grid_values(name_vector, plot_value, vector_size,
-                                                      #min_value, max_value, norm_value,
-                                                      #is_low_to_high=is_low_to_high)
-
         self.update_scalar_bar(title, min_value, max_value, norm_value,
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=is_low_to_high,
-                               is_horizontal=is_horizontal, is_shown=is_shown)
+                               is_shown=is_shown)
 
-        revert_displaced = True
-        self._final_grid_update(name, grid_result, None, None, None,
-                                1, subcase_id, result_type, location, subtitle, label,
-                                revert_displaced=revert_displaced)
-        if grid_result_vector is not None:
-            self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
-                                    vector_size, subcase_id, result_type, location, subtitle, label,
-                                    revert_displaced=False)
-            #if 0:
-                #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
-                #self._update_grid(vector_data)
-                #self.grid.Modified()
-                #self.geom_actor.Modified()
-                #self.vtk_interactor.Render()
-            #revert_displaced = False
-        #self._final_grid_update(name, grid_result, None, None, None,
-                                #1, subcase_id, result_type, location, subtitle, label,
-                                #revert_displaced=revert_displaced)
-
-        #self.is_horizontal_scalar_bar = is_horizontal
-        #unused_icase = i
         msg = ('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
                '                      scale=%r, phase=%r,\n'
                '                      data_format=%r, is_low_to_high=%s, is_discrete=%s,\n'
@@ -5992,11 +6026,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 user_points = loadtxt_nice(csv_points_filename, delimiter=',')
                 # can't handle leading spaces?
                 #raise
-        except ValueError as e:
+        except ValueError as error:
             #self.log_error(traceback.print_stack(f))
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
-            self.log_error(str(e))
+            self.log_error(str(error))
             return is_failed
 
         self._add_user_points(user_points, name, color, csv_points_filename, point_size=point_size)
@@ -6070,11 +6104,11 @@ def make_vtk_transform(origin, matrix_3x3):
         #print('origin%s = %s' % (label, str(origin)))
         transform.Translate(*origin)
     elif matrix_3x3 is not None:  # origin can be None
-        m = np.eye(4, dtype='float32')
-        m[:3, :3] = matrix_3x3
+        xform = np.eye(4, dtype='float32')
+        xform[:3, :3] = matrix_3x3
         if origin is not None:
-            m[:3, 3] = origin
-        transform.SetMatrix(m.ravel())
+            xform[:3, 3] = origin
+        transform.SetMatrix(xform.ravel())
     else:
         raise RuntimeError('unexpected coordinate system')
     return transform

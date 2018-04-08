@@ -1,4 +1,4 @@
-"""
+"""s
 defines:
  - LegendPropertiesWindow
 """
@@ -50,17 +50,23 @@ class LegendPropertiesWindow(PyDialog):
 
         self._updated_legend = False
         self._animation_window_shown = False
+        self._animation_window = None
+        self.external_call = True
 
-        if win_parent is None:
-            self._icase_fringe = data['icase_fringe']
-            self._icase_disp = data['icase_disp']
-            self._icase_vector = data['icase_vector']
-        else:
-            self._icase_fringe = data['icase']
-            self._icase_disp = data['icase']
-            self._icase_vector = data['icase']
+        #if win_parent is None:
+        self._icase_fringe = data['icase_fringe']
+        self._icase_disp = data['icase_disp']
+        self._icase_vector = data['icase_vector']
+        #else:
+            #self._icase_fringe = data['icase']
+            #self._icase_disp = data['icase']
+            #self._icase_vector = data['icase']
 
         self._default_icase_fringe = self._icase_fringe
+        self._default_icase_disp = self._icase_disp
+        self._default_icase_vector = self._icase_vector
+        print('*icase_fringe=%s icase_disp=%s icase_vector=%s' % (
+            self._default_icase_fringe, self._default_icase_disp, self._default_icase_vector))
 
         self._default_name = data['name']
         self._default_min = data['min']
@@ -69,12 +75,12 @@ class LegendPropertiesWindow(PyDialog):
         self._default_scale = data['default_scale']
         self._scale = data['scale']
 
-        if win_parent is None:
-            self._default_arrow_scale = data['default_arrow_scale']
-            self._arrow_scale = data['arrow_scale']
-        else:
-            self._default_arrow_scale = data['default_scale']
-            self._arrow_scale = data['scale']
+        #if win_parent is None:
+        self._default_arrow_scale = data['default_arrow_scale']
+        self._arrow_scale = data['arrow_scale']
+        #else:
+            #self._default_arrow_scale = data['default_scale']
+            #self._arrow_scale = data['scale']
 
         self._default_phase = data['default_phase']
         self._phase = data['phase']
@@ -103,7 +109,6 @@ class LegendPropertiesWindow(PyDialog):
 
         self._update_defaults_to_blank()
 
-        #self.setupUi(self)
         self.setWindowTitle('Legend Properties')
         self.create_widgets()
         self.create_layout()
@@ -130,45 +135,74 @@ class LegendPropertiesWindow(PyDialog):
         if self._nlabels is None:
             self._nlabels = ''
 
-    def update_legend(self, icase_fringe, name,
-                      min_value, max_value, data_format, scale, phase,
-                      nlabels, labelsize,
-                      ncolors, colormap,
+    def update_legend(self, icase_fringe, icase_disp, icase_vector, name,
+                      min_value, max_value, data_format,
+                      nlabels, labelsize, ncolors, colormap, is_fringe,
+                      scale, phase,
+                      arrow_scale,
 
                       default_title, default_min_value, default_max_value,
-                      default_data_format, default_scale, default_phase,
-                      default_nlabels, default_labelsize,
+                      default_data_format, default_nlabels, default_labelsize,
                       default_ncolors, default_colormap,
-                      is_low_to_high, is_horizontal_scalar_bar, is_fringe,
-                      font_size=8):
+                      default_scale, default_phase,
+                      default_arrow_scale,
+                      font_size=8, external_call=False):
         """
         We need to update the legend if there's been a result change request
         """
-        # TODO: update this
-        icase_disp = icase_vector = icase_fringe
-        default_arrow_scale = default_scale
-
+        self.external_call = external_call
         self.set_font_size(font_size)
+
+        update_fringe = False
+        update_disp = False
+        update_vector = False
+        #print('update_legend; fringe=%s disp=%s vector=%s' % (icase_fringe, icase_disp, icase_vector))
+        #print('update_legend; default: fringe=%s disp=%s vector=%s' % (
+        #    self._default_icase_fringe, self._default_icase_disp, self._default_icase_vector))
         if icase_fringe != self._default_icase_fringe:
             self._icase_fringe = icase_fringe
             self._default_icase_fringe = icase_fringe
+            update_fringe = True
 
-            self._icase_fringe = icase_disp
-            self._default_icase_fringe = icase_disp
+        #is_fringe = icase_fringe is not None
+        is_disp = icase_disp is not None
+        is_vector = icase_vector is not None
 
+        if icase_disp != self._default_icase_disp:
+            assert isinstance(scale, float), 'scale=%r' % scale
+            #assert isinstance(default_scale, float), 'default_scale=%r' % default_scale
+            self._icase_disp = icase_disp
+            self._default_icase_disp = icase_disp
+            self._default_scale = default_scale
+            self._default_phase = default_phase
+            update_disp = True
+
+        if icase_vector != self._default_icase_vector:
+            assert isinstance(arrow_scale, float), 'arrow_scale=%r' % arrow_scale
+            #assert isinstance(default_arrow_scale, float), 'default_arrow_scale=%r' % default_arrow_scale
             self._icase_vector = icase_vector
             self._default_icase_vector = icase_vector
+            self._default_arrow_scale = default_arrow_scale
+            update_vector = True
+
+        #print('*update_legend; default: fringe=%s disp=%s vector=%s' % (
+        #    self._default_icase_fringe, self._default_icase_disp, self._default_icase_vector))
+        #print('update_fringe=%s update_disp=%s update_vector=%s' % (
+        #    update_fringe, update_disp, update_vector))
+        #print('is_fringe=%s is_disp=%s is_vector=%s' % (
+        #    is_fringe, is_disp, is_vector))
+
+        if update_fringe:
+            self._icase_fringe = icase_fringe
+            self._default_icase_fringe = icase_fringe
 
             self._default_name = default_title
             self._default_min = default_min_value
             self._default_max = default_max_value
             self._default_format = default_data_format
-            self._default_is_low_to_high = is_low_to_high
+            #self._default_is_low_to_high = is_low_to_high
             self._default_is_discrete = True
-            self._default_is_horizontal = is_horizontal_scalar_bar
-            self._default_scale = default_scale
-            self._default_arrow_scale = default_arrow_scale
-            self._default_phase = default_phase
+            #self._default_is_horizontal = is_horizontal_scalar_bar
             self._default_nlabels = default_nlabels
             self._default_labelsize = default_labelsize
             self._default_ncolors = default_ncolors
@@ -184,50 +218,45 @@ class LegendPropertiesWindow(PyDialog):
             if nlabels is None:
                 nlabels = ''
 
-            self._update_defaults_to_blank()
+        self._update_defaults_to_blank()
 
-            assert isinstance(scale, float), 'scale=%r' % scale
-            assert isinstance(default_scale, float), 'default_scale=%r' % default_scale
-            if self._default_scale == 0.0:
-                self.scale.setEnabled(False)
-                self.scale_edit.setEnabled(False)
-                self.scale_button.setEnabled(False)
-            else:
-                self.scale.setEnabled(True)
-                self.scale_edit.setEnabled(True)
-                self.scale_button.setEnabled(True)
+        #-----------------------------------------------------------------------
+        update = update_fringe or update_disp or update_vector
+        if update:
+            #self.scale_label.setEnabled(is_disp)
+            #self.scale_edit.setEnabled(is_disp)
+            #self.scale_button.setEnabled(is_disp)
+            self.scale_label.setVisible(is_disp)
+            self.scale_edit.setVisible(is_disp)
+            self.scale_button.setVisible(is_disp)
 
-            if self._default_arrow_scale == 0.0:
-                self.arrow_scale.setEnabled(False)
-                self.arrow_scale_edit.setEnabled(False)
-                self.arrow_scale_button.setEnabled(False)
-            else:
-                self.arrow_scale.setEnabled(True)
-                self.arrow_scale_edit.setEnabled(True)
-                self.arrow_scale_button.setEnabled(True)
+            is_complex_disp = self._default_phase is not None
+            self.phase_label.setVisible(is_complex_disp)
+            self.phase_edit.setVisible(is_complex_disp)
+            self.phase_button.setVisible(is_complex_disp)
 
-            if self._default_phase is None:
-                self._phase = None
-                self.phase.setEnabled(False)
-                self.phase_edit.setEnabled(False)
-                self.phase_button.setEnabled(False)
-                self.phase_edit.setText('0.0')
-                self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
-            else:
-                self._phase = phase
-                self.phase.setEnabled(True)
-                self.phase_edit.setEnabled(True)
-                self.phase_button.setEnabled(True)
-                self.phase_edit.setText(str(phase))
-                self.phase_edit.setStyleSheet("QLineEdit{background: white;}")
+            self._scale = set_cell_to_blank_if_value_is_none(self.scale_edit, scale)
+            self._phase = set_cell_to_blank_if_value_is_none(self.phase_edit, phase)
 
+        #-----------------------------------------------------------------------
+        if update:
+            #self.arrow_scale_label.setEnabled(is_vector)
+            #self.arrow_scale_edit.setEnabled(is_vector)
+            #self.arrow_scale_button.setEnabled(is_vector)
+            self.arrow_scale_label.setVisible(is_vector)
+            self.arrow_scale_edit.setVisible(is_vector)
+            self.arrow_scale_button.setVisible(is_vector)
+            self._arrow_scale = set_cell_to_blank_if_value_is_none(
+                self.arrow_scale_edit, arrow_scale)
+
+        #-----------------------------------------------------------------------
+        if update_fringe:
             #self.on_default_name()
             #self.on_default_min()
             #self.on_default_max()
             #self.on_default_format()
             #self.on_default_scale()
             # reset defaults
-            self._name = name
             self.name_edit.setText(name)
             self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
@@ -239,10 +268,6 @@ class LegendPropertiesWindow(PyDialog):
 
             self.format_edit.setText(str(data_format))
             self.format_edit.setStyleSheet("QLineEdit{background: white;}")
-
-            self._scale = scale
-            self.scale_edit.setText(str(scale))
-            self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
             self.nlabels_edit.setText(str(nlabels))
             self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
@@ -256,18 +281,58 @@ class LegendPropertiesWindow(PyDialog):
             self.colormap_edit.setCurrentIndex(colormap_keys.index(str(colormap)))
 
             self._set_legend_fringe(self._is_fringe)
+
+        if update:
             self.on_apply()
+            self.external_call = True
+        #print('---------------------------------')
+
+    def clear_disp(self):
+        """hides dispacement blocks"""
+        self._icase_disp = None
+        self._default_icase_disp = None
+        self.scale_label.setVisible(False)
+        self.scale_edit.setVisible(False)
+        self.scale_button.setVisible(False)
+        self.phase_label.setVisible(False)
+        self.phase_edit.setVisible(False)
+        self.phase_button.setVisible(False)
+
+    def clear_vector(self):
+        """hides vector blocks"""
+        self._icase_vector = None
+        self._default_icase_vector = None
+        self.arrow_scale_label.setVisible(False)
+        self.arrow_scale_edit.setVisible(False)
+        self.arrow_scale_button.setVisible(False)
+
+    def clear(self):
+        """hides fringe, displacemnt, and vector blocks"""
+        self._icase_fringe = None
+        self._default_icase_fringe = None
+        self._set_legend_fringe(False)
+        self.clear_disp()
+        self.clear_vector()
 
     def _set_legend_fringe(self, is_fringe):
-        """show/hide buttons if we dont have a result"""
+        """
+        Show/hide buttons if we dont have a result.  This is used for normals.
+        A result can still exist (i.e., icase_fringe is not None).
+        """
         # lots of hacking for the Normal vectors
         self._is_fringe = is_fringe
+        #self._default_icase_fringe = None
         enable = True
         if not is_fringe:
             enable = False
 
-        self.max.setVisible(enable)
-        self.min.setVisible(enable)
+        show_name = (self._icase_fringe is not None and self._is_fringe)
+        self.name_label.setVisible(show_name)
+        self.name_edit.setVisible(show_name)
+        self.name_button.setVisible(show_name)
+
+        self.max_label.setVisible(enable)
+        self.min_label.setVisible(enable)
         self.max_edit.setVisible(enable)
         self.min_edit.setVisible(enable)
         self.max_button.setVisible(enable)
@@ -278,16 +343,16 @@ class LegendPropertiesWindow(PyDialog):
         self.low_to_high_radio.setVisible(enable)
         self.high_to_low_radio.setVisible(enable)
 
-        self.format.setVisible(enable)
+        self.format_label.setVisible(enable)
         self.format_edit.setVisible(enable)
         self.format_edit.setVisible(enable)
         self.format_button.setVisible(enable)
 
-        self.nlabels.setVisible(enable)
+        self.nlabels_label.setVisible(enable)
         self.nlabels_edit.setVisible(enable)
         self.nlabels_button.setVisible(enable)
 
-        self.ncolors.setVisible(enable)
+        self.ncolors_label.setVisible(enable)
         self.ncolors_edit.setVisible(enable)
         self.ncolors_button.setVisible(enable)
 
@@ -295,79 +360,81 @@ class LegendPropertiesWindow(PyDialog):
         self.vertical_radio.setVisible(enable)
         self.horizontal_radio.setVisible(enable)
 
-        self.colormap.setVisible(enable)
+        self.colormap_label.setVisible(enable)
         self.colormap_edit.setVisible(enable)
         self.colormap_button.setVisible(enable)
 
     def create_widgets(self):
         """creates the menu objects"""
         # Name
-        self.name = QLabel("Title:")
+        self.name_label = QLabel("Title:")
         self.name_edit = QLineEdit(str(self._default_name))
         self.name_button = QPushButton("Default")
 
         # Min
-        self.min = QLabel("Min:")
+        self.min_label = QLabel("Min:")
         self.min_edit = QLineEdit(str(self._default_min))
         self.min_button = QPushButton("Default")
 
         # Max
-        self.max = QLabel("Max:")
+        self.max_label = QLabel("Max:")
         self.max_edit = QLineEdit(str(self._default_max))
         self.max_button = QPushButton("Default")
 
         #---------------------------------------
         # Format
-        self.format = QLabel("Format (e.g. %.3f, %g, %.6e):")
+        self.format_label = QLabel("Format (e.g. %.3f, %g, %.6e):")
         self.format_edit = QLineEdit(str(self._format))
         self.format_button = QPushButton("Default")
 
         #---------------------------------------
         # Scale
-        self.scale = QLabel("True Scale:")
+        self.scale_label = QLabel("True Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
         self.scale_button = QPushButton("Default")
-        if self._default_scale == 0.0:
-            self.scale.setVisible(False)
+        if self._icase_disp is None:
+            self.scale_label.setVisible(False)
             self.scale_edit.setVisible(False)
             self.scale_button.setVisible(False)
 
-        self.arrow_scale = QLabel("Arrow Scale:")
-        self.arrow_scale_edit = QLineEdit(str(self._arrow_scale))
-        self.arrow_scale_button = QPushButton("Default")
-        if self._default_arrow_scale == 0.0 or 1: # TODO: flip
-            self.arrow_scale.setVisible(False)
-            self.arrow_scale_edit.setVisible(False)
-            self.arrow_scale_button.setVisible(False)
-
         # Phase
-        self.phase = QLabel("Phase (deg):")
+        self.phase_label = QLabel("Phase (deg):")
         self.phase_edit = QLineEdit(str(self._phase))
         self.phase_button = QPushButton("Default")
-        if self._default_phase is None:
-            self.phase.setVisible(False)
+        if self._icase_disp is None or self._default_phase is None:
+            self.phase_label.setVisible(False)
             self.phase_edit.setVisible(False)
             self.phase_button.setVisible(False)
             self.phase_edit.setText('0.0')
+
+        #---------------------------------------
+        self.arrow_scale_label = QLabel("Arrow Scale:")
+        self.arrow_scale_edit = QLineEdit(str(self._arrow_scale))
+        self.arrow_scale_button = QPushButton("Default")
+        if self._icase_vector is None:
+            self.arrow_scale_label.setVisible(False)
+            self.arrow_scale_edit.setVisible(False)
+            self.arrow_scale_button.setVisible(False)
+
         #tip = QtGui.QToolTip()
         #tip.setTe
         #self.format_edit.toolTip(tip)
 
         #---------------------------------------
         # nlabels
-        self.nlabels = QLabel("Number of Labels:")
+        self.nlabels_label = QLabel("Number of Labels:")
         self.nlabels_edit = QLineEdit(str(self._nlabels))
         self.nlabels_button = QPushButton("Default")
 
-        self.labelsize = QLabel("Label Size:")
+        self.labelsize_label = QLabel("Label Size:")
         self.labelsize_edit = QLineEdit(str(self._labelsize))
         self.labelsize_button = QPushButton("Default")
 
-        self.ncolors = QLabel("Number of Colors:")
+        self.ncolors_label = QLabel("Number of Colors:")
         self.ncolors_edit = QLineEdit(str(self._ncolors))
         self.ncolors_button = QPushButton("Default")
 
-        self.colormap = QLabel("Color Map:")
+        self.colormap_label = QLabel("Color Map:")
         self.colormap_edit = QComboBox(self)
         self.colormap_button = QPushButton("Default")
         for key in colormap_keys:
@@ -410,23 +477,28 @@ class LegendPropertiesWindow(PyDialog):
 
         # --------------------------------------------------------------
 
+        #show_name = (self._icase_fringe is not None and self._is_fringe)
+        #self.name_label.setVisible(show_name)
+        #self.name_edit.setVisible(show_name)
+        #self.name_button.setVisible(show_name)
+
         if not self._is_fringe:
-            self.max.hide()
-            self.min.hide()
+            self.max_label.hide()
+            self.min_label.hide()
             self.max_edit.hide()
             self.min_edit.hide()
             self.max_button.hide()
             self.min_button.hide()
 
-            self.format.hide()
+            self.format_label.hide()
             self.format_edit.hide()
             self.format_button.hide()
 
-            self.nlabels.hide()
+            self.nlabels_label.hide()
             self.nlabels_edit.hide()
             self.nlabels_button.hide()
 
-            self.ncolors.hide()
+            self.ncolors_label.hide()
             self.ncolors_edit.hide()
             self.ncolors_button.hide()
 
@@ -438,14 +510,14 @@ class LegendPropertiesWindow(PyDialog):
             self.low_to_high_radio.hide()
             self.high_to_low_radio.hide()
 
-            self.colormap.hide()
+            self.colormap_label.hide()
             self.colormap_edit.hide()
             self.colormap_button.hide()
 
         self.animate_button = QPushButton('Create Animation')
         #self.advanced_button = QPushButton('Advanced')
 
-        if self._default_scale == 0.0 and self._default_arrow_scale == 0.0:
+        if self._default_icase_disp is None or self._default_icase_vector is None:
             self.animate_button.setEnabled(False)
             self.animate_button.setToolTip('This must be a displacement-like result to animate')
 
@@ -457,47 +529,47 @@ class LegendPropertiesWindow(PyDialog):
     def create_layout(self):
         """displays the menu objects"""
         grid = QGridLayout()
-        grid.addWidget(self.name, 0, 0)
+        grid.addWidget(self.name_label, 0, 0)
         grid.addWidget(self.name_edit, 0, 1)
         grid.addWidget(self.name_button, 0, 2)
 
-        grid.addWidget(self.min, 1, 0)
+        grid.addWidget(self.min_label, 1, 0)
         grid.addWidget(self.min_edit, 1, 1)
         grid.addWidget(self.min_button, 1, 2)
 
-        grid.addWidget(self.max, 2, 0)
+        grid.addWidget(self.max_label, 2, 0)
         grid.addWidget(self.max_edit, 2, 1)
         grid.addWidget(self.max_button, 2, 2)
 
-        grid.addWidget(self.format, 3, 0)
+        grid.addWidget(self.format_label, 3, 0)
         grid.addWidget(self.format_edit, 3, 1)
         grid.addWidget(self.format_button, 3, 2)
 
-        grid.addWidget(self.scale, 4, 0)
+        grid.addWidget(self.scale_label, 4, 0)
         grid.addWidget(self.scale_edit, 4, 1)
         grid.addWidget(self.scale_button, 4, 2)
 
-        grid.addWidget(self.arrow_scale, 5, 0)
-        grid.addWidget(self.arrow_scale_edit, 5, 1)
-        grid.addWidget(self.arrow_scale_button, 5, 2)
-
-        grid.addWidget(self.phase, 6, 0)
+        grid.addWidget(self.phase_label, 6, 0)
         grid.addWidget(self.phase_edit, 6, 1)
         grid.addWidget(self.phase_button, 6, 2)
 
-        grid.addWidget(self.nlabels, 7, 0)
+        grid.addWidget(self.arrow_scale_label, 5, 0)
+        grid.addWidget(self.arrow_scale_edit, 5, 1)
+        grid.addWidget(self.arrow_scale_button, 5, 2)
+
+        grid.addWidget(self.nlabels_label, 7, 0)
         grid.addWidget(self.nlabels_edit, 7, 1)
         grid.addWidget(self.nlabels_button, 7, 2)
 
-        #grid.addWidget(self.labelsize, 6, 0)
+        #grid.addWidget(self.labelsize_label, 6, 0)
         #grid.addWidget(self.labelsize_edit, 6, 1)
         #grid.addWidget(self.labelsize_button, 6, 2)
 
-        grid.addWidget(self.ncolors, 8, 0)
+        grid.addWidget(self.ncolors_label, 8, 0)
         grid.addWidget(self.ncolors_edit, 8, 1)
         grid.addWidget(self.ncolors_button, 8, 2)
 
-        grid.addWidget(self.colormap, 9, 0)
+        grid.addWidget(self.colormap_label, 9, 0)
         grid.addWidget(self.colormap_edit, 9, 1)
         grid.addWidget(self.colormap_button, 9, 2)
 
@@ -589,7 +661,7 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_animate(self):
         """opens the animation window"""
-        name, flag0 = self.check_name(self.name_edit)
+        name, flag0 = check_name(self.name_edit)
         if not flag0:
             return
 
@@ -699,66 +771,63 @@ class LegendPropertiesWindow(PyDialog):
         self.vertical_radio.setEnabled(is_shown)
         self.horizontal_radio.setEnabled(is_shown)
 
-    @staticmethod
-    def check_name(cell):
-        cell_value = cell.text()
-        try:
-            text = str(cell_value).strip()
-        except UnicodeEncodeError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-        if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    @staticmethod
-    def check_colormap(cell):
-        text = str(cell.text()).strip()
-        if text in colormap_keys:
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
     def show_legend(self):
+        """shows the legend"""
         self._set_legend(True)
 
     def hide_legend(self):
+        """hides the legend"""
         self._set_legend(False)
 
     def _set_legend(self, is_shown):
+        """shows/hides the legend"""
         self.show_radio.setChecked(is_shown)
         self.hide_radio.setChecked(not is_shown)
 
     def on_validate(self):
-        name_value, flag0 = self.check_name(self.name_edit)
-        min_value, flag1 = check_float(self.min_edit)
-        max_value, flag2 = check_float(self.max_edit)
-        format_value, flag3 = check_format(self.format_edit)
-        scale, flag4 = check_float(self.scale_edit)
-        phase, flag5 = check_float(self.phase_edit)
+        """checks to see if the ``on_apply`` method can be called"""
+        show_name = (self._icase_fringe is not None and self._is_fringe)
+        flag_name = True
+        name_value = ''
+        if show_name:
+            name_value, flag_name = check_name(self.name_edit)
 
-        nlabels, flag6 = check_positive_int_or_blank(self.nlabels_edit)
-        ncolors, flag7 = check_positive_int_or_blank(self.ncolors_edit)
-        labelsize, flag8 = check_positive_int_or_blank(self.labelsize_edit)
-        colormap = str(self.colormap_edit.currentText())
-
-        if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7, flag8]):
+        flag_fringe = True
+        min_value = max_value = format_value = nlabels = ncolors = labelsize = colormap = None
+        if self._icase_fringe is not None:
+            min_value, flag1 = check_float(self.min_edit)
+            max_value, flag2 = check_float(self.max_edit)
+            format_value, flag3 = check_format(self.format_edit)
+            nlabels, flag4 = check_positive_int_or_blank(self.nlabels_edit)
+            ncolors, flag5 = check_positive_int_or_blank(self.ncolors_edit)
+            labelsize, flag6 = check_positive_int_or_blank(self.labelsize_edit)
+            colormap = str(self.colormap_edit.currentText())
             if 'i' in format_value:
                 format_value = '%i'
+            flag_fringe = all([flag1, flag2, flag3, flag4, flag5, flag6])
 
+        flag_disp = True
+        scale = phase = None
+        if self._icase_disp is not None:
+            scale, flag4 = check_float(self.scale_edit)
+            phase, flag5 = check_float(self.phase_edit)
             assert isinstance(scale, float), scale
+            flag_disp = all([flag1, flag2])
+
+        flag_vector = True
+        arrow_scale = None
+        if self._icase_vector is not None:
+            arrow_scale, flag_vector = check_float(self.arrow_scale_edit)
+
+        if all([flag_name, flag_fringe, flag_disp, flag_vector]):
             self.out_data['name'] = name_value
             self.out_data['min'] = min_value
             self.out_data['max'] = max_value
             self.out_data['format'] = format_value
             self.out_data['scale'] = scale
             self.out_data['phase'] = phase
+
+            self.out_data['arrow_scale'] = arrow_scale
 
             self.out_data['nlabels'] = nlabels
             self.out_data['ncolors'] = ncolors
@@ -780,23 +849,60 @@ class LegendPropertiesWindow(PyDialog):
         return False
 
     def on_apply(self):
+        """applies the current values"""
         passed = self.on_validate()
-        if passed:
+        if passed and self.external_call:
             self.win_parent._apply_legend(self.out_data)
+        self.external_call = True
         return passed
 
     def on_ok(self):
+        """applies the current values and closes the window"""
         passed = self.on_apply()
         if passed:
             self.close()
             #self.destroy()
 
     def on_cancel(self):
+        """closes the windows and reverts the legend"""
         self.out_data['close'] = True
         self.close()
 
+def set_cell_to_blank_if_value_is_none(cell_edit, value):
+    if value is None:
+        cell_edit.setText('0.0')
+    else:
+        cell_edit.setText(str(value))
+    cell_edit.setStyleSheet("QLineEdit{background: white;}")
+    return value
+
+def check_name(cell):
+    """verifies that the name/title is a string and is not empty"""
+    cell_value = cell.text()
+    try:
+        text = str(cell_value).strip()
+    except UnicodeEncodeError:
+        cell.setStyleSheet("QLineEdit{background: red;}")
+        return None, False
+
+    if text:
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return text, True
+    cell.setStyleSheet("QLineEdit{background: red;}")
+    return None, False
+
+#def check_colormap(cell):
+    #text = str(cell.text()).strip()
+    #if text in colormap_keys:
+        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #return text, True
+    #else:
+        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #return None, False
+
 
 def main(): # pragma: no cover
+    """tests out the legend"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -810,8 +916,9 @@ def main(): # pragma: no cover
     #The Main window
     data1 = {
         'icase_fringe' : 1,
-        'icase_disp' : None,
+        'icase_disp' : 62,
         'icase_vector' : 3,
+        'is_fringe': True,  # False=normals or no fringe
 
         'font_size' : 8,
         'name' : 'asdf',
@@ -842,7 +949,6 @@ def main(): # pragma: no cover
         'default_format' : '%s',
         'format' : '%g',
 
-        'is_fringe': False,
         'is_low_to_high': True,
         'is_discrete' : False,
         'is_horizontal' : False,
