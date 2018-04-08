@@ -130,8 +130,12 @@ class FakeGUIMethods(GuiCommon):
                           is_shown=True):
         pass
 
-    def update_legend(self, icase, name, min_value, max_value, data_format, scale, phase,
-                      nlabels, labelsize, ncolors, colormap):
+    def update_legend(self, icase_fringe, icase_disp, icase_vector,
+                      name, min_value, max_value, data_format, scale, phase,
+                      arrow_scale,
+                      nlabels, labelsize, ncolors, colormap,
+                      use_fringe_internal=False, use_disp_internal=False,
+                      use_vector_internal=False, external_call=True):
         pass
 
     def _finish_results_io2(self, form, cases, reset_labels=True):
