@@ -29,6 +29,7 @@ class TecplotIO(object):
         #case = self.result_cases[key]
 
         skip_reading = self.parent._remove_old_cart3d_geometry(tecplot_filename)
+        #skip_reading = False
         if skip_reading:
             return
 
