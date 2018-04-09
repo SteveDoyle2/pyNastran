@@ -1346,3 +1346,47 @@ class GuiCommon(GuiAttributes):
         self._is_fringe = False
         if self._legend_window_shown:
             self._legend_window.clear()
+
+    #---------------------------------------------------------------------------
+    def hide_labels(self, case_keys=None, show_msg=True):
+        if case_keys is None:
+            names = 'None)  # None -> all'
+            case_keys = sorted(self.label_actors.keys())
+        else:
+            mid = '%s,' * len(case_keys)
+            names = '[' + mid[:-1] + '])'
+
+        count = 0
+        for icase in case_keys:
+            actors = self.label_actors[icase]
+            for actor in actors:
+                actor.VisibilityOff()
+                #prop = actor.GetProperty()
+                count += 1
+        if count and show_msg:
+            self.log_command('hide_labels(%s)' % names)
+
+    def show_labels(self, case_keys=None, show_msg=True):
+        if case_keys is None:
+            names = 'None)  # None -> all'
+            case_keys = sorted(self.label_actors.keys())
+        else:
+            mid = '%s,' * len(case_keys)
+            names = mid[:-1] % case_keys + ')'
+
+        count = 0
+        for icase in case_keys:
+            try:
+                actors = self.label_actors[icase]
+            except KeyError:
+                msg = 'Cant find label_actors for icase=%r; keys=%s' % (
+                    icase, self.label_actors.keys())
+                self.log.error(msg)
+                continue
+            for actor in actors:
+                actor.VisibilityOn()
+                count += 1
+        if count and show_msg:
+            # yes the ) is intentionally left off because it's already been added
+            self.log_command('show_labels(%s)' % names)
+

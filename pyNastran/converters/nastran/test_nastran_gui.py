@@ -158,13 +158,14 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
         test.on_fringe(icase=43)
-        test.on_vector(icase=43)# force_xyz
-        test.on_disp(icase=45)# disp
+        test.on_vector(icase=43) # force_xyz
+        test.on_disp(icase=45) # disp
         test.on_clear_results()
 
         test.on_fringe(icase=43)
-        test.on_vector(icase=43)# force_xyz
-        test.on_disp(icase=45)# disp
+        test.on_vector(icase=43) # force_xyz
+        test.on_disp(icase=45) # disp
+        test.on_fringe(icase=33, update_legend_window=True, show_msg=True)  # normal
 
     def test_gui_elements_02(self):
         """tests a large number of elements and results in SOL 101"""
@@ -189,6 +190,21 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
+        icase = 33
+        name = 'Normal'
+        subcase_id = -1
+        test.set_normal_result(icase, name, subcase_id)
+
+        test.setup_fake_text_actors()
+        icase = 0
+        icase2 = icase + 1
+        while icase2 < len(test.result_cases):
+            #test.on_cycle_results(case=icase2, show_msg=True)
+            unused_result_name = 'dummy'
+            test._set_case(unused_result_name, icase2, explicit=False, cycle=False,
+                           skip_click_check=False, min_value=None, max_value=None,
+                           is_legend_shown=None, show_msg=True)
+            icase2 += 1
 
     def test_gui_elements_05(self):
         """tests a large number of elements and results in SOL 108-freq"""

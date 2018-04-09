@@ -11,7 +11,7 @@ from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.bdf.cards.base_card import deprecated
 
 from pyNastran.gui.test.mock_vtk import (
-    MockGeometryActor, MockGeometryProperty, MockGrid, MockGridMapper,
+    MockGeometryActor, MockGeometryProperty, MockGrid, MockGridMapper, MockTextActor,
     MockArrowSource, MockGlyph3D, MockLODActor, MockPolyDataMapper, MockVTKInteractor,
 )
 
@@ -110,6 +110,13 @@ class FakeGUIMethods(GuiCommon):
         level = 'debug' if self.debug else 'info'
         self.log = get_logger(log=None, level=level)
 
+    def setup_fake_text_actors(self):
+        self.text_actors[0] = MockTextActor()
+        self.text_actors[1] = MockTextActor()
+        self.text_actors[2] = MockTextActor()
+        self.text_actors[3] = MockTextActor()
+        for icase in self.result_cases:
+            self.label_actors[icase] = []
     @property
     def scalarBar(self):
         return self.scalar_bar.scalar_bar
@@ -217,13 +224,13 @@ class FakeGUIMethods(GuiCommon):
             self.icase = -1
             self.ncases = 0
 
-    def cycle_results(self):
+    def cycle_results(self, icase=None, show_msg=True):
         """fake method"""
         pass
 
-    def cycle_results_explicit(self):
-        """fake method"""
-        pass
+    #def cycle_results_explicit(self):
+        #"""fake method"""
+        #pass
 
     def _create_annotation(self, label, slot, x, y, z):
         """fake method"""

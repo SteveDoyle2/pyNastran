@@ -1,3 +1,7 @@
+from __future__ import print_function
+from six import string_types
+
+
 class MockArrays(object):
     def __init__(self):
         pass
@@ -18,6 +22,8 @@ class MockGridMapper(object):
     def __init__(self):
         pass
     def InterpolateScalarsBeforeMappingOff(self):
+        pass
+    def InterpolateScalarsBeforeMappingOn(self):
         pass
 
 class MockGeometryProperty(object):
@@ -70,6 +76,16 @@ class MockGrid(object):
         return MockArrays()
     def GetPointData(self):
         return MockArrays()
+
+class MockTextActor(object):
+    def __init__(self):
+        pass
+    def SetInput(self, string):
+        assert isinstance(string, string_types), 'type(string)=%s' % type(string)
+    def VisibilityOn(self):
+        pass
+    def VisibilityOff(self):
+        pass
 
 class MockArrowSource(object):
     def __init__(self):
