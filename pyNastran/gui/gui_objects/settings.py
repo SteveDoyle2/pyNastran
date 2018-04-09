@@ -18,7 +18,7 @@ defines:
  - repr_settings(settings)
 """
 from __future__ import print_function
-from six import itervalues, PY3, string_types
+from six import itervalues, string_types, iteritems # PY3
 import numpy as np
 from qtpy import QtGui
 
@@ -117,15 +117,18 @@ class Settings(object):
         self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True)
 
         # the vtk panel background color
-        self._set_setting(settings, setting_keys, ['use_gradient_background'], True, auto_type=True)
-        self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'], GREY, auto_type=True)
+        self._set_setting(settings, setting_keys, ['use_gradient_background'],
+                          False, auto_type=True)
+        self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'],
+                          GREY, auto_type=True)
         self._set_setting(settings, setting_keys, ['background_color2'], GREY, auto_type=True)
 
         # scales the coordinate systems
         self._set_setting(settings, setting_keys, ['coord_scale'], self.coord_scale, auto_type=True)
 
         # this is for the 3d annotation
-        self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'], BLACK, auto_type=True)
+        self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'],
+                          BLACK, auto_type=True)
         self._set_setting(settings, setting_keys, ['annotation_size'], 18, auto_type=True) # int
         if isinstance(self.annotation_size, float):
             # throw the float in the trash as it's from an old version of vtk
@@ -134,7 +137,8 @@ class Settings(object):
         self._set_setting(settings, setting_keys, ['magnify'], self.magnify)
 
         # this is the text in the lower left corner
-        self._set_setting(settings, setting_keys, ['text_color', 'textColor'], BLACK, auto_type=True)
+        self._set_setting(settings, setting_keys, ['text_color', 'textColor'],
+                          BLACK, auto_type=True)
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],
                                          screen_shape_default, save=False, auto_type=True)
 
@@ -161,14 +165,14 @@ class Settings(object):
         #self.app.setFont(font)
         self.parent.setFont(font)
 
-        if 0 and PY3:
-            pos_default = 0, 0
-            pos = settings.value("pos", pos_default)
-            x_pos, y_pos = pos
+        #if 0 and PY3:
+            #pos_default = 0, 0
+            #pos = settings.value("pos", pos_default)
+            #x_pos, y_pos = pos
             #print(pos)
             #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
-            y_pos = pos_default[0]
-            self.parent.setGeometry(x_pos, y_pos, width, height)
+            #y_pos = pos_default[0]
+            #self.parent.setGeometry(x_pos, y_pos, width, height)
         #except TypeError:
             #self.resize(1100, 700)
 
@@ -333,10 +337,12 @@ class Settings(object):
             self.parent.log_command('settings.set_annotation_size(%s)' % size)
 
     def set_coord_scale(self, coord_scale, render=True):
+        """sets the coordinate system size"""
         self.coord_scale = coord_scale
-        self.parent.update_coord_scale(coord_scale)
+        self.update_coord_scale(coord_scale, render=render)
 
     def update_coord_scale(self, coord_scale=None, render=True):
+        """internal method for updating the coordinate system size"""
         if coord_scale is None:
             coord_scale = self.coord_scale
         dim_max = self.dim_max
@@ -408,7 +414,8 @@ class Settings(object):
         """
         self.background_color = color
         self.parent.rend.SetBackground(*color)
-        self.parent.vtk_interactor.Render()
+        if render:
+            self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_background_color(%s, %s, %s)' % color)
 
     def set_background_color2(self, color, render=True):
@@ -422,7 +429,8 @@ class Settings(object):
         """
         self.background_color2 = color
         self.parent.rend.SetBackground2(*color)
-        self.parent.vtk_interactor.Render()
+        if render:
+            self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------
@@ -450,7 +458,8 @@ class Settings(object):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
 
-    def set_magnify(self, magnify):
+    def set_magnify(self, magnify=5):
+        """sets the screenshot magnification factor (int)"""
         self.magnify = magnify
 
 

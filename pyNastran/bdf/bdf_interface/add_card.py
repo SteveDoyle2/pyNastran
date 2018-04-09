@@ -6306,8 +6306,8 @@ class AddCards(AddMethods):
         self._add_rotor_object(rotor)
         return rotor
 
-    def add_rgyro(self, sid, async, refrot, unit, speed_low, speed_high, speed, comment=''):
-        fields = ['RGYRO', sid, async, refrot, unit, speed_low, speed_high, speed]
+    def add_rgyro(self, sid, asynci, refrot, unit, speed_low, speed_high, speed, comment=''):
+        fields = ['RGYRO', sid, asynci, refrot, unit, speed_low, speed_high, speed]
         self.reject_card_lines('RGYRO', print_card_8(fields).split('\n'))
 
     def add_rspint(self, rid, grida, gridb, gr, unit, table_id, comment=''):

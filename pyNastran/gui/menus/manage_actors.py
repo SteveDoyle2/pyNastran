@@ -207,14 +207,25 @@ class EditGeometryProperties(PyDialog):
         #self.table.itemClicked.connect(self.table.mouseDoubleClickEvent)
 
         actor_obj = data[self.active_key]
-        name = actor_obj.name
-        line_width = actor_obj.line_width
-        point_size = actor_obj.point_size
-        bar_scale = actor_obj.bar_scale
-        opacity = actor_obj.opacity
-        color = actor_obj.color
-        show = actor_obj.is_visible
-        self.representation = actor_obj.representation
+        if isinstance(actor_obj, CoordProperties):
+            opacity = 1.0
+            representation = 'coord'
+            show = actor_obj.is_visible
+            color = None
+            line_width = 0
+            point_size = 0
+            bar_scale = 0
+            name = 'Coord'
+        else:
+            name = actor_obj.name
+            line_width = actor_obj.line_width
+            point_size = actor_obj.point_size
+            bar_scale = actor_obj.bar_scale
+            opacity = actor_obj.opacity
+            color = actor_obj.color
+            show = actor_obj.is_visible
+            representation = actor_obj.representation
+        self.representation = representation
 
         # table
         header = self.table.horizontalHeader()
@@ -229,20 +240,20 @@ class EditGeometryProperties(PyDialog):
         self.color_edit = QPushButton()
         #self.color_edit.setFlat(True)
 
-        color = self.out_data[self.active_key].color
-        qcolor = QtGui.QColor()
-        qcolor.setRgb(*color)
-        #print('color =%s' % str(color))
-        palette = QtGui.QPalette(self.color_edit.palette()) # make a copy of the palette
-        #palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, \
-                         #qcolor)
-        palette.setColor(QtGui.QPalette.Background, QtGui.QColor('blue'))  # ButtonText
-        self.color_edit.setPalette(palette)
+        if color is not None:
+            qcolor = QtGui.QColor()
+            qcolor.setRgb(*color)
+            #print('color =%s' % str(color))
+            palette = QtGui.QPalette(self.color_edit.palette()) # make a copy of the palette
+            #palette.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, \
+                             #qcolor)
+            palette.setColor(QtGui.QPalette.Background, QtGui.QColor('blue'))  # ButtonText
+            self.color_edit.setPalette(palette)
 
-        self.color_edit.setStyleSheet("QPushButton {"
-                                      "background-color: rgb(%s, %s, %s);" % tuple(color) +
-                                      #"border:1px solid rgb(255, 170, 255); "
-                                      "}")
+            self.color_edit.setStyleSheet("QPushButton {"
+                                          "background-color: rgb(%s, %s, %s);" % tuple(color) +
+                                          #"border:1px solid rgb(255, 170, 255); "
+                                          "}")
 
         self.representation_label = QLabel('Representation:')
         self.checkbox_wire = QCheckBox('Wireframe')
@@ -356,6 +367,16 @@ class EditGeometryProperties(PyDialog):
 
         self.create_layout()
         self.set_connections()
+
+        if isinstance(actor_obj, CoordProperties):
+            self.color_edit.hide()
+            self.color.hide()
+            self.opacity.hide()
+            self.opacity_edit.hide()
+            self.opacity_slider_edit.hide()
+            self.line_width.hide()
+            self.line_width_edit.hide()
+            self.line_width_slider_edit.hide()
 
     def on_delete(self, irow):
         """deletes an actor based on the row number"""
