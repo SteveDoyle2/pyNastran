@@ -315,6 +315,10 @@ class Tecplot(FortranFormat):
                 for inode in range(nnodesi):
                     if inode == 0:
                         self.log.debug('zone_type=%s sline=%s' %(zone_type, sline))
+                    if not len(sline[3:]) == len(results[inode, :]):
+                        msg = 'sline[3:]=%s results[inode, :]=%s' % (sline[:3], results[inode, :])
+                        raise RuntimeError(msg)
+
                     try:
                         xyz[inode, :] = sline[:3]
                         results[inode, :] = sline[3:]
@@ -853,11 +857,12 @@ class Tecplot(FortranFormat):
                 else:
                     data = self.xyz
                     fmt = ' %15.9E %15.9E %15.9E'
+                    fmt3 = ' %15.9E %15.9E %15.9E\n'
 
                 if PY3:
                     #vals = self.xyz[:, ivar].ravel()
                     for vals in data:
-                        tecplot_file.write(fmt % tuple(vals))
+                        tecplot_file.write(fmt3 % tuple(vals))
                 else:
                     savetxt(tecplot_file, data, fmt=fmt)
             else:

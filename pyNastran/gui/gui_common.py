@@ -5577,6 +5577,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         #print('is_shown2 =', is_shown)
         #assert is_shown == False, is_shown
+        is_normal = False
         if self.icase_fringe is not None:
             key = self.case_keys[self.icase_fringe]
             assert isinstance(key, integer_types), key
@@ -5604,7 +5605,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             objd.set_phase(i, res_name, phase)
             assert isinstance(scale, float), scale
 
-        print('arrow_scale = ', arrow_scale)
+        #print('arrow_scale = ', arrow_scale)
         if self.icase_vector is not None:
             key = self.case_keys[self.icase_vector]
             assert isinstance(key, integer_types), key

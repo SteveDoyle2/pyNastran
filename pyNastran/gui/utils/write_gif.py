@@ -132,9 +132,10 @@ def setup_animate_scale(scale, icase, time, profile, fps):
             isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
             x = isteps
             scales = np.interp(x, xp, yp)
-
         else:
-            msg = "profile=%r is not '0 to scale', '0 to scale to 0', or '-scale to scale'"
+            msg = (
+                "profile=%r is not '0 to scale', '0 to scale to 0', "
+                "'-scale to scale', or '-scale to scale to -scale'")
             raise NotImplementedError(msg)
     #elif isinstance(profile, list):
         #yp = np.array(profile)

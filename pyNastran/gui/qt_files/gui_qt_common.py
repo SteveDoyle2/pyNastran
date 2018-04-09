@@ -233,6 +233,10 @@ class GuiCommon(GuiAttributes):
         self.res_widget.result_case_window.treeView.fringe.setChecked(False)
         self.res_widget.result_case_window.treeView.disp.setChecked(False)
         self.res_widget.result_case_window.treeView.vector.setChecked(False)
+        self.icase = -1
+        self.icase_fringe = None
+        self.icase_disp = None
+        self.icase_vector = None
 
     def _get_fringe_data(self, icase):
         """helper for ``on_fringe``"""
@@ -540,6 +544,7 @@ class GuiCommon(GuiAttributes):
                                arrow_scale,
                                nlabels, labelsize, ncolors, colormap,
                                use_disp_internal=True, use_vector_internal=True)
+            self._set_legend_fringe(True)
         self.res_widget.update_method(methods)
 
         self.icase_fringe = icase
@@ -549,18 +554,20 @@ class GuiCommon(GuiAttributes):
         self.res_widget.result_case_window.treeView.fringe.setChecked(True)
 
     def on_disp(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
+        """Sets the icase data to the active displacement"""
         is_disp = True
         self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.disp.setChecked(True)
 
     def on_vector(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
+        """Sets the icase data to the active vector"""
         is_disp = False
         self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
 
     def _on_disp_vector(self, icase, is_disp, apply_fringe=False, update_legend_window=True, show_msg=True):
         """
-        Sets the icase data to the active displacement
+        Sets the icase data to the active displacement/vector
 
         Parameters
         ----------
@@ -736,6 +743,14 @@ class GuiCommon(GuiAttributes):
         show_msg : bool; default=True
             ???
         """
+        _update_icase = (
+            self.icase != self.icase_fringe and self.icase_fringe is not None or
+            self.icase != self.icase_disp  and self.icase_disp is not None or
+            self.icase != self.icase_vector and self.icase_vector is not None
+        )
+        if _update_icase:
+            skip_click_check = True
+
         if not skip_click_check:
             if not cycle and icase == self.icase:
                 # don't click the button twice

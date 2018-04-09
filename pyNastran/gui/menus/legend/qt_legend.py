@@ -17,6 +17,8 @@ from pyNastran.gui.utils.qt.pydialog import (
 from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.gui.qt_version import qt_int as qt_version
 
+ANIMATE_TOOLTIP_OFF = 'This must be a displacement-like result to animate'
+ANIMATE_TOOLTIP_ON = 'Creates an scale/phase/time animation'
 
 class LegendPropertiesWindow(PyDialog):
     """
@@ -65,8 +67,8 @@ class LegendPropertiesWindow(PyDialog):
         self._default_icase_fringe = self._icase_fringe
         self._default_icase_disp = self._icase_disp
         self._default_icase_vector = self._icase_vector
-        print('*icase_fringe=%s icase_disp=%s icase_vector=%s' % (
-            self._default_icase_fringe, self._default_icase_disp, self._default_icase_vector))
+        #print('*icase_fringe=%s icase_disp=%s icase_vector=%s' % (
+            #self._default_icase_fringe, self._default_icase_disp, self._default_icase_vector))
 
         self._default_name = data['name']
         self._default_min = data['min']
@@ -238,6 +240,13 @@ class LegendPropertiesWindow(PyDialog):
             self._scale = set_cell_to_blank_if_value_is_none(self.scale_edit, scale)
             self._phase = set_cell_to_blank_if_value_is_none(self.phase_edit, phase)
 
+        if self._default_icase_disp is None: # or self._default_icase_vector is None:
+            self.animate_button.setEnabled(False)
+            self.animate_button.setToolTip(ANIMATE_TOOLTIP_OFF)
+        else:
+            self.animate_button.setEnabled(True)
+            self.animate_button.setToolTip(ANIMATE_TOOLTIP_ON)
+
         #-----------------------------------------------------------------------
         if update:
             #self.arrow_scale_label.setEnabled(is_vector)
@@ -326,7 +335,7 @@ class LegendPropertiesWindow(PyDialog):
         if not is_fringe:
             enable = False
 
-        show_name = (self._icase_fringe is not None and self._is_fringe)
+        show_name = self._icase_fringe is not None
         self.name_label.setVisible(show_name)
         self.name_edit.setVisible(show_name)
         self.name_button.setVisible(show_name)
@@ -477,10 +486,10 @@ class LegendPropertiesWindow(PyDialog):
 
         # --------------------------------------------------------------
 
-        #show_name = (self._icase_fringe is not None and self._is_fringe)
-        #self.name_label.setVisible(show_name)
-        #self.name_edit.setVisible(show_name)
-        #self.name_button.setVisible(show_name)
+        if self._icase_fringe is None:
+            self.name_label.setVisible(False)
+            self.name_edit.setVisible(False)
+            self.name_button.setVisible(False)
 
         if not self._is_fringe:
             self.max_label.hide()
@@ -517,9 +526,12 @@ class LegendPropertiesWindow(PyDialog):
         self.animate_button = QPushButton('Create Animation')
         #self.advanced_button = QPushButton('Advanced')
 
-        if self._default_icase_disp is None or self._default_icase_vector is None:
+        if self._default_icase_disp is None: # or self._default_icase_vector is None:
             self.animate_button.setEnabled(False)
-            self.animate_button.setToolTip('This must be a displacement-like result to animate')
+            self.animate_button.setToolTip(ANIMATE_TOOLTIP_OFF)
+        else:
+            self.animate_button.setEnabled(True)
+            self.animate_button.setToolTip(ANIMATE_TOOLTIP_ON)
 
         # closing
         self.apply_button = QPushButton("Apply")
@@ -786,7 +798,7 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_validate(self):
         """checks to see if the ``on_apply`` method can be called"""
-        show_name = (self._icase_fringe is not None and self._is_fringe)
+        show_name = self._icase_fringe is not None
         flag_name = True
         name_value = ''
         if show_name:
@@ -809,8 +821,8 @@ class LegendPropertiesWindow(PyDialog):
         flag_disp = True
         scale = phase = None
         if self._icase_disp is not None:
-            scale, flag4 = check_float(self.scale_edit)
-            phase, flag5 = check_float(self.phase_edit)
+            scale, flag1 = check_float(self.scale_edit)
+            phase, flag2 = check_float(self.phase_edit)
             assert isinstance(scale, float), scale
             flag_disp = all([flag1, flag2])
 
