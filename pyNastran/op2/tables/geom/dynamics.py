@@ -951,12 +951,12 @@ class DYNAMICS(GeomCommon):
         for i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
-            sid, async, refrot, unit, speed_low, speed_high, speed = out
-            async = async.decode('latin1')
+            sid, asynci, refrot, unit, speed_low, speed_high, speed = out
+            asynci = asynci.decode('latin1')
             unit = unit.decode('latin1')
             if self.is_debug_file:
                 self.binary_debug.write('  RGYRO=%s\n' % str(out))
-            self.add_rgyro(sid, async, refrot, unit, speed_low, speed_high, speed)
+            self.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
             n += ntotal
         self.increase_card_count('RGYRO', nentries)
         return n

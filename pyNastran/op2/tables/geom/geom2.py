@@ -277,7 +277,7 @@ class GEOM2(GeomCommon):
 # 5-CAXIF4 (2308,23,226)
 
     def _read_cbar(self, data, n):
-        """
+        r"""
         CBAR(2408,24,180) - the marker for Record 8
 
         MSC/NX

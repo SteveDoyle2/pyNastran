@@ -329,6 +329,11 @@ class FakeGUIMethods(GuiCommon):
         if self.debug:
             print('WARNING:  ', msg)
 
+    def log_command(self, msg):
+        """turns logs into prints to aide debugging"""
+        if self.debug:
+            print('COMMAND:  ', msg)
+
     #test.log_error = log_error
     #test.log_info = print
     #test.log_info = log_info
