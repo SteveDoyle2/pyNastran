@@ -47,7 +47,7 @@ from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
-
+from pyNastran.gui.gui_objects.trackball_style_camera import TrackballStyleCamera
 
 from pyNastran.gui.menus.legend.interface import (
     set_legend_menu, get_legend_fringe, get_legend_disp, get_legend_vector)
@@ -96,26 +96,6 @@ class Interactor(vtk.vtkGenericRenderWindowInteractor):
         #QVTKRenderWindowInteractor.__init__(self, parent=parent,
                                             #iren=iren, rw=render_window)
         #self.Highlight
-
-class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
-    #https://stackoverflow.com/questions/33108670/arrow-key-events-in-vtk-on-windows
-    def __init__(self, iren, parent):
-        self.parent = parent
-        vtk.vtkInteractorStyleTrackballCamera.__init__(self, iren)
-        #self.AddObserver("CharEvent", self.onKeyPressEvent)
-
-        self.AddObserver("KeyPressEvent", self.keyPressEvent)
-
-    def keyPressEvent(self, unused_obj, event):
-        key = self.parent.iren.GetKeySym()
-        if key == 'Left':
-            self.parent.on_pan_left(event)
-        elif key == 'Right':
-            self.parent.on_pan_right(event)
-        elif key == 'Up':
-            self.parent.on_pan_up(event)
-        elif key == 'Down':
-            self.parent.on_pan_down(event)
 
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
