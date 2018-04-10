@@ -1883,7 +1883,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera, cam, focal = self._setup_pan()
 
         # Create a vector that points upward, i.e. (0, 1, 0)
-        up = [0, 1, 0] #We don't want roll
+        up = camera.GetViewUp() # We don't want roll
         vec = [0, 0, 0]
         new_cam = [0, 0, 0]
         new_focal = [0, 0, 0]
@@ -1913,7 +1913,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         camera, cam, focal = self._setup_pan()
 
         # Create a vector that points upward, i.e. (0, 1, 0)
-        up = [0, 1, 0] #We don't want roll
+        up = camera.GetViewUp() # We don't want roll
         vec = [0, 0, 0]
         new_cam = [0, 0, 0]
         new_focal = [0, 0, 0]
@@ -1946,7 +1946,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # Create a 'vec' vector that will be the direction of movement
         # (numpad 8 and 5 generate movement along the z-axis; numpad 4
         # and 6 along the x-axis; numpad 7 and 9 along the y-axis)
-        vec = [0, 1, 0]
+        vec = camera.GetViewUp() # We don't want roll
         new_cam = [0, 0, 0]
         new_focal = [0, 0, 0]
 
@@ -1965,7 +1965,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # Create a 'vec' vector that will be the direction of movement
         # (numpad 8 and 5 generate movement along the z-axis; numpad 4
         # and 6 along the x-axis; numpad 7 and 9 along the y-axis)
-        vec = [0, 1, 0]
+        vec = camera.GetViewUp() # We don't want roll
         new_cam = [0, 0, 0]
         new_focal = [0, 0, 0]
 

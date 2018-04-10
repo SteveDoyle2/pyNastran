@@ -567,7 +567,7 @@ def main():
         'clipping_min' : 0.,
         'clipping_max' : 10,
 
-        'dim_max' : 502.
+        'dim_max' : 502.,
 
     }
     main_window = PreferencesWindow(data)
