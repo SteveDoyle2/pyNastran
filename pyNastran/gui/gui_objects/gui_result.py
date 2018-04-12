@@ -12,6 +12,7 @@ REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
 INT_TYPES = ['<i4', '<i8', '|i1',
              '>i4', '>i8']
 
+
 class GuiResultCommon(object):
     def __init__(self):
         self.class_name = self.__class__.__name__
@@ -99,6 +100,17 @@ class GuiResultCommon(object):
 
     def get_default_phase(self, i, name):
         return None
+
+class NullResult(GuiResultCommon):
+    def __init__(self):
+        super(NullResult, self).__init__()
+
+    def get_scalar(self, i, name):
+        return None
+
+    def __repr__(self):
+        msg = '<NormalResult>'
+        return msg
 
 class NormalResult(GuiResultCommon):
     def __init__(self, subcase_id, header, title,

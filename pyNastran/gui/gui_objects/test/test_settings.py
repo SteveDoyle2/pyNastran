@@ -23,7 +23,7 @@ class TestSettings(unittest.TestCase):
         value = autotype_value(1, int)
         assert allclose(value, 1)
 
-        self.assertRaises(ValueError):
+        with self.assertRaises(ValueError):
             value = autotype_value('4.2', int)
 
         value = autotype_value(['1', '2', '3'], int)
