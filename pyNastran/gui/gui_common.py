@@ -25,7 +25,7 @@ from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction)
-from qtpy.compat import getsavefilename, getopenfilename
+from qtpy.compat import getopenfilename
 
 import vtk
 
@@ -96,7 +96,6 @@ class Interactor(vtk.vtkGenericRenderWindowInteractor):
         #QVTKRenderWindowInteractor.__init__(self, parent=parent,
                                             #iren=iren, rw=render_window)
         #self.Highlight
-
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon2(QMainWindow, GuiCommon):
@@ -482,7 +481,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
                 ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
-                ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
+                ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
                 ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
                 ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
@@ -491,13 +490,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
 
-                ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
-                ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
-                ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
+                ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.tool_actions.update_camera('+x')),
+                ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.tool_actions.update_camera('+y')),
+                ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.tool_actions.update_camera('+z')),
 
-                ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-                ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+                ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.tool_actions.update_camera('-x')),
+                ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.tool_actions.update_camera('-y')),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.tool_actions.update_camera('-z')),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
@@ -1318,7 +1317,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 mag = np.linalg.norm(dxyz)
 
                 self._measure_distance_pick_points = []
-                self.log_info('dxyz=%s mag=%s' % (str(dxyz), str(mag)))
+                self.log_info('Node-Node: dxyz=%s mag=%s' % (str(dxyz), str(mag)))
 
                 measure_distance_button = self.actions['measure_distance']
                 measure_distance_button.setChecked(False)
@@ -1732,10 +1731,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         text_size = 14
         dtext_size = text_size + 1
-        self.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
-        self.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
-        self.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
-        self.create_text([5, 5], 'Word2', text_size)  # text actor 3
+        self.tool_actions.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
+        self.tool_actions.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
+        self.tool_actions.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
+        self.tool_actions.create_text([5, 5], 'Word2', text_size)  # text actor 3
 
         self.get_edges()
         if self.is_edges:
@@ -1839,24 +1838,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.is_wireframe = True
 
     def _update_camera(self, camera=None):
-        if camera is None:
-            camera = self.GetCamera()
-        camera.Modified()
-        self.vtk_interactor.Render()
+        self.tool_actions._update_camera(camera)
 
     def zoom(self, value):
-        camera = self.GetCamera()
-        camera.Zoom(value)
-        camera.Modified()
-        self.vtk_interactor.Render()
-        self.log_command('zoom(%s)' % value)
+        return self.tool_actions.zoom(value)
 
-    def rotate(self, rotate_deg):
-        camera = self.GetCamera()
-        camera.Roll(-rotate_deg)
-        camera.Modified()
-        self.vtk_interactor.Render()
-        self.log_command('rotate(%s)' % rotate_deg)
+    def rotate(self, rotate_deg, render=True):
+        """rotates the camera by a specified amount"""
+        self.tool_actions.rotate(rotate_deg, render=render)
 
     def on_pan_left(self, event):
         """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
@@ -1974,11 +1963,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def on_rotate_clockwise(self):
         """rotate clockwise"""
-        self.rotate(15.0)
+        self.tool_actions.rotate(15.0)
 
     def on_rotate_cclockwise(self):
         """rotate counter clockwise"""
-        self.rotate(-15.0)
+        self.tool_actions.rotate(-15.0)
 
     def on_increase_magnification(self):
         """zoom in"""
@@ -2480,24 +2469,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #if 0:
         self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
         self.extract_selection.Update()
-
-
-    def create_text(self, position, label, text_size=18):
-        """creates the lower left text actors"""
-        text_actor = vtk.vtkTextActor()
-        text_actor.SetInput(label)
-        text_prop = text_actor.GetTextProperty()
-        #text_prop.SetFontFamilyToArial()
-        text_prop.SetFontSize(int(text_size))
-        text_prop.SetColor(self.settings.text_color)
-        text_actor.SetDisplayPosition(*position)
-
-        text_actor.VisibilityOff()
-
-        # assign actor to the renderer
-        self.rend.AddActor(text_actor)
-        self.text_actors[self.itext] = text_actor
-        self.itext += 1
 
     def turn_text_off(self):
         """turns all the text actors off"""
@@ -3802,138 +3773,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         show_msg : bool; default=True
             log the command
         """
-        if fname is None or fname is False:
-            filt = ''
-            default_filename = ''
-
-            title = ''
-            if self.title is not None:
-                title = self.title
-
-            if self.out_filename is None:
-                default_filename = ''
-                if self.infile_name is not None:
-                    base, ext = os.path.splitext(os.path.basename(self.infile_name))
-                    default_filename = self.infile_name
-                    default_filename = base + '.png'
-            else:
-                base, ext = os.path.splitext(os.path.basename(self.out_filename))
-                default_filename = title + '_' + base + '.png'
-
-            file_types = (
-                'PNG Image *.png (*.png);; '
-                'JPEG Image *.jpg *.jpeg (*.jpg, *.jpeg);; '
-                'TIFF Image *.tif *.tiff (*.tif, *.tiff);; '
-                'BMP Image *.bmp (*.bmp);; '
-                'PostScript Document *.ps (*.ps)')
-
-            title = 'Choose a filename and type'
-            fname, flt = getsavefilename(parent=self, caption=title, basedir='',
-                                         filters=file_types, selectedfilter=filt,
-                                         options=None)
-            if fname in [None, '']:
-                return
-            #print("fname=%r" % fname)
-            #print("flt=%r" % flt)
-        else:
-            base, ext = os.path.splitext(os.path.basename(fname))
-            if ext.lower() in ['png', 'jpg', 'jpeg', 'tif', 'tiff', 'bmp', 'ps']:
-                flt = ext.lower()
-            else:
-                flt = 'png'
-
-        if not fname:
-            return
-        render_large = vtk.vtkRenderLargeImage()
-        render_large.SetInput(self.rend)
-
-        line_widths0, point_sizes0, coord_scale0, axes_actor, magnify = self._screenshot_setup(
-            magnify, render_large)
-
-        nam, ext = os.path.splitext(fname)
-        ext = ext.lower()
-        for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
-                               ("BMP", ['.bmp'], vtk.vtkBMPWriter),
-                               ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
-                               ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
-            if flt == nam:
-                fname = fname if ext in exts else fname + exts[0]
-                writer = obj()
-                break
-        else:
-            fname = fname if ext == '.png' else fname + '.png'
-            writer = vtk.vtkPNGWriter()
-
-        writer.SetInputConnection(render_large.GetOutputPort())
-        writer.SetFileName(fname)
-        writer.Write()
-
-        #self.log_info("Saved screenshot: " + fname)
-        if show_msg:
-            self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
-        self._screenshot_teardown(line_widths0, point_sizes0, coord_scale0, axes_actor)
-
-    def _screenshot_setup(self, magnify, render_large):
-        """helper method for ``on_take_screenshot``"""
-        if magnify is None:
-            magnify_min = 1
-            magnify = self.settings.magnify if self.settings.magnify > magnify_min else magnify_min
-        else:
-            magnify = magnify
-
-        if not isinstance(magnify, integer_types):
-            msg = 'magnify=%r type=%s' % (magnify, type(magnify))
-            raise TypeError(msg)
-        self.settings.update_text_size(magnify=magnify)
-
-        coord_scale0 = self.settings.coord_scale
-        self.settings.update_coord_scale(coord_scale=coord_scale0*magnify, render=False)
-        render_large.SetMagnification(magnify)
-
-        # multiply linewidth by magnify
-        line_widths0 = {}
-        point_sizes0 = {}
-        for key, geom_actor in iteritems(self.geometry_actors):
-            if isinstance(geom_actor, vtk.vtkActor):
-                prop = geom_actor.GetProperty()
-                line_width0 = prop.GetLineWidth()
-                point_size0 = prop.GetPointSize()
-                line_widths0[key] = line_width0
-                point_sizes0[key] = point_size0
-                line_width = line_width0 * magnify
-                point_size = point_size0 * magnify
-                prop.SetLineWidth(line_width)
-                prop.SetPointSize(point_size)
-                prop.Modified()
-            elif isinstance(geom_actor, vtk.vtkAxesActor):
-                pass
-            else:
-                raise NotImplementedError(geom_actor)
-
-        # hide corner axis
-        axes_actor = self.corner_axis.GetOrientationMarker()
-        axes_actor.SetVisibility(False)
-        return line_widths0, point_sizes0, coord_scale0, axes_actor, magnify
-
-    def _screenshot_teardown(self, line_widths0, point_sizes0, coord_scale0, axes_actor):
-        """helper method for ``on_take_screenshot``"""
-        self.settings.update_text_size(magnify=1.0)
-
-        # show corner axes
-        axes_actor.SetVisibility(True)
-
-        # set linewidth back
-        for key, geom_actor in iteritems(self.geometry_actors):
-            if isinstance(geom_actor, vtk.vtkActor):
-                prop = geom_actor.GetProperty()
-                prop.SetLineWidth(line_widths0[key])
-                prop.SetPointSize(point_sizes0[key])
-                prop.Modified()
-            elif isinstance(geom_actor, vtk.vtkAxesActor):
-                pass
-            else:
-                raise NotImplementedError(geom_actor)
-        self.settings.update_coord_scale(coord_scale=coord_scale0, render=True)
+        return self.on_take_screenshot(fname=fname, magnify=magnify, show_msg=show_msg)
 
     def make_gif(self, gif_filename, scale, istep=None,
                  min_value=None, max_value=None,
@@ -4572,58 +4412,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         return self.rend.GetActiveCamera()
 
     def update_camera(self, code):
-        camera = self.GetCamera()
-        #print("code =", code)
-        if code == '+x':  # set x-axis
-            # +z up
-            # +y right
-            # looking forward
-            camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 0., 1.)
-            camera.SetPosition(1., 0., 0.)
-        elif code == '-x':  # set x-axis
-            # +z up
-            # +y to the left (right wing)
-            # looking aft
-            camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 0., 1.)
-            camera.SetPosition(-1., 0., 0.)
-
-        elif code == '+y':  # set y-axis
-            # +z up
-            # +x aft to left
-            # view from right wing
-            camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 0., 1.)
-            camera.SetPosition(0., 1., 0.)
-        elif code == '-y':  # set y-axis
-            # +z up
-            # +x aft to right
-            # view from left wing
-            camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 0., 1.)
-            camera.SetPosition(0., -1., 0.)
-
-        elif code == '+z':  # set z-axis
-            # +x aft
-            # +y up (right wing up)
-            # top view
-            camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., 1., 0.)
-            camera.SetPosition(0., 0., 1.)
-        elif code == '-z':  # set z-axis
-            # +x aft
-            # -y down (left wing up)
-            # bottom view
-            camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(0., -1., 0.)
-            camera.SetPosition(0., 0., -1.)
-        else:
-            self.log_error('invalid camera code...%r' % code)
-            return
-        self._update_camera(camera)
-        self.rend.ResetCamera()
-        self.log_command('update_camera(%r)' % code)
+        self.tool_actions.update_camera(code)
 
     def _simulate_key_press(self, key):
         """

@@ -47,8 +47,10 @@ class PreferencesWindow(PyDialog):
         self._updated_preference = False
 
         self._default_font_size = data['font_size']
+        self._default_text_size = 14
         self._default_annotation_size = 18
         self._default_coord_scale = 0.05 * 100.
+        self._default_coord_text_scale = 0.5 * 100.
         self._default_clipping_min = data['clipping_min']
         self._default_clipping_max = data['clipping_max']
         #self.default_magnify = data['magnify']
@@ -61,7 +63,9 @@ class PreferencesWindow(PyDialog):
         #self.out_data = data
         self._picker_size = data['picker_size'] * 100.
         self._coord_scale = data['coord_scale'] * 100.
+        self._coord_text_scale = data['coord_text_scale'] * 100.
         self._magnify = data['magnify']
+        self._text_size = data['text_size']
 
         self.annotation_color_float, self.annotation_color_int = _check_color(
             data['annotation_color'])
@@ -93,6 +97,14 @@ class PreferencesWindow(PyDialog):
         # Annotation Color
         self.annotation_color = QLabel("Annotation Color:")
         self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
+
+        #-----------------------------------------------------------------------
+        # Text Color
+        self.text_size = QLabel("Text Size:")
+        self.text_size_edit = QSpinBox(self)
+        self.text_size_edit.setValue(self._default_text_size)
+        self.text_size_edit.setRange(7, 30)
+        self.text_size_button = QPushButton("Default")
 
         # Text Color
         self.text_color = QLabel("Text Color:")
@@ -153,6 +165,15 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit.setDecimals(3)
         self.coord_scale_edit.setSingleStep(2.5)
         self.coord_scale_edit.setValue(self._coord_scale)
+
+        self.coord_text_scale = QLabel('Coordinate System Text Scale:')
+        self.coord_text_scale_button = QPushButton("Default")
+
+        self.coord_text_scale_edit = QDoubleSpinBox(self)
+        self.coord_text_scale_edit.setRange(0.1, 200.)
+        self.coord_text_scale_edit.setDecimals(3)
+        self.coord_text_scale_edit.setSingleStep(2.5)
+        self.coord_text_scale_edit.setValue(self._coord_text_scale)
 
         #-----------------------------------------------------------------------
         self.magnify = QLabel('Screenshot Magnify:')
@@ -243,6 +264,11 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.background_color2_edit, irow, 1)
         irow += 1
 
+        grid.addWidget(self.text_size, irow, 0)
+        grid.addWidget(self.text_size_edit, irow, 1)
+        grid.addWidget(self.text_size_button, irow, 2)
+        irow += 1
+
         grid.addWidget(self.text_color, irow, 0)
         grid.addWidget(self.text_color_edit, irow, 1)
         irow += 1
@@ -271,6 +297,12 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.coord_scale_button, irow, 2)
         irow += 1
 
+        grid.addWidget(self.coord_text_scale, irow, 0)
+        grid.addWidget(self.coord_text_scale_edit, irow, 1)
+        grid.addWidget(self.coord_text_scale_button, irow, 2)
+        irow += 1
+
+        #-----------------------------------------------
         grid.addWidget(self.magnify, irow, 0)
         grid.addWidget(self.magnify_edit, irow, 1)
         irow += 1
@@ -309,6 +341,8 @@ class PreferencesWindow(PyDialog):
         self.gradient_scale_checkbox.clicked.connect(self.on_gradient_scale)
 
         self.text_color_edit.clicked.connect(self.on_text_color)
+        self.text_size_edit.valueChanged.connect(self.on_text_size)
+        self.text_size_button.clicked.connect(self.on_default_text_size)
 
         self.picker_size_edit.valueChanged.connect(self.on_picker_size)
         self.picker_size_edit.editingFinished.connect(self.on_picker_size)
@@ -316,6 +350,10 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit.valueChanged.connect(self.on_coord_scale)
         self.coord_scale_edit.editingFinished.connect(self.on_coord_scale)
         self.coord_scale_button.clicked.connect(self.on_default_coord_scale)
+
+        self.coord_text_scale_edit.valueChanged.connect(self.on_coord_text_scale)
+        self.coord_text_scale_edit.editingFinished.connect(self.on_coord_text_scale)
+        self.coord_text_scale_button.clicked.connect(self.on_default_coord_text_scale)
 
         self.magnify_edit.valueChanged.connect(self.on_magnify)
         self.magnify_edit.editingFinished.connect(self.on_magnify)
@@ -414,6 +452,17 @@ class PreferencesWindow(PyDialog):
             if self.win_parent is not None:
                 self.win_parent.settings.set_text_color(rgb_color_floats)
 
+    def on_default_text_size(self):
+        self.text_size_edit.setValue(self._default_text_size)
+        self.on_text_size(self._default_text_size)
+
+    def on_text_size(self, value=None):
+        if value is None:
+            value = self.text_size_edit.value()
+        self._text_size = value
+        if self.win_parent is not None:
+            self.win_parent.settings.set_text_size(value)
+
     def on_color(self, color_edit, rgb_color_ints, title):
         """pops a color dialog"""
         col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self,
@@ -447,6 +496,7 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.win_parent.settings.set_magnify(value)
 
+    #---------------------------------------------------------------------------
     def on_coord_scale(self, value=None):
         if value is None:
             value = self.coord_scale_edit.value()
@@ -458,6 +508,18 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit.setValue(self._default_coord_scale)
         self.on_coord_scale(self._default_coord_scale)
 
+    def on_coord_text_scale(self, value=None):
+        if value is None:
+            value = self.coord_text_scale_edit.value()
+        self._coord_text_scale = value
+        if self.win_parent is not None:
+            self.win_parent.settings.set_coord_text_scale(value / 100.)
+
+    def on_default_coord_text_scale(self):
+        self.coord_text_scale_edit.setValue(self._default_coord_text_scale)
+        self.on_coord_text_scale(self._default_coord_text_scale)
+
+    #---------------------------------------------------------------------------
     def on_default_font_size(self):
         self.font_size_edit.setValue(self._default_font_size)
         self.on_font(self._default_font_size)
@@ -497,6 +559,7 @@ class PreferencesWindow(PyDialog):
 
     def on_apply(self, force=False):
         passed = self.on_validate()
+
         if (passed or force) and self.win_parent is not None:
             self.win_parent.settings.on_set_font_size(self.out_data['font_size'])
 
@@ -556,8 +619,10 @@ def main():
         'background_color' : (0., 0., 0.), # black
         'background_color2' : (1., 0., 1.), # purple
         'coord_scale' : 0.05,
+        'coord_text_scale' : 1.0,
         'magnify' : 5,
 
+        'text_size' : 12,
         'text_color' : (0., 1., 0.), # green
 
         'annotation_color' : (1., 0., 0.), # red

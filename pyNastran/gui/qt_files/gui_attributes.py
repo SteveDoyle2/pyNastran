@@ -9,11 +9,11 @@ from collections import OrderedDict
 import numpy as np
 
 from pyNastran.gui.gui_objects.settings import Settings
+from pyNastran.gui.tool_actions import ToolActions
 from pyNastran.gui.utils.load_results import create_res_obj
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 from pyNastran.bdf.cards.base_card import deprecated
-
 
 #class GuiAttributes(QMainWindow):
 class GuiAttributes(object):
@@ -27,6 +27,7 @@ class GuiAttributes(object):
         res_widget = kwds['res_widget']
         self.dev = False
         self.settings = Settings(self)
+        self.tool_actions = ToolActions(self)
 
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
@@ -119,8 +120,6 @@ class GuiAttributes(object):
         self.geometry_properties = OrderedDict()
         self.follower_nodes = {}
         self.follower_functions = {}
-
-        self.itext = 0
 
         self.pick_state = 'node/centroid'
         self.label_actors = {-1 : []}

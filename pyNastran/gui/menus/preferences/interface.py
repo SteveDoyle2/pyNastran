@@ -26,11 +26,13 @@ def set_preferences_menu(self):
         'background_color' : self.settings.background_color,
         'background_color2' : self.settings.background_color2,
 
+        'text_size' : self.settings.text_size,
         'text_color' : self.settings.text_color,
 
         'picker_size' : self.element_picker_size,
         'dim_max' : self.settings.dim_max,
         'coord_scale' : self.settings.coord_scale,
+        'coord_text_scale' : self.settings.coord_text_scale,
         'magnify' : self.settings.magnify,
 
         'clipping_min' : min_clip,
