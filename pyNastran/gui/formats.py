@@ -58,13 +58,13 @@ except ImportError:  # pragma: no cover
 try:
     from pyNastran.converters.su2.su2_io import SU2_IO
     CLASS_MAP['su2'] = SU2_IO
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 try:
     from pyNastran.converters.fast.fast_io import FastIO
     CLASS_MAP['fast'] = FastIO
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 
@@ -82,8 +82,12 @@ is_bedge = True
 from pyNastran.converters.aflr.surf.surf_io import SurfIO
 is_surf = True
 
-from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
-is_ugrid = True
+
+try:
+    from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
+    CLASS_MAP['ugrid'] = UGRID_IO
+except ImportError:  # pragma: no cover
+    pass
 
 try:
     from pyNastran.converters.dev.openvsp.adb_io import ADB_IO

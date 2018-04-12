@@ -652,12 +652,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         all_nids = nid_cp_cd[:, 0]
         self.gui.node_ids = all_nids
 
+        colormap = self.settings.colormap
         nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
                             mask_value=0,
                             nlabels=None,
                             labelsize=None,
                             ncolors=None,
-                            colormap='jet',
+                            colormap=colormap,
                             data_format=None,
                             uname='GuiResult')
         cases[icase] = (nid_res, (0, 'Node ID'))
@@ -670,7 +671,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             nlabels=None,
                             labelsize=None,
                             ncolors=None,
-                            colormap='jet',
+                            colormap=colormap,
                             data_format=None,
                             uname='GuiResult')
         cases[icase] = (nid_res, (0, 'Node ID'))
@@ -681,7 +682,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         cds = np.array(nid_cp_cd[:, 2])
         if cds.max() > 0:
             cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
-                               location='node', scalar=cds)
+                               location='node', scalar=cds, colormap=colormap)
             cases[icase] = (cd_res, (0, 'NodeCd'))
             form0.append(('NodeCd', icase, []))
             icase += 1
@@ -692,7 +693,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             nlabels=None,
                             labelsize=None,
                             ncolors=None,
-                            colormap='jet',
+                            colormap=colormap,
                             data_format=None,
                             uname='GuiResult')
         cases[icase] = (eid_res, (0, 'ElementID'))
@@ -706,7 +707,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             nlabels=None,
                             labelsize=None,
                             ncolors=None,
-                            colormap='jet',
+                            colormap=colormap,
                             data_format=None,
                             uname='GuiResult')
         cases[icase] = (eid_res, (0, 'iElement'))
@@ -721,7 +722,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                 nlabels=None,
                                 labelsize=None,
                                 ncolors=None,
-                                colormap='jet',
+                                colormap=colormap,
                                 data_format=None,
                                 uname='GuiResult')
             cases[icase] = (dim_res, (0, 'ElementDim'))
@@ -736,7 +737,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                    nlabels=None,
                                    labelsize=None,
                                    ncolors=None,
-                                   colormap='jet',
+                                   colormap=colormap,
                                    data_format=None,
                                    uname='GuiResult')
             cases[icase] = (nnodes_res, (0, 'NNodes/Elem'))
@@ -805,7 +806,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             pass
 
         pid_res = GuiResult(0, header='iProperty', title='iProperty',
-                            location='centroid', scalar=ipids)
+                            location='centroid', scalar=ipids, colormap=colormap)
         cases[icase] = (pid_res, (0, 'iProperty'))
         form0.append(('iProperty', icase, []))
         icase += 1
@@ -3338,12 +3339,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # this intentionally makes a deepcopy
         cds = np.array(nid_cp_cd[:, 2])
+        colormap = self.settings.colormap
         nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
                             mask_value=0,
                             nlabels=None,
                             labelsize=None,
                             ncolors=None,
-                            colormap='jet',
+                            colormap=colormap,
                             data_format=None,
                             uname='GuiResult')
         cases[icase] = (nid_res, (0, 'Node ID'))
@@ -3362,7 +3364,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             nlabels=None,
                             labelsize=None,
                             ncolors=None,
-                            colormap='jet',
+                            colormap=colormap,
                             data_format=None,
                             uname='GuiResult')
         cases[icase] = (eid_res, (0, 'ElementID'))
@@ -3376,7 +3378,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                    #nlabels=None,
                                    #labelsize=None,
                                    #ncolors=None,
-                                   #colormap='jet',
+                                   #colormap=colormap,
                                    #data_format=None,
                                    #uname='GuiResult')
             #cases[icase] = (dim_res, (0, 'ElementDim'))
@@ -3390,7 +3392,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                    nlabels=None,
                                    labelsize=None,
                                    ncolors=None,
-                                   colormap='jet',
+                                   colormap=colormap,
                                    data_format=None,
                                    uname='GuiResult')
             cases[icase] = (nnodes_res, (0, 'NNodes/Elem'))
@@ -3402,7 +3404,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             #nlabels=None,
                             #labelsize=None,
                             #ncolors=None,
-                            #colormap='jet',
+                            #colormap=colormap,
                             #data_format=None,
                             #uname='GuiResult')
         #cases[icase] = (pid_res, (0, 'PropertyID'))
@@ -3433,7 +3435,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                  #nlabels=None,
                                  #labelsize=None,
                                  #ncolors=None,
-                                 #colormap='jet',
+                                 #colormap=colormap,
                                  #data_format=None,
                                  #uname='GuiResult')
             #cases[icase] = (mcid_res, (0, 'Material Coordinate System'))
@@ -3447,7 +3449,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                   #nlabels=None,
                                   #labelsize=None,
                                   #ncolors=None,
-                                  #colormap='jet',
+                                  #colormap=colormap,
                                   #data_format=None,
                                   #uname='GuiResult')
             #cases[icase] = (theta_res, (0, 'Theta'))
@@ -3490,7 +3492,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 location='centroid', scalar=normals[:, 2], data_format='%.2f')
             nxyz_res = NormalResult(0, 'Normals', 'Normals',
                                     nlabels=2, labelsize=5, ncolors=2,
-                                    colormap='jet', data_format='%.1f',
+                                    colormap=colormap, data_format='%.1f',
                                     uname='NormalResult')
 
 
@@ -4705,6 +4707,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          - Area Ratio
          - MaterialCoord
         """
+        colormap = self.settings.colormap
         #ielement = 0
         nelements = self.element_ids.shape[0]
         normals = np.zeros((nelements, 3), dtype='float32')
@@ -4933,7 +4936,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 location='centroid', scalar=normals[:, 2], data_format='%.2f')
             nxyz_res = NormalResult(0, 'Normals', 'Normals',
                                     nlabels=2, labelsize=5, ncolors=2,
-                                    colormap='jet', data_format='%.1f',
+                                    colormap=colormap, data_format='%.1f',
                                     uname='NormalResult')
             # this is just for testing nan colors that doesn't work
             #max_interior_angle[:1000] = np.nan
@@ -5498,6 +5501,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.log.debug('returning from plot_applied_loads_early')
             return icase
 
+        colormap = self.settings.colormap
         try:
             #form = []
             out = model.get_load_arrays(
@@ -5530,7 +5534,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         force_xyz_res = ForceTableResults(
                             subcase_id, titles, headers, fxyz, fscalar,
                             scales, data_formats=None,
-                            nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                            nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
                             set_max_min=False, uname='NastranGeometry')
                         force_xyz_res.save_defaults()
 
@@ -5548,7 +5552,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         moment_xyz_res = ForceTableResults(
                             subcase_id, titles, headers, mxyz, mscalar,
                             scales, data_formats=None,
-                            nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                            nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
                             set_max_min=False, uname='NastranGeometry')
                         moment_xyz_res.save_defaults()
 

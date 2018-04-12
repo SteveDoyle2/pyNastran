@@ -87,6 +87,7 @@ class ResultsWindow(QWidget):
                 if children:
                     assert isinstance(children, list), children
                     self.addItems(item, children, level + 1, count_check=count_check)
+                    #print('*children = %s' % children)
             is_single = redo
             return is_single
         except ValueError:
@@ -94,8 +95,8 @@ class ResultsWindow(QWidget):
             print('elements =', elements)
             print('element =', element)
             print('len(elements)=%s' % len(elements))
-            for e in elements:
-                print('  e = %s' % str(e))
+            for elem in elements:
+                print('  e = %s' % str(elem))
             raise
         #if redo:
         #    data = [

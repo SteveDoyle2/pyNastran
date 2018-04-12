@@ -87,7 +87,7 @@ def check_for_newer_version():
     return version_latest, version_current, is_newer
 
 def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
-                   dim_max=None, xyz_cid0=None):
+                   dim_max=None, xyz_cid0=None, colormap='jet'):
     """
     Parameters
     ----------
@@ -136,7 +136,7 @@ def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
         res_obj = GuiResult(
             islot, header, title, location, datai,
             nlabels=None, labelsize=None, ncolors=None,
-            colormap='jet', data_format=fmti,
+            colormap=colormap, data_format=fmti,
         )
     elif vector_size == 3:
         # title is 3 values
@@ -155,7 +155,7 @@ def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
             islot, titles, headers,
             xyz, dxyz, scalar, scales, data_formats=data_formats,
             nlabels=None, labelsize=None, ncolors=None,
-            colormap='jet',
+            colormap=colormap,
             set_max_min=True)
     else:
         raise RuntimeError('vector_size=%s' % (vector_size))

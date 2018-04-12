@@ -30,7 +30,7 @@ from pyNastran.gui.utils.version import check_for_newer_version
 from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import (
     NastranIO, DegenGeomIO, ADB_IO, # Plot3d_io,
-    SurfIO, UGRID_IO, AbaqusIO, BEdge_IO, OpenFoamIO,
+    SurfIO, AbaqusIO, BEdge_IO, OpenFoamIO,
 )
 from pyNastran.gui.gui_common import GuiCommon2
 
@@ -54,7 +54,7 @@ except:
 
 class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
                  ADB_IO,
-                 SurfIO, UGRID_IO, AbaqusIO, BEdge_IO,
+                 SurfIO, AbaqusIO, BEdge_IO,
                  OpenFoamIO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
@@ -120,7 +120,6 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
             DegenGeomIO.__init__(self)
             #Plot3d_io.__init__(self)
             SurfIO.__init__(self)
-            UGRID_IO.__init__(self)
             AbaqusIO.__init__(self)
             OpenFoamIO.__init__(self)
         else:

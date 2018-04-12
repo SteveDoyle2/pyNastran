@@ -4,7 +4,6 @@ import vtk
 class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
     #https://stackoverflow.com/questions/33108670/arrow-key-events-in-vtk-on-windows
     def __init__(self, iren, parent):
-        print('parent =', parent)
         self.parent = parent
         vtk.vtkInteractorStyleTrackballCamera.__init__(self, iren)
         #self.AddObserver("CharEvent", self.onKeyPressEvent)

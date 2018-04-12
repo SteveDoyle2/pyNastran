@@ -231,6 +231,7 @@ class Usm3dIO(object):
                          bcs, mapbc, bcmap_to_bc_name, loads, is_geometry=True):
         """actually fills the sidebar"""
         self.parent.scalarBar.VisibilityOff()
+        colormap = self.parent.settings.colormap
 
         subcasemap_id = 1
         icase = len(cases)
@@ -240,7 +241,7 @@ class Usm3dIO(object):
             assert len(self.parent.element_ids) > 0, self.parent.element_ids
             eid_res = GuiResult(
                 subcasemap_id, 'ElementID', 'ElementID', 'centroid', self.parent.element_ids,
-                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
                 data_format='%i', uname='GuiResult')
 
             cases[icase] = (eid_res, (itime, 'ElementID'))
@@ -249,7 +250,7 @@ class Usm3dIO(object):
             if bcs is not None:
                 region_res = GuiResult(
                     subcasemap_id, 'Patch', 'Patch', 'centroid', bcs,  # patch_id
-                    nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                    nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
                     data_format='%i', uname='GuiResult')
                 cases[icase] = (region_res, (itime, 'Patch'))
                 form.append(('Patch', icase, []))
@@ -279,10 +280,10 @@ class Usm3dIO(object):
                 family[ipatch] = familyi
 
             bc_res = GuiResult(subcasemap_id, 'BC', 'BC', 'centroid', bc_value,
-                               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                               nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
                                data_format='%i', uname='GuiResult')
             family_res = GuiResult(subcasemap_id, 'Family', 'Family', 'centroid', family,
-                                   nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                                   nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
                                    data_format='%i', uname='GuiResult')
             cases[icase] = (bc_res, (itime, 'BC'))
             cases[icase + 1] = (family_res, (itime, 'Family'))
@@ -303,7 +304,7 @@ class Usm3dIO(object):
             form0 = []
             for key, load in iteritems(loads):
                 load_res = GuiResult(subcasemap_id, key, key, 'node', load,
-                                     nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                                     nlabels=None, labelsize=None, ncolors=None, colormap=colormap,
                                      data_format='%.3f', uname='GuiResult')
                 cases[icase] = (load_res, (itime, key))
                 formi = (key, icase, [])

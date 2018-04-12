@@ -11,7 +11,7 @@ from six import string_types
 #from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QWidget, QVBoxLayout, QPushButton, QApplication,
-    QComboBox, QLabel, QHBoxLayout)
+    QComboBox, QLabel, QHBoxLayout, QBoxLayout)
 from pyNastran.gui.utils.qt.results_window import ResultsWindow
 
 
@@ -114,17 +114,35 @@ class Sidebar(QWidget):
     | - avg/derive |
     +--------------+
     """
-    def __init__(self, parent, debug=False, data=None, clear_data=True, name='main'):
-        """creates the buttons in the Sidebar, not the actual layout"""
+    def __init__(self, parent, debug=False, data=None, clear_data=True, name='main',
+                 setup_dict=None):
+        """
+        Creates the buttons in the Sidebar, not the actual layout
+
+        Parameters
+        ----------
+        parent : MainWindow()
+            the gui
+        debug : bool; default=False
+            flag for debug info
+        data : List[tree]
+            the tree
+        clear_data : bool; default=True
+            ???
+        name : str; default='main'
+            the active name
+        setup_dict : Dict[irow] = List[QWidgets]
+            a way to add additional widgets to the sidebar
+        """
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
+        self.setup_dict = setup_dict
 
         choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
         if data is None:
             data = []
 
-        #self.result_case_windows = []
         self.result_case_windows = [ResultsWindow(self, 'Case/Results', data, choices)]
         data = [
             ('A', 1, []),
@@ -133,6 +151,8 @@ class Sidebar(QWidget):
         ]
         self.result_method_window = ResultsWindow(self, 'Method', data, choices)
         self.result_method_window.setVisible(False)
+        #else:
+            #self.result_method_window = None
 
         self.show_pulldown = False
         if self.show_pulldown:
@@ -162,21 +182,34 @@ class Sidebar(QWidget):
 
     @property
     def result_case_window(self):
-        #if self.name is None:
-            #i = 0
-        #else:
-            #i = self.names.index(self.name)
+        if self.name is None:
+            i = 0
+        else:
+            i = self.names.index(self.name)
         i = 0
         return self.result_case_windows[i]
 
-    def setup_layout(self, data, choices, clear_data=True):
+    def setup_layout(self, data, choices, clear_data=True, init=True):
         """creates the sidebar visual layout"""
+        if not init:
+            #self.frameGeometry().
+            width = self.frameGeometry().width()
+            height = self.frameGeometry().height()
+            #print('width=%s height=%s' % (width, height))
+
+        #print('init...')
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
+
+        irow = 0
+        self._add_from_setup_dict(vbox, irow)
 
         hbox.addWidget(self.name_label)
         hbox.addWidget(self.name_pulldown)
         vbox.addLayout(hbox)
+
+        irow += 1
+        self._add_from_setup_dict(vbox, irow)
 
         nwindows = len(self.result_case_windows)
         print('nwindows=%s self.names=%s' % (nwindows, self.names))
@@ -184,8 +217,9 @@ class Sidebar(QWidget):
             print('*using existing window')
             result_case_window = self.result_case_windows[i]
             vbox.addWidget(result_case_window)
-            result_case_window.setVisible(False)
+            #result_case_window.setVisible(False)  # be very careful of this...
 
+        nwindows = len(self.result_case_windows)
         for name in self.names[nwindows:]:
             print('*creating a window')
             result_case_window = ResultsWindow(self, 'Case/Results', data, choices)
@@ -201,16 +235,53 @@ class Sidebar(QWidget):
         #for i in range(nwindows):
             #if i != iname:
                 #self.result_case_windows[iname].setVisible(False)
-        self.result_case_windows[iname].setVisible(True)
+        #self.result_case_windows[iname].setVisible(True)
 
-        vbox.addWidget(self.result_method_window)
+        irow += 1
+        self._add_from_setup_dict(vbox, irow)
+
+        if self.result_method_window:
+            vbox.addWidget(self.result_method_window)
         if self.show_pulldown:
             vbox.addWidget(self.pulldown)
+
+        irow += 1
+        self._add_from_setup_dict(vbox, irow)
+
         vbox.addWidget(self.apply_button)
+
+        irow += 1
+        self._add_from_setup_dict(vbox, irow)
+
         self.setLayout(vbox)
 
         if clear_data:
             self.clear_data()
+
+        #if not init:
+            #self.frameGeometry().width()
+            #self.frameGeometry().height()
+            #self.resize(width, height)
+
+    def _add_from_setup_dict(self, vbox, irow):
+        if self.setup_dict is None:
+            return
+
+        if irow in self.setup_dict:
+            widgets = self.setup_dict[irow]
+            assert widgets is not None, widgets
+            if isinstance(widgets, list):
+                for widget_layout in widgets:
+                    if isinstance(widget_layout, QBoxLayout):
+                        vbox.addLayout(widget_layout)
+                    else:
+                        vbox.addWidget(widget_layout)
+            else:
+                widget_layout = widgets
+                if isinstance(widget_layout, QBoxLayout):
+                    vbox.addLayout(widget_layout)
+                else:
+                    vbox.addWidget(widget_layout)
 
     def update_method(self, method):
         if isinstance(method, string_types):
@@ -271,6 +342,7 @@ class Sidebar(QWidget):
             self.on_update_name(None)
 
         if setup_layout and 0:
+            #print('setup_layout******')
             ## TODO: screws up the width of the window
             choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
             data = [
@@ -278,28 +350,30 @@ class Sidebar(QWidget):
                 #('B', 2, []),
                 #('C', 3, []),
             ]
-            self.setup_layout(data, choices, clear_data=True)
+            self.setup_layout(data, choices, init=False, clear_data=True)
 
     def update_methods(self, data):
         """the methods is a hidden box"""
-        self.result_method_window.update_data(data)
+        if self.result_method_window is not None:
+            self.result_method_window.update_data(data)
         self.apply_button.setEnabled(True)
 
     def clear_data(self):
         self.result_case_window.clear_data()
-        self.result_method_window.clear_data()
+        if self.result_method_window is not None:
+            self.result_method_window.clear_data()
         self.apply_button.setEnabled(False)
 
-    def on_pulldown(self, event):  # pragma: no cover
+    def on_pulldown(self):  # pragma: no cover
         print('pulldown...')
 
-    def on_update_name(self, event):  # pragma: no cover
+    def on_update_name(self):  # pragma: no cover
         """user clicked the pulldown"""
         name = str(self.name_pulldown.currentText())
         data = self.parent._get_sidebar_data(name)
         #self.result_case_window.update_data(data)
 
-    def on_apply(self, event):
+    def on_apply(self):
         data = self.result_case_window.data
         valid_a, keys_a = self.result_case_window.treeView.get_row()
 

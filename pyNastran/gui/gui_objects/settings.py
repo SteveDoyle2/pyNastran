@@ -18,12 +18,13 @@ defines:
  - repr_settings(settings)
 """
 from __future__ import print_function
-from six import itervalues, string_types, iteritems # PY3
+from six import itervalues, iteritems # PY3
 import numpy as np
 from qtpy import QtGui
 
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
+from pyNastran.gui.gui_objects.utils import get_setting
 
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
@@ -60,6 +61,9 @@ class Settings(object):
         self.font_size = 8
         self.magnify = 5
 
+        # string
+        self.colormap = 'jet' # 'viridis'
+
         # not stored
         self.coord_scale = 0.05
         self.dim_max = 1.0
@@ -88,6 +92,9 @@ class Settings(object):
         # float
         self.coord_scale = 0.05
 
+        # string
+        self.colormap = 'jet' # 'viridis'
+
         self.parent.resize(1100, 700)
 
         # not stored
@@ -102,45 +109,50 @@ class Settings(object):
         setting_keys = [str(key) for key in settings.childKeys()]
 
         # sets the window size/position
-        main_window_geometry = self._get_setting(
+        main_window_geometry = get_setting(
             settings, setting_keys, ['main_window_geometry', 'mainWindowGeometry'], None)
         if main_window_geometry is not None:
             self.parent.restoreGeometry(main_window_geometry)
 
         # this is the gui font
-        self._set_setting(settings, setting_keys, ['font_size'], self.font_size)
+        self._set_setting(settings, setting_keys, ['font_size'], self.font_size, auto_type=int)
 
         # the info/debug/gui/command preferences
-        self._set_setting(settings, setting_keys, ['show_info'], self.show_info, True)
-        self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug, True)
-        self._set_setting(settings, setting_keys, ['show_gui'], self.show_gui, True)
-        self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True)
+        self._set_setting(settings, setting_keys, ['show_info'], self.show_info, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_gui'], self.show_gui, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True, auto_type=bool)
 
         # the vtk panel background color
         self._set_setting(settings, setting_keys, ['use_gradient_background'],
-                          False, auto_type=True)
+                          False, auto_type=bool)
         self._set_setting(settings, setting_keys, ['background_color', 'backgroundColor'],
-                          GREY, auto_type=True)
-        self._set_setting(settings, setting_keys, ['background_color2'], GREY, auto_type=True)
+                          GREY, auto_type=float)
+        self._set_setting(settings, setting_keys, ['background_color2'], GREY, auto_type=float)
 
         # scales the coordinate systems
-        self._set_setting(settings, setting_keys, ['coord_scale'], self.coord_scale, auto_type=True)
+        self._set_setting(settings, setting_keys, ['coord_scale'], self.coord_scale, auto_type=float)
 
         # this is for the 3d annotation
         self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'],
-                          BLACK, auto_type=True)
-        self._set_setting(settings, setting_keys, ['annotation_size'], 18, auto_type=True) # int
+                          BLACK, auto_type=float)
+        self._set_setting(settings, setting_keys, ['annotation_size'], 18, auto_type=int) # int
         if isinstance(self.annotation_size, float):
             # throw the float in the trash as it's from an old version of vtk
             self.annotation_size = 18
 
-        self._set_setting(settings, setting_keys, ['magnify'], self.magnify)
+        self._set_setting(settings, setting_keys, ['magnify'], self.magnify, auto_type=int)
 
         # this is the text in the lower left corner
         self._set_setting(settings, setting_keys, ['text_color', 'textColor'],
-                          BLACK, auto_type=True)
+                          BLACK, auto_type=float)
+
+        # default colormap for legend
+        self._set_setting(settings, setting_keys, ['colormap'],
+                          'jet')
+
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],
-                                         screen_shape_default, save=False, auto_type=True)
+                                         screen_shape_default, save=False, auto_type=int)
 
         #try:
             #screen_shape = settings.value("screen_shape", screen_shape_default)
@@ -176,62 +188,14 @@ class Settings(object):
         #except TypeError:
             #self.resize(1100, 700)
 
-    def _get_setting(self, settings, setting_keys, setting_names, default, auto_type=False):
-        """
-        helper method for ``reapply_settings``
-
-        does this, but for a variable number of input names, but one output name:
-            screen_shape = settings.value("screen_shape", screen_shape_default)
-
-        If the registry key is not defined, the default is used.
-        """
-        unused_set_name = setting_names[0]
-        pull_name = None
-        for key in setting_names:
-            if key in setting_keys:
-                pull_name = key
-                break
-
-        if pull_name is None:
-            value = default
-        else:
-            try:
-                value = settings.value(pull_name, default)
-            except TypeError:
-                print('couldnt load %s; using default' % pull_name)
-                value = default
-
-        if value is None:
-            print('couldnt load %s; using default' % pull_name)
-            assert default is not None, pull_name
-            value = default
-        assert value is not None, pull_name
-
-        if auto_type and isinstance(value, list):
-            if value[0].isdigit():
-                value = [int(valuei) for valuei in value]
-            elif isfloat(value[0]):
-                value = [float(valuei) for valuei in value]
-        elif auto_type and isinstance(value, string_types):
-            if value == 'true':
-                value = True
-            elif value == 'false':
-                value = False
-            elif value.isdigit():
-                value = int(value)
-            elif isfloat(value):
-                value = float(value)
-
-        return value
-
     def _set_setting(self, settings, setting_keys, setting_names, default,
-                     save=True, auto_type=False):
+                     save=True, auto_type=None):
         """
         helper method for ``reapply_settings``
         """
         set_name = setting_names[0]
-        value = self._get_setting(settings, setting_keys, setting_names, default,
-                                  auto_type=auto_type)
+        value = get_setting(settings, setting_keys, setting_names, default,
+                            auto_type=auto_type)
         if save:
             setattr(self, set_name, value)
         return value
@@ -260,6 +224,9 @@ class Settings(object):
 
         # float
         settings.setValue('coord_scale', self.coord_scale)
+
+        # str
+        settings.setValue('colormap', self.colormap)
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
         main_window = self.parent.window()

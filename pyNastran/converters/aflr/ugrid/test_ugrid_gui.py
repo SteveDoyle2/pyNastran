@@ -24,7 +24,7 @@ class UGRID_GUI(UGRID_IO, FakeGUIMethods):
     """defines the UGRID 2D/3D interface"""
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        UGRID_IO.__init__(self)
+        UGRID_IO.__init__(self, self)
 
 class TestUgridGui(unittest.TestCase):
     """defines UGRID tests"""

@@ -20,8 +20,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class UGRID_IO(object):
-    def __init__(self):
-        pass
+    def __init__(self, parent):
+        self.parent = parent
 
     def get_ugrid_wildcard_geometry_results_functions(self):
         data = (
@@ -223,7 +223,7 @@ class UGRID_IO(object):
     def _fill_ugrid2d_case(self, cases, ID, nnodes, nelements):
         #cases_new = []
         #results_form = []
-
+        colormap = self.parent.settings.colormap
         geometry_form = [
             ('ElementID', 0, []),
             ('NodeID', 1, []),
@@ -235,9 +235,9 @@ class UGRID_IO(object):
         nids = arange(1, nnodes + 1)
 
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
-                            location='centroid', scalar=eids)
+                            location='centroid', scalar=eids, colormap=colormap)
         nid_res = GuiResult(0, header='NodeID', title='NodeID',
-                            location='node', scalar=nids)
+                            location='node', scalar=nids, colormap=colormap)
 
         icase = 0
         cases[icase] = (eid_res, (0, 'ElementID'))
@@ -258,6 +258,7 @@ class UGRID_IO(object):
         tag_filename = base + '.tags'
         mapbc_filename = base.split('.')[0] + '.mapbc'
         self.log.info('mapbc_filename = %r' % mapbc_filename)
+        colormap = self.parent.settings.colormap
 
         cases_new = []
         has_tag_data = False
@@ -290,12 +291,12 @@ class UGRID_IO(object):
         #npids = len(model.pids)
         pids = model.pids
         eid_res = GuiResult(0, header='ElementID', title='ElementID',
-                            location='centroid', scalar=eids)
+                            location='centroid', scalar=eids, colormap=colormap)
         nid_res = GuiResult(0, header='NodeID', title='NodeID',
-                            location='node', scalar=nids)
+                            location='node', scalar=nids, colormap=colormap)
         nxyz_res = NormalResult(0, 'Normals', 'Normals',
                                 nlabels=2, labelsize=5, ncolors=2,
-                                colormap='jet', data_format='%.1f',
+                                colormap=colormap, data_format='%.1f',
                                 uname='NormalResult')
 
         icase = 0
@@ -305,7 +306,7 @@ class UGRID_IO(object):
         icase += 3
         if not read_solids:
             surface_res = GuiResult(0, header='SurfaceID', title='SurfaceID',
-                                    location='centroid', scalar=pids)
+                                    location='centroid', scalar=pids, colormap=colormap)
             cases[icase] = (surface_res, (0, 'SurfaceID'))
             icase += 1
 
@@ -344,26 +345,28 @@ class UGRID_IO(object):
             tag_form.append(('bl_thickness', icase+9, []))
 
             visc_res = GuiResult(0, header='is_visc', title='is_visc',
-                                 location='node', scalar=int_data[:, 0])
+                                 location='node', scalar=int_data[:, 0], colormap=colormap)
             recon_res = GuiResult(0, header='is_recon', title='is_recon',
-                                  location='node', scalar=int_data[:, 1])
+                                  location='node', scalar=int_data[:, 1], colormap=colormap)
             rebuild_res = GuiResult(0, header='is_rebuild', title='is_rebuild',
-                                    location='node', scalar=int_data[:, 2])
+                                    location='node', scalar=int_data[:, 2], colormap=colormap)
             fixed_res = GuiResult(0, header='is_fixed', title='is_fixed',
-                                  location='node', scalar=int_data[:, 3])
+                                  location='node', scalar=int_data[:, 3], colormap=colormap)
             source_res = GuiResult(0, header='is_source', title='is_source',
-                                   location='node', scalar=int_data[:, 4])
+                                   location='node', scalar=int_data[:, 4], colormap=colormap)
             trans_res = GuiResult(0, header='is_trans', title='is_trans',
-                                  location='node', scalar=int_data[:, 5])
+                                  location='node', scalar=int_data[:, 5], colormap=colormap)
             delete_res = GuiResult(0, header='is_delete', title='is_delete',
-                                   location='node', scalar=int_data[:, 6])
+                                   location='node', scalar=int_data[:, 6], colormap=colormap)
             nlayers_res = GuiResult(0, header='nlayers', title='nlayers',
-                                    location='node', scalar=int_data[:, 7])
+                                    location='node', scalar=int_data[:, 7], colormap=colormap)
 
             spacing_res = GuiResult(0, header='bl_spacing', title='bl_spacing',
-                                    location='centroid', scalar=float_data[:, 0])
+                                    location='centroid', scalar=float_data[:, 0],
+                                    colormap=colormap)
             blthickness_res = GuiResult(0, header='bl_thickness', title='bl_thickness',
-                                        location='centroid', scalar=float_data[:, 1])
+                                        location='centroid', scalar=float_data[:, 1],
+                                        colormap=colormap)
 
             cases[icase] = (visc_res, (0, 'is_visc'))
             cases[icase + 1] = (recon_res, (0, 'is_recon'))
@@ -405,7 +408,7 @@ class UGRID_IO(object):
             mapbc_form.append(('Map BC', icase, []))
 
             mapbc_res = GuiResult(0, header='Map BC', title='Map BC',
-                                  location='centroid', scalar=mapbcs)
+                                  location='centroid', scalar=mapbcs, colormap=colormap)
             cases[icase + 9] = (mapbc_res, (0, 'Map BC'))
         else:
             self.log.warning('mapbc_filename=%r could not be found' % mapbc_filename)

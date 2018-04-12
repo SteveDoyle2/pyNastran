@@ -5132,7 +5132,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
                           data_format,
                           nlabels=None, labelsize=None,
-                          ncolors=None, colormap='jet',
+                          ncolors=None, colormap=None,
                           is_shown=True):
         """
         Updates the Scalar Bar
@@ -5160,6 +5160,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         is_shown : bool
             show the scalar bar
         """
+        if colormap is None:
+            colormap = self.settings.colormap
         #print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
                                nlabels=nlabels, labelsize=labelsize,
@@ -5498,7 +5500,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          arrow_scale=1.,
                          data_format='%.0f',
                          is_low_to_high=True, is_discrete=True, is_horizontal=True,
-                         nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                         nlabels=None, labelsize=None, ncolors=None, colormap=None,
                          is_shown=True):
         """
         Updates the legend/model
@@ -5510,6 +5512,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         TODO: speed up by using existing values to skip update steps
         """
+        if colormap is None:
+            colormap = self.settings.colormap
+
         self.is_low_to_high = is_low_to_high
         self.is_horizontal_scalar_bar = is_horizontal
 

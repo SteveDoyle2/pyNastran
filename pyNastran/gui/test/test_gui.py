@@ -27,7 +27,6 @@ from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
 
 from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
 from pyNastran.converters.aflr.surf.surf_io import SurfIO
-from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
 from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
 from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
 
@@ -72,7 +71,7 @@ EXTENSION_TO_OUPUT_FORMATS = {
 class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
               #ADB_IO, DegenGeomIO, #Plot3d_io,
               # AbaqusIO,
-              SurfIO, UGRID_IO, BEdge_IO,
+              SurfIO, BEdge_IO,
               DegenGeomIO, ADB_IO):
     """spoofs the gui for testing"""
 
@@ -94,7 +93,6 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
         #DegenGeomIO.__init__(self)
         #Plot3d_io.__init__(self)
         SurfIO.__init__(self)
-        UGRID_IO.__init__(self)
         #AbaqusIO.__init__(self)
 
     def load_geometry(self, input_filename):
