@@ -53,10 +53,10 @@ class PreferencesWindow(PyDialog):
         self._default_coord_text_scale = 0.5 * 100.
         self._default_clipping_min = data['clipping_min']
         self._default_clipping_max = data['clipping_max']
+        #self._default_annotation_size = data['annotation_size'] # int
         #self.default_magnify = data['magnify']
 
         self.dim_max = data['dim_max']
-        #self._default_annotation_size = data['annotation_size'] # int
         self._use_gradient_background = data['use_gradient_background'] # bool
         self._annotation_size = data['annotation_size'] # int
 

@@ -49,6 +49,8 @@ class Settings(object):
         self.background_color = GREY
         self.background_color2 = GREY
         self.annotation_color = BLACK
+
+        self.text_size = 14
         self.text_color = BLACK
 
         self.show_info = True
@@ -61,11 +63,14 @@ class Settings(object):
         self.font_size = 8
         self.magnify = 5
 
+        # floats
+        self.coord_scale = 0.05  # in percent of max dimension
+        self.coord_text_scale = 0.5 # percent of nominal
+
         # string
         self.colormap = 'jet' # 'viridis'
 
         # not stored
-        self.coord_scale = 0.05
         self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
@@ -85,12 +90,14 @@ class Settings(object):
         self.show_command = True
 
         # int
+        self.text_size = 14
         self.annotation_size = 18
         self.font_size = 8
         self.magnify = 5
 
         # float
         self.coord_scale = 0.05
+        self.coord_text_scale = 0.5
 
         # string
         self.colormap = 'jet' # 'viridis'
@@ -132,6 +139,7 @@ class Settings(object):
 
         # scales the coordinate systems
         self._set_setting(settings, setting_keys, ['coord_scale'], self.coord_scale, auto_type=float)
+        self._set_setting(settings, setting_keys, ['coord_text_scale'], self.coord_text_scale, auto_type=float)
 
         # this is for the 3d annotation
         self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'],
@@ -146,11 +154,13 @@ class Settings(object):
         # this is the text in the lower left corner
         self._set_setting(settings, setting_keys, ['text_color', 'textColor'],
                           BLACK, auto_type=float)
+        self._set_setting(settings, setting_keys, ['text_size'], 14, auto_type=int)
 
         # default colormap for legend
         self._set_setting(settings, setting_keys, ['colormap'],
                           'jet')
 
+        # general gui sizing
         screen_shape = self._set_setting(settings, setting_keys, ['screen_shape'],
                                          screen_shape_default, save=False, auto_type=int)
 
@@ -174,7 +184,6 @@ class Settings(object):
 
         font = QtGui.QFont()
         font.setPointSize(self.font_size)
-        #self.app.setFont(font)
         self.parent.setFont(font)
 
         #if 0 and PY3:
@@ -224,6 +233,7 @@ class Settings(object):
 
         # float
         settings.setValue('coord_scale', self.coord_scale)
+        settings.setValue('coord_text_scale', self.coord_text_scale)
 
         # str
         settings.setValue('colormap', self.colormap)
@@ -308,6 +318,11 @@ class Settings(object):
         self.coord_scale = coord_scale
         self.update_coord_scale(coord_scale, render=render)
 
+    def set_coord_text_scale(self, coord_text_scale, render=True):
+        """sets the coordinate system text size"""
+        self.coord_text_scale = coord_text_scale
+        self.update_coord_text_scale(coord_text_scale, render=render)
+
     def update_coord_scale(self, coord_scale=None, render=True):
         """internal method for updating the coordinate system size"""
         if coord_scale is None:
@@ -317,6 +332,27 @@ class Settings(object):
 
         for unused_coord_id, axes in iteritems(self.parent.axes):
             axes.SetTotalLength(scale, scale, scale)
+        if render:
+            self.parent.vtk_interactor.GetRenderWindow().Render()
+
+    def update_coord_text_scale(self, coord_text_scale=None, render=True):
+        """internal method for updating the coordinate system size"""
+        if coord_text_scale is None:
+            coord_text_scale = self.coord_text_scale
+
+        for unused_coord_id, axes in iteritems(self.parent.axes):
+            texts = [
+                axes.GetXAxisCaptionActor2D(),
+                axes.GetYAxisCaptionActor2D(),
+                axes.GetZAxisCaptionActor2D(),
+            ]
+            width = 0.10
+            height = 0.25
+            for text in texts:
+                prop = text.GetCaptionTextProperty()
+                text.SetWidth(coord_text_scale * width)
+                text.SetHeight(coord_text_scale * height)
+
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
@@ -403,7 +439,7 @@ class Settings(object):
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes
 
-    def set_text_color(self, color):
+    def set_text_color(self, color, render=True):
         """
         Set the text color
 
@@ -415,12 +451,35 @@ class Settings(object):
         self.text_color = color
         for text_actor in itervalues(self.parent.text_actors):
             text_actor.GetTextProperty().SetColor(color)
-        self.parent.vtk_interactor.Render()
+        if render:
+            self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_text_color(%s, %s, %s)' % color)
+
+    def set_text_size(self, text_size, render=True):
+        """
+        Set the text color
+
+        Parameters
+        ----------
+        text_size : int
+            the lower left text size (typical 14)
+        """
+        i = 0
+        dtext_size = text_size + 1
+        self.text_size = text_size
+        for text_actor in itervalues(self.parent.text_actors):
+            text_prop = text_actor.GetTextProperty()
+            text_prop.SetFontSize(text_size)
+
+            position = [5, 5 + i * dtext_size]
+            text_actor.SetDisplayPosition(*position)
+            i += 1
+        if render:
+            self.parent.vtk_interactor.Render()
+        self.parent.log_command('settings.set_text_size(%s)' % text_size)
 
     def update_text_size(self, magnify=1.0):
         """Internal method for updating the bottom-left text when we go to take a picture"""
-        text_size = int(14 * magnify)
         for text_actor in itervalues(self.parent.text_actors):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
@@ -428,6 +487,9 @@ class Settings(object):
     def set_magnify(self, magnify=5):
         """sets the screenshot magnification factor (int)"""
         self.magnify = magnify
+
+    def __repr__(self):
+        return '<Settings>'
 
 
 def isfloat(value):
