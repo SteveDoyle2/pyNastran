@@ -31,10 +31,7 @@ class RealBarArray(OES_Object):
         self.nelements = 0  # result specific
 
         if is_sort1:
-            if dt is not None:
-                #self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-                #self.addNewNode = self.addNewNodeSort1
+            pass
         else:
             raise NotImplementedError('SORT2')
             #assert dt is not None
@@ -139,12 +136,6 @@ class RealBarArray(OES_Object):
                 print(msg)
                 raise ValueError(msg)
         return True
-
-    def add_new_eid(self, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                    s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-        self.add_new_eid_sort1(dt, eid,
-                               s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                               s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
 
     def add_new_eid_sort1(self, dt, eid,
                           s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,

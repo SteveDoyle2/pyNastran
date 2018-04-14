@@ -349,7 +349,6 @@ class Settings(object):
             width = 0.10
             height = 0.25
             for text in texts:
-                prop = text.GetCaptionTextProperty()
                 text.SetWidth(coord_text_scale * width)
                 text.SetHeight(coord_text_scale * height)
 
