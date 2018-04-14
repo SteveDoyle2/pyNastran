@@ -1,8 +1,59 @@
 from __future__ import print_function
-from six import string_types
+#import sys
+from six import string_types #, integer_types
+#import vtk.util
+
+#VTK_FLOAT = 1
+#VTK_UNSIGNED_CHAR = 2
+#VTK_UNSIGNED_SHORT = 3
+#VTK_UNSIGNED_INT = 4
+#VTK_VERSION = '7.1.1'
+#class vtkLine(object):
+    #def __init__(self):
+        #pass
+#class vtkTriangle(object):
+    #def __init__(self):
+        #pass
+#class vtkQuad(object):
+    #def __init__(self):
+        #pass
+#class vtkTetra(object):
+    #def __init__(self):
+        #pass
+#class vtkWedge(object):
+    #def __init__(self):
+        #pass
+#class vtkHexahedron(object):
+    #def __init__(self):
+        #pass
+#class vtkQuadraticTriangle(object):
+    #def __init__(self):
+        #pass
+#class vtkQuadraticQuad(object):
+    #def __init__(self):
+        #pass
+#class vtkQuadraticTetra(object):
+    #def __init__(self):
+        #pass
+#class vtkQuadraticWedge(object):
+    #def __init__(self):
+        #pass
+#class vtkQuadraticHexahedron(object):
+    #def __init__(self):
+        #pass
+#class vtkPyramid(object):
+    #def __init__(self):
+        #pass
 
 
-class MockArrays(object):
+#class vtkPoints(object):
+    #def __init__(self):
+        #self.npoints = 0
+    #def SetNumberOfPoints(self, npoints):
+        #assert isinstance(npoints, integer_types), 'npoints=%s type=%s' % (npoints, type(npoints))
+        #self.npoints = npoints
+
+class Arrays(object):
     def __init__(self):
         pass
     def AddArray(self, grid):
@@ -18,7 +69,89 @@ class MockArrays(object):
     def SetActiveVectors(self, name):
         pass
 
-class MockGridMapper(object):
+class vtkArray(object):
+    def __init__(self):
+        pass
+    def SetNumberOfComponents(self, ncomp):
+        assert isinstance(ncomp, int), ncomp
+#class vtkLongArray(vtkArray):
+    #def __init__(self):
+        #Arrays.__init__(self)
+    #def GetDataTypeSize(self):
+        #return 8
+class vtkIdTypeArray(object):
+    def __init__(self):
+        pass
+    def GetDataTypeSize(self):
+        return 4
+
+
+#class vtkDataArray(object):
+    #def __init__(self):
+        #pass
+    #def CreateDataArray(self, vtk_array_type):
+        #pass
+
+#class vtkGenericRenderWindowInteractor(object):
+    #def __init__(self):
+        #pass
+#class vtkInteractorStyleRubberBandZoom(object):
+    #def __init__(self):
+        #pass
+#class vtkInteractorStyleTrackballCamera(object):
+    #def __init__(self):
+        #pass
+
+#class vtkColorTransferFunction(object):
+    #def __init__(self):
+        #pass
+    #def SetNanColor(self, red, green, blue):
+        #assert isinstance(red, float), red
+        #assert isinstance(green, float), green
+        #assert isinstance(blue, float), blue
+    #def SetColorSpaceToHSV(self):
+        #pass
+    ##def SetColorSpaceToRGB(self):
+        ##pass
+    #def AddRGBPoint(self, value, red, green, blue):
+        #assert isinstance(value, float), value
+        #assert isinstance(red, float), red
+        #assert isinstance(green, float), green
+        #assert isinstance(blue, float), blue
+    #def HSVWrapOff(self):
+        #pass
+    #def SetRange(self, min_value, max_value):
+        #assert isinstance(min_value, float), min_value
+        #assert isinstance(max_value, float), max_value
+
+#class vtkScalarBarActor(object):
+    #def __init__(self):
+        #pass
+    #def SetTitle(self, title):
+        #assert isinstance(title, string_types), 'title=%r' % title
+    #def SetLookupTable(self, color_function):
+        #assert isinstance(color_function, vtkColorTransferFunction), 'color_function=%r' % color_function
+    #def SetOrientationToVertical(self):
+        #pass
+    #def SetPosition(self, x, y):
+        #assert isinstance(x, float), x
+        #assert isinstance(y, float), y
+    #def SetHeight(self, height):
+        #assert isinstance(height, float), height
+    #def SetWidth(self, width):
+        #assert isinstance(width, float), width
+    #def SetLabelFormat(self, label_format):
+        #assert isinstance(label_format, string_types), 'label_format=%r' % label_format
+    #def SetNumberOfLabels(self, nlabels):
+        #assert isinstance(nlabels, int), nlabels
+    #def SetMaximumNumberOfColors(self, ncolors):
+        #assert isinstance(ncolors, int), ncolors
+    #def VisibilityOff(self):
+        #pass
+    #def Modified(self):
+        #pass
+
+class GridMapper(object):
     def __init__(self):
         pass
     def InterpolateScalarsBeforeMappingOff(self):
@@ -26,7 +159,7 @@ class MockGridMapper(object):
     def InterpolateScalarsBeforeMappingOn(self):
         pass
 
-class MockGeometryProperty(object):
+class GeometryProperty(object):
     def __init__(self):
         pass
     def SetRepresentationToPoints(self):
@@ -42,9 +175,9 @@ class MockGeometryProperty(object):
         assert isinstance(size, int), type(size)
 
 
-class MockGeometryActor(object):
+class GeometryActor(object):
     def __init__(self):
-        self._prop = MockGeometryProperty()
+        self._prop = GeometryProperty()
     def GetProperty(self):
         return self._prop
     def SetBackfaceProperty(self, prop):
@@ -57,7 +190,7 @@ class MockGeometryActor(object):
         pass
 
 
-class MockGrid(object):
+class Grid(object):
     def Reset(self):
         pass
     def Allocate(self, nelements, delta):
@@ -73,11 +206,25 @@ class MockGrid(object):
     def SetCells(self, vtk_cell_types, vtk_cell_locations, vtk_cells):
         pass
     def GetCellData(self):
-        return MockArrays()
+        return Arrays()
     def GetPointData(self):
-        return MockArrays()
+        return Arrays()
 
-class MockTextActor(object):
+class vtkTextProperty(object):
+    def __init__(self):
+        pass
+    def SetFontFamilyToArial(self):
+        pass
+    def BoldOn(self):
+        pass
+    def BoldOff(self):
+        pass
+    def ShadowOn(self):
+        pass
+    def ShadowOff(self):
+        pass
+
+class vtkTextActor(object):
     def __init__(self):
         pass
     def SetInput(self, string):
@@ -87,25 +234,31 @@ class MockTextActor(object):
     def VisibilityOff(self):
         pass
 
-class MockArrowSource(object):
+class ArrowSource(object):
     def __init__(self):
         pass
 
-class MockGlyph3D(object):
+class Glyph3D(object):
     def SetScaleFactor(self, value):
         pass
 
-class MockPolyDataMapper(object):
+class PolyDataMapper(object):
     def __init__(self):
         pass
 
-class MockLODActor(object):
+class vtkRenderer(object):
+    def __init__(self):
+        pass
+    def AddActor(self, actor):
+        pass
+
+class vtkLODActor(object):
     def __init__(self):
         pass
     def SetVisibility(self, is_visible):
         pass
 
-class MockVTKInteractor(object):
+class VTKInteractor(object):
     def __init__(self):
         pass
     def Render(self):

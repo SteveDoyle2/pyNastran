@@ -285,7 +285,7 @@ class GuiAttributes(object):
         """sets the element_id map"""
         self.eid_maps[self.name] = eid_map
 
-    #-------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def _load_patran_nod(self, nod_filename):
         """reads a Patran formatted *.nod file"""
         from pyNastran.bdf.patran_utils.read_patran import load_patran_nod
@@ -406,29 +406,6 @@ class GuiAttributes(object):
         #if name in self.geometry_actors:
         self.geometry_actors[name].Modified()
 
-    def create_coordinate_system(self, coord_id, dim_max, label='', origin=None, matrix_3x3=None,
-                                 coord_type='xyz'):
-        """
-        Creates a coordinate system
-
-        Parameters
-        ----------
-        dim_max : float
-            the max model dimension; 10% of the max will be used for
-            the coord length
-        label : str
-            the coord id or other unique label (default is empty to
-            indicate the global frame)
-        origin : (3, ) ndarray/list/tuple
-            the origin
-        matrix_3x3 : (3, 3) ndarray
-            a standard Nastran-style coordinate system
-        coord_type : str
-            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
-            that changes the axis names
-        """
-        pass
-
     @property
     def displacement_scale_factor(self):
         """
@@ -509,3 +486,89 @@ class GuiAttributes(object):
         #self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
         return skip_reading
+
+    #---------------------------------------------------------------------------
+    def create_coordinate_system(self, coord_id, dim_max, label='',
+                                 origin=None, matrix_3x3=None,
+                                 coord_type='xyz'):
+        """
+        Creates a coordinate system
+
+        Parameters
+        ----------
+        coord_id : float
+            the coordinate system id
+        dim_max : float
+            the max model dimension; 10% of the max will be used for the coord length
+        label : str
+            the coord id or other unique label (default is empty to indicate the global frame)
+        origin : (3, ) ndarray/list/tuple
+            the origin
+        matrix_3x3 : (3, 3) ndarray
+            a standard Nastran-style coordinate system
+        coord_type : str
+            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
+            that changes the axis names
+
+        .. todo::  coord_type is not supported ('xyz' ONLY)
+        .. todo::  Can only set one coordinate system
+        """
+        self.tool_actions.create_coordinate_system(
+            coord_id, dim_max, label=label,
+            origin=origin, matrix_3x3=matrix_3x3,
+            coord_type=coord_type)
+
+    def create_global_axes(self, dim_max):
+        """creates the global axis"""
+        cid = 0
+        self.tool_actions.create_coordinate_system(
+            cid, dim_max, label='', origin=None, matrix_3x3=None, coord_type='xyz')
+
+    def create_corner_axis(self):
+        """creates the axes that sits in the corner"""
+        self.tool_actions.create_corner_axis()
+
+    def on_rotate_clockwise(self):
+        """rotate clockwise"""
+        self.tool_actions.rotate(15.0)
+
+    def on_rotate_cclockwise(self):
+        """rotate counter clockwise"""
+        self.tool_actions.rotate(-15.0)
+
+    def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
+        """
+        Updates the text actors in the lower left
+
+        Max:  1242.3
+        Min:  0.
+        Subcase: 1 Subtitle:
+        Label: SUBCASE 1; Static
+        """
+        self.tool_actions.update_text_actors(subcase_id, subtitle, min_value, max_value, label)
+
+    def update_camera(self, code):
+        self.tool_actions.update_camera(code)
+
+    def _update_camera(self, camera=None):
+        self.tool_actions._update_camera(camera)
+
+    def zoom(self, value):
+        return self.tool_actions.zoom(value)
+
+    def rotate(self, rotate_deg, render=True):
+        """rotates the camera by a specified amount"""
+        self.tool_actions.rotate(rotate_deg, render=render)
+
+    def create_text(self, position, label, text_size=18):
+        """creates the lower left text actors"""
+        self.tool_actions.create_text(position, label, text_size=text_size)
+
+    def turn_text_off(self):
+        """turns all the text actors off"""
+        self.tool_actions.turn_text_off()
+
+    def turn_text_on(self):
+        """turns all the text actors on"""
+        self.tool_actions.turn_text_on()
+

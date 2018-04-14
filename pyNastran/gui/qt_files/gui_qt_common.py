@@ -64,34 +64,6 @@ class GuiCommon(GuiAttributes):
             for axes in itervalues(self.axes):
                 axes.SetTotalLength(dim, dim, dim)
 
-    def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
-        """
-        Updates the text actors in the lower left
-
-        Max:  1242.3
-        Min:  0.
-        Subcase: 1 Subtitle:
-        Label: SUBCASE 1; Static
-        """
-        if isinstance(max_value, integer_types):
-            max_msg = 'Max:  %i' % max_value
-            min_msg = 'Min:  %i' % min_value
-        elif isinstance(max_value, string_types):
-            max_msg = 'Max:  %s' % str(max_value)
-            min_msg = 'Min:  %s' % str(min_value)
-        else:
-            max_msg = 'Max:  %g' % max_value
-            min_msg = 'Min:  %g' % min_value
-        self.text_actors[0].SetInput(max_msg)
-        self.text_actors[1].SetInput(min_msg)
-        self.text_actors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))  # info
-
-        if label:
-            self.text_actors[3].SetInput('Label: %s' % label)  # info
-            self.text_actors[3].VisibilityOn()
-        else:
-            self.text_actors[3].VisibilityOff()
-
     def on_rcycle_results(self, case=None):
         """the reverse of on_cycle_results"""
         if len(self.case_keys) <= 1:
@@ -316,32 +288,7 @@ class GuiCommon(GuiAttributes):
 
     def export_case_data(self, icases=None):
         """exports CSVs of the requested cases"""
-        if icases is None:
-            icases = self.result_cases.keys()
-        for icase in icases:
-            (obj, (i, name)) = self.result_cases[icase]
-            subcase_id = obj.subcase_id
-            location = obj.get_location(i, name)
-
-            case = obj.get_result(i, name)
-            if case is None:
-                continue # normals
-            subtitle, label = self.get_subtitle_label(subcase_id)
-            label2 = obj.get_header(i, name)
-            data_format = obj.get_data_format(i, name)
-            vector_size = obj.get_vector_size(i, name)
-            print(subtitle, label, label2, location, name)
-
-            word, eids_nids = self.get_mapping_for_location(location)
-
-            # fixing cast int data
-            header = '%s(%%i),%s(%s)' % (word, label2, data_format)
-            if 'i' in data_format and isinstance(case.dtype, np.floating):
-                header = '%s(%%i),%s' % (word, label2)
-
-            fname = '%s_%s.csv' % (icase, name)
-            out_data = np.column_stack([eids_nids, case])
-            np.savetxt(fname, out_data, delimiter=',', header=header, fmt=b'%s')
+        self.tool_actions.export_case_data(icases=icases)
 
     def get_mapping_for_location(self, location):
         """helper method for ``export_case_data``"""

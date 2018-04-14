@@ -903,124 +903,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return self.log.simple_msg(msg, 'ERROR')
         self.log.simple_msg(msg, 'WARNING')
 
-    def create_coordinate_system(self, coord_id, dim_max, label='', origin=None, matrix_3x3=None,
-                                 coord_type='xyz'):
-        """
-        Creates a coordinate system
-
-        Parameters
-        ----------
-        coord_id : float
-            the coordinate system id
-        dim_max : float
-            the max model dimension; 10% of the max will be used for the coord length
-        label : str
-            the coord id or other unique label (default is empty to indicate the global frame)
-        origin : (3, ) ndarray/list/tuple
-            the origin
-        matrix_3x3 : (3, 3) ndarray
-            a standard Nastran-style coordinate system
-        coord_type : str
-            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
-            that changes the axis names
-
-        .. todo::  coord_type is not supported ('xyz' ONLY)
-        .. todo::  Can only set one coordinate system
-
-        .. seealso::
-            http://en.wikipedia.org/wiki/Homogeneous_coordinates
-            http://www3.cs.stonybrook.edu/~qin/courses/graphics/camera-coordinate-system.pdf
-            http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
-        """
-        self.settings.dim_max = dim_max
-        scale = self.settings.coord_scale * dim_max
-
-        transform = make_vtk_transform(origin, matrix_3x3)
-
-        create_actor = True
-        if coord_id in self.transform:
-            axes = self.axes[coord_id]
-            create_actor = False
-        else:
-            axes = vtk.vtkAxesActor()
-            axes.DragableOff()
-            axes.PickableOff()
-
-        #axes.GetLength() # pi
-        #axes.GetNormalizedShaftLength() # (0.8, 0.8, 0.8)
-        #axes.GetNormalizedTipLength() # (0.2, 0.2, 0.2)
-        #axes.GetOrigin() # (0., 0., 0.)
-        #axes.GetScale() # (1., 1., 1.)
-        #axes.GetShaftType() # 1
-        #axes.GetTotalLength() # (1., 1., 1.)
-
-        axes.SetUserTransform(transform)
-        axes.SetTotalLength(scale, scale, scale)
-        if coord_type == 'xyz':
-            if label:
-                xlabel = u'x%s' % label
-                ylabel = u'y%s' % label
-                zlabel = u'z%s' % label
-                axes.SetXAxisLabelText(xlabel)
-                axes.SetYAxisLabelText(ylabel)
-                axes.SetZAxisLabelText(zlabel)
-        else:
-            if coord_type == 'Rtz':  # cylindrical
-                #x = u'R'
-                #y = u'θ'
-                #z = u'z'
-                x = 'R'
-                y = 't'
-                z = 'z'
-
-            elif coord_type == 'Rtp':  # spherical
-                #x = u'R'
-                #y = u'θ'
-                #z = u'Φ'
-                x = 'R'
-                y = 't'
-                z = 'p'
-            else:
-                raise RuntimeError('invalid axis type; coord_type=%r' % coord_type)
-
-            xlabel = '%s%s' % (x, label)
-            ylabel = '%s%s' % (y, label)
-            zlabel = '%s%s' % (z, label)
-            axes.SetXAxisLabelText(xlabel)
-            axes.SetYAxisLabelText(ylabel)
-            axes.SetZAxisLabelText(zlabel)
-
-        self.transform[coord_id] = transform
-        self.axes[coord_id] = axes
-
-        is_visible = False
-        if label == '':
-            label = 'Global XYZ'
-            is_visible = True
-        else:
-            label = 'Coord %s' % label
-        self.geometry_properties[label] = CoordProperties(label, coord_type, is_visible, scale)
-        self.geometry_actors[label] = axes
-        if create_actor:
-            self.rend.AddActor(axes)
-
-    def create_global_axes(self, dim_max):
-        """creates the global axis"""
-        cid = 0
-        self.create_coordinate_system(
-            cid, dim_max, label='', origin=None, matrix_3x3=None, coord_type='xyz')
-
-    def create_corner_axis(self):
-        """creates the axes that sits in the corner"""
-        if not self.run_vtk:
-            return
-        axes = vtk.vtkAxesActor()
-        self.corner_axis = vtk.vtkOrientationMarkerWidget()
-        self.corner_axis.SetOrientationMarker(axes)
-        self.corner_axis.SetInteractor(self.vtk_interactor)
-        self.corner_axis.SetEnabled(1)
-        self.corner_axis.InteractiveOff()
-
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
 
@@ -1731,10 +1613,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         text_size = 14
         dtext_size = text_size + 1
-        self.tool_actions.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
-        self.tool_actions.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
-        self.tool_actions.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
-        self.tool_actions.create_text([5, 5], 'Word2', text_size)  # text actor 3
+        self.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
+        self.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
+        self.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
+        self.create_text([5, 5], 'Word2', text_size)  # text actor 3
 
         self.get_edges()
         if self.is_edges:
@@ -1836,16 +1718,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #prop.ShadingOff()
             self.vtk_interactor.Render()
             self.is_wireframe = True
-
-    def _update_camera(self, camera=None):
-        self.tool_actions._update_camera(camera)
-
-    def zoom(self, value):
-        return self.tool_actions.zoom(value)
-
-    def rotate(self, rotate_deg, render=True):
-        """rotates the camera by a specified amount"""
-        self.tool_actions.rotate(rotate_deg, render=render)
 
     def on_pan_left(self, event):
         """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
@@ -1960,14 +1832,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # Update the clipping range of the camera
         self.rend.ResetCameraClippingRange()
         self.Render()
-
-    def on_rotate_clockwise(self):
-        """rotate clockwise"""
-        self.tool_actions.rotate(15.0)
-
-    def on_rotate_cclockwise(self):
-        """rotate counter clockwise"""
-        self.tool_actions.rotate(-15.0)
 
     def on_increase_magnification(self):
         """zoom in"""
@@ -2469,16 +2333,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #if 0:
         self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
         self.extract_selection.Update()
-
-    def turn_text_off(self):
-        """turns all the text actors off"""
-        for text in itervalues(self.text_actors):
-            text.VisibilityOff()
-
-    def turn_text_on(self):
-        """turns all the text actors on"""
-        for text in itervalues(self.text_actors):
-            text.VisibilityOn()
 
     def build_lookup_table(self):
         scalar_range = self.grid_selected.GetScalarRange()
@@ -4411,9 +4265,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def GetCamera(self):
         return self.rend.GetActiveCamera()
 
-    def update_camera(self, code):
-        self.tool_actions.update_camera(code)
-
     def _simulate_key_press(self, key):
         """
         A little hack method that simulates pressing the key for the VTK
@@ -5826,23 +5677,3 @@ class GuiCommon2(QMainWindow, GuiCommon):
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
         prop.SetPointSize(point_size)
-
-
-def make_vtk_transform(origin, matrix_3x3):
-    """makes a vtkTransform"""
-    transform = vtk.vtkTransform()
-    if origin is None and matrix_3x3 is None:
-        pass
-    elif origin is not None and matrix_3x3 is None:
-        #print('origin%s = %s' % (label, str(origin)))
-        transform.Translate(*origin)
-    elif matrix_3x3 is not None:  # origin can be None
-        xform = np.eye(4, dtype='float32')
-        xform[:3, :3] = matrix_3x3
-        if origin is not None:
-            xform[:3, 3] = origin
-        transform.SetMatrix(xform.ravel())
-    else:
-        raise RuntimeError('unexpected coordinate system')
-    return transform
-

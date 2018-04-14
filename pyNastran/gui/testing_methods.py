@@ -11,9 +11,10 @@ from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.bdf.cards.base_card import deprecated
 
 from pyNastran.gui.test.mock_vtk import (
-    MockGeometryActor, MockGeometryProperty, MockGrid, MockGridMapper, MockTextActor,
-    MockArrowSource, MockGlyph3D, MockLODActor, MockPolyDataMapper, MockVTKInteractor,
+    GeometryActor, GeometryProperty, Grid, GridMapper,
+    ArrowSource, Glyph3D, PolyDataMapper, VTKInteractor, vtkRenderer,
 )
+from vtk import vtkTextActor, vtkLODActor
 
 #class ScalarBar(object):
     #def VisibilityOff(self):
@@ -73,7 +74,7 @@ class FakeGUIMethods(GuiCommon):
         #GuiAttributes.__init__(self, **kwds)
         GuiCommon.__init__(self, **kwds)
         self.res_widget = res_widget
-        self.vtk_interactor = MockVTKInteractor()
+        self.vtk_interactor = VTKInteractor()
         self.debug = False
         self._form = []
         self.result_cases = {}
@@ -81,8 +82,8 @@ class FakeGUIMethods(GuiCommon):
         #self.geometry_actors = {
             #'main' : GeometryActor(),
         #}
-        self.main_grid_mappers = {'main' : MockGridMapper()}
-        self.grid = MockGrid()
+        self.main_grid_mappers = {'main' : GridMapper()}
+        self.grid = Grid()
         #self.scalarBar = ScalarBar()
         self.scalar_bar = ScalarBar()
         self.alt_geometry_actor = ScalarBar()
@@ -90,15 +91,14 @@ class FakeGUIMethods(GuiCommon):
             'main' : self.grid,
         }
         self.main_geometry_actors = {
-            'main' :  MockGeometryActor(),
+            'main' :  GeometryActor(),
         }
 
-
-        self.glyph_source = MockArrowSource()
-        self.glyphs = MockGlyph3D()
-        self.glyph_mapper = MockPolyDataMapper()
-        self.arrow_actor = MockLODActor()
-        self.arrow_actor_centroid = MockLODActor()
+        self.glyph_source = ArrowSource()
+        self.glyphs = Glyph3D()
+        self.glyph_mapper = PolyDataMapper()
+        self.arrow_actor = vtkLODActor()
+        self.arrow_actor_centroid = vtkLODActor()
 
         #self.geometry_properties = {
             #'main' : None,
@@ -109,14 +109,16 @@ class FakeGUIMethods(GuiCommon):
 
         level = 'debug' if self.debug else 'info'
         self.log = get_logger(log=None, level=level)
+        self.rend = vtkRenderer()
 
     def setup_fake_text_actors(self):
-        self.text_actors[0] = MockTextActor()
-        self.text_actors[1] = MockTextActor()
-        self.text_actors[2] = MockTextActor()
-        self.text_actors[3] = MockTextActor()
+        self.text_actors[0] = vtkTextActor()
+        self.text_actors[1] = vtkTextActor()
+        self.text_actors[2] = vtkTextActor()
+        self.text_actors[3] = vtkTextActor()
         for icase in self.result_cases:
             self.label_actors[icase] = []
+
     @property
     def scalarBar(self):
         return self.scalar_bar.scalar_bar
@@ -236,18 +238,6 @@ class FakeGUIMethods(GuiCommon):
         """fake method"""
         pass
 
-    def  turn_text_on(self):
-        """fake method"""
-        pass
-
-    def turn_text_off(self):
-        """fake method"""
-        pass
-
-    def create_global_axes(self, dim_max):
-        """fake method"""
-        pass
-
     def update_axes_length(self, value):
         self.settings.dim_max = value
 
@@ -273,7 +263,7 @@ class FakeGUIMethods(GuiCommon):
                                   follower_nodes=None, follower_function=None,
                                   is_pickable=False, ugrid=None):
         """Fake creates an AltGeometry object"""
-        self.alt_grids[name] = MockGrid()
+        self.alt_grids[name] = Grid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
                            point_size=point_size, bar_scale=bar_scale,
                            opacity=opacity, representation=representation,
@@ -296,7 +286,7 @@ class FakeGUIMethods(GuiCommon):
             props = self.geometry_properties[name_duplicate_from]
             representation = props.representation
 
-        self.alt_grids[name] = MockGrid()
+        self.alt_grids[name] = Grid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
                            point_size=point_size, bar_scale=bar_scale,
                            opacity=opacity, representation=representation,
@@ -307,7 +297,7 @@ class FakeGUIMethods(GuiCommon):
 
     def _add_alt_actors(self, alt_grids):
         for name, grid in iteritems(alt_grids):
-            self.geometry_actors[name] = MockGeometryActor()
+            self.geometry_actors[name] = GeometryActor()
 
     def log_debug(self, msg):
         """turns logs into prints to aide debugging"""
