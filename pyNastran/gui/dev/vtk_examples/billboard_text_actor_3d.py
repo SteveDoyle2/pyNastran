@@ -15,7 +15,7 @@ def ActorCallback(caller, eventId_unuseD, clientData, callData_unused):
     #actor = vtkActor *(caller)
 
     xyz = actor.GetPosition()
-    label = '.3f, %.3f, %.3f' % (xyz[0], xyz[1], xyz[2])
+    label = '%.3f, %.3f, %.3f' % (xyz[0], xyz[1], xyz[2])
     text_actor.SetPosition(xyz)
     text_actor.SetInput(label)
 

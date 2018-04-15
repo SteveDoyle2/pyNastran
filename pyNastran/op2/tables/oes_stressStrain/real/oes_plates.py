@@ -294,7 +294,9 @@ class RealPlateArray(OES_Object):
                         f06_file.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % (
                             '', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                 else:
-                    raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+                    msg = 'element_name=%s self.element_type=%s' % (
+                        self.element_name, self.element_type)
+                    raise NotImplementedError(msg)
 
             f06_file.write(page_stamp % page_num)
             page_num += 1

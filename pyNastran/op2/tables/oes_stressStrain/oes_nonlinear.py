@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
 from itertools import cycle
-from six import iteritems, integer_types
+from six import integer_types
 from six.moves import range
 import numpy as np
 from numpy import zeros
@@ -122,7 +122,7 @@ class RealNonlinearPlateArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()[1:]
-        nelements = self.element.shape[0]
+        #nelements = self.element.shape[0]
 
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -183,14 +183,15 @@ class RealNonlinearPlateArray(OES_Object):
 
                     # vm stress can be NaN for some reason...
                     if not np.array_equal(t1, t2):
+                        eid_spaces = ' ' * (len(str(eid)))
                         msg += (
                             # eid   fd  ox  oy  oz  txy ex  ey  ez  exy es  eps ecs1
                             '%s    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
                             '%s    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
                                 fiber_distance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1,
-                                ' ' * (len(str(eid)),
-                                fiber_distance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2)))
+                                eid_spaces,
+                                fiber_distance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -234,7 +235,8 @@ class RealNonlinearPlateArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
+                  is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         #msg, nnodes, cen = _get_plate_msg(self)
@@ -314,17 +316,6 @@ class RealNonlinearPlateArray(OES_Object):
                         '0  %8i  %-13s  %-13s  %-13s                 %-13s  %-13s  %-13s  %s\n'
                         '                            %-13s  %-13s                 %s\n' % (
                             # A
-                            #eid, write_float_13e(fdi),
-                            #write_float_13e(oxxi), write_float_13e(oyyi),
-                            ##write_float_13e(ozzi),
-                            #write_float_13e(txyi),
-                            #write_float_13e(esi), write_float_13e(epsi),
-                            #write_float_13e(ecsi),
-
-                            #write_float_13e(exxi), write_float_13e(eyyi),
-                            ##write_float_13e(ezzi),
-                            #write_float_13e(exyi),
-
                             #    ELEMENT  FIBER  XYZ STRESS     EQUIVALENT  EFF.STRAIN  EFF.CREEP\n'
                             eid, write_float_13e(fdi),
                             write_float_13e(oxxi), write_float_13e(oyyi),
