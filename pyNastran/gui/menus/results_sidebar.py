@@ -212,16 +212,16 @@ class Sidebar(QWidget):
         self._add_from_setup_dict(vbox, irow)
 
         nwindows = len(self.result_case_windows)
-        print('nwindows=%s self.names=%s' % (nwindows, self.names))
+        #print('nwindows=%s self.names=%s' % (nwindows, self.names))
         for i in range(nwindows):
-            print('*using existing window')
+            #print('*using existing window')
             result_case_window = self.result_case_windows[i]
             vbox.addWidget(result_case_window)
             #result_case_window.setVisible(False)  # be very careful of this...
 
         nwindows = len(self.result_case_windows)
         for name in self.names[nwindows:]:
-            print('*creating a window')
+            #print('*creating a window')
             result_case_window = ResultsWindow(self, 'Case/Results', data, choices)
             result_case_window.setVisible(False)
             vbox.addWidget(result_case_window)

@@ -283,7 +283,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         self.cycle_results(case)
         self.on_set_camera_data(camera, show_log=False)
 
-    def closeEvent(self, unused_event):
+    def closeEvent(self, *args):
         """
         Handling saving state before application when application is
         being closed.

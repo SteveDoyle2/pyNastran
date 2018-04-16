@@ -1,6 +1,7 @@
 from __future__ import print_function
 #import sys
 from six import string_types #, integer_types
+from vtk import vtkCamera
 #import vtk.util
 
 #VTK_FLOAT = 1
@@ -251,6 +252,12 @@ class vtkRenderer(object):
         pass
     def AddActor(self, actor):
         pass
+    def GetActiveCamera(self):
+        return vtkCamera()
+    def ResetCameraClippingRange(self):
+        pass
+    def Render(self):
+        pass
 
 class vtkLODActor(object):
     def __init__(self):
@@ -258,8 +265,24 @@ class vtkLODActor(object):
     def SetVisibility(self, is_visible):
         pass
 
+#class vtkCamera(object):
+    #def __init__(self):
+        #pass
+    #def GetPosition(self):
+        #return (0., 0., 0.)
+    #def SetPosition(self, xyz):
+        #pass
+    #def GetFocalPoint(self):
+        #return (0., 0., 0.)
+    #def SetFocalPoint(self, xyz):
+        #pass
+    #def GetViewUp(self):
+        #return (0., 0., 1.)
+
 class VTKInteractor(object):
     def __init__(self):
         pass
     def Render(self):
         pass
+    def GetRenderWindow(self):
+        return vtkRenderer()

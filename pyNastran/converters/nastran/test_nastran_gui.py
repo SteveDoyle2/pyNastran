@@ -304,6 +304,16 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_chan.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        test.on_pan_left(None)
+        test.on_pan_right(None)
+        test.on_pan_up(None)
+        test.on_pan_down(None)
+        test.on_increase_magnification()
+        test.on_decrease_magnification()
+        test.zoom(1.2)
+        test.on_rotate_clockwise()
+        test.on_rotate_cclockwise()
+        test.rotate(15.0)
 
     def test_gui_bar_chan1(self):
         """tests a PBARL/CHAN1"""

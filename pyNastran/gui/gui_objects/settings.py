@@ -148,6 +148,10 @@ class Settings(object):
         if isinstance(self.annotation_size, float):
             # throw the float in the trash as it's from an old version of vtk
             self.annotation_size = 18
+        elif isinstance(self.annotation_size, int):
+            pass
+        else:
+            print('annotation_size = ', self.annotation_size)
 
         self._set_setting(settings, setting_keys, ['magnify'], self.magnify, auto_type=int)
 
@@ -479,6 +483,7 @@ class Settings(object):
 
     def update_text_size(self, magnify=1.0):
         """Internal method for updating the bottom-left text when we go to take a picture"""
+        text_size = int(14 * magnify)
         for text_actor in itervalues(self.parent.text_actors):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)

@@ -10,6 +10,7 @@ import numpy as np
 
 from pyNastran.gui.gui_objects.settings import Settings
 from pyNastran.gui.tool_actions import ToolActions
+from pyNastran.gui.views import ViewActions
 from pyNastran.gui.utils.load_results import create_res_obj
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
@@ -28,6 +29,7 @@ class GuiAttributes(object):
         self.dev = False
         self.settings = Settings(self)
         self.tool_actions = ToolActions(self)
+        self.view_actions = ViewActions(self)
 
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
@@ -528,14 +530,6 @@ class GuiAttributes(object):
         """creates the axes that sits in the corner"""
         self.tool_actions.create_corner_axis()
 
-    def on_rotate_clockwise(self):
-        """rotate clockwise"""
-        self.tool_actions.rotate(15.0)
-
-    def on_rotate_cclockwise(self):
-        """rotate counter clockwise"""
-        self.tool_actions.rotate(-15.0)
-
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
         """
         Updates the text actors in the lower left
@@ -553,13 +547,6 @@ class GuiAttributes(object):
     def _update_camera(self, camera=None):
         self.tool_actions._update_camera(camera)
 
-    def zoom(self, value):
-        return self.tool_actions.zoom(value)
-
-    def rotate(self, rotate_deg, render=True):
-        """rotates the camera by a specified amount"""
-        self.tool_actions.rotate(rotate_deg, render=render)
-
     def create_text(self, position, label, text_size=18):
         """creates the lower left text actors"""
         self.tool_actions.create_text(position, label, text_size=text_size)
@@ -571,4 +558,42 @@ class GuiAttributes(object):
     def turn_text_on(self):
         """turns all the text actors on"""
         self.tool_actions.turn_text_on()
+
+    #---------------------------------------------------------------------------
+    def on_pan_left(self, event):
+        self.view_actions.on_pan_left(event)
+
+    def on_pan_right(self, event):
+        self.view_actions.on_pan_right(event)
+
+    def on_pan_up(self, event):
+        self.view_actions.on_pan_up(event)
+
+    def on_pan_down(self, event):
+        self.view_actions.on_pan_down(event)
+
+    #------------------------------
+    def rotate(self, rotate_deg, render=True):
+        """rotates the camera by a specified amount"""
+        self.view_actions.rotate(rotate_deg, render=render)
+
+    def on_rotate_clockwise(self):
+        """rotate clockwise"""
+        self.view_actions.rotate(15.0)
+
+    def on_rotate_cclockwise(self):
+        """rotate counter clockwise"""
+        self.view_actions.rotate(-15.0)
+
+    #------------------------------
+    def zoom(self, value):
+        return self.view_actions.zoom(value)
+
+    def on_increase_magnification(self):
+        """zoom in"""
+        self.view_actions.on_increase_magnification()
+
+    def on_decrease_magnification(self):
+        """zoom out"""
+        self.view_actions.on_decrease_magnification()
 

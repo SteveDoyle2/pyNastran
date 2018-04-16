@@ -66,20 +66,20 @@ def run_docopt():
     msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test] [--qt QT]\n'
 
     # You don't need to throw a -o flag
     msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test] [--qt QT]\n'
 
     # no input/output files
     # can you ever have an OUTPUT, but no INPUT?
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test]\n'
+    msg += '               [-q] [--groups] [--noupdate] [--log LOG] [--test] [--qt QT]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -102,6 +102,7 @@ def run_docopt():
 
     msg += "Debug:\n"
     msg += "  --test    temporary dev mode (default=False)\n"
+    msg += "  --qt QT   sets the qt version (default=QT_API)\n"
     msg += '\n'
 
     msg += "Info:\n"
@@ -158,6 +159,12 @@ def run_docopt():
 
     user_points = data['--user_points']
     user_geom = data['--user_geom']
+
+    qt = data['--qt']
+    if qt:
+        qt = qt.lower()
+        assert qt in ['pyside', 'pyqt4', 'pyqt5'], 'qt=%r' % qt
+        os.environ.setdefault('QT_API', qt)
 
     for key, value in sorted(iteritems(data)):
         print(key, value)

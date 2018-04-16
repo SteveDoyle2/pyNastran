@@ -31,7 +31,10 @@ import vtk
 
 
 import pyNastran
-from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+if qt_version == 'pyside':
+    from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+else:
+    from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 from pyNastran.bdf.utils import write_patran_syntax_dict
@@ -1718,128 +1721,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #prop.ShadingOff()
             self.vtk_interactor.Render()
             self.is_wireframe = True
-
-    def on_pan_left(self, event):
-        """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
-        camera, cam, focal = self._setup_pan()
-
-        # Create a vector that points upward, i.e. (0, 1, 0)
-        up = camera.GetViewUp() # We don't want roll
-        vec = [0, 0, 0]
-        new_cam = [0, 0, 0]
-        new_focal = [0, 0, 0]
-
-        # Calculate the forward pointing unit-vector 'vec' again in the same way,
-        # i.e. the normalized vector of focal point – camera position
-        vtk.vtkMath.Subtract(focal, cam, vec)
-
-        vec[1] = 0 #We don't want roll
-        vtk.vtkMath.Normalize(vec)
-
-        # Calculate the cross product of the forward vector by the up vector,
-        # which will give us an orthogonal vector pointing right relative to
-        #the camera
-        vtk.vtkMath.Cross(vec, up, vec)
-
-        # Add this to the camera position and focal point to move it right
-        # new_cam = cam + vec
-        vtk.vtkMath.Add(cam, vec, new_cam)
-
-        # new_focal = focal + vec
-        vtk.vtkMath.Add(focal, vec, new_focal)
-        self._set_camera_position_focal_point(camera, new_cam, new_focal)
-
-    def on_pan_right(self, event):
-        """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
-        camera, cam, focal = self._setup_pan()
-
-        # Create a vector that points upward, i.e. (0, 1, 0)
-        up = camera.GetViewUp() # We don't want roll
-        vec = [0, 0, 0]
-        new_cam = [0, 0, 0]
-        new_focal = [0, 0, 0]
-
-        # Calculate the forward pointing unit-vector 'vec' again in the same way,
-        # i.e. the normalized vector of focal point – camera position
-        vtk.vtkMath.Subtract(focal, cam, vec)
-
-        vec[1] = 0 #We don't want roll
-        vtk.vtkMath.Normalize(vec)
-
-        # Calculate the cross product of the forward vector by the up vector,
-        # which will give us an orthogonal vector pointing right relative to
-        #the camera
-        #vec = up x vec
-        vtk.vtkMath.Cross(vec, up, vec)
-
-        # Subtract vec from the camera position and focal point to move it right
-        # new_cam = cam - vec
-        vtk.vtkMath.Subtract(cam, vec, new_cam)
-
-        # new_focal = focal - vec
-        vtk.vtkMath.Subtract(focal, vec, new_focal)
-        self._set_camera_position_focal_point(camera, new_cam, new_focal)
-
-    def on_pan_up(self, event):
-        """not 100% on this"""
-        camera, cam, focal = self._setup_pan()
-
-        # Create a 'vec' vector that will be the direction of movement
-        # (numpad 8 and 5 generate movement along the z-axis; numpad 4
-        # and 6 along the x-axis; numpad 7 and 9 along the y-axis)
-        vec = camera.GetViewUp() # We don't want roll
-        new_cam = [0, 0, 0]
-        new_focal = [0, 0, 0]
-
-        # Add the movement to the current camera position and focal point,
-        # and save these in 'new_cam' and 'new_focal' respectively
-        vtk.vtkMath.Subtract(cam, vec, new_cam)
-
-        # new_focal = focal - vec
-        vtk.vtkMath.Subtract(focal, vec, new_focal)
-        self._set_camera_position_focal_point(camera, new_cam, new_focal)
-
-    def on_pan_down(self, event):
-        """not 100% on this"""
-        camera, cam, focal = self._setup_pan()
-
-        # Create a 'vec' vector that will be the direction of movement
-        # (numpad 8 and 5 generate movement along the z-axis; numpad 4
-        # and 6 along the x-axis; numpad 7 and 9 along the y-axis)
-        vec = camera.GetViewUp() # We don't want roll
-        new_cam = [0, 0, 0]
-        new_focal = [0, 0, 0]
-
-        # Add the movement to the current camera position and focal point,
-        # and save these in 'new_cam' and 'new_focal' respectively
-        vtk.vtkMath.Add(cam, vec, new_cam)
-
-        # new_focal = focal + vec
-        vtk.vtkMath.Add(focal, vec, new_focal)
-        self._set_camera_position_focal_point(camera, new_cam, new_focal)
-
-    def _setup_pan(self):
-        camera = self.rend.GetActiveCamera()
-        cam = camera.GetPosition()
-        focal = camera.GetFocalPoint()
-        return camera, cam, focal
-
-    def _set_camera_position_focal_point(self, camera, new_cam, new_focal):
-        """Set the camera position and focal point to the new vectors"""
-        camera.SetPosition(new_cam)
-        camera.SetFocalPoint(new_focal)
-
-        # Update the clipping range of the camera
-        self.rend.ResetCameraClippingRange()
-        self.Render()
-
-    def on_increase_magnification(self):
-        """zoom in"""
-        self.zoom(1.1)
-
-    def on_decrease_magnification(self):
-        """zoom out"""
-        self.zoom(1.0 / 1.1)
 
     def on_flip_edges(self):
         """turn edges on/off"""

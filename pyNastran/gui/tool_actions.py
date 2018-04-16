@@ -432,22 +432,6 @@ class ToolActions(object):
         camera.Modified()
         self.vtk_interactor.Render()
 
-    def rotate(self, rotate_deg, render=True):
-        """see the gui"""
-        camera = self.GetCamera()
-        camera.Roll(-rotate_deg)
-        camera.Modified()
-        if render:
-            self.vtk_interactor.Render()
-        self.gui.log_command('rotate(%s)' % rotate_deg)
-
-    def zoom(self, value):
-        camera = self.GetCamera()
-        camera.Zoom(value)
-        camera.Modified()
-        self.vtk_interactor.Render()
-        self.gui.log_command('zoom(%s)' % value)
-
     #---------------------------------------------------------------------------
     def GetCamera(self):
         return self.rend.GetActiveCamera()
