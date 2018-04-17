@@ -37,7 +37,7 @@ class QTreeView2(QTreeView):
         if key == Qt.Key_Delete:
             self.on_delete()
         elif key in [Qt.Key_Enter, Qt.Key_Return]:
-            return self.parent.parent.on_apply(event)
+            return self.parent.parent.on_apply()
         elif key in [Qt.Key_Up, Qt.Key_Down]:
             QTreeView.keyPressEvent(self, event)
             self.set_rows()
