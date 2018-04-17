@@ -11,7 +11,7 @@ from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.bdf.cards.base_card import deprecated
 
 from pyNastran.gui.test.mock_vtk import (
-    GeometryActor, GeometryProperty, Grid, GridMapper,
+    GeometryActor, GeometryProperty, GridMapper, # Grid
     ArrowSource, Glyph3D, PolyDataMapper, VTKInteractor, vtkRenderer,
 )
 from vtk import vtkTextActor, vtkLODActor
