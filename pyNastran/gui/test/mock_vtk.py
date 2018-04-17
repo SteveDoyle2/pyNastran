@@ -54,37 +54,37 @@ from vtk import vtkCamera
         #assert isinstance(npoints, integer_types), 'npoints=%s type=%s' % (npoints, type(npoints))
         #self.npoints = npoints
 
-class Arrays(object):
-    def __init__(self):
-        pass
-    def AddArray(self, grid):
-        pass
-    def SetActiveScalars(self, name):
-        pass
-    def GetNumberOfArrays(self):
-        return 4
-    def GetArrayName(self, i):
-        return 'fakename'
-    def RemoveArray(self, name):
-        pass
-    def SetActiveVectors(self, name):
-        pass
+#class Arrays(object):
+    #def __init__(self):
+        #pass
+    #def AddArray(self, grid):
+        #pass
+    #def SetActiveScalars(self, name):
+        #pass
+    #def GetNumberOfArrays(self):
+        #return 4
+    #def GetArrayName(self, i):
+        #return 'fakename'
+    #def RemoveArray(self, name):
+        #pass
+    #def SetActiveVectors(self, name):
+        #pass
 
-class vtkArray(object):
-    def __init__(self):
-        pass
-    def SetNumberOfComponents(self, ncomp):
-        assert isinstance(ncomp, int), ncomp
+#class vtkArray(object):
+    #def __init__(self):
+        #pass
+    #def SetNumberOfComponents(self, ncomp):
+        #assert isinstance(ncomp, int), ncomp
 #class vtkLongArray(vtkArray):
     #def __init__(self):
         #Arrays.__init__(self)
     #def GetDataTypeSize(self):
         #return 8
-class vtkIdTypeArray(object):
-    def __init__(self):
-        pass
-    def GetDataTypeSize(self):
-        return 4
+#class vtkIdTypeArray(object):
+    #def __init__(self):
+        #pass
+    #def GetDataTypeSize(self):
+        #return 4
 
 
 #class vtkDataArray(object):
@@ -191,49 +191,49 @@ class GeometryActor(object):
         pass
 
 
-class Grid(object):
-    def Reset(self):
-        pass
-    def Allocate(self, nelements, delta):
-        pass
-    def InsertNextCell(self, *cell):
-        pass
-    def SetPoints(self, *cell):
-        pass
-    def Modified(self):
-        pass
-    def Update(self):
-        pass
-    def SetCells(self, vtk_cell_types, vtk_cell_locations, vtk_cells):
-        pass
-    def GetCellData(self):
-        return Arrays()
-    def GetPointData(self):
-        return Arrays()
+#class Grid(object):
+    #def Reset(self):
+        #pass
+    #def Allocate(self, nelements, delta):
+        #pass
+    #def InsertNextCell(self, *cell):
+        #pass
+    #def SetPoints(self, *cell):
+        #pass
+    #def Modified(self):
+        #pass
+    #def Update(self):
+        #pass
+    #def SetCells(self, vtk_cell_types, vtk_cell_locations, vtk_cells):
+        #pass
+    #def GetCellData(self):
+        #return Arrays()
+    #def GetPointData(self):
+        #return Arrays()
 
-class vtkTextProperty(object):
-    def __init__(self):
-        pass
-    def SetFontFamilyToArial(self):
-        pass
-    def BoldOn(self):
-        pass
-    def BoldOff(self):
-        pass
-    def ShadowOn(self):
-        pass
-    def ShadowOff(self):
-        pass
+#class vtkTextProperty(object):
+    #def __init__(self):
+        #pass
+    #def SetFontFamilyToArial(self):
+        #pass
+    #def BoldOn(self):
+        #pass
+    #def BoldOff(self):
+        #pass
+    #def ShadowOn(self):
+        #pass
+    #def ShadowOff(self):
+        #pass
 
-class vtkTextActor(object):
-    def __init__(self):
-        pass
-    def SetInput(self, string):
-        assert isinstance(string, string_types), 'type(string)=%s' % type(string)
-    def VisibilityOn(self):
-        pass
-    def VisibilityOff(self):
-        pass
+#class vtkTextActor(object):
+    #def __init__(self):
+        #pass
+    #def SetInput(self, string):
+        #assert isinstance(string, string_types), 'type(string)=%s' % type(string)
+    #def VisibilityOn(self):
+        #pass
+    #def VisibilityOff(self):
+        #pass
 
 class ArrowSource(object):
     def __init__(self):

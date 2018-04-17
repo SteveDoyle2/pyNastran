@@ -25,6 +25,8 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        test.cycle_results()
+        test.on_rcycle_results()
 
     def test_solid_shell_bar_02(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
@@ -33,6 +35,7 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        test.on_rcycle_results()
 
     def test_solid_shell_bar_03(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')

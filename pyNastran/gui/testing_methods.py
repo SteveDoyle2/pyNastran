@@ -112,11 +112,12 @@ class FakeGUIMethods(GuiCommon):
         self.log = get_logger(log=None, level=level)
         self.rend = vtkRenderer()
 
-    def setup_fake_text_actors(self):
         self.text_actors[0] = vtkTextActor()
         self.text_actors[1] = vtkTextActor()
         self.text_actors[2] = vtkTextActor()
         self.text_actors[3] = vtkTextActor()
+
+    def setup_fake_text_actors(self):
         for icase in self.result_cases:
             self.label_actors[icase] = []
 
@@ -227,9 +228,9 @@ class FakeGUIMethods(GuiCommon):
             self.icase = -1
             self.ncases = 0
 
-    def cycle_results(self, icase=None, show_msg=True):
-        """fake method"""
-        pass
+    #def cycle_results(self, icase=None, show_msg=True):
+        #"""fake method"""
+        #pass
 
     #def cycle_results_explicit(self):
         #"""fake method"""

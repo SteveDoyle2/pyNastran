@@ -565,6 +565,26 @@ class GuiAttributes(object):
         """creates the axes that sits in the corner"""
         self.tool_actions.create_corner_axis()
 
+    def update_axes_length(self, dim_max):
+        """
+        sets the driving dimension for:
+          - picking?
+          - coordinate systems
+          - label size
+        """
+        self.settings.dim_max = dim_max
+        dim = self.dim * 0.10
+        self.on_set_axes_length(dim)
+
+    def on_set_axes_length(self, dim=None):
+        """
+        scale coordinate system based on model length
+        """
+        if dim is None:
+            dim = self.settings.dim_max * 0.10
+        for axes in itervalues(self.axes):
+            axes.SetTotalLength(dim, dim, dim)
+
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
         """
         Updates the text actors in the lower left
@@ -593,6 +613,10 @@ class GuiAttributes(object):
     def turn_text_on(self):
         """turns all the text actors on"""
         self.tool_actions.turn_text_on()
+
+    def export_case_data(self, icases=None):
+        """exports CSVs of the requested cases"""
+        self.tool_actions.export_case_data(icases=icases)
 
     #---------------------------------------------------------------------------
     def on_pan_left(self, event):

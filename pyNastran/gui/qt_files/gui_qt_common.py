@@ -44,27 +44,6 @@ class GuiCommon(GuiAttributes):
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
 
-    def update_axes_length(self, dim_max):
-        """
-        sets the driving dimension for:
-          - picking?
-          - coordinate systems
-          - label size
-        """
-        self.settings.dim_max = dim_max
-        dim = self.dim * 0.10
-        self.on_set_axes_length(dim)
-
-    def on_set_axes_length(self, dim=None):
-        """
-        scale coordinate system based on model length
-        """
-        if dim is None:
-            dim = self.settings.dim_max * 0.10
-        if hasattr(self, 'axes'):
-            for axes in itervalues(self.axes):
-                axes.SetTotalLength(dim, dim, dim)
-
     def on_rcycle_results(self, case=None):
         """the reverse of on_cycle_results"""
         if len(self.case_keys) <= 1:
@@ -286,10 +265,6 @@ class GuiCommon(GuiAttributes):
         )
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
-
-    def export_case_data(self, icases=None):
-        """exports CSVs of the requested cases"""
-        self.tool_actions.export_case_data(icases=icases)
 
     def get_mapping_for_location(self, location):
         """helper method for ``export_case_data``"""
