@@ -989,8 +989,6 @@ class PBEAM(IntegratedLineProperty):
         n1b = set_blank_if_default(self.n1b, 0.0)
         n2b = set_blank_if_default(self.n2b, self.n1b)
 
-        #footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
-                  #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
 

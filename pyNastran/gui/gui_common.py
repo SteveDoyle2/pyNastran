@@ -31,9 +31,11 @@ import vtk
 
 
 import pyNastran
-if qt_version == 'pyside':
+#print('qt_version = %r' % qt_version)
+if qt_version in ['pyside', 'pyqt4']:
     from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 else:
+    #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
@@ -838,12 +840,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         elif typ == 'COMMAND' and not self.settings.show_command:
             return
 
-        _fr = sys._getframe(4)  # jump to get out of the logger code
-        n = _fr.f_lineno
-        filename = os.path.basename(_fr.f_globals['__file__'])
+        frame = sys._getframe(4)  # jump to get out of the logger code
+        lineno = frame.f_lineno
+        filename = os.path.basename(frame.f_globals['__file__'])
 
         #if typ in ['GUI', 'COMMAND']:
-        msg = '   fname=%-25s:%-4s   %s\n' % (filename, n, msg)
+        msg = '   fname=%-25s:%-4s   %s\n' % (filename, lineno, msg)
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
@@ -851,11 +853,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #message colors
         dark_orange = '#EB9100'
         colors = {
-            "GUI" : "blue",
-            "COMMAND" : "green",
-            "GUI ERROR" : "Crimson",
-            "DEBUG" : dark_orange,
-            'WARNING' : "purple",
+            'GUI' : 'blue',
+            'COMMAND' : 'green',
+            'ERROR' : 'Crimson',
+            'GUI ERROR' : 'Crimson',
+            'DEBUG' : dark_orange,
+            'WARNING' : 'purple',
             # INFO - black
         }
         msg = msg.rstrip().replace('\n', '<br>')
@@ -918,109 +921,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.edge_mapper = vtk.vtkPolyDataMapper()
 
         self.create_cell_picker()
-
-    def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
-                                  bar_scale=0.0, representation=None, display=None, is_visible=True,
-                                  follower_nodes=None, follower_function=None,
-                                  is_pickable=False, ugrid=None):
-        """
-        Creates an AltGeometry object
-
-        Parameters
-        ----------
-        line_width : int
-            the width of the line for 'surface' and 'main'
-        color : [int, int, int]
-            the RGB colors
-        opacity : float
-            0.0 -> solid
-            1.0 -> transparent
-        point_size : int
-            the point size for 'point'
-        bar_scale : float
-            the scale for the CBAR / CBEAM elements
-        representation : str
-            main - change with main mesh
-            wire - always wireframe
-            point - always points
-            surface - always surface
-            bar - can use bar scale
-        is_visible : bool; default=True
-            is this actor currently visable
-        is_pickable : bool; default=False
-            can you pick a node/cell on this actor
-        follower_nodes : List[int]
-            the nodes that are brought along with a deflection
-        follower_function : function
-            a custom follower_node update function
-        ugrid : vtk.vtkUnstructuredGrid(); default=None
-            the grid object; one will be created that you can fill
-            if None is passed in
-        """
-        if ugrid is None:
-            ugrid = vtk.vtkUnstructuredGrid()
-        self.alt_grids[name] = ugrid
-        self.geometry_properties[name] = AltGeometry(
-            self, name, color=color,
-            line_width=line_width, opacity=opacity,
-            point_size=point_size, bar_scale=bar_scale,
-            representation=representation, display=display,
-            is_visible=is_visible, is_pickable=is_pickable)
-        if follower_nodes is not None:
-            self.follower_nodes[name] = follower_nodes
-        if follower_function is not None:
-            self.follower_functions[name] = follower_function
-
-    def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
-                                     opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
-                                     follower_nodes=None, is_pickable=False):
-        """
-        Copies the VTK actor
-
-        Parameters
-        ----------
-        line_width : int
-            the width of the line for 'surface' and 'main'
-        color : [int, int, int]
-            the RGB colors
-        opacity : float
-            0.0 -> solid
-            1.0 -> transparent
-        point_size : int
-            the point size for 'point'
-        bar_scale : float
-            the scale for the CBAR / CBEAM elements
-        is_visible : bool; default=True
-            is this actor currently visable
-        is_pickable : bool; default=False
-            can you pick a node/cell on this actor
-        follower_nodes : List[int]
-            the nodes that are brought along with a deflection
-        """
-        self.alt_grids[name] = vtk.vtkUnstructuredGrid()
-        if name_duplicate_from == 'main':
-            grid_copy_from = self.grid
-            representation = 'toggle'
-        else:
-            grid_copy_from = self.alt_grids[name_duplicate_from]
-            props = self.geometry_properties[name_duplicate_from]
-            representation = props.representation
-        self.alt_grids[name].DeepCopy(grid_copy_from)
-
-        #representation : str
-            #main - change with main mesh
-            #wire - always wireframe
-            #point - always points
-            #surface - always surface
-            #bar - can use bar scale
-        self.geometry_properties[name] = AltGeometry(
-            self, name, color=color, line_width=line_width,
-            opacity=opacity, point_size=point_size,
-            bar_scale=bar_scale, representation=representation,
-            is_visible=is_visible, is_pickable=is_pickable)
-
-        if follower_nodes is not None:
-            self.follower_nodes[name] = follower_nodes
 
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
@@ -1236,22 +1136,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         style = RotationCenterStyle(parent=self)
         self.setup_mouse_buttons('style', revert=True, style=style)
-
-    def set_focal_point(self, focal_point):
-        """
-        Parameters
-        ----------
-        focal_point : (3, ) float ndarray
-            The focal point
-            [ 188.25109863 -7. -32.07858658]
-        """
-        camera = self.rend.GetActiveCamera()
-        self.log_command("set_focal_point(focal_point=%s)" % str(focal_point))
-
-        # now we can actually modify the camera
-        camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
-        camera.OrthogonalizeViewUp()
-        self.vtk_interactor.Render()
 
     def revert_pressed(self, active_name):
         if active_name != 'probe_result':
@@ -1635,39 +1519,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.style = TrackballStyleCamera(self.iren, self)
         self.vtk_interactor.SetInteractorStyle(self.style)
 
-    def on_run_script(self, python_file=False):
-        """pulldown for running a python script"""
-        is_failed = True
-        if python_file in [None, False]:
-            title = 'Choose a Python Script to Run'
-            wildcard = "Python (*.py)"
-            infile_name = self._create_load_file_dialog(
-                wildcard, title, self._default_python_file)[1]
-            if not infile_name:
-                return is_failed # user clicked cancel
-
-            #python_file = os.path.join(script_path, infile_name)
-            python_file = os.path.join(infile_name)
-
-        if not os.path.exists(python_file):
-            msg = 'python_file = %r does not exist' % python_file
-            self.log_error(msg)
-            return is_failed
-
-        lines = open(python_file, 'r').read()
-        try:
-            exec(lines)
-        except Exception as error:
-            #self.log_error(traceback.print_stack(f))
-            self.log_error('\n' + ''.join(traceback.format_stack()))
-            #traceback.print_exc(file=self.log_error)
-            self.log_error(str(error))
-            return is_failed
-        is_failed = False
-        self._default_python_file = python_file
-        self.log_command('self.on_run_script(%r)' % python_file)
-        return is_failed
-
     def on_show_info(self):
         """sets a flag for showing/hiding INFO messages"""
         self.settings.show_info = not self.settings.show_info
@@ -1688,39 +1539,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command('on_reset_camera()')
         self._simulate_key_press('r')
         self.vtk_interactor.Render()
-
-    def on_surface(self):
-        if self.is_wireframe:
-            self.log_command('on_surface()')
-            for name, actor in iteritems(self.geometry_actors):
-                #if name != 'main':
-                    #print('name: %s\nrep: %s' % (
-                        #name, self.geometry_properties[name].representation))
-                representation = self.geometry_properties[name].representation
-                if name == 'main' or representation in ['main', 'toggle']:
-                    prop = actor.GetProperty()
-
-                    prop.SetRepresentationToSurface()
-            self.is_wireframe = False
-            self.vtk_interactor.Render()
-
-    def on_wireframe(self):
-        if not self.is_wireframe:
-            self.log_command('on_wireframe()')
-            for name, actor in iteritems(self.geometry_actors):
-                #if name != 'main':
-                    #print('name: %s\nrep: %s' % (
-                        #name, self.geometry_properties[name].representation))
-                representation = self.geometry_properties[name].representation
-                if name == 'main' or representation in ['main', 'toggle']:
-                    prop = actor.GetProperty()
-                    prop.SetRepresentationToWireframe()
-                #prop.SetRepresentationToPoints()
-                #prop.GetPointSize()
-                #prop.SetPointSize(5.0)
-                #prop.ShadingOff()
-            self.vtk_interactor.Render()
-            self.is_wireframe = True
 
     def on_flip_edges(self):
         """turn edges on/off"""
@@ -3069,11 +2887,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         .. todo:: support changing the color
         .. todo:: support overwriting points
         """
+        is_failed = True
         if csv_filename in [None, False]:
             title = 'Load User Points'
             csv_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
             if not csv_filename:
-                return
+                return is_failed
         if color is None:
             # we mod the num_user_points so we don't go outside the range
             icolor = self.num_user_points % len(self.color_order)

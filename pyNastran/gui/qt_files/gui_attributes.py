@@ -4,6 +4,7 @@ and is inherited from many GUI classes
 """
 from __future__ import print_function
 import os
+import traceback
 from collections import OrderedDict
 
 import numpy as np
@@ -57,7 +58,6 @@ class GuiAttributes(object):
         self.blue_to_red = False
         self._is_axes_shown = True
         self.nvalues = 9
-        self.is_wireframe = False
         #-------------
 
         # window variables
@@ -490,6 +490,41 @@ class GuiAttributes(object):
         return skip_reading
 
     #---------------------------------------------------------------------------
+    def on_run_script(self, python_file=False):
+        """pulldown for running a python script"""
+        is_failed = True
+        if python_file in [None, False]:
+            title = 'Choose a Python Script to Run'
+            wildcard = "Python (*.py)"
+            infile_name = self._create_load_file_dialog(
+                wildcard, title, self._default_python_file)[1]
+            if not infile_name:
+                return is_failed # user clicked cancel
+
+            #python_file = os.path.join(script_path, infile_name)
+            python_file = os.path.join(infile_name)
+
+        if not os.path.exists(python_file):
+            msg = 'python_file = %r does not exist' % python_file
+            self.log_error(msg)
+            return is_failed
+
+        lines = open(python_file, 'r').read()
+        try:
+            exec(lines)
+        except Exception as error:
+            #self.log_error(traceback.print_stack(f))
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(error))
+            return is_failed
+        is_failed = False
+        self._default_python_file = python_file
+        self.log_command('self.on_run_script(%r)' % python_file)
+        print('self.on_run_script(%r)' % python_file)
+        return is_failed
+
+    #---------------------------------------------------------------------------
     def create_coordinate_system(self, coord_id, dim_max, label='',
                                  origin=None, matrix_3x3=None,
                                  coord_type='xyz'):
@@ -596,4 +631,22 @@ class GuiAttributes(object):
     def on_decrease_magnification(self):
         """zoom out"""
         self.view_actions.on_decrease_magnification()
+
+    def set_focal_point(self, focal_point):
+        """
+        Parameters
+        ----------
+        focal_point : (3, ) float ndarray
+            The focal point
+            [ 188.25109863 -7. -32.07858658]
+        """
+        self.view_actions.set_focal_point(focal_point)
+
+    def on_surface(self):
+        """sets the main/toggle actors to surface"""
+        self.view_actions.on_surface()
+
+    def on_wireframe(self):
+        """sets the main/toggle actors to wirefreme"""
+        self.view_actions.on_wireframe()
 

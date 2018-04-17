@@ -16,6 +16,7 @@ import vtk
 
 from pyNastran.utils import integer_types
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtk_points, VTK_VERSION
 from pyNastran.gui import IS_DEV
@@ -512,7 +513,8 @@ class GuiCommon(GuiAttributes):
         self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
 
-    def _on_disp_vector(self, icase, is_disp, apply_fringe=False, update_legend_window=True, show_msg=True):
+    def _on_disp_vector(self, icase, is_disp, apply_fringe=False,
+                        update_legend_window=True, show_msg=True):
         """
         Sets the icase data to the active displacement/vector
 
@@ -528,7 +530,8 @@ class GuiCommon(GuiAttributes):
         if not is_valid:
             return
         (
-            icase, unused_result_type, location, unused_min_value, unused_max_value, unused_norm_value,
+            icase, unused_result_type, location,
+            unused_min_value, unused_max_value, unused_norm_value,
             unused_data_format, scale, unused_phase, unused_methods,
             unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
             xyz_nominal, vector_data,
@@ -591,7 +594,8 @@ class GuiCommon(GuiAttributes):
                                result_type, min_value, max_value, data_format, scale, phase,
                                arrow_scale,
                                nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
-                               use_disp_internal=True, use_vector_internal=True, external_call=False)
+                               use_disp_internal=True, use_vector_internal=True,
+                               external_call=False)
 
         self.vtk_interactor.Render()
 
@@ -703,7 +707,7 @@ class GuiCommon(GuiAttributes):
                 # don't click the button twice
                 # cycle=True means we're cycling
                 # cycle=False skips that check
-                return
+                return None
 
         try:
             key = self.case_keys[icase]
@@ -1337,3 +1341,105 @@ class GuiCommon(GuiAttributes):
             # yes the ) is intentionally left off because it's already been added
             self.log_command('show_labels(%s)' % names)
 
+    def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
+                                  bar_scale=0.0, representation=None, display=None, is_visible=True,
+                                  follower_nodes=None, follower_function=None,
+                                  is_pickable=False, ugrid=None):
+        """
+        Creates an AltGeometry object
+
+        Parameters
+        ----------
+        line_width : int
+            the width of the line for 'surface' and 'main'
+        color : [int, int, int]
+            the RGB colors
+        opacity : float
+            0.0 -> solid
+            1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
+        representation : str
+            main - change with main mesh
+            wire - always wireframe
+            point - always points
+            surface - always surface
+            bar - can use bar scale
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
+        follower_nodes : List[int]
+            the nodes that are brought along with a deflection
+        follower_function : function
+            a custom follower_node update function
+        ugrid : vtk.vtkUnstructuredGrid(); default=None
+            the grid object; one will be created that you can fill
+            if None is passed in
+        """
+        if ugrid is None:
+            ugrid = vtk.vtkUnstructuredGrid()
+        self.alt_grids[name] = ugrid
+        self.geometry_properties[name] = AltGeometry(
+            self, name, color=color,
+            line_width=line_width, opacity=opacity,
+            point_size=point_size, bar_scale=bar_scale,
+            representation=representation, display=display,
+            is_visible=is_visible, is_pickable=is_pickable)
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
+        if follower_function is not None:
+            self.follower_functions[name] = follower_function
+
+    def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
+                                     opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
+                                     follower_nodes=None, is_pickable=False):
+        """
+        Copies the VTK actor
+
+        Parameters
+        ----------
+        line_width : int
+            the width of the line for 'surface' and 'main'
+        color : [int, int, int]
+            the RGB colors
+        opacity : float
+            0.0 -> solid
+            1.0 -> transparent
+        point_size : int
+            the point size for 'point'
+        bar_scale : float
+            the scale for the CBAR / CBEAM elements
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
+        follower_nodes : List[int]
+            the nodes that are brought along with a deflection
+        """
+        self.alt_grids[name] = vtk.vtkUnstructuredGrid()
+        if name_duplicate_from == 'main':
+            grid_copy_from = self.grid
+            representation = 'toggle'
+        else:
+            grid_copy_from = self.alt_grids[name_duplicate_from]
+            props = self.geometry_properties[name_duplicate_from]
+            representation = props.representation
+        self.alt_grids[name].DeepCopy(grid_copy_from)
+
+        #representation : str
+            #main - change with main mesh
+            #wire - always wireframe
+            #point - always points
+            #surface - always surface
+            #bar - can use bar scale
+        self.geometry_properties[name] = AltGeometry(
+            self, name, color=color, line_width=line_width,
+            opacity=opacity, point_size=point_size,
+            bar_scale=bar_scale, representation=representation,
+            is_visible=is_visible, is_pickable=is_pickable)
+
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes

@@ -314,6 +314,13 @@ class TestNastranGUI(unittest.TestCase):
         test.on_rotate_clockwise()
         test.on_rotate_cclockwise()
         test.rotate(15.0)
+        test.set_focal_point([0., 1., 2.])
+        #test.on_wireframe()
+        #test.on_surface()
+
+        with open('rotate.py', 'w') as pyfile:
+            pyfile.write('self.rotate(20.)\n')
+        test.on_run_script('rotate.py')
 
     def test_gui_bar_chan1(self):
         """tests a PBARL/CHAN1"""

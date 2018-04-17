@@ -2,7 +2,7 @@
 from __future__ import print_function
 #import os
 
-#from six import iteritems, itervalues, string_types
+from six import iteritems #, itervalues, string_types
 
 #import numpy as np
 import vtk
@@ -16,6 +16,7 @@ import vtk
 class ViewActions(object):
     def __init__(self, gui):
         self.gui = gui
+        self.is_wireframe = False
 
     def on_pan_left(self, event):
         """https://semisortedblog.wordpress.com/2014/09/04/building-vtk-user-interfaces-part-3c-vtk-interaction"""
@@ -155,6 +156,57 @@ class ViewActions(object):
         camera.Modified()
         self.vtk_interactor.Render()
         self.gui.log_command('zoom(%s)' % value)
+
+    def set_focal_point(self, focal_point):
+        """
+        Parameters
+        ----------
+        focal_point : (3, ) float ndarray
+            The focal point
+            [ 188.25109863 -7. -32.07858658]
+        """
+        camera = self.rend.GetActiveCamera()
+        self.gui.log_command("set_focal_point(focal_point=%s)" % str(focal_point))
+
+        # now we can actually modify the camera
+        camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+        camera.OrthogonalizeViewUp()
+        self.vtk_interactor.Render()
+
+    def on_surface(self):
+        """sets the main/toggle actors to surface"""
+        if self.is_wireframe:
+            self.gui.log_command('on_surface()')
+            for name, actor in iteritems(self.gui.geometry_actors):
+                #if name != 'main':
+                    #print('name: %s\nrep: %s' % (
+                        #name, self.geometry_properties[name].representation))
+                representation = self.gui.geometry_properties[name].representation
+                if name == 'main' or representation in ['main', 'toggle']:
+                    prop = actor.GetProperty()
+
+                    prop.SetRepresentationToSurface()
+            self.is_wireframe = False
+            self.vtk_interactor.Render()
+
+    def on_wireframe(self):
+        """sets the main/toggle actors to wirefreme"""
+        if not self.is_wireframe:
+            self.gui.log_command('on_wireframe()')
+            for name, actor in iteritems(self.gui.geometry_actors):
+                #if name != 'main':
+                    #print('name: %s\nrep: %s' % (
+                        #name, self.geometry_properties[name].representation))
+                representation = self.gui.geometry_properties[name].representation
+                if name == 'main' or representation in ['main', 'toggle']:
+                    prop = actor.GetProperty()
+                    prop.SetRepresentationToWireframe()
+                #prop.SetRepresentationToPoints()
+                #prop.GetPointSize()
+                #prop.SetPointSize(5.0)
+                #prop.ShadingOff()
+            self.vtk_interactor.Render()
+            self.is_wireframe = True
 
     #---------------------------------------------------------------------------
     def Render(self):

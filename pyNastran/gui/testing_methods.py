@@ -15,6 +15,7 @@ from pyNastran.gui.test.mock_vtk import (
     ArrowSource, Glyph3D, PolyDataMapper, VTKInteractor, vtkRenderer,
 )
 from vtk import vtkTextActor, vtkLODActor
+import vtk
 
 #class ScalarBar(object):
     #def VisibilityOff(self):
@@ -83,7 +84,7 @@ class FakeGUIMethods(GuiCommon):
             #'main' : GeometryActor(),
         #}
         self.main_grid_mappers = {'main' : GridMapper()}
-        self.grid = Grid()
+        self.grid = vtk.vtkUnstructuredGrid()
         #self.scalarBar = ScalarBar()
         self.scalar_bar = ScalarBar()
         self.alt_geometry_actor = ScalarBar()
@@ -257,44 +258,6 @@ class FakeGUIMethods(GuiCommon):
     def displacement_scale_factor(self):
         return 1 * self.settings.dim_max
 
-    def create_alternate_vtk_grid(self, name, color=None, line_width=None,
-                                  opacity=None, point_size=None, bar_scale=None,
-                                  representation=None, is_visible=True,
-                                  follower_nodes=None, follower_function=None,
-                                  is_pickable=False, ugrid=None):
-        """Fake creates an AltGeometry object"""
-        self.alt_grids[name] = Grid()
-        geom = AltGeometry(self, name, color=color, line_width=line_width,
-                           point_size=point_size, bar_scale=bar_scale,
-                           opacity=opacity, representation=representation,
-                           is_visible=is_visible, is_pickable=is_pickable)
-        self.geometry_properties[name] = geom
-        if follower_nodes is not None:
-            self.follower_nodes[name] = follower_nodes
-        if follower_function is not None:
-            self.follower_functions[name] = follower_function
-
-    def duplicate_alternate_vtk_grid(self, name, name_duplicate_from, color=None, line_width=5,
-                                     opacity=1.0, point_size=1, bar_scale=0.0, is_visible=True,
-                                     follower_nodes=None, is_pickable=False):
-        """Fake copies the VTK actor"""
-        if name_duplicate_from == 'main':
-            grid_copy_from = self.grid
-            representation = 'toggle'
-        else:
-            grid_copy_from = self.alt_grids[name_duplicate_from]
-            props = self.geometry_properties[name_duplicate_from]
-            representation = props.representation
-
-        self.alt_grids[name] = Grid()
-        geom = AltGeometry(self, name, color=color, line_width=line_width,
-                           point_size=point_size, bar_scale=bar_scale,
-                           opacity=opacity, representation=representation,
-                           is_visible=is_visible, is_pickable=is_pickable)
-        self.geometry_properties[name] = geom
-        if follower_nodes is not None:
-            self.follower_nodes[name] = follower_nodes
-
     def _add_alt_actors(self, alt_grids):
         for name, grid in iteritems(alt_grids):
             self.geometry_actors[name] = GeometryActor()
@@ -311,8 +274,8 @@ class FakeGUIMethods(GuiCommon):
 
     def log_error(self, msg):
         """turns logs into prints to aide debugging"""
-        if self.debug:
-            print('ERROR:  ', msg)
+        #if self.debug:
+        print('ERROR:  ', msg)
 
     def log_warning(self, msg):
         """turns logs into prints to aide debugging"""
