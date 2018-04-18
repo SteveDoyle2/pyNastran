@@ -30,3 +30,9 @@ class Result(object):
 
     def path(self):
         return self._h5n.path() + ['RESULT']
+
+    @property
+    def subcases(self):
+        # TODO: temporary for now, should be somewhere else, say under h5nastran.result
+        return self._h5n.h5f.get_node(self._h5n.table_paths.subcase).read()
+

@@ -178,14 +178,18 @@ class DataGetter(object):
             indices = self.indices
 
         for i in indices:
-            if isinstance(i, list):
-                result.append(self.get_data(data, i))
-            elif isinstance(i, (int, slice)):
-                result.append(data[i])
-            elif isinstance(i, DefinedValue):
-                result.append(i.value)
-            else:
-                result.append(data[i])
+            try:
+                # print(i)
+                if isinstance(i, list):
+                    result.append(self.get_data(data, i))
+                elif isinstance(i, (int, slice)):
+                    result.append(data[i])
+                elif isinstance(i, DefinedValue):
+                    result.append(i.value)
+                else:
+                    result.append(data[i])
+            except IndexError:
+                raise IndexError((i, data))
 
         return result
 
@@ -373,7 +377,7 @@ class TableDef(object):
 
         return data
 
-    def search(self, data_ids, domains=()):       
+    def search(self, data_ids, domains=()):
         private_index_table = self._get_private_index_table()
         
         if len(domains) == 0:
@@ -443,7 +447,10 @@ class TableDef(object):
         _result = {name: result[name] for name in names}
 
         for i in range(len(data_)):
-            _data = validator(indices.get_data(data_[i]))
+            try:
+                _data = validator(indices.get_data(data_[i]))
+            except IndexError:
+                raise IndexError([len(_) for _ in data_])
             for j in range(len(names)-1):
                 _result[names[j]][i] = _data[j]
 
@@ -877,7 +884,7 @@ class ResultTable(object):
 
     def search(self, data_ids, domains=(), **kwargs):
         try:
-            return self._table_def.search(data_ids, domains)
+            return self._table_def.search(data_ids, domains, **kwargs)
         except tables.exceptions.NoSuchNodeError:
             return self._table_def.result_table_data()
 
@@ -914,9 +921,12 @@ class ResultTableData(pd.DataFrame):
     the_dtype = None
     
     @classmethod
-    def from_records(cls, *args, **kwargs):
-        result = super(ResultTableData, cls).from_records(*args, **kwargs)
-        cls.the_dtype = args[0].dtype
+    def from_records(cls, nparr):
+        try:
+            result = super(ResultTableData, cls).from_records(nparr)  # .tolist(), columns=nparr.dtype.names)
+        except Exception:
+            result = super(ResultTableData, cls).from_records(nparr.tolist(), columns=nparr.dtype.names)
+        cls.the_dtype = nparr.dtype
         return result
 
     @property

@@ -78,6 +78,17 @@ class PunchHeaderData(object):
         results_type = set(self.results_type.split())
         no_options = set(self.results_type_no_options.split())
         return results_type - no_options
+    
+    @property
+    def load_factor(self):
+        try:
+            return float(self.other['LOAD FACTOR'])
+        except KeyError:
+            return 1.
+        
+    @property
+    def subcase_id_num(self):
+        return int(self._subcase_id)
 
     @property
     def results_type(self):

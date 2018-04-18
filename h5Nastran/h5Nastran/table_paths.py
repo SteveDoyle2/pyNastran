@@ -25,6 +25,9 @@ class TablePaths(object):
         self.shell_element_info_path = r'/H5NASTRAN/NASTRAN/INPUT'
         self.shell_element_info_table = 'SHELL_ELEMENT_INFO'
 
+        self.subcase_path = r'/H5NASTRAN/NASTRAN/RESULT'
+        self.subcase_table = 'SUBCASES'
+
         self.private_index_path = r'/H5NASTRAN/INDEX'
 
     def __getattr__(self, attr):
