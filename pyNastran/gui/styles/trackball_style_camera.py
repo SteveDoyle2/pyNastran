@@ -5,7 +5,20 @@ class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
     #https://stackoverflow.com/questions/33108670/arrow-key-events-in-vtk-on-windows
     def __init__(self, iren, parent):
         self.parent = parent
-        vtk.vtkInteractorStyleTrackballCamera.__init__(self, iren)
+
+        # PY2 - worked before...
+        #vtk.vtkInteractorStyleTrackballCamera.__init__(self, iren)
+
+        # works
+        vtk.vtkInteractorStyleTrackballCamera.__init__(self)
+
+        # PY3
+        # TypeError: object.__init__() takes no parameters
+        #super(TrackballStyleCamera, self).__init__(self, iren)
+
+        # TypeError: object.__init__() takes no parameters
+        #super(TrackballStyleCamera, self).__init__(self)
+
         #self.AddObserver("CharEvent", self.onKeyPressEvent)
 
         self.AddObserver("KeyPressEvent", self.keyPressEvent)

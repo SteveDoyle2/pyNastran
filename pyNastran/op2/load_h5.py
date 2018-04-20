@@ -94,13 +94,13 @@ def load_op2_from_h5(h5_filename, log=None):
     for key in h5_file.keys():
         if key.startswith('Subcase'):
             h5_subcase = h5_file.get(key)
-            print('subcase:')
+            log.info('subcase:')
             for result_name in h5_subcase.keys():
                 if result_name in ['eigenvalues']:
-                    print('    skipping %r...' % result_name)
+                    log.warning('    skipping %r...' % result_name)
                 elif result_name in TABLE_OBJ_KEYS:
                     if debug:
-                        print('  %s:' % result_name)
+                        log.info('  %s:' % result_name)
                     real_obj, complex_obj = TABLE_OBJ_MAP[result_name]
                     h5_result = h5_subcase.get(result_name)
                     obj = load_table(model, h5_result, real_obj, complex_obj)
@@ -115,24 +115,25 @@ def load_op2_from_h5(h5_filename, log=None):
                            opt_count, ogs,
                            superelement_adaptivity_index)
                     model.eigenvectors[key] = obj
-                    print('  loaded %r' % result_name)
+                    log.info('  loaded %r' % result_name)
                 else:
-                    print('skipping %r...' % result_name)
+                    log.warning('skipping %r...' % result_name)
 
             #print(h5_subcase.keys())
         elif key == 'info':
             pass
         elif key == 'matrices':
-            print('matrices:')
+            log.info('matrices:')
             h5_matrix_group = h5_file.get(key)
             for matrix_name in h5_matrix_group.keys():
-                print('  skipping %r...' % matrix_name)
                 h5_matrix = h5_matrix_group.get(matrix_name)
                 nkeys = len(h5_matrix.keys())
                 if not nkeys:
-                    print('  %s is empty...skipping' % h5_matrix)
-                #for attr in h5_matrix.keys():
-                    #print('    attr=%s' % attr)
+                    log.warning('  %s is empty...skipping' % h5_matrix)
+                else:
+                    log.warning('  skipping %r...' % matrix_name)
+                    #for attr in h5_matrix.keys():
+                        #print('    attr=%s' % attr)
 
         else:
             print('key = %r' % key)

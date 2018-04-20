@@ -83,7 +83,11 @@ from pyNastran.converters.nastran.displacements import (
     ForceTableResults, ElementalTableResults)
 
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.load_h5 import load_op2_from_h5
+try:
+    from pyNastran.op2.load_h5 import load_op2_from_h5
+    IS_H5PY = True
+except ImportError:
+    IS_H5PY = False
 #from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.op2.op2_geom import OP2Geom
 
@@ -5682,7 +5686,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self._load_patran_nod(results_filename)
                 self.cycle_results_explicit()  # start at nCase=0
                 return
-            elif ext == '.h5':
+            elif ext == '.h5' and IS_H5PY:
                 h5_filename = results_filename
                 model = load_op2_from_h5(h5_filename, log=self.log)
             #elif ext == '.pch':

@@ -52,7 +52,6 @@ from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
-from pyNastran.gui.gui_objects.trackball_style_camera import TrackballStyleCamera
 
 from pyNastran.gui.menus.legend.interface import (
     set_legend_menu, get_legend_fringe, get_legend_disp, get_legend_vector)
@@ -72,7 +71,7 @@ from pyNastran.gui.styles.area_pick_style import AreaPickStyle
 from pyNastran.gui.styles.zoom_style import ZoomStyle
 #from pyNastran.gui.styles.probe_style import ProbeResultStyle
 from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
-
+from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
