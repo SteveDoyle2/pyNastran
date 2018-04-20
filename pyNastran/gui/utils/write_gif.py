@@ -91,8 +91,14 @@ def setup_animate_scale(scale, icase, time, profile, fps):
             onesided = True
             if fps % 2 == 1:
                 fps += 1
+        elif profile == 'sinusoidal: 0 to scale to -scale to 0':
+            onesided = False
         else:
-            msg = "profile=%r is not '0 to scale' or '-scale to scale', '-scale to scale to -scale'"
+            msg = (
+                "profile=%r is not supported:\n"
+                "  '0 to scale'\n"
+                "  '-scale to scale'\n"
+                "  '-scale to scale to -scale'" % profile)
             raise NotImplementedError(msg)
     else:
         msg = 'profile=%r is not supported' % profile
@@ -132,10 +138,20 @@ def setup_animate_scale(scale, icase, time, profile, fps):
             isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
             x = isteps
             scales = np.interp(x, xp, yp)
+        elif profile == 'sinusoidal: 0 to scale to -scale to 0':
+            theta = np.array([0., np.pi, 2 * np.pi])
+            xp = np.array([0., nframes_interp / 2., nframes_interp])
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            x = isteps
+            scales = scale * np.sin(np.interp(x, xp, theta))
         else:
             msg = (
-                "profile=%r is not '0 to scale', '0 to scale to 0', "
-                "'-scale to scale', or '-scale to scale to -scale'")
+                "profile=%r is not:\n"
+                "  '0 to scale'\n"
+                "  '0 to scale to 0'\n"
+                "  '-scale to scale'\n"
+                "  '-scale to scale to -scale'\n"
+                "  'sinusoidal: 0 to scale to -scale to 0'\n" % profile)
             raise NotImplementedError(msg)
     #elif isinstance(profile, list):
         #yp = np.array(profile)

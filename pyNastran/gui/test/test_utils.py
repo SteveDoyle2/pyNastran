@@ -111,6 +111,28 @@ class GuiUtils(unittest.TestCase):
         assert np.allclose(scales.min(), -scale), scales
         assert np.allclose(scales.max(), scale), scales
 
+    def test_animation_scale_4(self):
+        scale_atols = [(1., 0.001), (10.0, 0.01)]
+        for scale, atol in scale_atols:
+            phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+                scale, istep=None,
+                animate_scale=True, animate_phase=False, animate_time=False,
+                icase=42,
+                icase_start=None, icase_end=None, icase_delta=None,
+                time=2.0, animation_profile='sinusoidal: 0 to scale to -scale to 0',
+                fps=30)
+            assert len(np.unique(icases)) == 1
+            assert len(np.unique(phases)) == 1
+            assert np.allclose(analysis_time, 2.0), analysis_time
+
+            msg = ''
+            if not np.allclose(scales.min(), -scale, atol=atol):
+                msg += 'scales=%s min=%s expected=%s\n' % (scales, scales.min(), -scale)
+            if not np.allclose(scales.max(), scale, atol=atol):
+                msg += 'scales=%s max=%s expected=%s' % (scales, scales.max(), scale)
+            if msg:  # pragma: no cover
+                raise ValueError(msg)
+
     def test_animation_bad_1(self):
         """animate_scale/phase/time must be specified"""
         scale = 1.0

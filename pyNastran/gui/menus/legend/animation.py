@@ -23,6 +23,7 @@ ANIMATION_PROFILES = [
     #'0 to Scale to -Scale to 0',
     '-Scale to Scale',
     '-Scale to Scale to -Scale',
+    'Sinusoidal: 0 to Scale to -Scale to 0',
 ]
 #ANIMATION_PROFILES['-Scale to Scale to -Scale'] = [-1., 1., -1.]
 #ANIMATION_PROFILES['CSV Profile  (not supported)'] = None
