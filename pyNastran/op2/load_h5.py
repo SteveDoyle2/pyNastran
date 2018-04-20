@@ -1,6 +1,9 @@
 import os
+
+from six import iteritems
 import numpy as np
 import h5py
+
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, ComplexDisplacementArray
 from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray, ComplexVelocityArray
@@ -13,6 +16,9 @@ from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import RealMPCForc
 from pyNastran.utils import print_bad_path
 
 def cast(h5_result_attr):
+    if h5_result_attr is None:
+        return None
+
     if len(h5_result_attr.shape) == 0:
         return np.array(h5_result_attr).tolist()
         #raise NotImplementedError(h5_result_attr.dtype)
@@ -29,7 +35,7 @@ TABLE_OBJ_MAP = {
 }
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
 
-def load_table(model, h5_result, real_obj, complex_obj, debug=False):
+def load_table(model, h5_result, real_obj, complex_obj, log, debug=False):
     """loads a RealEigenvectorArray/ComplexEigenvectorArray"""
     is_real = cast(h5_result.get('is_real'))
     is_complex = cast(h5_result.get('is_complex'))
@@ -55,6 +61,10 @@ def load_table(model, h5_result, real_obj, complex_obj, debug=False):
         'data_names' : data_names,
         'name' : data_names[0],
     }
+    for key, value in list(iteritems(data_code)):
+        if value is None and key not in ['nonlinear_factor']:
+            log.warning('%s %s' % (key, value))
+
     is_sort1 = cast(h5_result.get('is_sort1'))
     isubcase = cast(h5_result.get('isubcase'))
     dt = nonlinear_factor
@@ -106,7 +116,7 @@ def load_op2_from_h5(h5_filename, log=None):
                         log.info('  %s:' % result_name)
                     real_obj, complex_obj = TABLE_OBJ_MAP[result_name]
                     h5_result = h5_subcase.get(result_name)
-                    obj = load_table(model, h5_result, real_obj, complex_obj, debug=debug)
+                    obj = load_table(model, h5_result, real_obj, complex_obj, log=log, debug=debug)
                     if obj is None:
                         log.warning('    skipping %r...' % result_name)
                         continue
@@ -123,7 +133,7 @@ def load_op2_from_h5(h5_filename, log=None):
                     model.eigenvectors[key] = obj
                     log.info('  loaded %r' % result_name)
                 else:
-                    log.warning('skipping %r...' % result_name)
+                    log.warning('  skipping %r...' % result_name)
 
             #print(h5_subcase.keys())
         elif key == 'info':
