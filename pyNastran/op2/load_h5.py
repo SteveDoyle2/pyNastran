@@ -60,10 +60,13 @@ def load_table(model, h5_result, real_obj, complex_obj, debug=False):
     dt = nonlinear_factor
 
     if is_real:
-        obj = real_obj(data_code, is_sort1, isubcase, dt,
-                       f06_flag=False)
+        obj = real_obj(
+            data_code, is_sort1, isubcase, dt,
+            #f06_flag=False,
+        )
     else:
-        raise NotImplementedError()
+        return None
+
     keys_to_skip = [
         'class_name', 'headers', 'is_real', 'is_complex',
         'is_sort1', 'is_sort2', 'table_name_str']
@@ -103,7 +106,10 @@ def load_op2_from_h5(h5_filename, log=None):
                         log.info('  %s:' % result_name)
                     real_obj, complex_obj = TABLE_OBJ_MAP[result_name]
                     h5_result = h5_subcase.get(result_name)
-                    obj = load_table(model, h5_result, real_obj, complex_obj)
+                    obj = load_table(model, h5_result, real_obj, complex_obj, debug=debug)
+                    if obj is None:
+                        log.warning('    skipping %r...' % result_name)
+                        continue
 
                     # isubcase, analysis_code, sort_method,
                     #  count, ogs, superelement_adaptivity_index
