@@ -176,7 +176,7 @@ class GeometryProperty(object):
         assert isinstance(size, int), type(size)
 
 
-class GeometryActor(object):
+class vtkActor(object):
     def __init__(self):
         self._prop = GeometryProperty()
     def GetProperty(self):
@@ -255,6 +255,8 @@ class vtkRenderer(object):
     def GetActiveCamera(self):
         return vtkCamera()
     def ResetCameraClippingRange(self):
+        pass
+    def ResetCamera(self):
         pass
     def Render(self):
         pass

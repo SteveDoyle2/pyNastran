@@ -674,3 +674,5 @@ class GuiAttributes(object):
         """sets the main/toggle actors to wirefreme"""
         self.view_actions.on_wireframe()
 
+    def on_take_screenshot(self, fname=None, magnify=None, show_msg=True):
+        self.tool_actions.on_take_screenshot(fname=fname, magnify=magnify, show_msg=show_msg)

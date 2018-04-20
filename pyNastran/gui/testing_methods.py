@@ -11,10 +11,10 @@ from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.bdf.cards.base_card import deprecated
 
 from pyNastran.gui.test.mock_vtk import (
-    GeometryActor, GeometryProperty, GridMapper, # Grid
+    GeometryProperty, GridMapper, # Grid, vtkActor,
     ArrowSource, Glyph3D, PolyDataMapper, VTKInteractor, vtkRenderer,
 )
-from vtk import vtkTextActor, vtkLODActor
+from vtk import vtkTextActor, vtkLODActor, vtkActor
 import vtk
 
 #class ScalarBar(object):
@@ -81,7 +81,7 @@ class FakeGUIMethods(GuiCommon):
         self.result_cases = OrderedDict()
         self._finish_results_io = self.passer1
         #self.geometry_actors = {
-            #'main' : GeometryActor(),
+            #'main' : vtkActor(),
         #}
         self.main_grid_mappers = {'main' : GridMapper()}
         self.grid = vtk.vtkUnstructuredGrid()
@@ -92,7 +92,7 @@ class FakeGUIMethods(GuiCommon):
             'main' : self.grid,
         }
         self.main_geometry_actors = {
-            'main' :  GeometryActor(),
+            'main' :  vtkActor(),
         }
 
         self.glyph_source = ArrowSource()
@@ -261,7 +261,7 @@ class FakeGUIMethods(GuiCommon):
 
     def _add_alt_actors(self, alt_grids):
         for name, grid in iteritems(alt_grids):
-            self.geometry_actors[name] = GeometryActor()
+            self.geometry_actors[name] = vtkActor()
 
     def log_debug(self, msg):
         """turns logs into prints to aide debugging"""

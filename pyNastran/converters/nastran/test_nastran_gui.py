@@ -1,7 +1,10 @@
 """tests the NastranIO class"""
 import os
 import unittest
+
 import numpy as np
+import vtk
+
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_io import NastranIO
 import pyNastran
@@ -318,12 +321,42 @@ class TestNastranGUI(unittest.TestCase):
         test.on_rotate_cclockwise()
         test.rotate(15.0)
         test.set_focal_point([0., 1., 2.])
+        test.export_case_data(icases=[0, 1])
+
+        test.update_camera('+x')
+        test.update_camera('-x')
+        test.update_camera('+y')
+        test.update_camera('-y')
+        test.update_camera('+z')
+        test.update_camera('-z')
         #test.on_wireframe()
         #test.on_surface()
 
         with open('rotate.py', 'w') as pyfile:
             pyfile.write('self.rotate(20.)\n')
         test.on_run_script('rotate.py')
+
+    def test_gui_screenshot(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_chan.bdf')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+
+        magnify = None
+
+        render_large = vtk.vtkRenderLargeImage()
+        test.run_vtk = True
+        #test.create_corner_axis()
+
+        # faking coordinate system
+        axes_actor = vtk.vtkAxesActor()
+        test.corner_axis = vtk.vtkOrientationMarkerWidget()
+        test.corner_axis.SetOrientationMarker(axes_actor)
+
+        #test.on_take_screenshot(fname='chan.png', magnify=None, show_msg=True)
+        out = test.tool_actions._screenshot_setup(magnify, render_large)
+        line_widths0, point_sizes0, coord_scale0, fake_axes_actor, magnify = out
+        test.tool_actions._screenshot_teardown(
+            line_widths0, point_sizes0, coord_scale0, axes_actor)
 
     def test_gui_bar_chan1(self):
         """tests a PBARL/CHAN1"""

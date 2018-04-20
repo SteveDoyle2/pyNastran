@@ -235,6 +235,41 @@ class ToolActions(object):
 
         TODO: screenshot doesn't work well with the coordinate system text size
         """
+        fname, flt = self._get_screenshot_filename(fname)
+
+        if not fname:
+            return
+        render_large = vtk.vtkRenderLargeImage()
+        render_large.SetInput(self.rend)
+
+        out = self._screenshot_setup(magnify, render_large)
+        line_widths0, point_sizes0, coord_scale0, axes_actor, magnify = out
+
+        nam, ext = os.path.splitext(fname)
+        ext = ext.lower()
+        for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
+                               ("BMP", ['.bmp'], vtk.vtkBMPWriter),
+                               ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
+                               ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
+            if flt == nam:
+                fname = fname if ext in exts else fname + exts[0]
+                writer = obj()
+                break
+        else:
+            fname = fname if ext == '.png' else fname + '.png'
+            writer = vtk.vtkPNGWriter()
+
+        writer.SetInputConnection(render_large.GetOutputPort())
+        writer.SetFileName(fname)
+        writer.Write()
+
+        #self.log_info("Saved screenshot: " + fname)
+        if show_msg:
+            self.gui.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
+        self._screenshot_teardown(line_widths0, point_sizes0, coord_scale0, axes_actor)
+
+    def _get_screenshot_filename(self, fname):
+        """helper method for ``on_take_screenshot``"""
         if fname is None or fname is False:
             filt = ''
             default_filename = ''
@@ -274,37 +309,7 @@ class ToolActions(object):
                 flt = ext.lower()
             else:
                 flt = 'png'
-
-        if not fname:
-            return
-        render_large = vtk.vtkRenderLargeImage()
-        render_large.SetInput(self.rend)
-
-        out = self._screenshot_setup(magnify, render_large)
-        line_widths0, point_sizes0, coord_scale0, axes_actor, magnify = out
-
-        nam, ext = os.path.splitext(fname)
-        ext = ext.lower()
-        for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
-                               ("BMP", ['.bmp'], vtk.vtkBMPWriter),
-                               ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
-                               ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
-            if flt == nam:
-                fname = fname if ext in exts else fname + exts[0]
-                writer = obj()
-                break
-        else:
-            fname = fname if ext == '.png' else fname + '.png'
-            writer = vtk.vtkPNGWriter()
-
-        writer.SetInputConnection(render_large.GetOutputPort())
-        writer.SetFileName(fname)
-        writer.Write()
-
-        #self.log_info("Saved screenshot: " + fname)
-        if show_msg:
-            self.gui.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
-        self._screenshot_teardown(line_widths0, point_sizes0, coord_scale0, axes_actor)
+        return fname, flt
 
     def _screenshot_setup(self, magnify, render_large):
         """helper method for ``on_take_screenshot``"""
