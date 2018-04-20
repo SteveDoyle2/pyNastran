@@ -83,6 +83,7 @@ from pyNastran.converters.nastran.displacements import (
     ForceTableResults, ElementalTableResults)
 
 from pyNastran.op2.op2 import OP2
+from pyNastran.op2.load_h5 import load_op2_from_h5
 #from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.op2.op2_geom import OP2Geom
 
@@ -5608,18 +5609,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             print(sout)
         return icase
 
-    def load_nastran_results(self, op2_filename):
+    def load_nastran_results(self, results_filename):
         """
         Loads the Nastran results into the GUI
         """
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        if isinstance(op2_filename, string_types):
-            print("trying to read...%s" % op2_filename)
-            ext = os.path.splitext(op2_filename)[1].lower()
+        if isinstance(results_filename, string_types):
+            print("trying to read...%s" % results_filename)
+            ext = os.path.splitext(results_filename)[1].lower()
 
             if ext == '.op2':
+                op2_filename = results_filename
                 model = OP2(log=self.log, debug=True)
 
                 if 0:  # pragma: no cover
@@ -5677,9 +5679,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # print(model.get_op2_stats())
 
             elif ext == '.nod':
-                self._load_patran_nod(op2_filename)
+                self._load_patran_nod(results_filename)
                 self.cycle_results_explicit()  # start at nCase=0
                 return
+            elif ext == '.h5':
+                h5_filename = results_filename
+                model = load_op2_from_h5(h5_filename, log=self.log)
             #elif ext == '.pch':
                 #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
             #elif ext == '.f06':
@@ -5751,7 +5756,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # self.isubcase_name_map = {subcase_id : label for
                                 # in iteritems(model.isubcase_name_map)}
 
-        form = self._fill_op2_output(op2_filename, cases, model, form, icase)
+        form = self._fill_op2_output(results_filename, cases, model, form, icase)
         self._finish_results_io2(form, cases)
 
         #name = 'spike'
