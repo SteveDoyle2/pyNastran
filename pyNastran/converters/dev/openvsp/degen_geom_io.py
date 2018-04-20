@@ -1,4 +1,5 @@
 from __future__ import print_function
+from collections import OrderedDict
 from six.moves import range
 import numpy as np
 from numpy import amax, amin
@@ -90,7 +91,7 @@ class DegenGeomIO(object):
 
         self.grid.SetPoints(points)
         self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
+        if hasattr(self.grid, 'Update'):  # pragma: no cover
             self.grid.Update()
         #self.log_info("updated grid")
 
@@ -104,7 +105,7 @@ class DegenGeomIO(object):
         #note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
         note = 'name=%s' % name
         self.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         form, cases = self._fill_degen_geom_case(cases, ID, model, nnodes, nelements)

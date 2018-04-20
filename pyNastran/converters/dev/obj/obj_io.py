@@ -2,6 +2,7 @@
 Defines the GUI IO file for OBJ.
 """
 from __future__ import print_function
+from collections import OrderedDict
 
 from numpy import arange
 import vtk
@@ -39,7 +40,7 @@ class ObjIO(object):
             self.parent.turn_text_off()
             self.parent.grid.Reset()
 
-            self.parent.result_cases = {}
+            self.parent.result_cases = OrderedDict()
             self.parent.ncases = 0
             try:
                 del self.parent.case_keys
@@ -126,7 +127,7 @@ class ObjIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
 
@@ -134,7 +135,7 @@ class ObjIO(object):
         self.parent.scalarBar.Modified()
 
         self.parent.isubcase_name_map = {1: ['OBJ', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
         form, cases, icase = self._fill_obj_geometry_objects(
             cases, ID, nodes, nelements, model)
@@ -153,14 +154,14 @@ class ObjIO(object):
         nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', nids)
         eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids)
 
-        cases = {
-            0 : (nid_res, (0, 'NodeID')),
-            1 : (eid_res, (0, 'ElementID')),
+
+        cases[0] = (nid_res, (0, 'NodeID'))
+        cases[1] = (eid_res, (0, 'ElementID'))
             #2 : (area_res, (0, 'Area')),
             #4 : (cart3d_geo, (0, 'NormalX')),
             #5 : (cart3d_geo, (0, 'NormalY')),
             #6 : (cart3d_geo, (0, 'NormalZ')),
-        }
+
         geometry_form = [
             ('NodeID', 0, []),
             ('ElementID', 1, []),

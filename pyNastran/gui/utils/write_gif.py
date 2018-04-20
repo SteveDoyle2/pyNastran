@@ -149,8 +149,10 @@ def setup_animate_scale(scale, icase, time, profile, fps):
     icases = icase
     assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
     #assert len(scales) == nframes, 'len(scales)=%s nframes=%s' % (len(scales), nframes)
-    if profile == '0 to scale to 0' and len(scales) % 2 == 0:
-        raise RuntimeError('nscales=%s scales=%s' % (len(scales), scales))
+
+    # TODO: this can hit
+    #if profile == '0 to scale to 0' and len(scales) % 2 == 0:
+        #raise RuntimeError('nscales=%s scales=%s' % (len(scales), scales))
     return icases, isteps, scales, analysis_time, onesided
 
 def setup_animate_phase(scale, icase, time, fps):

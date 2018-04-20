@@ -3,6 +3,7 @@ Defines how the GUI reads Abaqus files
 """
 from __future__ import print_function
 import os
+from collections import OrderedDict
 from six import iteritems
 
 import numpy as np
@@ -256,7 +257,7 @@ class AbaqusIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
         # loadCart3dResults - regions/loads
@@ -266,7 +267,7 @@ class AbaqusIO(object):
         note = ''
         self.isubcase_name_map = {1: ['Abaqus%s' % note, '']}
         #form = []
-        cases = {}
+        cases = OrderedDict()
         ID = 1
         form, cases, icase = self._fill_abaqus_case(cases, ID, nodes, nelements, model)
         #self._fill_cart3d_results(cases, form, icase, ID, model)
@@ -306,10 +307,9 @@ class AbaqusIO(object):
         eid_res = GuiResult(ID, header='ElementID', title='ElementID',
                             location='centroid', scalar=element_ids)
 
-        cases = {
-            0 : (nid_res, (0, 'NodeID')),
-            1 : (eid_res, (0, 'ElementID')),
-        }
+        cases[0] = (nid_res, (0, 'NodeID'))
+        cases[1] = (eid_res, (0, 'ElementID'))
+
         geometry_form = [
             ('NodeID', 0, []),
             ('ElementID', 1, []),

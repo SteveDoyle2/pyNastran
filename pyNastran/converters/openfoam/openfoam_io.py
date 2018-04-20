@@ -4,6 +4,8 @@ defines:
 """
 from __future__ import print_function
 import os
+from collections import OrderedDict
+
 import numpy as np
 from numpy import zeros, arange, where, unique, cross
 from numpy.linalg import norm  # type: ignore
@@ -235,7 +237,7 @@ class OpenFoamIO(object):
                         elem.GetPointIds().SetId(0, element[0])
                         elem.GetPointIds().SetId(1, element[1])
                         elem.GetPointIds().SetId(2, element[2])
-                        self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                        grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                     elif nnodes == 4:
                         bdf_file.write('CQUAD4,%i,%i,%i,%i,%i,%i\n' % (
                             eid+1, pid, element[0]+1, element[1]+1, element[2]+1, element[3]+1))
@@ -249,7 +251,7 @@ class OpenFoamIO(object):
                         elem.GetPointIds().SetId(1, element[1])
                         elem.GetPointIds().SetId(2, element[2])
                         elem.GetPointIds().SetId(3, element[3])
-                        self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                        grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                     else:
                         raise RuntimeError('nnodes=%s' % nnodes)
             else:
@@ -259,16 +261,16 @@ class OpenFoamIO(object):
             bdf_file.write('ENDDATA\n')
 
         self.nelements = nelements
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
-            self.grid.Update()
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):  # pragma: no cover
+            grid.Update()
 
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
         self.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         #print("nElements = ",nElements)

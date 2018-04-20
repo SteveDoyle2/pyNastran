@@ -315,7 +315,6 @@ class AESTAT(BaseCard):
     #def uncross_reference(self):
         #pass
 
-
     @property
     def id(self):
         self.deprecated('id', 'aestat_id', '1.1')

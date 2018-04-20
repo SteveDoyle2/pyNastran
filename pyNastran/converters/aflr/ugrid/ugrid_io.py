@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 from six import iteritems
 from six.moves import range
@@ -162,16 +163,15 @@ class UGRID_IO(object):
         self.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
-        #self.log.info("updated grid")
 
         # loadCart3dResults - regions/loads
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
         self.isubcase_name_map = {1: ['AFLR UGRID Surface', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         if hasattr(model, 'pids'):

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from collections import OrderedDict
 from six.moves import range
 
 from numpy import arange, mean, amax, amin, array
@@ -34,7 +35,7 @@ class AvusIO(object):
             self.parent.turn_text_off()
             self.parent.grid.Reset()
 
-            self.parent.result_cases = {}
+            self.parent.result_cases = OrderedDict()
             self.parent.ncases = 0
             try:
                 del self.parent.case_keys
@@ -83,7 +84,7 @@ class AvusIO(object):
         else:
             note = ''
         self.parent.isubcase_name_map = {1: ['Avus%s' % note, '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         form, cases = self._fill_avus_case(cases, ID, model, is_surface)
@@ -216,7 +217,7 @@ class AvusIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
         return is_surface
 

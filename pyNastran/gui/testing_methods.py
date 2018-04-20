@@ -78,7 +78,7 @@ class FakeGUIMethods(GuiCommon):
         self.vtk_interactor = VTKInteractor()
         self.debug = False
         self._form = []
-        self.result_cases = {}
+        self.result_cases = OrderedDict()
         self._finish_results_io = self.passer1
         #self.geometry_actors = {
             #'main' : GeometryActor(),

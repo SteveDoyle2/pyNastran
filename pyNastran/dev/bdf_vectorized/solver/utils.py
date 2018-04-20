@@ -14,19 +14,19 @@ def partition_sparse(Is, Js, Vs):
     return(I2, J2, V2)
 
 
-def getDOF_Set(nAll, dofs):
-    dofsAll = {i for i in range(nAll)}
-    dofs = list(dofsAll.difference(set(dofs)))
+def get_dof_set(nall, dofs):
+    dofs_all = {i for i in range(nall)}
+    dofs = list(dofs_all.difference(set(dofs)))
     return dofs
 
-def remove_dofs(dofsAll, dofs_remove):
-    dofs = list(dofsAll.difference(set(dofs_remove)))
+def remove_dofs(dofs_all, dofs_remove):
+    dofs = list(dofs_all.difference(set(dofs_remove)))
     return dofs
 
 
 def partition_dense_symmetric(A, dofs_in):
-    nAll = A.shape[0]
-    dofs = getDOF_Set(nAll, dofs_in)
+    nall = A.shape[0]
+    dofs = get_dof_set(nall, dofs_in)
     dofs.sort()
     n = len(dofs)
     A2 = zeros((n, n), 'float64')
@@ -39,9 +39,9 @@ def partition_dense_symmetric(A, dofs_in):
 
 
 def partition_dense_vector(F, dofs_in):
-    nAll = F.shape[0]
+    nall = F.shape[0]
     #print("partition_dense_vector:  dofs_in = %s" % sorted(dofs_in))
-    dofs = getDOF_Set(nAll, dofs_in)
+    dofs = get_dof_set(nall, dofs_in)
     dofs.sort()
     #print("partition_dense_vector:  dofs = %s" % dofs)
     n = len(dofs)

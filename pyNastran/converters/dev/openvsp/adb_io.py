@@ -1,4 +1,5 @@
 from __future__ import print_function
+from collections import OrderedDict
 from six.moves import range
 from numpy import arange, amax, amin, zeros, hstack
 
@@ -31,7 +32,7 @@ class ADB_IO(object):  # pragma: no cover
             self.turn_text_off()
             self.grid.Reset()
 
-            self.result_cases = {}
+            self.result_cases = OrderedDict()
             self.ncases = 0
             try:
                 del self.case_keys
@@ -135,7 +136,7 @@ class ADB_IO(object):  # pragma: no cover
 
         self.grid.SetPoints(points)
         self.grid.Modified()
-        if hasattr(self.grid, 'Update'):
+        if hasattr(self.grid, 'Update'):  # pragma: no cover
             self.grid.Update()
         #self.log_info("updated grid")
 
@@ -148,7 +149,7 @@ class ADB_IO(object):  # pragma: no cover
         beta = model.betas[0]
         note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
         self.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         form, cases = self._fill_adb_case(cases, ID, model, plot_wakes)

@@ -5,14 +5,18 @@ from six import iteritems
 import numpy as np
 try:
     import pandas
-    is_pandas = True
+    IS_PANDAS = True
     # per http://stackoverflow.com/questions/35175949/ignore-pandas-warnings
     # doesn't work...
     #warnings.filterwarnings(
         #'ignore',
         #'.*unorderable dtypes; returning scalar but in the future this will be an error.*')
 except ImportError:
-    is_pandas = False
+    IS_PANDAS = False
+
+IS_TRANSIENT_PANDAS = False
+if IS_PANDAS and (np.lib.NumpyVersion(np.__version__) < '1.13.0'):
+    IS_TRANSIENT_PANDAS = True
 
 import pyNastran
 from pyNastran.utils.log import get_logger
@@ -251,6 +255,7 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
+        skip_dataframe = not IS_TRANSIENT_PANDAS
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
@@ -258,7 +263,7 @@ class TestOP2(Tester):
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True, check_memory=False,
-                stop_on_failure=True, dev=False)
+                stop_on_failure=True, dev=False, skip_dataframe=skip_dataframe)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -273,6 +278,7 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
+        skip_dataframe = not IS_TRANSIENT_PANDAS
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
@@ -280,7 +286,7 @@ class TestOP2(Tester):
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True, check_memory=False,
-                stop_on_failure=True, dev=False)
+                stop_on_failure=True, dev=False, skip_dataframe=skip_dataframe)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -354,9 +360,11 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
+        skip_dataframe = not IS_TRANSIENT_PANDAS
         op2 = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                       write_f06=write_f06,
-                      debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)[0]
+                      debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                      skip_dataframe=skip_dataframe)[0]
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
         op2.write_f06(f06_filename)
@@ -410,7 +418,7 @@ class TestOP2(Tester):
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, check_memory=False, stop_on_failure=True,
-            dev=False)
+            dev=False, skip_dataframe=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
@@ -509,6 +517,7 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
         f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
+        skip_dataframe = not IS_TRANSIENT_PANDAS
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=False, write_op2=False,
@@ -516,7 +525,7 @@ class TestOP2(Tester):
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, check_memory=False, stop_on_failure=True,
-            dev=False)
+            dev=False, skip_dataframe=skip_dataframe)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
@@ -675,7 +684,7 @@ class TestOP2(Tester):
         assert chexa_stress.data.shape == (1, 9, 10), chexa_stress.data.shape
         assert chexa_stress.is_von_mises, chexa_stress
 
-        if is_pandas:
+        if IS_PANDAS:
             rod_force.build_dataframe()
             rod_stress.build_dataframe()
             cbar_force.build_dataframe()
@@ -945,7 +954,7 @@ class TestOP2(Tester):
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (3, 9, 10), chexa_stress.data.shape
 
-        if is_pandas:
+        if IS_PANDAS:
             cbar_force.build_dataframe()
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -1025,7 +1034,7 @@ class TestOP2(Tester):
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (4, 9, 10), chexa_stress.data.shape
 
-        if is_pandas:
+        if IS_PANDAS:
             cbar_force.build_dataframe()
             str(cbar_force.data_frame)
 
@@ -1108,7 +1117,7 @@ class TestOP2(Tester):
         assert grid_point_forces.ntotal == 106, grid_point_forces.ntotal
         assert grid_point_forces.data.shape == (7, 106, 6), grid_point_forces.data.shape
 
-        if is_pandas:
+        if IS_PANDAS:
             rod_force.build_dataframe()
             rod_stress.build_dataframe()
             cbar_force.build_dataframe()
@@ -1152,10 +1161,13 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
+
+        skip_dataframe = not IS_TRANSIENT_PANDAS
         read_op2(op2_filename, debug=debug)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                                  write_f06=write_f06,
-                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
+                                 skip_dataframe=skip_dataframe)
         isubcase = 1
         # rod_force = op2.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
@@ -1212,7 +1224,7 @@ class TestOP2(Tester):
         assert grid_point_forces.ntotal == 130, grid_point_forces.ntotal
         assert grid_point_forces.data.shape == (21, 130, 6), grid_point_forces.data.shape
 
-        if is_pandas:
+        if IS_TRANSIENT_PANDAS:
             rod_force.build_dataframe()
             rod_stress.build_dataframe()
             cbar_force.build_dataframe()
@@ -1267,7 +1279,7 @@ class TestOP2(Tester):
         assert len(op2.ctria3_stress) == 0
 
         ctetra_stress = op2.ctetra_stress[isubcase]
-        if is_pandas:
+        if IS_PANDAS:
             ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 3951, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 19755, 10), ctetra_stress.data.shape
@@ -1305,10 +1317,11 @@ class TestOP2(Tester):
         write_f06 = False
         log = get_logger(level='warning')
         read_op2(op2_filename, log=log)
+        skip_dataframe = not IS_TRANSIENT_PANDAS
         op2i, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                                   write_f06=write_f06,
                                   log=log, stop_on_failure=True,
-                                  quiet=True)
+                                  quiet=True, skip_dataframe=skip_dataframe)
 
         nids = [5]
         isubcase = 103
@@ -1322,7 +1335,7 @@ class TestOP2(Tester):
             # no index 0; fortran 1-based
             acc.extract_xyplot(nids, 0, 'real')
 
-        if is_pandas:
+        if IS_PANDAS:
             acc.build_dataframe()
         accx = acc.extract_xyplot(nids, 1, 'real')
         accxi = acc.extract_xyplot(nids, 1, 'imag')
@@ -1423,7 +1436,7 @@ class TestOP2(Tester):
         cbush_force = op2.cbush_force[isubcase]
         assert cbush_force.nelements == 1, cbush_force.nelements
         assert cbush_force.data.shape == (1, 1, 6), cbush_force.data.shape
-        if is_pandas:
+        if IS_PANDAS:
             op2.build_dataframe()
 
         assert os.path.exists(debug_file), os.listdir(os.path.dirname(op2_filename))

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from collections import OrderedDict
 from six import iteritems
 from six.moves import range
 import vtk
@@ -118,7 +119,7 @@ class Plot3d_io(object):  # pragma: no cover
         self.scalarBar.Modified()
 
         self.isubcase_name_map = {1: ['Plot3d', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         #cases = self._fill_stl_case(cases, ID, elements)
@@ -194,7 +195,3 @@ class Plot3d_io(object):  # pragma: no cover
                 #nodal_data = loads[key]
                 #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
-
-    #def load_panair_results(self, panairFileName):
-        ##self.result_cases = {}
-        #pass

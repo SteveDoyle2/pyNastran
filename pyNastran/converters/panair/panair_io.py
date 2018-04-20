@@ -3,6 +3,7 @@ Defines the GUI IO file for Panair.
 """
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 from six import iteritems
 import numpy as np
@@ -87,7 +88,7 @@ class PanairIO(object):
             self.parent.scalarBar.Modified()
 
         self.parent.isubcase_name_map = {1: ['Panair', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         #print "nElements = ", nElements

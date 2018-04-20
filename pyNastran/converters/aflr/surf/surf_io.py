@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 from six import iteritems
 from numpy import vstack, amax, amin, arange, ones, zeros, where
@@ -116,7 +117,7 @@ class SurfIO(object):
         self.scalarBar.Modified()
 
         self.isubcase_name_map = {1: ['AFLR Surface', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         form, cases = self._fill_surf_case(surf_filename, cases, ID, nnodes, nelements, model)

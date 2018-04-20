@@ -2,6 +2,8 @@
 Defines the GUI IO file for SU2.
 """
 from __future__ import print_function
+from collections import OrderedDict
+
 from six import iteritems
 from six.moves import range
 import numpy as np
@@ -121,15 +123,14 @@ class SU2_IO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
-            self.parent.log_info("updated grid")
 
         # loadSTLResults - regions/loads
         self.parent.scalarBar.VisibilityOff()
         self.parent.scalarBar.Modified()
 
-        cases = {}
+        cases = OrderedDict()
         self.isubcase_name_map = {}
         ID = 1
 

@@ -2,6 +2,8 @@
 Defines the GUI IO file for S/HABP.
 """
 from __future__ import print_function
+from collections import OrderedDict
+
 from six import iteritems
 import numpy as np
 from numpy import zeros, cross, amax, amin
@@ -73,7 +75,7 @@ class ShabpIO(object):
 
         self.parent.grid.SetPoints(points)
         self.parent.grid.Modified()
-        if hasattr(self.parent.grid, 'Update'):
+        if hasattr(self.parent.grid, 'Update'):  # pragma: no cover
             self.parent.grid.Update()
 
         # loadShabpResults - regions/loads
@@ -81,7 +83,7 @@ class ShabpIO(object):
         self.parent.scalarBar.Modified()
 
         self.parent.isubcase_name_map = {1: ['S/HABP', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         self.parent.log.debug("nNodes=%i nElements=%i" % (
@@ -228,7 +230,6 @@ class ShabpIO(object):
         mach_results = []
         form = self.parent.form
         form.append(('Results', None, mach_results))
-        #self.result_cases = {}
         mach_forms = {}
         for case_id, Cp in sorted(iteritems(Cpd)):
             Cp = Cpd[case_id]

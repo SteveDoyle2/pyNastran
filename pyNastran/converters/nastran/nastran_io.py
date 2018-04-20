@@ -3674,7 +3674,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.set_glyph_scale_factor(np.nanmean(min_edge_length) * 2.5)  # was 1.5
 
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
         #----------------------------------------------------------
         # finishing up parameters
@@ -3722,7 +3722,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
         #self.gui.log_info("updated grid")
 

@@ -11,7 +11,7 @@ import numpy as np
 
 from pyNastran.gui.gui_objects.settings import Settings
 from pyNastran.gui.tool_actions import ToolActions
-from pyNastran.gui.views import ViewActions
+from pyNastran.gui.view_actions import ViewActions
 from pyNastran.gui.utils.load_results import create_res_obj
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
@@ -474,7 +474,7 @@ class GuiAttributes(object):
             self.turn_text_off()
             self.grid.Reset()
 
-            self.result_cases = {}
+            self.result_cases = OrderedDict()
             self.ncases = 0
             for param in params_to_delete:
                 if hasattr(self, param):  # TODO: is this correct???

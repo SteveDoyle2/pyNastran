@@ -2,6 +2,7 @@
 Defines the GUI IO file for STL.
 """
 from __future__ import print_function
+from collections import OrderedDict
 from numpy import arange
 
 import vtk
@@ -63,15 +64,14 @@ class STL_IO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
-            self.parent.log_info("updated grid")
 
         # loadSTLResults - regions/loads
         self.parent.scalarBar.VisibilityOff()
         self.parent.scalarBar.Modified()
 
-        cases = {}
+        cases = OrderedDict()
         self.parent.isubcase_name_map = {}
         ID = 1
 

@@ -3,6 +3,7 @@ Defines the GUI IO file for Tetegen.
 """
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 from pyNastran.converters.tetgen.tetgen import Tetgen
 #from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -76,14 +77,14 @@ class TetgenIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
         # loadTetgenResults - regions/loads
         self.parent.scalarBar.VisibilityOff()
         self.parent.scalarBar.Modified()
 
-        cases = {}
+        cases = OrderedDict()
         #unused_ID = 1
 
         self.parent._finish_results_io(cases)

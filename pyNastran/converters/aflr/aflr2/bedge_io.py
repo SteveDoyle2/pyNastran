@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+from collections import OrderedDict
 
 import numpy as np
 import vtk
@@ -80,7 +81,7 @@ class BEdge_IO(object):
         alt_grid.SetPoints(points)
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
         #print("updated grid")
 
@@ -90,7 +91,7 @@ class BEdge_IO(object):
         self.scalarBar.Modified()
 
         self.isubcase_name_map = {1: ['AFLR BEDGE', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         self._add_alt_actors(self.alt_grids)

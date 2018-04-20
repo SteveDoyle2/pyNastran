@@ -3,7 +3,7 @@ Defines the GUI IO file for Usm3d.
 """
 from __future__ import print_function
 import os
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from six import iteritems
 
 import numpy as np
@@ -189,13 +189,13 @@ class Usm3dIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
         # regions/loads
         self.parent.scalarBar.Modified()
 
-        cases = {}
+        cases = OrderedDict()
         form = []
         form, cases = self._fill_usm3d_results(cases, form,
                                                bcs, mapbc, bcmap_to_bc_name, loads,

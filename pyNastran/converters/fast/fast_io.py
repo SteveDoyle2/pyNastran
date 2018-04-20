@@ -3,6 +3,8 @@ Defines the GUI IO file for Fast.
 """
 from __future__ import print_function
 import os
+from collections import OrderedDict
+
 import numpy as np
 from vtk import vtkTriangle, vtkTetra
 
@@ -103,13 +105,13 @@ class FastIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
         # regions/loads
         self.parent.scalarBar.Modified()
 
-        cases = {}
+        cases = OrderedDict()
         #cases = self.result_cases
         form = []
         self._fill_fast_results(

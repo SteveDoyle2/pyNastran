@@ -2,6 +2,8 @@
 Defines the GUI IO file for LaWGS.
 """
 from __future__ import print_function
+from collections import OrderedDict
+
 import vtk
 from vtk import vtkQuad
 from numpy import array, arange, cross
@@ -67,7 +69,7 @@ class LaWGS_IO(object):
 
         self.parent.grid.SetPoints(points)
         self.parent.grid.Modified()
-        if hasattr(self.parent.grid, 'Update'):
+        if hasattr(self.parent.grid, 'Update'):  # pragma: no cover
             self.parent.grid.Update()
 
         # loadCart3dResults - regions/loads
@@ -75,7 +77,7 @@ class LaWGS_IO(object):
         #self.scalarBar.Modified()
 
         self.parent.isubcase_name_map = {1: ['LaWGS', '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         #print("nElements = %s" % nElements)

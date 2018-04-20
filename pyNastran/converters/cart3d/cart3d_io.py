@@ -3,6 +3,7 @@ Defines the GUI IO file for Cart3d.
 """
 from __future__ import print_function
 import os
+from collections import OrderedDict
 from six import iteritems
 
 from numpy import arange, mean, vstack, unique, where, sqrt
@@ -47,7 +48,7 @@ class Cart3dIO(object):
             self.parent.turn_text_off()
             self.parent.grid.Reset()
 
-            self.parent.result_cases = {}
+            self.parent.result_cases = OrderedDict()
             self.parent.ncases = 0
             try:
                 del self.parent.case_keys
@@ -122,7 +123,7 @@ class Cart3dIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
         self._create_cart3d_free_edges(model, nodes, elements)
 
@@ -138,7 +139,7 @@ class Cart3dIO(object):
         else:
             note = ''
         self.parent.isubcase_name_map = {1: ['Cart3d%s' % note, '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
         form, cases, icase = _fill_cart3d_geometry_objects(
             cases, ID, nodes, elements, regions, model)
@@ -429,15 +430,15 @@ def _fill_cart3d_geometry_objects(cases, unused_id, nodes, elements, regions, mo
                                 nids, eids, regions, area, cnormals,
                                 uname='Cart3dGeometry')
 
-    cases = {
-        0 : (cart3d_geo, (0, 'NodeID')),
-        1 : (cart3d_geo, (0, 'ElementID')),
-        2 : (cart3d_geo, (0, 'Region')),
-        3 : (cart3d_geo, (0, 'Area')),
-        4 : (cart3d_geo, (0, 'NormalX')),
-        5 : (cart3d_geo, (0, 'NormalY')),
-        6 : (cart3d_geo, (0, 'NormalZ')),
-    }
+    cases = OrderedDict()
+    cases[0] = (cart3d_geo, (0, 'NodeID'))
+    cases[1] = (cart3d_geo, (0, 'ElementID'))
+    cases[2] = (cart3d_geo, (0, 'Region'))
+    cases[3] = (cart3d_geo, (0, 'Area'))
+    cases[4] = (cart3d_geo, (0, 'NormalX'))
+    cases[5] = (cart3d_geo, (0, 'NormalY'))
+    cases[6] = (cart3d_geo, (0, 'NormalZ'))
+
     geometry_form = [
         ('NodeID', 0, []),
         ('ElementID', 1, []),

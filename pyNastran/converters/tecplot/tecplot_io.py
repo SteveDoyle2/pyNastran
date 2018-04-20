@@ -4,6 +4,7 @@ Defines the GUI IO file for Tecplot.
 from __future__ import print_function
 #import os
 from six import integer_types
+from collections import OrderedDict
 
 from numpy import arange, mean, amax, amin, array
 from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
@@ -61,7 +62,7 @@ class TecplotIO(object):
         else:
             note = ''
         self.isubcase_name_map = {1: ['Tecplot%s' % note, '']}
-        cases = {}
+        cases = OrderedDict()
         ID = 1
 
         form, cases = self._fill_tecplot_case(cases, ID, model, is_surface)
@@ -168,7 +169,7 @@ class TecplotIO(object):
 
         grid.SetPoints(points)
         grid.Modified()
-        if hasattr(grid, 'Update'):
+        if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
         return is_surface
 
