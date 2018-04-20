@@ -11,20 +11,25 @@ class FileReader(object):
 
         self.filesize = os.path.getsize(self.filename)
 
-        if self.filesize % 82 == 0:
-            self.separator = b'\r\n'
+        self.f = open(self.filename, 'rb')
+
+        tmp = self.f.read(100)
+
+        if b'\n\r' in tmp:
+            self.separator = b'\n\r'
             self.linesize = 82
-        elif self.filesize % 81 == 0:
+        elif b'\n':
             self.separator = b'\n'
             self.linesize = 81
         else:
             raise Exception('%s is not a valid punch file!' % self.filename)
 
-        self.f = open(self.filename, 'rb')
+        self.f.seek(0)
 
         self.chunksize = 10000 * self.linesize
 
         self._counter = 0
+        self._line_number = 0
 
         self._data = []
         self._old_data = None
@@ -48,12 +53,15 @@ class FileReader(object):
         try:
             tmp = self._data[self._counter]
             self._counter += 1
-            return tmp[:72]
+            line = tmp[:72]
+            self._line_number += 1
+            return line
         except IndexError:
             if self._new_data is not None:
                 self._data = self._new_data
                 self._new_data = None
                 self._counter = 0
+                self._line_number += 1
 
                 return self._data[self._counter][:72]
 
@@ -63,24 +71,40 @@ class FileReader(object):
 
             _data = self.f.read(self.chunksize)
 
+            # print(_data)
+
             self._data_read += len(_data)
 
             if len(_data) == 0:
+                # print('None 1')
                 return None
 
-            self._data = _data.split(self.separator)
+            if b'\n\r' in _data:
+                self._data = _data.split(b'\n\r')
+            else:
+                self._data = _data.split(b'\n')
+
+            # self._data = _data.split(self.separator)
+
             self._data.pop()
             self._counter = 0
+
+            # print(self.separator)
+            # print(self._data)
 
             try:
                 tmp = self._data[self._counter]
                 self._counter += 1
-                return tmp[:72]
+                line = tmp[:72]
+                self._line_number += 1
+                return line
             except IndexError:
+                # print('None 2')
                 return None
 
     def previous_line(self):
         self._counter -= 1
+        self._line_number -= 1
 
         try:
             return self._data[self._counter][:72]
@@ -96,4 +120,4 @@ class FileReader(object):
                 return None
 
     def line_number(self):
-        return self._data_read / self.linesize + self._counter
+        return self._line_number

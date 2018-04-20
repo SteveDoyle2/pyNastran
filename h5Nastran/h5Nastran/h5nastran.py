@@ -2,6 +2,8 @@ from __future__ import print_function, absolute_import
 from six import iteritems, itervalues
 from six.moves import range
 
+from collections import OrderedDict
+
 from pyNastran.bdf.bdf import BDF
 
 import tables
@@ -12,12 +14,14 @@ from .result import Result
 
 from .pynastran_interface import get_bdf_cards
 from .punch import PunchReader
+# from .op2 import OP2Reader
 from .f06 import F06Reader
 from .exceptions import pyNastranReadBdfError, pyNastranWriteBdfError
 from .table_paths import TablePaths
 from .data_helper import DataHelper
 
 
+# TODO: things are getting crowded in here, need to encapsulate stuff, such as bdf reader, result readers, etc.
 class H5Nastran(object):
     h5n_version_str = '0.1.0a0'
     h5n_version = (0, 1, 0)
@@ -41,14 +45,21 @@ class H5Nastran(object):
 
         if in_memory:
             driver = 'H5FD_CORE'
+            driver_core_backing_store = 0
         else:
             driver = self.default_driver
+            driver_core_backing_store = 1
 
         filters = tables.Filters(complib='zlib', complevel=5)
-        self.h5f = tables.open_file(h5filename, mode=mode, filters=filters, driver=driver)
+        self.h5f = tables.open_file(h5filename, mode=mode, filters=filters, driver=driver,
+                                    driver_core_backing_store=driver_core_backing_store)
 
         self._card_tables = {}
         self._result_tables = {}
+
+        # TODO: should there be higher level node here, say nastran, index, and h5nastran
+        #       the nastran node would have the input and result nodes
+        #       this would follow the h5 hierarchy better
 
         self.input = Input(self)
         self.result = Result(self)
@@ -63,6 +74,8 @@ class H5Nastran(object):
         self._punch = None
         self._f06 = None
         self._op2 = None
+
+        self._punch_subcase_ids = OrderedDict()
 
         self._element_results_tables = {}
 
@@ -122,7 +135,7 @@ class H5Nastran(object):
         for card_name in card_names:
             table = self._card_tables.get(card_name, None)
 
-            print(card_name)
+            # print(card_name)
 
             if table is None:
                 print(card_name, 'not supported')
@@ -176,6 +189,7 @@ class H5Nastran(object):
             raise Exception('F06 has already been loaded.  Cannot load punch file after f06.')
 
         self._punch = filename
+        self._punch_subcase_ids.clear()
 
         reader = PunchReader(filename)
         reader.register_callback(self._load_punch_table)
@@ -188,6 +202,32 @@ class H5Nastran(object):
 
         self._tables.clear()
         self._write_unsupported_tables()
+        self._punch_finalize()
+        
+    def _punch_finalize(self):
+        dtype = np.dtype([('SUBCASE_ID', '<i8'), ('LOAD_FACTOR', '<f8'), ('DOMAIN_ID', '<i8')])
+        format = tables.descr_from_dtype(dtype)[0]
+        
+        self.h5f.create_table(self.table_paths.subcase_path, self.table_paths.subcase_table, format,
+                              'SUBCASES', expectedrows=len(self._punch_subcase_ids), createparents=True)
+
+        table = self.h5f.get_node(self.table_paths.subcase)
+
+        data = np.zeros(len(self._punch_subcase_ids), dtype=dtype)
+        subcase_id = data['SUBCASE_ID']
+        load_factor = data['LOAD_FACTOR']
+        domain_id = data['DOMAIN_ID']
+        
+        for key, domain_id_ in iteritems(self._punch_subcase_ids):
+            index = domain_id_ - 1
+            subcase_id_, load_factor_ = key
+            subcase_id[index] = subcase_id_
+            load_factor[index] = load_factor_
+            domain_id[index] = domain_id_
+
+        table.append(data)
+
+        self.h5f.flush()
 
     def load_op2(self, filename):
         if self._bdf is None:
@@ -300,13 +340,13 @@ class H5Nastran(object):
         self.bdf = bdf
 
     def _load_result_table(self, table_data):
-        print(table_data.header)
+        # print(table_data.header)
 
         results_type = table_data.header.results_type
         results_type_ = table_data.header.results_type_no_options
 
-        print(results_type)
-        print(results_type_)
+        # print(results_type)
+        # print(results_type_)
 
         table = self._result_tables.get(results_type_, None)
 
@@ -335,7 +375,14 @@ class H5Nastran(object):
         self._tables.add(table)
 
     def _load_punch_table(self, table_data):
-        print(table_data.header)
+        # print(table_data.header)
+
+        # print(table_data.header)
+
+        key = table_data.header.subcase_id_num, table_data.header.load_factor
+
+        if key not in self._punch_subcase_ids:
+            self._punch_subcase_ids[key] = len(self._punch_subcase_ids) + 1
 
         results_type = table_data.header.results_type_basic
 
@@ -350,6 +397,7 @@ class H5Nastran(object):
 
     # TODO: remove element type from results tables, since it's hard to know what they should be
     # item code is good enough
+    # this means remove the QUAD4 in ELEMENT STRESSES QUAD4 33 REAL
     def _find_element_result_table(self, results_type):
         if not results_type.startswith('ELEMENT'):
             return None

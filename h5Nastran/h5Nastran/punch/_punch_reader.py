@@ -34,85 +34,25 @@ def _worker(data, lineno, d):
 class PunchReader(object):
     def __init__(self, filename):
         self.file = FileReader(filename)
-
         self._done_reading = False
-
         self._callback = _default_callback
 
     def register_callback(self, callback):
         assert callable(callback)
-
         self._callback = callback
 
     def close(self):
         self.file.close()
 
-    def read_multiprocess(self):
-
-        from multiprocessing import Process, Manager, cpu_count
-
-        _count = 0
-
-        _process = []
-        _data = []
-        _ln = []
-
-        manager = Manager()
-
-        max_count = cpu_count() - 1
-
-        while not self._done_reading:
-            table_data, line_number = self._read_table()
-
-            # print(self.file.status())
-
-            _ln.append(line_number)
-            _data.append(manager.dict())
-
-            d = _data[-1]
-
-            p = Process(target=_worker, args=(table_data, line_number, d))
-            p.start()
-
-            _process.append(p)
-
-            _count += 1
-
-            breakout = False
-            if _count == max_count:
-                for i in range(len(_process)):
-                    _process[i].join()
-                    d = _data[i]
-
-                    if d['error'] is True:
-                        breakout = True
-                        continue
-
-                    td = PunchTableData()
-                    td.load(d['table_data'])
-                    self._callback(td)
-
-                _process.clear()
-                _data.clear()
-                _count = 0
-
-            if breakout:
-                break
-
-        for i in range(len(_process)):
-            _process[i].join()
-            d = _data[i]
-
-            if d['error'] is True:
-                continue
-
-            td = PunchTableData()
-            td.load(d['table_data'])
-            self._callback(td)
-
     def read(self):
         while not self._done_reading:
             table_data, line_number = self._read_table()
+
+            # print(table_data)
+
+            if table_data is None:
+                # print('table data is None!')
+                continue
 
             data = PunchTableData(table_data)
             data.header.lineno = line_number
@@ -120,11 +60,8 @@ class PunchReader(object):
             self._callback(data)
 
     def _read_table(self):
-
         table_data = []
-
         reading_data = False
-
         line_number = -1
 
         while True:
@@ -152,14 +89,13 @@ class PunchReader(object):
                     table_data[-1] += next_line[18:]
                 except IndexError:
                     raise Exception('Error reading punch file %s!' % self.file.filename)
-
             else:
                 if len(table_data) == 0:
                     line_number = self.file.line_number()
-
+                    
                 table_data.append(next_line)
 
         if len(table_data) == 0:
-            return None
+            return None, None
 
         return table_data, line_number
