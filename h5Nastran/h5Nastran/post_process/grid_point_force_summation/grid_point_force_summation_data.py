@@ -1,13 +1,11 @@
 from __future__ import print_function, absolute_import
-from six import iteritems
-from six.moves import range
 
 import numpy as np
 import pandas as pd
-from typing import List, Tuple, Iterable, Union, Dict
+from six.moves import range
+from typing import Tuple, Iterable, Union, Dict
 
-from h5Nastran.result.result_table import ResultTableData
-
+from h5Nastran.h5.nastran.result import ResultTableData
 
 _Vector = Tuple[float, float, float]
 _Matrix = Tuple[_Vector, _Vector, _Vector]

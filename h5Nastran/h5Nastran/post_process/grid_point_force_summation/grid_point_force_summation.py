@@ -1,14 +1,15 @@
 from __future__ import print_function, absolute_import
-from six.moves import range
 
 from copy import deepcopy
-from typing import Iterable, List, Tuple, Union, Dict, Any
-
-from ...h5nastran import H5Nastran
-from ..collector import H5NastranCollector
-from .grid_point_force_summation_data import GridPointForceSummationCalculator, Vector, Matrix, GridPointForceSummationData
 
 import numpy as np
+from six.moves import range
+from typing import Iterable, List, Union
+
+from h5Nastran.h5nastran.h5nastran import H5Nastran
+from .grid_point_force_summation_data import GridPointForceSummationCalculator, Vector, Matrix, \
+    GridPointForceSummationData
+from ..collector import H5NastranCollector
 
 
 class GridPointForceSummationRequest(object):
@@ -92,10 +93,10 @@ class GridPointForceSummationRequestList(object):
 
     def _run_h5n(self):
         all_nodes = self.nodes()
-        grid_forces = self.db.result.nodal.grid_force.search(all_nodes, self.domain_ids, True)
+        grid_forces = self.db.nastran.result.nodal.grid_force.search(all_nodes, self.domain_ids, True)
 
         if self.grid_pos is None:
-            self.grid_pos = self.db.input.node.grid.grid_in_basic_dict()
+            self.grid_pos = self.db.nastran.input.node.grid.grid_in_basic_dict()
 
         self.calculator.set_data(grid_forces, self.grid_pos)
 
@@ -124,9 +125,9 @@ class GridPointForceSummationRequestList(object):
             h5n = db.h5n[i]
             # domains = db.model_case_selection[i]
             # TODO: need to handle loadcase selection better
-            grid_forces = h5n.result.nodal.grid_force.search(all_nodes, (), True)
+            grid_forces = h5n.nastran.result.nodal.grid_force.search(all_nodes, (), True)
 
-            grid_pos = h5n.input.node.grid.grid_in_basic_dict()
+            grid_pos = h5n.nastran.input.node.grid.grid_in_basic_dict()
 
             self.calculator.set_data(grid_forces, grid_pos)
 
