@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from six import iteritems
+from six import iteritems, PY3
 import numpy as np
 try:
     import pandas
@@ -509,7 +509,7 @@ class TestOP2(Tester):
             compare=True, debug=False, binary_debug=False,
             quiet=True, check_memory=False, stop_on_failure=True,
             dev=False)
-        assert len(op2.displacements) == 1, len(op2.displacements)
+        assert len(op2.displacements) == 1, len(op2.displacements).v
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     def test_op2_transient_solid_shell_bar_01_geom(self):
@@ -1317,7 +1317,7 @@ class TestOP2(Tester):
         write_f06 = False
         log = get_logger(level='warning')
         read_op2(op2_filename, log=log)
-        skip_dataframe = not IS_TRANSIENT_PANDAS
+        skip_dataframe = not IS_TRANSIENT_PANDAS or PY3
         op2i, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                                   write_f06=write_f06,
                                   log=log, stop_on_failure=True,
@@ -1335,7 +1335,7 @@ class TestOP2(Tester):
             # no index 0; fortran 1-based
             acc.extract_xyplot(nids, 0, 'real')
 
-        if IS_PANDAS:
+        if IS_PANDAS and not PY3:
             acc.build_dataframe()
         accx = acc.extract_xyplot(nids, 1, 'real')
         accxi = acc.extract_xyplot(nids, 1, 'imag')

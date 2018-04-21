@@ -1,6 +1,6 @@
 import os
 
-from six import iteritems
+from six import iteritems, PY3, binary_type
 import numpy as np
 import h5py
 
@@ -12,6 +12,7 @@ from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray, Comp
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import RealSPCForcesArray, ComplexSPCForcesArray
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import RealMPCForcesArray, ComplexMPCForcesArray
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealLoadVectorArray, ComplexLoadVectorArray
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import print_bad_path
 
@@ -32,6 +33,7 @@ TABLE_OBJ_MAP = {
     'eigenvectors' : (RealEigenvectorArray, ComplexEigenvectorArray),
     'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'load_vectors' : (RealLoadVectorArray, ComplexLoadVectorArray),
 }
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
 
@@ -41,7 +43,7 @@ def load_table(model, h5_result, real_obj, complex_obj, log, debug=False):
     is_complex = cast(h5_result.get('is_complex'))
     nonlinear_factor = cast(h5_result.get('nonlinear_factor'))
 
-    data_names = cast(h5_result.get('data_names')).tolist()
+    data_names = [name.decode('utf8') for name in cast(h5_result.get('data_names')).tolist()]
     sdata_names = [data_name + 's' for data_name in data_names]
     data_code = {
         'nonlinear_factor' : nonlinear_factor,
@@ -62,7 +64,7 @@ def load_table(model, h5_result, real_obj, complex_obj, log, debug=False):
         'name' : data_names[0],
     }
     for key, value in list(iteritems(data_code)):
-        if value is None and key not in ['nonlinear_factor']:
+        if value is None and key not in ['nonlinear_factor', 'acoustic_flag']:
             log.warning('%s %s' % (key, value))
 
     is_sort1 = cast(h5_result.get('is_sort1'))
@@ -75,7 +77,8 @@ def load_table(model, h5_result, real_obj, complex_obj, log, debug=False):
             #f06_flag=False,
         )
     else:
-        return None
+        obj = complex_obj(data_code, is_sort1, isubcase, dt)
+        #return None
 
     keys_to_skip = [
         'class_name', 'headers', 'is_real', 'is_complex',
@@ -95,6 +98,8 @@ def load_table(model, h5_result, real_obj, complex_obj, log, debug=False):
                 print('  **key=%r' % key)
             datai = cast(h5_result.get(key))
             setattr(obj, key, datai)
+            if PY3:
+                assert not isinstance(datai, binary_type), 'key=%r data=%s' % (key, datai)
     return obj
 
 def load_op2_from_h5(h5_filename, log=None):
@@ -118,7 +123,7 @@ def load_op2_from_h5(h5_filename, log=None):
                     h5_result = h5_subcase.get(result_name)
                     obj = load_table(model, h5_result, real_obj, complex_obj, log=log, debug=debug)
                     if obj is None:
-                        log.warning('    skipping %r...' % result_name)
+                        log.warning('    skipping %r because complex...' % result_name)
                         continue
 
                     # isubcase, analysis_code, sort_method,
@@ -130,8 +135,9 @@ def load_op2_from_h5(h5_filename, log=None):
                     key = (obj.isubcase, obj.analysis_code, obj.sort_method,
                            opt_count, ogs,
                            superelement_adaptivity_index)
-                    model.eigenvectors[key] = obj
-                    log.info('  loaded %r' % result_name)
+                    slot = getattr(model, result_name)
+                    slot[key] = obj
+                    log.debug('  loaded %r' % result_name)
                 else:
                     log.warning('  skipping %r...' % result_name)
 
