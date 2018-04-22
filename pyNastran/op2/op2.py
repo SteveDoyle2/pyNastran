@@ -648,15 +648,25 @@ class OP2(OP2_Scalar):
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
 
+    def load_hdf5(self, hdf5_filename):
+        """loads an h5 file into an OP2 object"""
+        assert os.path.exists(h5_filename), print_bad_path(h5_filename)
+        from pyNastran.op2.op2_interface.load_h5 import load_op2_from_hdf5_file
+        import h5py
+        model.op2_filename = hdf5_filename
+
+        log.info('hdf5_op2_filename = %r' % hdf5_filename)
+        debug = False
+        with h5py.File(hdf5_filename, 'r') as h5_file:
+            model = load_op2_from_hdf5_file(h5_file, model, log, debug=debug)
+
     def export_to_hdf5(self, hdf5_filename):
         """
         Converts the OP2 objects into hdf5 object
 
         TODO: doesn't support:
-                - matrices
-                - RealEigenvalues
-                - ComplexEigenvalues
-                - BucklingEigenvalues
+          - matrices
+          - BucklingEigenvalues
         """
         import h5py
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']

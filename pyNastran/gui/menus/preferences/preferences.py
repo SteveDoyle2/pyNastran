@@ -87,7 +87,7 @@ class PreferencesWindow(PyDialog):
     def create_widgets(self):
         """creates the display window"""
         # Text Size
-        self.font_size = QLabel("Font Size:")
+        self.font_size_label = QLabel("Font Size:")
         self.font_size_edit = QSpinBox(self)
         self.font_size_edit.setValue(self._default_font_size)
         self.font_size_edit.setRange(7, 20)
@@ -95,37 +95,38 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Annotation Color
-        self.annotation_color = QLabel("Annotation Color:")
+        self.annotation_color_label = QLabel("Annotation Color:")
         self.annotation_color_edit = QPushButtonColor(self.annotation_color_int)
-
+        self.annotation_color_label.hide()
+        self.annotation_color_edit.hide()
         #-----------------------------------------------------------------------
         # Text Color
-        self.text_size = QLabel("Text Size:")
+        self.text_size_label = QLabel("Text Size:")
         self.text_size_edit = QSpinBox(self)
         self.text_size_edit.setValue(self._default_text_size)
         self.text_size_edit.setRange(7, 30)
         self.text_size_button = QPushButton("Default")
 
         # Text Color
-        self.text_color = QLabel("Text Color:")
+        self.text_color_label = QLabel("Text Color:")
         self.text_color_edit = QPushButtonColor(self.text_color_int)
 
         #-----------------------------------------------------------------------
         # Background Color
-        self.background_color = QLabel("Background Color:")
+        self.background_color_label = QLabel("Background Color:")
         self.background_color_edit = QPushButtonColor(self.background_color_int)
 
         # Background Color2
-        self.gradient_scale = QLabel("Gradient Background:")
+        self.gradient_scale_label = QLabel("Gradient Background:")
         self.gradient_scale_checkbox = QCheckBox()
         self.gradient_scale_checkbox.setChecked(self._use_gradient_background)
 
-        self.background_color2 = QLabel("Top Background Color:")
+        self.background_color2_label = QLabel("Top Background Color:")
         self.background_color2_edit = QPushButtonColor(self.background_color2_int)
 
         #-----------------------------------------------------------------------
         # Annotation Size
-        self.annotation_size = QLabel("Annotation Size:")
+        self.annotation_size_label = QLabel("Annotation Size:")
         self.annotation_size_edit = QSpinBox(self)
         self.annotation_size_edit.setRange(1, 500)
         self.annotation_size_edit.setValue(self._annotation_size)
@@ -133,7 +134,7 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Picker Size
-        self.picker_size = QLabel("Picker Size (% of Screen):")
+        self.picker_size_label = QLabel("Picker Size (% of Screen):")
         self.picker_size_edit = QDoubleSpinBox(self)
         self.picker_size_edit.setRange(0., 10.)
 
@@ -147,17 +148,17 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Clipping Min
-        self.clipping_min = QLabel("Clipping Min:")
+        self.clipping_min_label = QLabel("Clipping Min:")
         self.clipping_min_edit = QLineEdit(str(self._default_clipping_min))
         self.clipping_min_button = QPushButton("Default")
 
         # Clipping Max
-        self.clipping_max = QLabel("Clipping Max:")
+        self.clipping_max_label = QLabel("Clipping Max:")
         self.clipping_max_edit = QLineEdit(str(self._default_clipping_max))
         self.clipping_max_button = QPushButton("Default")
 
         #-----------------------------------------------------------------------
-        self.coord_scale = QLabel('Coordinate System Scale:')
+        self.coord_scale_label = QLabel('Coordinate System Scale:')
         self.coord_scale_button = QPushButton("Default")
 
         self.coord_scale_edit = QDoubleSpinBox(self)
@@ -166,7 +167,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit.setSingleStep(2.5)
         self.coord_scale_edit.setValue(self._coord_scale)
 
-        self.coord_text_scale = QLabel('Coordinate System Text Scale:')
+        self.coord_text_scale_label = QLabel('Coordinate System Text Scale:')
         self.coord_text_scale_button = QPushButton("Default")
 
         self.coord_text_scale_edit = QDoubleSpinBox(self)
@@ -176,7 +177,7 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_edit.setValue(self._coord_text_scale)
 
         #-----------------------------------------------------------------------
-        self.magnify = QLabel('Screenshot Magnify:')
+        self.magnify_label = QLabel('Screenshot Magnify:')
         self.magnify_edit = QSpinBox(self)
         self.magnify_edit.setMinimum(1)
         self.magnify_edit.setMaximum(10)
@@ -247,67 +248,67 @@ class PreferencesWindow(PyDialog):
         grid = QGridLayout()
 
         irow = 0
-        grid.addWidget(self.font_size, irow, 0)
+        grid.addWidget(self.font_size_label, irow, 0)
         grid.addWidget(self.font_size_edit, irow, 1)
         grid.addWidget(self.font_size_button, irow, 2)
         irow += 1
 
-        grid.addWidget(self.gradient_scale, irow, 0)
+        grid.addWidget(self.gradient_scale_label, irow, 0)
         grid.addWidget(self.gradient_scale_checkbox, irow, 1)
         irow += 1
 
-        grid.addWidget(self.background_color, irow, 0)
+        grid.addWidget(self.background_color_label, irow, 0)
         grid.addWidget(self.background_color_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.background_color2, irow, 0)
+        grid.addWidget(self.background_color2_label, irow, 0)
         grid.addWidget(self.background_color2_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.text_size, irow, 0)
+        grid.addWidget(self.text_color_label, irow, 0)
+        grid.addWidget(self.text_color_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.text_size_label, irow, 0)
         grid.addWidget(self.text_size_edit, irow, 1)
         grid.addWidget(self.text_size_button, irow, 2)
         irow += 1
 
-        grid.addWidget(self.text_color, irow, 0)
-        grid.addWidget(self.text_color_edit, irow, 1)
-        irow += 1
-
-        grid.addWidget(self.annotation_color, irow, 0)
+        grid.addWidget(self.annotation_color_label, irow, 0)
         grid.addWidget(self.annotation_color_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.annotation_size, irow, 0)
+        grid.addWidget(self.annotation_size_label, irow, 0)
         grid.addWidget(self.annotation_size_edit, irow, 1)
         grid.addWidget(self.annotation_size_button, irow, 2)
         irow += 1
 
-        #grid.addWidget(self.clipping_min, irow, 0)
+        #grid.addWidget(self.clipping_min_label, irow, 0)
         #grid.addWidget(self.clipping_min_edit, irow, 1)
         #grid.addWidget(self.clipping_min_button, irow, 2)
         #irow += 1
 
-        #grid.addWidget(self.clipping_max, irow, 0)
+        #grid.addWidget(self.clipping_max_label, irow, 0)
         #grid.addWidget(self.clipping_max_edit, irow, 1)
         #grid.addWidget(self.clipping_max_button, irow, 2)
         #irow += 1
 
-        grid.addWidget(self.coord_scale, irow, 0)
+        grid.addWidget(self.coord_scale_label, irow, 0)
         grid.addWidget(self.coord_scale_edit, irow, 1)
         grid.addWidget(self.coord_scale_button, irow, 2)
         irow += 1
 
-        grid.addWidget(self.coord_text_scale, irow, 0)
+        grid.addWidget(self.coord_text_scale_label, irow, 0)
         grid.addWidget(self.coord_text_scale_edit, irow, 1)
         grid.addWidget(self.coord_text_scale_button, irow, 2)
         irow += 1
 
         #-----------------------------------------------
-        grid.addWidget(self.magnify, irow, 0)
+        grid.addWidget(self.magnify_label, irow, 0)
         grid.addWidget(self.magnify_edit, irow, 1)
         irow += 1
 
-        grid.addWidget(self.picker_size, irow, 0)
+        grid.addWidget(self.picker_size_label, irow, 0)
         grid.addWidget(self.picker_size_edit, irow, 1)
         irow += 1
 
@@ -390,7 +391,7 @@ class PreferencesWindow(PyDialog):
 
     def on_gradient_scale(self):
         is_checked = self.gradient_scale_checkbox.isChecked()
-        self.background_color2.setEnabled(is_checked)
+        self.background_color2_label.setEnabled(is_checked)
         self.background_color2_edit.setEnabled(is_checked)
         if self.win_parent is not None:
             self.win_parent.settings.set_gradient_background(use_gradient_background=is_checked)

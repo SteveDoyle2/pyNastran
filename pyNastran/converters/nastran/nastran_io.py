@@ -84,7 +84,7 @@ from pyNastran.converters.nastran.displacements import (
 
 from pyNastran.op2.op2 import OP2
 try:
-    from pyNastran.op2.load_h5 import load_op2_from_h5
+    import h5py
     IS_H5PY = True
 except ImportError:
     IS_H5PY = False
@@ -5687,8 +5687,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.cycle_results_explicit()  # start at nCase=0
                 return
             elif ext == '.h5' and IS_H5PY:
-                h5_filename = results_filename
-                model = load_op2_from_h5(h5_filename, log=self.log)
+                model = OP2(log=self.log, debug=True)
+                hdf5_filename = results_filename
+                model.load_hdf5(hdf5_filename)
             #elif ext == '.pch':
                 #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
             #elif ext == '.f06':

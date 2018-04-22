@@ -592,11 +592,11 @@ class MinorTables(OP2Common):
             assert ndata == 108, ndata
             (aero, name, comps, cp, x, y, z, coeff, word, column, cd,
              ind_dof) = unpack(self._endian + b'8s 56s 2i 3f 4s 8s 3i', data[:108])
-            print('aero=%r' % aero)
-            print('name=%r' % name)
-            print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
-            print('coeff=%r' % coeff)
-            print('word=%r (column, cd, ind_dof)=(%s, %s, %s)' % (word, column, cd, ind_dof))
+            #print('aero=%r' % aero)
+            #print('name=%r' % name)
+            #print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
+            #print('coeff=%r' % coeff)
+            #print('word=%r (column, cd, ind_dof)=(%s, %s, %s)' % (word, column, cd, ind_dof))
             assert cp == 2, cp
             assert x == 0.0, x
             assert y == 0.0, y

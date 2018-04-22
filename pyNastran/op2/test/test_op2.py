@@ -351,10 +351,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if IS_HDF5 and export_hdf5:
-            from pyNastran.op2.load_h5 import load_op2_from_h5
+            from pyNastran.op2.op2_interface.load_h5 import load_op2_from_hdf5
             h5_filename = model + '.test_op2.h5'
             op2.export_to_hdf5(h5_filename)
-            load_op2_from_h5(h5_filename, log=op2.log)
+            load_op2_from_hdf5(h5_filename, log=op2.log)
         if write_f06:
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
                           is_sort1=not is_sort2, quiet=quiet, repr_check=True)

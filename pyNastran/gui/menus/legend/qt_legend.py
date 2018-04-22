@@ -49,6 +49,7 @@ class LegendPropertiesWindow(PyDialog):
 
     def __init__(self, data, win_parent=None):
         PyDialog.__init__(self, data, win_parent)
+        self.is_gui = win_parent is not None
 
         self._updated_legend = False
         self._animation_window_shown = False
@@ -778,8 +779,16 @@ class LegendPropertiesWindow(PyDialog):
 
     def on_show_hide(self):
         """action when user clicks the 'Show/Hide' radio button"""
-        self.colormap_edit.setCurrentIndex(colormap_keys.index(self._default_colormap))
+        #self.colormap_edit.setCurrentIndex(colormap_keys.index(self._default_colormap))
         is_shown = self.show_radio.isChecked()
+        self.nlabels_edit.setEnabled(is_shown)
+        self.nlabels_button.setEnabled(is_shown)
+        self.ncolors_edit.setEnabled(is_shown)
+        self.ncolors_button.setEnabled(is_shown)
+        self.high_to_low_radio.setEnabled(is_shown)
+        self.low_to_high_radio.setEnabled(is_shown)
+        self.colormap_edit.setEnabled(is_shown)
+        self.colormap_button.setEnabled(is_shown)
         self.vertical_radio.setEnabled(is_shown)
         self.horizontal_radio.setEnabled(is_shown)
 
@@ -795,6 +804,8 @@ class LegendPropertiesWindow(PyDialog):
         """shows/hides the legend"""
         self.show_radio.setChecked(is_shown)
         self.hide_radio.setChecked(not is_shown)
+        #if self.is_gui:
+            #self.win_parent.scalarBar.SetVisibility(is_shown)
 
     def on_validate(self):
         """checks to see if the ``on_apply`` method can be called"""

@@ -1,0 +1,432 @@
+# pylint: disable=C0301
+"""
+defines:
+ model = load_op2_from_h5(h5_filename, log=None)
+"""
+from __future__ import print_function
+import os
+
+from six import iteritems, PY3, binary_type
+import numpy as np
+import h5py
+
+from pyNastran.op2.op2 import OP2
+
+from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, ComplexDisplacementArray
+from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray, ComplexVelocityArray
+from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray, ComplexAccelerationArray
+from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray, ComplexEigenvectorArray
+
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import RealSPCForcesArray, ComplexSPCForcesArray
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import RealMPCForcesArray, ComplexMPCForcesArray
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealLoadVectorArray, ComplexLoadVectorArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10NodesStressArray, RealBar10NodesStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStressArray, RealBeamStrainArray, RealNonlinearBeamStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStressArray, RealShearStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressArray, RealSolidStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealSpringStressArray, RealSpringStrainArray, RealNonlinearSpringStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressArray, RealBushStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
+from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
+
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexCBushStressArray, ComplexCBushStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray, ComplexTriaxStressArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
+
+
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray, ComplexGridPointForcesArray
+from pyNastran.op2.tables.oef_forces.oef_force_objects import (
+    RealBendForceArray, RealCBar100ForceArray, RealCBarForceArray, RealCBeamForceArray,
+    RealCBeamForceVUArray, RealCBushForceArray, RealCGapForceArray, RealConeAxForceArray,
+    RealCShearForceArray, RealDamperForceArray, RealForceVU2DArray, RealPlateBilinearForceArray,
+    RealPlateForceArray, RealRodForceArray, RealSolidPressureForceArray, RealSpringForceArray,
+    RealViscForceArray,
+)
+from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
+    ComplexCBarForceArray, ComplexCBeamForceArray, ComplexCBeamForceVUArray,
+    ComplexCBendForceArray, ComplexCBushForceArray, ComplexCShearForceArray,
+    ComplexDamperForceArray, ComplexPlate2ForceArray, ComplexPlateForceArray,
+    ComplexRodForceArray, ComplexSolidPressureForceArray, ComplexSpringForceArray,
+    ComplexViscForceArray,
+)
+
+#from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
+from pyNastran.utils import print_bad_path
+
+def cast(h5_result_attr):
+    """converts the h5py type back into the OP2 type"""
+    if h5_result_attr is None:
+        return None
+
+    if len(h5_result_attr.shape) == 0:
+        return np.array(h5_result_attr).tolist()
+        #raise NotImplementedError(h5_result_attr.dtype)
+    return np.array(h5_result_attr)
+
+TABLE_OBJ_MAP = {
+    'displacements' : (RealDisplacementArray, ComplexDisplacementArray),
+    'velocities' : (RealVelocityArray, ComplexVelocityArray),
+    'accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
+    'eigenvectors' : (RealEigenvectorArray, ComplexEigenvectorArray),
+    'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'load_vectors' : (RealLoadVectorArray, ComplexLoadVectorArray),
+
+    'celas1_stress' : (RealSpringStressArray, ComplexSpringStressArray),
+    'celas2_stress' : (RealSpringStressArray, ComplexSpringStressArray),
+    'celas3_stress' : (RealSpringStressArray, ComplexSpringStressArray),
+    'celas4_stress' : (RealSpringStressArray, ComplexSpringStressArray),
+
+    'celas1_strain' : (RealSpringStrainArray, ComplexSpringStrainArray),
+    'celas2_strain' : (RealSpringStrainArray, ComplexSpringStrainArray),
+    'celas3_strain' : (RealSpringStrainArray, ComplexSpringStrainArray),
+    'celas4_strain' : (RealSpringStrainArray, ComplexSpringStrainArray),
+
+    'celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'celas2_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'celas3_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'celas4_force' : (RealSpringForceArray, ComplexSpringForceArray),
+
+    'cdamp1_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'cdamp2_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'cdamp3_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'cdamp4_force' : (RealDamperForceArray, ComplexDamperForceArray),
+
+    'cvisc_force' : (RealViscForceArray, ComplexViscForceArray),
+
+    'crod_stress' : (RealRodStressArray, ComplexRodStressArray),
+    'conrod_stress' : (RealRodStressArray, ComplexRodStressArray),
+    'ctube_stress' : (RealRodStressArray, ComplexRodStressArray),
+    'crod_strain' : (RealRodStrainArray, ComplexRodStrainArray),
+    'conrod_strain' : (RealRodStrainArray, ComplexRodStrainArray),
+    'ctube_strain' : (RealRodStrainArray, ComplexRodStrainArray),
+
+    'crod_force' : (RealRodForceArray, ComplexRodForceArray),
+    'conrod_force' : (RealRodForceArray, ComplexRodForceArray),
+    'ctube_force' : (RealRodForceArray, ComplexRodForceArray),
+
+    'cbar_stress' : (RealBarStressArray, ComplexBarStressArray),
+    'cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray),
+    'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray, RealCBar100ForceArray),
+
+    'cbeam_stress' : (RealBeamStressArray, ComplexBeamStressArray),
+    'cbeam_strain' : (RealBeamStrainArray, ComplexBeamStrainArray),
+    'cbeam_force' : (RealCBeamForceArray, ComplexCBeamForceArray),
+
+    'cquad4_stress' : (RealPlateStressArray, ComplexPlateStressArray),
+    'ctria3_stress' : (RealPlateStressArray, ComplexPlateStressArray),
+    'cquad8_stress' : (RealPlateStressArray, ComplexPlateStressArray),
+    'ctria6_stress' : (RealPlateStressArray, ComplexPlateStressArray),
+    'ctriar_stress' : (RealPlateStressArray, ComplexPlateStressArray),
+    'cquadr_stress' : (RealPlateStressArray, ComplexPlateStressArray),
+
+    'cquad4_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
+    'ctria3_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
+    'cquad8_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
+    'ctria6_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
+    'ctriar_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
+    'cquadr_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
+
+    'cquad4_composite_stress' : (RealCompositePlateStressArray, None),
+    'ctria3_composite_stress' : (RealCompositePlateStressArray, None),
+    'cquad4_composite_strain' : (RealCompositePlateStrainArray, None),
+    'ctria3_composite_strain' : (RealCompositePlateStrainArray, None),
+
+    'cshear_stress' : (RealShearStressArray, ComplexShearStressArray),
+    'cshear_strain' : (RealShearStrainArray, ComplexShearStrainArray),
+    'cshear_force' : (RealCShearForceArray, ComplexCShearForceArray),
+
+    'ctetra_stress' : (RealSolidStressArray, ComplexSolidStressArray),
+    'cpenta_stress' : (RealSolidStressArray, ComplexSolidStressArray),
+    'chexa_stress' : (RealSolidStressArray, ComplexSolidStressArray),
+
+    'ctetra_strain' : (RealSolidStrainArray, ComplexSolidStrainArray),
+    'cpenta_strain' : (RealSolidStrainArray, ComplexSolidStrainArray),
+    'chexa_strain' : (RealSolidStrainArray, ComplexSolidStrainArray),
+    'grid_point_forces' : (RealGridPointForcesArray, ComplexGridPointForcesArray),
+
+    'ctria3_force' : (RealPlateForceArray, ComplexPlateForceArray),
+    'cquad4_force' : (RealPlateForceArray, RealPlateBilinearForceArray,
+                      ComplexPlateForceArray, ComplexPlate2ForceArray),
+    'cquad8_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'cquadr_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'ctria6_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'ctriar_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+
+    'cgap_force' : (RealCGapForceArray, None),
+
+    'cbend_force' : (RealBendForceArray, ComplexCBendForceArray),
+    'cconeax_force' : (RealConeAxForceArray, None),
+
+    'cbush_stress' : (RealBushStressArray, ComplexCBushStressArray),
+    'cbush_strain' : (RealBushStrainArray, ComplexCBushStrainArray),
+    'cbush_force' : (RealCBushForceArray, ComplexCBushForceArray), # ComplexCBushForceArray
+
+    'celas1_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'celas2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'celas3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'celas4_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+
+    'conrod_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'crod_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'ctube_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+
+    'cbush_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cbar_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cbeam_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+
+    'ctria3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'ctria6_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'ctriar_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cquad4_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cquad8_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cquadr_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cshear_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+
+    'ctetra_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cpenta_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'chexa_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'nonlinear_cbeam_stress' : (RealNonlinearBeamStressArray, ),
+    'nonlinear_celas1_stress' : (RealNonlinearSpringStressArray, ),
+    'nonlinear_conrod_stress' : (RealNonlinearRodArray, ),
+    'nonlinear_cquad4_stress' : (RealNonlinearPlateArray, ),
+    'nonlinear_ctria3_stress' : (RealNonlinearPlateArray, ),
+    'nonlinear_crod_stress' :  (RealNonlinearRodArray, ),
+    'nonlinear_ctube_stress' : (RealNonlinearRodArray, ),
+}
+
+TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
+
+def load_eigenvalue(h5_result, log):
+    """Loads a RealEigenvalue"""
+    class_name = cast(h5_result.get('class_name'))
+    title = ''
+    nmodes = cast(h5_result.get('nmodes'))
+    if class_name == 'RealEigenvalues':
+        obj = RealEigenvalues(title, nmodes=nmodes)
+    elif class_name == 'ComplexEigenvalues':
+        obj = ComplexEigenvalues(title, nmodes)
+    elif class_name == 'BucklingEigenvalues':
+        obj = BucklingEigenvalues(title, nmodes=nmodes)
+    else:
+        log.warning('  %r is not supported...skipping' % class_name)
+        return None
+
+    assert obj.class_name == class_name, 'class_name=%r selected; should be %r' % (obj.class_name, class_name)
+    keys_to_skip = ['class_name', 'is_complex', 'is_real']
+    for key in h5_result.keys():
+        if key in keys_to_skip:
+            continue
+        else:
+            datai = cast(h5_result.get(key))
+            assert not isinstance(datai, binary_type), key
+            setattr(obj, key, datai)
+    return obj
+
+def load_table(result_name, h5_result, objs, log, debug=False):# real_obj, complex_obj
+    """loads a RealEigenvectorArray/ComplexEigenvectorArray"""
+    is_real = cast(h5_result.get('is_real'))
+    #is_complex = cast(h5_result.get('is_complex'))
+    nonlinear_factor = cast(h5_result.get('nonlinear_factor'))
+    #is_stress = cast(h5_result.get('is_stress'))
+    #is_strain = cast(h5_result.get('is_strain'))
+
+    data_names = [name.decode('utf8') for name in cast(h5_result.get('data_names')).tolist()]
+    sdata_names = [data_name + 's' for data_name in data_names]
+    data_code = {
+        'nonlinear_factor' : nonlinear_factor,
+        'sort_bits' : cast(h5_result.get('sort_bits')).tolist(),
+        'sort_method' : cast(h5_result.get('sort_method')),
+        'is_msc' : cast(h5_result.get('is_msc')),
+        'format_code' : cast(h5_result.get('format_code')),
+        'device_code' : cast(h5_result.get('device_code')),
+        'approach_code' : cast(h5_result.get('approach_code')),
+        'analysis_code' : cast(h5_result.get('analysis_code')),
+        'table_code' : cast(h5_result.get('table_code')),
+        'tCode' : cast(h5_result.get('tCode')),
+        'sort_code' : cast(h5_result.get('sort_code')),
+        'thermal' : cast(h5_result.get('thermal')),
+        'subtitle' : cast(h5_result.get('subtitle')),
+        'acoustic_flag' : cast(h5_result.get('acoustic_flag')),
+        'stress_bits' : cast(h5_result.get('stress_bits')),
+        's_code' : cast(h5_result.get('s_code')),
+        'data_names' : data_names,
+        'name' : data_names[0],
+        'table_name' : cast(h5_result.get('table_name')),
+    }
+    for key, value in list(iteritems(data_code)):
+        if value is None:
+            if key in ['nonlinear_factor']:
+                pass
+            elif key in ['acoustic_flag', 'stress_bits', 's_code', 'thermal']:
+                del data_code[key]
+            else:
+                log.warning('%s %s' % (key, value))
+
+    is_sort1 = cast(h5_result.get('is_sort1'))
+    isubcase = cast(h5_result.get('isubcase'))
+    dt = nonlinear_factor
+
+    class_name = cast(h5_result.get('class_name'))
+    obj_class = _get_obj_class(objs, class_name, result_name, is_real, log)
+    if obj_class is None:
+        return None
+
+    obj = obj_class(data_code, is_sort1, isubcase, dt)
+
+    assert obj.class_name == class_name, 'class_name=%r selected; should be %r' % (obj.class_name, class_name)
+
+    keys_to_skip = [
+        'class_name', 'headers', 'is_real', 'is_complex',
+        'is_sort1', 'is_sort2', 'table_name_str',
+        'is_curvature', 'is_fiber_distance', 'is_max_shear', 'is_von_mises',
+        'is_strain', 'is_stress', 'nnodes_per_element']
+    #time_keys = ['eigns', 'mode_cycles', 'modes']
+    for key in h5_result.keys():
+        if key in keys_to_skip:
+            continue
+        elif result_name == 'grid_point_forces' and key in ['element_name']:
+            pass
+        elif key in sdata_names:
+            if debug:  # pragma: no cover
+                print('  *****key=%r' % key)
+            datai = cast(h5_result.get(key))
+            setattr(obj, key, datai)
+            setattr(obj, '_times', datai)
+        elif key not in data_code:
+            if debug:  # pragma: no cover
+                print('  **key=%r' % key)
+            datai = cast(h5_result.get(key))
+            try:
+                setattr(obj, key, datai)
+            except AttributeError:
+                print('key=%s datai=%r' % (key, datai))
+                raise
+            if PY3:
+                assert not isinstance(datai, binary_type), 'key=%r data=%s' % (key, datai)
+    return obj
+
+def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
+    #if 1:
+    #obj_map = {obj.__class_name : obj for obj in objs if obj is not None}
+    #obj_map = {obj.__class__.__name__ : obj for obj in objs if obj is not None}
+
+    # does what the two previous lines should do...
+    obj_map = {str(obj).split("'")[1].split('.')[-1] : obj for obj in objs if obj is not None}
+
+    try:
+        obj_class = obj_map[class_name]
+    except KeyError:
+        keysi = list(obj_map.keys())
+        print(objs)
+        print(obj_map)
+        log.warning('skipping result_name=%r class_name=%r keys=%s' % (
+            result_name, class_name, keysi))
+        #raise RuntimeError('result_name=%r class_name=%r keys=%s' % (
+            #result_name, class_name, keysi))
+        return None
+    #else:
+        #real_obj, complex_obj = objs
+        #if is_real:
+            #if real_obj is None:
+                #log.warning('    skipping real %r...' % result_name)
+                #return None
+            #obj_class = real_obj
+        #else:
+            #if complex_obj is None:
+                #log.warning('    skipping complex %r...' % result_name)
+                #return None
+            #obj_class = complex_obj
+    return obj_class
+
+def load_op2_from_hdf5(hdf5_filename, log=None):
+    """loads an hdf5 file into an OP2 object"""
+    assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
+    model = OP2(log=None)
+    model.op2_filename = hdf5_filename
+
+    log.info('hdf5_op2_filename = %r' % hdf5_filename)
+    debug = False
+    with h5py.File(hdf5_filename, 'r') as h5_file:
+        load_op2_from_hdf5_file(h5_file, model, log, debug=debug)
+    return model
+
+def load_op2_from_hdf5_file(h5_file, model, log, debug=False):
+    """loads an h5 file object into an OP2 object"""
+    for key in h5_file.keys():
+        if key.startswith('Subcase'):
+            h5_subcase = h5_file.get(key)
+            log.debug('subcase:')
+            for result_name in h5_subcase.keys():
+                if result_name in ['eigenvalues']:
+                    #log.warning('    skipping %r...' % result_name)
+                    h5_result = h5_subcase.get(result_name)
+                    obj = load_eigenvalue(h5_result, log=log)
+                    if obj is None:
+                        continue
+                    model.eigenvalues[obj.title] = obj
+                    log.debug('  loaded %r' % result_name)
+                elif result_name in TABLE_OBJ_KEYS:
+                    if debug:
+                        log.debug('  %s:' % result_name)
+                    objs = TABLE_OBJ_MAP[result_name]
+                    #real_obj, complex_obj = objs
+                    h5_result = h5_subcase.get(result_name)
+                    if objs is None:
+                        log.warning('  skipping %s...' % result_name)
+                        continue
+                    obj = load_table(result_name, h5_result, objs, log=log, debug=debug)
+                    if obj is None:
+                        continue
+
+                    # isubcase, analysis_code, sort_method,
+                    #  count, ogs, superelement_adaptivity_index
+                    opt_count = 0
+                    ogs = 0
+                    superelement_adaptivity_index = ''
+                    # (1, 2, 1, 0, 0, u'')
+                    key = (obj.isubcase, obj.analysis_code, obj.sort_method,
+                           opt_count, ogs,
+                           superelement_adaptivity_index)
+                    slot = getattr(model, result_name)
+                    slot[key] = obj
+                    log.debug('  loaded %r' % result_name)
+                else:
+                    log.warning('  unhandled %r...' % result_name)
+
+            #print(h5_subcase.keys())
+        elif key == 'info':
+            pass
+        elif key == 'matrices':
+            _read_h5_matrix(h5_file, model, key, log)
+        else:
+            log.warning('key = %r' % key)
+
+def _read_h5_matrix(h5_file, unused_model, key, log):
+    """reads an hdf5 matrix"""
+    log.debug('matrices:')
+    h5_matrix_group = h5_file.get(key)
+    for matrix_name in h5_matrix_group.keys():
+        h5_matrix = h5_matrix_group.get(matrix_name)
+        nkeys = len(h5_matrix.keys())
+        if not nkeys:
+            log.warning('  %s is empty...skipping' % h5_matrix)
+        else:
+            log.warning('  skipping %r...' % matrix_name)
+            #for attr in h5_matrix.keys():
+                #print('    attr=%s' % attr)

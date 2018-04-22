@@ -82,14 +82,13 @@ class Matrix(object):
         """exports the object to pandas format"""
         matrix = self.data
         if isinstance(matrix, coo_matrix):
-            print('HDF5: skipping sparse_coo_matrix')
-            #sparse_coo_matrix
+            data = {'row': matrix.row, 'col': matrix.col, 'data' : matrix.data}
+            data_frame = pd.DataFrame(data=data).reindex(columns=['row', 'col', 'data'])
+        elif isinstance(matrix, np.ndarray):
+            data_frame = pd.DataFrame(data=matrix)
         else:
-            #nrows, ncols = matrix.shape
-            #rows = np.ones(nrows)
-            #cols = np.ones(ncols)
-            self.data_frame = pd.DataFrame(data=matrix)
-            #self.data_frame.columns.names = column_names
+            raise NotImplementedError(type(matrix))
+        self.data_frame = data_frame
 
     def write(self, mat, print_full=True):
         """writes to the F06"""

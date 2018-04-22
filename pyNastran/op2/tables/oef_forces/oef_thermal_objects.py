@@ -955,7 +955,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
                     [fappliedi, free_convi, force_convi, fradi, ftotali])
                 [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
 
-                f06_file.write('         %10i    %13E    %13E    %13E    %13E    %13E    %13E\n' % (
+                f06_file.write('         %10i    %13E    %13E    %13E    %13E    %13E\n' % (
                     eid, sfapplied, sfree_conv, sforce_conv, sfrad, sftotal))
             f06_file.write(page_stamp % page_num)
             page_num += 1
@@ -1349,8 +1349,8 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
                     if not np.array_equal(t1, t2):
                         msg += (
-                            '%s   (%s, %s, %s, %s, %s, %s)\n'
-                            '     (%s, %s, %s, %s, %s, %s)\n' % (
+                            '%s   (%s, %s, %s, %s, %s)\n'
+                            '     (%s, %s, %s, %s, %s)\n' % (
                                 eid,
                                 fapplied1, free_conv1, force_conv1, frad1, ftotal1,
                                 fapplied2, free_conv2, force_conv2, frad2, ftotal2,

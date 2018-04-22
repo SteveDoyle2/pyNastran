@@ -39,11 +39,11 @@ class ComplexRodForceArray(ScalarObject):
 
     @property
     def is_real(self):
-        return True
+        return False
 
     @property
     def is_complex(self):
-        return False
+        return True
 
     #def get_headers(self):
         #headers = ['axial', 'torque']
@@ -247,6 +247,14 @@ class ComplexCShearForceArray(ScalarObject):
             pass
         else:
             raise NotImplementedError('SORT2')
+
+    @property
+    def is_real(self):
+        return False
+
+    @property
+    def is_complex(self):
+        return True
 
     def _reset_indices(self):
         self.itotal = 0
@@ -2424,6 +2432,14 @@ class ComplexCBushForceArray(ScalarObject):
         self.itime = 0
         self.nelements = 0  # result specific
         self.element_type = 'CBUSH'
+
+    @property
+    def is_real(self):
+        return False
+
+    @property
+    def is_complex(self):
+        return True
 
     def _reset_indices(self):
         self.itotal = 0

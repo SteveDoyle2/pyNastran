@@ -1271,7 +1271,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             pass
         else:
             world_position = picker.GetPickPosition()
-            if 0:
+            if 0:  # pragma : no cover
                 camera = self.rend.GetActiveCamera()
                 #focal_point = world_position
                 out = self.get_result_by_xyz_cell_id(world_position, cell_id)
@@ -1300,7 +1300,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 #method = 'get_result_by_cell_id()' # self.model_type
                 #print('pick_state =', self.pick_state)
 
-            icase = self.icase
+            icase = self.icase_fringe
             key = self.case_keys[icase]
             location = self.get_case_location(key)
 
@@ -1648,22 +1648,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
         try:
             #self.scalar_bar.title
             case_key = self.case_keys[self.icase] # int for object
-            result_name = self.result_name
-            obj, (i, name) = self.result_cases[case_key]
+            obj, (i, res_name) = self.result_cases[case_key]
             default_title = obj.get_default_title(i, name)
             location = obj.get_location(i, name)
             if obj.data_format != '%i':
-                self.log.error('not creating result=%r; must be an integer result' % result_name)
+                self.log.error('not creating result=%r; must be an integer result' % res_name)
                 return 0
             if location != 'centroid':
-                self.log.error('not creating result=%r; must be a centroidal result' % result_name)
+                self.log.error('not creating result=%r; must be a centroidal result' % res_name)
                 return 0
 
             word = default_title
             prefix = default_title
             ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
             self.log_command('create_groups_by_visible_result()'
-                             ' # created %i groups for result_name=%r' % (ngroups, result_name))
+                             ' # created %i groups for result_name=%r' % (ngroups, res_name))
         except Exception as error:
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
@@ -4129,7 +4128,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if icase is None:
             icase = self.icase
         case_key = self.case_keys[icase] # int for object
-        result_name = self.result_name
         case = self.result_cases[case_key]
 
         (obj, (i, res_name)) = case
@@ -4141,7 +4139,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         except IndexError:
             msg = ('case[cell_id] is out of bounds; length=%s\n'
                    'result_name=%r cell_id=%r case_key=%r\n' % (
-                       len(case), result_name, cell_id, case_key))
+                       len(case), res_name, cell_id, case_key))
             raise IndexError(msg)
 
         cell = self.grid_selected.GetCell(cell_id)
@@ -4274,8 +4272,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.case_keys[self.icase]
         assert isinstance(case_key, integer_types), case_key
-        unused_obj, (unused_i, name) = self.result_cases[case_key]
-        return name
+        unused_obj, (unused_i, res_name) = self.result_cases[case_key]
+        return res_name
 
     def finish_io(self, cases):
         self.result_cases = cases
@@ -4436,9 +4434,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
 
         # existing geometry
-        #icase = self.case_keys[self.icase]
         icase = self.icase
-        unused_result_name = self.result_name
 
         actors = self.label_actors[icase]
         for actor in actors:
@@ -4831,7 +4827,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                               is_discrete=is_discrete, is_horizontal=is_horizontal,
                               nlabels=nlabels, labelsize=labelsize,
                               ncolors=ncolors, colormap=colormap,
-                              is_shown=is_shown)
+                              is_shown=is_shown, from_legend_menu=True)
 
     def on_update_legend(self,
                          title='Title', min_value=0., max_value=1.,
@@ -4840,7 +4836,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          data_format='%.0f',
                          is_low_to_high=True, is_discrete=True, is_horizontal=True,
                          nlabels=None, labelsize=None, ncolors=None, colormap=None,
-                         is_shown=True):
+                         is_shown=True, from_legend_menu=False):
         """
         Updates the legend/model
 
@@ -4877,34 +4873,36 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #obj.set_data_format(i, res_name, data_format)
             unused_subtitle, unused_label = self.get_subtitle_label(subcase_id)
             is_normal = obj.is_normal_result(i, res_name)
+            #if scale != scale_old or phase != phase_old:
+            #if not from_legend_menu:
+            self.on_fringe(self.icase_fringe, show_msg=False, update_legend_window=False)
 
+        if is_normal:
+            return
 
         if self.icase_disp is not None:
             key = self.case_keys[self.icase_disp]
             assert isinstance(key, integer_types), key
             (objd, (i, res_name)) = self.result_cases[key]
-            objd.set_scale(i, res_name, scale)
-            objd.set_phase(i, res_name, phase)
-            assert isinstance(scale, float), scale
+            scale_old = objd.get_scale(i, res_name)
+            phase_old = objd.get_phase(i, res_name)
+            if scale != scale_old or phase != phase_old:
+                objd.set_scale(i, res_name, scale)
+                objd.set_phase(i, res_name, phase)
+                assert isinstance(scale, float), scale
+                self.on_disp(self.icase_disp, apply_fringe=False,
+                             update_legend_window=False, show_msg=False)
 
-        #print('arrow_scale = ', arrow_scale)
         if self.icase_vector is not None:
             key = self.case_keys[self.icase_vector]
             assert isinstance(key, integer_types), key
             (objv, (i, res_name)) = self.result_cases[key]
+            arrow_scale_old = objv.get_scale(i, res_name)
             objv.set_scale(i, res_name, arrow_scale)
             assert isinstance(arrow_scale, float), arrow_scale
-
-        if self.icase_fringe is not None:
-            self.on_fringe(self.icase_fringe, show_msg=False, update_legend_window=False)
-        if is_normal:
-            return
-
-        if self.icase_disp is not None:
-            self.on_disp(self.icase_disp, apply_fringe=False, update_legend_window=False, show_msg=False)
-
-        if self.icase_vector is not None:
-            self.on_vector(self.icase_vector, apply_fringe=False, update_legend_window=False, show_msg=False)
+            if arrow_scale != arrow_scale_old:
+                self.on_vector(self.icase_vector, apply_fringe=False,
+                               update_legend_window=False, show_msg=False)
 
         #unused_name = (vector_size1, subcase_id, result_type, label, min_value, max_value, scale1)
         #if obj.is_normal_result(i, res_name):
