@@ -118,7 +118,8 @@ class NastranGuiResults(NastranGuiAttributes):
                     # mode = 2; freq = 75.9575 Hz
                     header = _get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
-                    keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                    keys_map[key] = (case.subtitle, case.label,
+                                     case.superelement_adaptivity_index, case.pval_step)
 
                     tnorm_abs_max = tnorm.max()
                     #if tnorm_abs_max == 0.0:
@@ -151,7 +152,8 @@ class NastranGuiResults(NastranGuiAttributes):
                     dt = case._times[itime]
                     header = _get_nastran_header(case, dt, itime)
                     header_dict[(key, itime)] = header
-                    keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                    keys_map[key] = (case.subtitle, case.label,
+                                     case.superelement_adaptivity_index, case.pval_step)
 
                     tnorm_abs_max = tnorm.max()
                     scale = 1.
@@ -191,7 +193,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
 
                 loads = case.data[itime, :, :]
                 nxyz = norm(loads[:, :3], axis=1)
@@ -435,7 +438,8 @@ class NastranGuiResults(NastranGuiAttributes):
 
             #print('key =', key)
             case = resdict[key]
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            keys_map[key] = (case.subtitle, case.label,
+                             case.superelement_adaptivity_index, case.pval_step)
 
             if case.is_complex:
                 continue
@@ -519,7 +523,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 case = res_type[key]
                 if case.is_complex:
                     continue
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
                 data = case.data
                 if case.nonlinear_factor is None:
                     unused_ntimes = data.shape[:1]
@@ -554,7 +559,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 dt = case._times[itime]
                 header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
 
                 #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
                 # shear1, shear2, axial, torque]
@@ -593,7 +599,8 @@ class NastranGuiResults(NastranGuiAttributes):
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            keys_map[key] = (case.subtitle, case.label,
+                             case.superelement_adaptivity_index, case.pval_step)
 
             j = np.searchsorted(self.element_ids, ueids)
             di = j[1:-1] - j[0:-2]

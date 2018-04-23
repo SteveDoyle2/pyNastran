@@ -653,12 +653,12 @@ class OP2(OP2_Scalar):
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         from pyNastran.op2.op2_interface.load_h5 import load_op2_from_hdf5_file
         import h5py
-        model.op2_filename = hdf5_filename
+        self.op2_filename = hdf5_filename
 
         log.info('hdf5_op2_filename = %r' % hdf5_filename)
         debug = False
         with h5py.File(hdf5_filename, 'r') as h5_file:
-            model = load_op2_from_hdf5_file(h5_file, model, log, debug=debug)
+            load_op2_from_hdf5_file(self, h5_file, log, debug=debug)
 
     def export_to_hdf5(self, hdf5_filename):
         """

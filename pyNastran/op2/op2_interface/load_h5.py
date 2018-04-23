@@ -46,11 +46,11 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import Real
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressArray, RealBushStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray, RealTriaxStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray #, RealTriaxStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
-from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
+#from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
@@ -82,9 +82,11 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexViscForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
-    RealChbdyHeatFluxArray, RealConvHeatFluxArray, Real1DHeatFluxArray,
-    RealElementTableArray, RealHeatFluxVUArray, RealHeatFluxVUBeamArray,
-    RealHeatFluxVU3DArray, HeatFlux_2D_3DArray,
+    RealChbdyHeatFluxArray, # RealConvHeatFluxArray,
+    Real1DHeatFluxArray,
+    #RealElementTableArray, RealHeatFluxVUArray, RealHeatFluxVUBeamArray,
+    #RealHeatFluxVU3DArray,
+    HeatFlux_2D_3DArray,
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import print_bad_path
@@ -377,7 +379,7 @@ def load_table(result_name, h5_result, objs, log, debug=False):# real_obj, compl
     #is_strain = cast(h5_result.get('is_strain'))
 
     data_names = [name.decode('utf8') for name in cast(h5_result.get('data_names')).tolist()]
-    sdata_names = [data_name + 's' for data_name in data_names]
+    str_data_names = [data_name + 's' for data_name in data_names]
     data_code = {
         'nonlinear_factor' : nonlinear_factor,
         'sort_bits' : cast(h5_result.get('sort_bits')).tolist(),
@@ -424,19 +426,25 @@ def load_table(result_name, h5_result, objs, log, debug=False):# real_obj, compl
     obj = obj_class(data_code, is_sort1, isubcase, dt)
 
     assert obj.class_name == class_name, 'class_name=%r selected; should be %r' % (obj.class_name, class_name)
+    _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
+                                     debug=debug)
+    return obj
 
+def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
+                                     debug=False):
+    """helper method for ``load_table``"""
     keys_to_skip = [
         'class_name', 'headers', 'is_real', 'is_complex',
         'is_sort1', 'is_sort2', 'table_name_str',
         'is_curvature', 'is_fiber_distance', 'is_max_shear', 'is_von_mises',
         'is_strain', 'is_stress', 'nnodes_per_element']
-    #time_keys = ['eigns', 'mode_cycles', 'modes']
+
     for key in h5_result.keys():
         if key in keys_to_skip:
             continue
         elif result_name == 'grid_point_forces' and key in ['element_name']:
             pass
-        elif key in sdata_names:
+        elif key in str_data_names:
             if debug:  # pragma: no cover
                 print('  *****key=%r' % key)
             datai = cast(h5_result.get(key))
@@ -497,17 +505,17 @@ def load_op2_from_hdf5(hdf5_filename, log=None):
     log.info('hdf5_op2_filename = %r' % hdf5_filename)
     debug = False
     with h5py.File(hdf5_filename, 'r') as h5_file:
-        load_op2_from_hdf5_file(h5_file, model, log, debug=debug)
+        load_op2_from_hdf5_file(model, h5_file, log, debug=debug)
     return model
 
-def load_op2_from_hdf5_file(h5_file, model, log, debug=False):
+def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
     """loads an h5 file object into an OP2 object"""
     for key in h5_file.keys():
         if key.startswith('Subcase'):
             h5_subcase = h5_file.get(key)
             log.debug('subcase:')
             for result_name in h5_subcase.keys():
-                if result_name in ['eigenvalues']:
+                if result_name == 'eigenvalues':
                     #log.warning('    skipping %r...' % result_name)
                     h5_result = h5_subcase.get(result_name)
                     obj = load_eigenvalue(h5_result, log=log)
