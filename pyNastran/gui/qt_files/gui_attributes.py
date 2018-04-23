@@ -675,4 +675,63 @@ class GuiAttributes(object):
         self.view_actions.on_wireframe()
 
     def on_take_screenshot(self, fname=None, magnify=None, show_msg=True):
+        """
+        Take a screenshot of a current view and save as a file
+
+        Parameters
+        ----------
+        fname : str; default=None
+            None : pop open a window
+            str : bypass the popup window
+        magnify : int; default=None
+            None : use self.settings.magnify
+            int : resolution increase factor
+        show_msg : bool; default=True
+            log the command
+        """
         self.tool_actions.on_take_screenshot(fname=fname, magnify=magnify, show_msg=show_msg)
+
+    def get_camera_data(self):
+        """see ``set_camera_data`` for arguments"""
+        return self.view_actions.get_camera_data()
+
+    def on_set_camera(self, name, show_log=True):
+        """see ``set_camera_data`` for arguments"""
+        camera_data = self.cameras[name]
+        self.on_set_camera_data(camera_data, show_log=show_log)
+
+    def on_set_camera_data(self, camera_data, show_log=True):
+        """
+        Sets the current camera
+
+        Parameters
+        ----------
+        camera_data : Dict[key] : value
+            defines the camera
+            position : (float, float, float)
+                where am I is xyz space
+            focal_point : (float, float, float)
+                where am I looking
+            view_angle : float
+                field of view (angle); perspective only?
+            view_up : (float, float, float)
+                up on the screen vector
+            clip_range : (float, float)
+                start/end distance from camera where clipping starts
+            parallel_scale : float
+                ???
+            parallel_projection : bool (0/1)
+                flag?
+                TODO: not used
+            distance : float
+                distance to the camera
+
+        i_vector = focal_point - position
+        j'_vector = view_up
+
+        use:
+           i x j' -> k
+           k x i -> j
+           or it's like k'
+        """
+        self.view_actions.on_set_camera_data(camera_data, show_log=show_log)

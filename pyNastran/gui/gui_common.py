@@ -4299,48 +4299,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()
 
-    def _finish_results_io(self, cases):
-        self.result_cases = cases
-        self.case_keys = sorted(cases.keys())
-
-        if len(self.case_keys) > 1:
-            self.icase = -1
-            self.ncases = len(self.result_cases)  # number of keys in dictionary
-        elif len(self.case_keys) == 1:
-            self.icase = -1
-            self.ncases = 1
-        else:
-            self.icase = -1
-            self.ncases = 0
-
-        self.reset_labels()
-        self.cycle_results_explicit()  # start at nCase=0
-        if self.ncases:
-            self.scalarBar.VisibilityOn()
-            self.scalarBar.Modified()
-
-        #data = [
-        #    ('A',[]),
-        #    ('B',[]),
-        #    ('C',[]),
-        #]
-
-        #self.case_keys = [
-        #    (1, 'ElementID', 1, 'centroid', '%.0f'), (1, 'Region', 1, 'centroid', '%.0f')
-        #]
-        data = []
-        for i, key in enumerate(self.case_keys):
-            t = (key[1], i, [])
-            data.append(t)
-            i += 1
-        self.res_widget.update_results(data, self.name)
-
-        #method = 'centroid' if location else 'nodal'
-        #data2 = [(method, None, [])]
-
-        data2 = [('node/centroid', None, [])]
-        self.res_widget.update_methods(data2)
-
     def clear_application_log(self, force=False):
         """
         Clears the application log
@@ -4514,97 +4472,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #name = data['name']
         #self.cameras = deepcopy(data['cameras'])
         #self.on_set_camera(name)
-
-    def on_set_camera(self, name, show_log=True):
-        """see ``set_camera_data`` for arguments"""
-        camera_data = self.cameras[name]
-        self.on_set_camera_data(camera_data, show_log=show_log)
-
-    def get_camera_data(self):
-        """see ``set_camera_data`` for arguments"""
-        camera = self.rend.GetActiveCamera()
-        position = camera.GetPosition()
-        focal_point = camera.GetFocalPoint()
-        view_angle = camera.GetViewAngle()
-        view_up = camera.GetViewUp()
-        clip_range = camera.GetClippingRange()  # TODO: do I need this???
-
-        parallel_scale = camera.GetParallelScale()  # TODO: do I need this???
-        parallel_proj = camera.GetParralelProjection()
-        distance = camera.GetDistance()
-
-        # clip_range, view_up, distance
-        camera_data = {
-            'position' : position,
-            'focal_point' : focal_point,
-            'view_angle' : view_angle,
-            'view_up' : view_up,
-            'clip_range' : clip_range,
-            'parallel_scale' : parallel_scale,
-            'prallel_proj' : parallel_proj,
-            'distance' : distance,
-        }
-        return camera_data
-
-    def on_set_camera_data(self, camera_data, show_log=True):
-        """
-        Sets the current camera
-
-        Parameters
-        ----------
-        camera_data : Dict[key] : value
-            defines the camera
-            position : (float, float, float)
-                where am I is xyz space
-            focal_point : (float, float, float)
-                where am I looking
-            view_angle : float
-                field of view (angle); perspective only?
-            view_up : (float, float, float)
-                up on the screen vector
-            clip_range : (float, float)
-                start/end distance from camera where clipping starts
-            parallel_scale : float
-                ???
-            parallel_projection : bool (0/1)
-                flag?
-                TODO: not used
-            distance : float
-                distance to the camera
-
-        i_vector = focal_point - position
-        j'_vector = view_up
-
-        use:
-           i x j' -> k
-           k x i -> j
-           or it's like k'
-        """
-        position = camera_data['position']
-        focal_point = camera_data['focal_point']
-        view_angle = camera_data['view_angle']
-        view_up = camera_data['view_up']
-        clip_range = camera_data['clip_range']
-        parallel_scale = camera_data['parallel_scale']
-        unused_parallel_proj = camera_data['prallel_proj']
-        distance = camera_data['distance']
-
-        camera = self.rend.GetActiveCamera()
-        camera.SetPosition(position)
-        camera.SetFocalPoint(focal_point)
-        camera.SetViewAngle(view_angle)
-        camera.SetViewUp(view_up)
-        camera.SetClippingRange(clip_range)
-
-        camera.SetParallelScale(parallel_scale)
-        #parallel_proj
-
-        camera.SetDistance(distance)
-
-        camera.Modified()
-        self.vtk_interactor.Render()
-        if show_log:
-            self.log_command('on_set_camera_data(%s)' % str(camera_data))
 
     #---------------------------------------------------------------------------------------
     # PICKER
@@ -4863,6 +4730,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
             subcase_id = obj.subcase_id
 
             unused_location = obj.get_location(i, res_name)
+            min_old, max_old = obj.get_min_max(i, res_name)
+            data_format_old = obj.get_data_format(i, res_name)
+            colors_old = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+            nlabels_old, labelsize_old, ncolors_old, colormap_old = colors_old
+            update_legend = (
+                (nlabels, labelsize, ncolors, colormap) !=
+                (nlabels_old, labelsize_old, ncolors_old, colormap_old) or
+                data_format != data_format)
+
+            update_fringe = (
+                min_value != min_value_old or
+                max_value != max_value_old
+            )
+
             obj.set_min_max(i, res_name, min_value, max_value)
             obj.set_data_format(i, res_name, data_format)
             obj.set_nlabels_labelsize_ncolors_colormap(
@@ -4875,7 +4756,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             is_normal = obj.is_normal_result(i, res_name)
             #if scale != scale_old or phase != phase_old:
             #if not from_legend_menu:
-            self.on_fringe(self.icase_fringe, show_msg=False, update_legend_window=False)
+            if update_fringe:
+                self.on_fringe(self.icase_fringe, show_msg=False,
+                               update_legend_window=False)
 
         if is_normal:
             return

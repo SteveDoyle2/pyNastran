@@ -96,10 +96,12 @@ class BDFMethods(BDFAttributes):
                 pids_to_length[pid] = sum(lengths)
 
         has_length = len(pids_to_length)
-        if stop_if_no_length and not has_length:
-            raise RuntimeError('No elements with length were found')
-        else:
-            self.log.warning('No elements with length were found')
+
+        if not has_length:
+            msg = 'No elements with length were found'
+            self.log.warning(msg)
+            if stop_if_no_length:
+                raise RuntimeError(msg)
         return pids_to_length
 
     def get_area_breakdown(self, property_ids=None, stop_if_no_area=True, sum_bar_area=True):
@@ -163,10 +165,11 @@ class BDFMethods(BDFAttributes):
                 pids_to_area[pid] = sum(areas)
 
         has_area = len(pids_to_area)
-        if stop_if_no_area and not has_area:
-            raise RuntimeError('No elements with area were found')
-        else:
-            self.log.warning('No elements with area were found')
+        if not has_area:
+            msg = 'No elements with area were found'
+            self.log.warning(msg)
+            if stop_if_no_area:
+                raise RuntimeError(msg)
         return pids_to_area
 
     def get_volume_breakdown(self, property_ids=None, stop_if_no_volume=True):
@@ -251,10 +254,11 @@ class BDFMethods(BDFAttributes):
                 pids_to_volume[pid] = sum(volumes)
 
         has_volume = len(pids_to_volume)
-        if stop_if_no_volume and not has_volume:
-            raise RuntimeError('No elements with volume were found')
-        else:
-            self.log.warning('No elements with volume were found')
+        if not has_volume:
+            msg = 'No elements with volume were found'
+            self.log.warning(msg)
+            if stop_if_no_volume:
+                raise RuntimeError(msg)
         return pids_to_volume
 
     def get_mass_breakdown(self, property_ids=None, stop_if_no_mass=True):
@@ -367,10 +371,11 @@ class BDFMethods(BDFAttributes):
                 pids_to_mass[pid] = sum(masses)
 
         has_mass = len(mass_type_to_mass) > 0 or len(pids_to_mass) > 0
-        if stop_if_no_mass and not has_mass:
-            raise RuntimeError('No elements with mass were found')
-        else:
-            self.log.warning('No elements with mass were found')
+        if not has_mass:
+            msg = 'No elements with mass were found'
+            self.log.warning(msg)
+            if stop_if_no_mass:
+                raise RuntimeError(msg)
         return pids_to_mass, mass_type_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,

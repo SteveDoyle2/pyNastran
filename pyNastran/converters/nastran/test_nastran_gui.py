@@ -329,6 +329,9 @@ class TestNastranGUI(unittest.TestCase):
         test.update_camera('-y')
         test.update_camera('+z')
         test.update_camera('-z')
+        camera_data = test.get_camera_data()
+        test.on_set_camera_data(camera_data, show_log=True)
+
         #test.on_wireframe()
         #test.on_surface()
 

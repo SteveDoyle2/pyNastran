@@ -5,8 +5,10 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 
+import numpy as np
+
 from pyNastran.converters.tetgen.tetgen import Tetgen
-#from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
@@ -43,6 +45,7 @@ class TetgenIO(object):
         nodes = model.nodes
         tris = model.tris
         tets = model.tets
+        nnodes = nodes.shape[0]
 
         self.parent.nnodes = nodes.shape[0]
         ntris = 0
@@ -53,7 +56,8 @@ class TetgenIO(object):
             ntets = tets.shape[0]
         else:
             raise RuntimeError()
-        self.parent.nelements = ntris + ntets
+        nelements = ntris + ntets
+        self.parent.nelements = nelements
 
         #print("nnodes = ",self.nnodes)
         #print("nelements = ", self.nelements)
@@ -84,10 +88,30 @@ class TetgenIO(object):
         self.parent.scalarBar.VisibilityOff()
         self.parent.scalarBar.Modified()
 
+
+        form, cases = self._fill_tetgen_case(nnodes, nelements)
+        self.parent._finish_results_io2(form, cases, reset_labels=True)
+
+    def _fill_tetgen_case(self, nnodes, nelements):
+        subcase_id = 0
+        self.parent.isubcase_name_map = {subcase_id : ('Tetgen', '')}
+
+        icase = 0
+        form = [
+            ('NodeID', 0, []),
+            ('ElementID', 1, []),
+        ]
+        nids = np.arange(1, nnodes+1)
+        nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', nids,
+                            mask_value=None, nlabels=None, labelsize=None, ncolors=None,
+                            colormap='jet', data_format=None, uname='GuiResult')
+
+        eids = np.arange(1, nelements+1)
+        eid_res = GuiResult(subcase_id, 'ElementID', 'ElementID', 'centroid', eids,
+                            mask_value=None, nlabels=None, labelsize=None, ncolors=None,
+                            colormap='jet', data_format=None, uname='GuiResult')
+
         cases = OrderedDict()
-        #unused_ID = 1
-
-        self.parent._finish_results_io(cases)
-
-    def _fill_tetgen_case(self, cases, ID, unused_elements):
-        return cases
+        cases[icase] = (nid_res, (0, 'NodeID'))
+        cases[icase + 1] = (eid_res, (0, 'ElementID'))
+        return form, cases

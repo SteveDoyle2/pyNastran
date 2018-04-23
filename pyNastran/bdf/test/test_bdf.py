@@ -650,12 +650,11 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
             fem1.get_mass_breakdown(stop_if_no_mass=False)
             fem1.log.warning('no elements with length/area/volume found, but elements with mass were')
         else:
-            # len(elements) > 0
+            # len(elements) > 0 or len(masses) > 0
             fem1.get_length_breakdown(stop_if_no_length=False)
             fem1.get_area_breakdown(stop_if_no_area=False)
             fem1.get_volume_breakdown(stop_if_no_volume=False)
             fem1.get_mass_breakdown(stop_if_no_mass=False)
-            fem1.log.warning('no elements with mass found')
     return fem1
 
 
