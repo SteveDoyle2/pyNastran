@@ -16,7 +16,7 @@ from pyNastran.bdf.cards.aero.aero import (
     AEFACT, AELIST, AEPARM,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    AELIST, AESURF, AESURFS,
+    AESURF, AESURFS,
     AELINK, AECOMP,
     SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
 )
@@ -479,7 +479,7 @@ class TestAero(unittest.TestCase):
         nchord = 10
         igid = -1
         caero1d = CAERO1.add_quad(eid, pid, nspan, nchord, igid, p1, p2, p3, p4,
-                                 cp=cp, spanwise='y', comment='')
+                                  cp=cp, spanwise='y', comment='')
         caero1d.validate()
 
         eid = 5
@@ -499,7 +499,7 @@ class TestAero(unittest.TestCase):
         chord = 0.05
         igid = -1
         caero1f = CAERO1.add_quad(eid, pid, span, chord, igid, p1, p2, p3, p4,
-                                 cp=cp, spanwise='z', comment='')
+                                  cp=cp, spanwise='z', comment='')
         caero1f.validate()
         caero1f.flip_normal()
 
@@ -1154,7 +1154,7 @@ class TestAero(unittest.TestCase):
         p1, p2, p3, p4 = caero4b.get_points()
 
         caero4c = CAERO4(eid, pid, p1, x12, p4, x43,
-                         cp=0,nspan=0, lspan=0,
+                         cp=0, nspan=0, lspan=0,
                          comment='caero4c')
         with self.assertRaises(RuntimeError):
             # nspan=lspan=0

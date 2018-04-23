@@ -323,7 +323,7 @@ class GRAV(BaseCard):
         """
         sid = data[0]
         cid = data[1]
-        a = data[2]
+        unused_a = data[2]
         N = array(data[3:6])
         mb = data[6]
         scale = 1.

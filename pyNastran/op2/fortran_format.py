@@ -221,7 +221,7 @@ class FortranFormat(object):
             the data in binary
         """
         data_out = b''
-        for i in range(3):
+        for unused_i in range(3):
             data = self.f.read(4)
             ndata, = self.struct_i.unpack(data)
 
@@ -925,7 +925,7 @@ class FortranFormat(object):
                 markers1 = self.get_nmarkers(1, rewind=False)
                 if self.is_debug_file and debug:
                     self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-                recordi, nrecordi = self._skip_block_ndata()
+                unused_recordi, nrecordi = self._skip_block_ndata()
                 nrecord += nrecordi
 
                 markers1 = self.get_nmarkers(1, rewind=True)

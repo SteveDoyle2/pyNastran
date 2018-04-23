@@ -139,7 +139,7 @@ class RealBeamArray(OES_Object):
             i = 0
             if self.is_sort1:
                 for itime in range(ntimes):
-                    for ieid, (eid, nid) in enumerate(self.element_node):
+                    for ieid, (eid, unused_nid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
                         (axial_stress1, equiv_stress1, total_strain1, eff_plastic_creep_strain1,
@@ -417,9 +417,9 @@ class RealNonlinearBeamArray(OES_Object):
         self._times[self.itime] = dt
         (grid_a,
          ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,
-         da, long_da, eqs_da, te_da, eps_da, ecs_da,
+         unused_da, long_da, eqs_da, te_da, eps_da, ecs_da,
          ea, long_ea, eqs_ea, te_ea, eps_ea, ecs_ea,
-         fa, long_fa, eqs_fa, te_fa, eps_fa, ecs_fa,
+         unused_fa, long_fa, eqs_fa, te_fa, eps_fa, ecs_fa,
          grid_b,
          cb, long_cb, eqs_cb, te_cb, eps_cb, ecs_cb,
          db, long_db, eqs_db, te_db, eps_db, ecs_db,

@@ -68,10 +68,10 @@ class RealBarArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
 
-        if self.element_type == 34:
-            nnodes_per_element = 1
-        else:
-            raise NotImplementedError(self.element_type)
+        #if self.element_type == 34:
+            #nnodes_per_element = 1
+        #else:
+            #raise NotImplementedError(self.element_type)
 
         self.itime = 0
         self.ielement = 0
@@ -171,7 +171,7 @@ class RealBarArray(OES_Object):
 
         nelements = self.ntotal
         ntimes = self.ntimes
-        ntotal = self.ntotal
+        unused_ntotal = self.ntotal
         nelements = self.ntotal
 
         msg = []
@@ -238,10 +238,10 @@ class RealBarArray(OES_Object):
             sminb = self.data[itime, :, 13]
             MSc = self.data[itime, :, 14]
 
-            for (i, eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
-                         s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
-                count(), eids, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                               s1b, s2b, s3b, s4b,        smaxb, sminb, MSc):
+            for (eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
+                      s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
+                eids, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                      s1b, s2b, s3b, s4b,        smaxb, sminb, MSc):
 
                 vals = [s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
                         s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci]

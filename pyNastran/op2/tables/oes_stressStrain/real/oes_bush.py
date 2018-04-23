@@ -103,8 +103,8 @@ class RealBushArray(OES_Object):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (fx1, fy1, fz1, mx1, my1, mz1) = t1
-                        (fx2, fy2, fz2, mx2, my2, mz2) = t2
+                        (fx1, fy1, fz1, unused_mx1, unused_my1, unused_mz1) = t1
+                        (fx2, fy2, fz2, unused_mx2, unused_my2, unused_mz2) = t2
                         if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s)\n  (%s, %s, %s)\n' % (

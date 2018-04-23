@@ -186,7 +186,7 @@ class RealTriaxArray(OES_Object):
         if header is None:
             header = []
         msg = self._get_msgs()
-        (ntimes, ntotal) = self.data.shape[:2]
+        (ntimes, unused_ntotal) = self.data.shape[:2]
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
 

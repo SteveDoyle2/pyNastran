@@ -176,15 +176,15 @@ class FakeGUIMethods(GuiCommon):
 
             subcase_id = obj.subcase_id
             case = obj.get_result(i, name)
-            result_type = obj.get_title(i, name)
+            unused_result_type = obj.get_title(i, name)
             vector_size = obj.get_vector_size(i, name)
             #location = obj.get_location(i, name)
             methods = obj.get_methods(i)
             data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
             phase = obj.get_phase(i, name)
-            label2 = obj.get_header(i, name)
-            flag = obj.is_normal_result(i, name)
+            unused_label2 = obj.get_header(i, name)
+            unused_flag = obj.is_normal_result(i, name)
             #scalar_result = obj.get_scalar(i, name)
             nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
             if vector_size == 3:
@@ -260,7 +260,7 @@ class FakeGUIMethods(GuiCommon):
         return 1 * self.settings.dim_max
 
     def _add_alt_actors(self, alt_grids):
-        for name, grid in iteritems(alt_grids):
+        for unused_name, grid in iteritems(alt_grids):
             self.geometry_actors[name] = vtkActor()
 
     def log_debug(self, msg):

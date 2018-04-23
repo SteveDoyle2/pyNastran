@@ -409,7 +409,7 @@ class OEF(OP2Common):
                     obj.ielement = ielement2
                 else:
                     s = Struct(self._endian + b'i8s6f')
-                    for i in range(nelements):
+                    for unused_i in range(nelements):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
                         (eid_device, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux) = out
@@ -846,7 +846,7 @@ class OEF(OP2Common):
                         n += 24
 
                         out = s1.unpack(edata)
-                        (eid_device, parent, coord, icord, theta, null) = out
+                        (eid_device, parent, coord, icord, theta, unused_null) = out
                         eid = eid_device // 10
                         data_in = [eid, parent, coord, icord, theta]
                         #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
@@ -1038,7 +1038,7 @@ class OEF(OP2Common):
         self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
         if self._results.is_not_saved('element_forces'):
             return ndata
-        flag = 'element_id'
+        unused_flag = 'element_id'
         (num_wide_real, num_wide_imag) = self._oef_force_code()
         if self.is_debug_file:
             self.binary_debug.write('  num_wide_real = %r\n' % num_wide_real)
@@ -1276,7 +1276,7 @@ class OEF(OP2Common):
                                 out = s2.unpack(edata)
                                 if self.is_debug_file:
                                     self.binary_debug.write('%s\n' % (str(out)))
-                                (vugrid, mfx, mfy, mfxy, ai, bi, ci, bmx, bmy,
+                                (vugrid, mfx, mfy, mfxy, unused_ai, bi, ci, bmx, bmy,
                                  bmxy, syz, szx, di) = out
                                 out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                                 obj.add_sort1(dt, eid, parent, coord, icord, theta,
@@ -1994,7 +1994,7 @@ class OEF(OP2Common):
                 n = nelements * 4 * self.num_wide
                 itotal = obj.itotal
                 itotal2 = obj.itotal + nelements * 11
-                ielement = obj.ielement
+                #ielement = obj.ielement
                 ielement2 = obj.ielement + nelements
 
                 floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 100)[:, 1:]

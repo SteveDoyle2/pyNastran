@@ -1891,7 +1891,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         markers = []
         struc = Struct('3i')
-        for i in range(nmarkers):
+        for unused_i in range(nmarkers):
             block = self.f.read(12)
             marker = struc.unpack(block)
             markers.append(marker)

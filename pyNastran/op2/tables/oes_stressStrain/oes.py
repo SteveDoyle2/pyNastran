@@ -1158,7 +1158,7 @@ class OES(OP2Common):
                     out = s1.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
-                    (eid_device, ctype) = out
+                    (eid_device, unused_ctype) = out
                     eid = eid_device // 10
 
                     for i in range(nnodes):
@@ -1171,7 +1171,7 @@ class OES(OP2Common):
                         assert len(out) == 16
                         (grid,
                          sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
-                         ex, ey, ez, exy, eyz, exz) = out
+                         ex, ey, ez, unused_exy, eyz, exz) = out
             else:
                 #msg = self.code_information()
                 msg = "format_code=%s numwide=%s numwide_real=%s numwide_random=%s" % (
@@ -1327,7 +1327,7 @@ class OES(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('CQUAD4FD-139A- %s\n' % (str(out)))
 
-                        (eid_device, Type, ID, sx, sy, sxy, angle, smj, smi) = out
+                        (eid_device, Type, unused_id, sx, sy, sxy, angle, smj, smi) = out
                         eid = eid_device // 10
                         obj._add_new_eid_sort1(dt, [eid, Type, sx, sy, sxy, angle, smj, smi])
                         n += 36
@@ -1384,7 +1384,7 @@ class OES(OP2Common):
                 nelements = ndata // ntotal
                 for i in range(nelements):
                     out = s2.unpack(data[n:n + 24])
-                    (eid_device, parent, coord, icord, theta, itype) = out
+                    (eid_device, unused_parent, coord, icord, theta, itype) = out
                     n += 24
                     eid = eid_device // 10
                     edata = data[n:n + 68]
@@ -1404,7 +1404,7 @@ class OES(OP2Common):
                             self.binary_debug.write('              %s\n' % (str(out)))
 
                         (vuid, dummy, dummy2, msx, msy, mxy, dummy3, dummy4, dummy5,
-                         bcx, bcy, bcxy, tyz, tzx, dummy6, dummy7, dummy8) = out
+                         unused_bcx, bcy, bcxy, tyz, tzx, dummy6, dummy7, dummy8) = out
                         #obj.add(vuid, dummy, dummy2, msx, msy, mxy,
                                      #dummy3, dummy4, dummy5,
                                      #bcx, bcy, bcxy, tyz, tzx,
@@ -1634,7 +1634,7 @@ class OES(OP2Common):
         struct1 = Struct(self._endian + b'i8si3fi4s')
         nelements = ndata // ntotal
         #obj = self.obj
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct1.unpack(edata)  # num_wide=9
             if self.is_debug_file:
@@ -1935,7 +1935,7 @@ class OES(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
+        result_name, unused_is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
         slot = getattr(self, result_name)
         if self.format_code == 1 and self.num_wide == 5:  # real
             ntotal = 5 * 4
@@ -2611,7 +2611,7 @@ class OES(OP2Common):
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                     #print('%s-grid_device=%s' % (self.element_name, grid_device))
-                    grid_device2 = repeat(grid_device, nnodes_expected)
+                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
                     try:
                         obj.element_node[itotal:itotal2, 1] = grid_device
                     except ValueError:
@@ -3152,7 +3152,7 @@ class OES(OP2Common):
                     ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 15).copy()
                     eids = ints[:, 0] // 10
                     ints[:, 0] = 0
-                    ints1 = ints.reshape(nelements, 15)
+                    unused_ints1 = ints.reshape(nelements, 15)
                     nids = ints[:, 0]
 
                     assert eids.min() > 0, eids.min()
@@ -3367,7 +3367,7 @@ class OES(OP2Common):
 
                     out = cs.unpack(edata)  # len=17*4
                     # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
-                    (eid_device, j,
+                    (eid_device, unused_j,
                      grid,
                      fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                      fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
@@ -3822,7 +3822,7 @@ class OES(OP2Common):
                 if eid_device > 0:
                     out = s2.unpack(data[n+4:n+ntotal])
                 else:
-                    out1 = s2.unpack(data[n+4:n+ntotal])
+                    unused_out1 = s2.unpack(data[n+4:n+ntotal])
                     out = s3.unpack(data[n+4:n+ntotal])
                 (theory, lamid, fp, fm, fb, fmax, fflag) = out
 
@@ -4537,7 +4537,7 @@ class OES(OP2Common):
 
 
             struct1 = Struct(self._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
-            for i in range(nelements):  # num_wide=51
+            for unused_i in range(nelements):  # num_wide=51
                 edata = data[n:n + 204]
                 out = struct1.unpack(edata)
 
