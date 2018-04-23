@@ -1093,6 +1093,9 @@ class Op2Codes(object):
         table_code = self.tCode
         tcode = self.sort_code
         sort_code = tcode
+        #if self.table_name_str == 'OQGPSD2':
+            #print(self.code_information())
+            #print('table_name=%s tCode=%s sort_code=%s self.sort_bits=%s' % (self.table_name_str, self.tCode, sort_code, self.sort_bits))
         assert sort_code in [0, 1, 2, 3, 4, 5, 6], 'sort_code=%s\n%s' % (sort_code, self.code_information())
         try:
             sort_method, is_real, is_random = determine_sort_bits_meaning(table_code, sort_code, self.sort_bits)

@@ -17,10 +17,23 @@ from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, Co
 from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray, ComplexVelocityArray
 from pyNastran.op2.tables.oug.oug_accelerations import RealAccelerationArray, ComplexAccelerationArray
 from pyNastran.op2.tables.oug.oug_eigenvectors import RealEigenvectorArray, ComplexEigenvectorArray
+from pyNastran.op2.tables.oug.oug_temperatures import RealTemperatureArray
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealThermalVelocityVectorArray
+
+
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
+    RealLoadVectorArray, ComplexLoadVectorArray,
+    RealTemperatureVectorArray,
+)
+from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import (
+    #RealTemperatureGradientAndFlux,
+    RealTemperatureGradientAndFluxArray)
+
+from pyNastran.op2.tables.opg_appliedLoads.opnl_force_vector import RealForceVectorArray#, ComplexForceVectorArray
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import RealSPCForcesArray, ComplexSPCForcesArray
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import RealMPCForcesArray, ComplexMPCForcesArray
-from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealLoadVectorArray, ComplexLoadVectorArray
+#from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealLoadVectorArray, ComplexLoadVectorArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
@@ -33,6 +46,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import Real
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressArray, RealBushStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray, RealTriaxStrainArray
+
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
@@ -46,6 +61,8 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
+
+from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import GridPointStressesArray, GridPointStressesVolumeArray
 
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
@@ -64,7 +81,11 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexRodForceArray, ComplexSolidPressureForceArray, ComplexSpringForceArray,
     ComplexViscForceArray,
 )
-
+from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
+    RealChbdyHeatFluxArray, RealConvHeatFluxArray, Real1DHeatFluxArray,
+    RealElementTableArray, RealHeatFluxVUArray, RealHeatFluxVUBeamArray,
+    RealHeatFluxVU3DArray, HeatFlux_2D_3DArray,
+)
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import print_bad_path
 
@@ -80,12 +101,55 @@ def cast(h5_result_attr):
 
 TABLE_OBJ_MAP = {
     'displacements' : (RealDisplacementArray, ComplexDisplacementArray),
-    'velocities' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities' : (RealVelocityArray, ComplexVelocityArray, RealThermalVelocityVectorArray),
     'accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
     'eigenvectors' : (RealEigenvectorArray, ComplexEigenvectorArray),
     'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
     'load_vectors' : (RealLoadVectorArray, ComplexLoadVectorArray),
+    'force_vectors' : (RealForceVectorArray, ),
+
+    'displacement_scaled_response_spectra_ABS' : (RealDisplacementArray, ComplexDisplacementArray),
+    'velocity_scaled_response_spectra_ABS' : (RealVelocityArray, ComplexVelocityArray),
+    'spc_forces_scaled_response_spectra_ABS' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'acceleration_scaled_response_spectra_ABS' : (RealAccelerationArray, ComplexAccelerationArray),
+
+    'displacement_scaled_response_spectra_NRL' : (RealDisplacementArray, ComplexDisplacementArray),
+    'spc_forces_scaled_response_spectra_NRL' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'acceleration_scaled_response_spectra_NRL' : (RealAccelerationArray, ComplexAccelerationArray),
+
+    'displacement_scaled_response_spectra_SRSS' : (RealDisplacementArray, ComplexDisplacementArray),
+    'acceleration_scaled_response_spectra_SRSS' : (RealAccelerationArray, ComplexAccelerationArray),
+
+    'displacements_NO' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacements_ATO' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacements_CRM' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacements_PSD' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacements_RMS' : (RealDisplacementArray, ComplexDisplacementArray),
+
+    'velocities_NO' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities_ATO' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities_CRM' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities_PSD' : (RealVelocityArray, ComplexVelocityArray),
+    'velocities_RMS' : (RealVelocityArray, ComplexVelocityArray),
+
+    'accelerations_NO' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_ATO' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_CRM' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_PSD' : (RealAccelerationArray, ComplexAccelerationArray),
+    'accelerations_RMS' : (RealAccelerationArray, ComplexAccelerationArray),
+
+    'spc_forces_NO' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_ATO' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_CRM' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_PSD' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_RMS' : (RealSPCForcesArray, ComplexSPCForcesArray),
+
+    'mpc_forces_NO' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_ATO' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_CRM' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_PSD' : (RealMPCForcesArray, ComplexMPCForcesArray),
+    'mpc_forces_RMS' : (RealMPCForcesArray, ComplexMPCForcesArray),
 
     'celas1_stress' : (RealSpringStressArray, ComplexSpringStressArray),
     'celas2_stress' : (RealSpringStressArray, ComplexSpringStressArray),
@@ -122,7 +186,11 @@ TABLE_OBJ_MAP = {
 
     'cbar_stress' : (RealBarStressArray, ComplexBarStressArray),
     'cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray),
-    'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray, RealCBar100ForceArray),
+    'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray),
+
+    'cbar_force_10nodes' : (RealCBar100ForceArray, ),
+    'cbar_stress_10nodes' : (RealBar10NodesStressArray, ),
+    'cbar_strain_10nodes' : (RealBar10NodesStrainArray, ),
 
     'cbeam_stress' : (RealBeamStressArray, ComplexBeamStressArray),
     'cbeam_strain' : (RealBeamStrainArray, ComplexBeamStrainArray),
@@ -142,14 +210,23 @@ TABLE_OBJ_MAP = {
     'ctriar_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'cquadr_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
 
+    'ctriax_stress' : (RealTriaxStressArray, ComplexTriaxStressArray,),
+
     'cquad4_composite_stress' : (RealCompositePlateStressArray, None),
     'ctria3_composite_stress' : (RealCompositePlateStressArray, None),
+    'ctria6_composite_stress' : (RealCompositePlateStressArray, None),
+    'cquad8_composite_stress' : (RealCompositePlateStressArray, None),
+
     'cquad4_composite_strain' : (RealCompositePlateStrainArray, None),
     'ctria3_composite_strain' : (RealCompositePlateStrainArray, None),
+    'ctria6_composite_strain' : (RealCompositePlateStrainArray, None),
+    'cquad8_composite_strain' : (RealCompositePlateStrainArray, None),
 
     'cshear_stress' : (RealShearStressArray, ComplexShearStressArray),
     'cshear_strain' : (RealShearStrainArray, ComplexShearStrainArray),
     'cshear_force' : (RealCShearForceArray, ComplexCShearForceArray),
+
+    'coneax_force' : (RealConeAxForceArray,),
 
     'ctetra_stress' : (RealSolidStressArray, ComplexSolidStressArray),
     'cpenta_stress' : (RealSolidStressArray, ComplexSolidStressArray),
@@ -177,6 +254,8 @@ TABLE_OBJ_MAP = {
     'cbush_strain' : (RealBushStrainArray, ComplexCBushStrainArray),
     'cbush_force' : (RealCBushForceArray, ComplexCBushForceArray), # ComplexCBushForceArray
 
+    'cbush1d_stress_strain' : (RealBush1DStressArray, ComplexCBush1DStressArray),
+
     'celas1_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'celas2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'celas3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
@@ -197,17 +276,68 @@ TABLE_OBJ_MAP = {
     'cquad8_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'cquadr_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'cshear_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cquadx_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
     'ctetra_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'cpenta_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'chexa_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'nonlinear_cbeam_stress' : (RealNonlinearBeamStressArray, ),
+    'cdum8_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'ctriax_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'ctriax6_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cgap_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cbend_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'genel_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'dmig_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+
     'nonlinear_celas1_stress' : (RealNonlinearSpringStressArray, ),
+    'nonlinear_celas2_stress' : (RealNonlinearSpringStressArray, ),
+    'nonlinear_celas3_stress' : (RealNonlinearSpringStressArray, ),
+    'nonlinear_celas4_stress' : (RealNonlinearSpringStressArray, ),
     'nonlinear_conrod_stress' : (RealNonlinearRodArray, ),
-    'nonlinear_cquad4_stress' : (RealNonlinearPlateArray, ),
-    'nonlinear_ctria3_stress' : (RealNonlinearPlateArray, ),
     'nonlinear_crod_stress' :  (RealNonlinearRodArray, ),
     'nonlinear_ctube_stress' : (RealNonlinearRodArray, ),
+    'nonlinear_cgap_stress' : (NonlinearGapStressArray,),
+    'nonlinear_cbeam_stress' : (RealNonlinearBeamStressArray, ),
+
+    'nonlinear_cquad4_stress' : (RealNonlinearPlateArray, ),
+    'nonlinear_ctria3_stress' : (RealNonlinearPlateArray, ),
+
+    'ctetra_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
+    'cpenta_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
+    'chexa_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
+    'cbeam_force_vu' : (RealCBeamForceVUArray, ComplexCBeamForceVUArray),
+
+    'grid_point_stresses' : (GridPointStressesArray, ),
+    'grid_point_volume_stresses' : (GridPointStressesVolumeArray,),
+
+    'crod_thermal_load' :  (Real1DHeatFluxArray,),
+    'ctube_thermal_load' :  (Real1DHeatFluxArray,),
+    'conrod_thermal_load' : (Real1DHeatFluxArray,),
+
+    'cbar_thermal_load' :  (Real1DHeatFluxArray,),
+    'cbeam_thermal_load' : (Real1DHeatFluxArray,),
+    'cbend_thermal_load' : (Real1DHeatFluxArray,),
+
+    'cquad4_thermal_load' : (HeatFlux_2D_3DArray,),
+    'cquad8_thermal_load' : (HeatFlux_2D_3DArray,),
+    'ctria3_thermal_load' : (HeatFlux_2D_3DArray,),
+    'ctria6_thermal_load' : (HeatFlux_2D_3DArray,),
+    'ctriax6_thermal_load' : (HeatFlux_2D_3DArray,),
+
+    'ctetra_thermal_load' : (HeatFlux_2D_3DArray,),
+    'cpenta_thermal_load' : (HeatFlux_2D_3DArray,),
+    'chexa_thermal_load' : (HeatFlux_2D_3DArray,),
+
+    'chbdye_thermal_load' :  (RealChbdyHeatFluxArray,),
+    'chbdyp_thermal_load' : (RealChbdyHeatFluxArray,),
+    'chbdyg_thermal_load' : (RealChbdyHeatFluxArray,),
+
+    'vutria_force' : (RealForceVU2DArray,),
+    'vuquad_force' : (RealForceVU2DArray,),
+
+    'temperatures' : (RealTemperatureArray,),
+    'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray,),
+    'thermal_load_vectors' : (RealTemperatureVectorArray,),
 }
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
@@ -285,6 +415,10 @@ def load_table(result_name, h5_result, objs, log, debug=False):# real_obj, compl
     class_name = cast(h5_result.get('class_name'))
     obj_class = _get_obj_class(objs, class_name, result_name, is_real, log)
     if obj_class is None:
+        log.warning('  unhandled result_name=%r class_name=%r...' % (
+            result_name, class_name))
+        #raise NotImplementedError('  unhandled result_name=%r class_name=%r...' % (
+            #result_name, class_name))
         return None
 
     obj = obj_class(data_code, is_sort1, isubcase, dt)
@@ -408,7 +542,7 @@ def load_op2_from_hdf5_file(h5_file, model, log, debug=False):
                     log.debug('  loaded %r' % result_name)
                 else:
                     log.warning('  unhandled %r...' % result_name)
-
+                    #raise NotImplementedError('  unhandled %r...' % result_name)
             #print(h5_subcase.keys())
         elif key == 'info':
             pass
@@ -416,6 +550,7 @@ def load_op2_from_hdf5_file(h5_file, model, log, debug=False):
             _read_h5_matrix(h5_file, model, key, log)
         else:
             log.warning('key = %r' % key)
+            #raise NotImplementedError('  unhandled %r...' % key)
 
 def _read_h5_matrix(h5_file, unused_model, key, log):
     """reads an hdf5 matrix"""
@@ -428,5 +563,6 @@ def _read_h5_matrix(h5_file, unused_model, key, log):
             log.warning('  %s is empty...skipping' % h5_matrix)
         else:
             log.warning('  skipping %r...' % matrix_name)
+            #raise NotImplementedError('matrix=%r' % matrix_name)
             #for attr in h5_matrix.keys():
                 #print('    attr=%s' % attr)

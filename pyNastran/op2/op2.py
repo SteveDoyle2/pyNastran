@@ -752,12 +752,12 @@ class OP2(OP2_Scalar):
             for case_key in case_keys:
                 #print('case_key =', case_key)
                 if isinstance(case_key, tuple):
-                    isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, ogs = case_key
+                    isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step, ogs = case_key
                     #isubcasei, analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, table_name = case_key
                     if ogs == 0:
-                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index)
+                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step)
                     else:
-                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, ogs)
+                        value = (analysis_codei, sort_methodi, counti, isuperelmemnt_adaptivity_index, pval_step, ogs)
 
                     if value not in self.subcase_key[isubcasei]:
                         #print('isubcase=%s value=%s' % (isubcasei, value))
@@ -798,13 +798,13 @@ class OP2(OP2_Scalar):
 
                 if len(key0) == 5:
                     # ogs is optional
-                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index = key0
-                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index)
-                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index)
+                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, pval_step = key0
+                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step)
+                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step)
                 else:
-                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, ogs = key0
-                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, ogs)
-                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, ogs)
+                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, pval_step, ogs = key0
+                    key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
+                    key2 = (isubcase, analysis_code, 2, count, isuperelmemnt_adaptivity_index, pval_step, ogs)
 
                 #isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, table_name = key0
                 #key1 = (isubcase, analysis_code, 1, count, isuperelmemnt_adaptivity_index, table_name)
@@ -929,13 +929,14 @@ class OP2(OP2_Scalar):
         counts = set([])
         ogss = set([])
         superelement_adaptivity_indexs = set([])
+        pval_steps = set([])
 
         for key in keys:
-            if len(key) == 5:
-                isubcase, analysis_code, sort_method, count, superelement_adaptivity_index = key
+            if len(key) == 6:
+                isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step = key
                 ogs = 0
-            elif len(key) == 6:
-                isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index = key
+            elif len(key) == 7:
+                isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step = key
             else:
                 print('  %s' % str(key))
                 raise RuntimeError(key)
@@ -946,6 +947,7 @@ class OP2(OP2_Scalar):
             counts.add(count)
             ogss.add(ogs)
             superelement_adaptivity_indexs.add(superelement_adaptivity_index)
+            pval_steps.add(pval_step)
 
         isubcases = list(isubcases)
         analysis_codes = list(analysis_codes)
@@ -953,6 +955,7 @@ class OP2(OP2_Scalar):
         counts = list(counts)
         ogss = list(ogss)
         superelement_adaptivity_indexs = list(superelement_adaptivity_indexs)
+        pval_steps = list(pval_steps)
 
         isubcases.sort()
         analysis_codes.sort()
@@ -960,19 +963,21 @@ class OP2(OP2_Scalar):
         counts.sort()
         ogss.sort()
         superelement_adaptivity_indexs.sort()
+        pval_steps.sort()
 
         keys3 = []
         for isubcase in isubcases:
             for count in counts:
                 for analysis_code in analysis_codes:
                     for superelement_adaptivity_index in superelement_adaptivity_indexs:
-                        for sort_method in sort_methods:
-                            for ogs in ogss:
-                                key = (isubcase, analysis_code, sort_method,
-                                       count, ogs, superelement_adaptivity_index)
-                                if key not in keys3:
-                                    #print('adding ', key)
-                                    keys3.append(key)
+                        for pval_step in pval_steps:
+                            for sort_method in sort_methods:
+                                for ogs in ogss:
+                                    key = (isubcase, analysis_code, sort_method,
+                                           count, ogs, superelement_adaptivity_index, pval_step)
+                                    if key not in keys3:
+                                        #print('adding ', key)
+                                        keys3.append(key)
         if len(keys3) == 0:
             self.log.warning('No results...\n' + self.get_op2_stats(short=True))
         #assert len(keys3) > 0, keys3

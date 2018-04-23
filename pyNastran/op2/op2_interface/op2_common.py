@@ -273,9 +273,46 @@ class OP2Common(Op2Codes, F06Writer):
         title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
         self.title = title.decode(self.encoding).strip()
         subtitle = subtitle.decode(self.encoding)
-        self.label = label.decode(self.encoding).strip()
-        nsubtitle_break = 67
 
+        label = label.decode(self.encoding).strip()
+        nlabel = 65
+        label2 = label[nlabel:].strip()
+        assert len(label[:nlabel]) <= nlabel, 'len=%s \nlabel     =%r \nlabel[:%s]=%r' % (len(label), label, nlabel, label[:nlabel])
+        assert len(label2) <= 55, 'len=%s label = %r\nlabel[:%s]=%r\nlabel2    =%r' % (len(label2), label, nlabel, label[:nlabel], label2)
+        # not done...
+        # 65 + 55 = 120 < 128
+
+        self.label = label
+        self.pval_step = label2
+
+        #split_label = label.split()
+        #if len(split_label) == 2:
+            #word, value1 = split_label
+            #assert word == 'SUPERELEMENT', 'split_label=%s' % split_label
+            #subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
+            #value1 = int(value1)
+
+            #if superelement_adaptivity_index:
+                #superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
+                    #superelement_adaptivity_index, value1)
+            #else:
+                #superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
+        #elif len(split_label) == 4:
+            #word, value1, comma, value2 = split_label
+            #assert word == 'SUPERELEMENT', 'split_label=%s' % split_label
+            #value1 = int(value1)
+            #value2 = int(value2)
+
+            #if superelement_adaptivity_index:
+                #superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
+                    #superelement_adaptivity_index, value1, value2)
+            #else:
+                #superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
+        #else:
+            #raise RuntimeError(split_label)
+
+
+        nsubtitle_break = 67
         adpativity_index = subtitle[nsubtitle_break:99].strip()
         superelement = subtitle[99:].strip()
 
@@ -284,38 +321,7 @@ class OP2Common(Op2Codes, F06Writer):
         superelement = superelement.strip()
 
         assert len(subtitle) <= 67, 'len=%s subtitle=%r' % (len(subtitle), subtitle)
-
-        superelement_adaptivity_index = ''
-        if 'SUPERELEMENT' in superelement:
-            # 'SUPERELEMENT 0'
-
-            # F:\work\pyNastran\examples\Dropbox\move_tpl\opt7.op2
-            # 'SUPERELEMENT 0       ,   1'
-            split_superelement = superelement.split()
-            if len(split_superelement) == 2:
-                word, value1 = split_superelement
-                assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
-                subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
-                value1 = int(value1)
-
-                if superelement_adaptivity_index:
-                    superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
-                        superelement_adaptivity_index, value1)
-                else:
-                    superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
-            elif len(split_superelement) == 4:
-                word, value1, comma, value2 = split_superelement
-                assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
-                value1 = int(value1)
-                value2 = int(value2)
-
-                if superelement_adaptivity_index:
-                    superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
-                        superelement_adaptivity_index, value1, value2)
-                else:
-                    superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
-            else:
-                raise RuntimeError(split_superelement)
+        superelement_adaptivity_index = get_superelement_adaptivity_index(subtitle, superelement)
 
         if adpativity_index:
             assert 'ADAPTIVITY INDEX=' in adpativity_index
@@ -343,6 +349,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['subtitle'] = self.subtitle
 
         # the sub-key
+        self.data_code['pval_step'] = self.pval_step
         self.data_code['superelement_adaptivity_index'] = self.superelement_adaptivity_index
 
         #: the label of the subcase
@@ -351,11 +358,12 @@ class OP2Common(Op2Codes, F06Writer):
 
         if self.is_debug_file:
             self.binary_debug.write(
-                '  %-14s = %r\n' * 5 % (
+                '  %-14s = %r\n' * 6 % (
                     'count', self._count,
                     'title', self.title,
                     'subtitle', self.subtitle,
                     'label', self.label,
+                    'pval_step', self.pval_step,
                     'superelement_adaptivity_index', self.superelement_adaptivity_index))
 
     def _read_title(self, data):
@@ -376,7 +384,7 @@ class OP2Common(Op2Codes, F06Writer):
             ogs = 0
             if hasattr(self, 'ogs'):
                 ogs = self.ogs
-            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, ogs)
+            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, self.pval_step, ogs)
             #code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, self.table_name_str)
             #print("code =", code)
             #if code not in self.labels:
@@ -1402,7 +1410,7 @@ class OP2Common(Op2Codes, F06Writer):
         if hasattr(self, 'ogs'):
             ogs = self.ogs
         code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
-                self.superelement_adaptivity_index)
+                self.superelement_adaptivity_index, self.pval_step)
         #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
                 #self.superelement_adaptivity_index, self.table_name_str)
         #print('%r' % self.subtitle)
@@ -1970,3 +1978,37 @@ def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
         imag = floats[:, isave2]
         real_imag = real + 1.j * imag
     return real_imag
+
+def get_superelement_adaptivity_index(subtitle, superelement):
+    superelement_adaptivity_index = ''
+    if 'SUPERELEMENT' in superelement:
+        # 'SUPERELEMENT 0'
+
+        # F:\work\pyNastran\examples\Dropbox\move_tpl\opt7.op2
+        # 'SUPERELEMENT 0       ,   1'
+        split_superelement = superelement.split()
+        if len(split_superelement) == 2:
+            word, value1 = split_superelement
+            assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
+            subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
+            value1 = int(value1)
+
+            if superelement_adaptivity_index:
+                superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
+                    superelement_adaptivity_index, value1)
+            else:
+                superelement_adaptivity_index = 'SUPERELEMENT %ss' % value1
+        elif len(split_superelement) == 4:
+            word, value1, comma, value2 = split_superelement
+            assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
+            value1 = int(value1)
+            value2 = int(value2)
+
+            if superelement_adaptivity_index:
+                superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
+                    superelement_adaptivity_index, value1, value2)
+            else:
+                superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
+        else:
+            raise RuntimeError(split_superelement)
+    return superelement_adaptivity_index

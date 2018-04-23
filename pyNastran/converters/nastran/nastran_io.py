@@ -5901,27 +5901,28 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         key_itime0 = key_itime[0]
         key0 = key_itime0[0]
         # (isubcase, analysis_code, sort_method,
-        #  count, ogs, superelement_adaptivity_index) = key
+        #  count, ogs, superelement_adaptivity_index, pval_step) = key
         subcase_id_old = key0[0]
         count_old = key0[3]
         ogs_old = key0[4]
         subtitle_old = key0[5]
-        #print('key0 =', key0)
-        subtitle_old, label_old, superelement_adaptivity_index_old = keys_map[key0]
+        subtitle_old, label_old, superelement_adaptivity_index_old, pval_step_old = keys_map[key0]
         del label_old
         del superelement_adaptivity_index_old
 
         # now that we have the data built, we put it in the form
         # in sorted order
+        #
+        # TODO: consider pval_step
         for key, itime in key_itime:
             # (isubcase, analysis_code, sort_method,
-            #  count, ogs, superelement_adaptivity_index) = key
+            #  count, ogs, superelement_adaptivity_index, pval_step) = key
             #print('key =', key)
             subcase_id = key[0]
             count = key[3]
             #subtitle = key[4]
             try:
-                subtitle, unused_label, superelement_adaptivity_index = keys_map[key]
+                subtitle, unused_label, superelement_adaptivity_index, pval_step = keys_map[key]
             except:
                 subcase_id = subcase_id_old
                 subtitle = subtitle_old + '?'

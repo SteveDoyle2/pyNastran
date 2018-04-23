@@ -230,7 +230,7 @@ def create_composite_plates(model, key, is_stress, keys_map):
         composite_data_dict[element_type] = {}
         for case_key, case in iteritems(obj_dict):
             if case_key == key:
-                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+                keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index, case.pval_step)
                 #data_dict[element_type] = [ueids, data]
                 case_to_delete = case_key
                 cases_to_delete.append(case_to_delete)
@@ -357,7 +357,7 @@ def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
         dt = case._times[itime]
         header = _get_nastran_header(case, dt, itime)
         header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index, case.pval_step)
 
         # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
         oxx[i] = case.data[itime, :, 0]
@@ -405,7 +405,7 @@ def get_bar_stress_strain(model, key, is_stress, vm_word, itime,
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index, case.pval_step)
             #s1a = case.data[itime, :, 0]
             #s2a = case.data[itime, :, 1]
             #s3a = case.data[itime, :, 2]
@@ -485,7 +485,7 @@ def get_bar100_stress_strain(model, key, is_stress, vm_word, itime,
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index, case.pval_step)
 
             #  0    1    2    3    4     5     6     7     8
             # [sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
@@ -550,7 +550,7 @@ def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+            keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index, case.pval_step)
             sxc = case.data[itime, :, 0]
             sxd = case.data[itime, :, 1]
             sxe = case.data[itime, :, 2]
@@ -651,7 +651,7 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
         dt = case._times[itime]
         header = _get_nastran_header(case, dt, itime)
         header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index, case.pval_step)
         oxxi = case.data[itime, j, 1]
         oyyi = case.data[itime, j, 2]
         txyi = case.data[itime, j, 3]
@@ -734,7 +734,7 @@ def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
         dt = case._times[itime]
         header = _get_nastran_header(case, dt, itime)
         header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index)
+        keys_map[key] = (case.subtitle, case.label, case.superelement_adaptivity_index, case.pval_step)
         oxxi = case.data[itime, j, 0]
         oyyi = case.data[itime, j, 1]
         ozzi = case.data[itime, j, 2]
