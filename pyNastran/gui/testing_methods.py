@@ -260,7 +260,7 @@ class FakeGUIMethods(GuiCommon):
         return 1 * self.settings.dim_max
 
     def _add_alt_actors(self, alt_grids):
-        for unused_name, grid in iteritems(alt_grids):
+        for name, grid in iteritems(alt_grids):
             self.geometry_actors[name] = vtkActor()
 
     def log_debug(self, msg):
