@@ -188,6 +188,8 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
+        #test.create_groups_by_property_id()
+        test.create_groups_by_visible_result()
 
     def test_gui_elements_04(self):
         """tests a large number of elements and results in SOL 108-freq"""
@@ -329,8 +331,23 @@ class TestNastranGUI(unittest.TestCase):
         test.update_camera('-y')
         test.update_camera('+z')
         test.update_camera('-z')
+        test._update_camera()
         camera_data = test.get_camera_data()
         test.on_set_camera_data(camera_data, show_log=True)
+
+        csv_filename = os.path.join(MODEL_PATH, 'custom_geom.csv')
+        test.on_load_user_geom(csv_filename=csv_filename, name=None, color=None)
+
+        with open('xyz1.csv', 'w') as xyz_file:
+            xyz_file.write('1., 2., 3.\n')
+            xyz_file.write('4., 5., 6.\n')
+        csv_filename = 'xyz1.csv' # os.path.join(MODEL_PATH, 'xyz1.csv')
+        test.on_load_csv_points(csv_filename=csv_filename, name=None, color=None)
+
+        with open('xyz2.csv', 'w') as xyz_file:
+            xyz_file.write('10., 20., 30.')
+        csv_filename = 'xyz2.csv' # os.path.join(MODEL_PATH, 'xyz2.csv')
+        test.on_load_csv_points(csv_filename=csv_filename, name=None, color=None)
 
         #test.on_wireframe()
         #test.on_surface()

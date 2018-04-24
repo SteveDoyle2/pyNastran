@@ -79,7 +79,6 @@ class FakeGUIMethods(GuiCommon):
         self.debug = False
         self._form = []
         self.result_cases = OrderedDict()
-        self._finish_results_io = self.passer1
         #self.geometry_actors = {
             #'main' : vtkActor(),
         #}
@@ -243,17 +242,17 @@ class FakeGUIMethods(GuiCommon):
     def update_axes_length(self, value):
         self.settings.dim_max = value
 
-    def passer(self):
-        """fake method"""
-        pass
+    #def passer(self):
+        #"""fake method"""
+        #pass
 
-    def passer1(self, a):
-        """fake method"""
-        pass
+    #def passer1(self, a):
+        #"""fake method"""
+        #pass
 
-    def passer2(self, a, b):
-        """fake method"""
-        pass
+    #def passer2(self, a, b):
+        #"""fake method"""
+        #pass
 
     @property
     def displacement_scale_factor(self):

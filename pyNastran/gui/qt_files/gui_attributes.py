@@ -4,17 +4,22 @@ and is inherited from many GUI classes
 """
 from __future__ import print_function
 import os
+import sys
 import traceback
 from collections import OrderedDict
 
 import numpy as np
 
 from pyNastran.gui.gui_objects.settings import Settings
-from pyNastran.gui.tool_actions import ToolActions
-from pyNastran.gui.view_actions import ViewActions
+
+from pyNastran.gui.qt_files.tool_actions import ToolActions
+from pyNastran.gui.qt_files.view_actions import ViewActions
+from pyNastran.gui.qt_files.group_actions import GroupActions
+
 from pyNastran.gui.utils.load_results import create_res_obj
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
+
 from pyNastran.bdf.cards.base_card import deprecated
 
 #class GuiAttributes(QMainWindow):
@@ -31,6 +36,7 @@ class GuiAttributes(object):
         self.settings = Settings(self)
         self.tool_actions = ToolActions(self)
         self.view_actions = ViewActions(self)
+        self.group_actions = GroupActions(self)
 
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
@@ -161,6 +167,15 @@ class GuiAttributes(object):
 
         self.main_edge_mappers = {}
         self.main_edge_actors = {}
+
+        self.color_order = [
+            (1.0, 0.145098039216, 1.0),
+            (0.0823529411765, 0.0823529411765, 1.0),
+            (0.0901960784314, 1.0, 0.941176470588),
+            (0.501960784314, 1.0, 0.0941176470588),
+            (1.0, 1.0, 0.117647058824),
+            (1.0, 0.662745098039, 0.113725490196)
+        ]
 
     #-------------------------------------------------------------------
     # deprecated attributes
@@ -596,12 +611,6 @@ class GuiAttributes(object):
         """
         self.tool_actions.update_text_actors(subcase_id, subtitle, min_value, max_value, label)
 
-    def update_camera(self, code):
-        self.tool_actions.update_camera(code)
-
-    def _update_camera(self, camera=None):
-        self.tool_actions._update_camera(camera)
-
     def create_text(self, position, label, text_size=18):
         """creates the lower left text actors"""
         self.tool_actions.create_text(position, label, text_size=text_size)
@@ -618,7 +627,93 @@ class GuiAttributes(object):
         """exports CSVs of the requested cases"""
         self.tool_actions.export_case_data(icases=icases)
 
+    def on_load_user_geom(self, csv_filename=None, name=None, color=None):
+        """
+        Loads a User Geometry CSV File of the form:
+
+        #    id  x    y    z
+        GRID, 1, 0.2, 0.3, 0.3
+        GRID, 2, 1.2, 0.3, 0.3
+        GRID, 3, 2.2, 0.3, 0.3
+        GRID, 4, 5.2, 0.3, 0.3
+        grid, 5, 5.2, 1.3, 2.3  # case insensitive
+
+        #    ID, nodes
+        BAR,  1, 1, 2
+        TRI,  2, 1, 2, 3
+        # this is a comment
+
+        QUAD, 3, 1, 5, 3, 4
+        QUAD, 4, 1, 2, 3, 4  # this is after a blank line
+
+        #RESULT,4,CENTROID,AREA(%f),PROPERTY_ID(%i)
+        # in element id sorted order: value1, value2
+        #1.0, 2.0 # bar
+        #1.0, 2.0 # tri
+        #1.0, 2.0 # quad
+        #1.0, 2.0 # quad
+
+        #RESULT,NODE,NODEX(%f),NODEY(%f),NODEZ(%f)
+        # same difference
+
+        #RESULT,VECTOR3,GEOM,DXYZ
+        # 3xN
+
+        Parameters
+        ----------
+        csv_filename : str (default=None -> load a dialog)
+            the path to the user geometry CSV file
+        name : str (default=None -> extract from fname)
+            the name for the user points
+        color : (float, float, float)
+            RGB values as 0.0 <= rgb <= 1.0
+        """
+        self.tool_actions.on_load_user_geom(csv_filename=csv_filename, name=name, color=color)
+
+    def on_load_csv_points(self, csv_filename=None, name=None, color=None):
+        """
+        Loads a User Points CSV File of the form:
+
+        1.0, 2.0, 3.0
+        1.5, 2.5, 3.5
+
+        Parameters
+        -----------
+        csv_filename : str (default=None -> load a dialog)
+            the path to the user points CSV file
+        name : str (default=None -> extract from fname)
+            the name for the user points
+        color : (float, float, float)
+            RGB values as 0.0 <= rgb <= 1.0
+        """
+        is_failed = self.tool_actions.on_load_csv_points(
+            csv_filename=csv_filename, name=name, color=color)
+        return is_failed
+
     #---------------------------------------------------------------------------
+    def create_groups_by_visible_result(self, nlimit=50):
+        """
+        Creates group by the active result
+
+        This should really only be called for integer results < 50-ish.
+        """
+        return self.group_actions.create_groups_by_visible_result(nlimit=50)
+
+    def create_groups_by_property_id(self):
+        """
+        Creates a group for each Property ID.
+
+        As this is somewhat Nastran specific, create_groups_by_visible_result exists as well.
+        """
+        return self.group_actions.create_groups_by_property_id()
+
+    #---------------------------------------------------------------------------
+    def update_camera(self, code):
+        self.view_actions.update_camera(code)
+
+    def _update_camera(self, camera=None):
+        self.view_actions._update_camera(camera)
+
     def on_pan_left(self, event):
         self.view_actions.on_pan_left(event)
 
@@ -735,3 +830,7 @@ class GuiAttributes(object):
            or it's like k'
         """
         self.view_actions.on_set_camera_data(camera_data, show_log=show_log)
+
+    @property
+    def IS_GUI_TESTING(self):
+        return 'test_' in sys.argv[0]

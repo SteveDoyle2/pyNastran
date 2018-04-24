@@ -37,15 +37,10 @@ if qt_version in ['pyside', 'pyqt4']:
 else:
     #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 from pyNastran.bdf.utils import write_patran_syntax_dict
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types
-from pyNastran.utils.numpy_utils import loadtxt_nice
-
-from pyNastran.gui.utils.write_gif import (
-    setup_animation, update_animation_inputs, write_gif)
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -53,30 +48,30 @@ from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 
-from pyNastran.gui.menus.legend.interface import (
-    set_legend_menu, get_legend_fringe, get_legend_disp, get_legend_vector)
-from pyNastran.gui.menus.clipping.interface import set_clipping_menu
-from pyNastran.gui.menus.camera.interface import set_camera_menu
-from pyNastran.gui.menus.preferences.interface import set_preferences_menu
-from pyNastran.gui.menus.groups_modify.interface import on_set_modify_groups
-from pyNastran.gui.menus.groups_modify.groups_modify import Group
 
+from pyNastran.gui.menus.menus import (
+    set_legend_menu, get_legend_fringe, get_legend_disp, get_legend_vector,
+    set_clipping_menu,
+    set_camera_menu,
+    set_preferences_menu,
+    on_set_modify_groups, Group,
+    Sidebar,
+    ApplicationLogWidget,
+    PythonConsoleWidget,
+    EditGeometryProperties)
 
-from pyNastran.gui.menus.results_sidebar import Sidebar
-from pyNastran.gui.menus.application_log import ApplicationLogWidget
-from pyNastran.gui.menus.python_console import PythonConsoleWidget
-from pyNastran.gui.menus.manage_actors import EditGeometryProperties
+from pyNastran.gui.styles.styles import (
+    AreaPickStyle, ZoomStyle, RotationCenterStyle, TrackballStyleCamera
+)
 
-from pyNastran.gui.styles.area_pick_style import AreaPickStyle
-from pyNastran.gui.styles.zoom_style import ZoomStyle
-#from pyNastran.gui.styles.probe_style import ProbeResultStyle
-from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
-from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
+from pyNastran.gui.utils.write_gif import (
+    setup_animation, update_animation_inputs, write_gif)
+from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_idtype
+
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
-from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv, load_user_geom
 from pyNastran.gui.formats import CLASS_MAP
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_idtype
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
     def __init__(self):
@@ -494,13 +489,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
 
-                ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.tool_actions.update_camera('+x')),
-                ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.tool_actions.update_camera('+y')),
-                ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.tool_actions.update_camera('+z')),
+                ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.view_actions.update_camera('+x')),
+                ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y')),
+                ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z')),
 
-                ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.tool_actions.update_camera('-x')),
-                ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.tool_actions.update_camera('-y')),
-                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.tool_actions.update_camera('-z')),
+                ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x')),
+                ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y')),
+                ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z')),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
@@ -752,10 +747,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ##mapper.InterpolateScalarsBeforeMappingOn()
         ##mapper.UseLookupTableScalarRangeOn()
 
-        #if self.vtk_version <= 5:
-            #mapper.SetInputData(plane)
-        #else:
-            #mapper.SetInput(plane)
+        #mapper.SetInput(plane)
 
         #actor.GetProperty().SetColor(1., 0., 0.)
         #actor.SetMapper(mapper)
@@ -1392,20 +1384,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         image_data = self.image_reader.GetOutput()
 
         if has_background_image:
-            if vtk.VTK_MAJOR_VERSION <= 5:
-                self.image_actor.SetInput(image_data)
-            else:
-                self.image_actor.SetInputData(image_data)
+            self.image_actor.SetInputData(image_data)
             self.Render()
             return
 
         # Create an image actor to display the image
         self.image_actor = vtk.vtkImageActor()
-
-        if vtk.VTK_MAJOR_VERSION <= 5:
-            self.image_actor.SetInput(image_data)
-        else:
-            self.image_actor.SetInputData(image_data)
+        self.image_actor.SetInputData(image_data)
 
         self.background_rend = vtk.vtkRenderer()
         self.background_rend.SetLayer(0)
@@ -1639,79 +1624,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ishow = np.searchsorted(all_eids, eids)
         self.show_ids_mask(ishow)
 
-    def create_groups_by_visible_result(self, nlimit=50):
-        """
-        Creates group by the active result
-
-        This should really only be called for integer results < 50-ish.
-        """
-        try:
-            #self.scalar_bar.title
-            case_key = self.case_keys[self.icase] # int for object
-            obj, (i, res_name) = self.result_cases[case_key]
-            default_title = obj.get_default_title(i, name)
-            location = obj.get_location(i, name)
-            if obj.data_format != '%i':
-                self.log.error('not creating result=%r; must be an integer result' % res_name)
-                return 0
-            if location != 'centroid':
-                self.log.error('not creating result=%r; must be a centroidal result' % res_name)
-                return 0
-
-            word = default_title
-            prefix = default_title
-            ngroups = self._create_groups_by_name(word, prefix, nlimit=nlimit)
-            self.log_command('create_groups_by_visible_result()'
-                             ' # created %i groups for result_name=%r' % (ngroups, res_name))
-        except Exception as error:
-            self.log_error('\n' + ''.join(traceback.format_stack()))
-            #traceback.print_exc(file=self.log_error)
-            self.log_error(str(error))
-
-    def create_groups_by_property_id(self):
-        """
-        Creates a group for each Property ID.
-
-        As this is somewhat Nastran specific, create_groups_by_visible_result exists as well.
-        """
-        self._create_groups_by_name('PropertyID', 'property', nlimit=500)
-        self.log_command('create_groups_by_property_id()')
-
-    def _create_groups_by_name(self, name, prefix, nlimit=50):
-        """
-        Helper method for `create_groups_by_visible_result` and `create_groups_by_property_id`
-        """
-        #eids = self.find_result_by_name('ElementID')
-        #elements_pound = eids.max()
-        try:
-            eids = self.groups['main'].element_ids
-            elements_pound = self.groups['main'].elements_pound
-        except Exception as error:
-            self.log.error('Cannot create groups as there are no elements in the model')
-            self.log.error(str(error))
-            return 0
-
-        result = self.find_result_by_name(name)
-        ures = np.unique(result)
-        ngroups = len(ures)
-        if ngroups > nlimit:
-            self.log.error('not creating result; %i new groups would be created; '
-                           'increase nlimit=%i if you really want to' % (ngroups, nlimit))
-            return 0
-
-        for uresi in ures:
-            ids = np.where(uresi == result)[0]
-
-            name = '%s %s' % (prefix, uresi)
-            element_str = ''
-            group = Group(
-                name, element_str, elements_pound,
-                editable=True)
-            group.element_ids = eids[ids]
-            self.log_info('creating group=%r' % name)
-            self.groups[name] = group
-        return ngroups
-
     def create_group_with_name(self, name, eids):
         elements_pound = self.groups['main'].elements_pound
         element_str = ''
@@ -1918,12 +1830,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         if 0:  # pragma: no cover
             # doesn't work...
-            if vtk.VTK_MAJOR_VERSION <= 5:
-                self.extract_selection.SetInput(0, self.grid)
-                self.extract_selection.SetInput(1, self.selection)
-            else:
-                self.extract_selection.SetInputData(0, self.grid)
-                self.extract_selection.SetInputData(1, self.selection)
+            self.extract_selection.SetInputData(0, self.grid)
+            self.extract_selection.SetInputData(1, self.selection)
         else:
             # dumb; works
             self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
@@ -2014,12 +1922,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.selection.AddNode(self.selection_node)
 
         self.extract_selection = vtk.vtkExtractSelection()
-        if vtk.VTK_MAJOR_VERSION <= 5:
-            self.extract_selection.SetInput(0, self.grid)
-            self.extract_selection.SetInput(1, self.selection)
-        else:
-            self.extract_selection.SetInputData(0, self.grid)
-            self.extract_selection.SetInputData(1, self.selection)
+        self.extract_selection.SetInputData(0, self.grid)
+        self.extract_selection.SetInputData(1, self.selection)
         self.extract_selection.Update()
 
         # In selection
@@ -2345,10 +2249,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if hasattr(self, 'main_grids') and name not in self.main_grids:
             grid = vtk.vtkUnstructuredGrid()
             grid_mapper = vtk.vtkDataSetMapper()
-            if self.vtk_version[0] <= 5:
-                grid_mapper.SetInputConnection(grid.GetProducerPort())
-            else:
-                grid_mapper.SetInputData(grid)
+            grid_mapper.SetInputData(grid)
 
             geom_actor = vtk.vtkLODActor()
             geom_actor.DragableOff()
@@ -2467,7 +2368,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 restype = 'Patran_nod'
             else:
                 raise NotImplementedError('wildcard_level = %s' % wildcard_level)
-        except Exception as error:
+        except:
             msg = traceback.format_exc()
             self.log_error(msg)
             return is_failed
@@ -2488,7 +2389,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         try:
             self._load_csv(result_type, out_filename)
-        except Exception as error:
+        except:
             msg = traceback.format_exc()
             self.log_error(msg)
             #return
@@ -2631,7 +2532,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             try:
                 load_function(out_filenamei)
-            except Exception: #  as e
+            except: #  as e
                 msg = traceback.format_exc()
                 self.log_error(msg)
                 print(msg)
@@ -2686,14 +2587,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """interface for user defined post-scripts"""
         self.load_batch_inputs(inputs)
 
-        self.color_order = [
-            (1.0, 0.145098039216, 1.0),
-            (0.0823529411765, 0.0823529411765, 1.0),
-            (0.0901960784314, 1.0, 0.941176470588),
-            (0.501960784314, 1.0, 0.0941176470588),
-            (1.0, 1.0, 0.117647058824),
-            (1.0, 0.662745098039, 0.113725490196)
-        ]
         if inputs['user_points'] is not None:
             for fname in inputs['user_points']:
                 self.on_load_user_points(fname)
@@ -2702,209 +2595,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             for fname in inputs['user_geom']:
                 self.on_load_user_geom(fname)
         #self.set_anti_aliasing(16)
-
-    def on_load_user_geom(self, csv_filename=None, name=None, color=None):
-        """
-        Loads a User Geometry CSV File of the form:
-
-        #    id  x    y    z
-        GRID, 1, 0.2, 0.3, 0.3
-        GRID, 2, 1.2, 0.3, 0.3
-        GRID, 3, 2.2, 0.3, 0.3
-        GRID, 4, 5.2, 0.3, 0.3
-        grid, 5, 5.2, 1.3, 2.3  # case insensitive
-
-        #    ID, nodes
-        BAR,  1, 1, 2
-        TRI,  2, 1, 2, 3
-        # this is a comment
-
-        QUAD, 3, 1, 5, 3, 4
-        QUAD, 4, 1, 2, 3, 4  # this is after a blank line
-
-        #RESULT,4,CENTROID,AREA(%f),PROPERTY_ID(%i)
-        # in element id sorted order: value1, value2
-        #1.0, 2.0 # bar
-        #1.0, 2.0 # tri
-        #1.0, 2.0 # quad
-        #1.0, 2.0 # quad
-
-        #RESULT,NODE,NODEX(%f),NODEY(%f),NODEZ(%f)
-        # same difference
-
-        #RESULT,VECTOR3,GEOM,DXYZ
-        # 3xN
-
-        Parameters
-        ----------
-        csv_filename : str (default=None -> load a dialog)
-            the path to the user geometry CSV file
-        name : str (default=None -> extract from fname)
-            the name for the user points
-        color : (float, float, float)
-            RGB values as 0.0 <= rgb <= 1.0
-        """
-        if csv_filename in [None, False]:
-            title = 'Load User Geometry'
-            csv_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
-            if not csv_filename:
-                return
-
-        if color is None:
-            # we mod the num_user_points so we don't go outside the range
-            icolor = self.num_user_points % len(self.color_order)
-            color = self.color_order[icolor]
-        if name is None:
-            name = os.path.basename(csv_filename).rsplit('.', 1)[0]
-
-        self._add_user_geometry(csv_filename, name, color)
-        self.log_command('on_load_user_geom(%r, %r, %s)' % (
-            csv_filename, name, str(color)))
-
-    def _add_user_geometry(self, csv_filename, name, color):
-        """helper method for ``on_load_user_geom``"""
-        if name in self.geometry_actors:
-            msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
-            raise ValueError(msg)
-        if len(name) == 0:
-            msg = 'Invalid Name: name=%r' % name
-            raise ValueError(msg)
-
-        point_name = name + '_point'
-        geom_name = name + '_geom'
-
-        grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename)
-        nbars = len(bars)
-        ntris = len(tris)
-        nquads = len(quads)
-        nelements = nbars + ntris + nquads
-        self.create_alternate_vtk_grid(point_name, color=color, opacity=1.0,
-                                       point_size=5, representation='point')
-
-        if nelements > 0:
-            nid_map = {}
-            i = 0
-            for nid in grid_ids:
-                nid_map[nid] = i
-                i += 1
-            self.create_alternate_vtk_grid(geom_name, color=color, opacity=1.0,
-                                           line_width=5, representation='toggle')
-
-        # allocate
-        nnodes = len(grid_ids)
-        #self.alt_grids[point_name].Allocate(npoints, 1000)
-        #if nelements > 0:
-            #self.alt_grids[geom_name].Allocate(npoints, 1000)
-
-        # set points
-        points = numpy_to_vtk_points(xyz, dtype='<f')
-
-        if nelements > 0:
-            geom_grid = self.alt_grids[geom_name]
-            for i in range(nnodes):
-                elem = vtk.vtkVertex()
-                elem.GetPointIds().SetId(0, i)
-                self.alt_grids[point_name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        else:
-            for i in range(nnodes):
-                elem = vtk.vtkVertex()
-                elem.GetPointIds().SetId(0, i)
-                self.alt_grids[point_name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        if nbars:
-            for i, bar in enumerate(bars[:, 1:]):
-                g1 = nid_map[bar[0]]
-                g2 = nid_map[bar[1]]
-                elem = vtk.vtkLine()
-                elem.GetPointIds().SetId(0, g1)
-                elem.GetPointIds().SetId(1, g2)
-                geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-
-        if ntris:
-            for i, tri in enumerate(tris[:, 1:]):
-                g1 = nid_map[tri[0]]
-                g2 = nid_map[tri[1]]
-                g3 = nid_map[tri[2]]
-                elem = vtk.vtkTriangle()
-                elem.GetPointIds().SetId(0, g1)
-                elem.GetPointIds().SetId(1, g2)
-                elem.GetPointIds().SetId(2, g3)
-                geom_grid.InsertNextCell(5, elem.GetPointIds())
-
-        if nquads:
-            for i, quad in enumerate(quads[:, 1:]):
-                g1 = nid_map[quad[0]]
-                g2 = nid_map[quad[1]]
-                g3 = nid_map[quad[2]]
-                g4 = nid_map[quad[3]]
-                elem = vtk.vtkQuad()
-                point_ids = elem.GetPointIds()
-                point_ids.SetId(0, g1)
-                point_ids.SetId(1, g2)
-                point_ids.SetId(2, g3)
-                point_ids.SetId(3, g4)
-                geom_grid.InsertNextCell(9, elem.GetPointIds())
-
-        self.alt_grids[point_name].SetPoints(points)
-        if nelements > 0:
-            self.alt_grids[geom_name].SetPoints(points)
-
-        # create actor/mapper
-        self._add_alt_geometry(self.alt_grids[point_name], point_name)
-        if nelements > 0:
-            self._add_alt_geometry(self.alt_grids[geom_name], geom_name)
-
-        # set representation to points
-        #self.geometry_properties[point_name].representation = 'point'
-        #self.geometry_properties[geom_name].representation = 'toggle'
-        #actor = self.geometry_actors[name]
-        #prop = actor.GetProperty()
-        #prop.SetRepresentationToPoints()
-        #prop.SetPointSize(4)
-
-    def on_load_csv_points(self, csv_filename=None, name=None, color=None):
-        """
-        Loads a User Points CSV File of the form:
-
-        1.0, 2.0, 3.0
-        1.5, 2.5, 3.5
-
-        Parameters
-        -----------
-        csv_filename : str (default=None -> load a dialog)
-            the path to the user points CSV file
-        name : str (default=None -> extract from fname)
-            the name for the user points
-        color : (float, float, float)
-            RGB values as 0.0 <= rgb <= 1.0
-
-        .. note:: no header line is required
-        .. note:: nodes are in the global frame
-
-        .. todo:: support changing the name
-        .. todo:: support changing the color
-        .. todo:: support overwriting points
-        """
-        is_failed = True
-        if csv_filename in [None, False]:
-            title = 'Load User Points'
-            csv_filename = self._create_load_file_dialog(self.wildcard_delimited, title)[1]
-            if not csv_filename:
-                return is_failed
-        if color is None:
-            # we mod the num_user_points so we don't go outside the range
-            icolor = self.num_user_points % len(self.color_order)
-            color = self.color_order[icolor]
-        if name is None:
-            sline = os.path.basename(csv_filename).rsplit('.', 1)
-            name = sline[0]
-
-        is_failed = self._add_user_points_from_csv(csv_filename, name, color)
-        if not is_failed:
-            self.num_user_points += 1
-            self.log_command('on_load_csv_points(%r, %r, %s)' % (
-                csv_filename, name, str(color)))
-        return is_failed
 
     def create_cell_picker(self):
         """creates the vtk picker objects"""
@@ -3699,11 +3389,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print('grid_selected =', self.grid_selected)
 
         self.grid_mapper = vtk.vtkDataSetMapper()
-        if self.vtk_version[0] <= 5:
-            #self.grid_mapper.SetInput(self.grid_selected)  ## OLD
-            self.grid_mapper.SetInputConnection(self.grid_selected.GetProducerPort())
-        else:
-            self.grid_mapper.SetInputData(self.grid_selected)
+        self.grid_mapper.SetInputData(self.grid_selected)
 
 
         #if 0:
@@ -3854,7 +3540,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         for name in names:
             #print('adding %s' % name)
             grid = grids_dict[name]
-            self._add_alt_geometry(grid, name)
+            self.tool_actions._add_alt_geometry(grid, name)
 
     def _remove_alt_actors(self, names=None):
         if names is None:
@@ -3864,82 +3550,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             actor = self.geometry_actors[name]
             self.rend.RemoveActor(actor)
             del actor
-
-    def _add_alt_geometry(self, grid, name, color=None, line_width=None,
-                          opacity=None, representation=None):
-        """
-        NOTE: color, line_width, opacity are ignored if name already exists
-        """
-        is_pickable = self.geometry_properties[name].is_pickable
-        quad_mapper = vtk.vtkDataSetMapper()
-        if name in self.geometry_actors:
-            alt_geometry_actor = self.geometry_actors[name]
-            if self.vtk_version[0] >= 6:
-                alt_geometry_actor.GetMapper().SetInputData(grid)
-            else:
-                alt_geometry_actor.GetMapper().SetInput(grid)
-        else:
-            if self.vtk_version[0] >= 6:
-                quad_mapper.SetInputData(grid)
-            else:
-                quad_mapper.SetInput(grid)
-            alt_geometry_actor = vtk.vtkActor()
-            if not is_pickable:
-                alt_geometry_actor.PickableOff()
-                alt_geometry_actor.DragableOff()
-
-            alt_geometry_actor.SetMapper(quad_mapper)
-            self.geometry_actors[name] = alt_geometry_actor
-
-        #geometryActor.AddPosition(2, 0, 2)
-        if name in self.geometry_properties:
-            geom = self.geometry_properties[name]
-        else:
-            geom = AltGeometry(self, name, color=color, line_width=line_width,
-                               opacity=opacity, representation=representation)
-            self.geometry_properties[name] = geom
-
-        color = geom.color_float
-        opacity = geom.opacity
-        point_size = geom.point_size
-        representation = geom.representation
-        line_width = geom.line_width
-        #print('color_2014[%s] = %s' % (name, str(color)))
-        assert isinstance(color[0], float), color
-        assert color[0] <= 1.0, color
-
-        prop = alt_geometry_actor.GetProperty()
-        #prop.SetInterpolationToFlat()    # 0
-        #prop.SetInterpolationToGouraud() # 1
-        #prop.SetInterpolationToPhong()   # 2
-        prop.SetDiffuseColor(color)
-        prop.SetOpacity(opacity)
-        #prop.Update()
-
-        #print('prop.GetInterpolation()', prop.GetInterpolation()) # 1
-
-        if representation == 'point':
-            prop.SetRepresentationToPoints()
-            prop.SetPointSize(point_size)
-        elif representation in ['surface', 'toggle']:
-            prop.SetRepresentationToSurface()
-            prop.SetLineWidth(line_width)
-        elif representation == 'wire':
-            prop.SetRepresentationToWireframe()
-            prop.SetLineWidth(line_width)
-
-        self.rend.AddActor(alt_geometry_actor)
-        vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
-
-        if geom.is_visible:
-            alt_geometry_actor.VisibilityOn()
-        else:
-            alt_geometry_actor.VisibilityOff()
-
-        #print('current_actors = ', self.geometry_actors.keys())
-        if hasattr(grid, 'Update'):
-            grid.Update()
-        alt_geometry_actor.Modified()
 
     def on_update_scalar_bar(self, title, min_value, max_value, data_format):
         self.title = str(title)
@@ -4203,7 +3813,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #VTK_PYRAMID = 14
             #VTK_QUADRATIC_PYRAMID = 27
             raise NotImplementedError(msg)
-        return result_name, result_values, xyz
+        return res_name, result_values, xyz
 
     def cell_centroid(self, cell_id):
         """gets the cell centroid"""
@@ -4598,10 +4208,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._legend_window._updated_legend = True
         is_fringe = self._is_fringe
 
-        (_result_type, scalar_bar, defaults_scalar_bar, data_format,
-         default_format, default_title, _min_value, _max_value,
-         default_min, default_max) = get_legend_fringe(
-            self, icase_fringe)
+        out = get_legend_fringe(self, icase_fringe)
+        (
+            _result_type, scalar_bar, defaults_scalar_bar, data_format,
+            default_format, default_title, _min_value, _max_value,
+            default_min, default_max) = out
 
         unused_nlabels, _labelsize, _ncolors, _colormap = scalar_bar
         default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
@@ -4730,9 +4341,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             subcase_id = obj.subcase_id
 
             unused_location = obj.get_location(i, res_name)
-            min_old, max_old = obj.get_min_max(i, res_name)
+            min_value_old, max_value_old = obj.get_min_max(i, res_name)
             data_format_old = obj.get_data_format(i, res_name)
-            colors_old = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+            colors_old = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
             nlabels_old, labelsize_old, ncolors_old, colormap_old = colors_old
             update_legend = (
                 (nlabels, labelsize, ncolors, colormap) !=
@@ -4769,7 +4380,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             (objd, (i, res_name)) = self.result_cases[key]
             scale_old = objd.get_scale(i, res_name)
             phase_old = objd.get_phase(i, res_name)
-            if scale != scale_old or phase != phase_old:
+            update_disp = scale != scale_old or phase != phase_old
+            if update_disp:
                 objd.set_scale(i, res_name, scale)
                 objd.set_phase(i, res_name, phase)
                 assert isinstance(scale, float), scale
@@ -4783,7 +4395,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             arrow_scale_old = objv.get_scale(i, res_name)
             objv.set_scale(i, res_name, arrow_scale)
             assert isinstance(arrow_scale, float), arrow_scale
-            if arrow_scale != arrow_scale_old:
+            update_vector = arrow_scale != arrow_scale_old
+            if update_vector:
                 self.on_vector(self.icase_vector, apply_fringe=False,
                                update_legend_window=False, show_msg=False)
 
@@ -5163,97 +4776,3 @@ class GuiCommon2(QMainWindow, GuiCommon):
             grid.Update()
         grid.Modified()
         #print('update2...')
-
-
-    def _add_user_points_from_csv(self, csv_points_filename, name, color, point_size=4):
-        """
-        Helper method for adding csv nodes to the gui
-
-        Parameters
-        ----------
-        csv_points_filename : str
-            CSV filename that defines one xyz point per line
-        name : str
-            name of the geometry actor
-        color : List[float, float, float]
-            RGB values; [0. to 1.]
-        point_size : int; default=4
-            the nominal point size
-        """
-        is_failed = True
-        try:
-            assert os.path.exists(csv_points_filename), print_bad_path(csv_points_filename)
-            # read input file
-            try:
-                user_points = np.loadtxt(csv_points_filename, delimiter=',')
-            except ValueError:
-                user_points = loadtxt_nice(csv_points_filename, delimiter=',')
-                # can't handle leading spaces?
-                #raise
-        except ValueError as error:
-            #self.log_error(traceback.print_stack(f))
-            self.log_error('\n' + ''.join(traceback.format_stack()))
-            #traceback.print_exc(file=self.log_error)
-            self.log_error(str(error))
-            return is_failed
-
-        self._add_user_points(user_points, name, color, csv_points_filename, point_size=point_size)
-        is_failed = False
-        return False
-
-
-    def _add_user_points(self, user_points, name, color, csv_points_filename='', point_size=4):
-        """
-        Helper method for adding csv nodes to the gui
-
-        Parameters
-        ----------
-        user_points : (n, 3) float ndarray
-            the points to add
-        name : str
-            name of the geometry actor
-        color : List[float, float, float]
-            RGB values; [0. to 1.]
-        point_size : int; default=4
-            the nominal point size
-        """
-        if name in self.geometry_actors:
-            msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
-            raise ValueError(msg)
-        if len(name) == 0:
-            msg = 'Invalid Name: name=%r' % name
-            raise ValueError(msg)
-
-        # create grid
-        self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
-                                       point_size=point_size, representation='point')
-
-        npoints = user_points.shape[0]
-        if npoints == 0:
-            raise RuntimeError('npoints=0 in %r' % csv_points_filename)
-        if len(user_points.shape) == 1:
-            user_points = user_points.reshape(1, npoints)
-
-        # allocate grid
-        self.alt_grids[name].Allocate(npoints, 1000)
-
-        # set points
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(npoints)
-
-        for i, point in enumerate(user_points):
-            points.InsertPoint(i, *point)
-            elem = vtk.vtkVertex()
-            elem.GetPointIds().SetId(0, i)
-            self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-        self.alt_grids[name].SetPoints(points)
-
-        # create actor/mapper
-        self._add_alt_geometry(self.alt_grids[name], name)
-
-        # set representation to points
-        self.geometry_properties[name].representation = 'point'
-        actor = self.geometry_actors[name]
-        prop = actor.GetProperty()
-        prop.SetRepresentationToPoints()
-        prop.SetPointSize(point_size)

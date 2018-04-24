@@ -297,6 +297,68 @@ class ViewActions(object):
             self.gui.log_command('on_set_camera_data(%s)' % str(camera_data))
 
     #---------------------------------------------------------------------------
+    # camera
+    def update_camera(self, code):
+        camera = self.GetCamera()
+        #print("code =", code)
+        if code == '+x':  # set x-axis
+            # +z up
+            # +y right
+            # looking forward
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(1., 0., 0.)
+        elif code == '-x':  # set x-axis
+            # +z up
+            # +y to the left (right wing)
+            # looking aft
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(-1., 0., 0.)
+
+        elif code == '+y':  # set y-axis
+            # +z up
+            # +x aft to left
+            # view from right wing
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(0., 1., 0.)
+        elif code == '-y':  # set y-axis
+            # +z up
+            # +x aft to right
+            # view from left wing
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 0., 1.)
+            camera.SetPosition(0., -1., 0.)
+
+        elif code == '+z':  # set z-axis
+            # +x aft
+            # +y up (right wing up)
+            # top view
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., 1., 0.)
+            camera.SetPosition(0., 0., 1.)
+        elif code == '-z':  # set z-axis
+            # +x aft
+            # -y down (left wing up)
+            # bottom view
+            camera.SetFocalPoint(0., 0., 0.)
+            camera.SetViewUp(0., -1., 0.)
+            camera.SetPosition(0., 0., -1.)
+        else:
+            self.gui.log_error('invalid camera code...%r' % code)
+            return
+        self._update_camera(camera)
+        self.rend.ResetCamera()
+        self.gui.log_command('update_camera(%r)' % code)
+
+    def _update_camera(self, camera=None):
+        if camera is None:
+            camera = self.GetCamera()
+        camera.Modified()
+        self.vtk_interactor.Render()
+
+    #---------------------------------------------------------------------------
     def Render(self):
         self.vtk_interactor.GetRenderWindow().Render()
 
