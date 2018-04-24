@@ -1166,7 +1166,15 @@ class TABLES1(Table):
         return list_fields
 
     def repr_fields(self):
-        return self.raw_fields()
+        xy = []
+        for xi, yi in zip(self.x, self.y):
+            xy.extend([xi, yi])
+
+        # MSC 2005.2 doesn't support Type; 2016.1 does
+        table_type = set_blank_if_default(self.Type, 1)
+        list_fields = ['TABLES1', self.tid, table_type, None, None, None,
+                       None, None, None] + xy + ['ENDT']
+        return list_fields
 
 
 class TABLEST(Table):
