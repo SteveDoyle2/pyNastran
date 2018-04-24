@@ -197,20 +197,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def scalarBar(self):
         return self.scalar_bar.scalar_bar
 
-    def hide_legend(self):
-        """hides the legend"""
-        self.scalar_bar.VisibilityOff()
-        #self.scalar_bar.is_shown = False
-        if self._legend_window_shown:
-            self._legend_window.hide_legend()
-
-    def show_legend(self):
-        """shows the legend"""
-        self.scalar_bar.VisibilityOn()
-        if self._legend_window_shown:
-            self._legend_window.show_legend()
-        #self.scalar_bar.is_shown = True
-
     @property
     def color_function(self):
         return self.scalar_bar.color_function
@@ -1558,12 +1544,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         edge_mapper = self.edge_mapper
         edge_actor = self.edge_actor
 
-        if self.vtk_version[0] >= 6:
-            edges.SetInputData(self.grid_selected)
-            edge_mapper.SetInputConnection(edges.GetOutputPort())
-        else:
-            edges.SetInput(self.grid_selected)
-            edge_mapper.SetInput(edges.GetOutput())
+        edges.SetInputData(self.grid_selected)
+        edge_mapper.SetInputConnection(edges.GetOutputPort())
 
         edge_actor.SetMapper(edge_mapper)
         edge_actor.GetProperty().SetColor(0., 0., 0.)
@@ -3000,23 +2982,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             axis.VisibilityOn()
         self.corner_axis.EnabledOn()
 
-    def on_take_screenshot(self, fname=None, magnify=None, show_msg=True):
-        """
-        Take a screenshot of a current view and save as a file
-
-        Parameters
-        ----------
-        fname : str; default=None
-            None : pop open a window
-            str : bypass the popup window
-        magnify : int; default=None
-            None : use self.settings.magnify
-            int : resolution increase factor
-        show_msg : bool; default=True
-            log the command
-        """
-        return self.on_take_screenshot(fname=fname, magnify=magnify, show_msg=show_msg)
-
     def make_gif(self, gif_filename, scale, istep=None,
                  min_value=None, max_value=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
@@ -3475,12 +3440,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         glyph_source = vtk.vtkArrowSource()
         #glyph_source.InvertOn()  # flip this arrow direction
-        if self.vtk_version[0] == 5:
-            glyphs.SetInput(grid)
-        elif self.vtk_version[0] in [6, 7, 8]:
-            glyphs.SetInputData(grid)
-        else:
-            raise NotImplementedError(vtk.VTK_VERSION)
+        glyphs.SetInputData(grid)
 
 
         glyphs.SetSourceConnection(glyph_source.GetOutputPort())
@@ -3550,22 +3510,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             actor = self.geometry_actors[name]
             self.rend.RemoveActor(actor)
             del actor
-
-    def on_update_scalar_bar(self, title, min_value, max_value, data_format):
-        self.title = str(title)
-        self.min_value = float(min_value)
-        self.max_value = float(max_value)
-
-        try:
-            data_format % 1
-        except:
-            msg = ("failed applying the data formatter format=%r and "
-                   "should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
-            self.log_error(msg)
-            return
-        self.data_format = data_format
-        self.log_command('on_update_scalar_bar(%r, %r, %r, %r)' % (
-            title, min_value, max_value, data_format))
 
     def ResetCamera(self):
         self.GetCamera().ResetCamera()
@@ -3869,15 +3813,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def result_name(self):
         """
         creates the self.result_name variable
-
-        .. python ::
-
-          #if len(key) == 5:
-              #(subcase_id, result_type, vector_size, location, data_format) = key
-          #elif len(key) == 6:
-              #(subcase_id, j, result_type, vector_size, location, data_format) = key
-          else:
-              (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
         """
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.case_keys[self.icase]
@@ -3885,29 +3820,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
         unused_obj, (unused_i, res_name) = self.result_cases[case_key]
         return res_name
 
-    def finish_io(self, cases):
-        self.result_cases = cases
-        self.case_keys = sorted(cases.keys())
-        #print("case_keys = ", self.case_keys)
+    #def finish_io(self, cases):
+        #self.result_cases = cases
+        #self.case_keys = sorted(cases.keys())
+        ##print("case_keys = ", self.case_keys)
 
-        if len(self.result_cases) == 0:
-            self.ncases = 1
-            self.icase = 0
-        elif len(self.result_cases) == 1:
-            self.ncases = 1
-            self.icase = 0
-        else:
-            self.ncases = len(self.result_cases) - 1  # number of keys in dictionary
-            self.icase = -1
+        #if len(self.result_cases) == 0:
+            #self.ncases = 1
+            #self.icase = 0
+        #elif len(self.result_cases) == 1:
+            #self.ncases = 1
+            #self.icase = 0
+        #else:
+            #self.ncases = len(self.result_cases) - 1  # number of keys in dictionary
+            #self.icase = -1
 
-        self.icase_disp = None
-        self.icase_vector = None
-        self.icase_fringe = None
-        self.cycle_results()  # start at nCase=0
+        #self.icase_disp = None
+        #self.icase_vector = None
+        #self.icase_fringe = None
+        #self.cycle_results()  # start at nCase=0
 
-        if self.ncases:
-            self.scalarBar.VisibilityOn()
-            self.scalarBar.Modified()
+        #if self.ncases:
+            #self.scalarBar.VisibilityOn()
+            #self.scalarBar.Modified()
 
     def clear_application_log(self, force=False):
         """
@@ -3944,134 +3879,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 unused_prop = self.geometry_properties[name]
                 del self.geometry_properties[name]
             self.Render()
-
-    def reset_labels(self, reset_minus1=True):
-        """
-        Wipe all labels and regenerate the key slots based on the case keys.
-        This is used when changing the model.
-        """
-        self._remove_labels()
-
-        reset_minus1 = True
-        # new geometry
-        if reset_minus1:
-            self.label_actors = {-1 : []}
-        else:
-            for idi in self.label_actors:
-                if idi == -1:
-                    continue
-                self.label_actors[idi] = []
-        self.label_ids = {}
-
-        #self.case_keys = [
-            #(1, 'ElementID', 1, 'centroid', '%.0f'),
-            #(1, 'Region', 1, 'centroid', '%.0f')
-        #]
-        for icase in self.case_keys:
-            #result_name = self.get_result_name(icase)
-            self.label_actors[icase] = []
-            self.label_ids[icase] = set([])
-        #print(self.label_actors)
-        #print(self.label_ids)
-
-    def _remove_labels(self):
-        """
-        Remove all labels from the current result case.
-        This happens when the user explictly selects the clear label button.
-        """
-        if len(self.label_actors) == 0:
-            self.log.warning('No actors to remove')
-            return
-
-        # existing geometry
-        for icase, actors in iteritems(self.label_actors):
-            if icase == -1:
-                continue
-            for actor in actors:
-                self.rend.RemoveActor(actor)
-                del actor
-            self.label_actors[icase] = []
-            self.label_ids[icase] = set([])
-
-    def clear_labels(self):
-        """
-        This clears out all labels from all result cases.
-        """
-        if len(self.label_actors) == 0:
-            self.log.warning('No actors to clear')
-            return
-
-        # existing geometry
-        icase = self.icase
-
-        actors = self.label_actors[icase]
-        for actor in actors:
-            self.rend.RemoveActor(actor)
-            del actor
-        self.label_actors[icase] = []
-        self.label_ids[icase] = set([])
-
-    def resize_labels(self, case_keys=None, show_msg=True):
-        """
-        This resizes labels for all result cases.
-        TODO: not done...
-        """
-        if case_keys is None:
-            names = 'None)  # None -> all'
-            case_keys = sorted(self.label_actors.keys())
-        else:
-            mid = '%s,' * len(case_keys)
-            names = '[' + mid[:-1] + '])'
-
-        count = 0
-        for icase in case_keys:
-            actors = self.label_actors[icase]
-            for actor in actors:
-                actor.VisibilityOff()
-                count += 1
-        if count and show_msg:
-            self.log_command('resize_labels(%s)' % names)
-
-    def update_scalar_bar(self, title, min_value, max_value, norm_value,
-                          data_format,
-                          nlabels=None, labelsize=None,
-                          ncolors=None, colormap=None,
-                          is_shown=True):
-        """
-        Updates the Scalar Bar
-
-        Parameters
-        ----------
-        title : str
-            the scalar bar title
-        min_value : float
-            the blue value
-        max_value :
-            the red value
-        data_format : str
-            '%g','%f','%i', etc.
-        nlabels : int (default=None -> auto)
-            the number of labels
-        labelsize : int (default=None -> auto)
-            the label size
-        ncolors : int (default=None -> auto)
-            the number of colors
-        colormap : varies
-            str : the name
-            ndarray : (N, 3) float ndarry
-                red-green-blue array
-        is_shown : bool
-            show the scalar bar
-        """
-        if colormap is None:
-            colormap = self.settings.colormap
-        #print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
-        self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
-                               nlabels=nlabels, labelsize=labelsize,
-                               ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=self.is_low_to_high,
-                               is_horizontal=self.is_horizontal_scalar_bar,
-                               is_shown=is_shown)
 
     #---------------------------------------------------------------------------------------
     # CAMERA MENU

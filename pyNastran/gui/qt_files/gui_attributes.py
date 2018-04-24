@@ -8,6 +8,8 @@ import sys
 import traceback
 from collections import OrderedDict
 
+from six import iteritems
+
 import numpy as np
 
 from pyNastran.gui.gui_objects.settings import Settings
@@ -22,7 +24,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 from pyNastran.bdf.cards.base_card import deprecated
 
-#class GuiAttributes(QMainWindow):
+
 class GuiAttributes(object):
     """All methods in this class must not require VTK"""
     def __init__(self, **kwds):
@@ -391,7 +393,6 @@ class GuiAttributes(object):
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
         self.res_widget.update_results(form, 'main')
 
-
     #-------------------------------------------------------------------
     def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
         """
@@ -540,6 +541,166 @@ class GuiAttributes(object):
         return is_failed
 
     #---------------------------------------------------------------------------
+    def reset_labels(self, reset_minus1=True):
+        """
+        Wipe all labels and regenerate the key slots based on the case keys.
+        This is used when changing the model.
+        """
+        self._remove_labels()
+
+        reset_minus1 = True
+        # new geometry
+        if reset_minus1:
+            self.label_actors = {-1 : []}
+        else:
+            for idi in self.label_actors:
+                if idi == -1:
+                    continue
+                self.label_actors[idi] = []
+        self.label_ids = {}
+
+        #self.case_keys = [
+            #(1, 'ElementID', 1, 'centroid', '%.0f'),
+            #(1, 'Region', 1, 'centroid', '%.0f')
+        #]
+        for icase in self.case_keys:
+            #result_name = self.get_result_name(icase)
+            self.label_actors[icase] = []
+            self.label_ids[icase] = set([])
+        #print(self.label_actors)
+        #print(self.label_ids)
+
+    def _remove_labels(self):
+        """
+        Remove all labels from the current result case.
+        This happens when the user explictly selects the clear label button.
+        """
+        if len(self.label_actors) == 0:
+            self.log.warning('No actors to remove')
+            return
+
+        # existing geometry
+        for icase, actors in iteritems(self.label_actors):
+            if icase == -1:
+                continue
+            for actor in actors:
+                self.rend.RemoveActor(actor)
+                del actor
+            self.label_actors[icase] = []
+            self.label_ids[icase] = set([])
+
+    def clear_labels(self):
+        """
+        This clears out all labels from all result cases.
+        """
+        if len(self.label_actors) == 0:
+            self.log.warning('No actors to clear')
+            return
+
+        # existing geometry
+        icase = self.icase
+
+        actors = self.label_actors[icase]
+        for actor in actors:
+            self.rend.RemoveActor(actor)
+            del actor
+        self.label_actors[icase] = []
+        self.label_ids[icase] = set([])
+
+    def resize_labels(self, case_keys=None, show_msg=True):
+        """
+        This resizes labels for all result cases.
+        TODO: not done...
+        """
+        if case_keys is None:
+            names = 'None)  # None -> all'
+            case_keys = sorted(self.label_actors.keys())
+        else:
+            mid = '%s,' * len(case_keys)
+            names = '[' + mid[:-1] + '])'
+
+        count = 0
+        for icase in case_keys:
+            actors = self.label_actors[icase]
+            for actor in actors:
+                actor.VisibilityOff()
+                count += 1
+        if count and show_msg:
+            self.log_command('resize_labels(%s)' % names)
+
+    #---------------------------------------------------------------------------
+    def hide_legend(self):
+        """hides the legend"""
+        self.scalar_bar.VisibilityOff()
+        #self.scalar_bar.is_shown = False
+        if self._legend_window_shown:
+            self._legend_window.hide_legend()
+
+    def show_legend(self):
+        """shows the legend"""
+        self.scalar_bar.VisibilityOn()
+        if self._legend_window_shown:
+            self._legend_window.show_legend()
+        #self.scalar_bar.is_shown = True
+
+    def update_scalar_bar(self, title, min_value, max_value, norm_value,
+                          data_format,
+                          nlabels=None, labelsize=None,
+                          ncolors=None, colormap=None,
+                          is_shown=True):
+        """
+        Updates the Scalar Bar
+
+        Parameters
+        ----------
+        title : str
+            the scalar bar title
+        min_value : float
+            the blue value
+        max_value :
+            the red value
+        data_format : str
+            '%g','%f','%i', etc.
+        nlabels : int (default=None -> auto)
+            the number of labels
+        labelsize : int (default=None -> auto)
+            the label size
+        ncolors : int (default=None -> auto)
+            the number of colors
+        colormap : varies
+            str : the name
+            ndarray : (N, 3) float ndarry
+                red-green-blue array
+        is_shown : bool
+            show the scalar bar
+        """
+        if colormap is None:
+            colormap = self.settings.colormap
+        #print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
+        self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
+                               nlabels=nlabels, labelsize=labelsize,
+                               ncolors=ncolors, colormap=colormap,
+                               is_low_to_high=self.is_low_to_high,
+                               is_horizontal=self.is_horizontal_scalar_bar,
+                               is_shown=is_shown)
+
+    def on_update_scalar_bar(self, title, min_value, max_value, data_format):
+        self.title = str(title)
+        self.min_value = float(min_value)
+        self.max_value = float(max_value)
+
+        try:
+            data_format % 1
+        except:
+            msg = ("failed applying the data formatter format=%r and "
+                   "should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
+            self.log_error(msg)
+            return
+        self.data_format = data_format
+        self.log_command('on_update_scalar_bar(%r, %r, %r, %r)' % (
+            title, min_value, max_value, data_format))
+
+    #---------------------------------------------------------------------------
     def create_coordinate_system(self, coord_id, dim_max, label='',
                                  origin=None, matrix_3x3=None,
                                  coord_type='xyz'):
@@ -588,7 +749,7 @@ class GuiAttributes(object):
           - label size
         """
         self.settings.dim_max = dim_max
-        dim = self.dim * 0.10
+        dim = self.dim * self.settings.coord_scale
         self.on_set_axes_length(dim)
 
     def on_set_axes_length(self, dim=None):
@@ -596,7 +757,7 @@ class GuiAttributes(object):
         scale coordinate system based on model length
         """
         if dim is None:
-            dim = self.settings.dim_max * 0.10
+            dim = self.settings.dim_max * self.settings.coord_scale
         for axes in itervalues(self.axes):
             axes.SetTotalLength(dim, dim, dim)
 

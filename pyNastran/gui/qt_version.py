@@ -5,12 +5,12 @@ if qt_version in ['pyqt', 'pyqt4']:
     qt_int = 4
     qt_version = 'pyqt4'
     from qtpy import PYQT_VERSION
-elif qt_version == 'pyside':
-    qt_int = 4
-    from qtpy import PYSIDE_VERSION as PYQT_VERSION
 elif qt_version == 'pyqt5':
     qt_int = 5
     from qtpy import PYQT_VERSION
+elif qt_version == 'pyside':
+    qt_int = 4
+    from qtpy import PYSIDE_VERSION as PYQT_VERSION
 elif qt_version == 'pyside2':
     qt_int = 5
     from qtpy import PYSIDE_VERSION as PYQT_VERSION

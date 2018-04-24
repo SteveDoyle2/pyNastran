@@ -305,7 +305,7 @@ class ToolActions(object):
                                          filters=file_types, selectedfilter=filt,
                                          options=None)
             if fname in [None, '']:
-                return
+                return None, None
             #print("fname=%r" % fname)
             #print("flt=%r" % flt)
         else:

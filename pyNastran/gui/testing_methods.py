@@ -128,17 +128,17 @@ class FakeGUIMethods(GuiCommon):
     def grid_selected(self):
         return self.grid
 
-    def hide_legend(self):
-        pass
-    def show_legend(self):
-        pass
+    #def hide_legend(self):
+        #pass
+    #def show_legend(self):
+        #pass
 
-    def update_scalar_bar(self, title, min_value, max_value, norm_value,
-                          data_format,
-                          nlabels=None, labelsize=None,
-                          ncolors=None, colormap='jet',
-                          is_shown=True):
-        pass
+    #def update_scalar_bar(self, title, min_value, max_value, norm_value,
+                          #data_format,
+                          #nlabels=None, labelsize=None,
+                          #ncolors=None, colormap='jet',
+                          #is_shown=True):
+        #pass
 
     def update_legend(self, icase_fringe, icase_disp, icase_vector,
                       name, min_value, max_value, data_format, scale, phase,

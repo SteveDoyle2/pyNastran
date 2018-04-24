@@ -123,7 +123,6 @@ class Plot3d_io(object):  # pragma: no cover
         ID = 1
 
         #cases = self._fill_stl_case(cases, ID, elements)
-        #self.finish_io()
         self.result_cases = cases
         self.case_keys = sorted(cases.keys())
         #print "case_keys = ",self.case_keys

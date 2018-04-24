@@ -163,15 +163,15 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
-        test.on_fringe(icase=43)
-        test.on_vector(icase=43) # force_xyz
-        test.on_disp(icase=45) # disp
+        test.on_fringe(icase=46)
+        test.on_vector(icase=46) # force_xyz
+        test.on_disp(icase=48) # disp
         test.on_clear_results()
 
-        test.on_fringe(icase=43)
-        test.on_vector(icase=43) # force_xyz
-        test.on_disp(icase=45) # disp
-        test.on_fringe(icase=33, update_legend_window=True, show_msg=True)  # normal
+        test.on_fringe(icase=46)
+        test.on_vector(icase=46) # force_xyz
+        test.on_disp(icase=48) # disp
+        test.on_fringe(icase=37, update_legend_window=True, show_msg=True)  # normal
 
     def test_gui_elements_02(self):
         """tests a large number of elements and results in SOL 101"""
@@ -337,6 +337,8 @@ class TestNastranGUI(unittest.TestCase):
 
         csv_filename = os.path.join(MODEL_PATH, 'custom_geom.csv')
         test.on_load_user_geom(csv_filename=csv_filename, name=None, color=None)
+        test.clear_labels()
+        test.reset_labels()
 
         with open('xyz1.csv', 'w') as xyz_file:
             xyz_file.write('1., 2., 3.\n')
