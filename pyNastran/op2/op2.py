@@ -726,11 +726,11 @@ class OP2(OP2_Scalar):
         .. code-block:: python
 
           stress = {
-              # isubcase, analysis_code, sort_method, count, superelement_adaptivity_index
-              (1, 2, 1, 0, 'SUPERELEMENT 0') : result1,
-              (1, 2, 1, 0, 'SUPERELEMENT 10') : result2,
-              (1, 2, 1, 0, 'SUPERELEMENT 20') : result3,
-              (2, 2, 1, 0, 'SUPERELEMENT 0') : result4,
+              # isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step
+              (1, 2, 1, 0, 'SUPERELEMENT 0', '') : result1,
+              (1, 2, 1, 0, 'SUPERELEMENT 10', '') : result2,
+              (1, 2, 1, 0, 'SUPERELEMENT 20', '') : result3,
+              (2, 2, 1, 0, 'SUPERELEMENT 0', '') : result4,
           }
         and convert it to:
 

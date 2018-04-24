@@ -18,6 +18,7 @@ from pyNastran.gui.gui_objects.settings import Settings
 from pyNastran.gui.qt_files.tool_actions import ToolActions
 from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.group_actions import GroupActions
+from pyNastran.gui.qt_files.mouse_actions import MouseActions
 
 from pyNastran.gui.utils.load_results import create_res_obj
 from pyNastran.gui.utils.vtk.vtk_utils import (
@@ -40,6 +41,7 @@ class GuiAttributes(object):
         self.tool_actions = ToolActions(self)
         self.view_actions = ViewActions(self)
         self.group_actions = GroupActions(self)
+        self.mouse_actions = MouseActions(self)
 
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
@@ -49,7 +51,6 @@ class GuiAttributes(object):
         self.case_keys = []
         self.res_widget = res_widget
         self._show_flag = True
-        self._camera_mode = None
         self.observers = {}
 
         if 'test' in inputs:
@@ -132,7 +133,6 @@ class GuiAttributes(object):
         self.follower_nodes = {}
         self.follower_functions = {}
 
-        self.pick_state = 'node/centroid'
         self.label_actors = {-1 : []}
         self.label_ids = {}
         self.cameras = {}
@@ -1324,3 +1324,6 @@ class GuiAttributes(object):
     @property
     def IS_GUI_TESTING(self):
         return 'test_' in sys.argv[0]
+    @property
+    def iren(self):
+        return self.vtk_interactor

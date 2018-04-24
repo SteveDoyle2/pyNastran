@@ -186,7 +186,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
             #self.___saveY = ev.y()
             pass
         else:
-            self.iren.mousePressEvent(event)
+            self.vtk_interactor.mousePressEvent(event)
 
     #def LeftButtonPressEvent(self, ev):
 
@@ -195,7 +195,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         if self.is_pick:
             pass
         else:
-            self.iren.mousePressEvent(event)
+            self.vtk_interactor.mousePressEvent(event)
 
     def about_dialog(self):
         """ Display about dialog """
