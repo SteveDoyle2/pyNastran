@@ -15,9 +15,10 @@ if hasattr(sys.stdout, 'isatty'):  # pyInstaller <= 3.1 doesn't have this
 
 # You're running in a real terminal
 try:
-    from colorama import init as colorinit, Fore  # type: ignore
-    colorinit(autoreset=True)
-    IS_COLORAMA = True
+    #from colorama import init as colorinit, Fore  # type: ignore
+    #colorinit(autoreset=True)
+    #IS_COLORAMA = True
+    IS_COLORAMA = False
 except ImportError:
     IS_COLORAMA = False
 

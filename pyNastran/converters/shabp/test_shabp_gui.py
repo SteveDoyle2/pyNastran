@@ -14,6 +14,7 @@ class ShabpGUI(ShabpIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = ShabpIO(self)
+        self.build_fmts(['shabp'], stop_on_failure=True)
 
 
 class TestShabpGUI(unittest.TestCase):

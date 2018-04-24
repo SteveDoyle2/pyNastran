@@ -19,6 +19,7 @@ class STL_GUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = STL_IO(self)
+        self.build_fmts(['stl'], stop_on_failure=True)
 
 
 class STL_GUITest(unittest.TestCase):

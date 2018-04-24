@@ -13,6 +13,7 @@ class LaWGS_GUI(LaWGS_IO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = LaWGS_IO(self)
+        self.build_fmts(['lawgs'], stop_on_failure=True)
 
 
 class TestLawgsGUI(unittest.TestCase):

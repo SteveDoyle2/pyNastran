@@ -25,6 +25,8 @@ class UGRID_GUI(UGRID_IO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         UGRID_IO.__init__(self, self)
+        self.build_fmts(['ugrid'], stop_on_failure=True)
+
 
 class TestUgridGui(unittest.TestCase):
     """defines UGRID tests"""

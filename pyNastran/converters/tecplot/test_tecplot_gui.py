@@ -13,6 +13,7 @@ class TecplotGUI(TecplotIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = TecplotIO(self)
+        self.build_fmts(['tecplot'], stop_on_failure=True)
 
     def _remove_old_cart3d_geometry(self, tecplot_filename):
         pass

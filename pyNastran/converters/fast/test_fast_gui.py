@@ -14,6 +14,7 @@ class FastGUI(FastIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         FastIO.__init__(self, self)
+        self.build_fmts(['fast'], stop_on_failure=True)
 
 
 class TestFastGUI(unittest.TestCase):

@@ -14,6 +14,7 @@ class NastranGUI(NastranIO, FakeGUIMethods):
     def __init__(self, inputs=None):
         FakeGUIMethods.__init__(self, inputs=inputs)
         NastranIO.__init__(self)
+        self.build_fmts(['nastran'], stop_on_failure=True)
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
@@ -39,6 +40,13 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
         test.on_rcycle_results()
+
+    def test_solid_shell_bar_02b(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
+
+        test = NastranGUI()
+        test.on_load_geometry(infile_name=bdf_filename, geometry_format='nastran', name='main',
+                              plot=True, raise_error=False)
 
     def test_solid_shell_bar_03(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'buckling_solid_shell_bar.bdf')

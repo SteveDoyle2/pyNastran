@@ -21,6 +21,7 @@ class TetgenGUI(TetgenIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = TetgenIO(self)
+        self.build_fmts(['tetgen'], stop_on_failure=True)
 
 
 class TestTetgenGUI(unittest.TestCase):

@@ -19,6 +19,7 @@ class Usm3dGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = Usm3dIO(self)
+        self.build_fmts(['usm3d'], stop_on_failure=True)
 
 
 class TestUsm3dGUI(unittest.TestCase):

@@ -14,6 +14,7 @@ class PanairGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = PanairIO(self)
+        self.build_fmts(['panair'], stop_on_failure=True)
 
 
 class TestPanairGUI(unittest.TestCase):

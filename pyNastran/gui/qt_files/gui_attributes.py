@@ -6,6 +6,7 @@ from __future__ import print_function
 import os
 import sys
 import traceback
+import time as time_module
 from collections import OrderedDict
 
 from six import iteritems
@@ -45,7 +46,7 @@ class GuiAttributes(object):
         # for a Nastran ElementID/PropertyID, this is 'element'
         self.result_location = None
 
-        self.case_keys = {}
+        self.case_keys = []
         self.res_widget = res_widget
         self._show_flag = True
         self._camera_mode = None
@@ -424,6 +425,33 @@ class GuiAttributes(object):
         #if name in self.geometry_actors:
         self.geometry_actors[name].Modified()
 
+    def _add_alt_actors(self, grids_dict, names_to_ignore=None):
+        if names_to_ignore is None:
+            names_to_ignore = ['main']
+
+        names = set(list(grids_dict.keys()))
+        names_old = set(list(self.geometry_actors.keys()))
+        names_old = names_old - set(names_to_ignore)
+        #print('names_old1 =', names_old)
+
+        #names_to_clear = names_old - names
+        #self._remove_alt_actors(names_to_clear)
+        #print('names_old2 =', names_old)
+        #print('names =', names)
+        for name in names:
+            #print('adding %s' % name)
+            grid = grids_dict[name]
+            self.tool_actions._add_alt_geometry(grid, name)
+
+    def _remove_alt_actors(self, names=None):
+        if names is None:
+            names = list(self.geometry_actors.keys())
+            names.remove('main')
+        for name in names:
+            actor = self.geometry_actors[name]
+            self.rend.RemoveActor(actor)
+            del actor
+
     @property
     def displacement_scale_factor(self):
         """
@@ -761,6 +789,307 @@ class GuiAttributes(object):
         for axes in itervalues(self.axes):
             axes.SetTotalLength(dim, dim, dim)
 
+    #---------------------------------------------------------------------------
+    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
+                         plot=True, raise_error=False):
+        """
+        Loads a baseline geometry
+
+        Parameters
+        ----------
+        infile_name : str; default=None -> popup
+            path to the filename
+        geometry_format : str; default=None
+            the geometry format for programmatic loading
+        name : str; default='main'
+            the name of the actor; don't use this
+        plot : bool; default=True
+            Should the baseline geometry have results created and plotted/rendered?
+            If you're calling the on_load_results method immediately after, set it to False
+        raise_error : bool; default=True
+            stop the code if True
+        """
+        is_failed, out = self._load_geometry_filename(
+            geometry_format, infile_name)
+        if is_failed:
+            return
+
+        has_results = False
+        infile_name, load_function, filter_index, formats, geometry_format2 = out
+        if load_function is not None:
+            self.last_dir = os.path.split(infile_name)[0]
+
+            if self.name == '':
+                name = 'main'
+            else:
+                print('name = %r' % name)
+
+            if name != self.name:
+                #scalar_range = self.grid_selected.GetScalarRange()
+                #self.grid_mapper.SetScalarRange(scalar_range)
+                self.grid_mapper.ScalarVisibilityOff()
+                #self.grid_mapper.SetLookupTable(self.color_function)
+            self.name = str(name)
+            self._reset_model(name)
+
+            # reset alt grids
+            names = self.alt_grids.keys()
+            for name in names:
+                self.alt_grids[name].Reset()
+                self.alt_grids[name].Modified()
+
+            if not os.path.exists(infile_name) and geometry_format:
+                msg = 'input file=%r does not exist' % infile_name
+                self.log_error(msg)
+                self.log_error(print_bad_path(infile_name))
+                return
+
+            # clear out old data
+            if self.model_type is not None:
+                clear_name = 'clear_' + self.model_type
+                try:
+                    dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
+                    dy_method()
+                except:
+                    print("method %r does not exist" % clear_name)
+            self.log_info("reading %s file %r" % (geometry_format, infile_name))
+
+            try:
+                time0 = time_module.time()
+
+                if geometry_format2 in self.format_class_map:
+                    # intialize the class
+                    cls = self.format_class_map[geometry_format](self)
+                    function_name = 'load_%s_geometry' % geometry_format2
+                    load_function2 = getattr(cls, function_name)
+                    has_results = load_function2(infile_name, name=name, plot=plot)
+                else:
+                    has_results = load_function(infile_name, name=name, plot=plot) # self.last_dir,
+
+                dt = time_module.time() - time0
+                print('dt_load = %.2f sec = %.2f min' % (dt, dt / 60.))
+                #else:
+                    #name = load_function.__name__
+                    #self.log_error(str(args))
+                    #self.log_error("'plot' needs to be added to %r; "
+                                   #"args[-1]=%r" % (name, args[-1]))
+                    #has_results = load_function(infile_name) # , self.last_dir
+                    #form, cases = load_function(infile_name) # , self.last_dir
+            except Exception as error:
+                #raise
+                msg = traceback.format_exc()
+                self.log_error(msg)
+                if raise_error or self.dev:
+                    raise
+                #return
+            #self.vtk_panel.Update()
+            self.rend.ResetCamera()
+
+        # the model has been loaded, so we enable load_results
+        if filter_index >= 0:
+            self.format = formats[filter_index].lower()
+            unused_enable = has_results
+            #self.load_results.Enable(enable)
+        else: # no file specified
+            return
+        #print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
+        self.infile_name = infile_name
+        self.out_filename = None
+        #if self.out_filename is not None:
+            #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
+
+        if name == 'main':
+            msg = '%s - %s' % (self.format, self.infile_name)
+            self.window_title = msg
+            self.update_menu_bar()
+            main_str = ''
+        else:
+            main_str = ', name=%r' % name
+
+        self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
+            infile_name, self.format, main_str))
+
+    def _load_geometry_filename(self, geometry_format, infile_name):
+        """gets the filename and format"""
+        wildcard = ''
+        is_failed = False
+
+        if geometry_format and geometry_format.lower() not in self.supported_formats:
+            is_failed = True
+            msg = 'The import for the %r module failed.\n' % geometry_format
+            self.log_error(msg)
+            return is_failed, None
+
+        if infile_name:
+            geometry_format = geometry_format.lower()
+            print("geometry_format = %r" % geometry_format)
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geom_wildcard, geom_func, res_wildcard, _resfunc = fmt
+                if geometry_format == fmt_name:
+                    load_function = geom_func
+                    if res_wildcard is None:
+                        unused_has_results = False
+                    else:
+                        unused_has_results = True
+                    break
+            else:
+                self.log_error('---invalid format=%r' % geometry_format)
+                is_failed = True
+                return is_failed, None
+            formats = [geometry_format]
+            filter_index = 0
+        else:
+            # load a pyqt window
+            formats = []
+            load_functions = []
+            has_results_list = []
+            wildcard_list = []
+
+            # setup the selectable formats
+            for fmt in self.fmts:
+                fmt_name, _major_name, geom_wildcard, geom_func, res_wildcard, _res_func = fmt
+                formats.append(_major_name)
+                wildcard_list.append(geom_wildcard)
+                load_functions.append(geom_func)
+
+                if res_wildcard is None:
+                    has_results_list.append(False)
+                else:
+                    has_results_list.append(True)
+
+            # the list of formats that will be selectable in some odd syntax
+            # that pyqt uses
+            wildcard = ';;'.join(wildcard_list)
+
+            # get the filter index and filename
+            if infile_name is not None and geometry_format is not None:
+                filter_index = formats.index(geometry_format)
+            else:
+                title = 'Choose a Geometry File to Load'
+                wildcard_index, infile_name = self._create_load_file_dialog(wildcard, title)
+                if not infile_name:
+                    # user clicked cancel
+                    is_failed = True
+                    return is_failed, None
+                filter_index = wildcard_list.index(wildcard_index)
+
+            geometry_format = formats[filter_index]
+            load_function = load_functions[filter_index]
+            unused_has_results = has_results_list[filter_index]
+        return is_failed, (infile_name, load_function, filter_index, formats, geometry_format)
+
+    def build_fmts(self, fmt_order, stop_on_failure=False):
+        """populates the formats that will be supported"""
+        stop_on_failure = True
+        fmts = []
+        for fmt in fmt_order:
+            geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
+
+            if fmt in self.format_class_map:
+                cls = self.format_class_map[fmt](self)
+                data = getattr(cls, geom_results_funcs)()
+            elif hasattr(self, geom_results_funcs):
+                data = getattr(self, geom_results_funcs)()
+            else:
+                msg = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
+                if stop_on_failure:
+                    raise RuntimeError(msg)
+                self.log_error(msg)
+            self._add_fmt(fmts, fmt, geom_results_funcs, data)
+
+        if len(fmts) == 0:
+            RuntimeError('No formats...expected=%s' % fmt_order)
+        self.fmts = fmts
+        #print("fmts =", fmts)
+
+        self.supported_formats = [fmt[0] for fmt in fmts]
+        print('supported_formats = %s' % self.supported_formats)
+        #assert 'cart3d' in self.supported_formats, self.supported_formats
+        if len(fmts) == 0:
+            raise RuntimeError('no modules were loaded...')
+
+    def _add_fmt(self, fmts, fmt, geom_results_funcs, data):
+        """
+        Adds a format
+
+        Parameters
+        ----------
+        fmts : List[formats]
+            format : List[fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func]
+            macro_name : ???
+                ???
+            geo_fmt : ???
+                ???
+            geo_func : ???
+                ???
+            res_fmt : ???
+                ???
+            res_func : ???
+                ???
+        fmt : str
+            nastran, cart3d, etc.
+        geom_results_funcs : str
+            'get_nastran_wildcard_geometry_results_functions'
+            'get_cart3d_wildcard_geometry_results_functions'
+        data : function
+            the outputs from ``get_nastran_wildcard_geometry_results_functions()``
+            so 1 or more formats (macro_name, geo_fmt, geo_func, res_fmt, res_func)
+        """
+        msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
+        msg += 'data = %s'
+        if isinstance(data, tuple):
+            assert len(data) == 5, msg % str(data)
+            macro_name, geo_fmt, geo_func, res_fmt, res_func = data
+            fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+        elif isinstance(data, list):
+            for datai in data:
+                assert len(datai) == 5, msg % str(datai)
+                macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
+                fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+        else:
+            raise TypeError(data)
+
+    def _reset_model(self, name):
+        """resets the grids; sets up alt_grids"""
+        if hasattr(self, 'main_grids') and name not in self.main_grids:
+            grid = vtk.vtkUnstructuredGrid()
+            grid_mapper = vtk.vtkDataSetMapper()
+            grid_mapper.SetInputData(grid)
+
+            geom_actor = vtk.vtkLODActor()
+            geom_actor.DragableOff()
+            geom_actor.SetMapper(grid_mapper)
+            self.rend.AddActor(geom_actor)
+
+            self.grid = grid
+            self.grid_mapper = grid_mapper
+            self.geom_actor = geom_actor
+            self.grid.Modified()
+
+            # link the current "main" to the scalar bar
+            scalar_range = self.grid_selected.GetScalarRange()
+            self.grid_mapper.ScalarVisibilityOn()
+            self.grid_mapper.SetScalarRange(scalar_range)
+            self.grid_mapper.SetLookupTable(self.color_function)
+
+            self.edge_actor = vtk.vtkLODActor()
+            self.edge_actor.DragableOff()
+            self.edge_mapper = vtk.vtkPolyDataMapper()
+
+            # create the edges
+            self.get_edges()
+        else:
+            self.grid.Reset()
+            self.grid.Modified()
+
+        # reset alt grids
+        alt_names = self.alt_grids.keys()
+        for alt_name in alt_names:
+            self.alt_grids[alt_name].Reset()
+            self.alt_grids[alt_name].Modified()
+
+    #---------------------------------------------------------------------------
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
         """
         Updates the text actors in the lower left

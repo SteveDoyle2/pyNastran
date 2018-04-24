@@ -94,12 +94,13 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
         #Plot3d_io.__init__(self)
         SurfIO.__init__(self)
         #AbaqusIO.__init__(self)
+        self.format_class_map = CLASS_MAP
 
     def load_geometry(self, input_filename):
         """loads a model"""
         load_geometry_name = 'load_%s_geometry' % self._formati
-        if self._formati in CLASS_MAP:
-            cls = CLASS_MAP[self._formati](self)
+        if self._formati in self.format_class_map:
+            cls = self.format_class_map[self._formati](self)
             getattr(cls, load_geometry_name)(input_filename)
         elif hasattr(self, load_geometry_name):
             # self.load_nastran_geometry(bdf_filename, None)
@@ -111,8 +112,8 @@ class FakeGUI(FakeGUIMethods, NastranIO, AbaqusIO,
     def load_results(self, output_filename):
         """loads a model"""
         load_results_name = 'load_%s_results' % self._formati
-        if self._formati in CLASS_MAP:
-            cls = CLASS_MAP[self._formati](self)
+        if self._formati in self.format_class_map:
+            cls = self.format_class_map[self._formati](self)
             getattr(cls, load_results_name)(output_filename)
         elif hasattr(self, load_results_name):
             # self.load_nastran_ressults(op2_filename, None)

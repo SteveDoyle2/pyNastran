@@ -20,6 +20,7 @@ class SU2_GUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = SU2_IO(self)
+        self.build_fmts(['su2'], stop_on_failure=True)
 
 
 class TestSU2GUI(unittest.TestCase):

@@ -19,6 +19,7 @@ class Cart3dGUI(FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         self.model = Cart3dIO(self)
+        self.build_fmts(['cart3d'], stop_on_failure=True)
 
 
 class TestCart3dGUI(unittest.TestCase):

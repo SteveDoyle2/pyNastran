@@ -4,11 +4,13 @@ from collections import OrderedDict
 
 from six import iteritems, integer_types
 
-from pyNastran.gui.qt_files.scalar_bar import ScalarBar
-from pyNastran.utils.log import get_logger
-from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
+from pyNastran.gui.qt_files.scalar_bar import ScalarBar
+from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
+from pyNastran.gui.formats import CLASS_MAP
+
 from pyNastran.bdf.cards.base_card import deprecated
+from pyNastran.utils.log import get_logger
 
 from pyNastran.gui.test.mock_vtk import (
     GeometryProperty, GridMapper, # Grid, vtkActor,
@@ -115,6 +117,7 @@ class FakeGUIMethods(GuiCommon):
         self.text_actors[1] = vtkTextActor()
         self.text_actors[2] = vtkTextActor()
         self.text_actors[3] = vtkTextActor()
+        self.format_class_map = CLASS_MAP
 
     def setup_fake_text_actors(self):
         for icase in self.result_cases:
@@ -146,6 +149,9 @@ class FakeGUIMethods(GuiCommon):
                       nlabels, labelsize, ncolors, colormap,
                       use_fringe_internal=False, use_disp_internal=False,
                       use_vector_internal=False, external_call=True):
+        pass
+
+    def update_menu_bar(self):
         pass
 
     def _finish_results_io2(self, form, cases, reset_labels=True):
