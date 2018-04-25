@@ -648,17 +648,18 @@ class OP2(OP2_Scalar):
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
 
-    def load_hdf5(self, hdf5_filename):
+    def load_hdf5(self, hdf5_filename, combine=True):
         """loads an h5 file into an OP2 object"""
-        assert os.path.exists(h5_filename), print_bad_path(h5_filename)
+        assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
         from pyNastran.op2.op2_interface.load_h5 import load_op2_from_hdf5_file
         import h5py
         self.op2_filename = hdf5_filename
 
-        log.info('hdf5_op2_filename = %r' % hdf5_filename)
+        self.log.info('hdf5_op2_filename = %r' % hdf5_filename)
         debug = False
         with h5py.File(hdf5_filename, 'r') as h5_file:
-            load_op2_from_hdf5_file(self, h5_file, log, debug=debug)
+            load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
+        self.combine_results(combine=combine)
 
     def export_to_hdf5(self, hdf5_filename):
         """
@@ -920,7 +921,7 @@ class OP2(OP2_Scalar):
         #print('subcase_ids =', subcase_ids)
 
 
-        # isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index
+        # isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step
         #(1, 2, 1, 0, 0, 'SUPERELEMENT 0')  : result1
 
         isubcases = set([])
@@ -932,10 +933,13 @@ class OP2(OP2_Scalar):
         pval_steps = set([])
 
         for key in keys:
+            print('key = %s' % str(key))
             if len(key) == 6:
+                print('n = 6')
                 isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step = key
                 ogs = 0
             elif len(key) == 7:
+                print('n = 7')
                 isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step = key
             else:
                 print('  %s' % str(key))
@@ -975,8 +979,10 @@ class OP2(OP2_Scalar):
                                 for ogs in ogss:
                                     key = (isubcase, analysis_code, sort_method,
                                            count, ogs, superelement_adaptivity_index, pval_step)
+                                    print("superelement_adaptivity_index, pval_step = %r %r" % (
+                                        superelement_adaptivity_index, pval_step))
                                     if key not in keys3:
-                                        #print('adding ', key)
+                                        print('adding ', key)
                                         keys3.append(key)
         if len(keys3) == 0:
             self.log.warning('No results...\n' + self.get_op2_stats(short=True))

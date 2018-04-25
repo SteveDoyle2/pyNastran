@@ -5689,7 +5689,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif ext == '.h5' and IS_H5PY:
                 model = OP2(log=self.log, debug=True)
                 hdf5_filename = results_filename
-                model.load_hdf5(hdf5_filename)
+                model.load_hdf5(hdf5_filename, combine=False)
             #elif ext == '.pch':
                 #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
             #elif ext == '.f06':
@@ -5810,7 +5810,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         keys = model.get_key_order()
         assert keys is not None, keys
-        #print('keys_order =', keys)
+        print('keys_order =', keys)
 
         disp_dict = defaultdict(list)
         stress_dict = defaultdict(list)

@@ -439,6 +439,8 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
         'is_curvature', 'is_fiber_distance', 'is_max_shear', 'is_von_mises',
         'is_strain', 'is_stress', 'nnodes_per_element']
 
+    #if result_name == 'eigenvectors':
+        #debug = True
     for key in h5_result.keys():
         if key in keys_to_skip:
             continue
@@ -451,9 +453,12 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
             setattr(obj, key, datai)
             setattr(obj, '_times', datai)
         elif key not in data_code:
+            datai = cast(h5_result.get(key))
             if debug:  # pragma: no cover
                 print('  **key=%r' % key)
-            datai = cast(h5_result.get(key))
+                if key not in ['data']:
+                    print(datai)
+
             try:
                 setattr(obj, key, datai)
             except AttributeError:
@@ -537,14 +542,15 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                         continue
 
                     # isubcase, analysis_code, sort_method,
-                    #  count, ogs, superelement_adaptivity_index
+                    #  count, ogs, superelement_adaptivity_index, pval_step
                     opt_count = 0
                     ogs = 0
                     superelement_adaptivity_index = ''
+                    pval_step = ''
                     # (1, 2, 1, 0, 0, u'')
                     key = (obj.isubcase, obj.analysis_code, obj.sort_method,
                            opt_count, ogs,
-                           superelement_adaptivity_index)
+                           superelement_adaptivity_index, pval_step)
                     slot = getattr(model, result_name)
                     slot[key] = obj
                     log.debug('  loaded %r' % result_name)

@@ -1071,6 +1071,10 @@ def _get_times(model, key):
             case = table[key]
             #print(case)
             is_real = case.is_real
+
+            # you're presumably looking here because of a bug
+            # are you sure the keys are the right length?
+            #print("is_real=%r nonlinear_factor=%r" % (is_real, case.nonlinear_factor))
             if case.nonlinear_factor is not None:
                 times = case._times
                 is_static = False

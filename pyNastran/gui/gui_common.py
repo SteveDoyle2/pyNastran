@@ -2080,7 +2080,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             observer_name = self.observers['TimerEvent']
             self.vtk_interactor.RemoveObserver(observer_name)
             del self.observers['TimerEvent']
-            self.setup_mouse_buttons(mode='default', force=True)
+            self.mouse_actions.setup_mouse_buttons(mode='default', force=True)
         return is_failed
 
     def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
