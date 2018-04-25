@@ -506,9 +506,16 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'patran_fmt', '0012_20.bdf')
         nod_filename = os.path.join(MODEL_PATH, 'patran_fmt', 'normals.nod')
         test = NastranGUI()
-        test.setup_fake_text_actors()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(nod_filename)
+
+    def test_gui_patran2(self):
+        """tests patran format"""
+        bdf_filename = os.path.join(MODEL_PATH, 'patran_fmt', '0012_20.bdf')
+        nod_filename = os.path.join(MODEL_PATH, 'patran_fmt', 'normals.nod')
+        test = NastranGUI()
+        test.on_load_geometry(bdf_filename, geometry_format='nastran')
+        test.on_load_custom_results(out_filename=nod_filename, restype='Patran_nod')
 
     def test_gui_axi(self):
         """tests axisymmetric elements"""

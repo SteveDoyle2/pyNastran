@@ -300,3 +300,13 @@ class FakeGUIMethods(GuiCommon):
     #test.turn_text_on =  turn_text_on
     #test.turn_text_off = turn_text_off
     #test.cycle_results_explicit = passer
+
+    def setWindowTitle(self, msg):
+        assert isinstance(msg, str), 'msg=%r type=%r' % (msg, type(msg))
+        return
+
+    def getWindowTitle(self):
+        return 'title'
+
+    def get_edges(self):
+        pass

@@ -1092,6 +1092,19 @@ class TABLEM4(Table):
 
 
 class TABLES1(Table):
+    """
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |    1    |   2  |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+======+=======+=======+========+=====+=======+======+======+
+    | TABLES1 |  TID | TYPE  |       |        |     |       |      |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  |  y3   | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    | TABLES1 |  32  |       |       |        |     |       |      |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    |         |  0.0 |  0.0  |  0.01 |  1000. | 0.2 | 1500. | ENDT |      |
+    +---------+------+-------+-------+--------+-----+-------+------+------+
+    """
     type = 'TABLES1'
 
     def __init__(self, tid, x, y, Type=1, comment=''):
@@ -1106,6 +1119,8 @@ class TABLES1(Table):
             Type of stress-strain curve (1 or 2)
             1 - Cauchy (true) stress vs. total true strain
             2 - Cauchy (true) stress vs. plastic true strain (MSC only)
+            Type is MSC-specific and was added somewhere between
+            2006 and 2016.
         x, y : List[float]
             table values
         comment : str; default=''
@@ -1171,13 +1186,26 @@ class TABLES1(Table):
             xy.extend([xi, yi])
 
         # MSC 2005.2 doesn't support Type; 2016.1 does
-        table_type = set_blank_if_default(self.Type, 1)
-        list_fields = ['TABLES1', self.tid, table_type, None, None, None,
+        stress_strain_curve_type = set_blank_if_default(self.Type, 1)
+        list_fields = ['TABLES1', self.tid, stress_strain_curve_type, None, None, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 
 
 class TABLEST(Table):
+    """
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |    1    |   2   |   3   |   4   |    5   |  6  |   7   |  8   |   9  |
+    +=========+=======+=======+=======+========+=====+=======+======+======+
+    | TABLEST |  TID  |       |       |        |      |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |         |   x1  |  y1   |   x2  |   y2   |  x3  |  y3  | etc. | ENDT |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    | TABLEST |   32  |       |       |        |      |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    |         | 150.0 |  10.0 | 175.0 |  20.   | ENDT |      |      |      |
+    +---------+-------+-------+-------+--------+------+------+------+------+
+    """
     type = 'TABLEST'
 
     def __init__(self, tid, x, y, comment=''):

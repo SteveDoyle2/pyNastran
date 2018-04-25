@@ -9,9 +9,10 @@ import traceback
 import time as time_module
 from collections import OrderedDict
 
-from six import iteritems
+from six import string_types, iteritems, itervalues
 
 import numpy as np
+import vtk
 
 from pyNastran.gui.gui_objects.settings import Settings
 
@@ -20,11 +21,13 @@ from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.group_actions import GroupActions
 from pyNastran.gui.qt_files.mouse_actions import MouseActions
 
+from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
 from pyNastran.gui.utils.load_results import create_res_obj
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 
 from pyNastran.bdf.cards.base_card import deprecated
+from pyNastran.utils import print_bad_path
 
 
 class GuiAttributes(object):
@@ -42,6 +45,11 @@ class GuiAttributes(object):
         self.view_actions = ViewActions(self)
         self.group_actions = GroupActions(self)
         self.mouse_actions = MouseActions(self)
+
+        self.fmts = []
+        self.glyph_scale_factor = 1.0
+        self.html_logging = False
+        self.format_class_map = {}
 
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
@@ -180,6 +188,10 @@ class GuiAttributes(object):
             (1.0, 0.662745098039, 0.113725490196)
         ]
 
+        self.color_function_black = vtk.vtkColorTransferFunction()
+        self.color_function_black.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
+        self.color_function_black.AddRGBPoint(1.0, 0.0, 0.0, 0.0)
+
     #-------------------------------------------------------------------
     # deprecated attributes
     def deprecated(self, old_name, new_name, deprecated_version):
@@ -306,6 +318,121 @@ class GuiAttributes(object):
         self.eid_maps[self.name] = eid_map
 
     #---------------------------------------------------------------------------
+    def _on_load_custom_results_load_filename(self, out_filename=None, restype=None):
+        is_failed = True
+        #unused_geometry_format = self.format
+        if self.format is None:
+            msg = 'on_load_results failed:  You need to load a file first...'
+            self.log_error(msg)
+            return is_failed, None, None
+
+        if out_filename in [None, False]:
+            title = 'Select a Custom Results File for %s' % (self.format)
+
+            #print('wildcard_level =', wildcard_level)
+            #self.wildcard_delimited = 'Delimited Text (*.txt; *.dat; *.csv)'
+            fmts = [
+                'Node - Delimited Text (*.txt; *.dat; *.csv)',
+                'Element - Delimited Text (*.txt; *.dat; *.csv)',
+                'Nodal Deflection - Delimited Text (*.txt; *.dat; *.csv)',
+                'Patran nod (*.nod)',
+            ]
+            fmt = ';;'.join(fmts)
+            wildcard_level, out_filename = self._create_load_file_dialog(fmt, title)
+            if not out_filename:
+                return is_failed, None, None # user clicked cancel
+            iwildcard = fmts.index(wildcard_level)
+        else:
+            fmts = [
+                'node', 'element', 'deflection', 'patran_nod',
+            ]
+            iwildcard = fmts.index(restype.lower())
+        is_failed = False
+        return is_failed, out_filename, iwildcard
+
+    def on_load_custom_results(self, out_filename=None, restype=None):
+        """will be a more generalized results reader"""
+        is_failed, out_filename, iwildcard = self._on_load_custom_results_load_filename(
+            out_filename=out_filename, restype=restype)
+
+        if is_failed:
+            return is_failed
+        if out_filename == '':
+            is_failed = True
+            return is_failed
+
+        is_failed = True
+        if not os.path.exists(out_filename):
+            msg = 'result file=%r does not exist' % out_filename
+            self.log_error(msg)
+            return is_failed
+
+        try:
+            if iwildcard == 0:
+                self._on_load_nodal_elemental_results('Nodal', out_filename)
+                restype = 'Node'
+            elif iwildcard == 1:
+                self._on_load_nodal_elemental_results('Elemental', out_filename)
+                restype = 'Element'
+            elif iwildcard == 2:
+                self._load_deflection(out_filename)
+                restype = 'Deflection'
+            elif iwildcard == 3:
+                self._load_patran_nod(out_filename)
+                restype = 'Patran_nod'
+            else:
+                raise NotImplementedError('iwildcard = %s' % iwildcard)
+        except:
+            msg = traceback.format_exc()
+            self.log_error(msg)
+            return is_failed
+        self.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
+        is_failed = False
+        return is_failed
+
+    def _load_deflection(self, out_filename):
+        """loads a force file"""
+        self._load_deflection_force(out_filename, is_deflection=False, is_force=True)
+
+    def _load_deflection_force(self, out_filename, is_deflection=False, is_force=False):
+        out_filename_short = os.path.basename(out_filename)
+        A, fmt_dict, headers = load_deflection_csv(out_filename)
+        #nrows, ncols, fmts
+        header0 = headers[0]
+        result0 = A[header0]
+        nrows = result0.shape[0]
+
+        assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
+        result_type = 'node'
+        self._add_cases_to_form(A, fmt_dict, headers, result_type,
+                                out_filename_short, update=True, is_scalar=False,
+                                is_deflection=is_deflection, is_force=is_deflection)
+
+    def _on_load_nodal_elemental_results(self, result_type, out_filename=None):
+        """
+        Loads a CSV/TXT results file.  Must have called on_load_geometry first.
+
+        Parameters
+        ----------
+        result_type : str
+            'Nodal', 'Elemental'
+        out_filename : str / None
+            the path to the results file
+        """
+        try:
+            self._load_csv(result_type, out_filename)
+        except:
+            msg = traceback.format_exc()
+            self.log_error(msg)
+            #return
+            raise
+
+        #if 0:
+            #self.out_filename = out_filename
+            #msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
+            #self.window_title = msg
+            #self.out_filename = out_filename
+
     def _load_patran_nod(self, nod_filename):
         """reads a Patran formatted *.nod file"""
         from pyNastran.bdf.patran_utils.read_patran import load_patran_nod
@@ -316,6 +443,50 @@ class GuiAttributes(object):
         self._add_cases_to_form(A, fmt_dict, headers, result_type,
                                 out_filename_short, update=True,
                                 is_scalar=True)
+
+    def _load_csv(self, result_type, out_filename):
+        """
+        common method between:
+          - on_add_nodal_results(filename)
+          - on_add_elemental_results(filename)
+
+        Parameters
+        ----------
+        result_type : str
+            ???
+        out_filename : str
+            the CSV filename to load
+        """
+        out_filename_short = os.path.relpath(out_filename)
+        A, fmt_dict, headers = load_csv(out_filename)
+        #nrows, ncols, fmts
+        header0 = headers[0]
+        result0 = A[header0]
+        nrows = result0.size
+
+        if result_type == 'Nodal':
+            assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
+            result_type2 = 'node'
+            #ids = self.node_ids
+        elif result_type == 'Elemental':
+            assert nrows == self.nelements, 'nrows=%s nelements=%s' % (nrows, self.nelements)
+            result_type2 = 'centroid'
+            #ids = self.element_ids
+        else:
+            raise NotImplementedError('result_type=%r' % result_type)
+
+        #num_ids = len(ids)
+        #if num_ids != nrows:
+            #A2 = {}
+            #for key, matrix in iteritems(A):
+                #fmt = fmt_dict[key]
+                #assert fmt not in ['%i'], 'fmt=%r' % fmt
+                #if len(matrix.shape) == 1:
+                    #matrix2 = np.full(num_ids, dtype=matrix.dtype)
+                    #iids = np.searchsorted(ids, )
+            #A = A2
+        self._add_cases_to_form(A, fmt_dict, headers, result_type2,
+                                out_filename_short, update=True, is_scalar=True)
 
     def _add_cases_to_form(self, A, fmt_dict, headers, result_type,
                            out_filename_short, update=True, is_scalar=True,
@@ -350,7 +521,7 @@ class GuiAttributes(object):
         out_filename_short : str
             the display name
         update : bool; default=True
-            ???
+            update the res_widget
 
         # A = np.loadtxt('loadtxt_spike.txt', dtype=('float,int'))
         # dtype=[('f0', '<f8'), ('f1', '<i4')])
@@ -392,7 +563,8 @@ class GuiAttributes(object):
 
         self.ncases += len(headers)
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
-        self.res_widget.update_results(form, 'main')
+        if update:
+            self.res_widget.update_results(form, 'main')
 
     #-------------------------------------------------------------------
     def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
@@ -536,14 +708,14 @@ class GuiAttributes(object):
     #---------------------------------------------------------------------------
     def on_run_script(self, python_file=False):
         """pulldown for running a python script"""
-        is_failed = True
+        is_passed = False
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
             infile_name = self._create_load_file_dialog(
                 wildcard, title, self._default_python_file)[1]
             if not infile_name:
-                return is_failed # user clicked cancel
+                return is_passed # user clicked cancel
 
             #python_file = os.path.join(script_path, infile_name)
             python_file = os.path.join(infile_name)
@@ -551,22 +723,42 @@ class GuiAttributes(object):
         if not os.path.exists(python_file):
             msg = 'python_file = %r does not exist' % python_file
             self.log_error(msg)
-            return is_failed
+            return is_passed
 
-        lines = open(python_file, 'r').read()
+        txt = open(python_file, 'r').read()
+        is_passed = self._execute_python_code(txt, show_msg=False)
+        if not is_passed:
+            return is_passed
+        self._default_python_file = python_file
+        self.log_command('self.on_run_script(%r)' % python_file)
+        print('self.on_run_script(%r)' % python_file)
+        return is_passed
+
+    def _execute_python_code(self, txt, show_msg=True):
+        """executes python code"""
+        is_passed = False
+        if len(txt) == 0:
+            return is_passed
+        if show_msg:
+            self.log_command(txt)
         try:
-            exec(lines)
+            exec(txt)
+        except TypeError as error:
+            self.log_error('\n' + ''.join(traceback.format_stack()))
+            #traceback.print_exc(file=self.log_error)
+            self.log_error(str(error))
+            self.log_error(str(txt))
+            self.log_error(str(type(txt)))
+            return is_passed
         except Exception as error:
             #self.log_error(traceback.print_stack(f))
             self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
             self.log_error(str(error))
-            return is_failed
-        is_failed = False
-        self._default_python_file = python_file
-        self.log_command('self.on_run_script(%r)' % python_file)
-        print('self.on_run_script(%r)' % python_file)
-        return is_failed
+            self.log_error(str(txt))
+            return is_passed
+        is_passed = True
+        return is_passed
 
     #---------------------------------------------------------------------------
     def reset_labels(self, reset_minus1=True):
@@ -724,7 +916,7 @@ class GuiAttributes(object):
                    "should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
             self.log_error(msg)
             return
-        self.data_format = data_format
+        #self.data_format = data_format
         self.log_command('on_update_scalar_bar(%r, %r, %r, %r)' % (
             title, min_value, max_value, data_format))
 
@@ -777,7 +969,7 @@ class GuiAttributes(object):
           - label size
         """
         self.settings.dim_max = dim_max
-        dim = self.dim * self.settings.coord_scale
+        dim = self.settings.dim_max * self.settings.coord_scale
         self.on_set_axes_length(dim)
 
     def on_set_axes_length(self, dim=None):
@@ -811,6 +1003,7 @@ class GuiAttributes(object):
         """
         is_failed, out = self._load_geometry_filename(
             geometry_format, infile_name)
+        print("is_failed =", is_failed)
         if is_failed:
             return
 
@@ -921,6 +1114,13 @@ class GuiAttributes(object):
             return is_failed, None
 
         if infile_name:
+            if geometry_format is None:
+                is_failed = True
+                msg = 'infile_name=%r and geometry_format=%r; both must be specified\n' % (
+                    infile_name, geometry_format)
+                self.log_error(msg)
+                return is_failed, None
+
             geometry_format = geometry_format.lower()
             print("geometry_format = %r" % geometry_format)
 
@@ -978,6 +1178,95 @@ class GuiAttributes(object):
             load_function = load_functions[filter_index]
             unused_has_results = has_results_list[filter_index]
         return is_failed, (infile_name, load_function, filter_index, formats, geometry_format)
+
+    def on_load_results(self, out_filename=None):
+        """
+        Loads a results file.  Must have called on_load_geometry first.
+
+        Parameters
+        ----------
+        out_filename : str / None
+            the path to the results file
+        """
+        geometry_format = self.format
+        if self.format is None:
+            msg = 'on_load_results failed:  You need to load a file first...'
+            self.log_error(msg)
+            raise RuntimeError(msg)
+
+        if out_filename in [None, False]:
+            title = 'Select a Results File for %s' % self.format
+            wildcard = None
+            load_function = None
+
+            for fmt in self.fmts:
+                print(fmt)
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                if geometry_format == fmt_name:
+                    wildcard = _reswild
+                    load_function = _resfunc
+                    break
+            else:
+                msg = 'format=%r is not supported' % geometry_format
+                self.log_error(msg)
+                raise RuntimeError(msg)
+
+            if wildcard is None:
+                msg = 'format=%r has no method to load results' % geometry_format
+                self.log_error(msg)
+                return
+            out_filename = self._create_load_file_dialog(wildcard, title)[1]
+        else:
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                #print('fmt_name=%r geometry_format=%r' % (fmt_name, geometry_format))
+                if fmt_name == geometry_format:
+                    load_function = _resfunc
+                    break
+            else:
+                msg = ('format=%r is not supported.  '
+                       'Did you load a geometry model?' % geometry_format)
+                self.log_error(msg)
+                raise RuntimeError(msg)
+
+        if out_filename == '':
+            return
+        if isinstance(out_filename, string_types):
+            out_filename = [out_filename]
+        for out_filenamei in out_filename:
+            if not os.path.exists(out_filenamei):
+                msg = 'result file=%r does not exist' % out_filenamei
+                self.log_error(msg)
+                return
+                #raise IOError(msg)
+            self.last_dir = os.path.split(out_filenamei)[0]
+
+            try:
+                load_function(out_filenamei)
+            except: #  as e
+                msg = traceback.format_exc()
+                self.log_error(msg)
+                print(msg)
+                #return
+                raise
+
+            self.out_filename = out_filenamei
+            msg = '%s - %s - %s' % (self.format, self.infile_name, out_filenamei)
+            self.window_title = msg
+            print("on_load_results(%r)" % out_filenamei)
+            self.out_filename = out_filenamei
+            self.log_command("on_load_results(%r)" % out_filenamei)
+
+    @property
+    def window_title(self):
+        return self.getWindowTitle()
+
+    @window_title.setter
+    def window_title(self, msg):
+        #msg2 = "%s - "  % self.base_window_title
+        #msg2 += msg
+        self.setWindowTitle(msg)
 
     def build_fmts(self, fmt_order, stop_on_failure=False):
         """populates the formats that will be supported"""
@@ -1090,6 +1379,72 @@ class GuiAttributes(object):
             self.alt_grids[alt_name].Modified()
 
     #---------------------------------------------------------------------------
+    def load_batch_inputs(self, inputs):
+        geom_script = inputs['geomscript']
+        if geom_script is not None:
+            self.on_run_script(geom_script)
+
+        if not inputs['format']:
+            return
+        form = inputs['format'].lower()
+        input_filenames = inputs['input']
+        results_filename = inputs['output']
+        plot = True
+        if results_filename:
+            plot = False
+
+        #print('input_filename =', input_filename)
+        if input_filenames is not None:
+            for input_filename in input_filenames:
+                if not os.path.exists(input_filename):
+                    msg = '%s does not exist\n%s' % (
+                        input_filename, print_bad_path(input_filename))
+                    self.log.error(msg)
+                    if self.html_logging:
+                        print(msg)
+                    return
+            for results_filenamei in results_filename:
+                #print('results_filenamei =', results_filenamei)
+                if results_filenamei is not None:
+                    if not os.path.exists(results_filenamei):
+                        msg = '%s does not exist\n%s' % (
+                            results_filenamei, print_bad_path(results_filenamei))
+                        self.log.error(msg)
+                        if self.html_logging:
+                            print(msg)
+                        return
+
+        #unused_is_geom_results = input_filename == results_filename and len(input_filenames) == 1
+        unused_is_geom_results = False
+        for i, input_filename in enumerate(input_filenames):
+            if i == 0:
+                name = 'main'
+            else:
+                name = input_filename
+            #form = inputs['format'].lower()
+            #if is_geom_results:
+            #    is_failed = self.on_load_geometry_and_results(
+            #        infile_name=input_filename, name=name, geometry_format=form,
+            #        plot=plot, raise_error=True)
+            #else:
+            is_failed = self.on_load_geometry(
+                infile_name=input_filename, name=name, geometry_format=form,
+                plot=plot, raise_error=True)
+        self.name = 'main'
+        #print('keys =', self.nid_maps.keys())
+
+        if is_failed:
+            return
+        if results_filename:  #  and not is_geom_results
+            self.on_load_results(results_filename)
+
+        post_script = inputs['postscript']
+        if post_script is not None:
+            self.on_run_script(post_script)
+        self.on_reset_camera()
+        self.vtk_interactor.Modified()
+
+    #---------------------------------------------------------------------------
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
         """
         Updates the text actors in the lower left
@@ -1187,7 +1542,7 @@ class GuiAttributes(object):
 
         This should really only be called for integer results < 50-ish.
         """
-        return self.group_actions.create_groups_by_visible_result(nlimit=50)
+        return self.group_actions.create_groups_by_visible_result(nlimit=nlimit)
 
     def create_groups_by_property_id(self):
         """
@@ -1327,3 +1682,6 @@ class GuiAttributes(object):
     @property
     def iren(self):
         return self.vtk_interactor
+    @property
+    def render_window(self):
+        return self.vtk_interactor.GetRenderWindow()
