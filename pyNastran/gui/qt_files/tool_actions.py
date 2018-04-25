@@ -8,7 +8,7 @@ from six import iteritems, itervalues, string_types
 import numpy as np
 import vtk
 
-from qtpy.compat import getsavefilename#, getopenfilename
+from qtpy.compat import getsavefilename
 
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties

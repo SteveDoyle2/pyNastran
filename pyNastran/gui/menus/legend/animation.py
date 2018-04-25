@@ -10,7 +10,7 @@ from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
-from qtpy.compat import getexistingdirectory # getopenfilename
+from qtpy.compat import getexistingdirectory
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog

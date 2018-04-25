@@ -5683,7 +5683,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # print(model.get_op2_stats())
 
             elif ext == '.nod':
-                self._load_patran_nod(results_filename)
+                self.load_patran_nod(results_filename)
                 self.cycle_results_explicit()  # start at nCase=0
                 return
             elif ext == '.h5' and IS_H5PY:

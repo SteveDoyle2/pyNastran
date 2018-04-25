@@ -6,7 +6,6 @@ from __future__ import division, unicode_literals, print_function
 import sys
 import os.path
 import datetime
-import traceback
 from copy import deepcopy
 from collections import OrderedDict
 from itertools import cycle
@@ -24,7 +23,6 @@ from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction)
-from qtpy.compat import getopenfilename
 
 import vtk
 
@@ -38,7 +36,7 @@ else:
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils import integer_types
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -303,7 +301,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 # name, is_checked
                 'show_info' : True,
                 'show_debug' : True,
-                'show_gui' : True,
                 'show_command' : True,
                 'anti_alias_0' : True,
                 'anti_alias_1' : False,
@@ -322,12 +319,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
             file_tools = [
 
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
+
                 ('load_geometry', 'Load &Geometry...', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
                 ('load_results', 'Load &Results...', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
-
                 ('load_csv_user_geom', 'Load CSV User Geometry...', '', None, 'Loads custom geometry file', self.on_load_user_geom),
                 ('load_csv_user_points', 'Load CSV User Points...', 'user_points.png', None, 'Loads CSV points', self.on_load_csv_points),
-
                 ('load_custom_result', 'Load Custom Results...', '', None, 'Loads a custom results file', self.on_load_custom_results),
 
                 ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
@@ -352,7 +348,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
-                ('show_gui', 'Show GUI', 'show_gui.png', None, 'Show "GUI" messages', self.on_show_gui),
                 ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
 
                 ('magnify', 'Magnify', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
@@ -511,7 +506,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if self.html_logging:
             self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
             self.actions['log_dock_widget'].setStatusTip("Show/Hide application log")
-            menu_view += ['', 'show_info', 'show_debug', 'show_gui', 'show_command']
+            menu_view += ['', 'show_info', 'show_debug', 'show_command']
             menu_window += ['log_dock_widget']
         if self.execute_python:
             self.actions['python_dock_widget'] = self.python_dock_widget.toggleViewAction()
@@ -698,7 +693,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         Parameters
         ----------
         typ : str
-            {DEBUG, INFO, GUI ERROR, COMMAND, WARNING}
+            {DEBUG, INFO, ERROR, COMMAND, WARNING} or prepend 'GUI '
         msg : str
             message to be displayed
         """
@@ -706,21 +701,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
             print(typ, msg)
             return
 
-        if typ == 'DEBUG' and not self.settings.show_debug:
+        if 'DEBUG' in typ and not self.settings.show_debug:
             return
-        elif typ == 'INFO' and not self.settings.show_info:
+        elif 'INFO' in typ and not self.settings.show_info:
             return
-        elif typ == 'GUI' and not self.settings.show_gui:
-            return
-        elif typ == 'COMMAND' and not self.settings.show_command:
+        elif 'COMMAND' in typ and not self.settings.show_command:
             return
 
         frame = sys._getframe(4)  # jump to get out of the logger code
         lineno = frame.f_lineno
         filename = os.path.basename(frame.f_globals['__file__'])
 
-        #if typ in ['GUI', 'COMMAND']:
-        msg = '   fname=%-25s:%-4s   %s\n' % (filename, lineno, msg)
+        if typ in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
+            typ = typ[4:]
+            msg = '   fname=%-25s:%-4s   %s\n' % (filename, lineno, msg)
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
@@ -728,13 +722,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #message colors
         dark_orange = '#EB9100'
         colors = {
-            'GUI' : 'blue',
-            'COMMAND' : 'green',
+            'COMMAND' : 'blue',
             'ERROR' : 'Crimson',
-            'GUI ERROR' : 'Crimson',
             'DEBUG' : dark_orange,
             'WARNING' : 'purple',
-            # INFO - black
+            'INFO' : 'green',
         }
         msg = msg.rstrip().replace('\n', '<br>')
         msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
@@ -760,29 +752,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
-            return self.log.simple_msg(msg, 'ERROR')
-        self.log.simple_msg(msg, 'DEBUG')
+            return self.log.simple_msg(msg, 'GUI ERROR')
+        self.log.simple_msg(msg, 'GUI DEBUG')
 
     def log_command(self, msg):
         """ Helper funtion: log a message msg with a 'COMMAND:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
-            return self.log.simple_msg(msg, 'ERROR')
-        self.log.simple_msg(msg, 'COMMAND')
+            return self.log.simple_msg(msg, 'GUI ERROR')
+        self.log.simple_msg(msg, 'GUI COMMAND')
 
     def log_error(self, msg):
         """ Helper funtion: log a message msg with a 'GUI ERROR:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
-            return self.log.simple_msg(msg, 'ERROR')
+            return self.log.simple_msg(msg, 'GUI ERROR')
         self.log.simple_msg(msg, 'GUI ERROR')
 
     def log_warning(self, msg):
         """ Helper funtion: log a message msg with a 'WARNING:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
-            return self.log.simple_msg(msg, 'ERROR')
-        self.log.simple_msg(msg, 'WARNING')
+            return self.log.simple_msg(msg, 'GUI ERROR')
+        self.log.simple_msg(msg, 'GUI WARNING')
 
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
@@ -999,10 +991,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def on_show_debug(self):
         """sets a flag for showing/hiding DEBUG messages"""
         self.settings.show_debug = not self.settings.show_debug
-
-    def on_show_gui(self):
-        """sets a flag for showing/hiding GUI messages"""
-        self.settings.show_gui = not self.settings.show_gui
 
     def on_show_command(self):
         """sets a flag for showing/hiding COMMAND messages"""
@@ -1425,30 +1413,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.grid_mapper.SetScalarRange(scalar_range)
         self.grid_mapper.SetLookupTable(self.color_function)
         self.rend.AddActor(self.scalarBar)
-
-    def _create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
-        if default_filename is None:
-            default_filename = self.last_dir
-        fname, wildcard_level = getopenfilename(
-            parent=self, caption=title,
-            basedir=default_filename, filters=qt_wildcard,
-            selectedfilter='', options=None)
-        return wildcard_level, fname
-
-    #def _create_load_file_dialog2(self, qt_wildcard, title):
-        ## getOpenFileName return QString and we want Python string
-        ##title = 'Load a Tecplot Geometry/Results File'
-        #last_dir = ''
-        ##qt_wildcard = ['Tecplot Hex Binary (*.tec; *.dat)']
-        #dialog = MultiFileDialog()
-        #dialog.setWindowTitle(title)
-        #dialog.setDirectory(self.last_dir)
-        #dialog.setFilters(qt_wildcard.split(';;'))
-        #if dialog.exec_() == QtGui.QDialog.Accepted:
-            #outfiles = dialog.selectedFiles()
-            #wildcard_level = dialog.selectedFilter()
-            #return str(wildcard_level), str(fname)
-        #return None, None
 
     def start_logging(self):
         if self.html_logging is True:

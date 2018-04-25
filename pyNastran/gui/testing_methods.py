@@ -268,31 +268,6 @@ class FakeGUIMethods(GuiCommon):
         for name, grid in iteritems(alt_grids):
             self.geometry_actors[name] = vtkActor()
 
-    def log_debug(self, msg):
-        """turns logs into prints to aide debugging"""
-        if self.debug:
-            print('DEBUG:  ', msg)
-
-    def log_info(self, msg):
-        """turns logs into prints to aide debugging"""
-        if self.debug:
-            print('INFO:  ', msg)
-
-    def log_error(self, msg):
-        """turns logs into prints to aide debugging"""
-        #if self.debug:
-        print('ERROR:  ', msg)
-
-    def log_warning(self, msg):
-        """turns logs into prints to aide debugging"""
-        if self.debug:
-            print('WARNING:  ', msg)
-
-    def log_command(self, msg):
-        """turns logs into prints to aide debugging"""
-        if self.debug:
-            print('COMMAND:  ', msg)
-
     #test.log_error = log_error
     #test.log_info = print
     #test.log_info = log_info

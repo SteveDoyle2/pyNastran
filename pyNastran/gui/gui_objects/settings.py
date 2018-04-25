@@ -55,7 +55,6 @@ class Settings(object):
 
         self.show_info = True
         self.show_debug = True
-        self.show_gui = True
         self.show_command = True
 
         # int
@@ -86,7 +85,6 @@ class Settings(object):
 
         self.show_info = True
         self.show_debug = True
-        self.show_gui = True
         self.show_command = True
 
         # int
@@ -127,7 +125,6 @@ class Settings(object):
         # the info/debug/gui/command preferences
         self._set_setting(settings, setting_keys, ['show_info'], self.show_info, True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['show_gui'], self.show_gui, True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True, auto_type=bool)
 
         # the vtk panel background color
@@ -227,7 +224,6 @@ class Settings(object):
 
         settings.setValue('show_info', self.show_info)
         settings.setValue('show_debug', self.show_debug)
-        settings.setValue('show_gui', self.show_gui)
         settings.setValue('show_command', self.show_command)
 
         # int
