@@ -669,8 +669,8 @@ class OP2(OP2_Scalar):
           - matrices
           - BucklingEigenvalues
         """
-        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5
-        export_op2_to_hdf5(hdf5_filename, self)
+        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
+        export_op2_to_hdf5_file(hdf5_filename, self)
 
     def combine_results(self, combine=True):
         """

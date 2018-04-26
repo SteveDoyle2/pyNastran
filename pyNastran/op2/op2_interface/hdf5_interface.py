@@ -3,6 +3,12 @@
 defines:
  model = load_op2_from_h5(h5_filename, log=None)
  export_op2_to_hdf5(hdf5_filename, op2_model)
+
+ model = load_op2_from_hdf5(hdf5_filename, combine=True, log=None)
+ model = load_op2_from_hdf5_file(model, h5_file, log, debug=False)
+ export_op2_to_hdf5_file(hdf5_filename, op2_model)
+ export_op2_to_hdf5_file(hdf5_file, op2_model)
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -95,7 +101,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import print_bad_path
 
-def cast(h5_result_attr):
+def _cast(h5_result_attr):
     """converts the h5py type back into the OP2 type"""
     if h5_result_attr is None:
         return None
@@ -348,11 +354,11 @@ TABLE_OBJ_MAP = {
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
 
-def load_eigenvalue(h5_result, log):
+def _load_eigenvalue(h5_result, log):
     """Loads a RealEigenvalue"""
-    class_name = cast(h5_result.get('class_name'))
+    class_name = _cast(h5_result.get('class_name'))
     title = ''
-    nmodes = cast(h5_result.get('nmodes'))
+    nmodes = _cast(h5_result.get('nmodes'))
     if class_name == 'RealEigenvalues':
         obj = RealEigenvalues(title, nmodes=nmodes)
     elif class_name == 'ComplexEigenvalues':
@@ -369,41 +375,41 @@ def load_eigenvalue(h5_result, log):
         if key in keys_to_skip:
             continue
         else:
-            datai = cast(h5_result.get(key))
+            datai = _cast(h5_result.get(key))
             assert not isinstance(datai, binary_type), key
             setattr(obj, key, datai)
     return obj
 
-def load_table(result_name, h5_result, objs, log, debug=False):# real_obj, complex_obj
+def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, complex_obj
     """loads a RealEigenvectorArray/ComplexEigenvectorArray"""
-    is_real = cast(h5_result.get('is_real'))
-    #is_complex = cast(h5_result.get('is_complex'))
-    nonlinear_factor = cast(h5_result.get('nonlinear_factor'))
-    #is_stress = cast(h5_result.get('is_stress'))
-    #is_strain = cast(h5_result.get('is_strain'))
+    is_real = _cast(h5_result.get('is_real'))
+    #is_complex = _cast(h5_result.get('is_complex'))
+    nonlinear_factor = _cast(h5_result.get('nonlinear_factor'))
+    #is_stress = _cast(h5_result.get('is_stress'))
+    #is_strain = _cast(h5_result.get('is_strain'))
 
-    data_names = [name.decode('utf8') for name in cast(h5_result.get('data_names')).tolist()]
+    data_names = [name.decode('utf8') for name in _cast(h5_result.get('data_names')).tolist()]
     str_data_names = [data_name + 's' for data_name in data_names]
     data_code = {
         'nonlinear_factor' : nonlinear_factor,
-        'sort_bits' : cast(h5_result.get('sort_bits')).tolist(),
-        'sort_method' : cast(h5_result.get('sort_method')),
-        'is_msc' : cast(h5_result.get('is_msc')),
-        'format_code' : cast(h5_result.get('format_code')),
-        'device_code' : cast(h5_result.get('device_code')),
-        'approach_code' : cast(h5_result.get('approach_code')),
-        'analysis_code' : cast(h5_result.get('analysis_code')),
-        'table_code' : cast(h5_result.get('table_code')),
-        'tCode' : cast(h5_result.get('tCode')),
-        'sort_code' : cast(h5_result.get('sort_code')),
-        'thermal' : cast(h5_result.get('thermal')),
-        'subtitle' : cast(h5_result.get('subtitle')),
-        'acoustic_flag' : cast(h5_result.get('acoustic_flag')),
-        'stress_bits' : cast(h5_result.get('stress_bits')),
-        's_code' : cast(h5_result.get('s_code')),
+        'sort_bits' : _cast(h5_result.get('sort_bits')).tolist(),
+        'sort_method' : _cast(h5_result.get('sort_method')),
+        'is_msc' : _cast(h5_result.get('is_msc')),
+        'format_code' : _cast(h5_result.get('format_code')),
+        'device_code' : _cast(h5_result.get('device_code')),
+        'approach_code' : _cast(h5_result.get('approach_code')),
+        'analysis_code' : _cast(h5_result.get('analysis_code')),
+        'table_code' : _cast(h5_result.get('table_code')),
+        'tCode' : _cast(h5_result.get('tCode')),
+        'sort_code' : _cast(h5_result.get('sort_code')),
+        'thermal' : _cast(h5_result.get('thermal')),
+        'subtitle' : _cast(h5_result.get('subtitle')),
+        'acoustic_flag' : _cast(h5_result.get('acoustic_flag')),
+        'stress_bits' : _cast(h5_result.get('stress_bits')),
+        's_code' : _cast(h5_result.get('s_code')),
         'data_names' : data_names,
         'name' : data_names[0],
-        'table_name' : cast(h5_result.get('table_name')),
+        'table_name' : _cast(h5_result.get('table_name')),
     }
     for key, value in list(iteritems(data_code)):
         if value is None:
@@ -414,11 +420,11 @@ def load_table(result_name, h5_result, objs, log, debug=False):# real_obj, compl
             else:
                 log.warning('%s %s' % (key, value))
 
-    is_sort1 = cast(h5_result.get('is_sort1'))
-    isubcase = cast(h5_result.get('isubcase'))
+    is_sort1 = _cast(h5_result.get('is_sort1'))
+    isubcase = _cast(h5_result.get('isubcase'))
     dt = nonlinear_factor
 
-    class_name = cast(h5_result.get('class_name'))
+    class_name = _cast(h5_result.get('class_name'))
     obj_class = _get_obj_class(objs, class_name, result_name, is_real, log)
     if obj_class is None:
         log.warning('  unhandled result_name=%r class_name=%r...' % (
@@ -438,7 +444,7 @@ def load_table(result_name, h5_result, objs, log, debug=False):# real_obj, compl
 
 def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
                                      debug=False):
-    """helper method for ``load_table``"""
+    """helper method for ``_load_table``"""
     keys_to_skip = [
         'class_name', 'headers', 'is_real', 'is_complex',
         'is_sort1', 'is_sort2', 'table_name_str',
@@ -455,11 +461,11 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
         elif key in str_data_names:
             if debug:  # pragma: no cover
                 print('  *****key=%r' % key)
-            datai = cast(h5_result.get(key))
+            datai = _cast(h5_result.get(key))
             setattr(obj, key, datai)
             setattr(obj, '_times', datai)
         elif key not in data_code:
-            datai = cast(h5_result.get(key))
+            datai = _cast(h5_result.get(key))
             if debug:  # pragma: no cover
                 print('  **key=%r' % key)
                 if key not in ['data']:
@@ -507,57 +513,66 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
             #obj_class = complex_obj
     return obj_class
 
-def export_op2_to_hdf5(hdf5_filename, op2_model):
+def export_op2_to_hdf5_file(hdf5_filename, op2_model):
+    """exports an OP2 object to an HDF5 file"""
     #no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
-    result_types = op2_model.get_table_types()
-    i = 0
 
     with h5py.File(hdf5_filename, 'w') as hdf5_file:
-        info_group = hdf5_file.create_group('info')
-        info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
-        info_group.create_dataset('nastran_format', data=op2_model._nastran_format)
-        #info_group.create_dataset('is_msc', data=self.is_msc)
-        #info_group.create_dataset('is_nx', data=self.is_nx)
-        #info_group.create_dataset('nastran_version', data=self.is_nx)
+        export_op2_to_hdf5(hdf5_file, op2_model)
 
-        if len(op2_model.matrices):
-            matrix_group = hdf5_file.create_group('matrices')
-            for key, matrix in sorted(iteritems(op2_model.matrices)):
-                matrixi_group = matrix_group.create_group(b(key))
-                if hasattr(matrix, 'export_to_hdf5'):
-                    matrix.export_to_hdf5(matrixi_group, op2_model.log)
-                else:
-                    op2_model.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
-                    #raise NotImplementedError()
-                    continue
+def export_op2_to_hdf5(hdf5_file, op2_model):
+    """exports an OP2 object to an HDF5 file object"""
+    info_group = hdf5_file.create_group('info')
+    info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
+    info_group.create_dataset('nastran_format', data=op2_model._nastran_format)
+    #info_group.create_dataset('is_msc', data=self.is_msc)
+    #info_group.create_dataset('is_nx', data=self.is_nx)
+    #info_group.create_dataset('nastran_version', data=self.is_nx)
+    _export_matrices(hdf5_file, op2_model)
+    _export_subcases(hdf5_file, op2_model)
 
-        subcase_groups = {}
-        for result_type in result_types:
-            result = getattr(op2_model, result_type)
-            #if len(result):
-                #print(result)
+def _export_matrices(hdf5_file, op2_model):
+    """exports the matrices to HDF5"""
+    if len(op2_model.matrices):
+        matrix_group = hdf5_file.create_group('matrices')
+        for key, matrix in sorted(iteritems(op2_model.matrices)):
+            matrixi_group = matrix_group.create_group(b(key))
+            if hasattr(matrix, 'export_to_hdf5'):
+                matrix.export_to_hdf5(matrixi_group, op2_model.log)
+            else:
+                op2_model.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
+                #raise NotImplementedError()
+                continue
 
-            for key, obj in iteritems(result):
-                #class_name = obj.__class__.__name__
-                #print('working on %s' % class_name)
-                obj.object_attributes()
-                subcase_name = 'Subcase=%s' % str(key)
-                if subcase_name in subcase_groups:
-                    subcase_group = subcase_groups[subcase_name]
-                else:
-                    subcase_group = hdf5_file.create_group(subcase_name)
-                    subcase_groups[subcase_name] = subcase_group
+def _export_subcases(hdf5_file, op2_model):
+    """exports the subcases to HDF5"""
+    subcase_groups = {}
+    result_types = op2_model.get_table_types()
+    for result_type in result_types:
+        result = getattr(op2_model, result_type)
+        #if len(result):
+            #print(result)
 
-                #if hasattr(obj, 'element_name'):
-                    #class_name += ': %s' % obj.element_name
+        for key, obj in iteritems(result):
+            #class_name = obj.__class__.__name__
+            #print('working on %s' % class_name)
+            obj.object_attributes()
+            subcase_name = 'Subcase=%s' % str(key)
+            if subcase_name in subcase_groups:
+                subcase_group = subcase_groups[subcase_name]
+            else:
+                subcase_group = hdf5_file.create_group(subcase_name)
+                subcase_groups[subcase_name] = subcase_group
 
-                #result_name = result_type + ':' + class_name
-                result_name = result_type
-                result_group = subcase_group.create_group(result_name)
-                obj.export_to_hdf5(result_group, op2_model.log)
-                i += 1
+            #if hasattr(obj, 'element_name'):
+                #class_name += ': %s' % obj.element_name
 
-def load_op2_from_hdf5(hdf5_filename, log=None):
+            #result_name = result_type + ':' + class_name
+            result_name = result_type
+            result_group = subcase_group.create_group(result_name)
+            obj.export_to_hdf5(result_group, op2_model.log)
+
+def load_op2_from_hdf5(hdf5_filename, combine=True, log=None):
     """loads an hdf5 file into an OP2 object"""
     assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
     model = OP2(log=None)
@@ -567,6 +582,7 @@ def load_op2_from_hdf5(hdf5_filename, log=None):
     debug = False
     with h5py.File(hdf5_filename, 'r') as h5_file:
         load_op2_from_hdf5_file(model, h5_file, log, debug=debug)
+    model.combine_results(combine=combine)
     return model
 
 def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
@@ -579,7 +595,7 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                 if result_name == 'eigenvalues':
                     #log.warning('    skipping %r...' % result_name)
                     h5_result = h5_subcase.get(result_name)
-                    obj = load_eigenvalue(h5_result, log=log)
+                    obj = _load_eigenvalue(h5_result, log=log)
                     if obj is None:
                         continue
                     model.eigenvalues[obj.title] = obj
@@ -593,7 +609,7 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                     if objs is None:
                         log.warning('  skipping %s...' % result_name)
                         continue
-                    obj = load_table(result_name, h5_result, objs, log=log, debug=debug)
+                    obj = _load_table(result_name, h5_result, objs, log=log, debug=debug)
                     if obj is None:
                         continue
 

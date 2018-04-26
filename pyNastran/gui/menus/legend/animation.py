@@ -6,6 +6,7 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QWidget, QRadioButton,
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
@@ -109,15 +110,41 @@ class AnimationWindow(PyDialog):
         """creates the menu objects"""
         icase_max = 1000  # TODO: update 1000
 
-        self.icase_fringe = QLabel("iCase:")
+        self.checkbox_fringe = QCheckBox('Animate')
+        self.checkbox_fringe.setToolTip(
+            'Animate the fringe in addition to the deflection')
+        #self.checkbox_disp = QCheckBox('Animate')
+
+        self.icase_fringe = QLabel("iCase (Fringe):")
         self.icase_fringe_edit = QSpinBox(self)
-        self.icase_fringe_edit.setRange(1, icase_max)
+        self.icase_fringe_edit.setRange(0, icase_max)
         self.icase_fringe_edit.setSingleStep(1)
-        self.icase_fringe_edit.setValue(self._icase_fringe)
+        if self._icase_fringe is not None:
+            self.icase_fringe_edit.setValue(self._icase_fringe)
         self.icase_fringe_edit.setToolTip(
             'Case Number for the Scale/Phase Animation Type.\n'
             'Defaults to the result you had shown when you clicked "Create Animation".\n'
             'iCase can be seen by clicking "Apply" on a result.')
+
+        self.icase_disp = QLabel("iCase (Disp):")
+        self.icase_disp_edit = QSpinBox(self)
+        self.icase_disp_edit.setRange(1, icase_max)
+        self.icase_disp_edit.setSingleStep(1)
+        if self._icase_disp is not None:
+            self.icase_disp_edit.setValue(self._icase_disp)
+
+        self.checkbox_vector = QCheckBox('Animate')
+        self.checkbox_vector.setToolTip(
+            'Animate the vector in addition to the deflection')
+        self.checkbox_vector.hide()
+        #self.checkbox_disp = QCheckBox('Animate')
+
+        self.icase_vector = QLabel("iCase (Vector):")
+        self.icase_vector_edit = QSpinBox(self)
+        self.icase_vector_edit.setRange(1, icase_max)
+        self.icase_vector_edit.setSingleStep(1)
+        if self._icase_vector is not None:
+            self.icase_vector_edit.setValue(self._icase_vector)
 
         self.scale = QLabel("True Scale:")
         self.scale_edit = QLineEdit(str(self._scale))
@@ -165,6 +192,7 @@ class AnimationWindow(PyDialog):
 
         #-----------------
         # Time plot
+        self.displacement_label = QLabel("Displacement")
         self.icase_start = QLabel("iCase Start:")
         self.icase_start_edit = QSpinBox(self)
         self.icase_start_edit.setRange(0, icase_max)
@@ -302,7 +330,7 @@ class AnimationWindow(PyDialog):
         for animation_type in self.animation_types:
             self.animation_type_edit.addItem(animation_type)
         #self.animation_type_edit.setToolTip('The profile for a scaled GIF')
-        self.animation_type_edit.setToolTip(msg)
+        self.animation_type_edit.setToolTip(msg.rstrip())
 
         self.csv_profile = QLabel("CSV profile:")
         self.csv_profile_edit = QLineEdit()
@@ -351,12 +379,14 @@ class AnimationWindow(PyDialog):
         self.step_button = QPushButton("Step")
         self.wipe_button = QPushButton("Wipe Deformed Shape")
         self.stop_button = QPushButton("Stop")
-        self.run_button = QPushButton("Run All")
+        self.run_button = QPushButton("Run")
 
         self.step_button.setToolTip('Steps through the animation (for testing)')
         self.wipe_button.setToolTip('Removes the existing "deflecton" from the animation')
         self.stop_button.setToolTip('Stops the animation')
         self.run_button.setToolTip('Creates the animation')
+        self.step_button.hide()
+        self.wipe_button.hide()
 
         self.wipe_button.setEnabled(False)
         #self.wipe_button.hide()
@@ -375,6 +405,8 @@ class AnimationWindow(PyDialog):
 
     def set_connections(self):
         """creates button actions"""
+        self.checkbox_vector.clicked.connect(self.on_checkbox_vector)
+
         self.scale_button.clicked.connect(self.on_default_scale)
         self.arrow_scale_button.clicked.connect(self.on_default_arrow_scale)
         self.time_button.clicked.connect(self.on_default_time)
@@ -409,6 +441,13 @@ class AnimationWindow(PyDialog):
         self.animate_in_gui_checkbox.clicked.connect(self.on_animate_in_gui)
         self.animate_in_gui_checkbox.setChecked(True)
         self.on_animate_in_gui()
+
+    def on_checkbox_vector(self):
+        is_enabled = self.checkbox_vector.isEnabled()
+        is_checked = self.checkbox_vector.isChecked()
+        enable_edit = is_enabled and is_checked
+        self.icase_vector.setEnabled(is_checked)
+        self.icase_vector_edit.setEnabled(enable_edit)
 
     def on_animate_in_gui(self):
         animate_in_gui = self.animate_in_gui_checkbox.isChecked()
@@ -528,6 +567,16 @@ class AnimationWindow(PyDialog):
 
         self.icase_fringe.setEnabled(not enabled)
         self.icase_fringe_edit.setEnabled(not enabled)
+        self.checkbox_fringe.setEnabled(not enabled)
+
+        self.icase_disp.setEnabled(not enabled)
+        self.icase_disp_edit.setEnabled(not enabled)
+
+        self.icase_vector.setEnabled(not enabled)
+        self.icase_vector_edit.setEnabled(not enabled)
+        self.checkbox_vector.setEnabled(not enabled)
+        self.on_checkbox_vector()
+
         self.fps.setEnabled(not enabled)
         self.fps_edit.setEnabled(not enabled)
         self.fps_button.setEnabled(not enabled)
@@ -621,77 +670,122 @@ class AnimationWindow(PyDialog):
 
     def create_layout(self):
         """displays the menu objects"""
+
         grid = QGridLayout()
+        irow = 0
+        grid.addWidget(self.icase_fringe, irow, 0)
+        grid.addWidget(self.icase_fringe_edit, irow, 1)
+        grid.addWidget(self.checkbox_fringe, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.icase_fringe, 0, 0)
-        grid.addWidget(self.icase_fringe_edit, 0, 1)
+        grid.addWidget(self.icase_disp, irow, 0)
+        grid.addWidget(self.icase_disp_edit, irow, 1)
+        #grid.addWidget(self.checkbox_disp, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.scale, 1, 0)
-        grid.addWidget(self.scale_edit, 1, 1)
-        grid.addWidget(self.scale_button, 1, 2)
+        grid.addWidget(self.icase_vector, irow, 0)
+        grid.addWidget(self.icase_vector_edit, irow, 1)
+        grid.addWidget(self.checkbox_vector, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.arrow_scale, 2, 0)
-        grid.addWidget(self.arrow_scale_edit, 2, 1)
-        grid.addWidget(self.arrow_scale_button, 2, 2)
+        grid.addWidget(self.scale, irow, 0)
+        grid.addWidget(self.scale_edit, irow, 1)
+        grid.addWidget(self.scale_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.time, 3, 0)
-        grid.addWidget(self.time_edit, 3, 1)
-        grid.addWidget(self.time_button, 3, 2)
+        grid.addWidget(self.arrow_scale, irow, 0)
+        grid.addWidget(self.arrow_scale_edit, irow, 1)
+        grid.addWidget(self.arrow_scale_button, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.time, irow, 0)
+        grid.addWidget(self.time_edit, irow, 1)
+        grid.addWidget(self.time_button, irow, 2)
+        irow += 1
 
         # spacer
         spacer = QLabel('')
 
-        grid.addWidget(self.fps, 4, 0)
-        grid.addWidget(self.fps_edit, 4, 1)
-        grid.addWidget(self.fps_button, 4, 2)
+        grid.addWidget(self.fps, irow, 0)
+        grid.addWidget(self.fps_edit, irow, 1)
+        grid.addWidget(self.fps_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.resolution, 5, 0)
-        grid.addWidget(self.resolution_edit, 5, 1)
-        grid.addWidget(self.resolution_button, 5, 2)
+        grid.addWidget(self.resolution, irow, 0)
+        grid.addWidget(self.resolution_edit, irow, 1)
+        grid.addWidget(self.resolution_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.browse_folder, 6, 0)
-        grid.addWidget(self.browse_folder_edit, 6, 1)
-        grid.addWidget(self.browse_folder_button, 6, 2)
+        grid.addWidget(self.browse_folder, irow, 0)
+        grid.addWidget(self.browse_folder_edit, irow, 1)
+        grid.addWidget(self.browse_folder_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.gif, 7, 0)
-        grid.addWidget(self.gif_edit, 7, 1)
-        grid.addWidget(self.gif_button, 7, 2)
+        grid.addWidget(self.gif, irow, 0)
+        grid.addWidget(self.gif_edit, irow, 1)
+        grid.addWidget(self.gif_button, irow, 2)
+        irow += 1
 
-        grid.addWidget(self.animation_type, 8, 0)
-        grid.addWidget(self.animation_type_edit, 8, 1)
+        grid.addWidget(self.animation_type, irow, 0)
+        grid.addWidget(self.animation_type_edit, irow, 1)
+        irow += 1
 
-        grid.addWidget(spacer, 9, 0)
+        grid.addWidget(spacer, irow, 0)
+        irow += 1
 
         #----------
         #Time
         grid_time = QGridLayout()
-        grid_time.addWidget(self.icase_start, 0, 0)
-        grid_time.addWidget(self.icase_start_edit, 0, 1)
-        #grid_time.addWidget(self.icase_start_button, 0, 2)
+        jrow = 0
 
-        grid_time.addWidget(self.icase_end, 1, 0)
-        grid_time.addWidget(self.icase_end_edit, 1, 1)
-        #grid_time.addWidget(self.icase_end_button, 1, 2)
+        self.displacement_label.setAlignment(Qt.AlignCenter)
+        grid_time.addWidget(self.displacement_label, jrow, 1)
+        jrow += 1
 
-        grid_time.addWidget(self.icase_delta, 2, 0)
-        grid_time.addWidget(self.icase_delta_edit, 2, 1)
-        #grid_time.addWidget(self.icase_delta_button, 2, 2)
+        grid_time.addWidget(self.icase_start, jrow, 0)
+        grid_time.addWidget(self.icase_start_edit, jrow, 1)
+        #grid_time.addWidget(self.icase_start_button, jrow, 2)
+        jrow += 1
+
+        grid_time.addWidget(self.icase_end, jrow, 0)
+        grid_time.addWidget(self.icase_end_edit, jrow, 1)
+        #grid_time.addWidget(self.icase_end_button, jrow, 2)
+        jrow += 1
+
+        grid_time.addWidget(self.icase_delta,jrow, 0)
+        grid_time.addWidget(self.icase_delta_edit, jrow, 1)
+        #grid_time.addWidget(self.icase_delta_button, jrow, 2)
+        jrow += 1
+        #else:
+            #grid_time.addWidget(self.icase_start, jrow, 0)
+            #grid_time.addWidget(self.icase_end, jrow, 1)
+            #grid_time.addWidget(self.icase_delta, jrow, 2)
+            #jrow += 1
+
+            #grid_time.addWidget(self.icase_start_edit, jrow, 0)
+            #grid_time.addWidget(self.icase_end_edit, jrow, 1)
+            #grid_time.addWidget(self.icase_delta_edit, jrow, 2)
+            #jrow += 1
 
 
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.min_value_enable)
-        hbox.addWidget(self.min_value)
-        grid_time.addLayout(hbox, 3, 0)
-        grid_time.addWidget(self.min_value_edit, 3, 1)
-        grid_time.addWidget(self.min_value_button, 3, 2)
+        hbox_min = QHBoxLayout()
+        hbox_min.addWidget(self.min_value_enable)
+        hbox_min.addWidget(self.min_value)
+        grid_time.addLayout(hbox_min, jrow, 0)
+        grid_time.addWidget(self.min_value_edit, jrow, 1)
+        grid_time.addWidget(self.min_value_button, jrow, 2)
+        jrow += 1
 
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.max_value_enable)
-        hbox.addWidget(self.max_value)
-        grid_time.addLayout(hbox, 4, 0)
-        grid_time.addWidget(self.max_value_edit, 4, 1)
-        grid_time.addWidget(self.max_value_button, 4, 2)
-        grid_time.addWidget(spacer, 5, 0)
+        hbox_max = QHBoxLayout()
+        hbox_max.addWidget(self.max_value_enable)
+        hbox_max.addWidget(self.max_value)
+        grid_time.addLayout(hbox_max, jrow, 0)
+        grid_time.addWidget(self.max_value_edit, jrow, 1)
+        grid_time.addWidget(self.max_value_button, jrow, 2)
+        jrow += 1
+
+        grid_time.addWidget(spacer, jrow, 0)
+        jrow += 1
 
         #--------------
         grid_scale = QGridLayout()
@@ -820,6 +914,9 @@ class AnimationWindow(PyDialog):
         animate_phase = self.animate_phase_radio.isChecked()
         animate_time = self.animate_time_radio.isChecked()
 
+        if not self.checkbox_vector.isEnabled():
+            icase_vector = None
+
         animate_scale = False
         animate_phase = False
         animate_time = False
@@ -853,7 +950,8 @@ class AnimationWindow(PyDialog):
             self.win_parent.win_parent.make_gif(
                 gif_filename, scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
-                icase=icase, icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
+                icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
+                icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
                 time=time, animation_profile=animation_profile,
                 nrepeat=nrepeat, fps=fps, magnify=magnify,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,
@@ -876,8 +974,10 @@ class AnimationWindow(PyDialog):
         """checks to see if the input is valid"""
         # requires no special validation
         icase_fringe, flag0 = check_int(self.icase_fringe_edit)
-        icase_disp = self._icase_disp
-        icase_vector = self._icase_vector
+        icase_disp, unused_flaga = check_int(self.icase_disp_edit)
+        icase_vector, unused_flagb = check_int(self.icase_vector_edit)
+        #icase_disp = self._icase_disp
+        #icase_vector = self._icase_vector
 
         scale, flag1 = check_float(self.scale_edit)
         time, flag2 = check_float(self.time_edit)

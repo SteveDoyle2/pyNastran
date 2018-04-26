@@ -1860,7 +1860,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def make_gif(self, gif_filename, scale, istep=None,
                  min_value=None, max_value=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
-                 icase=None, icase_start=None, icase_end=None, icase_delta=None,
+                 icase_fringe=None, icase_disp=None, icase_vector=None,
+                 icase_start=None, icase_end=None, icase_delta=None,
                  time=2.0, animation_profile='0 to scale',
                  nrepeat=0, fps=30, magnify=1,
                  make_images=True, delete_images=False, make_gif=True, stop_animation=False,
@@ -1905,7 +1906,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         Case Selection
         --------------
-        icase : int; default=None
+        icase_fringe/disp/vector : int; default=None
             None : unused
             int : the result case to plot the deflection for
                   active if animate_scale=True or animate_phase=True
@@ -1974,19 +1975,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if stop_animation:
             return self.stop_animation()
 
-        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+        out = setup_animation(
             scale, istep=istep,
             animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
-            icase=icase,
+            icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
             icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
             time=time, animation_profile=animation_profile,
             fps=fps)
-
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = out
         parent = self
 
         #animate_in_gui = True
         self.stop_animation()
-        if len(icases) == 1:
+        if len(icases_disp) == 1:
             pass
         elif animate_in_gui:
             class vtkAnimationCallback(object):
@@ -1995,29 +1996,34 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 """
                 def __init__(self):
                     self.timer_count = 0
-                    self.cycler = cycle(range(len(icases)))
+                    self.cycler = cycle(range(len(icases_disp)))
 
-                    self.icase0 = -1
-                    self.ncases = len(icases)
+                    self.icase_fringe0 = -1
+                    self.icase_disp0 = -1
+                    self.icase_vector0 = -1
+                    self.ncases = len(icases_disp)
 
                 def execute(self, obj, unused_event):
                     unused_iren = obj
                     i = self.timer_count % self.ncases
                     #j = next(self.cycler)
                     unused_istep = isteps[i]
-                    icase = icases[i]
+
+                    icase_fringe = icases_fringe[i]
+                    icase_disp = icases_disp[i]
+                    icase_vector = icases_vector[i]
                     scale = scales[i]
                     phase = phases[i]
-                    if icase != self.icase0:
-                        #self.cycle_results(case=icase)
-                        parent.cycle_results_explicit(icase, explicit=True,
-                                                      min_value=min_value, max_value=max_value)
-                    try:
-                        parent.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
-                    except AttributeError:
-                        parent.log_error('Invalid Case %i' % icase)
+                    is_valid = parent.animation_update(
+                        self.icase_fringe0, self.icase_disp0, self.icase_vector0,
+                        icase_fringe, icase_disp, icase_vector,
+                        scale, phase,
+                        min_value, max_value)
+                    if not is_valid:
                         parent.stop_animation()
-                    self.icase0 = icase
+
+                    self.icase_disp0 = icase_disp
+                    self.icase_fringe0 = icase_fringe
 
                     parent.vtk_interactor.Render()
                     self.timer_count += 1
@@ -2040,7 +2046,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         is_failed = True
         try:
             is_failed = self.make_gif_helper(
-                gif_filename, icases, scales,
+                gif_filename, icases_fringe, icases_disp, icases_vector, scales,
                 phases=phases, isteps=isteps,
                 max_value=max_value, min_value=min_value,
                 time=time, analysis_time=analysis_time, fps=fps, magnify=magnify,
@@ -2058,14 +2064,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'make_gif(%r, %s, istep=%s,\n'
                 '         min_value=%s, max_value=%s,\n'
                 '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n'
-                '         icase=%s, icase_start=%s, icase_end=%s, icase_delta=%s,\n'
+                '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
+                '         icase_start=%s, icase_end=%s, icase_delta=%s,\n'
                 "         time=%s, animation_profile=%r,\n"
                 '         nrepeat=%s, fps=%s, magnify=%s,\n'
                 '         make_images=%s, delete_images=%s, make_gif=%s, stop_animation=%s,\n'
                 '         animate_in_gui=%s)\n' % (
                     gif_filename, scale, istep, min_value, max_value,
                     animate_scale, animate_phase, animate_time,
-                    icase, icase_start, icase_end, icase_delta, time, animation_profile,
+                    icase_fringe, icase_disp, icase_vector,
+                    icase_start, icase_end, icase_delta, time, animation_profile,
                     nrepeat, fps, magnify, make_images, delete_images, make_gif, stop_animation,
                     animate_in_gui)
             )
@@ -2083,7 +2091,36 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.mouse_actions.setup_mouse_buttons(mode='default', force=True)
         return is_failed
 
-    def make_gif_helper(self, gif_filename, icases, scales, phases=None, isteps=None,
+    def animation_update(self, icase_fringe0, icase_disp0, icase_vector0,
+                         icase_fringe, icase_disp, icase_vector, scale, phase,
+                         min_value, max_value):
+        """applies the animation update callback"""
+        #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
+        if icase_disp != icase_disp0:
+            # apply the fringe
+            #
+            # min/max value is used only for the time plot
+            # it's assumed to be a displacement result, so the fringe=displacement
+            self.cycle_results_explicit(icase_disp, explicit=True,
+                                        min_value=min_value, max_value=max_value)
+
+        if icase_fringe is not None and icase_fringe != icase_fringe0:
+            is_valid = self.on_fringe(icase_fringe,
+                                      update_legend_window=False, show_msg=False)
+            if not is_valid:
+                self.log_error('Invalid Fringe Case %i' % icase_fringe)
+                return False
+        try:
+            # apply the deflection
+            self.update_grid_by_icase_scale_phase(icase_disp, scale, phase=phase)
+        except(AttributeError, KeyError):
+            self.log_error('Invalid Displacement Case %i' % icase_disp)
+            return False
+        is_valid = True
+        return is_valid
+
+    def make_gif_helper(self, gif_filename, icases_fringe, icases_disp, icases_vector,
+                        scales, phases=None, isteps=None,
                         max_value=None, min_value=None,
                         time=2.0, analysis_time=2.0, fps=30, magnify=1,
                         onesided=True, nrepeat=0,
@@ -2166,23 +2203,29 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if not os.path.exists(png_dirname):
             os.makedirs(png_dirname)
 
-        phases, icases, isteps, scales = update_animation_inputs(
-            phases, icases, isteps, scales, analysis_time, fps)
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales = update_animation_inputs(
+            phases, icases_fringe, icases_disp, icases_vector,
+            isteps, scales, analysis_time, fps)
 
         if gif_filename is not None:
             png_filenames = []
             fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
 
-        icase0 = -1
+        icase_fringe0 = -1
+        icase_disp0 = -1
+        icase_vector0 = -1
         is_failed = True
         if make_images:
-            for istep, icase, scale, phase in zip(isteps, icases, scales, phases):
-                if icase != icase0:
-                    #self.cycle_results(case=icase)
-                    self.cycle_results_explicit(icase, explicit=True,
-                                                min_value=min_value, max_value=max_value)
-                self.update_grid_by_icase_scale_phase(icase, scale, phase=phase)
+            for istep, icase_fringe, icase_disp, icase_vector, scale, phase in zip(
+                isteps, icases_fringe, icases_disp, icases_vector, scales, phases):
 
+                is_valid = self.animation_update(
+                     icase_fringe0, icase_disp0, icase_vector0,
+                     icase_fringe, icase_disp, icase_vector,
+                     scale, phase,
+                     min_value, max_value)
+                if not is_valid:
+                    return is_failed
                 if gif_filename is not None:
                     png_filename = fmt % istep
                     self.on_take_screenshot(fname=png_filename, magnify=magnify)

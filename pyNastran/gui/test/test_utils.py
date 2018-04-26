@@ -51,7 +51,7 @@ class GuiUtils(unittest.TestCase):
 
         header0 = headers[0]
         result0 = A[header0]
-        nrows = result0.shape[0]
+        #nrows = result0.shape[0]
         #assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
         header = header0
         islot = 0
@@ -66,14 +66,14 @@ class GuiUtils(unittest.TestCase):
     def test_animation_scale_1(self):
         """0 to scale"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
-            icase=42,
+            icase_disp=42,
             icase_start=None, icase_end=None, icase_delta=None,
             time=2.0, animation_profile='0 to scale to 0',
             fps=30)
-        assert len(np.unique(icases)) == 1
+        assert len(np.unique(icases_disp)) == 1
         assert len(np.unique(phases)) == 1
         assert np.allclose(analysis_time, 1.0), analysis_time
         assert np.allclose(scales.min(), 0.), scales
@@ -82,14 +82,14 @@ class GuiUtils(unittest.TestCase):
     def test_animation_scale_2(self):
         """-scale to scale"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
-            icase=42,
+            icase_disp=42,
             icase_start=None, icase_end=None, icase_delta=None,
             time=2.0, animation_profile='-scale to scale',
             fps=30)
-        assert len(np.unique(icases)) == 1
+        assert len(np.unique(icases_disp)) == 1
         assert len(np.unique(phases)) == 1
         assert np.allclose(analysis_time, 2.0), analysis_time
         assert np.allclose(scales.min(), -scale), scales
@@ -98,32 +98,32 @@ class GuiUtils(unittest.TestCase):
     def test_animation_scale_3(self):
         """-scale to scale to -scale"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
-            icase=42,
+            icase_disp=42,
             icase_start=None, icase_end=None, icase_delta=None,
             time=2.0, animation_profile='-scale to scale to -scale',
             fps=30)
-        assert len(np.unique(icases)) == 1
+        assert len(np.unique(icases_disp)) == 1
         assert len(np.unique(phases)) == 1
         assert np.allclose(analysis_time, 1.0), analysis_time
         assert np.allclose(scales.min(), -scale), scales
         assert np.allclose(scales.max(), scale), scales
 
     def test_animation_scale_4(self):
-        scale_atols = [(1., 0.001), (10.0, 0.01)]
+        scale_atols = [(1., 0.003), (10.0, 0.03)]
         for scale, atol in scale_atols:
-            phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+            phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
                 scale, istep=None,
                 animate_scale=True, animate_phase=False, animate_time=False,
-                icase=42,
+                icase_disp=42,
                 icase_start=None, icase_end=None, icase_delta=None,
                 time=2.0, animation_profile='sinusoidal: 0 to scale to -scale to 0',
                 fps=30)
-            assert len(np.unique(icases)) == 1
+            assert len(np.unique(icases_disp)) == 1
             assert len(np.unique(phases)) == 1
-            assert np.allclose(analysis_time, 2.0), analysis_time
+            assert np.allclose(analysis_time, 1.0), analysis_time
 
             msg = ''
             if not np.allclose(scales.min(), -scale, atol=atol):
@@ -137,10 +137,10 @@ class GuiUtils(unittest.TestCase):
         """animate_scale/phase/time must be specified"""
         scale = 1.0
         with self.assertRaises(NotImplementedError):
-            phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+            setup_animation(
                 scale, istep=None,
                 animate_scale=False, animate_phase=False, animate_time=False,
-                icase=42,
+                icase_disp=42,
                 icase_start=None, icase_end=None, icase_delta=None,
                 time=2.0,  animation_profile='-scale to scale',
                 fps=30)
@@ -148,14 +148,14 @@ class GuiUtils(unittest.TestCase):
     def test_animation_phase_1(self):
         """phase plot"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=False, animate_phase=True, animate_time=False,
-            icase=42,
+            icase_disp=42,
             icase_start=None, icase_end=None, icase_delta=None,
             time=2.0, #animation_profile='0 to scale',
             fps=30)
-        assert len(np.unique(icases)) == 1
+        assert len(np.unique(icases_disp)) == 1
         assert len(np.unique(scales)) == 1
         assert np.allclose(analysis_time, 2.0), analysis_time
         assert np.allclose(phases[0], 0.), phases
@@ -164,14 +164,14 @@ class GuiUtils(unittest.TestCase):
     def test_animation_time_1(self):
         """time plot"""
         scale = 1.0
-        phases, icases, isteps, scales, analysis_time, onesided = setup_animation(
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=False, animate_phase=False, animate_time=True,
-            icase=42,
+            icase_disp=42,
             icase_start=1, icase_end=10, icase_delta=2,
             time=2.0, #animation_profile='0 to scale',
             fps=30)
-        assert np.array_equal(icases, [1, 3, 5, 7, 9]), icases
+        assert np.array_equal(icases_disp, [1, 3, 5, 7, 9]), icases_disp
         assert len(np.unique(scales)) == 1, scales
         assert len(np.unique(isteps)) > 1, isteps
         assert len(np.unique(phases)) == 1, phases

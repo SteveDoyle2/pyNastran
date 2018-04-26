@@ -402,7 +402,7 @@ class GuiCommon(GuiAttributes):
         is_valid, (grid_result, name, name_str, data) = self._get_fringe_data(icase)
 
         if not is_valid:
-            return
+            return is_valid
         (
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
@@ -475,6 +475,8 @@ class GuiCommon(GuiAttributes):
         self.grid_selected.Modified()
         self.vtk_interactor.Render()
         self.res_widget.result_case_window.treeView.fringe.setChecked(True)
+        is_valid = True
+        return is_valid
 
     def on_disp(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
         """Sets the icase data to the active displacement"""

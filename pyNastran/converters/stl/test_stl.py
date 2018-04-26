@@ -45,10 +45,25 @@ class TestSTL(unittest.TestCase):
             stl_file.write(lines)
 
         stl = read_stl(stl_filename, log=log, debug=False)
+        stl.get_normals_at_nodes()
+        scale = 1.0
+        stl.scale_nodes(scale)
+        stl.shift_nodes(0., 0., 0.)
+
+        axes = 'xy'
+        stl.flip_axes(axes, scale)
+        stl.flip_axes(axes, scale)  # flip back
+
         #stl = STL(log=None, debug=False)
         #stl.read_stl(stl_filename)
         assert len(stl.nodes) == 6, 'nodes=%s' % len(stl.nodes)
         assert len(stl.elements) == 2, 'nelements=%s' % len(stl.elements)
+
+        xyz = 'y'
+        tol = 0.00001
+        stl.create_mirror_model(xyz, tol)
+        assert len(stl.nodes) == 12, 'nodes=%s' % len(stl.nodes)
+        assert len(stl.elements) == 4, 'nelements=%s' % len(stl.elements)
         os.remove(stl_filename)
 
     def test_stl_io_02(self):

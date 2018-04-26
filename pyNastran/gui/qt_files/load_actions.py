@@ -247,7 +247,7 @@ class LoadActions(object):
                 msg = 'format=%r has no method to load results' % geometry_format
                 self.gui.log_error(msg)
                 return
-            out_filename = self._create_load_file_dialog(wildcard, title)[1]
+            out_filename = self.create_load_file_dialog(wildcard, title)[1]
         else:
 
             for fmt in self.gui.fmts:
@@ -350,7 +350,7 @@ class LoadActions(object):
                 'Patran nod (*.nod)',
             ]
             fmt = ';;'.join(fmts)
-            wildcard_level, out_filename = self._create_load_file_dialog(fmt, title)
+            wildcard_level, out_filename = self.create_load_file_dialog(fmt, title)
             if not out_filename:
                 return is_failed, None, None # user clicked cancel
             iwildcard = fmts.index(wildcard_level)
@@ -542,7 +542,7 @@ class LoadActions(object):
         if default_filename is None:
             default_filename = self.gui.last_dir
         fname, wildcard_level = getopenfilename(
-            parent=self, caption=title,
+            parent=self.gui, caption=title,
             basedir=default_filename, filters=qt_wildcard,
             selectedfilter='', options=None)
         return wildcard_level, fname
