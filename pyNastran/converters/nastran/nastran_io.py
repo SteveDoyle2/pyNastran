@@ -5810,7 +5810,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         keys = model.get_key_order()
         assert keys is not None, keys
-        print('keys_order =', keys)
+        #print('keys_order =', keys)
 
         disp_dict = defaultdict(list)
         stress_dict = defaultdict(list)

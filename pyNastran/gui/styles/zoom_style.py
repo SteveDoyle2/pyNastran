@@ -90,12 +90,12 @@ class ZoomStyle(vtk.vtkInteractorStyleRubberBandZoom):
             self.parent.zoom(zoom_factor)
 
             self.zoom_button.setChecked(False)
-            self.parent.setup_mouse_buttons(mode='default')
+            self.parent.mouse_actions.setup_mouse_buttons(mode='default')
             #self.parent.actions['zoom'].SetChecked(False)
 
 
     def right_button_press_event(self, obj, event):
         """cancels the zoom button"""
         self.zoom_button.setChecked(False)
-        self.parent.setup_mouse_buttons(mode='default')
+        self.parent.mouse_actions.setup_mouse_buttons(mode='default')
         self.parent.vtk_interactor.Render()

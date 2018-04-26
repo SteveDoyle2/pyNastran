@@ -651,7 +651,7 @@ class OP2(OP2_Scalar):
     def load_hdf5(self, hdf5_filename, combine=True):
         """loads an h5 file into an OP2 object"""
         assert os.path.exists(hdf5_filename), print_bad_path(hdf5_filename)
-        from pyNastran.op2.op2_interface.load_h5 import load_op2_from_hdf5_file
+        from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_file
         import h5py
         self.op2_filename = hdf5_filename
 
@@ -669,55 +669,8 @@ class OP2(OP2_Scalar):
           - matrices
           - BucklingEigenvalues
         """
-        import h5py
-        no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
-        result_types = self.get_table_types()
-        i = 0
-
-        with h5py.File(hdf5_filename, 'w') as hdf5_file:
-            info_group = hdf5_file.create_group('info')
-            info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
-            info_group.create_dataset('nastran_format', data=self._nastran_format)
-            #info_group.create_dataset('is_msc', data=self.is_msc)
-            #info_group.create_dataset('is_nx', data=self.is_nx)
-            #info_group.create_dataset('nastran_version', data=self.is_nx)
-
-            if len(self.matrices):
-                matrix_group = hdf5_file.create_group('matrices')
-                for key, matrix in sorted(iteritems(self.matrices)):
-                    matrixi_group = matrix_group.create_group(b(key))
-                    if hasattr(matrix, 'export_to_hdf5'):
-                        matrix.export_to_hdf5(matrixi_group, self.log)
-                    else:
-                        self.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
-                        #raise NotImplementedError()
-                        continue
-
-            subcase_groups = {}
-            for result_type in result_types:
-                result = getattr(self, result_type)
-                #if len(result):
-                    #print(result)
-
-                for key, obj in iteritems(result):
-                    class_name = obj.__class__.__name__
-                    #print('working on %s' % class_name)
-                    obj.object_attributes()
-                    subcase_name = 'Subcase=%s' % str(key)
-                    if subcase_name in subcase_groups:
-                        subcase_group = subcase_groups[subcase_name]
-                    else:
-                        subcase_group = hdf5_file.create_group(subcase_name)
-                        subcase_groups[subcase_name] = subcase_group
-
-                    #if hasattr(obj, 'element_name'):
-                        #class_name += ': %s' % obj.element_name
-
-                    #result_name = result_type + ':' + class_name
-                    result_name = result_type
-                    result_group = subcase_group.create_group(result_name)
-                    obj.export_to_hdf5(result_group, self.log)
-                    i += 1
+        from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5
+        export_op2_to_hdf5(hdf5_filename, self)
 
     def combine_results(self, combine=True):
         """
@@ -933,13 +886,11 @@ class OP2(OP2_Scalar):
         pval_steps = set([])
 
         for key in keys:
-            print('key = %s' % str(key))
+            #print('key = %s' % str(key))
             if len(key) == 6:
-                print('n = 6')
                 isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step = key
                 ogs = 0
             elif len(key) == 7:
-                print('n = 7')
                 isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step = key
             else:
                 print('  %s' % str(key))
@@ -979,10 +930,8 @@ class OP2(OP2_Scalar):
                                 for ogs in ogss:
                                     key = (isubcase, analysis_code, sort_method,
                                            count, ogs, superelement_adaptivity_index, pval_step)
-                                    print("superelement_adaptivity_index, pval_step = %r %r" % (
-                                        superelement_adaptivity_index, pval_step))
                                     if key not in keys3:
-                                        print('adding ', key)
+                                        #print('adding ', key)
                                         keys3.append(key)
         if len(keys3) == 0:
             self.log.warning('No results...\n' + self.get_op2_stats(short=True))

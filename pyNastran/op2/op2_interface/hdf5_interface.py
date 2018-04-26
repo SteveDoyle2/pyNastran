@@ -2,14 +2,18 @@
 """
 defines:
  model = load_op2_from_h5(h5_filename, log=None)
+ export_op2_to_hdf5(hdf5_filename, op2_model)
 """
-from __future__ import print_function
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import os
+from six import b
 
 from six import iteritems, PY3, binary_type
 import numpy as np
 import h5py
 
+import pyNastran
 from pyNastran.op2.op2 import OP2
 
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues
@@ -425,7 +429,9 @@ def load_table(result_name, h5_result, objs, log, debug=False):# real_obj, compl
 
     obj = obj_class(data_code, is_sort1, isubcase, dt)
 
-    assert obj.class_name == class_name, 'class_name=%r selected; should be %r' % (obj.class_name, class_name)
+    if obj.class_name != class_name:
+        msg = 'class_name=%r selected; should be %r' % (obj.class_name, class_name)
+        raise RuntimeError(msg)
     _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
                                      debug=debug)
     return obj
@@ -500,6 +506,56 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
                 #return None
             #obj_class = complex_obj
     return obj_class
+
+def export_op2_to_hdf5(hdf5_filename, op2_model):
+    #no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
+    result_types = op2_model.get_table_types()
+    i = 0
+
+    with h5py.File(hdf5_filename, 'w') as hdf5_file:
+        info_group = hdf5_file.create_group('info')
+        info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
+        info_group.create_dataset('nastran_format', data=op2_model._nastran_format)
+        #info_group.create_dataset('is_msc', data=self.is_msc)
+        #info_group.create_dataset('is_nx', data=self.is_nx)
+        #info_group.create_dataset('nastran_version', data=self.is_nx)
+
+        if len(op2_model.matrices):
+            matrix_group = hdf5_file.create_group('matrices')
+            for key, matrix in sorted(iteritems(op2_model.matrices)):
+                matrixi_group = matrix_group.create_group(b(key))
+                if hasattr(matrix, 'export_to_hdf5'):
+                    matrix.export_to_hdf5(matrixi_group, op2_model.log)
+                else:
+                    op2_model.log.warning('HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix))))
+                    #raise NotImplementedError()
+                    continue
+
+        subcase_groups = {}
+        for result_type in result_types:
+            result = getattr(op2_model, result_type)
+            #if len(result):
+                #print(result)
+
+            for key, obj in iteritems(result):
+                #class_name = obj.__class__.__name__
+                #print('working on %s' % class_name)
+                obj.object_attributes()
+                subcase_name = 'Subcase=%s' % str(key)
+                if subcase_name in subcase_groups:
+                    subcase_group = subcase_groups[subcase_name]
+                else:
+                    subcase_group = hdf5_file.create_group(subcase_name)
+                    subcase_groups[subcase_name] = subcase_group
+
+                #if hasattr(obj, 'element_name'):
+                    #class_name += ': %s' % obj.element_name
+
+                #result_name = result_type + ':' + class_name
+                result_name = result_type
+                result_group = subcase_group.create_group(result_name)
+                obj.export_to_hdf5(result_group, op2_model.log)
+                i += 1
 
 def load_op2_from_hdf5(hdf5_filename, log=None):
     """loads an hdf5 file into an OP2 object"""
