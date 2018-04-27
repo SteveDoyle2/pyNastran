@@ -18,11 +18,6 @@ environment:
     # conda set
     # TODO: add conda_libs...
     # TODO: add all_tests.py command
-    - PYTHON: "C:\\Miniconda"
-      PYTHON_VERSION: "2.7.x" # currently 2.7.11
-      PYTHON_ARCH: "32"
-      PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
-      PYNASTRAN_LIBS: "numpy scipy matplotlib vtk pyqt"
 
     - PYTHON: "C:\\Miniconda-x64"
       PYTHON_VERSION: "2.7.x" # currently 2.7.11
@@ -30,21 +25,9 @@ environment:
       PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
       PYNASTRAN_LIBS: "numpy scipy matplotlib vtk pyqt"
 
-    - PYTHON: "C:\\Miniconda35"
-      PYTHON_VERSION: "3.5.x" # currently 3.5.1
-      PYTHON_ARCH: "32"
-      PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
-      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
-
     - PYTHON: "C:\\Miniconda35-x64"
       PYTHON_VERSION: "3.5.x" # currently 3.5.1
       PYTHON_ARCH: "64"
-      PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
-      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
-
-    - PYTHON: "C:\\Miniconda36"
-      PYTHON_VERSION: "3.6.x" # currently 3.6.x
-      PYTHON_ARCH: "32"
       PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
       PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
 
