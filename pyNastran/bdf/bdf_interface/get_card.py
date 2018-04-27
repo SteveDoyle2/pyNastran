@@ -811,8 +811,12 @@ class GetCard(GetMethods):
         fail_nids = set()
         fail_count = 0
         fail_count_max = 3
+        loads_to_skip = ['MOMENT', 'MOMENT1', 'MOMENT2', 'FORCE1', 'TEMP']
         for load, scale in zip(loads, scale_factors):
-            if load.type == 'FORCE':
+            load_type = load.type
+            if load_type in loads_to_skip:
+                pass
+            elif load_type == 'FORCE':
                 scale2 = load.mag * scale  # does this need a magnitude?
                 nid = load.node
                 if nid in dependents_nodes:
@@ -823,7 +827,7 @@ class GetCard(GetMethods):
                             nid, str(load)))
                 forces[nid_map[nid]] += load.xyz * scale2
 
-            elif load.type == 'PLOAD':
+            elif load_type == 'PLOAD':
                 pressure = load.pressure * scale
                 nnodes = len(load.nodes)
                 if nnodes == 4:
@@ -847,7 +851,7 @@ class GetCard(GetMethods):
                 for nid in load.nodes:
                     forces[nid_map[nid]] += forcei
 
-            elif load.type == 'PLOAD2':
+            elif load_type == 'PLOAD2':
                 pressure = load.pressure * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:
                     elem = self.elements[eid]
@@ -877,7 +881,7 @@ class GetCard(GetMethods):
                         self.log.debug('    case=%s etype=%r loadtype=%r not supported' % (
                             load_case_id, elem.type, load.type))
 
-            elif load.type == 'PLOAD4':
+            elif load_type == 'PLOAD4':
                 # multiple elements
                 for elem in load.eids_ref:
                     ie = eid_map[elem.eid]
@@ -1046,7 +1050,7 @@ class GetCard(GetMethods):
                         #m = cross(r, f)
                         #M += m
 
-            elif load.type == 'SPCD':
+            elif load_type == 'SPCD':
                 #self.gids = [integer(card, 2, 'G1'),]
                 #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
                 #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
@@ -1061,18 +1065,14 @@ class GetCard(GetMethods):
                     assert c1 in [1, 2, 3, 4, 5, 6], c1
                     if c1 < 4:
                         spcd[nid_map[nid], c1 - 1] = d1
-            elif load.type in ['FORCE1', 'MOMENT1']:
-                pass
-            elif load.type in ['TEMP']:
-                pass
-            elif load.type == 'SLOAD':
+            elif load_type == 'SLOAD':
                 for nid, mag in zip(load.nodes, load.mags):
                     forces[nid_map[nid]] += np.array([mag, 0., 0.])
             else:
-                if load.type not in cards_ignored:
-                    cards_ignored.add(load.type)
+                if load_type not in cards_ignored:
+                    cards_ignored.add(load_type)
                     self.log.warning('  _get_forces_moments_array - unsupported '
-                                     'load.type = %s' % load.type)
+                                     'load.type = %s' % load_type)
         if fail_count:
             fail_nids_list = list(fail_nids)
             fail_nids_list.sort()
