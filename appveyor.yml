@@ -81,6 +81,7 @@ install:
   # removed: atlas
   - "conda install %PYNASTRAN_LIBS% --yes"
   #- "conda create -q -n test-environment python=$PYTHON_VERSION atlas numpy scipy pandas"
+  - "conda list"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
