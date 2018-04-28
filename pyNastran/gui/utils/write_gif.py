@@ -21,7 +21,7 @@ def setup_animation(scale, istep=None,
                     icase_fringe=None, icase_disp=None, icase_vector=None,
                     icase_start=None, icase_end=None, icase_delta=None,
                     time=2.0, animation_profile='0 to scale',
-                    fps=30):
+                    fps=30, animate_in_gui=False):
     """
     helper method for ``make_gif``
 
@@ -76,39 +76,67 @@ def setup_animation(scale, istep=None,
         analysis_time, fps)
     phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2 = out
 
+    if istep is None and animate_scale and not animate_in_gui:
+        scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2 = make_one_sided(
+            scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, onesided)
     if istep is not None:
         assert isinstance(istep, integer_types), 'istep=%r' % istep
         scales = (scales2[istep],)
         phases = (phases2[istep],)
         isteps = (istep,)
+    #print('scales_final=%s' % scales)
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2, analysis_time, onesided
 
+
+def fix_nframes(nframes, profile):
+    """
+    # make sure we break at the "true scale" max
+    #
+    # should this be in terms of fps or nframes?
+    """
+    fix_nframes_even = nframes == 1 or nframes % 2 == 0
+    fix_nframes_sin = nframes == 1 or nframes % 4 != 1
+    if profile in ['0 to scale to 0', '-scale to scale to -scale'] and fix_nframes_even:
+        nframes_div_2 = nframes // 2
+        nframes = 2 * (nframes_div_2 + 1) + 1
+    if '0 to scale to -scale to 0' in profile and fix_nframes_sin:
+        nframes_div_4 = nframes // 4
+        nframes = 4 * (nframes_div_4 + 1) + 1
+    return nframes
 
 def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, profile, fps):
     """
     Gets the inputs for a displacement scale/real modal animation
 
-    A onesided animation is an animation that does not need to loop back
-    on itself because it ends back at the start point.  We want to
-    set it to true because if an animation is onesided, we can skip
+    A onesided animation is an animation that:
+     - does not need to loop back on itself because it ends back at the
+       start point
+     - is symmetric
+
+    We want to set it to true because if an animation is onesided, we can skip
     making half the images.
     """
     if isinstance(profile, string_types):
         profile = profile.lower()
         if profile == '0 to scale':
+            # doesn't end at start point
+            # not symmetric
             onesided = False
         elif profile == '0 to scale to 0':
+            # ends at start point
+            # symmetric
             onesided = True
-            if fps % 2 == 1:
-                fps += 1
         elif profile == '-scale to scale':
+            # not symmetric
             onesided = False
         elif profile == '-scale to scale to -scale':
+            # ends at start point
+            # symmetric
             onesided = True
-            if fps % 2 == 1:
-                fps += 1
-        elif profile == 'sinusoidal: 0 to scale to -scale to 0':
-            onesided = True
+        elif profile in ['0 to scale to -scale to 0',
+                         'sinusoidal: 0 to scale to -scale to 0']:
+            # not symmetric
+            onesided = False
         else:
             msg = (
                 "profile=%r is not supported:\n"
@@ -116,6 +144,7 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
                 "   '0 to scale to 0'\n"
                 "  '-scale to scale'\n"
                 "  '-scale to scale to -scale'\n"
+                "  '0 to scale to -scale to 0'"
                 "  'sinusoidal: 0 to scale to -scale to 0'"
                 % profile)
             raise NotImplementedError(msg)
@@ -124,12 +153,15 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
         raise NotImplementedError(msg)
 
     analysis_time = get_analysis_time(time, onesided)
+    #fps = fix_nframes(fps, profile)
     nframes = int(analysis_time * fps)
-    if profile in ['0 to scale to 0', '-scale to scale to -scale']:
-        nframes += 1
 
+    nframes = fix_nframes(nframes, profile)
+    #print('analysis_time*fps=%s*%s=%s nframes=%s profile=%r' % (
+        #analysis_time, fps, analysis_time * fps, nframes, profile))
+
+    # endpoint=False if scale[0] == scale[-1]; otherwise True
     nframes_interp = nframes - 1
-
     if isinstance(profile, string_types):
         profile = profile.lower()
         if profile == '0 to scale':
@@ -143,24 +175,38 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
             xp = np.array([0., nframes_interp])
             x = np.arange(nframes)
             scales = np.interp(x, xp, yp)
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
+            # TODO: add flag for endpoint
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
 
         elif profile == '0 to scale to 0':
             yp = np.array([0, scale, 0.])
             xp = np.array([0., nframes_interp / 2., nframes_interp])
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
             x = isteps
             scales = np.interp(x, xp, yp)
         elif profile == '-scale to scale to -scale':
             yp = np.array([-scale, scale, -scale])
             xp = np.array([0., nframes_interp / 2., nframes_interp])
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
             x = isteps
             scales = np.interp(x, xp, yp)
+        elif profile == '0 to scale to -scale to 0':
+            yp = np.array([0., 1., 0., -1., 0.])
+            xp = np.array([0., nframes_interp * 0.25, nframes_interp * 0.5,
+                           nframes_interp * 0.75, nframes_interp])
+            # TODO: add flag for endpoint
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
+            x = isteps
+            scales = scale * np.interp(x, xp, yp)
+            #print('x=%s xp=%s yp=%s' % (x, xp, yp))
+            #print('scales=%s' % (scales))
+            #print('isteps* = ', isteps)
         elif profile == 'sinusoidal: 0 to scale to -scale to 0':
-            theta = np.array([0., np.pi, 2 * np.pi])
-            xp = np.array([0., nframes_interp / 2., nframes_interp])
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            theta = np.pi * np.array([0., 0.5, 1., 1.5, 2.])
+            xp = np.array([0., nframes_interp * 0.25, nframes_interp * 0.5,
+                           nframes_interp * 0.75, nframes_interp])
+            # TODO: add flag for endpoint
+            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
             x = isteps
             scales = scale * np.sin(np.interp(x, xp, theta))
         else:
@@ -170,6 +216,7 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
                 "  '0 to scale to 0'\n"
                 "  '-scale to scale'\n"
                 "  '-scale to scale to -scale'\n"
+                "  '0 to scale to -scale to 0'"
                 "  'sinusoidal: 0 to scale to -scale to 0'\n" % profile)
             raise NotImplementedError(msg)
     #elif isinstance(profile, list):
@@ -325,7 +372,6 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
         #print(msg)
         raise ValueError(msg)
 
-
     if len(icases_fringe) != len(phases):
         msg = 'ncases_fringe=%s nphases=%s' % (len(icases_fringe), len(phases))
         #print(msg)
@@ -333,13 +379,14 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
 
     if isteps is None:
         isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
-        print("setting isteps in make_gif")
+        #print("setting isteps in make_gif")
 
     if len(scales) != len(isteps):
         msg = 'len(scales)=%s len(isteps)=%s analysis_time=%s fps=%s' % (
             len(scales), len(isteps), analysis_time, fps)
         print(msg)
         raise ValueError(msg)
+    #print('scales=%s' % scales)
     assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
 
     phases2 = np.array(phases)
@@ -349,6 +396,80 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     isteps2 = np.array(isteps)
     scales2 = np.array(scales)
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2
+
+def make_one_sided(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, onesided):
+    """
+    Chop the frames in half at the middle frame
+
+    [1, 2, 3, 4, 5, 4, 3, 2, 1]
+    >>> a = [1, 2, 3, 4, 5]
+    """
+    # if twosided
+    i = None
+    if onesided:
+        nframes = len(scales)
+        ihalf_frame = nframes // 2 + 1
+        assert nframes % 2 == 1, nframes
+        i = ihalf_frame
+    elif scales[0] == scales[-1]:
+        i = -1
+
+    if i is not None:
+        if isinstance(phases, np.ndarray):
+            phases = phases[:i]
+        if isinstance(icases_fringe, np.ndarray):
+            icases_fringe = icases_fringe[:i]
+        if isinstance(icases_disp, np.ndarray):
+            icases_disp = icases_disp[:i]
+        if isinstance(icases_vector, np.ndarray):
+            icases_vector = icases_vector[:i]
+        isteps = isteps[:i]
+        scales = scales[:i]
+    return scales, phases, icases_fringe, icases_disp, icases_vector, isteps
+
+def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, onesided):
+    """
+    Drop the duplicate middle frame if we're onesided.  Only for the GUI.
+
+    Example
+    -------
+    this is a onesided "mountain", we only go up
+    >>> a = [1, 2, 3, 4, 5]
+    >>> a + a[-2::-1]
+
+    this is a two sided "mountain"; we have to go back down
+    [1, 2, 3, 4, 5, 4, 3, 2, 1]
+    """
+    is_endpoint = scales[0] == scales[-1]
+    end = None
+
+    if is_endpoint:
+        end = -1
+
+    # if twosided
+    #if not onesided:
+        #print('A-end=%s scales=%s, isteps=%s' % (end, scales, isteps))
+        #print(scales[:end], scales[-1::-1])
+        #phases = np.hstack([phases[:end], phases[-1::-1]])
+        #icases_fringe = np.hstack([icases_fringe[:end], icases_fringe[-1::-1]])
+        #icases_disp = np.hstack([icases_disp[:end], icases_disp[-1::-1]])
+        #icases_vector = np.hstack([icases_vector[:end], icases_vector[-1::-1]])
+        #isteps = np.hstack([isteps[:end], isteps[-1::-1]])
+        #scales = np.hstack([scales[:end], scales[-1::-1]])
+        #print('B-scales=%s n=%s, isteps=%s' % (scales, len(scales), isteps))
+        ##analysis_time *= 2
+        #end = None
+
+    # make sure that we don't screw up onesided by putting this on repeat
+    #print('scales[:end]=%s' % scales[:end])
+    phases = np.hstack([phases[:end], phases[:end]])
+    icases_fringe = np.hstack([icases_fringe[:end], icases_fringe[:end]])
+    icases_disp = np.hstack([icases_disp[:end], icases_disp[:end]])
+    icases_vector = np.hstack([icases_vector[:end], icases_vector[:end]])
+    isteps = np.hstack([isteps[:end], isteps[:end]])
+    scales = np.hstack([scales[:end], scales[:end]])
+    #print('scales2     =%s n=%s, isteps2=%s' % (scales, len(scales), isteps))
+    return scales, phases, icases_fringe, icases_disp, icases_vector, isteps
 
 def write_gif(gif_filename, png_filenames, time=2.0,
               onesided=True, nrepeat=0,

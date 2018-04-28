@@ -21,9 +21,9 @@ from pyNastran.gui.utils.write_gif import IS_IMAGEIO
 ANIMATION_PROFILES = [
     '0 to Scale',
     '0 to Scale to 0',
-    #'0 to Scale to -Scale to 0',
     '-Scale to Scale',
     '-Scale to Scale to -Scale',
+    '0 to Scale to -Scale to 0',
     'Sinusoidal: 0 to Scale to -Scale to 0',
 ]
 #ANIMATION_PROFILES['-Scale to Scale to -Scale'] = [-1., 1., -1.]
@@ -114,6 +114,7 @@ class AnimationWindow(PyDialog):
         self.checkbox_fringe.setToolTip(
             'Animate the fringe in addition to the deflection')
         #self.checkbox_disp = QCheckBox('Animate')
+        self.checkbox_fringe.setEnabled(False)
 
         self.icase_fringe = QLabel("iCase (Fringe):")
         self.icase_fringe_edit = QSpinBox(self)
@@ -192,27 +193,47 @@ class AnimationWindow(PyDialog):
 
         #-----------------
         # Time plot
+        self.fringe_label = QLabel("Fringe")
+
+        self.icase_fringe_start_edit = QSpinBox(self)
+        self.icase_fringe_start_edit.setRange(0, icase_max)
+        self.icase_fringe_start_edit.setSingleStep(1)
+        self.icase_fringe_start_edit.setValue(self._icase_fringe)
+        self.icase_fringe_start_button = QPushButton("Default")
+
+        self.icase_fringe_end_edit = QSpinBox(self)
+        self.icase_fringe_end_edit.setRange(0, icase_max)
+        self.icase_fringe_end_edit.setSingleStep(1)
+        self.icase_fringe_end_edit.setValue(self._icase_fringe)
+        self.icase_fringe_end_button = QPushButton("Default")
+
+        self.icase_fringe_delta_edit = QSpinBox(self)
+        self.icase_fringe_delta_edit.setRange(1, icase_max)
+        self.icase_fringe_delta_edit.setSingleStep(1)
+        self.icase_fringe_delta_edit.setValue(1)
+        self.icase_fringe_delta_button = QPushButton("Default")
+
         self.displacement_label = QLabel("Displacement")
         self.icase_start = QLabel("iCase Start:")
-        self.icase_start_edit = QSpinBox(self)
-        self.icase_start_edit.setRange(0, icase_max)
-        self.icase_start_edit.setSingleStep(1)
-        self.icase_start_edit.setValue(self._icase_fringe)
-        self.icase_start_button = QPushButton("Default")
+        self.icase_disp_start_edit = QSpinBox(self)
+        self.icase_disp_start_edit.setRange(0, icase_max)
+        self.icase_disp_start_edit.setSingleStep(1)
+        self.icase_disp_start_edit.setValue(self._icase_fringe)
+        self.icase_disp_start_button = QPushButton("Default")
 
         self.icase_end = QLabel("iCase End:")
-        self.icase_end_edit = QSpinBox(self)
-        self.icase_end_edit.setRange(0, icase_max)
-        self.icase_end_edit.setSingleStep(1)
-        self.icase_end_edit.setValue(self._icase_fringe)
-        self.icase_end_button = QPushButton("Default")
+        self.icase_disp_end_edit = QSpinBox(self)
+        self.icase_disp_end_edit.setRange(0, icase_max)
+        self.icase_disp_end_edit.setSingleStep(1)
+        self.icase_disp_end_edit.setValue(self._icase_fringe)
+        self.icase_disp_end_button = QPushButton("Default")
 
         self.icase_delta = QLabel("iCase Delta:")
-        self.icase_delta_edit = QSpinBox(self)
-        self.icase_delta_edit.setRange(1, icase_max)
-        self.icase_delta_edit.setSingleStep(1)
-        self.icase_delta_edit.setValue(1)
-        self.icase_delta_button = QPushButton("Default")
+        self.icase_disp_delta_edit = QSpinBox(self)
+        self.icase_disp_delta_edit.setRange(1, icase_max)
+        self.icase_disp_delta_edit.setSingleStep(1)
+        self.icase_disp_delta_edit.setValue(1)
+        self.icase_disp_delta_button = QPushButton("Default")
 
         self.min_value_enable = QCheckBox()
         self.min_value = QLabel("Min Value:")
@@ -242,11 +263,11 @@ class AnimationWindow(PyDialog):
         #self.max_value_button.hide()
         # TODO: enable this (uncomment) ------------------------------------------
 
-        self.icase_start_edit.setToolTip('The first frame of the animation')
-        self.icase_end_edit.setToolTip(
+        self.icase_disp_start_edit.setToolTip('The first frame of the animation')
+        self.icase_disp_end_edit.setToolTip(
             'The last frame of the animation\n'
             'Assumes icase_start + nframes * icase_delta = icase_end')
-        self.icase_delta_edit.setToolTip('The frame step size (to skip non-consecutive results).\n'
+        self.icase_disp_delta_edit.setToolTip('The frame step size (to skip non-consecutive results).\n'
                                          'Frame skipping can be used to:\n'
                                          "  - skip across results that you don't want to plot\n"
                                          '  - adjust the FPS')
@@ -426,7 +447,7 @@ class AnimationWindow(PyDialog):
 
         self.min_value_button.clicked.connect(self.on_min_value_default)
         self.max_value_button.clicked.connect(self.on_max_value_default)
-        self.icase_start_button.clicked.connect(self.on_update_min_max_defaults)
+        self.icase_disp_start_button.clicked.connect(self.on_update_min_max_defaults)
 
         #self.animate_scale_radio.clicked.connect(self.on_animate_scale)
         #self.animate_phase_radio.clicked.connect(self.on_animate_phase)
@@ -531,18 +552,28 @@ class AnimationWindow(PyDialog):
     def set_grid_time(self, enabled=True, word=''):
         """enables/disables the secondary input"""
         #print('%s-set_grid_time; enabled = %r' % (word, enabled))
+        self.displacement_label.setEnabled(enabled)
+        self.fringe_label.setEnabled(enabled)
+
         self.icase_start.setEnabled(enabled)
-        self.icase_start_edit.setEnabled(enabled)
-        self.icase_start_button.setEnabled(enabled)
+        self.icase_disp_start_edit.setEnabled(enabled)
+        self.icase_disp_start_button.setEnabled(enabled)
+        self.icase_fringe_start_edit.setEnabled(enabled)
+        self.icase_fringe_start_button.setEnabled(enabled)
 
         self.icase_end.setEnabled(enabled)
-        self.icase_end_edit.setEnabled(enabled)
-        self.icase_end_button.setEnabled(enabled)
+        self.icase_disp_end_edit.setEnabled(enabled)
+        self.icase_disp_end_button.setEnabled(enabled)
+        self.icase_fringe_end_edit.setEnabled(enabled)
+        self.icase_fringe_end_button.setEnabled(enabled)
 
         self.icase_delta.setEnabled(enabled)
-        self.icase_delta_edit.setEnabled(enabled)
-        self.icase_delta_button.setEnabled(enabled)
+        self.icase_disp_delta_edit.setEnabled(enabled)
+        self.icase_disp_delta_button.setEnabled(enabled)
+        self.icase_fringe_delta_edit.setEnabled(enabled)
+        self.icase_fringe_delta_button.setEnabled(enabled)
 
+        #-----------------------------------------------------------------------
         is_min_enabled = self.min_value_enable.isChecked()
         self.min_value.setEnabled(is_min_enabled)
         self.min_value_edit.setEnabled(is_min_enabled)
@@ -605,21 +636,21 @@ class AnimationWindow(PyDialog):
         """
         When the icase is changed, the min/max value default message is changed
         """
-        icase = self.icase_start_edit.value()
+        icase = self.icase_disp_start_edit.value()
         min_value, max_value = self.get_min_max(icase)
         self.min_value_button.setToolTip('Sets the min value to %g' % min_value)
         self.max_value_button.setToolTip('Sets the max value to %g' % max_value)
 
     def on_min_value_default(self):
         """When min default icase is pressued, update the value"""
-        icase = self.icase_start_edit.value()
+        icase = self.icase_disp_start_edit.value()
         min_value = self.get_min_max(icase)[0]
         self.min_value_edit.setText(str(min_value))
         self.min_value_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_max_value_default(self):
         """When max default icase is pressued, update the value"""
-        icase = self.icase_start_edit.value()
+        icase = self.icase_disp_start_edit.value()
         max_value = self.get_min_max(icase)[1]
         self.max_value_edit.setText(str(max_value))
         self.max_value_edit.setStyleSheet("QLineEdit{background: white;}")
@@ -738,34 +769,36 @@ class AnimationWindow(PyDialog):
         grid_time = QGridLayout()
         jrow = 0
 
+        self.fringe_label.setAlignment(Qt.AlignCenter)
         self.displacement_label.setAlignment(Qt.AlignCenter)
+
+        self.fringe_label.hide()
+        self.icase_fringe_delta_edit.hide()
+        self.icase_fringe_start_edit.hide()
+        self.icase_fringe_end_edit.hide()
+        self.icase_fringe_delta_button.hide()
+
         grid_time.addWidget(self.displacement_label, jrow, 1)
+        grid_time.addWidget(self.fringe_label, jrow, 2)
         jrow += 1
 
         grid_time.addWidget(self.icase_start, jrow, 0)
-        grid_time.addWidget(self.icase_start_edit, jrow, 1)
-        #grid_time.addWidget(self.icase_start_button, jrow, 2)
+        grid_time.addWidget(self.icase_disp_start_edit, jrow, 1)
+        grid_time.addWidget(self.icase_fringe_start_edit, jrow, 2)
+        #grid_time.addWidget(self.icase_disp_start_button, jrow, 2)
         jrow += 1
 
         grid_time.addWidget(self.icase_end, jrow, 0)
-        grid_time.addWidget(self.icase_end_edit, jrow, 1)
+        grid_time.addWidget(self.icase_disp_end_edit, jrow, 1)
+        grid_time.addWidget(self.icase_fringe_end_edit, jrow, 2)
         #grid_time.addWidget(self.icase_end_button, jrow, 2)
         jrow += 1
 
-        grid_time.addWidget(self.icase_delta,jrow, 0)
-        grid_time.addWidget(self.icase_delta_edit, jrow, 1)
+        grid_time.addWidget(self.icase_delta, jrow, 0)
+        grid_time.addWidget(self.icase_disp_delta_edit, jrow, 1)
+        grid_time.addWidget(self.icase_fringe_delta_edit, jrow, 2)
         #grid_time.addWidget(self.icase_delta_button, jrow, 2)
         jrow += 1
-        #else:
-            #grid_time.addWidget(self.icase_start, jrow, 0)
-            #grid_time.addWidget(self.icase_end, jrow, 1)
-            #grid_time.addWidget(self.icase_delta, jrow, 2)
-            #jrow += 1
-
-            #grid_time.addWidget(self.icase_start_edit, jrow, 0)
-            #grid_time.addWidget(self.icase_end_edit, jrow, 1)
-            #grid_time.addWidget(self.icase_delta_edit, jrow, 2)
-            #jrow += 1
 
 
         hbox_min = QHBoxLayout()
@@ -934,9 +967,9 @@ class AnimationWindow(PyDialog):
         make_gif = self.make_gif_checkbox.isChecked()
         animation_profile = str(self.animation_profile_edit.currentText())
 
-        icase_start = self.icase_start_edit.value()
-        icase_end = self.icase_end_edit.value()
-        icase_delta = self.icase_delta_edit.value()
+        icase_disp_start = self.icase_disp_start_edit.value()
+        icase_disp_end = self.icase_disp_end_edit.value()
+        icase_disp_delta = self.icase_disp_delta_edit.value()
 
         bool_repeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
         if bool_repeat:
@@ -951,7 +984,7 @@ class AnimationWindow(PyDialog):
                 gif_filename, scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
                 icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
-                icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
+                icase_start=icase_disp_start, icase_end=icase_disp_end, icase_delta=icase_disp_delta,
                 time=time, animation_profile=animation_profile,
                 nrepeat=nrepeat, fps=fps, magnify=magnify,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,

@@ -57,7 +57,7 @@ from pyNastran.gui.menus.menus import (
     EditGeometryProperties)
 
 from pyNastran.gui.utils.write_gif import (
-    setup_animation, update_animation_inputs, write_gif)
+    setup_animation, update_animation_inputs, write_gif, make_two_sided)
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_idtype
 
 
@@ -1981,7 +1981,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
             icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
             time=time, animation_profile=animation_profile,
-            fps=fps)
+            fps=fps, animate_in_gui=animate_in_gui)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = out
         parent = self
 
@@ -1990,6 +1990,34 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if len(icases_disp) == 1:
             pass
         elif animate_in_gui:
+            if animate_time:
+                icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
+                        icase_fringe, icase_disp, icase_vector,)
+            else:
+                icase_msg = '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n' % (
+                        icase_fringe, icase_disp, icase_vector,)
+            msg = (
+                'make_gif(%r, %s, istep=%s,\n'
+                '         min_value=%s, max_value=%s,\n'
+                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n%s'
+                #'         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
+                #'         icase_start=%s, icase_end=%s, icase_delta=%s,\n'
+                "         time=%s, animation_profile=%r,\n"
+                '         fps=%s, stop_animation=%s, animate_in_gui=%s)\n' % (
+                    gif_filename, scale, istep, min_value, max_value,
+                    animate_scale, animate_phase, animate_time,
+                    icase_msg,
+                    #icase_fringe, icase_disp, icase_vector,
+                    #icase_start, icase_end, icase_delta,
+                    time, animation_profile,
+                    fps, stop_animation, animate_in_gui)
+            )
+            self.log_command(msg)
+
+            # onesided has no advantages for in-gui animations and creates confusion
+            scales, phases, icases_fringe, icases_disp, icases_vector, isteps = make_two_sided(
+                scales, phases, icases_fringe, icases_disp, icases_vector, isteps, onesided)
+
             class vtkAnimationCallback(object):
                 """
                 http://www.vtk.org/Wiki/VTK/Examples/Python/Animation
@@ -2008,7 +2036,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     i = self.timer_count % self.ncases
                     #j = next(self.cycler)
                     unused_istep = isteps[i]
-
                     icase_fringe = icases_fringe[i]
                     icase_disp = icases_disp[i]
                     icase_vector = icases_vector[i]
@@ -2024,6 +2051,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                     self.icase_disp0 = icase_disp
                     self.icase_fringe0 = icase_fringe
+                    self.icase_vector0 = icase_vector
 
                     parent.vtk_interactor.Render()
                     self.timer_count += 1
@@ -2132,7 +2160,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ----------
         gif_filename : str
             path to the output gif & png folder
-        icases : int / List[int]
+        icases_fringe/disp/vector : int / List[int]
             the result case to plot the deflection for
         scales : List[float]
             List[float] : the deflection scale factors; true scale
@@ -2140,9 +2168,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             List[float] : the phase angles (degrees)
             None -> animate scale
         max_value : float; default=None
-            the max value on the plot (not supported)
+            the max value on the plot
         min_value : float; default=None
-            the min value on the plot (not supported)
+            the min value on the plot
         isteps : List[int]
             the png file numbers (let's you pick a subset of images)
             useful for when you press ``Step``

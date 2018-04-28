@@ -6,7 +6,7 @@ import numpy as np
 import pyNastran
 from pyNastran.gui.utils.load_results import (
     load_csv, load_deflection_csv, load_user_geom, create_res_obj)
-from pyNastran.gui.utils.write_gif import setup_animation
+from pyNastran.gui.utils.write_gif import setup_animation, make_two_sided
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
@@ -63,56 +63,183 @@ class GuiUtils(unittest.TestCase):
         csv_filename = os.path.join(MODEL_PATH, 'custom_geom.csv')
         load_user_geom(csv_filename)
 
-    def test_animation_scale_1(self):
+    def test_animation_scale_0(self):
         """0 to scale"""
-        scale = 1.0
+        scale = 2.0
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
             icase_start=None, icase_end=None, icase_delta=None,
-            time=2.0, animation_profile='0 to scale to 0',
-            fps=30)
+            time=1.0, animation_profile='0 to scale',
+            fps=5)
         assert len(np.unique(icases_disp)) == 1
         assert len(np.unique(phases)) == 1
         assert np.allclose(analysis_time, 1.0), analysis_time
         assert np.allclose(scales.min(), 0.), scales
         assert np.allclose(scales.max(), scale), scales
+        np.testing.assert_almost_equal(scales, [0.0, 0.25*scale, 0.5*scale, 0.75*scale, scale])
+
+    def test_animation_scale_1a(self):
+        """0 to scale to 0"""
+        scale = 2.0
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
+            scale, istep=None,
+            animate_scale=True, animate_phase=False, animate_time=False,
+            icase_disp=42,
+            icase_start=None, icase_end=None, icase_delta=None,
+            time=1.0, animation_profile='0 to scale to 0',
+            fps=11)
+        assert len(np.unique(icases_disp)) == 1
+        assert len(np.unique(phases)) == 1
+        assert np.allclose(analysis_time, 0.5), analysis_time
+        assert np.allclose(scales.min(), 0.), scales
+        assert np.allclose(scales.max(), scale), scales
+        np.testing.assert_almost_equal(scales, [0., 0.5*scale, scale])
+
+    def test_animation_scale_1b(self):
+        """0 to scale to 0"""
+        scale = 1.0
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
+            scale, istep=None,
+            animate_scale=True, animate_phase=False, animate_time=False,
+            icase_disp=42,
+            icase_start=None, icase_end=None, icase_delta=None,
+            time=1.0, animation_profile='0 to scale to 0',
+            fps=10)
+        assert len(np.unique(icases_disp)) == 1
+        assert len(np.unique(phases)) == 1
+        assert np.allclose(analysis_time, 0.5), analysis_time
+        assert np.allclose(scales.min(), 0.), scales
+        assert np.allclose(scales.max(), scale), scales
+        np.testing.assert_almost_equal(scales, [0., 0.5, 1.])
 
     def test_animation_scale_2(self):
         """-scale to scale"""
-        scale = 1.0
+        scale = 2.0
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
             icase_start=None, icase_end=None, icase_delta=None,
-            time=2.0, animation_profile='-scale to scale',
-            fps=30)
-        assert len(np.unique(icases_disp)) == 1
-        assert len(np.unique(phases)) == 1
-        assert np.allclose(analysis_time, 2.0), analysis_time
-        assert np.allclose(scales.min(), -scale), scales
-        assert np.allclose(scales.max(), scale), scales
-
-    def test_animation_scale_3(self):
-        """-scale to scale to -scale"""
-        scale = 1.0
-        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
-            scale, istep=None,
-            animate_scale=True, animate_phase=False, animate_time=False,
-            icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
-            time=2.0, animation_profile='-scale to scale to -scale',
-            fps=30)
+            time=1.0, animation_profile='-scale to scale',
+            fps=5)
         assert len(np.unique(icases_disp)) == 1
         assert len(np.unique(phases)) == 1
         assert np.allclose(analysis_time, 1.0), analysis_time
         assert np.allclose(scales.min(), -scale), scales
         assert np.allclose(scales.max(), scale), scales
+        np.testing.assert_almost_equal(scales, [-scale, -0.5*scale, 0., 0.5*scale, scale])
 
-    def test_animation_scale_4(self):
-        scale_atols = [(1., 0.003), (10.0, 0.03)]
+    def test_animation_scale_3a(self):
+        """-scale to scale to -scale"""
+        scale = 2.0
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
+            scale, istep=None,
+            animate_scale=True, animate_phase=False, animate_time=False,
+            icase_disp=42,
+            icase_start=None, icase_end=None, icase_delta=None,
+            time=1.0, animation_profile='-scale to scale to -scale',
+            fps=11)
+        assert len(np.unique(icases_disp)) == 1
+        assert len(np.unique(phases)) == 1
+        assert np.allclose(analysis_time, 0.5), analysis_time
+        assert np.allclose(scales.min(), -scale), scales
+        assert np.allclose(scales.max(), scale), scales
+        np.testing.assert_almost_equal(scales, [-scale, 0., scale])
+
+    def test_animation_scale_3b(self):
+        """-scale to scale to -scale"""
+        scale = 2.0
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
+            scale, istep=None,
+            animate_scale=True, animate_phase=False, animate_time=False,
+            icase_disp=42,
+            icase_start=None, icase_end=None, icase_delta=None,
+            time=1.0, animation_profile='-scale to scale to -scale',
+            fps=10)
+        assert len(np.unique(icases_disp)) == 1
+        assert len(np.unique(phases)) == 1
+        assert np.allclose(analysis_time, 0.5), analysis_time
+        assert np.allclose(scales.min(), -scale), scales
+        assert np.allclose(scales.max(), scale), scales
+        assert len(scales) == 3, scales
+        np.testing.assert_almost_equal(scales, [-scale, 0., scale])
+
+    def test_animation_scale_3c(self):
+        """-scale to scale to -scale"""
+        scale = 2.0
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
+            scale, istep=None,
+            animate_scale=True, animate_phase=False, animate_time=False,
+            icase_disp=42,
+            icase_start=None, icase_end=None, icase_delta=None,
+            time=1.0, animation_profile='-scale to scale to -scale',
+            fps=1)
+        assert len(np.unique(icases_disp)) == 1
+        assert len(np.unique(phases)) == 1
+        np.testing.assert_almost_equal(scales, [-scale, scale])
+        assert np.allclose(analysis_time, 0.5), analysis_time
+        assert np.allclose(scales.min(), -scale), scales
+        assert np.allclose(scales.max(), scale), scales
+        assert len(scales) == 2, scales
+
+    def test_animation_scale_4a(self):
+        """0 to scale to -scale to 0"""
+        scale_atols = [(1., 0.00000001), (10.0, 0.00000001)]
+        for scale, atol in scale_atols:
+            phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
+                scale, istep=None,
+                animate_scale=True, animate_phase=False, animate_time=False,
+                icase_disp=42,
+                icase_start=None, icase_end=None, icase_delta=None,
+                time=1.0, animation_profile='0 to scale to -scale to 0',
+                fps=5, )
+            assert len(np.unique(icases_disp)) == 1
+            assert len(np.unique(phases)) == 1
+            assert np.allclose(analysis_time, 1.0), analysis_time
+            np.testing.assert_almost_equal(scales, [0., scale, 0., -scale])
+
+            msg = ''
+            if not np.allclose(scales.min(), -scale, atol=atol):
+                msg += 'scales=%s min=%s expected=%s\n' % (scales, scales.min(), -scale)
+            if not np.allclose(scales.max(), scale, atol=atol):
+                msg += 'scales=%s max=%s expected=%s' % (scales, scales.max(), scale)
+            if msg:  # pragma: no cover
+                raise ValueError(msg)
+
+    def test_animation_scale_4b(self):
+        """0 to scale to -scale to 0"""
+        scale, atol = (1., 0.00000001)
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
+            scale, istep=None,
+            animate_scale=True, animate_phase=False, animate_time=False,
+            icase_disp=42,
+            icase_start=None, icase_end=None, icase_delta=None,
+            time=1.0, animation_profile='0 to scale to -scale to 0',
+            fps=7, animate_in_gui=True)
+        assert len(np.unique(icases_disp)) == 1
+        assert len(np.unique(phases)) == 1
+        assert np.allclose(analysis_time, 1.0), analysis_time
+        np.testing.assert_almost_equal(scales, [0., 0.5*scale, scale, 0.5*scale,
+                                                0., -0.5*scale, -scale, -0.5*scale, 0.])
+
+        scales, phases, icases_fringe, icases_disp, icases_vector, isteps = make_two_sided(
+            scales, phases, icases_fringe, icases_disp, icases_vector, isteps, onesided)
+        np.testing.assert_almost_equal(scales, [0., 0.5*scale, scale, 0.5*scale, 0., -0.5*scale, -scale, -0.5*scale,
+                                                0., 0.5*scale, scale, 0.5*scale, 0., -0.5*scale, -scale, -0.5*scale, ] )
+
+        msg = ''
+        if not np.allclose(scales.min(), -scale, atol=atol):
+            msg += 'scales=%s min=%s expected=%s\n' % (scales, scales.min(), -scale)
+        if not np.allclose(scales.max(), scale, atol=atol):
+            msg += 'scales=%s max=%s expected=%s' % (scales, scales.max(), scale)
+        if msg:  # pragma: no cover
+            raise ValueError(msg)
+
+    def test_animation_scale_5(self):
+        """sinusoidal: 0 to scale to -scale to 0"""
+        scale_atols = [(1., 0.00001), (10.0, 0.0001)]
         for scale, atol in scale_atols:
             phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = setup_animation(
                 scale, istep=None,
@@ -120,10 +247,10 @@ class GuiUtils(unittest.TestCase):
                 icase_disp=42,
                 icase_start=None, icase_end=None, icase_delta=None,
                 time=2.0, animation_profile='sinusoidal: 0 to scale to -scale to 0',
-                fps=30)
+                fps=5)
             assert len(np.unique(icases_disp)) == 1
             assert len(np.unique(phases)) == 1
-            assert np.allclose(analysis_time, 1.0), analysis_time
+            assert np.allclose(analysis_time, 2.0), analysis_time
 
             msg = ''
             if not np.allclose(scales.min(), -scale, atol=atol):
