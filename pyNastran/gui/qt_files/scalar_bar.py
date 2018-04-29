@@ -184,7 +184,7 @@ class ScalarBar(object):
 
     def update_position(self, is_horizontal=True):
         """updates if the scalar bar is horizontal/vertical"""
-        update_position = is_horizontal is self.is_horizontal
+        update_position = is_horizontal is not self.is_horizontal
         if not update_position:
             return
         if is_horizontal:
