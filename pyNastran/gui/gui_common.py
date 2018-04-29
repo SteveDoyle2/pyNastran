@@ -1973,29 +1973,37 @@ class GuiCommon2(QMainWindow, GuiCommon):
          - set onesided=False
         """
         if stop_animation:
-            return self.stop_animation()
+            self.stop_animation()
+            return False
 
-        out = setup_animation(
-            scale, istep=istep,
-            animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
-            icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
-            icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
-            time=time, animation_profile=animation_profile,
-            fps=fps, animate_in_gui=animate_in_gui)
+        is_failed = True
+        try:
+            out = setup_animation(
+                scale, istep=istep,
+                animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
+                icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
+                icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
+                time=time, animation_profile=animation_profile,
+                fps=fps, animate_in_gui=animate_in_gui)
+        except (AssertionError, ValueError, RuntimeError, NotImplementedError) as error:
+            self.log_error(str(error))
+            self.stop_animation()
+            return is_failed
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = out
         parent = self
+
+        if animate_time:
+            icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
+                    icase_fringe, icase_disp, icase_vector,)
+        else:
+            icase_msg = '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n' % (
+                    icase_fringe, icase_disp, icase_vector,)
 
         #animate_in_gui = True
         self.stop_animation()
         if len(icases_disp) == 1:
             pass
         elif animate_in_gui:
-            if animate_time:
-                icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
-                        icase_fringe, icase_disp, icase_vector,)
-            else:
-                icase_msg = '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n' % (
-                        icase_fringe, icase_disp, icase_vector,)
             msg = (
                 'make_gif(%r, %s, istep=%s,\n'
                 '         min_value=%s, max_value=%s,\n'
@@ -2071,7 +2079,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             unused_timer_id = self.vtk_interactor.CreateRepeatingTimer(delay)
             return
 
-        is_failed = True
         try:
             is_failed = self.make_gif_helper(
                 gif_filename, icases_fringe, icases_disp, icases_vector, scales,
@@ -2091,17 +2098,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
             msg = (
                 'make_gif(%r, %s, istep=%s,\n'
                 '         min_value=%s, max_value=%s,\n'
-                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n'
-                '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
-                '         icase_start=%s, icase_end=%s, icase_delta=%s,\n'
+                '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n%s'
+                #'         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
+                #'         icase_start=%s, icase_end=%s, icase_delta=%s,\n'
                 "         time=%s, animation_profile=%r,\n"
                 '         nrepeat=%s, fps=%s, magnify=%s,\n'
                 '         make_images=%s, delete_images=%s, make_gif=%s, stop_animation=%s,\n'
                 '         animate_in_gui=%s)\n' % (
                     gif_filename, scale, istep, min_value, max_value,
                     animate_scale, animate_phase, animate_time,
-                    icase_fringe, icase_disp, icase_vector,
-                    icase_start, icase_end, icase_delta, time, animation_profile,
+                    icase_msg,
+                    #icase_fringe, icase_disp, icase_vector,
+                    #icase_start, icase_end, icase_delta,
+                    time, animation_profile,
                     nrepeat, fps, magnify, make_images, delete_images, make_gif, stop_animation,
                     animate_in_gui)
             )
@@ -2861,8 +2870,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         set_clipping_menu(self)
 
     def _apply_clipping(self, data):
-        min_clip = data['clipping_min']
-        max_clip = data['clipping_max']
+        min_clip = data['min_clip']
+        max_clip = data['max_clip']
         self.on_update_clipping(min_clip, max_clip)
 
     def on_update_clipping(self, min_clip=None, max_clip=None):
@@ -2873,7 +2882,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if max_clip is None:
             max_clip = _max_clip
         camera.SetClippingRange(min_clip, max_clip)
-        self.log_command('self.on_update_clipping(min_value=%s, max_clip=%s)'
+        self.log_command('on_update_clipping(min_clip=%s, max_clip=%s)'
                          % (min_clip, max_clip))
 
     #---------------------------------------------------------------------------------------
@@ -3008,8 +3017,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _apply_legend(self, data):
         title = data['name']
-        min_value = data['min']
-        max_value = data['max']
+        min_value = data['min_value']
+        max_value = data['max_value']
         scale = data['scale']
         phase = data['phase']
         arrow_scale = data['arrow_scale']
@@ -3024,7 +3033,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         ncolors = data['ncolors']
         colormap = data['colormap']
 
-        #print('is_shown1 =', is_shown)
         self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
                               scale=scale, phase=phase,
                               arrow_scale=arrow_scale,
@@ -3042,7 +3050,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          data_format='%.0f',
                          is_low_to_high=True, is_discrete=True, is_horizontal=True,
                          nlabels=None, labelsize=None, ncolors=None, colormap=None,
-                         is_shown=True):
+                         is_shown=True, render=True):
         """
         Updates the legend/model
 
@@ -3056,12 +3064,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if colormap is None:
             colormap = self.settings.colormap
 
+        is_shown_old = self.scalar_bar.is_shown
+        is_horizontal_old = self.is_horizontal_scalar_bar
+        is_low_to_high_old = self.is_low_to_high
+
         self.is_low_to_high = is_low_to_high
         self.is_horizontal_scalar_bar = is_horizontal
 
         #print('is_shown2 =', is_shown)
         #assert is_shown == False, is_shown
         is_normal = False
+        update_legend = False
         if self.icase_fringe is not None:
             key = self.case_keys[self.icase_fringe]
             assert isinstance(key, integer_types), key
@@ -3082,7 +3095,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 (
                     (nlabels, labelsize, ncolors, colormap) !=
                     (nlabels_old, labelsize_old, ncolors_old, colormap_old) or
-                    data_format != data_format_old) and
+                    data_format != data_format_old or
+                    is_shown != is_shown_old or
+                    is_horizontal != is_horizontal_old or
+                    is_low_to_high != is_low_to_high_old) and
                 not update_fringe)
 
             obj.set_min_max(i, res_name, min_value, max_value)
@@ -3152,6 +3168,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                                    nlabels=nlabels, labelsize=labelsize,
                                    ncolors=ncolors, colormap=colormap,
                                    is_shown=is_shown)
+        if render:
+            self.Render()
 
         msg = ('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
                '                      scale=%r, phase=%r,\n'

@@ -45,14 +45,16 @@ def setup_animation(scale, istep=None,
 
     phases = None
     onesided = False
+    is_symmetric = False
     if animate_scale:
         out = setup_animate_scale(
             scale,
             icase_fringe, icase_disp, icase_vector,
             time, animation_profile, fps)
-        icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = out
+        icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, is_symmetric = out
     elif animate_phase:
         onesided = True
+        is_symmetric = False
         out = setup_animate_phase(
             scale,
             icase_fringe, icase_disp, icase_vector,
@@ -60,6 +62,7 @@ def setup_animation(scale, istep=None,
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, fps = out
     elif animate_time:
         onesided = True
+        is_symmetric = False
         out = setup_animate_time(
             scale, time,
             icase_start, icase_end, icase_delta,
@@ -77,8 +80,8 @@ def setup_animation(scale, istep=None,
     phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2 = out
 
     if istep is None and animate_scale and not animate_in_gui:
-        scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2 = make_one_sided(
-            scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, onesided)
+        scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2 = make_symmetric(
+            scales2, phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, is_symmetric)
     if istep is not None:
         assert isinstance(istep, integer_types), 'istep=%r' % istep
         scales = (scales2[istep],)
@@ -122,21 +125,31 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
             # doesn't end at start point
             # not symmetric
             onesided = False
+            endpoint = False
+            is_symmetric = False
         elif profile == '0 to scale to 0':
             # ends at start point
             # symmetric
             onesided = True
+            endpoint = True
+            is_symmetric = True
         elif profile == '-scale to scale':
             # not symmetric
             onesided = False
+            endpoint = False
+            is_symmetric = False
         elif profile == '-scale to scale to -scale':
             # ends at start point
             # symmetric
             onesided = True
+            endpoint = True
+            is_symmetric = True
         elif profile in ['0 to scale to -scale to 0',
                          'sinusoidal: 0 to scale to -scale to 0']:
             # not symmetric
             onesided = False
+            endpoint = True
+            is_symmetric = False
         else:
             msg = (
                 "profile=%r is not supported:\n"
@@ -162,53 +175,48 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
 
     # endpoint=False if scale[0] == scale[-1]; otherwise True
     nframes_interp = nframes - 1
+
+    # TODO: add more explicit flag for endpoint?
+    is_linspace_endpoint = not endpoint
+    isteps = np.linspace(0, nframes, num=nframes, endpoint=is_linspace_endpoint, dtype='int32')
+
     if isinstance(profile, string_types):
         profile = profile.lower()
         if profile == '0 to scale':
             yp = np.array([0, scale])
             xp = np.array([0., nframes_interp])
-            x = np.arange(nframes)
-            scales = np.interp(x, xp, yp)
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            scales = np.interp(isteps, xp, yp)
+
         elif profile == '-scale to scale':
             yp = np.array([-scale, scale])
             xp = np.array([0., nframes_interp])
-            x = np.arange(nframes)
-            scales = np.interp(x, xp, yp)
-            # TODO: add flag for endpoint
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=True, dtype='int32')
+            scales = np.interp(isteps, xp, yp)
 
         elif profile == '0 to scale to 0':
             yp = np.array([0, scale, 0.])
             xp = np.array([0., nframes_interp / 2., nframes_interp])
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
-            x = isteps
-            scales = np.interp(x, xp, yp)
+            scales = np.interp(isteps, xp, yp)
+
         elif profile == '-scale to scale to -scale':
             yp = np.array([-scale, scale, -scale])
             xp = np.array([0., nframes_interp / 2., nframes_interp])
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
-            x = isteps
-            scales = np.interp(x, xp, yp)
+            scales = np.interp(isteps, xp, yp)
+
         elif profile == '0 to scale to -scale to 0':
             yp = np.array([0., 1., 0., -1., 0.])
             xp = np.array([0., nframes_interp * 0.25, nframes_interp * 0.5,
                            nframes_interp * 0.75, nframes_interp])
-            # TODO: add flag for endpoint
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
-            x = isteps
-            scales = scale * np.interp(x, xp, yp)
+            scales = scale * np.interp(isteps, xp, yp)
             #print('x=%s xp=%s yp=%s' % (x, xp, yp))
             #print('scales=%s' % (scales))
             #print('isteps* = ', isteps)
+
         elif profile == 'sinusoidal: 0 to scale to -scale to 0':
             theta = np.pi * np.array([0., 0.5, 1., 1.5, 2.])
             xp = np.array([0., nframes_interp * 0.25, nframes_interp * 0.5,
                            nframes_interp * 0.75, nframes_interp])
-            # TODO: add flag for endpoint
-            isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
-            x = isteps
-            scales = scale * np.sin(np.interp(x, xp, theta))
+            scales = scale * np.sin(np.interp(isteps, xp, theta))
+
         else:
             msg = (
                 "profile=%r is not:\n"
@@ -226,8 +234,6 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
         msg = 'profile=%r is not supported' % profile
         raise NotImplementedError(msg)
 
-    x = np.arange(nframes)
-
     icases_fringe = icase_fringe
     icases_disp = icase_disp
     icases_vector = icase_vector
@@ -237,7 +243,7 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
     # TODO: this can hit
     #if profile == '0 to scale to 0' and len(scales) % 2 == 0:
         #raise RuntimeError('nscales=%s scales=%s' % (len(scales), scales))
-    return icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided
+    return icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, is_symmetric
 
 def setup_animate_phase(scale, icase_fringe, icase_disp, icase_vector, time, fps):
     """Gets the inputs for a phase animation"""
@@ -280,7 +286,7 @@ def setup_animate_time(scale, time,
     fps = nfiles / time
 
     # our scale will be constant
-    # phases is just None
+    # phases is just None b/c time is real
     scales = [scale] * nfiles
     if len(icases_disp) != nfiles:
         msg = 'len(icases)=%s nfiles=%s' % (len(icases_disp), nfiles)
@@ -397,7 +403,7 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     scales2 = np.array(scales)
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2
 
-def make_one_sided(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, onesided):
+def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, is_symmetric):
     """
     Chop the frames in half at the middle frame
 
@@ -406,7 +412,7 @@ def make_one_sided(scales, phases, icases_fringe, icases_disp, icases_vector, is
     """
     # if twosided
     i = None
-    if onesided:
+    if is_symmetric:
         nframes = len(scales)
         ihalf_frame = nframes // 2 + 1
         assert nframes % 2 == 1, nframes

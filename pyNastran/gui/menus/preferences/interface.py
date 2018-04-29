@@ -35,8 +35,8 @@ def set_preferences_menu(self):
         'coord_text_scale' : self.settings.coord_text_scale,
         'magnify' : self.settings.magnify,
 
-        'clipping_min' : min_clip,
-        'clipping_max' : max_clip,
+        'min_clip' : min_clip,
+        'max_clip' : max_clip,
 
         'clicked_ok' : False,
         'close' : False,

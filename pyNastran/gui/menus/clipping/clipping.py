@@ -25,8 +25,8 @@ class ClippingPropertiesWindow(PyDialog):
 
         self._updated_clipping = False
 
-        self._default_min = data['clipping_min']
-        self._default_max = data['clipping_max']
+        self._default_min = data['min_clip']
+        self._default_max = data['max_clip']
 
         #self.setupUi(self)
         self.setWindowTitle('Clipping Properties')
@@ -109,8 +109,8 @@ class ClippingPropertiesWindow(PyDialog):
         max_value, flag1 = check_float(self.max_edit)
 
         if flag0 and flag1:
-            self.out_data['clipping_min'] = min(min_value, max_value)
-            self.out_data['clipping_max'] = max(min_value, max_value)
+            self.out_data['min_clip'] = min(min_value, max_value)
+            self.out_data['max_clip'] = max(min_value, max_value)
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -145,8 +145,8 @@ def main():
     app = QApplication(sys.argv)
     #The Main window
     d = {
-        'clipping_min' : 0.,
-        'clipping_max' : 10,
+        'min_clip' : 0.,
+        'max_clip' : 10,
     }
     main_window = ClippingPropertiesWindow(d)
     main_window.show()

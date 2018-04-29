@@ -51,8 +51,8 @@ class PreferencesWindow(PyDialog):
         self._default_annotation_size = 18
         self._default_coord_scale = 0.05 * 100.
         self._default_coord_text_scale = 0.5 * 100.
-        self._default_clipping_min = data['clipping_min']
-        self._default_clipping_max = data['clipping_max']
+        self._default_clipping_min = data['min_clip']
+        self._default_clipping_max = data['max_clip']
         #self._default_annotation_size = data['annotation_size'] # int
         #self.default_magnify = data['magnify']
 
@@ -552,8 +552,8 @@ class PreferencesWindow(PyDialog):
             self._picker_size = picker_size_value
 
             self.out_data['font_size'] = int(font_size_value)
-            self.out_data['clipping_min'] = min(clipping_min_value, clipping_max_value)
-            self.out_data['clipping_max'] = max(clipping_min_value, clipping_max_value)
+            self.out_data['min_clip'] = min(clipping_min_value, clipping_max_value)
+            self.out_data['max_clip'] = max(clipping_min_value, clipping_max_value)
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -630,8 +630,8 @@ def main():
         'annotation_size' : 11,
         'picker_size' : 10.,
 
-        'clipping_min' : 0.,
-        'clipping_max' : 10,
+        'min_clip' : 0.,
+        'max_clip' : 10,
 
         'dim_max' : 502.,
 

@@ -6,7 +6,7 @@ import numpy as np
 import pyNastran
 from pyNastran.gui.utils.load_results import (
     load_csv, load_deflection_csv, load_user_geom, create_res_obj)
-from pyNastran.gui.utils.write_gif import setup_animation, make_two_sided
+from pyNastran.gui.utils.write_gif import setup_animation, make_two_sided, make_symmetric
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 

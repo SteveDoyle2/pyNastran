@@ -72,8 +72,8 @@ class LegendPropertiesWindow(PyDialog):
             #self._default_icase_fringe, self._default_icase_disp, self._default_icase_vector))
 
         self._default_name = data['name']
-        self._default_min = data['min']
-        self._default_max = data['max']
+        self._default_min = data['min_value']
+        self._default_max = data['max_value']
 
         self._default_scale = data['default_scale']
         self._scale = data['scale']
@@ -844,8 +844,8 @@ class LegendPropertiesWindow(PyDialog):
 
         if all([flag_name, flag_fringe, flag_disp, flag_vector]):
             self.out_data['name'] = name_value
-            self.out_data['min'] = min_value
-            self.out_data['max'] = max_value
+            self.out_data['min_value'] = min_value
+            self.out_data['max_value'] = max_value
             self.out_data['format'] = format_value
             self.out_data['scale'] = scale
             self.out_data['phase'] = phase
@@ -945,8 +945,8 @@ def main(): # pragma: no cover
 
         'font_size' : 8,
         'name' : 'asdf',
-        'min' : 0.,
-        'max' : 10,
+        'min_value' : 0.,
+        'max_value' : 10,
         'scale' : 1e-12,
         'default_scale' : 1.0,
 

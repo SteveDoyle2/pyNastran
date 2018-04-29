@@ -123,8 +123,8 @@ def set_legend_menu(self):
         'icase_disp' : self.icase_disp,
         'icase_vector' : self.icase_vector,
         'name' : result_type,
-        'min' : min_value,
-        'max' : max_value,
+        'min_value' : min_value,
+        'max_value' : max_value,
 
         'scale' : scale,
         'arrow_scale' : arrow_scale,
