@@ -201,9 +201,9 @@ class GuiUtils(unittest.TestCase):
             np.testing.assert_almost_equal(scales, [0., scale, 0., -scale])
 
             msg = ''
-            if not np.allclose(scales.min(), -scale, atol=atol):
+            if not np.allclose(scales.min(), -scale, atol=atol):  # pragma: no cover
                 msg += 'scales=%s min=%s expected=%s\n' % (scales, scales.min(), -scale)
-            if not np.allclose(scales.max(), scale, atol=atol):
+            if not np.allclose(scales.max(), scale, atol=atol):  # pragma: no cover
                 msg += 'scales=%s max=%s expected=%s' % (scales, scales.max(), scale)
             if msg:  # pragma: no cover
                 raise ValueError(msg)
@@ -230,9 +230,9 @@ class GuiUtils(unittest.TestCase):
                                                 0., 0.5*scale, scale, 0.5*scale, 0., -0.5*scale, -scale, -0.5*scale, ] )
 
         msg = ''
-        if not np.allclose(scales.min(), -scale, atol=atol):
+        if not np.allclose(scales.min(), -scale, atol=atol):  # pragma: no cover
             msg += 'scales=%s min=%s expected=%s\n' % (scales, scales.min(), -scale)
-        if not np.allclose(scales.max(), scale, atol=atol):
+        if not np.allclose(scales.max(), scale, atol=atol):  # pragma: no cover
             msg += 'scales=%s max=%s expected=%s' % (scales, scales.max(), scale)
         if msg:  # pragma: no cover
             raise ValueError(msg)
@@ -253,9 +253,9 @@ class GuiUtils(unittest.TestCase):
             assert np.allclose(analysis_time, 2.0), analysis_time
 
             msg = ''
-            if not np.allclose(scales.min(), -scale, atol=atol):
+            if not np.allclose(scales.min(), -scale, atol=atol):  # pragma: no cover
                 msg += 'scales=%s min=%s expected=%s\n' % (scales, scales.min(), -scale)
-            if not np.allclose(scales.max(), scale, atol=atol):
+            if not np.allclose(scales.max(), scale, atol=atol):  # pragma: no cover
                 msg += 'scales=%s max=%s expected=%s' % (scales, scales.max(), scale)
             if msg:  # pragma: no cover
                 raise ValueError(msg)

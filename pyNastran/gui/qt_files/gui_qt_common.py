@@ -462,11 +462,12 @@ class GuiCommon(GuiAttributes):
         phase = 0.0
         arrow_scale = 0.0
         if update_legend_window:
-            self.update_legend(icase_fringe, icase_disp, icase_vector,
-                               result_type, min_value, max_value, data_format, scale, phase,
-                               arrow_scale,
-                               nlabels, labelsize, ncolors, colormap,
-                               use_disp_internal=True, use_vector_internal=True)
+            self.legend_obj.update_legend(
+                icase_fringe, icase_disp, icase_vector,
+                result_type, min_value, max_value, data_format, scale, phase,
+                arrow_scale,
+                nlabels, labelsize, ncolors, colormap,
+                use_disp_internal=True, use_vector_internal=True)
             self._set_legend_fringe(True)
         self.res_widget.update_method(methods)
 
@@ -567,12 +568,13 @@ class GuiCommon(GuiAttributes):
         phase = None
         arrow_scale = None
         if update_legend_window:
-            self.update_legend(icase_fringe, icase_disp, icase_vector,
-                               result_type, min_value, max_value, data_format, scale, phase,
-                               arrow_scale,
-                               nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
-                               use_disp_internal=True, use_vector_internal=True,
-                               external_call=False)
+            self.legend_obj.update_legend(
+                icase_fringe, icase_disp, icase_vector,
+                result_type, min_value, max_value, data_format, scale, phase,
+                arrow_scale,
+                nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
+                use_disp_internal=True, use_vector_internal=True,
+                external_call=False)
 
         self.vtk_interactor.Render()
 
@@ -790,11 +792,12 @@ class GuiCommon(GuiAttributes):
         icase_vector = self.icase_vector
 
         arrow_scale = 0.0
-        self.update_legend(icase_fringe, icase_disp, icase_vector,
-                           result_type, min_value, max_value, data_format, scale, phase,
-                           arrow_scale,
-                           nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
-                           external_call=False)
+        self.legend_obj.update_legend(
+            icase_fringe, icase_disp, icase_vector,
+            result_type, min_value, max_value, data_format, scale, phase,
+            arrow_scale,
+            nlabels, labelsize, ncolors, colormap, use_fringe_internal=True,
+            external_call=False)
 
         # updates the type of the result that is displayed
         # method:
@@ -856,9 +859,10 @@ class GuiCommon(GuiAttributes):
         #min_value = -1.
         #max_value = 1.
         #icase_fringe = icase
-        #self.update_legend(icase_fringe, icase_disp, icase_vector,
-                           #result_type, min_value, max_value, data_format, scale, phase,
-                           #nlabels, labelsize, ncolors, colormap, external_call=False)
+        #self.legend_obj.update_legend(
+            #icase_fringe, icase_disp, icase_vector,
+            #result_type, min_value, max_value, data_format, scale, phase,
+            #nlabels, labelsize, ncolors, colormap, external_call=False)
         self.hide_legend()
         self.scalar_bar.is_shown = False
         self._set_legend_fringe(False)
@@ -1267,13 +1271,13 @@ class GuiCommon(GuiAttributes):
 
     def _set_legend_fringe(self, is_fringe):
         self._is_fringe = is_fringe
-        if self._legend_window_shown:
-            self._legend_window._set_legend_fringe(is_fringe)
+        if self.legend_obj._legend_window_shown:
+            self.legend_obj._legend_window._set_legend_fringe(is_fringe)
 
     def clear_legend(self):
         self._is_fringe = False
-        if self._legend_window_shown:
-            self._legend_window.clear()
+        if self.legend_obj._legend_window_shown:
+            self.legend_obj._legend_window.clear()
 
     #---------------------------------------------------------------------------
     def hide_labels(self, case_keys=None, show_msg=True):

@@ -875,7 +875,7 @@ class LegendPropertiesWindow(PyDialog):
         """applies the current values"""
         passed = self.on_validate()
         if passed and self.external_call:
-            self.win_parent._apply_legend(self.out_data)
+            self.win_parent.legend_obj._apply_legend(self.out_data)
         self.external_call = True
         return passed
 

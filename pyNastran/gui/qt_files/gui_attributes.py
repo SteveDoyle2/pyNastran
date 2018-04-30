@@ -20,6 +20,7 @@ from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.group_actions import GroupActions
 from pyNastran.gui.qt_files.mouse_actions import MouseActions
 from pyNastran.gui.qt_files.load_actions import LoadActions
+from pyNastran.gui.menus.legend.legend_object import LegendObject
 
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
@@ -44,6 +45,7 @@ class GuiAttributes(object):
         self.group_actions = GroupActions(self)
         self.mouse_actions = MouseActions(self)
         self.load_actions = LoadActions(self)
+        self.legend_obj = LegendObject(self)
 
         self.glyph_scale_factor = 1.0
         self.html_logging = False
@@ -76,7 +78,6 @@ class GuiAttributes(object):
         #-------------
 
         # window variables
-        self._legend_window_shown = False
         self._preferences_window_shown = False
         self._clipping_window_shown = False
         self._edit_geometry_properties_window_shown = False
@@ -147,9 +148,6 @@ class GuiAttributes(object):
         self.label_ids = {}
         self.cameras = {}
         self.label_scale = 1.0 # in percent
-
-        self.is_horizontal_scalar_bar = False
-        self.is_low_to_high = True
 
         self.result_cases = {}
         self.num_user_points = 0
@@ -611,15 +609,42 @@ class GuiAttributes(object):
         """hides the legend"""
         self.scalar_bar.VisibilityOff()
         #self.scalar_bar.is_shown = False
-        if self._legend_window_shown:
-            self._legend_window.hide_legend()
+        if self.legend_obj._legend_window_shown:
+            self.legend_obj._legend_window.hide_legend()
 
     def show_legend(self):
         """shows the legend"""
         self.scalar_bar.VisibilityOn()
-        if self._legend_window_shown:
-            self._legend_window.show_legend()
+        if self.legend_obj._legend_window_shown:
+            self.legend_obj._legend_window.show_legend()
         #self.scalar_bar.is_shown = True
+
+    def on_update_legend(self,
+                         title='Title', min_value=0., max_value=1.,
+                         scale=0.0, phase=0.0,
+                         arrow_scale=1.,
+                         data_format='%.0f',
+                         is_low_to_high=True, is_discrete=True, is_horizontal=True,
+                         nlabels=None, labelsize=None, ncolors=None, colormap=None,
+                         is_shown=True, render=True):
+        """
+        Updates the legend/model
+
+        Parameters
+        ----------
+        scale : float
+            displacemnt scale factor; true scale
+
+        TODO: speed up by using existing values to skip update steps
+        """
+        self.legend_obj.on_update_legend(
+            title='Title', min_value=0., max_value=1.,
+            scale=0.0, phase=0.0,
+            arrow_scale=1.,
+            data_format='%.0f',
+            is_low_to_high=True, is_discrete=True, is_horizontal=True,
+            nlabels=None, labelsize=None, ncolors=None, colormap=None,
+            is_shown=True, render=True)
 
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
                           data_format,
@@ -658,8 +683,8 @@ class GuiAttributes(object):
         self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=self.is_low_to_high,
-                               is_horizontal=self.is_horizontal_scalar_bar,
+                               is_low_to_high=self.legend_obj.is_low_to_high,
+                               is_horizontal=self.legend_obj.is_horizontal_scalar_bar,
                                is_shown=is_shown)
 
     def on_update_scalar_bar(self, title, min_value, max_value, data_format):
@@ -1247,3 +1272,6 @@ class GuiAttributes(object):
         """turns logs into prints to aide debugging"""
         if self.debug:
             print('COMMAND:  ', msg)
+
+    def Render(self):  # pragma: no cover
+        pass
