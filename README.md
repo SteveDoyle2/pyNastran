@@ -2,11 +2,13 @@
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
 |  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v1.0)](http://pynastran-git.readthedocs.io/en/v1.0.0/?badge=v1.0.0) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.0.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.0.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.0) |
-|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) [![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) | 
+|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) | 
 
 
 
 <!---
+[![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) 
+
 [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 --->
 
@@ -94,7 +96,7 @@ GUI:
     - in gui animation
     - multiple animation profiles
     - wipe deformed shape button (currently broken)
-    - link to legend change (not done)
+    - link to legend change
     - no longer a subset of the legend menu (not done)
  - nominal geometry (useful for deflection plots)
  - single click menus
@@ -197,37 +199,7 @@ However, you may distribute an unmodified binary.
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 --->
 
-The following are some new features from the v0.8 release.
-
- - BDF
-   - unicode support
-   - 278 cards supported
-   - simplifed method to add cards : `grid = GRID(nid, cp, xyz, cd, ps, seid, comment)`
-   - `verify=False` in `read_bdf(...)` will disable checks to allow reading in bad decks
-   - lots of optimization work
-   - bdf equivalence, renumber, deck merging
-   - element quality
- - OP2
-   - ~500x faster than v0.7.2
-     - non-vectorized OP2 option has been removed
-   - matrix support
-   - improved SOL 200 support
-   - transform displacement/eigenvectors/spc/mpc/applied loads to global coordinate system
-   - transform stresses/forces to material coordinate system
-   - geometry can be read directly from op2 (not perfect, but when it works, it's much faster)
-   - [Pandas](http://pandas.pydata.org/) DataFrame support for use in the [Jupyter](http://jupyter.org/index.html) Notebook
- - GUI
-   - additional results
-      - multiple OP2s
-      - deflection plots
-      - area, max interior angle, skew angle, aspect ratio, taper ratio results
-   - SOL 200 support
-   - improved legend
-   - custom user (nodal/centroidal) results
-   - aero models now support sideslip coordinate systems
- - OP4
-  - fixed sparse ASCII BIGMAT bug
-
+See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for information regarding enhancements.
 
 ### pyNastran v0.7.2 has been Released (4/25/2015)
 
@@ -235,18 +207,7 @@ The following are some new features from the v0.8 release.
 | :--- 	  | :--- 	  |
 |  [v0.7.2](https://github.com/SteveDoyle2/pyNastran/releases) |  [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.7.2)](http://pynastran-git.readthedocs.io/en/v0.7.2/?badge=v0.7.2) |
 
-Highlights:
- * OP2
-   * superelement support
-   * vectorized support (uses much less memory; Element Forces not vectorized yet)
-   * additional results (e.g. grid point weight, eigenvalues)
-   * `PARAM,POST,-2` support
-   * catching of most FATAL errors without needing to read the F06
- * BDF
-   * 238 BDF cards
-   * large field format and double precision writing
- * GUI
-   * much improved GUI with transient support (real only), a results sidebar, logging, and scripting support
+See [v0.7.2](https://github.com/SteveDoyle2/pyNastran/releases) for information regarding enhancements.
 
 ### Version 0.6.1 has been released (6/2013)
 **Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. a integer field can't be a float).  Additionally, cards also have a comment() method.
