@@ -159,7 +159,8 @@ class LegendPropertiesWindow(PyDialog):
         update_fringe = False
         update_disp = False
         update_vector = False
-        #print('update_legend; fringe=%s disp=%s vector=%s' % (icase_fringe, icase_disp, icase_vector))
+        #print('update_legend; fringe=%s disp=%s vector=%s' % (
+            #icase_fringe, icase_disp, icase_vector))
         #print('update_legend; default: fringe=%s disp=%s vector=%s' % (
         #    self._default_icase_fringe, self._default_icase_disp, self._default_icase_vector))
         if icase_fringe != self._default_icase_fringe:

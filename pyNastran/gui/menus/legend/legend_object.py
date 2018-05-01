@@ -2,8 +2,10 @@
 defines:
  - LegendObject
 """
+from qtpy.QtWidgets import QMainWindow
 from pyNastran.gui.menus.legend.qt_legend import LegendPropertiesWindow
 from pyNastran.utils import integer_types
+
 
 class LegendObject(object):
     """defines LegendObject, which is an interface to the Legend Window"""
@@ -38,7 +40,7 @@ class LegendObject(object):
         if self._legend_window_shown:
             self._legend_window.set_font_size(font_size)
 
-    def set_legend_menu(self, open_menu=True):
+    def set_legend_menu(self):
         """
         Opens a dialog box to set:
 
@@ -58,16 +60,16 @@ class LegendObject(object):
 
         default_format = None
         (result_type, scalar_bar, defaults_scalar_bar, data_format, default_format,
-         default_title, min_value, max_value, default_min, default_max) = get_legend_fringe(
-             self, self.gui.icase_fringe)
+         default_title, min_value, max_value, default_min, default_max) = self.get_legend_fringe(
+             self.gui.icase_fringe)
 
         nlabels, labelsize, ncolors, colormap = scalar_bar
         default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
 
-        scale, phase, default_scale, default_phase = get_legend_disp(
-            self, self.gui.icase_disp)
+        scale, phase, default_scale, default_phase = self.get_legend_disp(
+            self.gui.icase_disp)
 
-        arrow_scale, default_arrow_scale = get_legend_vector(self, self.gui.icase_vector)
+        arrow_scale, default_arrow_scale = self.get_legend_vector(self.gui.icase_vector)
 
         #arrow_scale = None
         #default_arrow_scale = None
@@ -113,7 +115,7 @@ class LegendObject(object):
             'clicked_ok' : False,
             'close' : False,
         }
-        if not open_menu: # pragma: no cover
+        if not isinstance(self.gui, QMainWindow): # pragma: no cover
             return # testing
         if not self._legend_window_shown:
             self._legend_window = LegendPropertiesWindow(data, win_parent=self.gui)
@@ -161,7 +163,7 @@ class LegendObject(object):
         self._legend_window._updated_legend = True
         is_fringe = self.gui._is_fringe
 
-        out = get_legend_fringe(self, icase_fringe)
+        out = self.get_legend_fringe(icase_fringe)
         (
             _result_type, scalar_bar, defaults_scalar_bar, data_format,
             default_format, default_title, _min_value, _max_value,
@@ -197,8 +199,8 @@ class LegendObject(object):
             #is_normals = obj.is_normal_result(i, name)
             #is_fringe = not is_normals
 
-        _scale, _phase, default_scale, default_phase = get_legend_disp(
-            self, icase_disp)
+        _scale, _phase, default_scale, default_phase = self.get_legend_disp(
+            icase_disp)
         #if icase_disp is not None:
             #default_scale = obj.get_default_scale(i, name)
             #default_phase = obj.get_default_phase(i, name)
@@ -209,7 +211,7 @@ class LegendObject(object):
             #default_phase = _default_phase
 
 
-        _arrow_scale, default_arrow_scale = get_legend_vector(self, icase_vector)
+        _arrow_scale, default_arrow_scale = self.get_legend_vector(icase_vector)
         if use_vector_internal:
             arrow_scale = _arrow_scale
             #default_arrow_scale = _default_arrow_scale
@@ -404,76 +406,76 @@ class LegendObject(object):
         #if is_shown:
             #pass
 
-def get_legend_fringe(self, icase_fringe):
-    """helper method for ``set_legend_menu``"""
-    #nlabels = None
-    #labelsize = None
-    #ncolors = None
-    #colormap = None
-    result_type = None
-    min_value = None
-    max_value = None
-    data_format = None
-    scalar_bar = (None, None, None, None)
-    defaults_scalar_bar = (None, None, None, None)
+    def get_legend_fringe(self, icase_fringe):
+        """helper method for ``set_legend_menu``"""
+        #nlabels = None
+        #labelsize = None
+        #ncolors = None
+        #colormap = None
+        result_type = None
+        min_value = None
+        max_value = None
+        data_format = None
+        scalar_bar = (None, None, None, None)
+        defaults_scalar_bar = (None, None, None, None)
 
-    #default_nlabels = None
-    #default_labelsize = None
-    #default_ncolors = None
-    #default_colormap = None
+        #default_nlabels = None
+        #default_labelsize = None
+        #default_ncolors = None
+        #default_colormap = None
 
-    default_min = None
-    default_max = None
-    default_format = None
-    default_title = None
+        default_min = None
+        default_max = None
+        default_format = None
+        default_title = None
 
-    #title = None
-    if icase_fringe is not None:
-        key = self.gui.case_keys[icase_fringe]
-        assert isinstance(key, integer_types), key
-        (obj, (i, res_name)) = self.gui.result_cases[key]
-        #case = obj.get_result(i, res_name)
-        result_type = obj.get_title(i, res_name)
+        #title = None
+        if icase_fringe is not None:
+            key = self.gui.case_keys[icase_fringe]
+            assert isinstance(key, integer_types), key
+            (obj, (i, res_name)) = self.gui.result_cases[key]
+            #case = obj.get_result(i, res_name)
+            result_type = obj.get_title(i, res_name)
 
-        scalar_bar = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
-        defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
+            scalar_bar = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
+            defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
 
-        data_format = obj.get_data_format(i, res_name)
-        default_title = obj.get_default_title(i, res_name)
-        min_value, max_value = obj.get_min_max(i, res_name)
-        default_min, default_max = obj.get_default_min_max(i, res_name)
-        default_format = obj.get_default_data_format(i, res_name)
+            data_format = obj.get_data_format(i, res_name)
+            default_title = obj.get_default_title(i, res_name)
+            min_value, max_value = obj.get_min_max(i, res_name)
+            default_min, default_max = obj.get_default_min_max(i, res_name)
+            default_format = obj.get_default_data_format(i, res_name)
 
-    out = (
-        result_type, scalar_bar, defaults_scalar_bar, data_format, default_format,
-        default_title, min_value, max_value, default_min, default_max)
-    return out
+        out = (
+            result_type, scalar_bar, defaults_scalar_bar, data_format, default_format,
+            default_title, min_value, max_value, default_min, default_max)
+        return out
 
 
-def get_legend_disp(self, icase_disp):
-    """helper method for ``set_legend_menu``"""
-    scale = None
-    phase = None
-    default_scale = None
-    default_phase = None
-    if icase_disp is not None:
-        key = self.case_keys[icase_disp]
-        (objd, (i, res_name)) = self.result_cases[key]
-        scale = objd.get_scale(i, res_name)
-        phase = objd.get_phase(i, res_name)
-        default_scale = objd.get_default_scale(i, res_name)
-        default_phase = objd.get_default_phase(i, res_name)
-    return scale, phase, default_scale, default_phase
+    def get_legend_disp(self, icase_disp):
+        """helper method for ``set_legend_menu``"""
+        scale = None
+        phase = None
+        default_scale = None
+        default_phase = None
+        if icase_disp is not None:
+            key = self.gui.case_keys[icase_disp]
+            (objd, (i, res_name)) = self.gui.result_cases[key]
+            scale = objd.get_scale(i, res_name)
+            phase = objd.get_phase(i, res_name)
+            default_scale = objd.get_default_scale(i, res_name)
+            default_phase = objd.get_default_phase(i, res_name)
+        return scale, phase, default_scale, default_phase
 
-def get_legend_vector(self, icase_vector):
-    """helper method for ``set_legend_menu``"""
-    arrow_scale = None
-    default_arrow_scale = None
-    if icase_vector is not None:
-        key = self.case_keys[icase_vector]
-        (objv, (i, res_name)) = self.result_cases[key]
-        arrow_scale = objv.get_scale(i, res_name)
-        default_arrow_scale = objv.get_default_scale(i, res_name)
-        #phasev = objv.get_phase(i, res_name)
-        #default_phasev = objv.get_default_phase(i, res_name)
-    return arrow_scale, default_arrow_scale
+    def get_legend_vector(self, icase_vector):
+        """helper method for ``set_legend_menu``"""
+        arrow_scale = None
+        default_arrow_scale = None
+        if icase_vector is not None:
+            key = self.gui.case_keys[icase_vector]
+            (objv, (i, res_name)) = self.gui.result_cases[key]
+            arrow_scale = objv.get_scale(i, res_name)
+            default_arrow_scale = objv.get_default_scale(i, res_name)
+            #phasev = objv.get_phase(i, res_name)
+            #default_phasev = objv.get_default_phase(i, res_name)
+        return arrow_scale, default_arrow_scale

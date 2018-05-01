@@ -37,7 +37,7 @@ class TestNastranGUI(unittest.TestCase):
         op2_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.op2')
 
         test = NastranGUI()
-        test.legend_obj.set_legend_menu(open_menu=False)
+        test.legend_obj.set_legend_menu()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
         test.on_rcycle_results()
@@ -57,7 +57,7 @@ class TestNastranGUI(unittest.TestCase):
             is_low_to_high=True, is_discrete=True, is_horizontal=False,
             nlabels=None, labelsize=None, ncolors=None, colormap='viridis',
             is_shown=True, render=True)
-        test.legend_obj.set_legend_menu(open_menu=False)
+        test.legend_obj.set_legend_menu()
 
     def test_solid_shell_bar_02b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
