@@ -8,7 +8,6 @@ import os.path
 import datetime
 from copy import deepcopy
 from collections import OrderedDict
-from itertools import cycle
 from math import ceil
 import cgi #  html lib
 
@@ -43,6 +42,7 @@ from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
+from pyNastran.gui.utils.vtk.animation_callback import AnimationCallback
 
 from pyNastran.gui.menus.menus import (
     set_clipping_menu,
@@ -439,8 +439,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.menu_window.setFont(font)
         self.menu_help.setFont(font)
 
-        if self.legend_obj._legend_window_shown:
-            self.legend_obj._legend_window.set_font_size(font_size)
+        self.legend_obj.set_font_size(font_size)
         if self._clipping_window_shown:
             self._clipping_window.set_font_size(font_size)
         if self._edit_geometry_properties_window_shown:
@@ -516,7 +515,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             'load_custom_result', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
-                         'front_view', 'back_view', 'top_view', 'bottom_view', 'left_view', 'right_view',
+                         'front_view', 'back_view', 'top_view', 'bottom_view',
+                         'left_view', 'right_view',
                          'magnify', 'shrink', 'zoom',
                          'rotate_clockwise', 'rotate_cclockwise',
                          'rotation_center', 'measure_distance', 'probe_result', 'area_pick',
@@ -1426,12 +1426,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log = log
 
     def on_load_geometry_button(self, infile_name=None, geometry_format=None, name='main',
-                                plot=True, raise_error=False):
+                                raise_error=False):
         """action version of ``on_load_geometry``"""
         self.on_load_geometry(infile_name=infile_name, geometry_format=geometry_format,
                               name=name, plot=True, raise_error=raise_error)
 
     def _update_menu_bar_to_format(self, fmt, method):
+        """customizes the gui to be nastran/cart3d-focused"""
         self.menu_bar_format = fmt
         tools, menu_items = getattr(self, method)()
         unused_actions = self._prepare_actions(self._icon_path, tools, self.checkables)
@@ -1444,6 +1445,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # the current state of the format
         #method_new = '_create_%s_tools_and_menu_items' % self.menu_bar_format
+
+        # TODO: what is cwo?
         self.menu_bar_format = 'cwo'
         if self.menu_bar_format is None:
             self._update_menu_bar_to_format(self.format, method_new)
@@ -1708,9 +1711,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.convert_units(icase, result_value, x, y, z)
 
         text_actor = vtk.vtkBillboardTextActor3D()
-        label = text
         text_actor.SetPosition(x, y, z)
-        text_actor.SetInput(label)
+        text_actor.SetInput(text)
         text_actor.PickableOff()
         text_actor.DragableOff()
         #text_actor.SetPickable(False)
@@ -1988,14 +1990,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.stop_animation()
             return is_failed
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided = out
-        parent = self
 
         if animate_time:
             icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
-                    icase_fringe, icase_disp, icase_vector,)
+                icase_start, icase_end, icase_delta,)
         else:
             icase_msg = '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n' % (
-                    icase_fringe, icase_disp, icase_vector,)
+                icase_fringe, icase_disp, icase_vector,)
 
         #animate_in_gui = True
         self.stop_animation()
@@ -2019,62 +2020,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     fps, stop_animation, animate_in_gui)
             )
             self.log_command(msg)
-
             # onesided has no advantages for in-gui animations and creates confusion
             scales, phases, icases_fringe, icases_disp, icases_vector, isteps = make_two_sided(
                 scales, phases, icases_fringe, icases_disp, icases_vector, isteps, onesided)
 
-            class vtkAnimationCallback(object):
-                """
-                http://www.vtk.org/Wiki/VTK/Examples/Python/Animation
-                """
-                def __init__(self):
-                    self.timer_count = 0
-                    self.cycler = cycle(range(len(icases_disp)))
-
-                    self.icase_fringe0 = -1
-                    self.icase_disp0 = -1
-                    self.icase_vector0 = -1
-                    self.ncases = len(icases_disp)
-
-                def execute(self, obj, unused_event):
-                    unused_iren = obj
-                    i = self.timer_count % self.ncases
-                    #j = next(self.cycler)
-                    unused_istep = isteps[i]
-                    icase_fringe = icases_fringe[i]
-                    icase_disp = icases_disp[i]
-                    icase_vector = icases_vector[i]
-                    scale = scales[i]
-                    phase = phases[i]
-                    is_valid = parent.animation_update(
-                        self.icase_fringe0, self.icase_disp0, self.icase_vector0,
-                        icase_fringe, icase_disp, icase_vector,
-                        scale, phase,
-                        min_value, max_value)
-                    if not is_valid:
-                        parent.stop_animation()
-
-                    self.icase_disp0 = icase_disp
-                    self.icase_fringe0 = icase_fringe
-                    self.icase_vector0 = icase_vector
-
-                    parent.vtk_interactor.Render()
-                    self.timer_count += 1
-
-            # Sign up to receive TimerEvent
-            callback = vtkAnimationCallback()
-
-            observer_name = self.vtk_interactor.AddObserver('TimerEvent', callback.execute)
-            self.observers['TimerEvent'] = observer_name
-
-            # total_time not needed
-            # fps
-            # -> frames_per_second = 1/fps
-            delay = int(1. / fps * 1000)
-
-            # time in milliseconds
-            unused_timer_id = self.vtk_interactor.CreateRepeatingTimer(delay)
+            self._animate_in_gui(
+                min_value, max_value,
+                scales, phases,
+                icases_fringe, icases_disp, icases_vector,
+                fps)
             return
 
         try:
@@ -2097,8 +2051,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'make_gif(%r, %s, istep=%s,\n'
                 '         min_value=%s, max_value=%s,\n'
                 '         animate_scale=%s, animate_phase=%s, animate_time=%s,\n%s'
-                #'         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
-                #'         icase_start=%s, icase_end=%s, icase_delta=%s,\n'
                 "         time=%s, animation_profile=%r,\n"
                 '         nrepeat=%s, fps=%s, magnify=%s,\n'
                 '         make_images=%s, delete_images=%s, make_gif=%s, stop_animation=%s,\n'
@@ -2106,8 +2058,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     gif_filename, scale, istep, min_value, max_value,
                     animate_scale, animate_phase, animate_time,
                     icase_msg,
-                    #icase_fringe, icase_disp, icase_vector,
-                    #icase_start, icase_end, icase_delta,
                     time, animation_profile,
                     nrepeat, fps, magnify, make_images, delete_images, make_gif, stop_animation,
                     animate_in_gui)
@@ -2115,6 +2065,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.log_command(msg)
 
         return is_failed
+
+    def _animate_in_gui(self, min_value, max_value,
+                        scales, phases,
+                        icases_fringe, icases_disp, icases_vector,
+                        fps):
+        """helper method for ``make_gif``"""
+        callback = AnimationCallback(self, scales, phases,
+                                     icases_fringe, icases_disp, icases_vector,
+                                     min_value, max_value)
+
+        # Sign up to receive TimerEvent
+        observer_name = self.vtk_interactor.AddObserver('TimerEvent', callback.execute)
+        self.observers['TimerEvent'] = observer_name
+
+        # total_time not needed
+        # fps
+        # -> frames_per_second = 1/fps
+        delay = int(1. / fps * 1000)
+
+        # time in milliseconds
+        unused_timer_id = self.vtk_interactor.CreateRepeatingTimer(delay)
 
     def stop_animation(self):
         """removes the animation timer"""
@@ -2131,6 +2102,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                          min_value, max_value):
         """applies the animation update callback"""
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
+        arrow_scale = None # self.glyph_scale_factor * scale
+        icase_vector = None
         if icase_disp != icase_disp0:
             # apply the fringe
             #
@@ -2151,6 +2124,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
         except(AttributeError, KeyError):
             self.log_error('Invalid Displacement Case %i' % icase_disp)
             return False
+
+        if icase_vector is not None and icase_vector != icase_vector0:
+            try:
+                # apply the nodal forces
+                self.update_forces_by_icase_scale_phase(icase_vector, arrow_scale, phase=phase)
+            except(AttributeError, KeyError):
+                self.log_error('Invalid Vector Case %i' % icase_vector)
+                return False
         is_valid = True
         return is_valid
 
@@ -2255,10 +2236,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 isteps, icases_fringe, icases_disp, icases_vector, scales, phases):
 
                 is_valid = self.animation_update(
-                     icase_fringe0, icase_disp0, icase_vector0,
-                     icase_fringe, icase_disp, icase_vector,
-                     scale, phase,
-                     min_value, max_value)
+                    icase_fringe0, icase_disp0, icase_vector0,
+                    icase_fringe, icase_disp, icase_vector,
+                    scale, phase,
+                    min_value, max_value)
                 if not is_valid:
                     return is_failed
                 if gif_filename is not None:

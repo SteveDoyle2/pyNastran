@@ -12,7 +12,7 @@ from pyNastran.utils.log import get_logger
 class AbaqusGui(AbaqusIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        AbaqusIO.__init__(self)
+        AbaqusIO.__init__(self, self)
 
 class TestAbaqusGui(unittest.TestCase):
     def test_abaqus_1(self):

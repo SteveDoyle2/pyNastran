@@ -1,11 +1,7 @@
 from __future__ import print_function
 from collections import OrderedDict
-from six.moves import range
 import numpy as np
 from numpy import amax, amin
-
-import vtk
-from vtk import vtkQuad
 
 from pyNastran.converters.dev.openvsp.degen_geom import DegenGeom
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -14,8 +10,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class DegenGeomIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_degen_geom_wildcard_geometry_results_functions(self):# pragma: no cover
         data = ('DegenGeom',
@@ -34,19 +30,20 @@ class DegenGeomIO(object):
         if skip_reading:
             return
 
-        model = DegenGeom(log=self.log, debug=False)
-        self.model_type = 'vspaero'
+        log = self.gui.log
+        model = DegenGeom(log=log, debug=False)
+        self.gui.model_type = 'vspaero'
         #self.model_type = model.model_type
         model.read_degen_geom(csv_filename)
         nodes = []
         elements = []
         inid = 0
-        for name, comps in sorted(model.components.items()):
-            self.log.debug('name = %r' % name)
+        for comp_name, comps in sorted(model.components.items()):
+            log.debug('comp_name = %r' % comp_name)
             #print(comps)
             #print('------------')
             for comp in comps:
-                self.log.info(comp)
+                log.info(comp)
                 nnodes = comp.xyz.shape[0]
                 nodes.append(comp.xyz)
                 is_elem = np.linalg.norm(comp.elements, axis=1) > 0
@@ -63,21 +60,21 @@ class DegenGeomIO(object):
 
         nnodes = nodes.shape[0]
         nelements = elements.shape[0]
-        self.nnodes = nnodes
-        self.nelements = nelements
+        self.gui.nnodes = nnodes
+        self.gui.nelements = nelements
 
-        self.grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nid_map = {}
+        self.gui.nid_map = {}
 
         assert nodes is not None
 
         #print("nxyz_nodes=%s" % nxyz_nodes)
         mmax = amax(nodes, axis=0)
-
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
         points = numpy_to_vtk_points(nodes)
         #self.log.info('nxyz_nodes=%s nwake_nodes=%s total=%s' % (
@@ -87,29 +84,30 @@ class DegenGeomIO(object):
 
         elements -= 1
         etype = 9 # vtkQuad().GetCellType()
-        create_vtk_cells_of_constant_element_type(self.grid, elements, etype)
 
-        self.grid.SetPoints(points)
-        self.grid.Modified()
-        if hasattr(self.grid, 'Update'):  # pragma: no cover
-            self.grid.Update()
+        create_vtk_cells_of_constant_element_type(grid, elements, etype)
+
+        grid.SetPoints(points)
+        grid.Modified()
+        if hasattr(grid, 'Update'):  # pragma: no cover
+            grid.Update()
         #self.log_info("updated grid")
 
         # load results - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
         #mach = model.machs[0]
         #alpha = model.alphas[0]
         #beta = model.betas[0]
         #note = ':  Mach=%.2f, alpha=%.1f, beta=%.1f' % (mach, alpha, beta)
         note = 'name=%s' % name
-        self.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
+        self.gui.isubcase_name_map = {1: ['OpenVSP%s' % note, '']}
         cases = OrderedDict()
         ID = 1
 
-        form, cases = self._fill_degen_geom_case(cases, ID, model, nnodes, nelements)
-        self._finish_results_io2(form, cases)
+        form, cases = _fill_degen_geom_case(cases, ID, model, nnodes, nelements)
+        self.gui._finish_results_io2(form, cases)
 
     #def clear_adb(self):
         #pass
@@ -117,26 +115,26 @@ class DegenGeomIO(object):
     #def load_adb_results(self, cart3d_filename):
         #raise NotImplementedError()
 
-    def _fill_degen_geom_case(self, cases, ID, model, nnodes, nelements):  # pragma: no cover
-        icase = 0
-        itime = 0
-        form = [
-            ('ElementID', icase, []),
-            ('NodeID', icase + 1, []),
-        ]
+def _fill_degen_geom_case(cases, ID, unused_model, nnodes, nelements):  # pragma: no cover
+    icase = 0
+    itime = 0
+    form = [
+        ('ElementID', icase, []),
+        ('NodeID', icase + 1, []),
+    ]
 
-        #form = ['Geometry', None, []]
-        #form0 = form[2]
-        formi = []
-        form0 = form
+    #form = ['Geometry', None, []]
+    #form0 = form[2]
+    unused_formi = []
+    unused_form0 = form
 
-        nodes = np.arange(nnodes, dtype='int32')
-        elements = np.arange(nelements, dtype='int32')
+    nodes = np.arange(nnodes, dtype='int32')
+    elements = np.arange(nelements, dtype='int32')
 
-        eid_res = GuiResult(0, header='ElementID', title='ElementID',
-                            location='centroid', scalar=elements)
-        nid_res = GuiResult(0, header='NodeID', title='NodeID',
-                            location='node', scalar=nodes)
-        cases[icase] = (eid_res, (itime, 'ElementID'))
-        cases[icase + 1] = (nid_res, (itime, 'NodeID'))
-        return form, cases
+    eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                        location='centroid', scalar=elements)
+    nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                        location='node', scalar=nodes)
+    cases[icase] = (eid_res, (itime, 'ElementID'))
+    cases[icase + 1] = (nid_res, (itime, 'NodeID'))
+    return form, cases

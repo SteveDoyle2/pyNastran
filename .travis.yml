@@ -35,13 +35,6 @@ before_install:
  - sudo -H pip install auxlib
  - sudo pip install conda
 
-#install 2:
-#  - sudo conda init
-#    # Install packages
-#  - sudo conda update conda --yes
-#  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy vtk
-#  - export PATH=$HOME/py/bin:$PATH
-#  - python setup.py develop
 
 # per http://conda.pydata.org/docs/travis.html
 install:

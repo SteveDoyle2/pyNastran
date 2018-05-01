@@ -235,7 +235,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
 
         if node0: # and '3d_bars' not in self.alt_grids:
-            def update_grid_function(nid_map, ugrid, points, nodes):  # pragma: no cover
+            def update_grid_function(unused_nid_map, ugrid, points, nodes):  # pragma: no cover
                 """custom function to update the 3d bars"""
                 points_list = []
                 node0b = 0

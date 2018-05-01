@@ -153,7 +153,7 @@ class NastranIO(NastranIO_xref):
             self.nid_map[node_id] = i
 
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
 
         # add the CAERO/CONM2 elements

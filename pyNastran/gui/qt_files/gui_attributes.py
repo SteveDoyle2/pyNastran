@@ -609,15 +609,22 @@ class GuiAttributes(object):
         """hides the legend"""
         self.scalar_bar.VisibilityOff()
         #self.scalar_bar.is_shown = False
-        if self.legend_obj._legend_window_shown:
-            self.legend_obj._legend_window.hide_legend()
+        self.legend_obj.hide_legend()
 
     def show_legend(self):
         """shows the legend"""
         self.scalar_bar.VisibilityOn()
-        if self.legend_obj._legend_window_shown:
-            self.legend_obj._legend_window.show_legend()
         #self.scalar_bar.is_shown = True
+        self.legend_obj.show_legend()
+
+    def clear_legend(self):
+        """clears the legend"""
+        self._is_fringe = False
+        self.legend_obj.clear_legend()
+
+    def _set_legend_fringe(self, is_fringe):
+        self._is_fringe = is_fringe
+        self.legend_obj._set_legend_fringe(is_fringe)
 
     def on_update_legend(self,
                          title='Title', min_value=0., max_value=1.,
@@ -638,13 +645,13 @@ class GuiAttributes(object):
         TODO: speed up by using existing values to skip update steps
         """
         self.legend_obj.on_update_legend(
-            title='Title', min_value=0., max_value=1.,
-            scale=0.0, phase=0.0,
-            arrow_scale=1.,
-            data_format='%.0f',
-            is_low_to_high=True, is_discrete=True, is_horizontal=True,
-            nlabels=None, labelsize=None, ncolors=None, colormap=None,
-            is_shown=True, render=True)
+            title=title, min_value=min_value, max_value=max_value,
+            scale=scale, phase=phase,
+            arrow_scale=arrow_scale,
+            data_format=data_format,
+            is_low_to_high=is_low_to_high, is_discrete=is_discrete, is_horizontal=is_horizontal,
+            nlabels=nlabels, labelsize=labelsize, ncolors=ncolors, colormap=colormap,
+            is_shown=is_shown, render=render)
 
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
                           data_format,

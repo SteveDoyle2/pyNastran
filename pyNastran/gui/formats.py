@@ -69,19 +69,22 @@ except ImportError:  # pragma: no cover
 
 
 from pyNastran.converters.nastran.nastran_io import NastranIO
-is_nastran = True
+#CLASS_MAP['nastran'] = NastranIO
 
 
 #from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
 
-is_fast = True
+try:
+    from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
+    CLASS_MAP['bedge'] = BEdge_IO
+except ImportError:  # pragma: no cover
+    pass
 
-from pyNastran.converters.aflr.aflr2.bedge_io import BEdge_IO
-is_bedge = True
-
-from pyNastran.converters.aflr.surf.surf_io import SurfIO
-is_surf = True
-
+try:
+    from pyNastran.converters.aflr.surf.surf_io import SurfIO
+    CLASS_MAP['surf'] = SurfIO
+except ImportError:  # pragma: no cover
+    pass
 
 try:
     from pyNastran.converters.aflr.ugrid.ugrid_io import UGRID_IO
@@ -90,60 +93,34 @@ except ImportError:  # pragma: no cover
     pass
 
 try:
+    from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
+    CLASS_MAP['abaqus'] = AbaqusIO
+except ImportError:  # pragma: no cover
+    pass
+
+
+try:
     from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
-    is_openvsp = True
-except ImportError:
-    #raise
-    class ADB_IO(object):
-        """dummy adb gui class"""
-        def __init__(self):
-            """dummy gui init"""
-            pass
-    is_openvsp = False
+    CLASS_MAP['adb'] = ADB_IO
+except ImportError:  # pragma: no cover
+    pass
 
 try:
     from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
-    is_degen_geom = True
-except ImportError:
-    #raise
-    class DegenGeomIO(object):
-        """dummy degen_geom gui class"""
-        def __init__(self):
-            """dummy gui init"""
-            pass
-    is_degen_geom = False
-
-try:
-    from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
-    is_abaqus = True
-except ImportError:
-    #raise
-    class AbaqusIO(object):
-        """dummy abaqus gui class"""
-        def __init__(self):
-            """dummy gui init"""
-            pass
-    is_abaqus = False
-
+    CLASS_MAP['degen_geom'] = DegenGeomIO
+except ImportError:  # pragma: no cover
+    pass
 
 try:
     from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
-    is_openfoam = True
-except ImportError:
-    raise
+    CLASS_MAP['openfoam_hex'] = OpenFoamIO
+    CLASS_MAP['openfoam_shell'] = OpenFoamIO
+    CLASS_MAP['openfoam_faces'] = OpenFoamIO
+except ImportError:  # pragma: no cover
+    pass
 
 try:
     from pyNastran.converters.dev.obj.obj_io import ObjIO
     CLASS_MAP['obj'] = ObjIO
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
-
-try:
-    is_obj = True
-except ImportError:
-    class ObjIO(object):
-        """dummy SU2 gui class"""
-        def __init__(self):
-            """dummy gui init"""
-            pass
-    is_obj = False

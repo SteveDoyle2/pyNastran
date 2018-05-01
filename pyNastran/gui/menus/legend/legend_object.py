@@ -6,6 +6,7 @@ from pyNastran.gui.menus.legend.qt_legend import LegendPropertiesWindow
 from pyNastran.utils import integer_types
 
 class LegendObject(object):
+    """defines LegendObject, which is an interface to the Legend Window"""
     def __init__(self, gui):
         self.gui = gui
         self._legend_window_shown = False
@@ -13,7 +14,31 @@ class LegendObject(object):
         self.is_horizontal_scalar_bar = False
         self.is_low_to_high = True
 
-    def set_legend_menu(self):
+    def show_legend(self):
+        """shows the legend"""
+        if self._legend_window_shown:
+            self._legend_window.show_legend()
+
+    def hide_legend(self):
+        """hides the legend"""
+        if self._legend_window_shown:
+            self._legend_window.hide_legend()
+
+    def clear_legend(self):
+        """clears the legend"""
+        if self._legend_window_shown:
+            self._legend_window.clear()
+
+    def _set_legend_fringe(self, is_fringe):
+        if self._legend_window_shown:
+            self._legend_window._set_legend_fringe(is_fringe)
+
+    def set_font_size(self, font_size):
+        """sets the font size for the legend window"""
+        if self._legend_window_shown:
+            self._legend_window.set_font_size(font_size)
+
+    def set_legend_menu(self, open_menu=True):
         """
         Opens a dialog box to set:
 
@@ -88,6 +113,8 @@ class LegendObject(object):
             'clicked_ok' : False,
             'close' : False,
         }
+        if not open_menu: # pragma: no cover
+            return # testing
         if not self._legend_window_shown:
             self._legend_window = LegendPropertiesWindow(data, win_parent=self.gui)
             self._legend_window.show()
@@ -206,6 +233,7 @@ class LegendObject(object):
 
     @property
     def settings(self):
+        """gets the gui settings"""
         return self.gui.settings
 
     def _apply_legend(self, data):

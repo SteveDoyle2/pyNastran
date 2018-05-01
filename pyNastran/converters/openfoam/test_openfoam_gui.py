@@ -14,7 +14,7 @@ MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'openfoam', 'models')
 class OpenFoamGUI(OpenFoamIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        OpenFoamIO.__init__(self)
+        OpenFoamIO.__init__(self, self)
 
 
 class TestOpenFoamGUI(unittest.TestCase):

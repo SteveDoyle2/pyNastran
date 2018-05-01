@@ -20,7 +20,7 @@ class SurfGui(SurfIO, FakeGUIMethods):
     """defines the UGRID 2D/3D interface"""
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        SurfIO.__init__(self)
+        SurfIO.__init__(self, self)
 
 class TestSurfGui(unittest.TestCase):
     """defines *.surf tests"""

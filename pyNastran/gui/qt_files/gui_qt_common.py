@@ -7,7 +7,7 @@ This file defines functions related to the result updating that are VTK specific
 # pylint: disable=C0111
 from __future__ import print_function, unicode_literals
 from copy import deepcopy
-from six import iteritems, itervalues, iterkeys, string_types
+from six import iteritems, iterkeys
 
 import numpy as np
 from numpy import full, issubdtype
@@ -44,7 +44,7 @@ class GuiCommon(GuiAttributes):
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
 
-    def on_rcycle_results(self, case=None):
+    def on_rcycle_results(self):
         """the reverse of on_cycle_results"""
         if len(self.case_keys) <= 1:
             return
@@ -66,7 +66,7 @@ class GuiCommon(GuiAttributes):
             except IndexError:
                 icase -= 1
 
-    def on_cycle_results(self, case=None, show_msg=True):
+    def on_cycle_results(self, show_msg=True):
         """the gui method for calling cycle_results"""
         if len(self.case_keys) <= 1:
             return
@@ -234,7 +234,7 @@ class GuiCommon(GuiAttributes):
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
 
-        normi = self._get_normalized_data(icase)
+        normi = _get_normalized_data(self.result_cases[icase])
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -277,20 +277,6 @@ class GuiCommon(GuiAttributes):
         else:
             raise NotImplementedError(location)
         return word, eids_nids
-
-    def _get_normalized_data(self, icase):
-        """helper method for ``export_case_data``"""
-        (obj, (i, name)) = self.result_cases[icase]
-        case = obj.get_result(i, name)
-        if case is None:
-            return None
-
-        if len(case.shape) == 1:
-            normi = case
-        else:
-            assert isinstance(case, np.ndarray), case
-            normi = norm(case, axis=1)
-        return normi
 
     def _get_disp_data(self, icase, is_disp):
         """helper for ``on_disp``"""
@@ -503,7 +489,8 @@ class GuiCommon(GuiAttributes):
             None : defaults to self.icase+1
         """
         self.icase = icase
-        is_valid, (grid_result, name, name_str, data) = self._get_disp_data(icase, is_disp)
+        is_valid, (grid_result, unused_name, name_str, data) = self._get_disp_data(
+            icase, is_disp)
 
         if not is_valid:
             return
@@ -534,7 +521,7 @@ class GuiCommon(GuiAttributes):
             self._xyz_nominal = xyz_nominal
             self._update_grid(vector_data)
 
-            self.grid.Modified()
+            grid.Modified()
             self.grid_selected.Modified()
             self.icase_disp = icase
         else:
@@ -816,7 +803,7 @@ class GuiCommon(GuiAttributes):
         assert self.icase is not False, self.icase
         return self.icase
 
-    def set_normal_result(self, icase, name, subcase_id):
+    def set_normal_result(self, icase, name, unused_subcase_id):
         """plots a NormalResult"""
         unused_name_str = self._names_storage.get_name_string(name)
         prop = self.geom_actor.GetProperty()
@@ -872,7 +859,7 @@ class GuiCommon(GuiAttributes):
                                 #min_value, max_value, label)
         self.vtk_interactor.Render()
 
-    def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
+    def set_grid_values(self, name, case, vector_size, min_value, unused_max_value, norm_value,
                         is_low_to_high=True):
         """
         https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
@@ -969,6 +956,33 @@ class GuiCommon(GuiAttributes):
         self._is_displaced = True
         self._xyz_nominal = xyz_nominal
         self._update_grid(vector_data)
+
+    def update_forces_by_icase_scale_phase(self, icase, arrow_scale, phase=0.0):
+        """
+        Updates to the force state defined by the cases
+
+        Parameters
+        ----------
+        icase : int
+            result number in self.result_cases
+        arrow_scale : float
+            force scale factor; ??? scale
+        phase : float; default=0.0
+            phase angle (degrees); unused for real results
+        """
+        #print('update_grid_by_icase_scale_phase')
+        (obj, (i, res_name)) = self.result_cases[icase]
+        unused_xyz_nominal, vector_data = obj.get_vector_result_by_scale_phase(
+            i, res_name, arrow_scale, phase)
+
+        #grid_result1 = self.set_grid_values(name, case, 1,
+            #min_value, max_value, norm_value)
+        #point_data.AddArray(grid_result1)
+
+        self._is_forces = True
+        ## TODO: support elemental forces
+        self._update_forces(vector_data, set_scalars=False, scale=arrow_scale)
+        #self._update_elemental_vectors(forces_array, set_scalars=True, scale=None)
 
     def final_grid_update(self, icase, name, grid_result,
                           name_vector, grid_result_vector,
@@ -1117,23 +1131,9 @@ class GuiCommon(GuiAttributes):
         grid = self.grid
         if scale is not None:
             self.glyphs.SetScaleFactor(self.glyph_scale_factor * scale)
-        mag = np.linalg.norm(forces_array, axis=1)
-        #assert len(forces_array) == len(mag)
-
-        mag_max = mag.max()
-        if mag_max > 0.:
-            new_forces = np.copy(forces_array / mag_max)
-        else:
-            new_forces = np.copy(forces_array)
-        #mag /= mag_max
-
-        #inonzero = np.where(mag > 0)[0]
-        #print('new_forces_max =', new_forces.max())
-        #print('new_forces =', new_forces[inonzero])
-        #print('mag =', mag[inonzero])
+        new_forces, mag = normalize_forces(forces_array)
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-
         grid.GetPointData().SetVectors(vtk_vectors)
         if set_scalars:
             vtk_mag = numpy_to_vtk(mag, deep=1)
@@ -1149,20 +1149,9 @@ class GuiCommon(GuiAttributes):
         if scale is not None:
             # TODO: glyhs_centroid?
             self.glyphs_centroid.SetScaleFactor(self.glyph_scale_factor * scale)
-        mag = np.linalg.norm(forces_array, axis=1)
-        #assert len(forces_array) == len(mag)
-
-        mag_max = mag.max()
-        new_forces = np.copy(forces_array / mag_max)
-        #mag /= mag_max
-
-        #inonzero = np.where(mag > 0)[0]
-        #print('new_forces_max =', new_forces.max())
-        #print('new_forces =', new_forces[inonzero])
-        #print('mag =', mag[inonzero])
+        new_forces, mag = normalize_forces(forces_array)
 
         vtk_vectors = numpy_to_vtk(new_forces, deep=1)
-
         grid.GetPointData().SetVectors(None)
         #print('_update_elemental_vectors; shape=%s' % (str(new_forces.shape)))
         grid.GetCellData().SetVectors(vtk_vectors)
@@ -1259,25 +1248,15 @@ class GuiCommon(GuiAttributes):
         #print("next icase=%s key=%s" % (self.icase, key))
         return found_cases
 
-    def get_result_name(self, key):
-        assert isinstance(key, integer_types), key
-        (unused_obj, (unused_i, name)) = self.result_cases[key]
-        return name
+    def get_result_name(self, icase):
+        assert isinstance(icase, integer_types), icase
+        (unused_obj, (unused_i, res_name)) = self.result_cases[icase]
+        return res_name
 
-    def get_case_location(self, key):
-        assert isinstance(key, integer_types), key
-        (obj, (i, name)) = self.result_cases[key]
-        return obj.get_location(i, name)
-
-    def _set_legend_fringe(self, is_fringe):
-        self._is_fringe = is_fringe
-        if self.legend_obj._legend_window_shown:
-            self.legend_obj._legend_window._set_legend_fringe(is_fringe)
-
-    def clear_legend(self):
-        self._is_fringe = False
-        if self.legend_obj._legend_window_shown:
-            self.legend_obj._legend_window.clear()
+    def get_case_location(self, icase):
+        assert isinstance(icase, integer_types), icase
+        (obj, (i, res_name)) = self.result_cases[icase]
+        return obj.get_location(i, res_name)
 
     #---------------------------------------------------------------------------
     def hide_labels(self, case_keys=None, show_msg=True):
@@ -1424,3 +1403,35 @@ class GuiCommon(GuiAttributes):
 
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
+
+def _get_normalized_data(result_case):
+    """helper method for ``export_case_data``"""
+    (obj, (i, name)) = result_case
+    case = obj.get_result(i, name)
+    if case is None:
+        return None
+
+    if len(case.shape) == 1:
+        normi = case
+    else:
+        assert isinstance(case, np.ndarray), case
+        normi = norm(case, axis=1)
+    return normi
+
+def normalize_forces(forces_array):
+    """normalizes the forces"""
+    mag = np.linalg.norm(forces_array, axis=1)
+    #assert len(forces_array) == len(mag)
+
+    mag_max = mag.max()
+    if mag_max > 0.:
+        new_forces = np.copy(forces_array / mag_max)
+    else:
+        new_forces = np.copy(forces_array)
+    #mag /= mag_max
+
+    #inonzero = np.where(mag > 0)[0]
+    #print('new_forces_max =', new_forces.max())
+    #print('new_forces =', new_forces[inonzero])
+    #print('mag =', mag[inonzero])
+    return new_forces, mag

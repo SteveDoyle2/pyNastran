@@ -19,8 +19,8 @@ MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'dev', 'openvsp')
 class OpenVSP_GUI(DegenGeomIO, ADB_IO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        DegenGeomIO.__init__(self)
-        ADB_IO.__init__(self)
+        DegenGeomIO.__init__(self, self)
+        ADB_IO.__init__(self, self)
 
 
 class TestOpenVSP_GUI(unittest.TestCase):

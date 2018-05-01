@@ -21,7 +21,7 @@ MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'aflr2')
 class BEdge_GUI(BEdge_IO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
-        BEdge_IO.__init__(self)
+        BEdge_IO.__init__(self, self)
 
 
 class TestBEdgeGUI(unittest.TestCase):

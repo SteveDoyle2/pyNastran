@@ -4,18 +4,17 @@ creates the pyNastranGUI
 # coding: utf-8
 from __future__ import division, unicode_literals, print_function
 
+# we're intentionally putting this here to validate the imports
+# before doing lots of work
+from pyNastran.gui.arg_handling import get_inputs
+get_inputs()
+
+import sys
 import ctypes
 # kills the program when you hit Cntl+C from the command line
 # doesn't save the current state as presumably there's been an error
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-import sys
-
-
-# yes we're intentionally putting this here to validate the imports
-# before doing lots of work
-from pyNastran.gui.arg_handling import get_inputs
-get_inputs()
 
 
 import pyNastran
@@ -32,7 +31,7 @@ def cmd_line():
     from qtpy.QtWidgets import QApplication
     app = QApplication(sys.argv)
 
-    if 0:
+    if 0:  # pragma: no cover
         try:
             import qtmodern.styles
         except ImportError:
@@ -62,41 +61,41 @@ def cmd_line():
         #palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
         #app.setPalette(palette)
 
-    if 0:
+    if 0:  # pragma: no cover
         import qtpy.QtGui as QtGui
         import qtpy.QtCore as QtCore
         from qtpy.QtGui import QPalette, QColor
-        darkPalette = QtGui.QPalette()
-        darkPalette.setColor(QPalette.WindowText, QColor(180, 180, 180))
-        darkPalette.setColor(QPalette.Button, QColor(53, 53, 53))
-        darkPalette.setColor(QPalette.Light, QColor(180, 180, 180))
-        darkPalette.setColor(QPalette.Midlight, QColor(90, 90, 90))
-        darkPalette.setColor(QPalette.Dark, QColor(35, 35, 35))
-        darkPalette.setColor(QPalette.Text, QColor(180, 180, 180))
-        darkPalette.setColor(QPalette.BrightText, QColor(180, 180, 180))
-        darkPalette.setColor(QPalette.ButtonText, QColor(180, 180, 180))
-        darkPalette.setColor(QPalette.Base, QColor(42, 42, 42))
-        darkPalette.setColor(QPalette.Window, QColor(53, 53, 53))
-        darkPalette.setColor(QPalette.Shadow, QColor(20, 20, 20))
-        darkPalette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-        darkPalette.setColor(QPalette.HighlightedText, QColor(180, 180, 180))
-        darkPalette.setColor(QPalette.Link, QColor(56, 252, 196))
-        darkPalette.setColor(QPalette.AlternateBase, QColor(66, 66, 66))
-        darkPalette.setColor(QPalette.ToolTipBase, QColor(53, 53, 53))
-        darkPalette.setColor(QPalette.ToolTipText, QColor(180, 180, 180))
+        dark_palette = QtGui.QPalette()
+        dark_palette.setColor(QPalette.WindowText, QColor(180, 180, 180))
+        dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.Light, QColor(180, 180, 180))
+        dark_palette.setColor(QPalette.Midlight, QColor(90, 90, 90))
+        dark_palette.setColor(QPalette.Dark, QColor(35, 35, 35))
+        dark_palette.setColor(QPalette.Text, QColor(180, 180, 180))
+        dark_palette.setColor(QPalette.BrightText, QColor(180, 180, 180))
+        dark_palette.setColor(QPalette.ButtonText, QColor(180, 180, 180))
+        dark_palette.setColor(QPalette.Base, QColor(42, 42, 42))
+        dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.Shadow, QColor(20, 20, 20))
+        dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.HighlightedText, QColor(180, 180, 180))
+        dark_palette.setColor(QPalette.Link, QColor(56, 252, 196))
+        dark_palette.setColor(QPalette.AlternateBase, QColor(66, 66, 66))
+        dark_palette.setColor(QPalette.ToolTipBase, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.ToolTipText, QColor(180, 180, 180))
 
         # disabled
-        darkPalette.setColor(QPalette.Disabled, QPalette.WindowText,
-                             QColor(127, 127, 127))
-        darkPalette.setColor(QPalette.Disabled, QPalette.Text,
-                             QColor(127, 127, 127))
-        darkPalette.setColor(QPalette.Disabled, QPalette.ButtonText,
-                             QColor(127, 127, 127))
-        darkPalette.setColor(QPalette.Disabled, QPalette.Highlight,
-                             QColor(80, 80, 80))
-        darkPalette.setColor(QPalette.Disabled, QPalette.HighlightedText,
-                             QColor(127, 127, 127))
-        app.setPalette(darkPalette)
+        dark_palette.setColor(QPalette.Disabled, QPalette.WindowText,
+                              QColor(127, 127, 127))
+        dark_palette.setColor(QPalette.Disabled, QPalette.Text,
+                              QColor(127, 127, 127))
+        dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText,
+                              QColor(127, 127, 127))
+        dark_palette.setColor(QPalette.Disabled, QPalette.Highlight,
+                              QColor(80, 80, 80))
+        dark_palette.setColor(QPalette.Disabled, QPalette.HighlightedText,
+                              QColor(127, 127, 127))
+        app.setPalette(dark_palette)
 
     QApplication.setOrganizationName("pyNastran")
     QApplication.setOrganizationDomain(pyNastran.__website__)

@@ -318,7 +318,7 @@ class ScalarBar(object):
         self.set_visibility(is_shown)
         self.scalar_bar.Modified()
 
-def _is_int_result(data_format):
-    if 'i' in data_format:
-        return True
-    return False
+#def _is_int_result(data_format):
+    #if 'i' in data_format:
+        #return True
+    #return False

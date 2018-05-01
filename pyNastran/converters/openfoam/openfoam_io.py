@@ -22,8 +22,9 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class OpenFoamIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        """creates OpenFoamIO"""
+        self.gui = gui
 
     def get_openfoam_hex_wildcard_geometry_results_functions(self):
         data = (
@@ -82,22 +83,23 @@ class OpenFoamIO(object):
         #case = self.resultCases[key]
 
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
-        skip_reading = self._remove_old_geometry(openfoam_filename)
+        skip_reading = self.gui._remove_old_geometry(openfoam_filename)
         if skip_reading:
             return
+        log = self.gui.log
         reset_labels = True
         #self.log.info('self.modelType=%s' % self.modelType)
-        self.log.info('mesh_3d = %s' % mesh_3d)
+        log.info('mesh_3d = %s' % mesh_3d)
         if mesh_3d in ['hex', 'shell']:
-            model = BlockMesh(log=self.log, debug=False) # log=self.log, debug=False
+            model = BlockMesh(log=log, debug=False) # log=self.log, debug=False
         elif mesh_3d == 'faces':
-            model = BlockMesh(log=self.log, debug=False) # log=self.log, debug=False
-            boundary = Boundary(log=self.log, debug=False)
+            model = BlockMesh(log=log, debug=False) # log=self.log, debug=False
+            boundary = Boundary(log=log, debug=False)
 
 
-        self.modelType = 'openfoam'
+        self.gui.modelType = 'openfoam'
         #self.modelType = model.modelType
-        self.log.info('openfoam_filename = %s' % openfoam_filename)
+        log.info('openfoam_filename = %s' % openfoam_filename)
 
         is_face_mesh = False
         if mesh_3d == 'hex':
@@ -120,9 +122,9 @@ class OpenFoamIO(object):
 
 
         if mesh_3d == 'hex':
-            self.nelements = len(hexas)
+            self.gui.nelements = len(hexas)
         elif mesh_3d == 'shell':
-            self.nelements = len(quads)
+            self.gui.nelements = len(quads)
         elif mesh_3d == 'faces':
             dirname = os.path.dirname(openfoam_filename)
             point_filename = os.path.join(dirname, 'points')
@@ -136,18 +138,18 @@ class OpenFoamIO(object):
             patches = None
             nodes, quads, names = boundary.read_openfoam(
                 point_filename, face_filename, boundary_filename)
-            self.nelements = len(quads) + len(tris)
+            self.gui.nelements = len(quads) + len(tris)
         else:
             raise RuntimeError(mesh_3d)
 
-        self.nnodes = len(nodes)
-        print("nnodes = %s" % self.nnodes)
-        print("nelements = %s" % self.nelements)
+        self.gui.nnodes = len(nodes)
+        print("nnodes = %s" % self.gui.nnodes)
+        print("nelements = %s" % self.gui.nelements)
 
-        grid = self.grid
-        grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
-        self.nid_map = {}
+        self.gui.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -155,9 +157,9 @@ class OpenFoamIO(object):
         xmax, ymax, zmax = nodes.max(axis=0)
         xmin, ymin, zmin = nodes.min(axis=0)
         nodes -= np.array([xmin, ymin, zmin])
-        self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
-        self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
-        self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
+        log.info('xmax=%s xmin=%s' % (xmax, xmin))
+        log.info('ymax=%s ymin=%s' % (ymax, ymin))
+        log.info('zmax=%s zmin=%s' % (zmax, zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
 
         #dim_max = (mmax - mmin).max()
@@ -166,7 +168,7 @@ class OpenFoamIO(object):
 
         # breaks the model without subracting off the delta
         #self.update_axes_length(dim_max)
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
         #print('is_face_mesh=%s is_3d_blockmesh=%s is_surface_blockmesh=%s' % (
             #is_face_mesh, is_3d_blockmesh, is_surface_blockmesh))
@@ -181,7 +183,7 @@ class OpenFoamIO(object):
 
             if is_face_mesh:
                 points = vtk.vtkPoints()
-                points.SetNumberOfPoints(self.nnodes)
+                points.SetNumberOfPoints(self.gui.nnodes)
 
                 unodes = unique(quads)
                 unodes.sort()
@@ -207,7 +209,6 @@ class OpenFoamIO(object):
                 create_vtk_cells_of_constant_element_type(grid, quads, cell_type_quad4)
 
             elif is_face_mesh:
-
                 elems = quads
                 nelements = quads.shape[0]
                 nnames = len(names)
@@ -260,16 +261,16 @@ class OpenFoamIO(object):
                 raise RuntimeError(msg)
             bdf_file.write('ENDDATA\n')
 
-        self.nelements = nelements
+        self.gui.nelements = nelements
         grid.SetPoints(points)
         grid.Modified()
         if hasattr(grid, 'Update'):  # pragma: no cover
             grid.Update()
 
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
-        self.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
+        self.gui.isubcase_name_map = {0: ['OpenFoam BlockMeshDict', '']}
         cases = OrderedDict()
         ID = 1
 
@@ -289,9 +290,9 @@ class OpenFoamIO(object):
             raise RuntimeError(mesh_3d)
 
         if plot:
-            self._finish_results_io2(form, cases, reset_labels=reset_labels)
+            self.gui._finish_results_io2(form, cases, reset_labels=reset_labels)
         else:
-            self._set_results(form, cases)
+            self.gui._set_results(form, cases)
 
 
     def clear_openfoam(self):
@@ -300,7 +301,7 @@ class OpenFoamIO(object):
     #def _load_openfoam_results(self, openfoam_filename):
         #raise NotImplementedError()
 
-    def _fill_openfoam_case(self, cases, ID, nodes, nelements, patches, names, normals,
+    def _fill_openfoam_case(self, cases, unused_ID, nodes, nelements, patches, names, normals,
                             is_surface_blockmesh):
         #nelements = elements.shape[0]
         nnodes = nodes.shape[0]

@@ -2,7 +2,6 @@
 Defines how the GUI reads Abaqus files
 """
 from __future__ import print_function
-import os
 from collections import OrderedDict
 from six import iteritems
 
@@ -18,8 +17,8 @@ from pyNastran.converters.abaqus.abaqus import Abaqus
 
 
 class AbaqusIO(object):
-    def __init__(self):
-        pass
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_abaqus_wildcard_geometry_results_functions(self):
         """dynamic named method for loading abaqus input files"""
@@ -32,14 +31,14 @@ class AbaqusIO(object):
 
     def load_abaqus_geometry(self, abaqus_filename, name='main', plot=True):
         """loads abaqus input files into the gui"""
-        skip_reading = self._remove_old_geometry(abaqus_filename)
+        skip_reading = self.gui._remove_old_geometry(abaqus_filename)
         if skip_reading:
             return
 
-        self.eid_maps[name] = {}
-        self.nid_maps[name] = {}
-        model = Abaqus(log=self.log, debug=False)
-        self.model_type = 'abaqus'
+        self.gui.eid_maps[name] = {}
+        self.gui.nid_maps[name] = {}
+        model = Abaqus(log=self.gui.log, debug=False)
+        self.gui.model_type = 'abaqus'
         #self.model_type = model.model_type
         model.read_abaqus_inp(abaqus_filename)
 
@@ -57,8 +56,8 @@ class AbaqusIO(object):
         nnodes = 0
         nelements = 0
         all_nodes = []
-        for part_name, part in iteritems(model.parts):
-            nids = part.nids - 1
+        for unused_part_name, part in iteritems(model.parts):
+            unused_nids = part.nids - 1
             nodes = part.nodes
 
             nnodes += nodes.shape[0]
@@ -84,20 +83,24 @@ class AbaqusIO(object):
                 n_c3d10h += part.c3d10h.shape[0]
 
             all_nodes.append(nodes)
-        nelements += n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r
+        nelements += (
+            n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r +
+            n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r
+        )
         assert nelements > 0, nelements
         #nodes = model.nodes
         #elements = model.elements
 
 
-        self.nnodes = nnodes
-        self.nelements = nelements
+        self.gui.nnodes = nnodes
+        self.gui.nelements = nelements
 
-        self.grid.Allocate(self.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nnodes)
-        self.nid_map = {}
+        self.gui.nid_map = {}
 
         assert nodes is not None
         nnodes = nodes.shape[0]
@@ -110,7 +113,7 @@ class AbaqusIO(object):
         mmax = np.amax(nodes, axis=0)
         mmin = np.amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.create_global_axes(dim_max)
+        self.gui.create_global_axes(dim_max)
 
         data_type = vtk.VTK_FLOAT
         points_array = numpy_to_vtk(
@@ -120,9 +123,8 @@ class AbaqusIO(object):
         )
         points.SetData(points_array)
 
-        grid = self.grid
         nid_offset = -1
-        for part_name, part in iteritems(model.parts):
+        for unused_part_name, part in iteritems(model.parts):
             nnodesi = part.nodes.shape[0]
 
             n_r2d2 = 0
@@ -160,7 +162,7 @@ class AbaqusIO(object):
             if n_r2d2:
                 eids = part.r2d2[:, 0]
                 node_ids = part.r2d2[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
+                for unused_eid, node_ids in zip(eids, node_ids):
                     elem = vtkLine()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -169,7 +171,7 @@ class AbaqusIO(object):
             if n_cpe3:
                 eids = part.cpe3[:, 0]
                 node_ids = part.cpe3[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
+                for unused_eid, node_ids in zip(eids, node_ids):
                     elem = vtkTriangle()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -179,7 +181,7 @@ class AbaqusIO(object):
             if n_cpe4:
                 eids = part.cpe4[:, 0]
                 node_ids = part.cpe4[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
+                for unused_eid, node_ids in zip(eids, node_ids):
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -190,7 +192,7 @@ class AbaqusIO(object):
             if n_cpe4r:
                 eids = part.cpe4r[:, 0]
                 node_ids = part.cpe4r[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
+                for unused_eid, node_ids in zip(eids, node_ids):
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -201,7 +203,7 @@ class AbaqusIO(object):
             if n_coh2d4:
                 eids = part.coh2d4[:, 0]
                 node_ids = part.coh2d4[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
+                for unused_eid, node_ids in zip(eids, node_ids):
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -212,7 +214,7 @@ class AbaqusIO(object):
             if n_cohax4:
                 eids = part.cohax4[:, 0]
                 node_ids = part.cohax4[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
+                for unused_eid, node_ids in zip(eids, node_ids):
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -223,7 +225,7 @@ class AbaqusIO(object):
             if n_cax3:
                 eids = part.cax3[:, 0]
                 node_ids = part.cax3[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
+                for unused_eid, node_ids in zip(eids, node_ids):
                     elem = vtkTriangle()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -233,7 +235,7 @@ class AbaqusIO(object):
             if n_cax4r:
                 eids = part.cax4r[:, 0]
                 node_ids = part.cax4r[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
+                for unused_eid, node_ids in zip(eids, node_ids):
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -245,8 +247,8 @@ class AbaqusIO(object):
             if n_c3d10h:
                 eids = part.c3d10h[:, 0]
                 node_ids = part.c3d10h[:, 1:] + nid_offset
-                for eid, node_ids in zip(eids, node_ids):
-                #for eid, node_ids in part.c3d10h:
+                for unused_eid, node_ids in zip(eids, node_ids):
+                #for unused_eid, node_ids in part.c3d10h:
                     elem = vtkTetra()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -261,17 +263,17 @@ class AbaqusIO(object):
             grid.Update()
 
         # loadCart3dResults - regions/loads
-        self.scalarBar.VisibilityOn()
-        self.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOn()
+        self.gui.scalarBar.Modified()
 
         note = ''
-        self.isubcase_name_map = {1: ['Abaqus%s' % note, '']}
+        self.gui.isubcase_name_map = {1: ['Abaqus%s' % note, '']}
         #form = []
         cases = OrderedDict()
         ID = 1
-        form, cases, icase = self._fill_abaqus_case(cases, ID, nodes, nelements, model)
+        form, cases, unused_icase = self._fill_abaqus_case(cases, ID, nodes, nelements, model)
         #self._fill_cart3d_results(cases, form, icase, ID, model)
-        self._finish_results_io2(form, cases)
+        self.gui._finish_results_io2(form, cases)
 
     def clear_abaqus(self):
         """does nothing"""
@@ -281,7 +283,7 @@ class AbaqusIO(object):
         """does nothing"""
         raise NotImplementedError()
 
-    def _fill_abaqus_case(self, cases, ID, nodes, nelements, model):
+    def _fill_abaqus_case(self, cases, ID, nodes, nelements, unused_model):
         """creates the result objects for abaqus"""
         #return [], {}, 0
         #nelements = elements.shape[0]
@@ -296,8 +298,8 @@ class AbaqusIO(object):
         #print('nnodes =', nnodes)
         #print('nelements =', nelements)
         #print('regions.shape =', regions.shape)
-        subcase_id = 0
-        labels = ['NodeID', 'ElementID']
+        #subcase_id = 0
+        #labels = ['NodeID', 'ElementID']
         #cart3d_geo = Cart3dGeometry(subcase_id, labels,
                                     #nids, eids, regions, cnormals,
                                     #uname='Cart3dGeometry')

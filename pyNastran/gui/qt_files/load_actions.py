@@ -84,7 +84,7 @@ class LoadActions(object):
 
                 if geometry_format2 in self.gui.format_class_map:
                     # intialize the class
-                    cls = self.gui.format_class_map[geometry_format](self)
+                    cls = self.gui.format_class_map[geometry_format](self.gui)
                     function_name = 'load_%s_geometry' % geometry_format2
                     load_function2 = getattr(cls, function_name)
                     has_results = load_function2(infile_name, name=name, plot=plot)

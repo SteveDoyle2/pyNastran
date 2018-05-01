@@ -8,7 +8,6 @@ from __future__ import division, unicode_literals, print_function
 # standard library
 import sys
 import os.path
-from collections import OrderedDict
 import imp
 #import traceback
 #import webbrowser
@@ -28,10 +27,7 @@ from pyNastran.gui.utils.version import check_for_newer_version
 
 # pyNastran
 from pyNastran.gui.plugins import plugin_name_to_path
-from pyNastran.gui.formats import (
-    NastranIO, DegenGeomIO, ADB_IO, # Plot3d_io,
-    SurfIO, AbaqusIO, BEdge_IO, OpenFoamIO,
-)
+from pyNastran.gui.formats import NastranIO
 from pyNastran.gui.gui_common import GuiCommon2
 
 try:
@@ -52,10 +48,7 @@ except:
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
 
-class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
-                 ADB_IO,
-                 SurfIO, AbaqusIO, BEdge_IO,
-                 OpenFoamIO):
+class MainWindow(GuiCommon2, NastranIO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -114,14 +107,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         #html_logging=html_logging,
 
         if qt_version in ['pyqt4', 'pyqt5', 'pyside']:
-            ADB_IO.__init__(self)
-            BEdge_IO.__init__(self)
             NastranIO.__init__(self)
-            DegenGeomIO.__init__(self)
-            #Plot3d_io.__init__(self)
-            SurfIO.__init__(self)
-            AbaqusIO.__init__(self)
-            OpenFoamIO.__init__(self)
         else:
             raise NotImplementedError('qt_version=%r is not supported' % qt_version)
 
@@ -169,7 +155,7 @@ class MainWindow(GuiCommon2, NastranIO, DegenGeomIO,
         #import time
         #time0 = time.time()
         version_latest, unused_version_current, is_newer = check_for_newer_version()
-        if is_newer:
+        if is_newer and check:
             url = pyNastran.__website__
             from pyNastran.gui.menus.download import DownloadWindow
             win = DownloadWindow(url, version_latest, win_parent=self)

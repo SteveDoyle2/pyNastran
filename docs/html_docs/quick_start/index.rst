@@ -4,7 +4,7 @@ Quick Start
 
 
 .. toctree::
-
+   installation_release
    installation
    installed_programs
    bdf_overview
