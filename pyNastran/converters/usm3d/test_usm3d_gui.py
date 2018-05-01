@@ -32,6 +32,7 @@ class TestUsm3dGUI(unittest.TestCase):
 
         test = Usm3dGUI()
         test.log = log
+        #test.on_load_geometry(geometry_filename, geometry_format='usm3d')
         test.model.load_usm3d_geometry(geometry_filename)
         test.model.load_usm3d_results(flo_filename)
         test.model.on_reload_usm3d()

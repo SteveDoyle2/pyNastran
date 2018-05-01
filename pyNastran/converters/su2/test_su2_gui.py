@@ -31,7 +31,8 @@ class TestSU2GUI(unittest.TestCase):
 
         test = SU2_GUI()
         test.log = log
-        test.model.load_su2_geometry(geometry_filename)
+        #test.model.load_su2_geometry(geometry_filename)
+        test.on_load_geometry(geometry_filename, geometry_format='su2')
 
 
 if __name__ == '__main__':  # pragma: no cover

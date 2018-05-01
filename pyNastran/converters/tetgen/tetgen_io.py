@@ -14,8 +14,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class TetgenIO(object):
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, gui):
+        self.gui = gui
 
     def get_tetgen_wildcard_geometry_results_functions(self):
         data = ('Tetgen',
@@ -24,12 +24,11 @@ class TetgenIO(object):
         return data
 
     def load_tetgen_geometry(self, smesh_filename, name='main', plot=True):
-        #print("load_tetgen_geometry...")
-        skip_reading = self.parent._remove_old_geometry(smesh_filename)
+        skip_reading = self.gui._remove_old_geometry(smesh_filename)
         if skip_reading:
             return
 
-        model = Tetgen(log=self.parent.log, debug=False)
+        model = Tetgen(log=self.gui.log, debug=False)
 
         base_filename, ext = os.path.splitext(smesh_filename)
         ext = ext.lower()
@@ -47,7 +46,7 @@ class TetgenIO(object):
         tets = model.tets
         nnodes = nodes.shape[0]
 
-        self.parent.nnodes = nodes.shape[0]
+        self.gui.nnodes = nodes.shape[0]
         ntris = 0
         ntets = 0
         if dimension_flag == 2:
@@ -57,17 +56,17 @@ class TetgenIO(object):
         else:
             raise RuntimeError()
         nelements = ntris + ntets
-        self.parent.nelements = nelements
+        self.gui.nelements = nelements
 
-        #print("nnodes = ",self.nnodes)
-        #print("nelements = ", self.nelements)
+        #print("nnodes = ",self.gui.nnodes)
+        #print("nelements = ", self.gui.nelements)
 
-        grid = self.parent.grid
-        grid.Allocate(self.parent.nelements, 1000)
+        grid = self.gui.grid
+        grid.Allocate(self.gui.nelements, 1000)
 
         assert nodes is not None
         points = numpy_to_vtk_points(nodes)
-        self.parent.nid_map = {}
+        self.gui.nid_map = {}
 
         #elements -= 1
         if dimension_flag == 2:
@@ -85,16 +84,16 @@ class TetgenIO(object):
             grid.Update()
 
         # loadTetgenResults - regions/loads
-        self.parent.scalarBar.VisibilityOff()
-        self.parent.scalarBar.Modified()
+        self.gui.scalarBar.VisibilityOff()
+        self.gui.scalarBar.Modified()
 
 
         form, cases = self._fill_tetgen_case(nnodes, nelements)
-        self.parent._finish_results_io2(form, cases, reset_labels=True)
+        self.gui._finish_results_io2(form, cases, reset_labels=True)
 
     def _fill_tetgen_case(self, nnodes, nelements):
         subcase_id = 0
-        self.parent.isubcase_name_map = {subcase_id : ('Tetgen', '')}
+        self.gui.isubcase_name_map = {subcase_id : ('Tetgen', '')}
 
         icase = 0
         form = [

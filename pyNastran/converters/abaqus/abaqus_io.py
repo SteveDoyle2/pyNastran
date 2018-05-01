@@ -99,7 +99,7 @@ class AbaqusIO(object):
         grid.Allocate(self.gui.nelements, 1000)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.nnodes)
+        points.SetNumberOfPoints(self.gui.nnodes)
         self.gui.nid_map = {}
 
         assert nodes is not None

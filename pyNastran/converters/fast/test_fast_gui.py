@@ -23,7 +23,8 @@ class TestFastGUI(unittest.TestCase):
         geometry_filename = os.path.join(TEST_PATH, 'flow_demo1', 'om6inviscid.fgrid')
 
         test = FastGUI()
-        test.load_fast_geometry(geometry_filename)
+        #test.load_fast_geometry(geometry_filename)
+        test.on_load_geometry(geometry_filename, geometry_format='fast')
 
 
 if __name__ == '__main__':  # pragma: no cover

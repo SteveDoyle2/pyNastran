@@ -24,7 +24,8 @@ class TestShabpGUI(unittest.TestCase):
         test = ShabpGUI()
         test.log = log
         shabp_infilename = os.path.join(model_path, 'models', 'flap', 'flap_inviscid.mk5')
-        test.model.load_shabp_geometry(shabp_infilename)
+        #test.model.load_shabp_geometry(shabp_infilename)
+        test.on_load_geometry(shabp_infilename, geometry_format='shabp')
 
     def _test_shabp_geometry_02(self):
         test = ShabpGUI()

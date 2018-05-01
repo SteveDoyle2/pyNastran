@@ -32,7 +32,8 @@ class STL_GUITest(unittest.TestCase):
         test = STL_GUI()
         test.log = log
         #test.model.load_nastran_geometry(geometry_filename)
-        test.model.load_stl_geometry(geometry_filename)
+        #test.model.load_stl_geometry(geometry_filename)
+        test.on_load_geometry(geometry_filename, geometry_format='stl')
 
 
 if __name__ == '__main__':  # pragma: no cover

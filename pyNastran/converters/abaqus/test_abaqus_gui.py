@@ -13,6 +13,7 @@ class AbaqusGui(AbaqusIO, FakeGUIMethods):
     def __init__(self):
         FakeGUIMethods.__init__(self)
         AbaqusIO.__init__(self, self)
+        self.build_fmts(['abaqus'], stop_on_failure=True)
 
 class TestAbaqusGui(unittest.TestCase):
     def test_abaqus_1(self):
@@ -40,7 +41,8 @@ class TestAbaqusGui(unittest.TestCase):
 
         test = AbaqusGui()
         test.log = log
-        test.load_abaqus_geometry(abaqus_filename)
+        #test.load_abaqus_geometry(abaqus_filename)
+        test.on_load_geometry(abaqus_filename, geometry_format='abaqus')
         os.remove(abaqus_filename)
 
 if __name__ == '__main__':  #  pragma: no cover
