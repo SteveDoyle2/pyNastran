@@ -20,7 +20,11 @@ from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.group_actions import GroupActions
 from pyNastran.gui.qt_files.mouse_actions import MouseActions
 from pyNastran.gui.qt_files.load_actions import LoadActions
+
 from pyNastran.gui.menus.legend.legend_object import LegendObject
+from pyNastran.gui.menus.preferences.interface import PreferencesObject
+from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
+    EditGeometryPropertiesObject)
 
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
@@ -45,7 +49,10 @@ class GuiAttributes(object):
         self.group_actions = GroupActions(self)
         self.mouse_actions = MouseActions(self)
         self.load_actions = LoadActions(self)
+
         self.legend_obj = LegendObject(self)
+        self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
+        self.preferences_obj = PreferencesObject(self)
 
         self.glyph_scale_factor = 1.0
         self.html_logging = False
@@ -80,7 +87,6 @@ class GuiAttributes(object):
         # window variables
         self._preferences_window_shown = False
         self._clipping_window_shown = False
-        self._edit_geometry_properties_window_shown = False
         self._modify_groups_window_shown = False
         #self._label_window = None
         #-------------
@@ -1010,6 +1016,38 @@ class GuiAttributes(object):
         #self.log_command('command2')
         #self.log_error('error2')
         self.vtk_interactor.Modified()
+
+    #---------------------------------------------------------------------------
+    def on_update_geometry_properties_window(self, geometry_properties):
+            self.edit_geometry_properties_obj.on_update_geometry_properties_window(
+                geometry_properties)
+
+    def on_update_geometry_properties(self, out_data, name=None, write_log=True):
+        """
+        Applies the changed properties to the different actors if
+        something changed.
+
+        Note that some of the values are limited.  This prevents
+        points/lines from being shrunk to 0 and also the actor being
+        actually "hidden" at the same time.  This prevents confusion
+        when you try to show the actor and it's not visible.
+        """
+        self.edit_geometry_properties_obj.on_update_geometry_properties(
+            out_data, name=name, write_log=write_log)
+
+    def on_update_geometry_properties_override_dialog(self, geometry_properties):
+        """
+        Update the goemetry properties and overwite the options in the
+        edit geometry properties dialog if it is open.
+
+        Parameters
+        -----------
+        geometry_properties : dict {str : CoordProperties or AltGeometry}
+            Dictionary from name to properties object. Only the names included in
+            ``geometry_properties`` are modified.
+        """
+        self.edit_geometry_properties_obj.on_update_geometry_properties_override_dialog(
+            geometry_properties)
 
     #---------------------------------------------------------------------------
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):

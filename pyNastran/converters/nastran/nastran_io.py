@@ -271,9 +271,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def on_update_geometry_properties_window(self, geometry_properties):
         """updates the 'Edit Geometry Properties' window"""
-        if self.gui._edit_geometry_properties_window_shown:
-            self.gui._edit_geometry_properties.on_update_geometry_properties_window(
-                geometry_properties)
+        self.gui.on_update_geometry_properties_window(geometry_properties)
 
     def toggle_caero_sub_panels(self):
         """

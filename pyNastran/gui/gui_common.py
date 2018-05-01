@@ -6,7 +6,6 @@ from __future__ import division, unicode_literals, print_function
 import sys
 import os.path
 import datetime
-from copy import deepcopy
 from collections import OrderedDict
 from math import ceil
 import cgi #  html lib
@@ -40,19 +39,16 @@ from pyNastran.utils import integer_types
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 
-from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.utils.vtk.animation_callback import AnimationCallback
 
 from pyNastran.gui.menus.menus import (
     set_clipping_menu,
     set_camera_menu,
-    set_preferences_menu,
     on_set_modify_groups, Group,
     Sidebar,
     ApplicationLogWidget,
-    PythonConsoleWidget,
-    EditGeometryProperties)
+    PythonConsoleWidget)
 
 from pyNastran.gui.utils.write_gif import (
     setup_animation, update_animation_inputs, write_gif, make_two_sided)
@@ -337,7 +333,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-                ('geo_properties', 'Edit Geometry Properties...', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
+                ('geo_properties', 'Edit Geometry Properties...', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties),
                 ('modify_groups', 'Modify Groups...', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
 
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
@@ -347,6 +343,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
                 ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
+                ('show_warning', 'Show WARNING', 'show_warning.png', None, 'Show "COMMAND" messages', self.on_show_warning),
+                ('show_error', 'Show ERROR', 'show_error.png', None, 'Show "COMMAND" messages', self.on_show_error),
 
                 ('magnify', 'Magnify', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
                 ('shrink', 'Shrink', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification),
@@ -390,7 +388,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
                 ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size),
                 ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size),
-                ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set GUI Preferences', self.set_preferences_menu),
+                ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
 
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.mouse_actions.on_area_pick),
@@ -440,14 +438,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.menu_help.setFont(font)
 
         self.legend_obj.set_font_size(font_size)
+        self.edit_geometry_properties_obj.set_font_size(font_size)
         if self._clipping_window_shown:
             self._clipping_window.set_font_size(font_size)
-        if self._edit_geometry_properties_window_shown:
-            self._edit_geometry_properties.set_font_size(font_size)
         if self._modify_groups_window_shown:
             self._modify_groups_window.set_font_size(font_size)
-        if self._preferences_window_shown:
-            self._preferences_window.set_font_size(font_size)
+        self.preferences_obj.set_font_size(font_size)
 
         #self.menu_scripts.setFont(font)
         self.log_command('settings.on_set_font_size(%s)' % font_size)
@@ -503,7 +499,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if self.html_logging:
             self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
             self.actions['log_dock_widget'].setStatusTip("Show/Hide application log")
-            menu_view += ['', 'show_info', 'show_debug', 'show_command']
+            menu_view += ['', 'show_info', 'show_debug', 'show_command', 'show_warning', 'show_error']
             menu_window += ['log_dock_widget']
         if self.execute_python:
             self.actions['python_dock_widget'] = self.python_dock_widget.toggleViewAction()
@@ -993,6 +989,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def on_show_command(self):
         """sets a flag for showing/hiding COMMAND messages"""
         self.settings.show_command = not self.settings.show_command
+
+    def on_show_warning(self):
+        """sets a flag for showing/hiding WARNING messages"""
+        self.settings.show_warning = not self.settings.show_warning
+
+    def on_show_error(self):
+        """sets a flag for showing/hiding ERROR messages"""
+        self.settings.show_error = not self.settings.show_error
 
     def on_reset_camera(self):
         self.log_command('on_reset_camera()')
@@ -2824,17 +2828,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.cell_picker.SetTolerance(size)
 
     #---------------------------------------------------------------------------------------
-    def set_preferences_menu(self):
-        """
-        Opens a dialog box to set:
-
-        +--------+----------+
-        |  Min   |  Float   |
-        +--------+----------+
-        """
-        set_preferences_menu(self)
-
-    #---------------------------------------------------------------------------------------
     # CLIPPING MENU
     def set_clipping(self):
         """
@@ -2877,97 +2870,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_command('on_set_anti_aliasing(%r)' % (scale))
 
     #---------------------------------------------------------------------------------------
-    # EDIT ACTOR PROPERTIES
-    def edit_geometry_properties(self):
-        """
-        Opens a dialog box to set:
-
-        +--------+----------+
-        |  Name  |  String  |
-        +--------+----------+
-        |  Min   |  Float   |
-        +--------+----------+
-        |  Max   |  Float   |
-        +--------+----------+
-        | Format | pyString |
-        +--------+----------+
-        """
-        if not hasattr(self, 'case_keys'):
-            self.log_error('No model has been loaded.')
-            return
-        if not len(self.geometry_properties):
-            self.log_error('No secondary geometries to edit.')
-            return
-        #print('geometry_properties.keys() =', self.geometry_properties.keys())
-        #key = self.case_keys[self.icase]
-        #case = self.result_cases[key]
-
-        data = deepcopy(self.geometry_properties)
-        data['font_size'] = self.settings.font_size
-        if not self._edit_geometry_properties_window_shown:
-            self._edit_geometry_properties = EditGeometryProperties(data, win_parent=self)
-            self._edit_geometry_properties.show()
-            self._edit_geometry_properties_window_shown = True
-            self._edit_geometry_properties.exec_()
-        else:
-            self._edit_geometry_properties.activateWindow()
-
-        if 'clicked_ok' not in data:
-            self._edit_geometry_properties.activateWindow()
-            return
-
-        if data['clicked_ok']:
-            self.on_update_geometry_properties(data)
-            self._save_geometry_properties(data)
-            del self._edit_geometry_properties
-            self._edit_geometry_properties_window_shown = False
-        elif data['clicked_cancel']:
-            self.on_update_geometry_properties(self.geometry_properties)
-            del self._edit_geometry_properties
-            self._edit_geometry_properties_window_shown = False
-
-    def _save_geometry_properties(self, out_data):
-        for name, group in iteritems(out_data):
-            if name in ['clicked_ok', 'clicked_cancel']:
-                continue
-
-            if name not in self.geometry_properties:
-                # we've deleted the actor
-                continue
-
-            geom_prop = self.geometry_properties[name]
-            if isinstance(geom_prop, CoordProperties):
-                pass
-            elif isinstance(geom_prop, AltGeometry):
-                geom_prop.color = group.color
-                geom_prop.line_width = group.line_width
-                geom_prop.opacity = group.opacity
-                geom_prop.point_size = group.point_size
-            else:
-                raise NotImplementedError(geom_prop)
-
-    def on_update_geometry_properties_override_dialog(self, geometry_properties):
-        """
-        Update the goemetry properties and overwite the options in the
-        edit geometry properties dialog if it is open.
-
-        Parameters
-        -----------
-        geometry_properties : dict {str : CoordProperties or AltGeometry}
-            Dictionary from name to properties object. Only the names included in
-            ``geometry_properties`` are modified.
-        """
-        if self._edit_geometry_properties_window_shown:
-            # Override the output state in the edit geometry properties diaglog
-            # if the button is pushed while the dialog is open. This prevent the
-            # case where you close the dialog and the state reverts back to
-            # before you hit the button.
-            for name, prop in iteritems(geometry_properties):
-                self._edit_geometry_properties.out_data[name] = prop
-                if self._edit_geometry_properties.active_key == name:
-                    index = self._edit_geometry_properties.table.currentIndex()
-                    self._edit_geometry_properties.update_active_key(index)
-        self.on_update_geometry_properties(geometry_properties)
 
     def on_set_modify_groups(self):
         """
@@ -3004,218 +2906,3 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 continue
             data[group.name] = group
         self.groups = data
-
-    def on_update_geometry_properties(self, out_data, name=None, write_log=True):
-        """
-        Applies the changed properties to the different actors if
-        something changed.
-
-        Note that some of the values are limited.  This prevents
-        points/lines from being shrunk to 0 and also the actor being
-        actually "hidden" at the same time.  This prevents confusion
-        when you try to show the actor and it's not visible.
-        """
-        lines = []
-        if name is None:
-            for namei, group in iteritems(out_data):
-                if namei in ['clicked_ok', 'clicked_cancel']:
-                    continue
-                self._update_ith_geometry_properties(namei, group, lines, render=False)
-        else:
-            group = out_data[name]
-            self._update_ith_geometry_properties(name, group, lines, render=False)
-
-        self.vtk_interactor.Render()
-        if write_log and lines:
-            msg = 'out_data = {\n'
-            msg += ''.join(lines)
-            msg += '}\n'
-            msg += 'self.on_update_geometry_properties(out_data)'
-            self.log_command(msg)
-
-    def _update_ith_geometry_properties(self, namei, group, lines, render=True):
-        """updates a geometry"""
-        if namei not in self.geometry_actors:
-            # we've deleted the actor
-            return
-        actor = self.geometry_actors[namei]
-
-        if isinstance(actor, vtk.vtkActor):
-            alt_prop = self.geometry_properties[namei]
-            label_actors = alt_prop.label_actors
-            lines += self._update_geometry_properties_actor(namei, group, actor, label_actors)
-        elif isinstance(actor, vtk.vtkAxesActor):
-            changed = False
-            is_visible1 = bool(actor.GetVisibility())
-            is_visible2 = group.is_visible
-            if is_visible1 != is_visible2:
-                actor.SetVisibility(is_visible2)
-                alt_prop = self.geometry_properties[namei]
-                alt_prop.is_visible = is_visible2
-                actor.Modified()
-                changed = True
-
-            if changed:
-                lines.append('    %r : CoordProperties(is_visible=%s),\n' % (
-                    namei, is_visible2))
-        else:
-            raise NotImplementedError(actor)
-        if render:
-            self.vtk_interactor.Render()
-
-    def _update_geometry_properties_actor(self, name, group, actor, label_actors):
-        """
-        Updates an actor
-
-        Parameters
-        ----------
-        name : str
-            the geometry proprety to update
-        group : AltGeometry()
-            a storage container for all the actor's properties
-        actor : vtkActor()
-            the actor where the properties will be applied
-
-        linewidth1 : int
-            the active linewidth
-        linewidth2 : int
-            the new linewidth
-        """
-        lines = []
-        changed = False
-        #mapper = actor.GetMapper()
-        prop = actor.GetProperty()
-        backface_prop = actor.GetBackfaceProperty()
-
-        if name == 'main' and backface_prop is None:
-            # don't edit these
-            # we're lying about the colors to make sure the
-            # colors aren't reset for the Normals
-            color1 = prop.GetDiffuseColor()
-            color2 = color1
-            assert color1[1] <= 1.0, color1
-        else:
-            color1 = prop.GetDiffuseColor()
-            assert color1[1] <= 1.0, color1
-            color2 = group.color_float
-            #print('line2646 - name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
-            #color2 = group.color
-
-        opacity1 = prop.GetOpacity()
-        opacity2 = group.opacity
-        opacity2 = max(0.1, opacity2)
-
-        line_width1 = prop.GetLineWidth()
-        line_width2 = group.line_width
-        line_width2 = max(1, line_width2)
-
-        point_size1 = prop.GetPointSize()
-        point_size2 = group.point_size
-        point_size2 = max(1, point_size2)
-
-        representation = group.representation
-        alt_prop = self.geometry_properties[name]
-        #representation = alt_prop.representation
-        #is_visible1 = alt_prop.is_visible
-        is_visible1 = bool(actor.GetVisibility())
-        is_visible2 = group.is_visible
-        #print('is_visible1=%s is_visible2=%s'  % (is_visible1, is_visible2))
-
-        bar_scale1 = alt_prop.bar_scale
-        bar_scale2 = group.bar_scale
-        # bar_scale2 = max(0.0, bar_scale2)
-
-        #print('name=%s color1=%s color2=%s' % (name, str(color1), str(color2)))
-        if color1 != color2:
-            #print('color_2662[%s] = %s' % (name, str(color1)))
-            assert isinstance(color1[0], float), color1
-            prop.SetDiffuseColor(color2)
-            changed = True
-        if line_width1 != line_width2:
-            line_width2 = max(1, line_width2)
-            prop.SetLineWidth(line_width2)
-            changed = True
-        if opacity1 != opacity2:
-            #if backface_prop is not None:
-                #backface_prop.SetOpacity(opacity2)
-            prop.SetOpacity(opacity2)
-            changed = True
-        if point_size1 != point_size2:
-            prop.SetPointSize(point_size2)
-            changed = True
-        if representation == 'bar' and bar_scale1 != bar_scale2:
-            #print('name=%s rep=%r bar_scale1=%s bar_scale2=%s' % (
-                #name, representation, bar_scale1, bar_scale2))
-            self.set_bar_scale(name, bar_scale2)
-
-        if is_visible1 != is_visible2:
-            actor.SetVisibility(is_visible2)
-            alt_prop.is_visible = is_visible2
-            #prop.SetViPointSize(is_visible2)
-            actor.Modified()
-            for label_actor in label_actors:
-                label_actor.SetVisibility(is_visible2)
-                label_actor.Modified()
-            changed = True
-
-        if changed:
-            lines.append('    %r : AltGeometry(self, %r, color=(%s, %s, %s), '
-                         'line_width=%s, opacity=%s, point_size=%s, bar_scale=%s, '
-                         'representation=%r, is_visible=%s),\n' % (
-                             name, name, color2[0], color2[1], color2[2], line_width2,
-                             opacity2, point_size2, bar_scale2, representation, is_visible2))
-            prop.Modified()
-        return lines
-
-    def set_bar_scale(self, name, bar_scale):
-        """
-        Parameters
-        ----------
-        name : str
-           the parameter to scale (e.g. TUBE_y, TUBE_z)
-        bar_scale : float
-           the scaling factor
-        """
-        #print('set_bar_scale - GuiCommon2; name=%s bar_scale=%s' % (name, bar_scale))
-        if bar_scale <= 0.0:
-            return
-        assert bar_scale > 0.0, 'bar_scale=%r' % bar_scale
-
-        # bar_y : (nbars, 6) float ndarray
-        #     the xyz coordinates for (node1, node2) of the y/z axis of the bar
-        #     xyz1 is the centroid
-        #     xyz2 is the end point of the axis with a length_xyz with a bar_scale of 1.0
-        bar_y = self.bar_lines[name]
-
-        #dy = c - yaxis
-        #dz = c - zaxis
-        #print('bary:\n%s' % bar_y)
-        xyz1 = bar_y[:, :3]
-        xyz2 = bar_y[:, 3:]
-        dxyz = xyz2 - xyz1
-
-        # vectorized version of L = sqrt(dx^2 + dy^2 + dz^2)
-        length_xyz = np.linalg.norm(dxyz, axis=1)
-        izero = np.where(length_xyz == 0.0)[0]
-        if len(izero):
-            bad_eids = self.bar_eids[name][izero]
-            self.log.error('The following elements have zero length...%s' % bad_eids)
-
-        # v = dxyz / length_xyz *  bar_scale
-        # xyz2 = xyz1 + v
-
-        nnodes = len(length_xyz)
-        grid = self.alt_grids[name]
-        points = grid.GetPoints()
-        for i in range(nnodes):
-            #unused_point = points.GetPoint(2*i+1)
-            #print(unused_point)
-            node = xyz1[i, :] + length_xyz[i] * bar_scale * dxyz[i, :]
-            #print(unused_point, node)
-            points.SetPoint(2 * i + 1, *node)
-
-        if hasattr(grid, 'Update'):
-            #print('update....')
-            grid.Update()
-        grid.Modified()
-        #print('update2...')

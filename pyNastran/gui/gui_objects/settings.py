@@ -56,6 +56,8 @@ class Settings(object):
         self.show_info = True
         self.show_debug = True
         self.show_command = True
+        self.show_warning = True
+        self.show_error = True
 
         # int
         self.annotation_size = 18
@@ -86,6 +88,8 @@ class Settings(object):
         self.show_info = True
         self.show_debug = True
         self.show_command = True
+        self.show_warning = True
+        self.show_error = True
 
         # int
         self.text_size = 14
@@ -126,6 +130,8 @@ class Settings(object):
         self._set_setting(settings, setting_keys, ['show_info'], self.show_info, True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['show_debug'], self.show_debug, True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['show_command'], self.show_command, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_warning'], self.show_command, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['show_error'], self.show_command, True, auto_type=bool)
 
         # the vtk panel background color
         self._set_setting(settings, setting_keys, ['use_gradient_background'],
@@ -225,6 +231,8 @@ class Settings(object):
         settings.setValue('show_info', self.show_info)
         settings.setValue('show_debug', self.show_debug)
         settings.setValue('show_command', self.show_command)
+        settings.setValue('show_warning', self.show_warning)
+        settings.setValue('show_error', self.show_error)
 
         # int
         settings.setValue('font_size', self.font_size)
