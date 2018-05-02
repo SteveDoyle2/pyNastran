@@ -32,8 +32,9 @@
 --->
 
 Also, check out the:
-  * [Discussion forum](http://groups.google.com/group/pynastran-discuss)
-  * [Developer forum](http://groups.google.com/group/pynastran-dev)
+  * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
+  * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
+  * [Docs](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) (the version isn't quite right, but it's close)
 
 for more detailed information.
 
@@ -62,49 +63,57 @@ This should be hidden...
 
 v1.1-progress
 
-This will be a major release.  The focus has again been on robustness and testing.
+It's been roughly a year and 100 tickets closed since the last version, so it's probably
+time for another release!  I'm pleased to announce that the continuing problems 
+of up-to-date documentation will hopefully be a thing of the past.  xxx 
+has graciously offered to host the documentation.  The pyNastranGUI exe (previously 
+hosted on Sourceforge) will also be hosted there.  Outside of that, it's the same 
+open-source project and will still be on Github.
+
+Regarding features, the focus has again been on robustness and testing.  There has been
+a 10% increase in the testing coverage (the same as v0.8 to v1.0).
+
 There are a few changes (mainly in the BDF) though.  The GUI now also supports
 PyQt4, PyQt5, and Pyside with the same API, which helps reduces the restriction on
 licensing.
 
-Even more exciting is the pyNastran documentation is going to be hosted on xxx.
-Documentation will be up to date and have better uptime.
-
-
 Programmatics
+ - Dropping Python 3.4 support
  - dropping VTK 5/6 suppoprt for the GUI
 
 BDF:
  - currently 340 cards supported
- - cross-referencing is now simpler
+ - cross-referencing is now more straightforward to new users (much of v1.0 works using the `_ref` option)
    - ``*_ref`` attributes are cross-referenced
       - ``element.nodes`` is not cross-referenced
       - ``element.nodes_ref`` is cross-referenced
- - pickling to load your deck ~5x faster
+ - pickling to reload your deck ~5x faster
  - decreased time required for Case Control Deck with large SETs and many load cases
  - improved optimization checks
 
 OP2:
- - HDF5 export support
+ - HDF5 export/import support
  - pandas support for matrices
  - couple more results vectorized (e.g., complex strain energy, DMIG strain energy, some forces)
  - grid_point_stressses supported (disabled since v0.7)
  - fixed sparse matrices being stored as dense matrices
 
 GUI:
- - animation menu is more intuitive
+ - can now mix and match fringe/displacement/vector results (e.g., max principal stress shown on a displaced model)
+ - improved animation menu
     - in gui animation
-    - multiple animation profiles
-    - wipe deformed shape button (currently broken)
-    - link to legend change
-    - no longer a subset of the legend menu (not done)
+    - more animation profiles
+ - bar profile visualzation
  - nominal geometry (useful for deflection plots)
- - single click menus
  - improved optimization support
  - improved picking display
  - better PSHELL/PCOMP distinction
 
-  --->
+Known issues:
+ - Transient Pandas Dataframes will fail in newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
+   this is probably pretty easy to fix.
+ 
+--->
   
 # News
 
