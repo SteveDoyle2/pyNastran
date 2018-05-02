@@ -581,6 +581,9 @@ class GuiAttributes(object):
 
         # existing geometry
         icase = self.icase
+        if icase not in self.label_actors:
+            self.log.warning('No actors to clear')
+            return
 
         actors = self.label_actors[icase]
         for actor in actors:

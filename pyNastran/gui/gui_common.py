@@ -296,6 +296,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'show_info' : True,
                 'show_debug' : True,
                 'show_command' : True,
+                'show_warning' : True,
+                'show_error' : True,
                 'anti_alias_0' : True,
                 'anti_alias_1' : False,
                 'anti_alias_2' : False,
