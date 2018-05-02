@@ -7,7 +7,7 @@ class AltGeometry(object):
                        'bar', 'wire+point', 'wire+surf']
     displays = ['Wireframe', 'Surface', 'point', None]
     def __repr__(self):
-        msg = ('AltGeometry(self, %s, color=%s, line_width=%s, opacity=%s,\n'
+        msg = ('AltGeometry(%r, color=%s, line_width=%s, opacity=%s,\n'
               ' point_size=%s, bar_scale=%s, representation=%r, display=%r, is_visible=%s,\n'
               'is_pickable=%s, label_actors=%s)' % (
                   self.name, str(self.color), self.line_width, self.opacity, self.point_size,
@@ -100,14 +100,17 @@ class AltGeometry(object):
         self.representation = representation
 
     def __deepcopy__(self, memo):
+        """doesn't copy the label_actors to speed things up?"""
         keys = ['name', '_color', 'display', 'line_width', 'point_size', '_opacity',
                 '_representation', 'is_visible', 'bar_scale', 'is_pickable']
         cls = self.__class__
         result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k in keys:
-            v = self.__dict__[k]
-            setattr(result, k, deepcopy(v, memo))
+        idi = id(self)
+        memo[idi] = result
+        for key in keys:
+            value = self.__dict__[key]
+            setattr(result, key, deepcopy(value, memo))
+        #result.label_actors = [] #= memo['label_actors']
         return result
 
     @property

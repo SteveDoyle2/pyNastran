@@ -153,10 +153,11 @@ class EditGeometryPropertiesObject(object):
     def _update_ith_geometry_properties(self, namei, group, lines, render=True):
         """updates a geometry"""
         if namei not in self.gui.geometry_actors:
+            #print('cant find %r' % namei)
             # we've deleted the actor
             return
-        actor = self.gui.geometry_actors[namei]
 
+        actor = self.gui.geometry_actors[namei]
         if isinstance(actor, vtk.vtkActor):
             alt_prop = self.gui.geometry_properties[namei]
             label_actors = alt_prop.label_actors

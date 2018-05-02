@@ -156,13 +156,13 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
 class BAROR(object):
     """
-    +-------+-----+---+---+---+-------+-----+-------+------+
-    |   1   |  2  | 3 | 4 | 5 |   6   |  7  |   8   |  9   |
-    +=======+=====+===+===+===+=======+=====+=======+======+
-    | BAROR | PID |   |   |   | G0/X1 |  X2 |  X3   | OFFT |
-    +-------+-----+---+---+---+-------+-----+-------+------+
-    | BAROR | 39  |   |   |   |  0.6  | 2.9 | -5.87 | GOG  |
-    +-------+-----+---+---+---+-------+-----+-------+------+
+    +-------+---+-----+---+---+-------+-----+-------+------+
+    |   1   | 2 |  3  | 4 | 5 |   6   |  7  |   8   |  9   |
+    +=======+===+=====+===+===+=======+=====+=======+======+
+    | BAROR |   | PID |   |   | G0/X1 |  X2 |  X3   | OFFT |
+    +-------+---+-----+---+---+-------+-----+-------+------+
+    | BAROR |   | 39  |   |   |  0.6  | 2.9 | -5.87 | GOG  |
+    +-------+---+-----+---+---+-------+-----+-------+------+
     """
     type = 'BAROR'
     def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
@@ -192,10 +192,12 @@ class BAROR(object):
                           double_or_blank(card, 6, 'x2', 0.),
                           double_or_blank(card, 7, 'x3', 0.)],
                          dtype='float64')
+        else:
+            raise NotImplementedError('BAROR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
         if isinstance(offt, integer_types):
             raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
-        assert len(card) <= 8, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
         return BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
 class CBARAO(BaseCard):

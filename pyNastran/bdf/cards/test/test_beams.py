@@ -1030,6 +1030,41 @@ class TestBeams(unittest.TestCase):
         model.pop_xref_errors()
         save_load_deck(model, run_convert=False)
 
+    def test_beamor(self):
+        """tests a BEAMOR"""
+        model = BDF(debug=False)
+        n1 = 10
+        n2 = 20
+        model.add_grid(n1, [0., 0., 0.])
+        model.add_grid(n2, [1., 0., 0.])
+
+        pid = 2
+        mid = 1
+        beam_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        xxb = [0., 1.]
+        dims = [dim, dim]
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb, dims, so=None,
+                                 nsm=[1.0],
+                                 group='MSCBML0',
+                                 comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+
+        card_lines = ['BEAMOR', None, pid, None, None, 0.6, 2.9, -5.87, 'GOG']
+        model.add_card(card_lines, 'BEAMOR', comment='BEAMOR', is_list=True,
+                       has_none=True)
+
+        eid = 1
+        card_lines = ['CBEAM', eid, pid, n1, n2]
+        model.add_card(card_lines, 'CBEAM', comment='', is_list=True,
+                      has_none=True)
+        model.pop_parse_errors()
+
     def test_pbmsect(self):
         """tests a PBMSECT"""
         model = BDF(debug=False)

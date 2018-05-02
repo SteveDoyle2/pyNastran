@@ -1,5 +1,6 @@
 """tests the NastranIO class"""
 import os
+from copy import deepcopy
 import unittest
 
 import numpy as np
@@ -209,6 +210,41 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        out_datai = deepcopy(test.geometry_properties)
+        test.on_update_geometry_properties_override_dialog(out_datai)
+
+        out_data = {
+            'clicked_ok' : True,
+            'Global XYZ' : out_datai['Global XYZ'],
+            'conm2' : out_datai['conm2'],
+            'bar_z' : out_datai['bar_z'],
+            'caero' : out_datai['caero'],
+        }
+
+        #print(test.geometry_properties)
+        coord = out_data['Global XYZ']
+        coord.is_visible = False
+        str(coord)
+        #print('coord = %r' % coord)
+
+        conm2 = out_data['conm2']
+        conm2.point_size = 10
+
+        barz = out_data['bar_z']
+        barz.bar_scale = 0.5
+        barz.is_visible = True
+        #print(barz)
+
+        caero = test.geometry_properties['caero']
+        str(caero)
+        caero.color = (255, 0, 0)
+        caero.line_width = 10
+        caero.opacity = 0.8
+        caero.is_visible = False
+        #print(caero)
+        #print(out_data)
+        test.on_update_geometry_properties(out_data, name='caero',
+                                           write_log=True)
 
     def test_gui_elements_01(self):
         """tests forces/pressure in SOL 101"""

@@ -143,8 +143,8 @@ class OpenFoamIO(object):
             raise RuntimeError(mesh_3d)
 
         self.gui.nnodes = len(nodes)
-        print("nnodes = %s" % self.gui.nnodes)
-        print("nelements = %s" % self.gui.nelements)
+        self.log.debug("nnodes = %s" % self.gui.nnodes)
+        self.log.debug("nelements = %s" % self.gui.nelements)
 
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)

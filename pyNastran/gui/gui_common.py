@@ -515,6 +515,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         menu_items = self._create_menu_items(actions)
         self._populate_menu(menu_items)
 
+        self.actions['show_info'].setChecked(self.settings.show_info)
+        self.actions['show_debug'].setChecked(self.settings.show_debug)
+        self.actions['show_command'].setChecked(self.settings.show_command)
+        self.actions['show_warning'].setChecked(self.settings.show_warning)
+        self.actions['show_error'].setChecked(self.settings.show_error)
+
+
     def _populate_menu(self, menu_items):
         """populate menus and toolbar"""
         assert isinstance(menu_items, dict), menu_items

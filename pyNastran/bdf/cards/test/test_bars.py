@@ -475,6 +475,36 @@ class TestBars(unittest.TestCase):
         assert pbarl.MassPerLength() == 21.0, pbarl.MassPerLength()
         assert pbarl2.MassPerLength() == 21.0, pbarl2.MassPerLength()
 
+    def test_baror(self):
+        """tests a BAROR"""
+        model = BDF(debug=False)
+        n1 = 10
+        n2 = 20
+        model.add_grid(n1, [0., 0., 0.])
+        model.add_grid(n2, [1., 0., 0.])
+
+        pid = 2
+        mid = 1
+        bar_type = 'BAR'
+        dim = [1., 2.]  # area = 2.0
+        nsm = 1.
+        pbarl = model.add_pbarl(pid, mid, bar_type, dim, group='MSCBML0', nsm=1.,
+                               comment='')
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.)
+
+        card_lines = ['BAROR', None, pid, None, None, 0.6, 2.9, -5.87, 'GOG']
+        model.add_card(card_lines, 'BAROR', comment='BAROR', is_list=True,
+                       has_none=True)
+
+        eid = 1
+        card_lines = ['CBAR', eid, pid, n1, n2]
+        model.add_card(card_lines, 'CBAR', comment='', is_list=True,
+                      has_none=True)
+        model.pop_parse_errors()
 
     def test_pbrsect(self):
         """tests a PBRSECT"""

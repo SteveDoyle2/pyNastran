@@ -615,10 +615,12 @@ class BEAMOR(BaseCard):
                           double_or_blank(card, 6, 'x2', 0.0),
                           double_or_blank(card, 7, 'x3', 0.0)],
                          dtype='float64')
+        else:
+            raise NotImplementedError('BEAMOR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
         if isinstance(offt, integer_types):
             raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
-        assert len(card) <= 8, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
         return BEAMOR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
     def raw_fields(self):

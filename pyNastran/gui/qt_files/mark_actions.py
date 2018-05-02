@@ -279,34 +279,34 @@ class MarkActions(object):
             self.create_annotation(texti, self.gui.label_actors[icase], xi, yi, zi)
         self.gui.vtk_interactor.Render()
 
-    def __mark_nodes_by_result(self, nids, icases):
-        """
-        # mark the node 1 with the NodeID (0) result
-        self.mark_nodes_by_result_case(1, 0)
+    #def __mark_nodes_by_result(self, nids, icases):
+        #"""
+        ## mark the node 1 with the NodeID (0) result
+        #self.mark_nodes_by_result_case(1, 0)
 
-        # mark the nodes 1 and 2 with the NodeID (0) result
-        self.mark_nodes_by_result_case([1, 2], 0)
+        ## mark the nodes 1 and 2 with the NodeID (0) result
+        #self.mark_nodes_by_result_case([1, 2], 0)
 
-        # mark the nodes with the NodeID (0) and ElementID (1) result
-        self.mark_nodes_by_result_case([1, 2], [0, 1])
-        """
-        i = np.searchsorted(self.gui.node_ids, nids)
-        if isinstance(icases, int):
-            icases = [icases]
+        ## mark the nodes with the NodeID (0) and ElementID (1) result
+        #self.mark_nodes_by_result_case([1, 2], [0, 1])
+        #"""
+        #i = np.searchsorted(self.gui.node_ids, nids)
+        #if isinstance(icases, int):
+            #icases = [icases]
 
-        for icase in icases:
-            if icase not in self.gui.label_actors:
-                msg = 'icase=%r not in label_actors=[%s]' % (
-                    icase, ', '.join(self.gui.label_actors))
-                self.gui.log_error(msg)
-                continue
+        #for icase in icases:
+            #if icase not in self.gui.label_actors:
+                #msg = 'icase=%r not in label_actors=[%s]' % (
+                    #icase, ', '.join(self.gui.label_actors))
+                #self.gui.log_error(msg)
+                #continue
 
-            for node_id in i:
-                jnid = np.where(node_id == self.gui.node_ids)[0]
-                world_position = self.gui.xyz_cid0[jnid, :]
-                out = self.get_result_by_xyz_node_id(world_position, node_id)
-                _result_name, unused_result_value, node_id, node_xyz = out
-                xi, yi, zi = node_xyz
-                texti = 'test'
-                self.create_annotation(texti, self.gui.label_actors[icase], xi, yi, zi)
-        self.gui.vtk_interactor.Render()
+            #for node_id in i:
+                #jnid = np.where(node_id == self.gui.node_ids)[0]
+                #world_position = self.gui.xyz_cid0[jnid, :]
+                #out = self.get_result_by_xyz_node_id(world_position, node_id)
+                #_result_name, unused_result_value, node_id, node_xyz = out
+                #xi, yi, zi = node_xyz
+                #texti = 'test'
+                #self.create_annotation(texti, self.gui.label_actors[icase], xi, yi, zi)
+        #self.gui.vtk_interactor.Render()

@@ -1,3 +1,7 @@
+"""
+defines:
+ - model = read_block_mesh(block_mesh_dict_filename, log=None, debug=False)
+"""
 from __future__ import print_function
 import os
 from copy import deepcopy
@@ -16,14 +20,21 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.log import get_logger2
 from pyNastran.utils import print_bad_path
 
+def read_block_mesh(block_mesh_dict_filename, log=None, debug=False):
+    """functional interface to BlockMesh"""
+    model = BlockMesh(log=log, debug=debug)
+    model.read_openfoam(block_mesh_dict_filename)
+    return model
 
 def area_centroid(n1, n2, n3, n4):
+    """calculates the area and centroid of a quad"""
     centroid = (n1 + n2 + n3 + n4) / 4.
     n = cross(n3 - n1, n4 - n2)
     area = 0.5 * norm(n)
     return area, centroid
 
 def volume8(n1, n2, n3, n4, n5, n6, n7, n8):
+    """calculates the volume of a hex"""
     (A1, c1) = area_centroid(n1, n2, n3, n4)
     (A2, c2) = area_centroid(n5, n6, n7, n8)
     V = (A1 + A2) / 2. * norm(c1 - c2)
@@ -44,8 +55,10 @@ class FaceFile(object):
         #p = FoamFile(face_filename)
         #lines = p.read_foam_file()
         #print('converting')
-        face_file = open(face_filename, 'r')
+        with open(face_filename, 'r') as face_file:
+            self._read_face_file(face_file, ifaces_to_read=ifaces_to_read)
 
+    def _read_face_file(self, face_file, ifaces_to_read=None):
         i = 0
         nfaces = 0
         while nfaces == 0:
@@ -244,7 +257,7 @@ class BoundaryFile(object):
             i += 1
             typeline = boundary_file.readline()
             i += 1
-            word, Type = typeline.strip('\n\r\t ;').split()
+            word, boundary_type = typeline.strip('\n\r\t ;').split()
 
             nfacesline = boundary_file.readline()
             i += 1
@@ -277,7 +290,7 @@ class BoundaryFile(object):
                     msg = ('boundary_name=%r is already defined...'
                            'boundaries must have unique names' % boundary_name)
                     raise KeyError(msg)
-                boundaries[boundary_name] = [Type, nfaces, startfaces]
+                boundaries[boundary_name] = [boundary_type, nfaces, startfaces]
 
                 #self._read_boundaries(boundary_file, i, nboundaries2, boundaries, basename + name)
             else:
@@ -305,20 +318,23 @@ class BoundaryFile(object):
                 if boundary_name in boundaries:
                     raise KeyError('boundary_name=%r is already defined...'
                                    'boundaries must have unique names' % boundary_name)
-                boundaries[boundary_name] = [Type, nfaces, startfaces]
+                boundaries[boundary_name] = [boundary_type, nfaces, startfaces]
 
         for name, boundary in iteritems(boundaries):
-            print('name=%s boundary=%s' % (name, boundary))
+            self.log.info('name=%s boundary=%s' % (name, boundary))
         return boundaries
 
 
 class Boundary(object):
+    """defines Boundary"""
     def __init__(self, log=None, debug=False):
+        """creates a Boundary object"""
         self.debug = False
         #log = None
         self.log = get_logger2(log, debug=debug)
 
     def read_openfoam(self, point_filename, face_filename, boundary_filename):
+        """reads a Boundary file"""
         assert os.path.exists(face_filename), print_bad_path(face_filename)
         assert os.path.exists(point_filename), print_bad_path(point_filename)
         assert os.path.exists(boundary_filename), print_bad_path(boundary_filename)
@@ -332,14 +348,14 @@ class Boundary(object):
         assert 'boundary' in boundary_filename, boundary_filename
 
         #print('starting Boundary')
-        p = PointFile(log=self.log, debug=self.debug)
+        point_file = PointFile(log=self.log, debug=self.debug)
         #from PyFoam.RunDictionary.ParsedBlockMeshDict import ParsedBlockMeshDict
         #self.log.info(dir(f))
 
-        f = FaceFile(log=self.log, debug=self.debug)
+        face_file = FaceFile(log=self.log, debug=self.debug)
 
-        b = BoundaryFile(log=self.log, debug=False)
-        boundaries = b.read_boundary_file(boundary_filename)
+        boundary_file = BoundaryFile(log=self.log, debug=False)
+        boundaries = boundary_file.read_boundary_file(boundary_filename)
 
         #if 0:
             #foam = FoamFile(boundary_filename, log=p.log)
@@ -380,7 +396,7 @@ class Boundary(object):
                 ifaces_to_read.shape, nfaces2))
         self.log.info(ifaces_to_read)
 
-        faces = f.read_face_file(face_filename, ifaces_to_read=ifaces_to_read)
+        faces = face_file.read_face_file(face_filename, ifaces_to_read=ifaces_to_read)
         #faces = f.read_face_file(face_filename, ifaces_to_read=None)
         del ifaces_to_read
 
@@ -402,19 +418,19 @@ class Boundary(object):
             self.log.info('ipoints_to_read = %s' % ipoints_to_read)
         else:
             ipoints_to_read = None
-        nodes = p.read_point_file(point_filename, ipoints_to_read=ipoints_to_read)
+        nodes = point_file.read_point_file(point_filename, ipoints_to_read=ipoints_to_read)
 
         if ipoints_to_read is not None:
             nid_to_ipoint = {}
-            for i, nid in enumerate(ipoints_to_read):
-                nid_to_ipoint[nid] = i
+            for inid, nid in enumerate(ipoints_to_read):
+                nid_to_ipoint[nid] = inid
 
             self.log.info('%s %s' % (faces, faces.max()))
-            for i, unused_face in enumerate(faces):
+            for iface, unused_face in enumerate(faces):
                 #print('face      = %s' % face)
-                faces[i, 0] = nid_to_ipoint[faces[i, 0]]
-                faces[i, 1] = nid_to_ipoint[faces[i, 1]]
-                faces[i, 2] = nid_to_ipoint[faces[i, 2]]
+                faces[iface, 0] = nid_to_ipoint[faces[iface, 0]]
+                faces[iface, 1] = nid_to_ipoint[faces[iface, 1]]
+                faces[iface, 2] = nid_to_ipoint[faces[iface, 2]]
                 #print('faces[%i] = %s' % (i, faces[i, :]))
             self.log.info('%s %s' % (faces, faces.max()))
             self.log.info('done...')
@@ -434,7 +450,7 @@ class Boundary(object):
             # nFaces          nFaces;
             # startFace       777700;
             try:
-                unused_Type = boundary[0]
+                unused_type = boundary[0]
                 nfacesi = int(boundary[1])
                 startface = int(boundary[2])
             except:
@@ -483,13 +499,16 @@ class Boundary(object):
 
 
 class BlockMesh(object):
+    """defines BlockMesh"""
     def __init__(self, log=None, debug=False):
+        """creates BlockMesh"""
         debug = False
         #log = None
         self.log = get_logger2(log, debug=debug)
 
         # arrays
         self.nodes = None
+        self.quads = None
         self.hexas = None
         self.npoints = None
         self.grading = None
@@ -572,9 +591,8 @@ class BlockMesh(object):
                     i / L
                     #p1 =
 
-
-
     def read_openfoam(self, block_mesh_name='blockMeshDict'):
+        """reads the BlockMesh file"""
         self.log.info('block_mesh_name = %r' % block_mesh_name)
         foam_file = FoamFile(block_mesh_name)
         foam_lines = foam_file.read_foam_file()
@@ -655,6 +673,7 @@ class BlockMesh(object):
         inames = array(inames, dtype='int32')
         bcs = array(bcs, dtype='int32')
 
+        self.quads = quads
         self.iname_to_quads = iname_to_quads
         self.inames = inames
         self.bcs = bcs
@@ -666,6 +685,7 @@ class BlockMesh(object):
         return nodes, hexas, quads, inames, bcs
 
     def write_bdf(self, bdf_filename, nodes, hexas):
+        """writes the BlockMesh as a Nastran BDF"""
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -702,10 +722,11 @@ class BlockMesh(object):
             if ieq == 10:
                 asdf
                 break
-            print('neq = %s' % neq)
-        print('ieq = %s' % ieq)
+            self.log.debug('neq = %s' % neq)
+        self.log.debug('ieq = %s' % ieq)
 
     def equivalence_nodes(self, Rtol=0.1):
+        """equivalences the nodes of a BlockMeshDict"""
         #same_location = []
         inode_map = {}
         neq = 0
@@ -771,8 +792,8 @@ class BlockMesh(object):
                 new_ids_map2[i+j] = value - j0
                 j += 1
 
-        for key, value in sorted(iteritems(new_ids_map2)):
-            self.log.info('  k=%s v=%s' % (key, value))
+        #for key, value in sorted(iteritems(new_ids_map2)):
+            #self.log.info('  k=%s v=%s' % (key, value))
         new_ids_map = new_ids_map2
 
         # get new array of nodes
@@ -827,8 +848,8 @@ class BlockMesh(object):
                 faces2.append(face2)
             iname_to_quads[iname] = array(faces2, dtype='int32')
 
-        self.log.info(nodes.shape)
-        self.log.info(nodes2.shape)
+        #self.log.info(nodes.shape)
+        #self.log.info(nodes2.shape)
         self.nodes = nodes2
         self.hexas = hexas2
         self.grading = grading2
@@ -837,12 +858,14 @@ class BlockMesh(object):
 
         return neq
 
-    def write_block_mesh(self, blockMesh_name_out='blockMeshDict.out', make_symmetry=False):
-        with open(blockMesh_name_out, 'w') as block_mesh_file:
-            self.log.info('writing %s' % blockMesh_name_out)
+    def write_block_mesh(self, block_mesh_name_out='blockMeshDict.out', make_symmetry=False):
+        """filename interface to ``_write_block_mesh``"""
+        with open(block_mesh_name_out, 'w') as block_mesh_file:
+            self.log.info('writing %s' % block_mesh_name_out)
             self._write_block_mesh(block_mesh_file, make_symmetry)
 
     def _write_block_mesh(self, block_mesh_file, make_symmetry):
+        """writes a BlockMeshDict with a file object"""
         nodes = self.nodes
         hexas = self.hexas
 
@@ -929,7 +952,6 @@ class BlockMesh(object):
         block_mesh_file.write('(\n')
         block_mesh_file.write(');\n')
 
-
         block_mesh_file.write('\n')
         block_mesh_file.write('boundary\n')
         block_mesh_file.write('(\n')
@@ -974,12 +996,12 @@ class BlockMesh(object):
         if make_symmetry:
             #name = self.iname_to_name[iname]
             name = 'symmetry'
-            Type = 'symmetryPlane'
-            #Type = self.iname_to_type[iname]
+            foam_type = 'symmetryPlane'
+            #foam_type = self.iname_to_type[iname]
 
             block_mesh_file.write('    %s\n' % name)
             block_mesh_file.write('    {\n')
-            block_mesh_file.write('        type %s;\n' % Type)
+            block_mesh_file.write('        type %s;\n' % foam_type)
             block_mesh_file.write('        faces\n')
             block_mesh_file.write('        (\n')
             for face in symmetry_faces:
@@ -1004,28 +1026,27 @@ class BlockMesh(object):
             block_mesh_file.write('        );\n')
             block_mesh_file.write('    }\n')
 
-
         block_mesh_file.write(');\n\n')
-
         block_mesh_file.write('mergeMatchPairs\n')
         block_mesh_file.write('(\n')
         block_mesh_file.write(');\n\n')
         block_mesh_file.write('// ************************************************************************* //\n')
 
-def main():
+def mirror_block_mesh(block_mesh_name, block_mesh_name_out, log=None, debug=True):
+    """mirrors a blockMeshDict"""
+    make_symmetry = True
+    block_mesh_model = read_block_mesh(block_mesh_name, log=log, debug=debug)
+    #out = block_mesh_model.read_openfoam(block_mesh_name)
+    #unused_nodes, unused_hexas, unused_quads, unused_names, unused_bcs = out
+    if make_symmetry:
+        block_mesh_model.adjust_nodes_to_symmetry()
+    block_mesh_model.write_block_mesh(block_mesh_name_out, make_symmetry=make_symmetry)
+
+def main():  # pragma: no cover
     import sys
     block_mesh_name = sys.argv[1]
     block_mesh_name_out = sys.argv[2]
     mirror_block_mesh(block_mesh_name, block_mesh_name_out)
-
-def mirror_block_mesh(block_mesh_name, block_mesh_name_out):
-    make_symmetry = True
-    block_mesh_model = BlockMesh()
-    out = block_mesh_model.read_openfoam(block_mesh_name)
-    unused_nodes, unused_hexas, unused_quads, unused_names, unused_bcs = out
-    if make_symmetry:
-        block_mesh_model.adjust_nodes_to_symmetry()
-    block_mesh_model.write_block_mesh(block_mesh_name_out, make_symmetry=make_symmetry)
 
 if __name__ == '__main__':  # pragma: no cover
     main()
