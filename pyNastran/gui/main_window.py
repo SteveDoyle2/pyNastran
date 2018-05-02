@@ -183,6 +183,24 @@ class MainWindow(GuiCommon2, NastranIO):
         else:
             self.vtk_interactor.mousePressEvent(event)
 
+    def open_website(self):
+        """loads the pyNastran main website"""
+        import webbrowser
+        url = pyNastran.__website__
+        webbrowser.open(url)
+
+    def open_docs(self):
+        """loads the pyNastran docs website"""
+        import webbrowser
+        url = pyNastran.__docs__
+        webbrowser.open(url)
+
+    def open_discussion_forum(self):
+        """loads the pyNastran discussion forum website"""
+        import webbrowser
+        url = pyNastran.__discussion_forum__
+        webbrowser.open(url)
+
     def about_dialog(self):
         """ Display about dialog """
         copyright = pyNastran.__copyright__

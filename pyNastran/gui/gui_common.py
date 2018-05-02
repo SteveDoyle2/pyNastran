@@ -356,7 +356,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
                 ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
+
+                ('website', 'Open pyNastran Website...', '', None, 'Open the pyNastran website', self.open_website),
+                ('docs', 'Open pyNastran Docs Website...', '', None, 'Open the pyNastran documentation website', self.open_docs),
+                ('discussion_forum', 'Discussion Forum Website...', '', None, 'Open the discussion forum to ask questions', self.open_discussion_forum),
                 ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
+
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.camera_obj.set_camera_menu),
                 ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
                 ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
@@ -485,7 +490,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             menu_items['file'] = (self.menu_file, menu_file)
             menu_items['view'] = (self.menu_view, menu_view)
             menu_items['main'] = (self.menu_window, menu_window)
-            menu_items['help'] = (self.menu_help, ('about',))
+            menu_items['help'] = (self.menu_help, ('website', 'docs', 'discussion_forum', 'about',))
             menu_items['scripts'] = (self.menu_scripts, scripts)
             menu_items['toolbar'] = (self.toolbar, toolbar_tools)
             menu_items['hidden'] = (self.menu_hidden, hidden_tools)
