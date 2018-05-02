@@ -97,6 +97,17 @@ def check_int(cell):
         cell.setStyleSheet("QLineEdit{background: red;}")
         return None, False
 
+#def check_float(cell):
+    #text = cell.text()
+    #try:
+        #value = eval_float_from_string(text)
+        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #return value, True
+    #except ValueError:
+        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #return None, False
+
+
 def check_float(cell):
     text = cell.text()
     try:

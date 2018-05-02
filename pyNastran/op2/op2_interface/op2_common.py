@@ -561,71 +561,6 @@ class OP2Common(Op2Codes, F06Writer):
             # self.obj.format_code = format_code
             # self.obj.data_code['format_code'] = format_code
 
-    def _read_table(self, data, ndata, result_name, storage_obj,
-                    real_obj, complex_obj,
-                    real_vector, complex_vector,
-                    node_elem, random_code=None, is_cid=False):
-        raise RuntimeError('is this still used?')
-        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
-        assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
-        #assert real_obj is None
-        #assert complex_obj is None
-        #assert thermal_real_obj is None
-
-        #print('self.num_wide =', self.num_wide)
-        #print('random...%s' % self.isRandomResponse())
-        #if not self.isRandomResponse():
-        if self.format_code == 1 and self.num_wide == 8:  # real/random
-            # real_obj
-            assert real_obj is not None
-            nnodes = ndata // 32  # 8*4
-            auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector, is_cid=is_cid)
-            if auto_return:
-                return ndata
-
-            self._fix_format_code(format_code=1)
-            if self.is_sort1:
-                if self.nonlinear_factor is None:
-                    n = self._read_real_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
-                else:
-                    n = self._read_real_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
-            else:
-                n = self._read_real_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
-                #n = ndata
-                #msg = self.code_information()
-                #n = self._not_implemented_or_skip(data, ndata, msg)
-        elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
-            # complex_obj
-            assert complex_obj is not None
-            nnodes = ndata // 56  # 14*4
-            if self.is_debug_file:
-                self.binary_debug.write('nnodes=%s' % nnodes)
-            auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
-            if auto_return:
-                return ndata
-            if self.is_sort1:
-                if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
-                else:
-                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
-            else:
-                if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
-                else:
-                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
-                #msg = self.code_information()
-                #n = self._not_implemented_or_skip(data, ndata, msg)
-        else:
-            #msg = 'COMPLEX/PHASE is included in:\n'
-            #msg += '  DISP(PLOT)=ALL\n'
-            #msg += '  but the result type is REAL\n'
-            msg = self.code_information()
-            n = self._not_implemented_or_skip(data, ndata, msg)
-        #else:
-        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
-        #n = self._not_implemented_or_skip(data, ndata, msg)
-        return n
-
     def _read_random_table(self, data, ndata, result_name, storage_obj,
                            real_vector, node_elem, random_code=None, is_cid=False):
         """
@@ -692,7 +627,7 @@ class OP2Common(Op2Codes, F06Writer):
                                real_vector, complex_vector,
                                node_elem, random_code=None, is_cid=False):
         """
-        Reads a generalized real/complex table
+        Reads a generalized real/complex SORT1/SORT2 table
         """
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
@@ -754,7 +689,39 @@ class OP2Common(Op2Codes, F06Writer):
     def _read_scalar_table_vectorized(self, data, ndata, result_name, storage_obj,
                                       real_vector, complex_vector,
                                       node_elem, random_code=None, is_cid=False):
+        """
+        Reads a table
 
+        Parameters
+        ----------
+        data : bytes
+            the data to read
+        ndata : int
+            the length of data
+        result_name : str
+            the name
+        storage_obj : dict
+            the slot for the result
+        real_vector : RealTableArray()
+            the result object if this is a real result
+        complex_vector : ComplexTableArray()
+            the result object if this is a complex result
+        node_elem : str
+            'node' or 'elem'
+        random_code : int; default=None
+            unused
+        is_cid : bool; default=False
+            unused
+        Returns
+        -------
+        n : int
+            the new position in the OP2
+
+        >>> n = self._read_scalar_table_vectorized(
+            data, ndata, result_name, storage_obj,
+            RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
+            'node', random_code=self.random_code)
+        """
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #print('self.num_wide =', self.num_wide)
@@ -823,21 +790,24 @@ class OP2Common(Op2Codes, F06Writer):
         """
         if self._function_code == 1:
             if value // 1000 in [2, 3, 6]:
-                return 2
-            return 1
+                out = 2
+            else:
+                out = 1
         elif self._function_code == 2:
-            return value % 100
+            out = value % 100
         elif self._function_code == 3:
-            return value % 1000
+            out = value % 1000
         elif self._function_code == 4:
-            return value // 10
+            out =value // 10
         elif self._function_code == 5:
-            return value % 10
+            out = value % 10
         #elif self._function_code == 6:
             #raise NotImplementedError(self.function_code)
         #elif self._function_code == 7:
             #raise NotImplementedError(self.function_code)
-        raise NotImplementedError(self.function_code)
+        else:
+            raise NotImplementedError(self.function_code)
+        return out
 
     def _read_real_scalar_table_static(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
         """

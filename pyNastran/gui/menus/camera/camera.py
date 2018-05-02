@@ -4,12 +4,10 @@ defines:
 """
 from copy import deepcopy
 
-#from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
     QApplication, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
     QHBoxLayout, QVBoxLayout, QGridLayout)
 
-#from pyNastran.gui.qt_version import qt_int as qt_version
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 
 
@@ -165,31 +163,12 @@ class CameraWindow(PyDialog):
 
         for irow in reversed(irows):
             self.table.removeRow(irow)
-            #print('delete', self.names)
             name = self.names.pop(irow)
             del self.cameras[name]
             #print('  removing irow=%s name=%r' % (irow, name))
 
     def closeEvent(self, event):
         event.accept()
-
-    @staticmethod
-    def check_name(cell):
-        text = str(cell.text()).strip()
-        if len(text):
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return text, True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
-
-    #def on_validate(self):
-        #name_value, flag0 = self.check_name(self.name_edit)
-        #if flag0:
-            #self.out_data['cameras'] = self.cameras
-            #self.out_data['clicked_ok'] = True
-            #return True
-        #return False
 
     def on_apply(self):
         passed = self.on_set()
@@ -215,8 +194,17 @@ class CameraWindow(PyDialog):
     def on_cancel(self):
         self.close()
 
+#def check_name(cell):
+    #text = str(cell.text()).strip()
+    #if len(text):
+        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #return text, True
+    #else:
+        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #return None, False
 
-def main():
+
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal

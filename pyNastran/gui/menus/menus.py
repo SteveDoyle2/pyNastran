@@ -1,5 +1,3 @@
-from pyNastran.gui.menus.clipping.interface import set_clipping_menu
-from pyNastran.gui.menus.camera.interface import set_camera_menu
 from pyNastran.gui.menus.groups_modify.interface import on_set_modify_groups
 from pyNastran.gui.menus.groups_modify.groups_modify import Group
 

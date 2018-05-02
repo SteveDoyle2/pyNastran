@@ -43,8 +43,6 @@ from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.utils.vtk.animation_callback import AnimationCallback
 
 from pyNastran.gui.menus.menus import (
-    set_clipping_menu,
-    set_camera_menu,
     on_set_modify_groups, Group,
     Sidebar,
     ApplicationLogWidget,
@@ -330,7 +328,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
                 ('legend', 'Modify Legend...', 'legend.png', None, 'Set Legend', self.legend_obj.set_legend_menu),
-                ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.set_clipping),
+                ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.clipping_obj.set_clipping_menu),
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
@@ -359,7 +357,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
                 ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
                 ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
-                ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
+                ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.camera_obj.set_camera_menu),
                 ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
                 ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
 
@@ -440,9 +438,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.menu_help.setFont(font)
 
         self.legend_obj.set_font_size(font_size)
+        self.camera_obj.set_font_size(font_size)
         self.edit_geometry_properties_obj.set_font_size(font_size)
-        if self._clipping_window_shown:
-            self._clipping_window.set_font_size(font_size)
+        self.clipping_obj.set_font_size(font_size)
         if self._modify_groups_window_shown:
             self._modify_groups_window.set_font_size(font_size)
         self.preferences_obj.set_font_size(font_size)
@@ -2796,16 +2794,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.Render()
 
     #---------------------------------------------------------------------------------------
-    # CAMERA MENU
-    def view_camera(self):
-        set_camera_menu(self)
-
-    #def _apply_camera(self, data):
-        #name = data['name']
-        #self.cameras = deepcopy(data['cameras'])
-        #self.on_set_camera(name)
-
-    #---------------------------------------------------------------------------------------
     # PICKER
     @property
     def node_picker_size(self):
@@ -2830,37 +2818,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.cell_picker.SetTolerance(size)
 
     #---------------------------------------------------------------------------------------
-    # CLIPPING MENU
-    def set_clipping(self):
-        """
-        Opens a dialog box to set:
-
-        +--------+----------+
-        |  Min   |  Float   |
-        +--------+----------+
-        |  Max   |  Float   |
-        +--------+----------+
-        """
-        set_clipping_menu(self)
-
-    def _apply_clipping(self, data):
-        min_clip = data['min_clip']
-        max_clip = data['max_clip']
-        self.on_update_clipping(min_clip, max_clip)
-
-    def on_update_clipping(self, min_clip=None, max_clip=None):
-        camera = self.GetCamera()
-        _min_clip, _max_clip = camera.GetClippingRange()
-        if min_clip is None:
-            min_clip = _min_clip
-        if max_clip is None:
-            max_clip = _max_clip
-        camera.SetClippingRange(min_clip, max_clip)
-        self.log_command('on_update_clipping(min_clip=%s, max_clip=%s)'
-                         % (min_clip, max_clip))
-
-    #---------------------------------------------------------------------------------------
-
     def on_set_anti_aliasing(self, scale=0):
         assert isinstance(scale, int), 'scale=%r; type=%r' % (scale, type(scale))
         renwin = self.render_window

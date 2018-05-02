@@ -235,30 +235,23 @@ class BCMap(QtGui.QDialog):
         self.normal_y_edit.setText(str(1.0))
         self.normal_z_edit.setText(str(0.0))
 
-    def _on_float(self, field):
-        try:
-            eval_float_from_string(field.text())
-            field.setStyleSheet("QLineEdit{background: white;}")
-        except ValueError:
-            field.setStyleSheet("QLineEdit{background: red;}")
-
     def on_origin_x(self):
-        self._on_float(self.origin_x_edit)
+        _on_float(self.origin_x_edit)
 
     def on_origin_y(self):
-        self._on_float(self.origin_y_edit)
+        _on_float(self.origin_y_edit)
 
     def on_origin_z(self):
-        self._on_float(self.origin_z_edit)
+        _on_float(self.origin_z_edit)
 
     def on_normal_x(self):
-        self._on_float(self.normal_x_edit)
+        _on_float(self.normal_x_edit)
 
     def on_normal_y(self):
-        self._on_float(self.normal_y_edit)
+        _on_float(self.normal_y_edit)
 
     def on_normal_z(self):
-        self._on_float(self.normal_z_edit)
+        _on_float(self.normal_z_edit)
 
 
     def closeEvent(self, event):
@@ -283,16 +276,6 @@ class BCMap(QtGui.QDialog):
         self.normal_x_edit.setStyleSheet("QLineEdit{background: white;}")
         self.normal_y_edit.setStyleSheet("QLineEdit{background: white;}")
         self.normal_z_edit.setStyleSheet("QLineEdit{background: white;}")
-
-    def check_float(self, cell):
-        text = cell.text()
-        try:
-            value = eval_float_from_string(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
 
     def check_name(self, cell):
         text = str(cell.text()).strip()
@@ -336,8 +319,15 @@ class BCMap(QtGui.QDialog):
     def on_cancel(self):
         self.close()
 
+def _on_float(self, field):
+    try:
+        eval_float_from_string(field.text())
+        field.setStyleSheet("QLineEdit{background: white;}")
+    except ValueError:
+        field.setStyleSheet("QLineEdit{background: red;}")
 
-def main():
+
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal

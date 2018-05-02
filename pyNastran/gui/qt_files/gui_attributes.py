@@ -22,7 +22,9 @@ from pyNastran.gui.qt_files.mouse_actions import MouseActions
 from pyNastran.gui.qt_files.load_actions import LoadActions
 
 from pyNastran.gui.menus.legend.legend_object import LegendObject
-from pyNastran.gui.menus.preferences.interface import PreferencesObject
+from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
+from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
+from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
     EditGeometryPropertiesObject)
 
@@ -53,6 +55,8 @@ class GuiAttributes(object):
         self.legend_obj = LegendObject(self)
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
         self.preferences_obj = PreferencesObject(self)
+        self.clipping_obj = ClippingObject(self)
+        self.camera_obj = CameraObject(self)
 
         self.glyph_scale_factor = 1.0
         self.html_logging = False
@@ -85,8 +89,6 @@ class GuiAttributes(object):
         #-------------
 
         # window variables
-        self._preferences_window_shown = False
-        self._clipping_window_shown = False
         self._modify_groups_window_shown = False
         #self._label_window = None
         #-------------
@@ -152,7 +154,6 @@ class GuiAttributes(object):
 
         self.label_actors = {-1 : []}
         self.label_ids = {}
-        self.cameras = {}
         self.label_scale = 1.0 # in percent
 
         self.result_cases = {}
@@ -614,6 +615,10 @@ class GuiAttributes(object):
             self.log_command('resize_labels(%s)' % names)
 
     #---------------------------------------------------------------------------
+    def on_update_clipping(self, min_clip=None, max_clip=None):
+        self.clipping_obj.on_update_clipping(min_clip=min_clip, max_clip=max_clip)
+
+        #---------------------------------------------------------------------------
     def hide_legend(self):
         """hides the legend"""
         self.scalar_bar.VisibilityOff()
@@ -1022,8 +1027,9 @@ class GuiAttributes(object):
 
     #---------------------------------------------------------------------------
     def on_update_geometry_properties_window(self, geometry_properties):
-            self.edit_geometry_properties_obj.on_update_geometry_properties_window(
-                geometry_properties)
+        """updates the EditGeometryProperties window"""
+        self.edit_geometry_properties_obj.on_update_geometry_properties_window(
+            geometry_properties)
 
     def on_update_geometry_properties(self, out_data, name=None, write_log=True):
         """
@@ -1241,12 +1247,11 @@ class GuiAttributes(object):
 
     def get_camera_data(self):
         """see ``set_camera_data`` for arguments"""
-        return self.view_actions.get_camera_data()
+        return self.camera_obj.get_camera_data()
 
     def on_set_camera(self, name, show_log=True):
         """see ``set_camera_data`` for arguments"""
-        camera_data = self.cameras[name]
-        self.on_set_camera_data(camera_data, show_log=show_log)
+        self.camera_obj.on_set_camera(name, show_log=show_log)
 
     def on_set_camera_data(self, camera_data, show_log=True):
         """
@@ -1282,7 +1287,7 @@ class GuiAttributes(object):
            k x i -> j
            or it's like k'
         """
-        self.view_actions.on_set_camera_data(camera_data, show_log=show_log)
+        self.camera_obj.on_set_camera_data(camera_data, show_log=show_log)
 
     @property
     def IS_GUI_TESTING(self):

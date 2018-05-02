@@ -117,6 +117,7 @@ class EditGeometryPropertiesObject(object):
         self.on_update_geometry_properties(geometry_properties)
 
     def on_update_geometry_properties_window(self, geometry_properties):
+        """updates the EditGeometryProperties window"""
         if self._edit_geometry_properties_window_shown:
             self._edit_geometry_properties.on_update_geometry_properties_window(
                 geometry_properties)

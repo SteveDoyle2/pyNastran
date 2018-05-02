@@ -58,6 +58,16 @@ class TestNastranGUI(unittest.TestCase):
             nlabels=None, labelsize=None, ncolors=None, colormap='viridis',
             is_shown=True, render=True)
         test.legend_obj.set_legend_menu()
+        test.on_set_camera_data(
+            {'distance': 15.23729238729831,
+             'prallel_proj': None,
+             'view_angle': 30.0,
+             'parallel_scale': 3.9437014656284517,
+             'position': (-8.279127062822164, 4.306812025814127, 11.191236382055052),
+             'view_up': (0.14388395111701072, 0.9587296714789404, -0.245224031523912),
+             'clip_range': (7.44295814719721, 25.085506595796954),
+             'focal_point': (0.49249999999999994, 0.0, -0.5)}
+        )
 
     def test_solid_shell_bar_02b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')

@@ -1,3 +1,7 @@
+"""
+defines:
+ - ClippingPropertiesWindow
+"""
 from pyNastran.gui.qt_version import qt_int as qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import (
@@ -19,6 +23,7 @@ class ClippingPropertiesWindow(PyDialog):
     """
 
     def __init__(self, data, win_parent=None):
+        """creates ClippingPropertiesWindow"""
         #Init the base class
         PyDialog.__init__(self, data, win_parent)
         self.set_font_size(data['font_size'])
@@ -37,41 +42,34 @@ class ClippingPropertiesWindow(PyDialog):
 
     def create_widgets(self):
         # Min
-        self.min = QLabel("Min:")
+        self.min_label = QLabel("Min:")
         self.min_edit = QLineEdit(str(self._default_min))
         self.min_button = QPushButton("Default")
 
         # Max
-        self.max = QLabel("Max:")
+        self.max_label = QLabel("Max:")
         self.max_edit = QLineEdit(str(self._default_max))
         self.max_button = QPushButton("Default")
 
         # closing
-        self.apply_button = QPushButton("Apply")
         self.ok_button = QPushButton("OK")
-        self.cancel_button = QPushButton("Cancel")
 
     def create_layout(self):
         grid = QGridLayout()
 
-        grid.addWidget(self.min, 0, 0)
+        grid.addWidget(self.min_label, 0, 0)
         grid.addWidget(self.min_edit, 0, 1)
         grid.addWidget(self.min_button, 0, 2)
 
-        grid.addWidget(self.max, 1, 0)
+        grid.addWidget(self.max_label, 1, 0)
         grid.addWidget(self.max_edit, 1, 1)
         grid.addWidget(self.max_button, 1, 2)
-
-        ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
-        ok_cancel_box.addWidget(self.cancel_button)
 
         vbox = QVBoxLayout()
         vbox.addLayout(grid)
 
         vbox.addStretch()
-        vbox.addLayout(ok_cancel_box)
+        vbox.addLayout(self.ok_button)
         self.setLayout(vbox)
 
     def set_connections(self):
@@ -81,9 +79,9 @@ class ClippingPropertiesWindow(PyDialog):
             # closeEvent
         self.min_button.clicked.connect(self.on_default_min)
         self.max_button.clicked.connect(self.on_default_max)
-        self.apply_button.clicked.connect(self.on_apply)
+        self.min_edit.textChanged.connect(self.on_apply)
+        self.max_edit.textChanged.connect(self.on_apply)
         self.ok_button.clicked.connect(self.on_ok)
-        self.cancel_button.clicked.connect(self.on_cancel)
 
     def on_default_min(self):
         self.min_edit.setText(str(self._default_min))
@@ -92,17 +90,6 @@ class ClippingPropertiesWindow(PyDialog):
     def on_default_max(self):
         self.max_edit.setText(str(self._default_max))
         self.max_edit.setStyleSheet("QLineEdit{background: white;}")
-
-    @staticmethod
-    def check_float(cell):
-        text = cell.text()
-        try:
-            value = eval_float_from_string(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return value, True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return None, False
 
     def on_validate(self):
         min_value, flag0 = check_float(self.min_edit)
@@ -118,7 +105,7 @@ class ClippingPropertiesWindow(PyDialog):
     def on_apply(self):
         passed = self.on_validate()
         if passed:
-            self.win_parent._apply_clipping(self.out_data)
+            self.win_parent.clipping_obj.apply_clipping(self.out_data)
         return passed
 
     def on_ok(self):
@@ -132,7 +119,7 @@ class ClippingPropertiesWindow(PyDialog):
         self.close()
 
 
-def main():
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal

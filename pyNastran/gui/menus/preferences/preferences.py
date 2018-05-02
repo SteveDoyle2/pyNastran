@@ -567,7 +567,7 @@ class PreferencesWindow(PyDialog):
             #self.win_parent.settings.set_annotation_size_color(self._annotation_size)
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
-            self.win_parent._apply_clipping(self.out_data)
+            self.win_parent.clipping_obj.apply_clipping(self.out_data)
         return passed
 
     def on_ok(self):
