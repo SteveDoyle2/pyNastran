@@ -241,9 +241,9 @@ class FakeGUIMethods(GuiCommon):
         #"""fake method"""
         #pass
 
-    def _create_annotation(self, label, slot, x, y, z):
-        """fake method"""
-        pass
+    #def create_annotation(self, label, slot, x, y, z):
+        #"""fake method"""
+        #pass
 
     def update_axes_length(self, value):
         self.settings.dim_max = value
@@ -280,8 +280,19 @@ class FakeGUIMethods(GuiCommon):
         assert isinstance(msg, str), 'msg=%r type=%r' % (msg, type(msg))
         return
 
-    def getWindowTitle(self):
-        return 'title'
-
     def get_edges(self):
         pass
+
+    def getWindowTitle(self):  # pragma: no cover
+        """fake QMainWindow method"""
+        return 'title'
+
+    def resize(self, height, width):  # pragma: no cover
+        """fake QMainWindow method"""
+        assert isinstance(height, int), 'height=%r' % height
+        assert isinstance(width, int), 'width=%r' % width
+
+    def setFont(self, font):
+        """fake QMainWindow method"""
+        pass
+

@@ -2320,7 +2320,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             text = str(label)
             #slot = self.gui.label_actors[-1]
             slot = self.gui.geometry_properties[name].label_actors
-            self.gui._create_annotation(text, slot, x, y, z)
+            self.gui.create_annotation(text, slot, x, y, z)
 
         self.gui.alt_grids[name].SetPoints(points)
 
@@ -2523,7 +2523,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #texti = ', '.join(['%s-%s'  % (pin_flagi, eid) for (eid, pin_flagi) in data])
             nids.append(nid)
             text.append(texti)
-        self.mark_nodes(nids, result_name, text)
+        self.gui.mark_nodes(nids, result_name, text)
 
     def _fill_bar_yz(self, unused_dim_max, model, icase, cases, form, debug=False):
         """

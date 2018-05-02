@@ -12,6 +12,8 @@ from six import iteritems, itervalues
 
 import numpy as np
 import vtk
+from qtpy import QtGui
+from qtpy.QtWidgets import QMainWindow
 
 from pyNastran.gui.gui_objects.settings import Settings
 
@@ -20,6 +22,7 @@ from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.group_actions import GroupActions
 from pyNastran.gui.qt_files.mouse_actions import MouseActions
 from pyNastran.gui.qt_files.load_actions import LoadActions
+from pyNastran.gui.qt_files.mark_actions import MarkActions
 
 from pyNastran.gui.menus.legend.legend_object import LegendObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
@@ -51,6 +54,7 @@ class GuiAttributes(object):
         self.group_actions = GroupActions(self)
         self.mouse_actions = MouseActions(self)
         self.load_actions = LoadActions(self)
+        self.mark_actions = MarkActions(self)
 
         self.legend_obj = LegendObject(self)
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
@@ -1024,6 +1028,132 @@ class GuiAttributes(object):
         #self.log_command('command2')
         #self.log_error('error2')
         self.vtk_interactor.Modified()
+
+    #---------------------------------------------------------------------------
+    def on_increase_font_size(self):
+        """used by the hidden_tools for Ctrl +"""
+        self.on_set_font_size(self.settings.font_size + 1)
+
+    def on_decrease_font_size(self):
+        """used by the hidden_tools for Ctrl -"""
+        self.on_set_font_size(self.settings.font_size - 1)
+
+    def on_set_font_size(self, font_size, show_command=True):
+        """changes the font size"""
+        is_failed = True
+        if not isinstance(font_size, int):
+            self.log_error('font_size=%r must be an integer; type=%s' % (
+                font_size, type(font_size)))
+            return is_failed
+        if font_size < 6:
+            font_size = 6
+        if self.settings.font_size == font_size:
+            return False
+        self.settings.font_size = font_size
+        font = QtGui.QFont()
+        font.setPointSize(self.settings.font_size)
+        self.setFont(font)
+
+        if isinstance(self, QMainWindow):
+            #self.toolbar.setFont(font)
+            self.menu_file.setFont(font)
+            self.menu_view.setFont(font)
+            self.menu_window.setFont(font)
+            self.menu_help.setFont(font)
+
+        self.legend_obj.set_font_size(font_size)
+        self.camera_obj.set_font_size(font_size)
+        self.edit_geometry_properties_obj.set_font_size(font_size)
+        self.clipping_obj.set_font_size(font_size)
+        if self._modify_groups_window_shown:
+            self._modify_groups_window.set_font_size(font_size)
+        self.preferences_obj.set_font_size(font_size)
+
+        #self.menu_scripts.setFont(font)
+        self.log_command('settings.on_set_font_size(%s)' % font_size)
+        return False
+
+    #---------------------------------------------------------------------------
+    def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
+        """won't handle multiple cell_ids/node_xyz"""
+        result_name, result_values, node_id, xyz = self.mark_actions.get_result_by_xyz_cell_id(
+            node_xyz, cell_id)
+        return result_name, result_values, node_id, xyz
+
+    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
+        """should handle multiple cell_ids"""
+        res_name, result_values, xyz = self.mark_actions.get_result_by_cell_id(
+            cell_id, world_position, icase=icase)
+        return res_name, result_values, xyz
+
+    def mark_elements_by_different_case(self, eids, icase_result, icase_to_apply):
+        """
+        Marks a series of elements with custom text labels
+
+        Parameters
+        ----------
+        eids : int, List[int]
+            the elements to apply a message to
+        icase_result : int
+            the case to draw the result from
+        icase_to_apply : int
+            the key in label_actors to slot the result into
+
+        TODO: fix the following
+        correct   : applies to the icase_to_apply
+        incorrect : applies to the icase_result
+
+        Examples
+        --------
+        .. code-block::
+
+          eids = [16563, 16564, 8916703, 16499, 16500, 8916699,
+                  16565, 16566, 8916706, 16502, 16503, 8916701]
+          icase_result = 22
+          icase_to_apply = 25
+          self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
+        """
+        self.mark_actions.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
+
+    def mark_nodes(self, nids, icase, text):
+        """
+        Marks a series of nodes with custom text labels
+
+        Parameters
+        ----------
+        nids : int, List[int]
+            the nodes to apply a message to
+        icase : int
+            the key in label_actors to slot the result into
+        text : str, List[str]
+            the text to display
+
+        0 corresponds to the NodeID result
+        self.mark_nodes(1, 0, 'max')
+        self.mark_nodes(6, 0, 'min')
+        self.mark_nodes([1, 6], 0, 'max')
+        self.mark_nodes([1, 6], 0, ['max', 'min'])
+        """
+        self.mark_actions.mark_nodes(nids, icase, text)
+
+    def create_annotation(self, text, slot, x, y, z):
+        """
+        Creates the actual annotation and appends it to slot
+
+        Parameters
+        ----------
+        text : str
+            the text to display
+        label_actors[icase] : List[annotation]
+            where to place the annotation
+            icase : int
+                the key in label_actors to slot the result into
+            annotation : vtkBillboardTextActor3D
+                the annotation object
+        x, y, z : float
+            the position of the label
+        """
+        self.mark_actions.create_annotation(text, slot, x, y, z)
 
     #---------------------------------------------------------------------------
     def on_update_geometry_properties_window(self, geometry_properties):

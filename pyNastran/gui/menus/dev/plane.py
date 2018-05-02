@@ -319,7 +319,7 @@ class BCMap(QtGui.QDialog):
     def on_cancel(self):
         self.close()
 
-def _on_float(self, field):
+def _on_float(field):
     try:
         eval_float_from_string(field.text())
         field.setStyleSheet("QLineEdit{background: white;}")

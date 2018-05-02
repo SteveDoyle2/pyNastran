@@ -407,48 +407,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #print('qkey_event =', qkey_event.key())
         super(GuiCommon2, self).keyPressEvent(qkey_event)
 
-    def on_increase_font_size(self):
-        """used by the hidden_tools for Ctrl +"""
-        self.on_set_font_size(self.settings.font_size + 1)
-
-    def on_decrease_font_size(self):
-        """used by the hidden_tools for Ctrl -"""
-        self.on_set_font_size(self.settings.font_size - 1)
-
-    def on_set_font_size(self, font_size, show_command=True):
-        """changes the font size"""
-        is_failed = True
-        if not isinstance(font_size, int):
-            self.log_error('font_size=%r must be an integer; type=%s' % (
-                font_size, type(font_size)))
-            return is_failed
-        if font_size < 6:
-            font_size = 6
-        if self.settings.font_size == font_size:
-            return False
-        self.settings.font_size = font_size
-        font = QtGui.QFont()
-        font.setPointSize(self.settings.font_size)
-        self.setFont(font)
-
-        #self.toolbar.setFont(font)
-        self.menu_file.setFont(font)
-        self.menu_view.setFont(font)
-        self.menu_window.setFont(font)
-        self.menu_help.setFont(font)
-
-        self.legend_obj.set_font_size(font_size)
-        self.camera_obj.set_font_size(font_size)
-        self.edit_geometry_properties_obj.set_font_size(font_size)
-        self.clipping_obj.set_font_size(font_size)
-        if self._modify_groups_window_shown:
-            self._modify_groups_window.set_font_size(font_size)
-        self.preferences_obj.set_font_size(font_size)
-
-        #self.menu_scripts.setFont(font)
-        self.log_command('settings.on_set_font_size(%s)' % font_size)
-        return False
-
     def _create_menu_items(self, actions=None, create_menu_bar=True):
         if actions is None:
             actions = self.actions
@@ -1552,128 +1510,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.cell_picker.SetTolerance(0.001)
         self.node_picker.SetTolerance(0.001)
 
-    def mark_elements_by_different_case(self, eids, icase_result, icase_to_apply):
-        """
-        Marks a series of elements with custom text labels
-
-        Parameters
-        ----------
-        eids : int, List[int]
-            the elements to apply a message to
-        icase_result : int
-            the case to draw the result from
-        icase_to_apply : int
-            the key in label_actors to slot the result into
-
-        TODO: fix the following
-        correct   : applies to the icase_to_apply
-        incorrect : applies to the icase_result
-
-        Examples
-        --------
-        .. code-block::
-
-          eids = [16563, 16564, 8916703, 16499, 16500, 8916699,
-                  16565, 16566, 8916706, 16502, 16503, 8916701]
-          icase_result = 22
-          icase_to_apply = 25
-          self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
-        """
-        if icase_result not in self.label_actors:
-            msg = 'icase_result=%r not in label_actors=[%s]' % (
-                icase_result, ', '.join(self.label_actors))
-            self.log_error(msg)
-            return
-        if icase_to_apply not in self.label_actors:
-            msg = 'icase_to_apply=%r not in label_actors=[%s]' % (
-                icase_to_apply, ', '.join(self.label_actors))
-            self.log_error(msg)
-            return
-
-        eids = np.unique(eids)
-        unused_neids = len(eids)
-        #centroids = np.zeros((neids, 3), dtype='float32')
-        ieids = np.searchsorted(self.element_ids, eids)
-        #print('ieids = ', ieids)
-
-        for cell_id in ieids:
-            centroid = self.cell_centroid(cell_id)
-            unused_result_name, result_values, unused_xyz = self.get_result_by_cell_id(
-                cell_id, centroid, icase_result)
-            texti = '%s' % result_values
-            xi, yi, zi = centroid
-            self._create_annotation(texti, self.label_actors[icase_to_apply], xi, yi, zi)
-        self.log_command('mark_elements_by_different_case(%s, %s, %s)' % (
-            eids, icase_result, icase_to_apply))
-        self.vtk_interactor.Render()
-
-    def mark_nodes(self, nids, icase, text):
-        """
-        Marks a series of nodes with custom text labels
-
-        Parameters
-        ----------
-        nids : int, List[int]
-            the nodes to apply a message to
-        icase : int
-            the key in label_actors to slot the result into
-        text : str, List[str]
-            the text to display
-
-        0 corresponds to the NodeID result
-        self.mark_nodes(1, 0, 'max')
-        self.mark_nodes(6, 0, 'min')
-        self.mark_nodes([1, 6], 0, 'max')
-        self.mark_nodes([1, 6], 0, ['max', 'min'])
-        """
-        if icase not in self.label_actors:
-            msg = 'icase=%r not in label_actors=[%s]' % (
-                icase, ', '.join(self.label_actors))
-            self.log_error(msg)
-            return
-        i = np.searchsorted(self.node_ids, nids)
-        if isinstance(text, string_types):
-            text = [text] * len(i)
-        else:
-            assert len(text) == len(i)
-
-        xyz = self.xyz_cid0[i, :]
-        for (xi, yi, zi), texti in zip(xyz, text):
-            self._create_annotation(texti, self.label_actors[icase], xi, yi, zi)
-        self.vtk_interactor.Render()
-
-    def __mark_nodes_by_result(self, nids, icases):
-        """
-        # mark the node 1 with the NodeID (0) result
-        self.mark_nodes_by_result_case(1, 0)
-
-        # mark the nodes 1 and 2 with the NodeID (0) result
-        self.mark_nodes_by_result_case([1, 2], 0)
-
-        # mark the nodes with the NodeID (0) and ElementID (1) result
-        self.mark_nodes_by_result_case([1, 2], [0, 1])
-        """
-        i = np.searchsorted(self.node_ids, nids)
-        if isinstance(icases, int):
-            icases = [icases]
-
-        for icase in icases:
-            if icase not in self.label_actors:
-                msg = 'icase=%r not in label_actors=[%s]' % (
-                    icase, ', '.join(self.label_actors))
-                self.log_error(msg)
-                continue
-
-            for node_id in i:
-                jnid = np.where(node_id == self.node_ids)[0]
-                world_position = self.xyz_cid0[jnid, :]
-                out = self.get_result_by_xyz_node_id(world_position, node_id)
-                _result_name, unused_result_value, node_id, node_xyz = out
-                xi, yi, zi = node_xyz
-                texti = 'test'
-                self._create_annotation(texti, self.label_actors[icase], xi, yi, zi)
-        self.vtk_interactor.Render()
-
     def init_cell_picker(self):
         self.is_pick = False
         if not self.run_vtk:
@@ -1687,63 +1523,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.input_units
         #self.display_units
         return result_value, xyz
-
-    def _create_annotation(self, text, slot, x, y, z):
-        """
-        Creates the actual annotation and appends it to slot
-
-        Parameters
-        ----------
-        text : str
-            the text to display
-        x, y, z : float
-            the position of the label
-        slot : List[annotation]
-            where to place the annotation
-            self.label_actors[icase] : List[annotation]
-                icase : icase
-                    the key in label_actors to slot the result into
-                annotation : vtkBillboardTextActor3D
-                    the annotation object
-            ???
-        """
-        if not isinstance(slot, list):
-            msg = 'slot=%r type=%s' % (slot, type(slot))
-            raise TypeError(msg)
-        # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
-
-        #self.convert_units(icase, result_value, x, y, z)
-
-        text_actor = vtk.vtkBillboardTextActor3D()
-        text_actor.SetPosition(x, y, z)
-        text_actor.SetInput(text)
-        text_actor.PickableOff()
-        text_actor.DragableOff()
-        #text_actor.SetPickable(False)
-
-        #text_actor.SetPosition(actor.GetPosition())
-        text_prop = text_actor.GetTextProperty()
-        text_prop.SetFontSize(self.settings.annotation_size)
-        text_prop.SetFontFamilyToArial()
-        text_prop.BoldOn()
-        text_prop.ShadowOn()
-
-        text_prop.SetColor(self.settings.annotation_color)
-        text_prop.SetJustificationToCentered()
-
-        # finish adding the actor
-        self.rend.AddActor(text_actor)
-
-        #self.label_actors[icase].append(text_actor)
-        slot.append(text_actor)
-
-        #print('added label actor %r; icase=%s' % (text, icase))
-        #print(self.label_actors)
-
-        #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-        #camera.GetPosition()
-        #camera.GetClippingRange()
-        #camera.GetFocalPoint()
 
     def _on_multi_pick(self, unused_a):
         """
@@ -2590,88 +2369,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         for unused_module_name, module in iteritems(self.modules):
             module.post_load_geometry()
 
-    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
-        """should handle multiple cell_ids"""
-        if icase is None:
-            icase = self.icase
-        case_key = self.case_keys[icase] # int for object
-        case = self.result_cases[case_key]
-
-        (obj, (i, res_name)) = case
-        unused_subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
-
-        try:
-            result_values = case[cell_id]
-        except IndexError:
-            msg = ('case[cell_id] is out of bounds; length=%s\n'
-                   'result_name=%r cell_id=%r case_key=%r\n' % (
-                       len(case), res_name, cell_id, case_key))
-            raise IndexError(msg)
-
-        cell = self.grid_selected.GetCell(cell_id)
-        nnodes = cell.GetNumberOfPoints()
-        points = cell.GetPoints()
-        cell_type = cell.GetCellType()
-
-        if cell_type in [5, 9, 22, 23, 28]:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD
-            node_xyz = np.zeros((nnodes, 3), dtype='float32')
-            for ipoint in range(nnodes):
-                point = points.GetPoint(ipoint)
-                node_xyz[ipoint, :] = point
-            xyz = node_xyz.mean(axis=0)
-        elif cell_type in [10, 12, 13, 14]: # CTETRA4, CHEXA8, CPENTA6, CPYRAM5
-            # TODO: No idea how to get the center of the face
-            #       vs. a point on a face that's not exposed
-            #faces = cell.GetFaces()
-            #nfaces = cell.GetNumberOfFaces()
-            #for iface in range(nfaces):
-                #face = cell.GetFace(iface)
-                #points = face.GetPoints()
-            #faces
-            xyz = world_position
-        elif cell_type in [24, 25, 26, 27]: # CTETRA10, CHEXA20, CPENTA15, CPYRAM13
-            xyz = world_position
-        elif cell_type in [3]: # CBAR, CBEAM, CELASx, CDAMPx, CBUSHx
-            node_xyz = np.zeros((nnodes, 3), dtype='float32')
-            for ipoint in range(nnodes):
-                point = points.GetPoint(ipoint)
-                node_xyz[ipoint, :] = point
-            xyz = node_xyz.mean(axis=0)
-        elif cell_type in [21]: # CBEND
-            # 21-QuadraticEdge
-            node_xyz = np.zeros((nnodes, 3), dtype='float32')
-            for ipoint in range(nnodes):
-                point = points.GetPoint(ipoint)
-                node_xyz[ipoint, :] = point
-            xyz = node_xyz.mean(axis=0)
-        else:
-            #self.log.error(msg)
-            msg = 'cell_type=%s nnodes=%s; icase=%s result_values=%s' % (
-                cell_type, nnodes, icase, result_values)
-            self.log.error(msg)
-            #VTK_LINE = 3
-
-            #VTK_TRIANGLE = 5
-            #VTK_QUADRATIC_TRIANGLE = 22
-
-            #VTK_QUAD = 9
-            #VTK_QUADRATIC_QUAD = 23
-
-            #VTK_TETRA = 10
-            #VTK_QUADRATIC_TETRA = 24
-
-            #VTK_WEDGE = 13
-            #VTK_QUADRATIC_WEDGE = 26
-
-            #VTK_HEXAHEDRON = 12
-            #VTK_QUADRATIC_HEXAHEDRON = 25
-
-            #VTK_PYRAMID = 14
-            #VTK_QUADRATIC_PYRAMID = 27
-            raise NotImplementedError(msg)
-        return res_name, result_values, xyz
-
     def cell_centroid(self, cell_id):
         """gets the cell centroid"""
         cell = self.grid_selected.GetCell(cell_id)
@@ -2684,44 +2381,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         centroid /= nnodes
         return centroid
 
-    def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
-        """won't handle multiple cell_ids/node_xyz"""
-        case_key = self.case_keys[self.icase]
-        result_name = self.result_name
-
-        cell = self.grid_selected.GetCell(cell_id)
-        nnodes = cell.GetNumberOfPoints()
-        points = cell.GetPoints()
-
-        #node_xyz = array(node_xyz, dtype='float32')
-        #point0 = array(points.GetPoint(0), dtype='float32')
-        #dist_min = norm(point0 - node_xyz)
-        point0 = points.GetPoint(0)
-        dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
-
-        point_min = point0
-        imin = 0
-        for ipoint in range(1, nnodes):
-            #point = array(points.GetPoint(ipoint), dtype='float32')
-            #dist = norm(point - node_xyz)
-            point = points.GetPoint(ipoint)
-            dist = vtk.vtkMath.Distance2BetweenPoints(point, node_xyz)
-            if dist < dist_min:
-                dist_min = dist
-                imin = ipoint
-                point_min = point
-
-        node_id = cell.GetPointId(imin)
-        xyz = np.array(point_min, dtype='float32')
-        case = self.result_cases[case_key]
-        assert isinstance(case_key, integer_types), case_key
-        (obj, (i, res_name)) = case
-        unused_subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
-        result_values = case[node_id]
-        assert not isinstance(xyz, int), xyz
-        return result_name, result_values, node_id, xyz
-
     @property
     def result_name(self):
         """
@@ -2732,30 +2391,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         assert isinstance(case_key, integer_types), case_key
         unused_obj, (unused_i, res_name) = self.result_cases[case_key]
         return res_name
-
-    #def finish_io(self, cases):
-        #self.result_cases = cases
-        #self.case_keys = sorted(cases.keys())
-        ##print("case_keys = ", self.case_keys)
-
-        #if len(self.result_cases) == 0:
-            #self.ncases = 1
-            #self.icase = 0
-        #elif len(self.result_cases) == 1:
-            #self.ncases = 1
-            #self.icase = 0
-        #else:
-            #self.ncases = len(self.result_cases) - 1  # number of keys in dictionary
-            #self.icase = -1
-
-        #self.icase_disp = None
-        #self.icase_vector = None
-        #self.icase_fringe = None
-        #self.cycle_results()  # start at nCase=0
-
-        #if self.ncases:
-            #self.scalarBar.VisibilityOn()
-            #self.scalarBar.Modified()
 
     def clear_application_log(self, force=False):
         """

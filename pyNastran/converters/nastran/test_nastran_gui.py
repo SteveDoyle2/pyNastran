@@ -68,6 +68,24 @@ class TestNastranGUI(unittest.TestCase):
              'clip_range': (7.44295814719721, 25.085506595796954),
              'focal_point': (0.49249999999999994, 0.0, -0.5)}
         )
+        test.settings.reset_settings()
+        test.on_set_font_size(8)
+        test.on_increase_font_size()
+        test.on_decrease_font_size()
+
+        labels_list = []
+        text = 'text'
+        x, y, z = 0., 0., 0.
+        test.create_annotation(text, labels_list, x, y, z)
+
+        cell_id = 1
+        world_position = [0., 0., 1.]
+        res_name, result_values, xyz = test.get_result_by_cell_id(
+            cell_id, world_position,
+            icase=0)
+        assert res_name == 'NodeID', 'res_name=%r' % res_name
+        assert result_values == 2, 'result_values=%r' % result_values
+        assert isinstance(xyz, list), xyz
 
     def test_solid_shell_bar_02b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')

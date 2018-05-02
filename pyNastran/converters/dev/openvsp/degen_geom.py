@@ -9,6 +9,7 @@ from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
 
 
 class Geom(object):
+    """defines a lifting surfaces"""
     def __init__(self, name, lifting_surface_xyz,
                  lifting_surface_nx, lifting_surface_ny):
         self.name = name
@@ -17,6 +18,7 @@ class Geom(object):
         self.ny = lifting_surface_ny
 
     def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):
+        """exports a GEOM to Nastran formatted file"""
         nx = self.nx
         ny = self.ny
         nxy = nx * ny
@@ -104,7 +106,7 @@ class DegenGeom(object):
     def write_panair(self, panair_filename, panair_case_filename):  # pragma: no cover
         pan = PanairGrid()
         pan.mach = 0.5
-        pan.isEnd = True
+        pan.is_end = True
         pan.ncases = 2
         pan.alphas = [0., 5.]
 
@@ -411,25 +413,27 @@ def read_stick_node(degen_geom_file, lines, iline, log):
     return iline
 
 def read_stick_face(degen_geom_file, lines, iline, log):
-        # DegenGeom Type, nXsecs
-        # STICK_FACE, 5
-        # sweeple,sweepte,areaTop,areaBot
+    """
+    DegenGeom Type, nXsecs
+    STICK_FACE, 5
+    sweeple,sweepte,areaTop,areaBot
+    """
+    degen_geom_file.readline()
+    iline += 1
+
+    sline = degen_geom_file.readline().strip().split(',')
+    sline2 = lines[iline].strip().split(',')
+    assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
+    stick_face, nx = sline
+    iline += 1
+
+    assert stick_face == 'STICK_FACE', stick_face
+    nx = int(nx)
+    degen_geom_file.readline()
+    for i in range(nx):
         degen_geom_file.readline()
         iline += 1
-
-        sline = degen_geom_file.readline().strip().split(',')
-        sline2 = lines[iline].strip().split(',')
-        assert sline == sline2, 'iline=%s \nsline1=%s \nsline2=%s' % (iline, sline, sline2)
-        stick_face, nx = sline
-        iline += 1
-
-        assert stick_face == 'STICK_FACE', stick_face
-        nx = int(nx)
-        degen_geom_file.readline()
-        for i in range(nx):
-            degen_geom_file.readline()
-            iline += 1
-        return iline
+    return iline
 
 def main():  # pragma: no cover
     degen_geom_csv = 'model_DegenGeom.csv'

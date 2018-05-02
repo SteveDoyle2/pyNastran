@@ -113,7 +113,7 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Background Color
-        self.background_color_label = QLabel("Background Color:")
+        self.background_color_label = QLabel("Btm Background Color:")
         self.background_color_edit = QPushButtonColor(self.background_color_int)
 
         # Background Color2
@@ -257,12 +257,12 @@ class PreferencesWindow(PyDialog):
         grid.addWidget(self.gradient_scale_checkbox, irow, 1)
         irow += 1
 
-        grid.addWidget(self.background_color_label, irow, 0)
-        grid.addWidget(self.background_color_edit, irow, 1)
-        irow += 1
-
         grid.addWidget(self.background_color2_label, irow, 0)
         grid.addWidget(self.background_color2_edit, irow, 1)
+        irow += 1
+
+        grid.addWidget(self.background_color_label, irow, 0)
+        grid.addWidget(self.background_color_edit, irow, 1)
         irow += 1
 
         grid.addWidget(self.text_color_label, irow, 0)

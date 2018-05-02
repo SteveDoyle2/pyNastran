@@ -349,6 +349,7 @@ class MouseActions(object):
 
     def _probe_picker(self, unused_obj, unused_event):
         """pick a point and apply the label based on the current displayed result"""
+
         picker = self.cell_picker
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
@@ -359,6 +360,10 @@ class MouseActions(object):
         if cell_id < 0:
             pass
         else:
+            icase = self.gui.icase_fringe
+            if icase is None:
+                return
+
             world_position = picker.GetPickPosition()
             if 0:  # pragma : no cover
                 camera = self.rend.GetActiveCamera()
@@ -389,7 +394,6 @@ class MouseActions(object):
                 #method = 'get_result_by_cell_id()' # self.model_type
                 #print('pick_state =', self.pick_state)
 
-            icase = self.gui.icase_fringe
             key = self.gui.case_keys[icase]
             location = self.gui.get_case_location(key)
 
@@ -418,7 +422,7 @@ class MouseActions(object):
             text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
             text = str(result_value)
             assert icase in self.gui.label_actors, icase
-            self.gui._create_annotation(text, self.gui.label_actors[icase], x, y, z)
+            self.gui.create_annotation(text, self.gui.label_actors[icase], x, y, z)
             self.vtk_interactor.Render()
         if self.revert:
             self.setup_mouse_buttons(mode='default')
