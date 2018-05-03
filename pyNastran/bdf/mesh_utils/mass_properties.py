@@ -1761,14 +1761,11 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
             inertia[4] *= 0.0  # Ixz
             inertia[5] *= 2.0  # Iyz; no x
 
-    if scale is None and 'WTMASS' in model.params:
-        param = model.params['WTMASS']
-        #assert isinstance(param, PARAM), 'param=%s' % param
-        scale = param.values[0]
+    wtmass = model.wtmass
+    if scale is None:
+        scale = wtmass
         if scale != 1.0:
             model.log.info('WTMASS scale = %r' % scale)
-    elif scale is None:
-        scale = 1.0
     mass *= scale
     inertia *= scale
     return (mass, cg, inertia)

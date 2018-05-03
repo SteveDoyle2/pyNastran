@@ -937,3 +937,19 @@ class BDFAttributes(object):
     def caero_ids(self):
         """gets the CAEROx ids"""
         return self.caeros.keys()
+
+    @property
+    def wtmass(self):
+        """
+        Gets the PARAM,WTMASS value, which defines the weight to mass
+        conversion factor
+
+        kg -> kg : 1.0
+        lb -> slug : 1/32.2
+        lb -> slinch : 1/(32.2*12)=1/386.4
+        """
+        wtmass = 1.0
+        if 'WTMASS' in self.params:
+            param = self.params['WTMASS']
+            wtmass = param.values[0]
+        return wtmass
