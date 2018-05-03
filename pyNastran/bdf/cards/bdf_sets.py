@@ -152,6 +152,7 @@ class ABCQSet(Set):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by %s' % self.type
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -236,6 +237,7 @@ class SuperABCQSet(Set):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -292,6 +294,7 @@ class ASET(ABCQSet):
             a comment for the card
 
         ..note :: the length of components and ids must be the same
+
         """
         ABCQSet.__init__(self, ids, components, comment)
 
@@ -327,6 +330,7 @@ class BSET(ABCQSet):
             a comment for the card
 
         ..note :: the length of components and ids must be the same
+
         """
         ABCQSet.__init__(self, ids, components, comment)
 
@@ -363,6 +367,7 @@ class CSET(ABCQSet):
             a comment for the card
 
         ..note :: the length of components and ids must be the same
+
         """
         ABCQSet.__init__(self, ids, components, comment)
 
@@ -396,6 +401,7 @@ class QSET(ABCQSet):
             the degree of freedoms to be created (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
+
         """
         ABCQSet.__init__(self, ids, components, comment)
 
@@ -469,6 +475,7 @@ class ABQSet1(Set):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by %s' % self.type
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -575,6 +582,7 @@ class SuperABQSet1(Set):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -629,6 +637,7 @@ class ASET1(ABQSet1):
             the degree of freedoms to be retained (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
+
         """
         ABQSet1.__init__(self, ids, components, comment)
 
@@ -662,6 +671,7 @@ class OMIT1(ABQSet1):
             the degree of freedoms to be omitted (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
+
         """
         ABQSet1.__init__(self, ids, components, comment)
 
@@ -698,6 +708,7 @@ class BSET1(ABQSet1):
             the degree of freedoms to be fixed (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
+
         """
         ABQSet1.__init__(self, ids, components, comment)
 
@@ -736,6 +747,7 @@ class CSET1(Set):
             the degree of freedoms to be free (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
+
         """
         Set.__init__(self)
         if comment:
@@ -756,6 +768,7 @@ class CSET1(Set):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         if integer_string_or_blank(card, 2, 'C') == 'ALL':
             components = '123456'
@@ -778,6 +791,7 @@ class CSET1(Set):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by CSET1'
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -824,6 +838,7 @@ class QSET1(ABQSet1):
             the degree of freedoms to be created (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
+
         """
         ABQSet1.__init__(self, ids, components, comment)
 
@@ -869,6 +884,7 @@ class SET1(Set):
             if is_skin is used; ids must be empty
         comment : str; default=''
             a comment for the card
+
         """
         Set.__init__(self)
         if comment:
@@ -897,6 +913,7 @@ class SET1(Set):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
@@ -957,6 +974,7 @@ class SET1(Set):
           - ACMODL (optional)
         - elements
           - ACMODL (optional)
+
         """
         msg = ' which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
@@ -990,6 +1008,7 @@ class SET1(Set):
           - ACMODL (optional)
         - elements
           - ACMODL (optional)
+
         """
         assert msg != ''
         msg = ' which is required by SET1 sid=%s%s nid=%%s' % (self.sid, msg)
@@ -1150,6 +1169,7 @@ class SET3(Set):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         desc = string(card, 2, 'desc')
@@ -1257,6 +1277,7 @@ class SESET(SetSuper):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         seid = integer_or_blank(card, 1, 'seid', 0)
         ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
@@ -1406,6 +1427,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         ssid = integer(card, 1, 'ssid')
         psid = integer(card, 2, 'psid')
@@ -1497,6 +1519,7 @@ class USET(Set):
             the degree of freedoms (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
+
         """
         Set.__init__(self)
         if comment:
@@ -1518,6 +1541,7 @@ class USET(Set):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         name = string(card, 1, 'name')
         components = []
@@ -1541,6 +1565,7 @@ class USET(Set):
         that I don't understand like:
           - the setname is 1-4 characters, except if it's 'ZERO%i' % sid
             ummm...odd
+
         """
         sid = data[0]
         nid = data[1]
@@ -1563,6 +1588,7 @@ class USET(Set):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by USET name=%s' % (self.name)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)

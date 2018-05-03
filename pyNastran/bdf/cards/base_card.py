@@ -50,6 +50,7 @@ class BaseCard(object):
      - object_methods(self, mode='public', keys_to_skip=None)
      - comment
      - update_field(self, n, value)
+
     """
     def __init__(self):
         pass
@@ -146,6 +147,7 @@ class BaseCard(object):
           node = model.nodes[nid]
           # ['GRID', nid, cp, x, y, z]
           node.update_field(3, 0.1) # change the z coordinate
+
         """
         try:
             key_name = self._field_map[n]
@@ -157,6 +159,7 @@ class BaseCard(object):
         """
         dynamic method for non-standard attributes
         (e.g., node.update_field(3, 0.1) to update z)
+
         """
         msg = '%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__
         raise IndexError(msg)
@@ -205,6 +208,7 @@ class BaseCard(object):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         print('# skipping _verify (type=%s) because _verify is '
               'not implemented' % self.type)
@@ -222,6 +226,7 @@ class BaseCard(object):
           False
           >>> GRID(nid=1, ...) === CQUAD4(eid=1, ...)
           False
+
         """
         if not isinstance(card, self.__class__):
             return False
@@ -252,7 +257,8 @@ class BaseCard(object):
         Returns
         -------
         fields : List[varies]
-          the fields that define the card
+            the fields that define the card
+
         """
         return self.raw_fields()
 
@@ -273,6 +279,7 @@ class BaseCard(object):
         """
         Prints a card in the simplest way possible
         (default values are left blank).
+
         """
         comment = self.comment
         list_fields = self.repr_fields()
@@ -313,6 +320,7 @@ class BaseCard(object):
         -------
         msg : str
             the string representation of the card
+
         """
         raise NotImplementedError('%s has not overwritten write_card' % self.__class__.__name__)
 
@@ -336,6 +344,7 @@ class Property(BaseCard):
         -------
         pid : int
             the Property ID
+
         """
         return self.pid
 
@@ -348,6 +357,7 @@ class Property(BaseCard):
         -------
         mid : int
             the Material ID
+
         """
         if self.mid_ref is None:
             return self.mid
@@ -439,6 +449,7 @@ class Element(BaseCard):
         -------
         pid : int
             the Property ID
+
         """
         if self.pid_ref is None:
             return self.pid
@@ -548,6 +559,7 @@ class Element(BaseCard):
         Examples
         --------
         >>> print(element.faces)
+
         """
         faces = {}
         try:
@@ -581,6 +593,7 @@ class Element(BaseCard):
             the face number as an integer
 
         .. warning:: It's assumed you have the nodes in the proper order.
+
         """
         assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
         face = None
@@ -612,6 +625,7 @@ def _format_comment(comment):
 
     >>> _format_comment('$ a comment within a comment looks weird')
     $$ a comment within a comment looks weird
+
     """
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
@@ -677,6 +691,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
         This is useful for [2, 'THRU' 5, 1]
     sort_fields : bool; default=False
         Should the fields be sorted at the end?
+
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
     if isinstance(fields, integer_types):
@@ -741,6 +756,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=True,
     Notes
     -----
     used for QBDY3 and what else ???
+
     """
     if require_int:
         func = int
@@ -808,7 +824,8 @@ def expand_thru_exclude(fields):
     Expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
 
-    .. warning:: hasnt been tested
+    .. warning:: hasn't been tested
+
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
     fields = [interpret_value(field.upper())

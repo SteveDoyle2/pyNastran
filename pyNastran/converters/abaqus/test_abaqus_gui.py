@@ -2,11 +2,11 @@ from __future__ import print_function
 import os
 import unittest
 
-#import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.abaqus.abaqus_io import AbaqusIO
-from pyNastran.converters.abaqus.abaqus import read_abaqus
+#from pyNastran.converters.abaqus.abaqus import read_abaqus
 from pyNastran.utils.log import get_logger
+from pyNastran.converters.abaqus.test_unit_abaqus import make_model
 
 
 class AbaqusGui(AbaqusIO, FakeGUIMethods):
@@ -18,22 +18,7 @@ class AbaqusGui(AbaqusIO, FakeGUIMethods):
 class TestAbaqusGui(unittest.TestCase):
     def test_abaqus_1(self):
         """simple test"""
-        lines = [
-            '*part, name=dummy',
-            '*node',
-            '1,0.,0.,0.',
-            '2,1.,0.,0.',
-            '3,1.,1.,0.',
-            '4,0.,1.,0.',
-
-            '*element, type=cpe3',
-            '1,1,2,3',
-            '*element, type=cpe4',
-            '2,1,2,3,4',
-            '*end part',
-            #'*material, name=steel',
-            #'42',
-        ]
+        lines = make_model()
         abaqus_filename = 'test.inp'
         with open(abaqus_filename, 'w') as abaqus_file:
             abaqus_file.write('\n'.join(lines))

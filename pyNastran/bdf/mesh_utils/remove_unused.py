@@ -20,6 +20,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
      - properties
      - materials
      - coords
+
     """
     if isinstance(bdf_filename, BDF):
         model = bdf_filename

@@ -32,6 +32,7 @@ def bdf_mirror(model, plane='xz'):
         the offset node id
     eid_offset : int
         the offset element id
+
     """
     nid_offset = _mirror_nodes(model, plane=plane)
     eid_offset = _mirror_elements(model, nid_offset)
@@ -87,6 +88,7 @@ def write_bdf_symmetric(model, out_filename=None, encoding=None,
         the offset node id
     eid_offset : int
         the offset element id
+
     """
     #model.write_caero_model()
     nid_offset, eid_offset = bdf_mirror(model, plane=plane)
@@ -103,6 +105,7 @@ def _mirror_nodes(model, plane='xz'):
     .. warning:: doesn't consider coordinate systems;
                   it could, but you'd need 20 new coordinate systems
     .. warning:: doesn't mirror SPOINTs, EPOINTs
+
     """
     nid_offset = max(model.node_ids)
 
@@ -130,9 +133,7 @@ def _plane_to_iy(plane):
     return iy
 
 def _mirror_elements(model, nid_offset):
-    """
-    Mirrors the elements
-    """
+    """Mirrors the elements"""
     eid_offset = max(model.elements.keys())
     if model.elements:
         for eid, element in sorted(iteritems(model.elements)):
@@ -165,3 +166,99 @@ def _mirror_elements(model, nid_offset):
                     print(element.get_stats())
                     raise
     return eid_offset
+
+def make_symmetric_model(model, iy=1, zero_tol=1e-12):
+    """
+    Makes a symmetric model
+
+    ## TODO: doesn't handle elements straddling the centerline
+    """
+    nids_to_remove = []
+    eids_to_remove = []
+    caero_ids_to_remove = []
+    zero = -zero_tol
+    for eid, elem in iteritems(model.elements):
+        xyz = elem.Centroid()
+
+        if xyz[iy] < zero:
+            eids_to_remove.append(eid)
+
+    for nid, node in iteritems(model.nodes):
+        xyz = node.get_position()
+        if xyz[iy] < zero:
+            nids_to_remove.append(nid)
+
+    for nid in nids_to_remove:
+        print('**', nid)
+        del model.nodes[nid]
+
+    for eid in eids_to_remove:
+        del model.elements[eid]
+
+    for caero_id, caero in iteritems(model.caeros):
+        if caero.type == 'CAERO1':
+            p1, p2, p3, p4 = caero.get_points()
+            #print(caero)
+            if p1[iy] <= zero and p4[iy] <= zero:
+                #print('p1=%s p4=%s' % (p1, p4))
+                caero_ids_to_remove(caero_id)
+            elif p1[iy] < zero:
+                p1[iy] = 0.
+                caero.set_points([p1, p2, p3, p4])
+            elif p4[iy] < zero:
+                p4[iy] = 0.
+                caero.set_points([p1, p2, p3, p4])
+        elif caero.type == 'CAERO2':
+            # TODO: a CAERO2 can't be half symmetric...
+            # TODO: it can be skewed though...
+            p1, p2 = caero.get_points()
+            if p1[iy] <= zero and p2[iy] <= zero:
+                #print('p1=%s p4=%s' % (p1, p4))
+                caero_ids_to_remove(caero_id)
+        else:
+            raise NotImplementedError(caero)
+
+    for caero_id in caero_ids_to_remove:
+        del model.caeros[caero_id]
+
+    print('nids_to_remove =', nids_to_remove)
+    for spline_id, spline in iteritems(model.splines):
+        caero = spline.caero
+        setg = spline.setg
+        #print('caero = ', caero)
+        nids = spline.setg_ref.ids  # list
+        #spline.uncross_reference()
+
+        i = 0
+        nids = list(set(nids) - set(nids_to_remove))
+        nids.sort()
+        spline.setg_ref.ids_ref = None
+        spline.setg_ref.ids = nids
+
+    plane_to_labels_keep_map = {
+        0 : ['URDD4', 'URDD2', 'URDD3', 'SIDES', 'YAW'], # yz
+        1 : ['URDD1', 'URDD5', 'URDD3', 'PITCH', 'ANGLEA'], # xz plane
+        2 : ['URDD1', 'URDD2', 'URDD6', 'ROLL'], # xy plane
+    }
+
+    all_labels = [
+        'URDD4', 'URDD2', 'URDD3', 'SIDES', 'YAW',
+        'URDD1', 'URDD5', 'URDD3', 'PITCH', 'ANGLEA',
+        'URDD1', 'URDD2', 'URDD6', 'ROLL',
+    ]
+    labels_to_keep = plane_to_labels_keep_map[iy]
+    labels_to_remove = [label for label in all_labels if label not in labels_to_keep]
+
+    print('labels_to_remove =', labels_to_remove)
+    for aestat_id in list(model.aestats.keys()):
+        aestat = model.aestats[aestat_id]
+        if aestat.label in labels_to_remove:
+            del model.aestats[aestat_id]
+
+    for trid_id, trim in iteritems(model.trims):
+        labels = trim.labels
+        ilabels_to_remove = [labels.index(label) for label in labels_to_remove
+                             if label in labels]
+        print("ilabels_to_remove =", ilabels_to_remove)
+        trim.uxz = [trim.uxs[ilabel] for ilabel in ilabels_to_remove]
+        trim.labels = [trim.labels[ilabel] for ilabel in ilabels_to_remove]

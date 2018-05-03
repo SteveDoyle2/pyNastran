@@ -20,7 +20,8 @@ def export_mcids(bdf_filename, csv_filename=None,
     bdf_filename : str/BDF
         a bdf filename or BDF model
     csv_filename : str; default=None
-        the path to the output csv
+        str : the path to the output csv
+        None : don't write a CSV
     eids : List[int]
         the element ids to consider
     export_xaxis : bool; default=True
@@ -48,12 +49,13 @@ def export_mcids(bdf_filename, csv_filename=None,
         0      layer1
         1      layer2
 
-
     Returns
     -------
     nodes : (nnodes, 3) float list
         the nodes
     bars : (nbars, 2) int list
+        the "bars" that represent the x/y axes of the coordinate systems
+
     """
     if isinstance(eids, integer_types):
         eids = [eids]
@@ -89,7 +91,7 @@ def export_mcids(bdf_filename, csv_filename=None,
         elements = {eid : model.elements[eid] for eid in eids}
 
     pids_failed = set([])
-    for eidi, elem in sorted(iteritems(elements)):
+    for unused_eidi, elem in sorted(iteritems(elements)):
         if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
             pid_ref = elem.pid_ref
             if pid_ref.type == 'PSHELL':
@@ -180,54 +182,59 @@ def export_mcids(bdf_filename, csv_filename=None,
             prop = model.properties[pid]
             msg += 'Property %s:\n%s\n' % (pid, prop)
         raise RuntimeError(msg)
+    _export_coord_axes(nodes, bars, csv_filename)
+    return nodes, bars
+
+def _export_coord_axes(nodes, bars, csv_filename):
     if csv_filename:
         with open(csv_filename, 'w') as out_file:
             for node in nodes:
                 out_file.write('GRID,%i,%s,%s,%s\n' % node)
             for bari in bars:
                 out_file.write('BAR,%i,%i,%i\n' % bari)
-    return nodes, bars
 
 def _rotate_mcid(elem, pid_ref, iply, imat, jmat, normal,
                  consider_property_rotation=True):
     """rotates a material coordinate system"""
-    if consider_property_rotation:
-        pid_ref = elem.pid_ref
-        if pid_ref.type == 'PSHELL':
-            theta_mcid = elem.theta_mcid
-            if isinstance(theta_mcid, float):
-                thetad = theta_mcid
-            elif isinstance(theta_mcid, integer_types):
-                return imat, jmat
-            else:
-                msg = 'theta/mcid=%r is not an int/float; type=%s\n%s' % (
-                    theta_mcid, type(theta_mcid), elem)
-                raise TypeError(msg)
-        elif pid_ref.type in ['PCOMP', 'PCOMPG']:
-            #print(pid_ref.nplies)
-            thetad = pid_ref.get_theta(iply)
-        else:
-            msg = 'property type=%r is not supported\n%s%s' % (
-                elem.pid_ref.type, elem, elem.pid_ref)
-            raise NotImplementedError(msg)
-        if isinstance(thetad, float) and thetad == 0.0:
+    if not consider_property_rotation:
+        return imat, jmat
+
+    pid_ref = elem.pid_ref
+    if pid_ref.type == 'PSHELL':
+        theta_mcid = elem.theta_mcid
+        if isinstance(theta_mcid, float):
+            thetad = theta_mcid
+        elif isinstance(theta_mcid, integer_types):
             return imat, jmat
+        else:
+            msg = 'theta/mcid=%r is not an int/float; type=%s\n%s' % (
+                theta_mcid, type(theta_mcid), elem)
+            raise TypeError(msg)
+    elif pid_ref.type in ['PCOMP', 'PCOMPG']:
+        #print(pid_ref.nplies)
+        thetad = pid_ref.get_theta(iply)
+    else:
+        msg = 'property type=%r is not supported\n%s%s' % (
+            elem.pid_ref.type, elem, elem.pid_ref)
+        raise NotImplementedError(msg)
+    if isinstance(thetad, float) and thetad == 0.0:
+        return imat, jmat
 
-        theta = np.radians(thetad)
-        c = np.cos(theta)
-        s = np.sin(theta)
+    theta = np.radians(thetad)
+    c = np.cos(theta)
+    s = np.sin(theta)
 
-        R = np.array([
-            [c, -s, 0.],
-            [s, c, 0.],
-            [0., 0., 1.]
-            ], dtype='float64')
+    R = np.array([
+        [c, -s, 0.],
+        [s, c, 0.],
+        [0., 0., 1.]
+        ], dtype='float64')
 
-        R1 = np.vstack([imat, jmat, normal])
-        R2 = np.dot(R, R1)  ## TODO: validate
-        imat2 = R2[0, :]
-        jmat2 = R2[1, :]
-        return imat2, jmat2
+    R1 = np.vstack([imat, jmat, normal])
+    R2 = np.dot(R, R1)  ## TODO: validate
+    imat2 = R2[0, :]
+    jmat2 = R2[1, :]
+    return imat2, jmat2
 
 def _add_elements(nid, eid, nodes, bars,
                   centroid, iaxis, jaxis,

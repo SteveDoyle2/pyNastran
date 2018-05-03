@@ -1,30 +1,9 @@
 cards Package
 =============
 
-:mod:`aero` Module
-------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.aero
-
-.. automodule:: pyNastran.bdf.cards.aero
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`base_card` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.base_card
-
-.. automodule:: pyNastran.bdf.cards.base_card
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
+**********************
 :mod:`bdf_sets` Module
-----------------------
+**********************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.bdf_sets
 
@@ -34,8 +13,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+************************
 :mod:`bdf_tables` Module
-------------------------
+************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.bdf_tables
 
@@ -45,8 +25,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+***************************
 :mod:`collpase_card` Module
----------------------------
+***************************
 
 .. automodule:: pyNastran.bdf.cards.collpase_card
     :members:
@@ -54,8 +35,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+*************************
 :mod:`constraints` Module
--------------------------
+*************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.constraints
 
@@ -65,8 +47,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+*********************
 :mod:`contact` Module
----------------------
+*********************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.contact
 
@@ -76,8 +59,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+********************************
 :mod:`coordinate_systems` Module
---------------------------------
+********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.coordinate_systems
 
@@ -87,8 +71,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+********************
 :mod:`deqatn` Module
---------------------
+********************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.deqatn
 
@@ -98,8 +83,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+******************
 :mod:`dmig` Module
-------------------
+******************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.dmig
 
@@ -109,8 +95,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+*********************
 :mod:`dynamic` Module
----------------------
+*********************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.dynamic
 
@@ -120,8 +107,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+***********************
 :mod:`materials` Module
------------------------
+***********************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.materials
 
@@ -131,8 +119,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+***************************
 :mod:`material_deps` Module
----------------------------
+***************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.material_deps
 
@@ -142,8 +131,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+*********************
 :mod:`methods` Module
----------------------
+*********************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.methods
 
@@ -153,8 +143,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+*********************
 :mod:`msgmesh` Module
----------------------
+*********************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.msgmesh
 
@@ -164,8 +155,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+*******************
 :mod:`nodes` Module
--------------------
+*******************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.nodes
 
@@ -175,8 +167,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+**************************
 :mod:`optimization` Module
---------------------------
+**************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.optimization
 
@@ -186,8 +179,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+********************
 :mod:`params` Module
---------------------
+********************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.params
 
@@ -197,8 +191,9 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+*******************
 :mod:`utils` Module
--------------------
+*******************
 
 .. automodule:: pyNastran.bdf.cards.utils
     :members:
@@ -211,8 +206,9 @@ Subpackages
 
 .. toctree::
 
+   pyNastran.bdf.cards.base_card
+   pyNastran.bdf.cards.aero
    pyNastran.bdf.cards.elements
    pyNastran.bdf.cards.loads
    pyNastran.bdf.cards.properties
    pyNastran.bdf.cards.thermal
-

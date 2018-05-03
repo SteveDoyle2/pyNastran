@@ -38,6 +38,7 @@ def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     I_new : (6, ) float ndarray
         the mass moment of inertias about the new reference point
         [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+
     """
     xcg, ycg, zcg = xyz_cg
     xref, yref, zref = xyz_ref
@@ -122,6 +123,7 @@ def _mass_properties(model, elements, masses, reference_point):
         moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
 
     .. seealso:: model.mass_properties
+
     """
     #Ixx Iyy Izz, Ixy, Ixz Iyz
     # precompute the CG location and make it the reference point
@@ -264,6 +266,7 @@ def _mass_properties_no_xref(model, elements, masses, reference_point):  # pragm
         moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
 
     .. seealso:: self.mass_properties
+
     """
     #Ixx Iyy Izz, Ixy, Ixz Iyz
     # precompute the CG location and make it the reference point
@@ -428,6 +431,7 @@ def _mass_properties_new(model, element_ids=None, mass_ids=None, nsm_id=None,
     ----
      - fix NSML
      - fix CG for F:\work\pyNastran\examples\Dropbox\move_tpl\ac11102g.bdf
+
     """
     #if reference_point is None:
     reference_point = array([0., 0., 0.])
@@ -1077,6 +1081,7 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
         is this an area element
     nsm_centroids : (nelements, 3 ) float ndarray
         the centroids for the elements
+
     """
     nsm_centroids = []
     all_eids_pids = []
@@ -1154,6 +1159,7 @@ def _combine_prop_weighted_area_length_simple(
 
     The NSM card defines nsm_unit_area,  while NSML defines
     total nsm  or ``A*nsm_per_unit_area``.
+
     """
     if debug:  # pragma: no cover
         model.log.debug('_combine_weighted_area_length_simple')
@@ -1195,6 +1201,7 @@ def _combine_prop_weighted_area_length(
 
     The NSML mass contribution is calculated as a distrubted mass:
         mass = nsm_per_unit_area * areai / area_sum
+
     """
     assert area_sum is not None
     assert nsm_value is not None
@@ -1276,6 +1283,7 @@ def _apply_nsm(model, nsm_id,
 
     per MSC QRG 2018.0.1: Undefined property/element IDs are ignored.
     TODO: support ALL
+
     """
     if not nsm_id:
         return mass
@@ -1685,6 +1693,7 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
     """
     Scales the mass & moement of inertia based on the symmetry axes
     and the PARAM WTMASS card
+
     """
     if isinstance(sym_axis, string_types):
         sym_axis = [sym_axis]

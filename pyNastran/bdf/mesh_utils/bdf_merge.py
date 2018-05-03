@@ -67,6 +67,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     .. todo:: doesn't support SPOINTs/EPOINTs
     .. warning:: still very preliminary
+
     """
     if not isinstance(bdf_filenames, (list, tuple)):
         raise TypeError('bdf_filenames is not a list/tuple...%s' % str(bdf_filenames))
@@ -242,6 +243,7 @@ def _assemble_mapper(mappers, mapper_0, data_members, mapper_renumber=None):
     -------
     mappers_all : List[mappers]
         One mapper for each bdf_filename
+
     """
     if mapper_renumber is not None:
         mappers_all = [_renumber_mapper(mapper_0, mapper_renumber)]
@@ -284,6 +286,7 @@ def _get_mapper_0(model):
             'coords' : cid_map,
             ...
         }
+
     """
     # build the maps
     eids_all = list(model.elements.keys()) + list(model.masses.keys()) + list(model.rigid_elements.keys())
@@ -401,6 +404,7 @@ def _renumber_mapper(mapper_0, mapper_renumber):
                 ???
             value : ???
                 ???
+
     """
     mapper = mapper_0.copy()
     # apply any renumbering
@@ -419,6 +423,7 @@ def _dicts_key_to_key(dictionaries):
     """
     creates a dummy map from the nominal key to the nominal key for
     multiple input dictionaries
+
     """
     out = {}
     for dicti in dictionaries:

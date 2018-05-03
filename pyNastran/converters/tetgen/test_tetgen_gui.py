@@ -8,6 +8,7 @@ np.seterr(all='raise')
 
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
+from pyNastran.converters.tetgen.tetgen import read_tetgen
 from pyNastran.converters.tetgen.tetgen_io import TetgenIO
 from pyNastran.utils.log import get_logger
 import pyNastran
@@ -51,9 +52,17 @@ class TestTetgenGUI(unittest.TestCase):
         base = os.path.join(model_path, 'tetgen_test.1')
         test.model.load_tetgen_geometry(base + '.smesh')
         test.model.load_tetgen_geometry(base + '.ele')
+
+        model2 = read_tetgen(base, dimension_flag=2, log=None, debug=False)
+        model2.write_nastran(base + '.bdf')
+
+        model3 = read_tetgen(base, dimension_flag=3, log=None, debug=False)
+        model3.write_nastran(base + '.bdf')
+
         #base = 'tetgen_test_flipped.1'
         #m.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag=3)
         #m.write_nastran(base + '.bdf')
+        os.remove(base + '.bdf')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

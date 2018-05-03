@@ -1,8 +1,9 @@
 elements Package
 ================
 
+*********************************
 :mod:`axisymmetric_shells` Module
----------------------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.axisymmetric_shells
 
@@ -12,8 +13,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`bars` Module
-------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.bars
 
@@ -23,8 +25,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`beam` Module
-------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.beam
 
@@ -34,8 +37,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`bush` Module
-------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.bush
 
@@ -45,8 +49,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`damper` Module
---------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.damper
 
@@ -56,8 +61,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`elements` Module
-----------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.elements
 
@@ -67,8 +73,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`mass` Module
-------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.mass
 
@@ -78,8 +85,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`rigid` Module
--------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.rigid
 
@@ -89,8 +97,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`rods` Module
-------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.rods
 
@@ -100,8 +109,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`shell` Module
--------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.shell
 
@@ -111,8 +121,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`solid` Module
--------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.solid
 
@@ -122,8 +133,9 @@ elements Package
     :undoc-members:
     :show-inheritance:
 
+*********************************
 :mod:`springs` Module
----------------------
+*********************************
 
 .. inheritance-diagram:: pyNastran.bdf.cards.elements.springs
 

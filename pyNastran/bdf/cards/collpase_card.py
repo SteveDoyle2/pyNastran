@@ -14,6 +14,7 @@ def collapse_thru_by(fields, get_packs=False):
     fields              packs
     [1, 2, 3...150]  -> [1, 150, 1]
     [1, 3, 5...150]  -> [1, 150, 2]
+
     """
     assert 'THRU' not in fields, fields
     fields.sort()
@@ -47,6 +48,7 @@ def collapse_thru(fields, nthru=None):
     -------
     packs = list[pack]
        pack = list[int first_val, int last_val, int_by]
+
     """
     assert 'THRU' not in fields, fields
     fields.sort()
@@ -102,6 +104,7 @@ def collapse_colon_packs(fields, thru_split=3):
     # output
     singles = [1]
     doubles = [[3, ':', 10], [20, ':', 30]]
+
     """
     packs = condense(fields)
     singles, doubles = build_thru_packs(packs, max_dv=None, thru_split=thru_split)
@@ -135,6 +138,7 @@ def condense(value_list):
            a list representation of the min/max/delta id values
 
     .. seealso:: build_thru
+
     """
     if len(value_list) == 0:
         return []
@@ -214,6 +218,7 @@ def build_thru_packs(packs, max_dv=1, thru_split=3):
     returns
       singles = [1]
       doubles = [[3, 'THRU', 10], [20, 'THRU', 30]]
+
     """
     singles = []
     doubles = []
@@ -260,6 +265,7 @@ def build_thru(packs, max_dv=None, nthru=None):
     -------
     value : varies
         the value of the field
+
     """
     singles = []
     fields = []
@@ -327,6 +333,7 @@ def build_thru_float(packs, max_dv=None):
     max_dv : int; default=None -> no limit
         integer defining the max allowable delta between two values
         (default=None; no limit)
+
     """
     fields = []
     for (first_val, last_val, dv) in packs:

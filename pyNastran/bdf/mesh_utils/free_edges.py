@@ -22,6 +22,7 @@ def non_paired_edges(model):
     """
     Gets the edges not shared by exactly 2 elements.
     This is useful for identifying rib/spar intersections.
+
     """
     edge_to_eids = _get_edge_to_eids_map(model)
 

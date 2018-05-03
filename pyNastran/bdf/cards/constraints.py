@@ -14,6 +14,7 @@ All constraint cards are defined in this file.  This includes:
   * MPCADD
 
 The ConstraintObject contain multiple constraints.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -40,6 +41,7 @@ class Constraint(BaseCard):
      - SPC / SPC1
      - SPCAX
      - SPCOFF / SPCOFF1
+
      """
     def __init__(self):
         pass
@@ -79,6 +81,7 @@ class SUPORT1(Constraint):
             compoents to support at each node
         comment : str; default=''
             a comment for the card
+
         """
         Constraint.__init__(self)
         if comment:
@@ -101,6 +104,7 @@ class SUPORT1(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')  # really a support id sid
 
@@ -130,6 +134,7 @@ class SUPORT1(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         assert (len(data) - 1) % 2 == 0, data
@@ -165,6 +170,7 @@ class SUPORT1(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SUPORT1'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -224,6 +230,7 @@ class SUPORT(Constraint):
             compoents to support at each node
         comment : str; default=''
             a comment for the card
+
         """
         Constraint.__init__(self)
         if comment:
@@ -251,6 +258,7 @@ class SUPORT(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nfields = len(card)
         assert len(card) > 1, card
@@ -278,6 +286,7 @@ class SUPORT(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         fields = data
         nodes = []
@@ -302,6 +311,7 @@ class SUPORT(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SUPORT'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -376,6 +386,7 @@ class MPC(Constraint):
             the degree of freedoms to constrain (e.g., '1', '123')
         coefficients : List[float]
             the scaling coefficients
+
         """
         Constraint.__init__(self)
         if comment:
@@ -413,6 +424,7 @@ class MPC(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')
         nodes = []
@@ -461,6 +473,7 @@ class MPC(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         #msg = 'MPC has not implemented data parsing'
         conid = data[0]
@@ -487,6 +500,7 @@ class MPC(Constraint):
     @property
     def gids_ref(self):
         return self.nodes_ref
+
     @gids_ref.setter
     def gids_ref(self, nodes_ref):
         self.nodes_ref = nodes_ref
@@ -494,6 +508,7 @@ class MPC(Constraint):
     @property
     def gids(self):
         return self.nodes
+
     @gids.setter
     def gids(self, nodes):
         self.nodes = nodes
@@ -513,6 +528,7 @@ class MPC(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MPC=%s' % self.conid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -622,6 +638,7 @@ class SPC(Constraint):
 
         .. note:: len(gids) == len(components) == len(enforced)
         .. warning:: non-zero enforced deflection requires an SPCD as well
+
         """
         Constraint.__init__(self)
         if comment:
@@ -654,6 +671,7 @@ class SPC(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
@@ -683,6 +701,7 @@ class SPC(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         gids = [data[1]]
@@ -726,6 +745,7 @@ class SPC(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPC=%s' % (self.conid)
         self.gids_ref = model.EmptyNodes(self.gids, msg=msg)
@@ -784,6 +804,7 @@ class GMSPC(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'sid')
         component = parse_components(card, 2, 'components')
@@ -861,6 +882,7 @@ class SPCAX(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')
         rid = integer(card, 2, 'rid')
@@ -963,6 +985,7 @@ class SPC1(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')
         components = parse_components(card, 2, 'components')  # 246 = y; dx, dz dir
@@ -980,6 +1003,7 @@ class SPC1(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         components = str(data[1])
@@ -1014,6 +1038,7 @@ class SPC1(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPC1; conid=%s' % self.conid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -1079,6 +1104,7 @@ class SPCOFF(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         raise NotImplementedError()
         #if card.field(5) in [None, '']:
@@ -1108,6 +1134,7 @@ class SPCOFF(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         nodes = [data[0]]
         components = data[1]
@@ -1149,6 +1176,7 @@ class SPCOFF(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPCOFF'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -1212,6 +1240,7 @@ class SPCOFF1(Constraint):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         components = parse_components(card, 1, 'components')  # 246 = y; dx, dz dir
         nodes = card.fields(2)
@@ -1228,6 +1257,7 @@ class SPCOFF1(Constraint):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         components = str(data[0])
         nodes = data[1]
@@ -1260,6 +1290,7 @@ class SPCOFF1(Constraint):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPCOFF1'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -1312,7 +1343,6 @@ class SPCADD(ConstraintAdd):
     +--------+----+----+-----+
     """
     type = 'SPCADD'
-
     def __init__(self, conid, sets, comment=''):
         ConstraintAdd.__init__(self)
         if comment:
@@ -1348,6 +1378,7 @@ class SPCADD(ConstraintAdd):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         sets = list(data[1:-1])
@@ -1379,6 +1410,7 @@ class SPCADD(ConstraintAdd):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SPCADD=%s' % self.conid
         self.sets_ref = []
@@ -1449,6 +1481,7 @@ class MPCADD(ConstraintAdd):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         conid = integer(card, 1, 'conid')
         sets = card.fields(2)
@@ -1465,6 +1498,7 @@ class MPCADD(ConstraintAdd):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         conid = data[0]
         sets = list(data[1:-1])
@@ -1490,6 +1524,7 @@ class MPCADD(ConstraintAdd):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MPCADD=%s' % self.conid
         self.sets_ref = []

@@ -1,6 +1,6 @@
-============
-Installation
-============
+=========================
+Installation From Source
+=========================
 
 pyNastran is an easy package to install once you have the required Python
 modules.  It's a pure Python package so you shouldn't have too many problems.
@@ -10,13 +10,9 @@ Installing from source is recommened if:
  - You want easier access to the source
  - You're on an air-gapped machine
 
-*******************************
-Install Procedure - From Source
-*******************************
-
 Overview
 ========
- * Install Python (see :ref:`_installation_release_xref`)
+ * Install Python (see :doc:`installation_release`)
    - skip the `pip install pyNastran` step
  * Install Sphinx, GraphViz, alabaster (for documentation)
 
@@ -24,14 +20,18 @@ Overview
  * Clone pyNastran-master from Github
  * Install pyNastran
 
-Install extra Python packages
-=============================
-Install Sphinx and alabaster
+Install extra packages (for Doucmentation)
+==========================================
+
+Install `GraphViz  <https://www.graphviz.org/>`_
+
+Install additional python packages
 
 .. code-block:: console
 
   pip install Sphinx
   pip install alabaster
+  pip install numpydoc
 
 Install Git
 ===========
@@ -43,7 +43,7 @@ Install Git
 
 Install pyNastran
 =================
-There are two ways to install the dev version of pyNastran
+There are two ways to install the master (dev) version of pyNastran
 
  1. Download the most recent `zip version <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_
 

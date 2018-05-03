@@ -34,6 +34,7 @@ def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None, msg=''
     -------
     nids_close: (Ncompare, ) int ndarray
         the close node ids
+
     """
     if not isinstance(neq_max, int):
         msgi = 'neq_max=%r must be an int; type=%s\n%s' % (
@@ -86,6 +87,7 @@ def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol, msg=''):
     -------
     slots : (Ncompare, ) int ndarray
         the indices of the close nodes corresponding to nodes_xyz
+
     """
     #nodes_xyz, model, nids, inew = _eq_nodes_setup(
         #bdf_filename, tol, renumber_nodes=renumber_nodes,
@@ -130,6 +132,7 @@ def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4, msg=''):
             (N, N) int ndarray
     msg : str; default=''
         error message
+
     """
     assert isinstance(xyz_compare, np.ndarray), type(xyz_compare)
     if nodes_xyz.shape[1] != xyz_compare.shape[1]:

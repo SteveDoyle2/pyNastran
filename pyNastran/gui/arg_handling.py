@@ -95,14 +95,14 @@ def run_docopt():
     msg += "  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)\n"
     msg += "  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)\n"
     msg += "  --groups                        enables groups\n"
-    msg += "  --noupdate                      disables the update check\n"
-    msg += "  --user_geom GEOM_FNAME          add user specified points (repeatable)\n"
-    msg += "  -u POINTS_FNAME, --user_points  add user specified geometry (repeatable)\n"
+    msg += "  --user_geom GEOM_FNAME          add user specified geometry (repeatable)\n"
+    msg += "  -u POINTS_FNAME, --user_points  add user specified points (repeatable)\n"
     msg += '\n'
 
     msg += "Debug:\n"
-    msg += "  --test    temporary dev mode (default=False)\n"
-    msg += "  --qt QT   sets the qt version (default=QT_API)\n"
+    msg += "  --test      temporary dev mode (default=False)\n"
+    msg += "  --qt QT     sets the qt version (default=QT_API)\n"
+    msg += "  --noupdate  disables the update check\n"
     msg += '\n'
 
     msg += "Info:\n"

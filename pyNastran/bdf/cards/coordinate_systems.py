@@ -8,6 +8,7 @@ All coordinate cards are defined in this file.  This includes:
  * CORD2R
  * CORD2C
  * CORD2S
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -43,6 +44,7 @@ def normalize(v):
         normalized v
 
     .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
+
     """
     norm_v = norm(v)
     if not norm_v > 0.:
@@ -54,9 +56,7 @@ class Coord(BaseCard):
     type = 'COORD'
 
     def __init__(self):
-        """
-        Defines a general CORDxx object
-        """
+        """Defines a general CORDxx object"""
         #: have all the transformation matricies been determined
         self.is_resolved = False
         self.cid = None
@@ -74,9 +74,7 @@ class Coord(BaseCard):
         return self.cid
 
     def setup_global_cord2x(self):
-        """
-        Sets up a global CORD2R, CORD2S, CORD2C
-        """
+        """Sets up a global CORD2R, CORD2S, CORD2C"""
         #if self.Cid() == 0:
             #self.origin = np.array([0., 0., 0.], dtype='float64')
             #return
@@ -182,6 +180,7 @@ class Coord(BaseCard):
 
         .. math::
           i = j \times k
+
         """
         #if self.is_resolved:
             #return
@@ -339,6 +338,7 @@ class Coord(BaseCard):
 
         .. math::
           i = j \times k
+
         """
         assert isinstance(self.rid, integer_types), self.rid
         if self.is_resolved:
@@ -481,6 +481,7 @@ class Coord(BaseCard):
         -------
         p : (1, 3) float ndarray
             the vector in the global frame
+
         """
         if self.cid == 0:
             return p
@@ -555,6 +556,7 @@ class Coord(BaseCard):
         -----
         Shifting the load application point of a force creates
         a moment, but the force will be the same.
+
         """
         if self.cid == 0:
             return p
@@ -584,6 +586,7 @@ class Coord(BaseCard):
         """
         Transforms a generalized vector from the local frame to the
         global frame.
+
         """
         if self.cid == 0:
             return p
@@ -637,6 +640,7 @@ class Coord(BaseCard):
         .. warning:: make sure you cross-reference before calling this
         .. warning:: you probably shouldnt call this, call the Node methods
                      get_position and get_position_wrt
+
         """
         if self.cid == 0:
             return xyz
@@ -663,6 +667,7 @@ class Coord(BaseCard):
         -------
         xyz : (1, 3) float ndarray
             the position of the GRID in the alternate coordinate system
+
         """
         if self.cid == 0:
             return xyz
@@ -684,6 +689,7 @@ class Coord(BaseCard):
         -------
         xyz_local : (1,3) ndarray
             the point in the local frame
+
         """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
@@ -702,6 +708,7 @@ class Coord(BaseCard):
         -------
         xyz_local : (1,3) ndarray
             the point in the local frame
+
         """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
@@ -737,6 +744,7 @@ class Coord(BaseCard):
 
         Where transform(x) depends on the rectangular, cylindrical, or
         spherical coordinate system
+
         """
         beta = self.beta()
         return self._transform_node_to_local(xyz, beta)
@@ -751,6 +759,7 @@ class Coord(BaseCard):
     def transform_node_from_local_to_local(self, coord_to, xyz):
         """
         Converts an xyz coordinate in an arbitrary system to a different one
+
         """
         if self.cid == coord_to.cid:
             return xyz
@@ -761,6 +770,7 @@ class Coord(BaseCard):
     def transform_node_from_local_to_local_array(self, coord_to, xyz):
         """
         Converts an xyz coordinate array in an arbitrary system to a different one
+
         """
         if self.cid == coord_to.cid:
             return xyz
@@ -771,6 +781,7 @@ class Coord(BaseCard):
     def transform_vector_to_local(self, xyz):
         """
         see transform_node_to_local, but set the origin to <0, 0, 0>
+
         """
         beta = self.beta()
         xyz_coord = np.dot(xyz, beta.T)
@@ -781,6 +792,7 @@ class Coord(BaseCard):
     def global_to_local(self):
         r"""
         Gets the 3 x 3 global to local transform
+
         """
         return self.beta().T
 
@@ -796,6 +808,7 @@ class Coord(BaseCard):
         Gets the 3 x 3 transformation
 
         .. math:: [\lambda] = [B_{ij}]
+
         """
         if self.cid == 0:
             return np.array([[1., 0., 0.],
@@ -809,6 +822,7 @@ class Coord(BaseCard):
         Gets the 3n x 3n transformation
 
         .. math:: [\lambda] = [B_{ij}]
+
         """
         assert n < 10, 'n=%r' % n
         matrix = self.beta()
@@ -831,6 +845,7 @@ class Coord(BaseCard):
               the global coordinate system
         maintain_rid : bool; default=False
             set the rid to cid=0 if False
+
         """
         if self.i is None:
             self.setup()
@@ -854,6 +869,7 @@ def _fix_xyz_shape(xyz, name='xyz'):
         the xyz locations
     name : str; default='xyz'
         the name in case of an error
+
     """
     xyz = np.asarray(xyz)
     if not isinstance(xyz, np.ndarray):
@@ -897,6 +913,7 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
     creates 1 CORD2S and ncid CORD2R coordinate systems
 
     .. todo:: hasn't been tested...
+
     """
     if len(cids) != len(thetas):
         msg = 'len(cids)=%s len(thetas)=%s; must be equal' % (len(cids, len(thetas)))
@@ -967,6 +984,7 @@ def define_coord_e123(model, cord2_type, cid, origin, rid=0,
     The axes and planes are defined in the rid coordinate system
 
     .. todo:: hasn't been tested...
+
     """
     assert cord2_type in ['CORD2R', 'CORD2C', 'CORD2S'], cord2_type
     origin = _fix_xyz_shape(origin, 'origin')
@@ -1071,6 +1089,7 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
     -------
     coord : CORD2R, CORD2C, CORD2S
         the coordinate system
+
     """
     assert cord2_type in ['CORD2R', 'CORD2C', 'CORD2S'], cord2_type
     origin = _fix_xyz_shape(origin, 'origin')
@@ -1122,6 +1141,7 @@ class RectangularCoord(object):
         -------
         xyz : (3,) ndarray
             the point in the local coordinate system
+
         """
         return p
 
@@ -1132,6 +1152,7 @@ class RectangularCoord(object):
         -------
         xyz : (3,) ndarray
             the delta xyz point in the local coordinate system
+
         """
         return p
 
@@ -1142,6 +1163,7 @@ class RectangularCoord(object):
         -------
         xyz : (n, 3) ndarray
             the point in the local coordinate system
+
         """
         return p
 
@@ -1152,6 +1174,7 @@ class RectangularCoord(object):
         -------
         xyz : (n, 3) ndarray
             the delta xyz point in the local coordinate system
+
         """
         return p
 
@@ -1171,6 +1194,7 @@ class CylindricalCoord(object):
 
     .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
+
     """
 
     @staticmethod
@@ -1191,6 +1215,7 @@ class CylindricalCoord(object):
         -------
         xyz : (3,) float ndarray
             the point in the local coordinate system
+
         """
         R = p[0]
         theta = radians(p[1])
@@ -1216,6 +1241,7 @@ class CylindricalCoord(object):
         -------
         xyz : (3,) float ndarray
             the point in the local coordinate system
+
         """
         assert len(p.shape) == 2, p.shape
         R = p[:, 0]
@@ -1245,6 +1271,7 @@ class CylindricalCoord(object):
         -------
         xyz : (3,) float ndarray
             the delta xyz point in the local coordinate system
+
         """
         (x, y, z) = p
         theta = degrees(atan2(y, x))
@@ -1269,6 +1296,7 @@ class CylindricalCoord(object):
         -------
         xyz : (3,) float ndarray
             the point in the local coordinate system
+
         """
         assert len(p.shape) == 2, p.shape
         x = p[:, 0]
@@ -1297,6 +1325,7 @@ class SphericalCoord(object):
     .. seealso:: http://en.wikipedia.org/wiki/Spherical_coordinate_system
 
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
+
     """
     @staticmethod
     def xyz_to_coord(p):
@@ -1305,6 +1334,7 @@ class SphericalCoord(object):
         -------
         xyz : (3, ) float ndarray
             the local XYZ point in the R, \theta, \phi coordinate system
+
         """
         (x, y, z) = p
         R = sqrt(x * x + y * y + z * z)
@@ -1322,6 +1352,7 @@ class SphericalCoord(object):
         -------
         xyz : (3, ) float ndarray
             the local XYZ point in the R, \theta, \phi coordinate system
+
         """
         assert len(p.shape) == 2, p.shape
         x = p[:, 0]
@@ -1344,6 +1375,7 @@ class SphericalCoord(object):
         -------
         xyz : (3,) float ndarray
             the R, \theta, \phi in the local coordinate system
+
         """
         radius = p[0]
         theta = radians(p[1])
@@ -1360,6 +1392,7 @@ class SphericalCoord(object):
         -------
         xyz : (3,) float ndarray
             the R, \theta, \phi in the local coordinate system
+
         """
         assert len(p.shape) == 2, p.shape
         R = p[:, 0]
@@ -1413,6 +1446,7 @@ class Cord2x(Coord):
             a point on the xz-plane
 
         .. note :: no type checking
+
         """
         Coord.__init__(self)
         if comment:
@@ -1490,6 +1524,7 @@ class Cord2x(Coord):
         must be None
 
         The axes and planes are defined in the rid coordinate system
+
         """
         assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
         if origin is None:
@@ -1583,6 +1618,7 @@ class Cord2x(Coord):
             defines the j unit vector
         k : (3,) ndarray
             defines the k unit vector
+
         """
         Type = cls.type
         assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
@@ -1630,9 +1666,7 @@ class Cord2x(Coord):
 
     @classmethod
     def add_card(cls, card, comment=''):
-        """
-        Defines the CORD2x class
-        """
+        """Defines the CORD2x class"""
         #: coordinate system ID
         cid = integer(card, 1, 'cid')
         #: reference coordinate system ID
@@ -1679,6 +1713,7 @@ class Cord2x(Coord):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         cid = self.Cid()
         rid = self.Rid()
@@ -1704,6 +1739,7 @@ class Cord2x(Coord):
         ----------
         maintain_rid : bool; default=False
             set the rid to cid=0 if False
+
         """
         if maintain_rid:
             #e1 = self.rid_ref.transform_node_to_global(self.e1)
@@ -1747,6 +1783,7 @@ class Cord2x(Coord):
         .. warning:: Doesn't set rid to the coordinate system if it's in the
                     global.  This isn't a problem.  It's meant to speed up the
                     code in order to resolve extra coordinate systems.
+
         """
         if self.Rid() != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
@@ -1794,6 +1831,7 @@ class Cord1x(Coord):
             grid point 3
         comment : str; default=''
             a comment for the card
+
 
         """
         Coord.__init__(self)
@@ -1867,6 +1905,7 @@ class Cord1x(Coord):
             a BDF model
         rid : int; default=0
             The relative coordinate system
+
         """
         rid1 = self.g1_ref.Cp()
         rid2 = self.g2_ref.Cp()
@@ -1908,6 +1947,7 @@ class Cord1x(Coord):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         cid = self.Cid()
         assert isinstance(cid, integer_types), 'cid=%r' % cid
@@ -1920,6 +1960,7 @@ class Cord1x(Coord):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         #: grid point 1
@@ -1941,6 +1982,7 @@ class Cord1x(Coord):
         """
         Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
+
         """
         if self.is_resolved:
             return
@@ -2020,6 +2062,7 @@ class GMCORD(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         cid = integer(card, 1, 'cid')
         entity = string(card, 2, 'entity')
@@ -2123,6 +2166,7 @@ class CORD3G(Coord):  # not done
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         cid = integer(card, 1, 'cid')
         method = string_or_blank(card, 2, 'E313')
@@ -2147,6 +2191,7 @@ class CORD3G(Coord):  # not done
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by CORD3G cid=%s' % (self.cid)
         self.rid_ref = model.Coord(self.rid, msg=msg)
@@ -2175,6 +2220,7 @@ class CORD3G(Coord):  # not done
          Y rotations, in the moving axes (Note: the order of multiplication
          of matrices is the opposite of the order in which they're
          applied to a vector)."
+
         """
         if self.method_es == 'E':
             rotations = [int(i) for i in str(self.method_int)]
@@ -2400,6 +2446,7 @@ class CORD2R(Cord2x, RectangularCoord):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         cid = self.Cid()
         rid = self.Rid()

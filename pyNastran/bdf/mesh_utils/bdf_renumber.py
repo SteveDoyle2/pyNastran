@@ -173,6 +173,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     }
     >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                      starting_ids_dict=starting_ids_dict, round_ids=False)
+
     """
     starting_id_dict_default = {
         'cid' : 1,
@@ -771,6 +772,7 @@ def _update_case_control(model, mapper):
         the BDF object
     mapper : dict[str] = List[int]
         Defines the possible case control header values for each entry (e.g. `LOAD`)
+
     """
     elemental_quantities = ['STRESS', 'STRAIN', 'FORCE', 'ESE', 'EKE']
     nodal_quantities = [

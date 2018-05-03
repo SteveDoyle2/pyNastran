@@ -59,26 +59,27 @@ def cmd_line_equivalence():  # pragma: no cover
     """command line interface to bdf_equivalence_nodes"""
     from docopt import docopt
     import pyNastran
-    msg = "Usage:\n"
-    msg += "  bdf equivalence IN_BDF_FILENAME EQ_TOL  [-o OUT_BDF_FILENAME]\n"
+    msg = (
+        "Usage:\n"
+        "  bdf equivalence IN_BDF_FILENAME EQ_TOL  [-o OUT_BDF_FILENAME]\n"
 
-    msg += '  bdf equivalence -h | --help\n'
-    msg += '  bdf equivalence -v | --version\n'
-    msg += '\n'
+        '  bdf equivalence -h | --help\n'
+        '  bdf equivalence -v | --version\n'
+        '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  IN_BDF_FILENAME   path to input BDF/DAT/NAS file\n"
-    msg += "  EQ_TOL            the spherical equivalence tolerance\n\n"
-    #msg += "  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
-    msg += '\n'
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME   path to input BDF/DAT/NAS file\n"
+        "  EQ_TOL            the spherical equivalence tolerance\n\n"
+        #"  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
+        '\n'
 
-    msg += 'Options:\n'
-    msg += "  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+        'Options:\n'
+        "  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
 
-    msg += 'Info:\n'
-    msg += '  -h, --help      show this help message and exit\n'
-    msg += "  -v, --version   show program's version number and exit\n"
-
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
     if len(sys.argv) == 1:
         sys.exit(msg)
 
@@ -109,33 +110,35 @@ def cmd_line_bin():  # pragma: no cover
     """bins the model into nbins"""
     from docopt import docopt
     import pyNastran
-    msg = "Usage:\n"
-    #msg += "  bdf bin IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n"
-    msg += "  bdf bin IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--nbins NBINS]\n"
-    msg += '  bdf bin -h | --help\n'
-    msg += '  bdf bin -v | --version\n'
-    msg += '\n'
+    msg = (
+        "Usage:\n"
+        #"  bdf bin IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n"
+        "  bdf bin IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--nbins NBINS]\n"
+        '  bdf bin -h | --help\n'
+        '  bdf bin -v | --version\n'
+        '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-    msg += "  AXIS1              axis to loop over\n"
-    msg += "  AXIS2              axis to bin\n"
-    msg += '\n'
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+        "  AXIS1              axis to loop over\n"
+        "  AXIS2              axis to bin\n"
+        '\n'
 
-    msg += 'Options:\n'
-    msg += "  --cid CID   the coordinate system to bin (default:0)\n"
-    #msg += "  --step SIZE   the step size for binning\n\n"
-    msg += "  --nbins NBINS the number of bins\n\n"
+        'Options:\n'
+        "  --cid CID   the coordinate system to bin (default:0)\n"
+        "  --step SIZE   the step size for binning\n\n"
+        "  --nbins NBINS the number of bins\n\n"
 
-    msg += 'Info:\n'
-    msg += '  -h, --help      show this help message and exit\n'
-    msg += "  -v, --version   show program's version number and exit\n\n"
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n\n"
 
-    msg += 'Plot z (2) as a function of y (1) in y-stepsizes of 0.1:\n'
-    msg += '  bdf bin fem.bdf 1 2 --cid 0 --step 0.1\n\n'
+        'Plot z (2) as a function of y (1) in y-stepsizes of 0.1:\n'
+        '  bdf bin fem.bdf 1 2 --cid 0 --step 0.1\n\n'
 
-    msg += 'Plot z (2) as a function of y (1) with 50 bins:\n'
-    msg += '  bdf bin fem.bdf 1 2 --cid 0 --nbins 50'
+        'Plot z (2) as a function of y (1) with 50 bins:\n'
+        '  bdf bin fem.bdf 1 2 --cid 0 --nbins 50'
+    )
 
     if len(sys.argv) == 1:
         sys.exit(msg)
@@ -213,24 +216,25 @@ def cmd_line_renumber():  # pragma: no cover
     """command line interface to bdf_renumber"""
     from docopt import docopt
     import pyNastran
-    msg = "Usage:\n"
-    msg += "  bdf renumber IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n"
-    msg += '  bdf renumber -h | --help\n'
-    msg += '  bdf renumber -v | --version\n'
-    msg += '\n'
+    msg = (
+        "Usage:\n"
+        "  bdf renumber IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n"
+        '  bdf renumber -h | --help\n'
+        '  bdf renumber -v | --version\n'
+        '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-    #msg += "  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
-    msg += '\n'
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+       #"  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
+        '\n'
 
-    msg += 'Options:\n'
-    msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+        'Options:\n'
+        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
 
-    msg += 'Info:\n'
-    msg += '  -h, --help      show this help message and exit\n'
-    msg += "  -v, --version   show program's version number and exit\n"
-
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
     if len(sys.argv) == 1:
         sys.exit(msg)
 
@@ -257,26 +261,27 @@ def cmd_line_mirror():  # pragma: no cover
     """command line interface to write_bdf_symmetric"""
     from docopt import docopt
     import pyNastran
-    msg = "Usage:\n"
-    msg += "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n"
-    msg += '  bdf mirror -h | --help\n'
-    msg += '  bdf mirror -v | --version\n'
-    msg += '\n'
+    msg = (
+        "Usage:\n"
+        "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n"
+        '  bdf mirror -h | --help\n'
+        '  bdf mirror -v | --version\n'
+        '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-    #msg += "  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
-    msg += '\n'
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+       #"  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
+        '\n'
 
-    msg += 'Options:\n'
-    msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
-    msg += "  --plane PLANE                       the symmetry plane (xz, ???)\n\n"
-    msg += "  --tol   TOL                         the spherical equivalence tolerance (default=0.000001)\n\n"
+        'Options:\n'
+        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+        "  --plane PLANE                       the symmetry plane (xz, ???)\n\n"
+        "  --tol   TOL                         the spherical equivalence tolerance (default=0.000001)\n\n"
 
-    msg += 'Info:\n'
-    msg += '  -h, --help      show this help message and exit\n'
-    msg += "  -v, --version   show program's version number and exit\n"
-
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
     if len(sys.argv) == 1:
         sys.exit(msg)
 
@@ -319,23 +324,24 @@ def cmd_line_merge():  # pragma: no cover
     """command line interface to bdf_merge"""
     from docopt import docopt
     import pyNastran
-    msg = "Usage:\n"
-    msg += "  bdf merge (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n"
-    msg += '  bdf merge -h | --help\n'
-    msg += '  bdf merge -v | --version\n'
-    msg += '\n'
+    msg = (
+        "Usage:\n"
+        '  bdf merge (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
+        '  bdf merge -h | --help\n'
+        '  bdf merge -v | --version\n'
+        '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  IN_BDF_FILENAMES   path to input BDF/DAT/NAS files\n"
-    msg += '\n'
+        'Positional Arguments:\n'
+        '  IN_BDF_FILENAMES   path to input BDF/DAT/NAS files\n'
+        '\n'
 
-    msg += 'Options:\n'
-    msg += "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n"
+        'Options:\n'
+        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n\n'
 
-    msg += 'Info:\n'
-    msg += '  -h, --help      show this help message and exit\n'
-    msg += "  -v, --version   show program's version number and exit\n"
-
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
     if len(sys.argv) == 1:
         sys.exit(msg)
 
@@ -362,27 +368,28 @@ def cmd_line_export_mcid():  # pragma: no cover
     """command line interface to export_mcids"""
     from docopt import docopt
     import pyNastran
-    msg = "Usage:\n"
-    msg += "  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n"
-    msg += '  bdf export_mcids -h | --help\n'
-    msg += '  bdf export_mcids -v | --version\n'
-    msg += '\n'
+    msg = (
+        'Usage:\n'
+        '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
+        '  bdf export_mcids -h | --help\n'
+        '  bdf export_mcids -v | --version\n'
+        '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-    msg += '\n'
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+        '\n'
 
-    msg += 'Options:\n'
-    msg += "  -o OUT, --output  OUT_CSV_FILENAME  path to output CSV file\n\n"
+        'Options:\n'
+        "  -o OUT, --output  OUT_CSV_FILENAME  path to output CSV file\n\n"
 
-    msg += 'Data Suppression:\n'
-    msg += "  --no_x,  don't write the x axis\n"
-    msg += "  --no_y,  don't write the y axis\n"
+        'Data Suppression:\n'
+        "  --no_x,  don't write the x axis\n"
+        "  --no_y,  don't write the y axis\n"
 
-    msg += 'Info:\n'
-    msg += '  -h, --help      show this help message and exit\n'
-    msg += "  -v, --version   show program's version number and exit\n"
-
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
     if len(sys.argv) == 1:
         sys.exit(msg)
 
@@ -411,23 +418,24 @@ def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
     """command line interface to split_cbars_by_pin_flag"""
     from docopt import docopt
     import pyNastran
-    msg = "Usage:\n"
-    msg += '  bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
-    msg += '  bdf split_cbars_by_pin_flags -h | --help\n'
-    msg += '  bdf split_cbars_by_pin_flags -v | --version\n'
-    msg += '\n'
+    msg = (
+        'Usage:\n'
+        '  bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
+        '  bdf split_cbars_by_pin_flags -h | --help\n'
+        '  bdf split_cbars_by_pin_flags -v | --version\n'
+        '\n'
 
-    msg += "Positional Arguments:\n"
-    msg += "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-    msg += '\n'
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+        '\n'
 
-    msg += 'Options:\n'
-    msg += " -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file\n"
-    msg += " -p PIN, --pin     PIN_FLAGS_CSV_FILENAME  path to pin_flags_csv file\n\n"
-    msg += 'Info:\n'
-    msg += '  -h, --help      show this help message and exit\n'
-    msg += "  -v, --version   show program's version number and exit\n"
-
+        'Options:\n'
+        " -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file\n"
+        " -p PIN, --pin     PIN_FLAGS_CSV_FILENAME  path to pin_flags_csv file\n\n"
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
     if len(sys.argv) == 1:
         sys.exit(msg)
 
@@ -508,4 +516,3 @@ def cmd_line():  # pragma: no cover
 if __name__ == '__main__':  # pragma: no cover
     sys.argv = sys.argv[1:]
     cmd_line()
-

@@ -2,6 +2,7 @@
 All axisymmetric shell elements are defined in this file.  This includes:
  * AXIC
  * PRESAX
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -47,6 +48,7 @@ class AXIC(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nharmonics = integer(card, 1, 'nharmonics')
         assert len(card) == 2, 'len(AXIC card) = %i\ncard=%s' % (len(card), card)
@@ -84,6 +86,9 @@ class POINTAX(BaseCard):
             Identification number of a RINGAX entry.
         phi : float
             Azimuthal angle in degrees.
+        comment : str; default=''
+            a comment for the card
+
         """
         if comment:
             self.comment = comment
@@ -102,6 +107,7 @@ class POINTAX(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nid = integer(card, 1, 'nid')
         ringax = integer(card, 2, 'ringax')
@@ -164,6 +170,7 @@ class RINGAX(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nid = integer(card, 1, 'nid')
         blank(card, 2, 'blank')
@@ -188,6 +195,7 @@ class RINGAX(BaseCard):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         nid = data[0]
         R = data[1]
@@ -204,6 +212,7 @@ class RINGAX(BaseCard):
         -------
         fields : List[varies]
             the fields that define the card
+
         """
         list_fields = ['RINGAX', self.nid, None, self.R, self.z, None,
                        None, self.ps]
@@ -218,6 +227,7 @@ class RINGAX(BaseCard):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -260,6 +270,7 @@ class CCONEAX(Element):
             node ids
         comment : str; default=''
             a comment for the card
+
         """
         Element.__init__(self)
         if comment:
@@ -284,6 +295,7 @@ class CCONEAX(Element):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -339,8 +351,6 @@ class PCONEAX(Property):
     +---------+-------+--------+------+-------+-------+-------+-------+-------+
     |         | PHI7  |  PHI8  | PHI9 | PHI10 | PHI11 | PHI12 | PHI13 | PHI14 |
     +---------+-------+--------+------+-------+-------+-------+-------+-------+
-
-    +---------+-------+--------+------+-------+-------+-------+-------+-------+
     | PCONEAX |   2   |   4    | 1.0  |   6   | 16.3  |   8   |  2.1  |  0.5  |
     +---------+-------+--------+------+-------+-------+-------+-------+-------+
     |         | 0.001 | -0.002 | 23.6 | 42.9  |       |       |       |       |
@@ -384,6 +394,9 @@ class PCONEAX(Property):
             Fiber distances from the middle surface for stress recovery.
         phi : List[float]
             Azimuthal coordinates (in degrees) for stress recovery.
+        comment : str; default=''
+            a comment for the card
+
         """
         Property.__init__(self)
         if comment:
@@ -416,6 +429,7 @@ class PCONEAX(Property):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         #: Property ID
         pid = integer(card, 1, 'pid')
@@ -458,6 +472,7 @@ class PCONEAX(Property):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by PCONEAX=%s' %(self.pid)
         if self.mid1 > 0:
@@ -556,6 +571,7 @@ class PRESAX(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         pressure = double(card, 2, 'pressure')
@@ -608,6 +624,7 @@ class TEMPAX(ThermalLoad):
                 the nodal temperature
         comment : str; default=''
             a comment for the card
+
         """
         ThermalLoad.__init__(self)
         if comment:
@@ -632,6 +649,7 @@ class TEMPAX(ThermalLoad):
             ???
         comment : str; default=''
             a comment for the card
+
         """
         istart = 1 + icard * 4
         sid = integer(card, istart, 'sid')

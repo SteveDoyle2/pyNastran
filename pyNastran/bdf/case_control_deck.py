@@ -62,6 +62,7 @@ class CaseControlDeck(object):
             ending with BEGIN BULK
         log : log()
             a :mod: `logging` object
+
         """
         # pulls the logger from the BDF object
         self.log = get_logger(log, "debug")
@@ -128,6 +129,7 @@ class CaseControlDeck(object):
             FORCE(PLOT,SORT1,REAL)
 
         .. warning:: most case control types are not supported
+
         """
         for subcase in itervalues(self.subcases):
             # if isubcase == 0:
@@ -145,6 +147,7 @@ class CaseControlDeck(object):
             the subcase ID to check
         param_names : List[str]
             the parameter name to look for
+
         """
         if self.has_subcase(isubcase):
             return any(self.subcases[isubcase].has_parameter(*param_names))
@@ -163,6 +166,7 @@ class CaseControlDeck(object):
             the parameter name to look for
         obj : bool; default=False
             should the object be returned
+
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper(), obj=obj)
@@ -184,6 +188,7 @@ class CaseControlDeck(object):
         -------
         val : bool
             does_subcase_exist (type = bool)
+
         """
         if isubcase in self.subcases:
             return True
@@ -205,6 +210,7 @@ class CaseControlDeck(object):
 
         .. warning ::  be careful you dont add data to the global subcase
                        after running this...is this True???
+
         """
         #print("creating subcase=%s" % isubcase)
         if self.has_subcase(isubcase):
@@ -220,8 +226,11 @@ class CaseControlDeck(object):
         """
         Deletes a subcase.
 
-        :param isubcase: the Subcase to delete
-        :type isubcase: int
+        Parameters
+        ----------
+        isubcase : int
+            the Subcase to delete
+
         """
         if not self.has_subcase(isubcase):
             sys.stderr.write('subcase %s doesnt exist...skipping\n' % isubcase)
@@ -244,6 +253,7 @@ class CaseControlDeck(object):
         -------
         subcase : Subcase()
             the new subcase
+
         """
         #print("copying subcase from=%s to=%s overwrite=%s" % (
             #i_from_subcase, i_to_subcase, overwrite_subcase))
@@ -306,6 +316,7 @@ class CaseControlDeck(object):
             ANALYSIS FLUTTER
             DISP = ALL
         >>>
+
         """
         self.add_parameter_to_local_subcase(isubcase, 'ANALYSIS %s' % sol)
 
@@ -330,6 +341,7 @@ class CaseControlDeck(object):
         >>> print(bdf.case_control)
         TITLE = DUMMY LINE
         DISP = ALL
+
         """
         (j, key, value, options, param_type) = self._parse_data_from_user(param)
         subcase_list = self.get_subcase_list()
@@ -362,6 +374,7 @@ class CaseControlDeck(object):
         SUBCASE 1
             DISP = ALL
         >>>
+
         """
         (j, key, value, options, param_type) = self._parse_data_from_user(param)
         self._add_parameter_to_subcase(key, value, options, param_type,
@@ -375,6 +388,7 @@ class CaseControlDeck(object):
         ----------
         param : str
             the variable to add
+
         """
         if '\n' in param or '\r' in param or '\t' in param:
             msg = 'doesnt support embedded endline/tab characters\n'
@@ -395,6 +409,7 @@ class CaseControlDeck(object):
 
         .. warning:: doesnt check for 72 character width lines, but will
                      follow that when it's written out
+
         """
         isubcase = 0
         lines = _clean_lines(lines)
@@ -492,6 +507,7 @@ class CaseControlDeck(object):
             see brief
         param_type : str/int/float/List
             see brief
+
         """
         i = 0
         options = []
@@ -809,6 +825,7 @@ class CaseControlDeck(object):
         """
         Removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
+
         """
         for subcase in itervalues(self.subcases):
             subcase.finish_subcase()
@@ -824,6 +841,7 @@ class CaseControlDeck(object):
             the BDF object
 
         .. todo:: not done...
+
         """
         analysis = model.rsolmap_to_str[model.sol]
         model.sol = 200
@@ -833,9 +851,7 @@ class CaseControlDeck(object):
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
     def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
-        """
-        Internal method
-        """
+        """Internal method"""
         if self.debug:
             a = 'key=%r' % key
             b = 'value=%r' % value
@@ -876,6 +892,7 @@ class CaseControlDeck(object):
         ----------
         model : BDF()
             the BDF object
+
         """
         for isubcase, subcase in sorted(iteritems(self.subcases)):
             subcase.cross_reference(model)
@@ -943,9 +960,7 @@ def verify_card(key, value, options, line):
         assert value2 > 0, 'line=%r is invalid; value=%r must be greater than 0.' % (line, value2)
 
 def verify_card2(key, value, options, line):
-    """
-    Make sure there are no obvious errors
-    """
+    """Make sure there are no obvious errors"""
     # this is purposely made overly strict to catch all the cases
     int_cards = [
         'SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
@@ -1073,6 +1088,7 @@ def _clean_lines(lines):
     ----------
     lines : List[str, ...]
         the lines to clean.
+
     """
     lines2 = []  # type: List[str]
     for line in lines:

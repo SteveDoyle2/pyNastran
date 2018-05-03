@@ -8,6 +8,7 @@ All trim aero cards are defined in this file.  This includes:
  * TRIM
 
 All cards are BaseCard objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -68,6 +69,7 @@ class AEROS(Aero):
             xy symmetry flag (+1=symmetry; -1=antisymmetric)
         comment : str; default=''
             a comment for the card
+
         """
         Aero.__init__(self)
         if comment:
@@ -147,6 +149,7 @@ class AEROS(Aero):
         ----------
         model : BDF
             The BDF object.
+
         """
         msg = ' which is required by AEROS'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
@@ -160,6 +163,7 @@ class AEROS(Aero):
         ----------
         model : BDF
             The BDF object.
+
         """
         msg = ' which is required by AEROS'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
@@ -176,6 +180,7 @@ class AEROS(Aero):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         acsid = integer_or_blank(card, 1, 'acsid', 0)
         rcsid = integer_or_blank(card, 2, 'rcsid', 0)
@@ -210,6 +215,7 @@ class AEROS(Aero):
         maps = {
             'coord' : cid_map,
         }
+
         """
         cid_map = maps['coord']
         self.acsid = cid_map[self.acsid]
@@ -223,6 +229,7 @@ class AEROS(Aero):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['AEROS', self.Acsid(), self.Rcsid(), self.cref,
                        self.bref, self.sref, self.sym_xz, self.sym_xy]
@@ -236,6 +243,7 @@ class AEROS(Aero):
         -------
         fields : List[varies]
           the fields that define the card
+
         """
         sym_xz = set_blank_if_default(self.sym_xz, 0)
         sym_xy = set_blank_if_default(self.sym_xy, 0)
@@ -278,6 +286,7 @@ class AESTAT(BaseCard):
             name for the id
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -296,6 +305,7 @@ class AESTAT(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         aestat_id = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
@@ -333,6 +343,7 @@ class AESTAT(BaseCard):
         -------
         fields : List[int/str]
             the fields that define the card
+
         """
         list_fields = ['AESTAT', self.aestat_id, self.label]
         return list_fields
@@ -379,6 +390,7 @@ class CSSCHD(Aero):
             the control surface deflection profile (AEFACT) id
         comment : str; default=''
             a comment for the card
+
         """
         Aero.__init__(self)
         if comment:
@@ -416,6 +428,7 @@ class CSSCHD(Aero):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         aesid = integer(card, 2, 'aesid')             # AESURF
@@ -442,6 +455,7 @@ class CSSCHD(Aero):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by CSSCHD sid=%s' % self.sid
         self.aesid_ref = model.AESurf(self.aesid, msg=msg)
@@ -509,6 +523,7 @@ class CSSCHD(Aero):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['CSSCHD', self.sid, self.AESid(), self.LAlpha(),
                        self.LMach(), self.LSchd()]
@@ -537,6 +552,7 @@ class DIVERG(BaseCard):
         the number of roots
     machs : List[float, ..., float]
         list of Mach numbers
+
     """
     type = 'DIVERG'
     def __init__(self, sid, nroots, machs, comment=''):
@@ -554,6 +570,7 @@ class DIVERG(BaseCard):
             list of Mach numbers
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -573,6 +590,7 @@ class DIVERG(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         nroots = integer(card, 2, 'nroot')
@@ -627,6 +645,7 @@ class TRIM(BaseCard):
         -------
         value : varies
             the value for the appropriate field
+
         """
         ni = 4
         for i in range(len(self.labels)):
@@ -653,6 +672,7 @@ class TRIM(BaseCard):
             the field number to update
         value : varies
             the value for the appropriate field
+
         """
         ni = 4
         for i in range(len(self.labels)):
@@ -688,6 +708,7 @@ class TRIM(BaseCard):
             1.0 : elastic trim analysis (default)
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -921,6 +942,7 @@ class TRIM(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         mach = double(card, 2, 'mach')
@@ -959,6 +981,7 @@ class TRIM(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['TRIM', self.sid, self.mach, self.q]
         nlabels = len(self.labels)

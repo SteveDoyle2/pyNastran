@@ -11,7 +11,7 @@ import numpy as np
 
 class SolidSection(object):
     """a SolidSection defines depth and a material"""
-    def __init__(self, param_map, data_lines):
+    def __init__(self, param_map, data_lines, log):
         self.param_map = param_map
         self.data_lines = data_lines
         self.material = param_map['material']
@@ -19,10 +19,10 @@ class SolidSection(object):
         line0 = data_lines[0]
         assert len(line0) == 1., data_lines
 
-        self.thickness = line0[0]
+        self.thickness = float(line0[0])
 
         for line in data_lines:
-            print('solid - %r' % line)
+            log.info('solid - %r' % line)
 
     def __repr__(self):
         """prints a summary for the solid section"""

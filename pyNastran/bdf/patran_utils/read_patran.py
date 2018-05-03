@@ -34,6 +34,7 @@ def read_patran_format(patran_fmt_filename):
       SEC = Normal (Z)
 
       TYPE = END
+
     """
     assert os.path.exists(patran_fmt_filename), print_bad_path(patran_fmt_filename)
     with open(patran_fmt_filename, 'r') as patran_file:
@@ -62,6 +63,7 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
          30.1772419E+00-.2389538E+00-.9547180E+00
          40.1056876E+00-.2347771E+00-.9662866E+00
          50.6002256E-01-.1678307E+00-.9839869E+00
+
     """
     base = os.path.splitext(patran_filename)[0]
     headers = read_patran_format(base + '.res_tmpl')
@@ -147,6 +149,7 @@ def load_patran_nod(nod_filename, node_ids):
             '%i', '%f'
     headers : List[str]???
         the titles???
+
     """
     data_dict = read_patran(nod_filename, fdtype='float32', idtype='int32')
     nids = data_dict['nids']

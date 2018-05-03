@@ -18,6 +18,7 @@ def convert(model, units_to, units=None):
         [length, mass, time]
     units : list
         overwrites model.units
+
     """
     # units_start = 'in'
     # units_end = 'mm'
@@ -58,6 +59,7 @@ def _set_wtmass(model, gravity_scale):
     in-lbm-s : 1. / (32.2*12)
     m-kg-s   : 1.
     mm-Mg-s  : 1.
+
     """
     if 'WTMASS' in model.params:
         param = model.params['WTMASS']
@@ -462,7 +464,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.G22 *= stress_scale
             mat.G23 *= stress_scale
             mat.G33 *= stress_scale
-            mat.rho = density_scale
+            mat.rho *= density_scale
             # 1/dTemp
             if mat.a1 is not None:
                 mat.a1 *= a_scale
@@ -1026,6 +1028,4 @@ def convert_mass(mass_from, mass_to):
             gravity_scale *= gravity_english
         else:
             raise NotImplementedError('mass to unit=%r; expected=[g, kg, Mg, lbm]' % mass_to)
-
-
     return mass_scale, weight_scale, gravity_scale

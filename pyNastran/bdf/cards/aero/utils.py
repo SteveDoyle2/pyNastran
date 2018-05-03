@@ -2,6 +2,7 @@
 defines:
  - elements = elements_from_quad(nx, ny)
  - points, elements = points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+
 """
 import numpy as np
 
@@ -9,6 +10,7 @@ def elements_from_quad(nx, ny):
     """
     Creates an array of rectilinear mesh of nodes and then
     grabs indexs it to get the elements
+
     """
     assert nx > 1
     assert ny > 1
@@ -39,6 +41,7 @@ def tri_cap(nelements):
       0  /---------*4
 
     create a matrix with the point counter
+
     """
     npoints = nelements
     ipoints = np.arange(npoints, dtype='int32')
@@ -110,4 +113,3 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     #ipoints = np.arange(npoints, dtype='int32').reshape((nx, ny))
 
     return points, elements
-

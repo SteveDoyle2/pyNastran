@@ -1,3 +1,5 @@
+.. _xref-test_bdf:
+
 ========
 test_bdf
 ========

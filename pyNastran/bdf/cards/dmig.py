@@ -66,6 +66,7 @@ class DTI(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         name = string(card, 1, 'name')
         if name == 'UNITS':
@@ -152,6 +153,7 @@ class NastranMatrix(BaseCard):
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
+
         """
         if comment:
             self.comment = comment
@@ -219,6 +221,7 @@ class NastranMatrix(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         name = string(card, 1, 'name')
         #zero
@@ -421,6 +424,7 @@ class NastranMatrix(BaseCard):
             dictionary of keys=columnID, values=(Grid,Component) for the matrix
 
         .. warning:: is_sparse=True WILL fail
+
         """
         return get_matrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
 
@@ -458,6 +462,7 @@ class NastranMatrix(BaseCard):
           - DMIG, UACCEL
           - DMIGOUT
           - DMIGROT
+
         """
         if self.polar == 0: # real, imag
             return False
@@ -875,6 +880,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
         dictionary of keys=columnID, values=(Grid,Component) for the matrix
 
     .. warning:: is_sparse=True WILL fail
+
     """
     nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed = get_row_col_map(
         self.GCi, self.GCj, self.matrix_form)
@@ -955,6 +961,7 @@ class DMIG_UACCEL(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         tin = integer(card, 4, 'tin')
         ncol = integer_or_blank(card, 8, 'ncol')
@@ -1095,6 +1102,7 @@ class DMIG(NastranMatrix):
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
+
         """
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                GCj, GCi, Real, Complex, comment=comment,
@@ -1159,6 +1167,7 @@ class DMIAX(object):
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
+
         """
         ncols = None
 
@@ -1241,6 +1250,7 @@ class DMIAX(object):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         name = string(card, 1, 'name')
         #zero
@@ -1347,6 +1357,7 @@ class DMIJ(NastranMatrix):
     entries. A column entry is required for each column with nonzero elements.
     For entering data for the interference elements of a CAERO2, use DMIJI
     or DMI.
+
     """
     type = 'DMIJ'
 
@@ -1395,6 +1406,7 @@ class DMIJ(NastranMatrix):
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
+
         """
         NastranMatrix.__init__(self, name, matrix_form, tin, tout, polar, ncols,
                                GCj, GCi, Real, Complex, comment=comment,
@@ -1411,6 +1423,7 @@ class DMIJI(NastranMatrix):
     and one or more column entries. A column entry is required for each column
     with nonzero elements.  For entering data for the slender elements of a
     CAERO2, or a CAERO1, 3, 4 or 5 use DMIJ or DMI.
+
     """
     type = 'DMIJI'
 
@@ -1458,6 +1471,7 @@ class DMIJI(NastranMatrix):
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
+
         """
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                GCj, GCi, Real, Complex, comment=comment,
@@ -1535,6 +1549,7 @@ class DMIK(NastranMatrix):
             The complex values (if the matrix is complex)
         comment : str; default=''
             a comment for the card
+
         """
         NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                GCj, GCi, Real, Complex, comment=comment,
@@ -1619,6 +1634,7 @@ class DMI(NastranMatrix):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         name = string(card, 1, 'name')
         #zero
@@ -1678,6 +1694,7 @@ class DMI(NastranMatrix):
         #: 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
         #: 6=Symmetric; 8=Identity (m=nRows, n=m)
         self.matrix_form = integer(card, 3, 'matrix_form')
+
         """
         return self.matrix_form
         #if self.nrows == self.ncols:
@@ -1789,6 +1806,7 @@ class DMI(NastranMatrix):
 
                       This is an invalid method, but is not disabled
                       because it's currently needed for checking results
+
         """
         list_fields = ['DMI', self.name, 0, self.matrix_form, self.tin,
                        self.tout, None, self.nrows, self.ncols]
@@ -1892,5 +1910,6 @@ class DMI(NastranMatrix):
         """
         .. todo:: support shortened output format.  There's a very low 1000
                   DMI cap, I assume this is entries and not matrices.
+
         """
         return self.write_card(size=8, is_double=False)

@@ -1,3 +1,5 @@
+.. _xref-pynastran_gui:
+
 ==============================
 Graphical User Interface (GUI)
 ==============================
@@ -101,8 +103,7 @@ Setup Note
 Download the entire package from Github or just the `GUI
 <https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
 
-If you download the source, make sure you follow the `Installation Guide
-<https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use
+If you download the source, make sure you follow the :doc:`installation` and use
 **setup.py develop** and not **setup.py install**.
 
 Python 2.7 with ``vtk==5.10.1`` or ``vtk==6.3.0`` with PyQt4 will give you the
@@ -166,7 +167,9 @@ To view the options:
       -v, --version  show program's version number and exit
 
 
-The standard way to run the code:
+The standard way to run the code is simply by launching the exe.
+Alternatively, you can call it from the command line, which can directly
+load a model:
 
 .. code-block:: console
 
@@ -212,17 +215,17 @@ Minor Features
  * edges flippable from menu
  * change label color/size menu
  * change background color
- * attach simplistic custom geometry
- * additional points may be added with the ``-u`` option
+ * attach simplistic custom geometry with the ``Load CSV User Geometry`` or the ``-user_geom`` option
+ * additional points may be added with the ``Load CSV User Points`` or the ``--user_points`` option
 
 
 Nastran Specific Features
 =========================
  * attach multiple OP2 files
  * supports SPOINTs
- * displacement/eigenvectors now shown as a deformation (real)
+ * displacement/eigenvectors/nodal force results
 
-   * scale editable from legend menu
+   * scale/phase editable from legend menu
    * rotated into global frame
 
  * Edit Geometry Properties
@@ -612,6 +615,7 @@ For example, you can:
  - custom animations of mode shapes
  - high resolution screenshots
  - model introspection
+ - create custom annotations
 
 
 Using the scripting menu
@@ -651,8 +655,5 @@ Option #1
 Option #2
 ---------
 
-.. code-block:: python
-
-    self.magnify = 5
-
+On the ``View`` -> ``Preferences`` menu, change **Screenshot Magnify** and click **Apply**.
 Now take a screenshot.

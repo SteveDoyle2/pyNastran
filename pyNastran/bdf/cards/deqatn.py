@@ -3,6 +3,7 @@
 Defines the DEQATN class and sub-functions.
 
 The capitalization of the sub-functions is important.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -70,6 +71,7 @@ def dba(p, pref, f):
     -------
     dbi : float
         acoustic pressure in Decibels
+
     """
     ta1, ta2 = _get_ta(f)
     return 20. * log(p / pref) + 10 * log(ta1) + 10. * log(ta2)
@@ -91,6 +93,7 @@ def invdba(dbai, pref, f):
     -------
     p : float
         structural responses or acoustic pressure
+
     """
     ta1, ta2 = _get_ta(f)
     #dbai = dba(p, pref, f)
@@ -152,6 +155,7 @@ class DEQATN(BaseCard):  # needs work...
             'F = A + B – F1 * D',
         ]
         >>> deqatn = DEQATN(41, eq, comment='')
+
         """
         if comment:
             self.comment = comment
@@ -172,6 +176,7 @@ class DEQATN(BaseCard):  # needs work...
             this card is special and is not a ``BDFCard`` like other cards
         comment : str; default=''
             a comment for the card
+
         """
         #print(card)
         line0 = card[0]
@@ -211,6 +216,7 @@ class DEQATN(BaseCard):  # needs work...
         def stress(x):
             x = float(x)
             return x + 32.
+
         """
         default_values = {}
         if self.dtable is not None:
@@ -235,6 +241,7 @@ class DEQATN(BaseCard):  # needs work...
         ----------
         model : BDF()
             the BDF object
+
         """
         # TODO: get defaults from DTABLE
         # TODO: get limits from DCONSTR
@@ -377,6 +384,7 @@ def _split_equation(lines_out, line, n, isplit=0):
     -------
     lines_out : List[str]
         the long line broken into shorter lines
+
     """
     #print('n=%s -> line=%r len=%s' % (n, line, len(line)))
     if len(line) <= n:
@@ -449,6 +457,7 @@ def fortran_to_python(lines, default_values, comment=''):
             raise
         f = x + y
         return f
+
     """
     func_msg = ''
     variables = []
@@ -535,6 +544,7 @@ def write_function_header(func_header, eq, default_values, comment=''):
     variables : List[str]
         the variables used by the equation header
         a, b, c
+
     """
     msg = ''
 

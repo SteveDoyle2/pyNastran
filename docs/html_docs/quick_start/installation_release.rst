@@ -6,12 +6,14 @@ pyNastran is an easy package to install once you have the required Python
 modules.  It's a pure Python package so you shouldn't have too many problems.
 
 Python
-======
+------
 The software is tested against:
  - Python 2.7.14 (Windows/Linux)
  - Python 3.5 (Windows/Linux)
  - Python 3.6 (Linux)
 
+Packages
+--------
 The suggested set of packages include:
  - numpy 1.14
  - scipy 1.0
@@ -24,8 +26,6 @@ The suggested set of packages include:
  - typing >= 3.6.1
  - pathlib2 >= 2.2.0
  - scandir >= 1.4.0
-
-.. _installation_release_xref:
 
 ***********************************************
 Install Procedure - From Anaconda (recommended)
