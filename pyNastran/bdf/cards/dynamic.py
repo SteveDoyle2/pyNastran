@@ -582,7 +582,7 @@ class FREQ3(FREQ):
 
     def __init__(self, sid, f1, f2=None, freq_type='LINEAR', nef=10, cluster=1.0, comment=''):
         """
-        Creates a FREQ4 card
+        Creates a FREQ3 card
 
         Parameters
         ----------

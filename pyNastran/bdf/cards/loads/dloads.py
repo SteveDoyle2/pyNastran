@@ -309,7 +309,8 @@ class DLOAD(LoadCombination):
             Load set identification numbers of RLOAD1, RLOAD2, TLOAD1,
             TLOAD2, and ACSRCE entries. See Remarks 3 and 7. (Integer > 0)
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
@@ -322,6 +323,7 @@ class DLOAD(LoadCombination):
         ----------
         model : BDF()
             the BDF object
+
         """
         dload_ids2 = []
         msg = ' which is required by DLOAD=%s' % (self.sid)
@@ -388,7 +390,7 @@ class RLOAD1(DynamicLoad):
 
     def __init__(self, sid, excite_id, delay=0, dphase=0, tc=0, td=0, Type='LOAD', comment=''):
         """
-        Creates a RLOAD1 card, which defienes a frequency-dependent load
+        Creates an RLOAD1 card, which defienes a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -420,6 +422,7 @@ class RLOAD1(DynamicLoad):
             4, 5, 6, 7, 12, 13 - MSC only
         comment : str; default=''
             a comment for the card
+
         """
         DynamicLoad.__init__(self)
         if comment:
@@ -667,7 +670,7 @@ class RLOAD2(DynamicLoad):
     # P(f) = {A} * B(f) * e^(i*phi(f), + theta - 2*pi*f*tau)
     def __init__(self, sid, excite_id, delay=0, dphase=0, tb=0, tp=0, Type='LOAD', comment=''):
         """
-        Creates a RLOAD2 card, which defienes a frequency-dependent load
+        Creates a nRLOAD2 card, which defienes a frequency-dependent load
         based on TABLEDs.
 
         Parameters
@@ -705,6 +708,7 @@ class RLOAD2(DynamicLoad):
             4, 5, 6, 7, 12, 13 - MSC only
         comment : str; default=''
             a comment for the card
+
         """
         DynamicLoad.__init__(self)
         if comment:

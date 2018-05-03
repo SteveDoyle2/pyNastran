@@ -18,7 +18,7 @@ class PyDialog(QDialog):
     is not repeated
     """
     def __init__(self, data, win_parent):
-        QDialog.__init__(self, win_parent)
+        super(PyDialog, self).__init__(win_parent)
         self.out_data = data
         self.win_parent = win_parent
         self.font_size = None

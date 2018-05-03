@@ -666,6 +666,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         with open(obj_filename, 'rb') as obj_file:
             obj = load(obj_file)
 
+        # these are properties, functions, etc.
         keys_to_skip = [
             'case_control_deck',
             'log',
@@ -677,6 +678,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
+            'wtmass',
         ]
         for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
             if key.startswith('__') and key.endswith('__'):
@@ -708,6 +710,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         -----
         loads/spcs (not supported) are tricky because you can't replace
         cards one-to-one...not sure what to do
+
         """
         for nid, node in iteritems(replace_model.nodes):
             self.nodes[nid] = node
@@ -741,7 +744,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         .. python ::
 
-            bdfModel.disable_cards(['DMIG', 'PCOMP'])
+            bdf_model.disable_cards(['DMIG', 'PCOMP'])
+
         """
         if cards is None:
             return
@@ -762,7 +766,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         .. python ::
 
-            bdfModel.set_cards(['GRID', 'CTRIA3'])
+            bdf_model.set_cards(['GRID', 'CTRIA3'])
+
         """
         if cards is None:
             return
@@ -793,6 +798,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         stop_on_xref_error : bool
             should an error be raised if there
             are cross-reference errors (default=True)
+
         """
         assert isinstance(nparse_errors, int), type(nparse_errors)
         assert isinstance(nxref_errors, int), type(nxref_errors)
@@ -1093,6 +1099,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         .. note::  Setting read_includes to False is kind of pointless if
                    called directly; it's useful for ``read_bdf``
+
         """
         punch = False #  doesn't really matter
         read_includes = True
@@ -1148,6 +1155,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           bdf.nodes = 20
           bdf.elements = 10
           etc.
+
         """
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
@@ -1577,6 +1585,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             the solution method (only for SOL=600)
         sol_iline : int
             the line to put the SOL/method on
+
         """
         self.sol_iline = sol_iline
         # the integer of the solution type (e.g. SOL 101)
@@ -1631,6 +1640,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         # On GRID 100, set X (3) to 43.
         >>> model.update_card('GRID', 100, 3, 43.)
+
         """
         #rslot_map = self.get_rslot_map(reset_type_to_slot_map=False)
 
@@ -1688,6 +1698,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         8-character field.
 
         .. warning:: Type matters!
+
         """
         self.dict_of_vars = {}
         assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
@@ -1712,6 +1723,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         ----------
         card_name : str
             the card_name -> 'GRID'
+
         """
         if card_name.startswith('='):
             return False
@@ -1749,6 +1761,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             ['GRID', '1', '', '1.0', '2.0', '3.0']
             >>> card_name
             'GRID'
+
         """
         card_name = self._get_card_name(card_lines)
         fields = to_fields(card_lines, card_name)
@@ -1783,6 +1796,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             the card object representation of card
         card : list[str]
             the card with empty fields removed
+
         """
         card_name = card_name.upper()
         self.increase_card_count(card_name)
@@ -2648,6 +2662,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                   you know the type (assuming a GRID), so just call the
                   *mesh.Node(nid)* to get the Node object that was just
                   created.
+
         """
         card_name = card_name.upper()
         card_obj, unused_card = self.create_card_object(
@@ -2676,6 +2691,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         -------
         card_object : BDFCard()
             the card object representation of card
+
         """
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
@@ -2697,6 +2713,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             an optional the comment for the card
         has_none : bool; default=True
             can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
+
         """
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
@@ -2772,6 +2789,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         -------
         xyz : (n, 3) ndarray
             the xyz points in the cid coordinate frame
+
         """
         #return self.get_displacement_index_xyz_cp_cd(cid=cid, fdtype=dtype)[2]
         npoints, nids, all_nodes = self._get_npoints_nids_allnids()
@@ -2806,6 +2824,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             the card_name -> 'GRID'
         comment : str
             an optional the comment for the card
+
         """
         if card_name == 'ECHOON':
             self.echo = True
@@ -2896,6 +2915,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         TODO
         ----
          - RBE3s from OP2s can show up as ???s
+
         """
         card_dict_groups = [
             'params', 'nodes', 'points', 'elements', 'normals', 'rigid_elements',
@@ -3176,6 +3196,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         >>> icd_transform[50]
         [2]
+
         """
         nids_cd_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
         nids_cp_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
@@ -3621,6 +3642,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         >>> icd_transform[50]
         [2]
+
         """
         nids_transform = defaultdict(list)
         icd_transform = {}
@@ -3669,6 +3691,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         -------
         card_name : str
             the name of the card
+
         """
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
         if len(card_name) == 0:
@@ -3696,6 +3719,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.card_count['GRID']
         50
+
         """
         if card_name in self.card_count:
             self.card_count[card_name] += count_num
@@ -3748,6 +3772,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             the dynamic value defined by dict_of_vars
 
         .. seealso:: :func: `set_dynamic_syntax`
+
         """
         key = key.strip()[1:]
         self.log.debug("dynamic key = %r" % key)
@@ -3790,6 +3815,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             $ pyNastran: units=in,lb,s
 
         ..warning :: pyNastran lines must be at the top of the file
+
         """
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             return
@@ -3844,9 +3870,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     break
 
     def _verify_bdf(self, xref=None):
-        """
-        Cross reference verification method.
-        """
+        """Cross reference verification method."""
         if xref is None:
             xref = self._xref
         #for key, card in sorted(iteritems(self.params)):
@@ -3866,7 +3890,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         for unused_key, card in sorted(iteritems(self.elements)):
             try:
                 card._verify(xref)
-            except Exception:
+            except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
@@ -3876,7 +3900,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         for eid, cbarao in sorted(iteritems(self.ao_element_flags)):
             try:
                 assert self.elements[eid].type == 'CBAR', 'CBARAO error: eid=%s is not a CBAR' % eid
-            except Exception:
+            except:
                 print(str(cbarao))
                 raise
 
@@ -3936,7 +3960,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 #------------------------------------------------------------------------------------------------------
     # HDF5
     def _read_bdf_cards(self, bdf_filename=None,
-                        validate=True, xref=False, punch=False, read_includes=True, encoding=None):
+                        validate=True, xref=False, punch=False,
+                        read_includes=True, encoding=None):
         """
         Read method for the bdf files
 
@@ -3970,6 +3995,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
           bdf.nodes = 20
           bdf.elements = 10
           etc.
+
         """
         self._is_cards_dict = True
 
@@ -4089,6 +4115,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         you know the type (assuming a GRID), so just call the
         *mesh.Node(nid)* to get the Node object that was just
         created.
+
         """
         card_name = card_name.upper()
         card_obj, unused_card = self.create_card_object(
@@ -4112,6 +4139,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             the card_name -> 'GRID'
         comment : str
             an optional the comment for the card
+
         """
         if card_name == 'ECHOON':
             self.echo = True
@@ -4168,6 +4196,7 @@ class BDF(BDF_):
         mode : str; default='msc'
             the type of Nastran
             valid_modes = {'msc', 'nx'}
+
         """
         BDF_.__init__(self, debug=debug, log=log, mode=mode)
         #: stores SPOINT, GRID cards
@@ -4211,9 +4240,7 @@ def _check_for_spaces(card_name, card_lines, comment):
         raise RuntimeError('No executive/case control deck was defined.')
 
 def main():  # pragma: no cover
-    """
-    shows off how unicode works becausee it's overly complicated
-    """
+    """shows off how unicode works becausee it's overly complicated"""
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     bdf_filename = os.path.abspath(os.path.join(

@@ -1146,7 +1146,7 @@ class RFORCE1(Load):
     def __init__(self, sid, nid, scale, group_id,
                  cid=0, r123=None, racc=0., mb=0, method=2, comment=''):
         """
-        Defines the RFORCE1 card
+        Creates an RFORCE1 card
 
         Parameters
         ----------
@@ -1175,6 +1175,7 @@ class RFORCE1(Load):
             Method used to compute centrifugal forces due to angular velocity.
         comment : str; default=''
             a comment for the card
+
         """
         if comment:
             self.comment = comment

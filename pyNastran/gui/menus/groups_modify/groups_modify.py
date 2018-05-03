@@ -18,7 +18,7 @@ from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 #from pyNastran.gui.menus.manage_actors import Model
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
 from pyNastran.gui.utils.qt.qelement_edit import QElementEdit
-from .groups import Group, _get_collapsed_text
+from pyNastran.gui.menus.groups_modify.groups import Group, _get_collapsed_text
 #from .groups_modify.color_display import ColorDisplay
 
 class GroupsModify(PyDialog):
@@ -38,7 +38,7 @@ class GroupsModify(PyDialog):
     +--------------------------+
     """
     def __init__(self, data, win_parent=None, group_active='main'):
-        PyDialog.__init__(self, data, win_parent)
+        super(GroupsModify, self).__init__(data, win_parent)
         self.set_font_size(data['font_size'])
         self._updated_groups = False
 
@@ -506,6 +506,9 @@ def main(): # pragma: no cover
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
+    import os
+    os.environ['QT_API'] = 'pyside'
+    #os.environ['QT_API'] = 'pyqt5'
 
     import sys
     # Someone is launching this directly
@@ -514,6 +517,7 @@ def main(): # pragma: no cover
     #The Main window
 
     data = {
+        'font_size' : 8,
         0 : Group(name='main', element_str='1:#', elements_pound='103', editable=False),
         1 : Group(name='wing', element_str='1:10', elements_pound='103', editable=True),
         2 : Group(name='fuselage1', element_str='50:60', elements_pound='103', editable=True),
@@ -531,7 +535,7 @@ def main(): # pragma: no cover
         14 : Group(name='fuselage13', element_str='50:60', elements_pound='103', editable=True),
         15 : Group(name='fuselage14', element_str='50:60', elements_pound='103', editable=True),
     }
-    main_window = GroupsModify(data)
+    main_window = GroupsModify(data, win_parent=None, group_active='main')
     main_window.show()
     # Enter the main loop
     app.exec_()

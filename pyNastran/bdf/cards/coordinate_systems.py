@@ -1793,7 +1793,8 @@ class Cord1x(Coord):
         g3 : int
             grid point 3
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         Coord.__init__(self)
         if comment:
@@ -1826,8 +1827,9 @@ class Cord1x(Coord):
         icard : int
             the coordinate location on the line
             (there are possibly 2 coordinates on 1 card)
-        comment : str
-            the card comment
+        comment : str; default=''
+            a comment for the card
+
         """
         #self.is_resolved = False
         assert icard in (0, 1), 'icard=%r' % (icard)
@@ -2085,7 +2087,8 @@ class CORD3G(Coord):  # not done
             the referenced coordinate system that defines the system the
             vectors???
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         Coord.__init__(self)
         if comment:
@@ -2248,7 +2251,8 @@ class CORD1R(Cord1x, RectangularCoord):
         g3 : int
             grid point 3
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
@@ -2286,7 +2290,8 @@ class CORD1C(Cord1x, CylindricalCoord):
         g3 : int
             grid point 3
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
@@ -2333,7 +2338,8 @@ class CORD1S(Cord1x, SphericalCoord):
         g3 : int
             grid point 3
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
@@ -2381,7 +2387,8 @@ class CORD2R(Cord2x, RectangularCoord):
             a point on the xz plane
             None : [1., 0., 0.]
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
 
@@ -2443,7 +2450,8 @@ class CORD2C(Cord2x, CylindricalCoord):
             a point on the xz plane
             None : [1., 0., 0.]
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
 
@@ -2491,7 +2499,8 @@ class CORD2S(Cord2x, SphericalCoord):
             a point on the xz plane
             None : [1., 0., 0.]
         comment : str; default=''
-            the card comment
+            a comment for the card
+
         """
         Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
 
