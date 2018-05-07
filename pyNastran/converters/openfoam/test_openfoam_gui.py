@@ -4,6 +4,7 @@ import unittest
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.openfoam.block_mesh import read_block_mesh, mirror_block_mesh
+from pyNastran.converters.openfoam.face_file import FaceFile
 from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
 from pyNastran.utils.log import get_logger
 from pyNastran.utils import print_bad_path
@@ -25,12 +26,14 @@ class TestOpenFoamGUI(unittest.TestCase):
         log = get_logger(level='warning', encoding='utf-8')
         geometry_filename = os.path.join(MODEL_PATH, 'SnakeRiverCanyon', 'system', 'blockMeshDict')
         bdf_filename = os.path.join(MODEL_PATH, 'SnakeRiverCanyon', 'system', 'blockMeshDict.bdf')
+        face_filename = os.path.join(MODEL_PATH, 'SnakeRiverCanyon', 'system', 'faces')
         assert os.path.exists(geometry_filename), print_bad_path(geometry_filename)
         test = OpenFoamGUI()
         test.log = log
         test.load_openfoam_geometry_shell(geometry_filename)
 
         test.load_openfoam_geometry_hex(geometry_filename)
+        #test.load_openfoam_geometry_faces(geometry_filename)
 
         model = read_block_mesh(geometry_filename, log=log)
         model.write_block_mesh(block_mesh_name_out='blockMeshDict.out',
@@ -42,6 +45,28 @@ class TestOpenFoamGUI(unittest.TestCase):
         block_mesh_name_out = 'blockMeshDict.out'
         mirror_block_mesh(geometry_filename, block_mesh_name_out)
         #nodes, hexas, quads, inames, bcs
+
+    def test_openfoam_2(self):
+        point_filename = 'points'
+        with open(point_filename, 'w') as point_file:
+            point_file.write('0. 0. 0.\n')
+
+        face_filename = 'faces'
+        with open(face_filename, 'w') as face_file:
+            face_file.write('2\n')
+            face_file.write('\n')
+            face_file.write('3 1 2 3\n')
+            face_file.write('3 1 3 4\n')
+
+        log = get_logger(level='warning', encoding='utf-8')
+        #test = OpenFoamGUI()
+        #test.log = log
+        #test.load_openfoam_geometry_faces(face_filename)
+        faces = FaceFile(log=None, debug=False)
+        faces.read_face_file(face_filename)
+
+        faces.read_face_file(face_filename, ifaces_to_read=[1])
+        faces.read_face_file(face_filename, ifaces_to_read=[0, 1])
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

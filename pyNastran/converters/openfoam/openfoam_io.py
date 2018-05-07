@@ -14,7 +14,8 @@ import vtk
 #VTK_TRIANGLE = 5
 from vtk import vtkTriangle, vtkQuad, vtkHexahedron
 
-from pyNastran.converters.openfoam.block_mesh import BlockMesh, Boundary
+from pyNastran.converters.openfoam.block_mesh import BlockMesh
+from pyNastran.converters.openfoam.boundary_file import Boundary
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.utils import print_bad_path
 from pyNastran.gui.utils.vtk.vtk_utils import (
